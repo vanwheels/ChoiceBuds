@@ -5,7 +5,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import type { ImportedPokemonInfo, EVSpread, IVSpread } from '../types/pokemon';
+import type { ImportedPokemonInfo, EVSpread } from '../types/pokemon';
 
 export interface UseActiveEditorReturn {
   // Current edit state
@@ -31,7 +31,6 @@ export interface UseActiveEditorReturn {
   updateTeraType: (teraType: string) => void;
   updateNature: (nature: string) => void;
   updateEVs: (evs: Partial<EVSpread>) => void;
-  updateIVs: (ivs: Partial<IVSpread>) => void;
   updateMoves: (moves: string[]) => void;
   updateMove: (index: number, move: string) => void;
   
@@ -71,7 +70,6 @@ export function useActiveEditor(): UseActiveEditorReturn {
         teraType: pokemon.showdownData.teraType,
         nature: pokemon.showdownData.nature,
         evs: { ...pokemon.showdownData.evs },
-        ivs: { ...pokemon.showdownData.ivs },
         moves: [...pokemon.showdownData.moves],
       },
       pokedexNumber: pokemon.pokedexNumber,
@@ -270,22 +268,6 @@ export function useActiveEditor(): UseActiveEditorReturn {
   }, [updateDraft]);
 
   /**
-   * Update IVs in draft (partial update)
-   */
-  const updateIVs = useCallback((ivs: Partial<IVSpread>): void => {
-    updateDraft(draft => ({
-      ...draft,
-      showdownData: {
-        ...draft.showdownData,
-        ivs: {
-          ...draft.showdownData.ivs,
-          ...ivs,
-        },
-      },
-    }));
-  }, [updateDraft]);
-
-  /**
    * Update all moves in draft
    */
   const updateMoves = useCallback((moves: string[]): void => {
@@ -359,7 +341,6 @@ export function useActiveEditor(): UseActiveEditorReturn {
     updateTeraType,
     updateNature,
     updateEVs,
-    updateIVs,
     updateMoves,
     updateMove,
     getCommittableData,

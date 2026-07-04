@@ -3,7 +3,7 @@
  * No API calls, no side effects - strictly regex-based text processing
  */
 
-import type { ShowdownPokemon, ParseResult, EVSpread, IVSpread } from '../types/pokemon';
+import type { ShowdownPokemon, ParseResult, EVSpread } from '../types/pokemon';
 
 /**
  * Default EV spread (all zeros)
@@ -17,17 +17,6 @@ const DEFAULT_EVS: EVSpread = {
   speed: 0,
 };
 
-/**
- * Default IV spread (all 31s - perfect IVs)
- */
-const DEFAULT_IVS: IVSpread = {
-  hp: 31,
-  attack: 31,
-  defense: 31,
-  specialAttack: 31,
-  specialDefense: 31,
-  speed: 31,
-};
 
 /**
  * Splits Showdown/Pokepaste text into individual Pokémon blocks
@@ -67,7 +56,6 @@ export function parsePokemonBlock(block: string): ShowdownPokemon {
     gigantamax: false,
     happiness: 255,
     evs: { ...DEFAULT_EVS },
-    ivs: { ...DEFAULT_IVS },
     moves: [],
   };
 
@@ -103,8 +91,6 @@ export function parsePokemonBlock(block: string): ShowdownPokemon {
       pokemon.nature = line.replace(/\s+Nature$/, '').trim();
     } else if (line.startsWith('EVs:')) {
       parseStatLine(line.substring(4), pokemon.evs);
-    } else if (line.startsWith('IVs:')) {
-      parseStatLine(line.substring(4), pokemon.ivs);
     } else if (line.startsWith('-')) {
       // Move line
       const move = line.substring(1).trim();
@@ -155,13 +141,13 @@ function parseFirstLine(line: string, pokemon: ShowdownPokemon): void {
 }
 
 /**
- * Parses a stat line (EVs or IVs)
+ * Parses a stat line (EVs)
  * Format: "252 HP / 252 Atk / 4 Def"
  * 
- * @param line - Stat line content (without "EVs:" or "IVs:" prefix)
+ * @param line - Stat line content (without "EVs:" prefix)
  * @param stats - Stats object to populate
  */
-function parseStatLine(line: string, stats: EVSpread | IVSpread): void {
+function parseStatLine(line: string, stats: EVSpread): void {
   const parts = line.split('/').map(part => part.trim());
   
   for (const part of parts) {

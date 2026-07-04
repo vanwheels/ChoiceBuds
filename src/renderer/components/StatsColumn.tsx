@@ -125,37 +125,6 @@ export default function StatsColumn({ pokemon }: StatsColumnProps) {
         </div>
       </div>
 
-      {/* IVs Spread */}
-      <div>
-        <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">IVs</p>
-        <div className="grid grid-cols-2 gap-2">
-          {Object.entries(showdownData.ivs).map(([stat, value]) => (
-            <div key={stat} className="flex justify-between text-sm">
-              <span className={getStatColor(stat)}>
-                {STAT_LABELS[stat as keyof typeof STAT_LABELS]}:
-              </span>
-              <span className="text-gray-100 font-mono">{value}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Base Stats (if available) */}
-      {pokemon.baseStats && (
-        <div>
-          <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">Base Stats</p>
-          <div className="grid grid-cols-2 gap-2">
-            {Object.entries(pokemon.baseStats).map(([stat, value]) => (
-              <div key={stat} className="flex justify-between text-sm">
-                <span className="text-gray-400">
-                  {STAT_LABELS[stat as keyof typeof STAT_LABELS]}:
-                </span>
-                <span className="text-gray-300 font-mono">{value}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

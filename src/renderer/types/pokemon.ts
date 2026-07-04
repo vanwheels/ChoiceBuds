@@ -27,17 +27,6 @@ export interface EVSpread {
   speed: number;
 }
 
-/**
- * Represents IVs (Individual Values) distribution
- */
-export interface IVSpread {
-  hp: number;
-  attack: number;
-  defense: number;
-  specialAttack: number;
-  specialDefense: number;
-  speed: number;
-}
 
 /**
  * Parsed Pokémon data from Showdown/Pokepaste format
@@ -56,7 +45,6 @@ export interface ShowdownPokemon {
   teraType?: string;
   nature?: string;
   evs: EVSpread;
-  ivs: IVSpread;
   moves: string[];
 }
 
