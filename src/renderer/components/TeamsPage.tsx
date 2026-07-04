@@ -8,8 +8,8 @@ import { useState } from 'react';
 import type { UseTeamsReturn } from '../hooks/useTeams';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
 import type { UseActiveEditorReturn } from '../hooks/useActiveEditor';
-import type { Team } from '../types/pokemon';
 import ImportTeamModal from './ImportTeamModal';
+import TeamCard from './TeamCard';
 
 
 interface TeamsPageProps {
@@ -118,85 +118,6 @@ export default function TeamsPage({
           onImport={teamsState.addTeam}
           databaseState={databaseState}
         />
-      )}
-    </div>
-  );
-}
-
-/**
- * Individual team card component
- */
-interface TeamCardProps {
-  team: Team;
-  onDelete: () => void;
-  isExpanded: boolean;
-  onToggleExpand: () => void;
-}
-
-function TeamCard({ team, onDelete, isExpanded, onToggleExpand }: TeamCardProps) {
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
-
-  return (
-    <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 hover:border-gray-600 transition-colors">
-      {/* Card Header */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-100">{team.name}</h3>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-xs px-2 py-1 bg-blue-600 text-white rounded">
-              {team.format}
-            </span>
-            <span className="text-xs text-gray-400">
-              {team.pokemon.length} Pokémon
-            </span>
-          </div>
-        </div>
-        <button
-          onClick={onDelete}
-          className="text-gray-400 hover:text-red-400 transition-colors"
-          title="Delete team"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Pokémon Preview */}
-      <div className="flex gap-2 mb-3 overflow-x-auto">
-        {team.pokemon.slice(0, 6).map((pokemon, index) => (
-          <div
-            key={index}
-            className="flex-shrink-0 w-12 h-12 bg-gray-700 rounded border border-gray-600 flex items-center justify-center"
-            title={pokemon.showdownData.species}
-          >
-            <span className="text-xs text-gray-400">#{pokemon.pokedexNumber}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Card Footer */}
-      <div className="flex items-center justify-between text-xs text-gray-500">
-        <span>Updated {formatDate(team.updatedAt)}</span>
-        <button
-          onClick={onToggleExpand}
-          className="text-blue-400 hover:text-blue-300 transition-colors"
-        >
-          {isExpanded ? 'Collapse' : 'Expand'}
-        </button>
-      </div>
-
-      {/* Expanded Details */}
-      {isExpanded && team.notes && (
-        <div className="mt-3 pt-3 border-t border-gray-700">
-          <p className="text-sm text-gray-400">{team.notes}</p>
-        </div>
       )}
     </div>
   );
