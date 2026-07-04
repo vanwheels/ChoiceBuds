@@ -1,0 +1,7 @@
+# Architecture Style Guide
+- Strictly enforce a decoupled architecture. Never write monolithic files.
+- UI components (src/renderer/components) must contain less than 250 lines of code. If a component grows larger, extract sub-components.
+- All core application state changes must flow through custom hooks (src/renderer/hooks), never mixed directly inside UI markup.
+- Static theme tables, hex colors, and type maps must sit in config files (src/renderer/config), not inline in utilities or views.
+- Direct JSON fetch requests to pokeapi.co are mandatory. No web scraping or third-party scraper proxy middleware allowed.
+- Use explicit TypeScript interfaces for all data contracts. Casting with 'as any' is forbidden unless handling external layout boundary wrappers.
