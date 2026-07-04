@@ -58,18 +58,18 @@ const electronAPI = {
 
 /**
  * Expose protected methods via contextBridge
- * This creates window.electronAPI in the renderer process
+ * This creates window.electron in the renderer process
  */
-contextBridge.exposeInMainWorld('electronAPI', electronAPI);
+contextBridge.exposeInMainWorld('electron', electronAPI);
 
 /**
- * TypeScript declaration for window.electronAPI
+ * TypeScript declaration for window.electron
  * This allows TypeScript to recognize the API in renderer code
  */
 export type ElectronAPI = typeof electronAPI;
 
 declare global {
   interface Window {
-    electronAPI: ElectronAPI;
+    electron: ElectronAPI;
   }
 }

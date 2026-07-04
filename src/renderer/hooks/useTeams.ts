@@ -54,7 +54,7 @@ export function useTeams(): UseTeamsReturn {
     setError(null);
     
     try {
-      const database = await window.electronAPI.readTeamsDatabase();
+      const database = await window.electron.readTeamsDatabase();
       
       if (database) {
         setTeams(database.teams);
@@ -82,7 +82,7 @@ export function useTeams(): UseTeamsReturn {
         lastModified: Date.now(),
       };
       
-      const success = await window.electronAPI.writeTeamsDatabase(database);
+      const success = await window.electron.writeTeamsDatabase(database);
       
       if (!success) {
         throw new Error('Failed to write teams database');

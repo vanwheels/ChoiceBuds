@@ -62,7 +62,7 @@ export function useDatabase(): UseDatabaseReturn {
   const initializeCacheWithSWR = async (): Promise<void> => {
     try {
       // Step 1: Instantly serve stale cache from disk
-      const cachedData = await window.electronAPI.readPokeAPICache();
+      const cachedData = await window.electron.readPokeAPICache();
       
       if (cachedData) {
         setCache(cachedData);
@@ -80,7 +80,7 @@ export function useDatabase(): UseDatabaseReturn {
           lastCleaned: Date.now(),
         };
         
-        await window.electronAPI.writePokeAPICache(emptyCache);
+        await window.electron.writePokeAPICache(emptyCache);
         setCache(emptyCache);
         setIsInitialized(true);
       }
@@ -140,7 +140,7 @@ export function useDatabase(): UseDatabaseReturn {
         lastCleaned: now,
       };
       
-      const success = await window.electronAPI.writePokeAPICache(updatedCache);
+      const success = await window.electron.writePokeAPICache(updatedCache);
       
       if (success) {
         setCache(updatedCache);
@@ -193,7 +193,7 @@ export function useDatabase(): UseDatabaseReturn {
         },
       };
       
-      const success = await window.electronAPI.writePokeAPICache(updatedCache);
+      const success = await window.electron.writePokeAPICache(updatedCache);
       
       if (success) {
         setCache(updatedCache);
@@ -236,7 +236,7 @@ export function useDatabase(): UseDatabaseReturn {
         lastCleaned: Date.now(),
       };
       
-      const success = await window.electronAPI.writePokeAPICache(emptyCache);
+      const success = await window.electron.writePokeAPICache(emptyCache);
       
       if (success) {
         setCache(emptyCache);
