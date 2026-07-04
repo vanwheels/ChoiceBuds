@@ -7,7 +7,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { Team, TeamsDatabase } from '../types/pokemon';
 
-interface UseTeamsReturn {
+export interface UseTeamsReturn {
   teams: Team[];
   isLoading: boolean;
   error: string | null;

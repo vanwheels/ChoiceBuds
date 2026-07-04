@@ -7,7 +7,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { PokeAPICache, PokeAPICacheEntry } from '../types/pokemon';
 
-interface UseDatabaseReturn {
+export interface UseDatabaseReturn {
   cache: PokeAPICache | null;
   isInitialized: boolean;
   isRevalidating: boolean;

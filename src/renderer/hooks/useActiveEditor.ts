@@ -7,7 +7,7 @@
 import { useState, useCallback } from 'react';
 import type { ImportedPokemonInfo, EVSpread, IVSpread } from '../types/pokemon';
 
-interface UseActiveEditorReturn {
+export interface UseActiveEditorReturn {
   // Current edit state
   isEditing: boolean;
   editingPokemonIndex: number | null;

@@ -5,7 +5,7 @@
  * All returned strings are forced to lowercase before hitting state
  */
 
-import type { PokemonStats, PokeAPICacheEntry } from '../types/pokemon';
+import type { PokemonStats, PokeAPICacheEntry, ShowdownPokemon, ImportedPokemonInfo } from '../types/pokemon';
 
 /**
  * Base URL for PokeAPI v2
@@ -238,4 +238,43 @@ export async function fetchPokemonBatch(
   });
   
   return Promise.all(promises);
+}
+
+/**
+ * Enriches parsed Showdown Pokémon data with PokeAPI metadata
+ * Checks cache first, fetches from API if needed, then caches result
+ * @param showdownPokemon - Parsed Showdown format Pokémon
+ * @param getCachedEntry - Cache getter function
+ * @param setCacheEntry - Cache setter function
+ * @returns Promise resolving to fully enriched ImportedPokemonInfo
+ */
+export async function enrichPokemonWithAPI(
+  showdownPokemon: ShowdownPokemon,
+  getCachedEntry: (species: string) => PokeAPICacheEntry | null,
+  setCacheEntry: (species: string, entry: PokeAPICacheEntry) => Promise<boolean>
+): Promise<ImportedPokemonInfo> {
+  const species = showdownPokemon.species;
+  
+  // Step 1: Check cache first
+  let apiData = getCachedEntry(species);
+  
+  // Step 2: If not cached or expired, fetch from API
+  if (!apiData) {
+    apiData = await fetchPokemonData(species);
+    
+    // Step 3: Cache the fetched data
+    await setCacheEntry(species, apiData);
+  }
+  
+  // Step 4: Combine Showdown data with API data
+  const enrichedPokemon: ImportedPokemonInfo = {
+    showdownData: showdownPokemon,
+    pokedexNumber: apiData.pokedexNumber,
+    types: apiData.types,
+    baseStats: apiData.baseStats,
+    spriteUrl: apiData.spriteUrl,
+    importedAt: Date.now(),
+  };
+  
+  return enrichedPokemon;
 }
