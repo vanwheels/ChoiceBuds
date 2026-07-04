@@ -18,7 +18,7 @@ interface TeamsPageProps {
   editorState: UseActiveEditorReturn;
 }
 
-type FormatFilter = 'All' | 'VGC' | 'Singles' | 'Doubles' | 'Other';
+type FormatFilter = 'All' | 'Reg M-A' | 'Reg M-B';
 
 /**
  * Main teams page component
@@ -37,7 +37,7 @@ export default function TeamsPage({
     : teamsState.teams.filter(team => team.format === activeFilter);
 
   // Format filter buttons configuration
-  const filterButtons: FormatFilter[] = ['All', 'VGC', 'Singles', 'Doubles', 'Other'];
+  const filterButtons: FormatFilter[] = ['All', 'Reg M-A', 'Reg M-B'];
 
   return (
     <div className="h-full flex flex-col">

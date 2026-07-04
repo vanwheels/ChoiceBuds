@@ -87,7 +87,7 @@ export interface ImportedPokemonInfo {
 export interface Team {
   id: string; // UUID
   name: string;
-  format: 'VGC' | 'Singles' | 'Doubles' | 'Other';
+  format: 'Reg M-A' | 'Reg M-B';
   pokemon: ImportedPokemonInfo[];
   createdAt: number; // Unix timestamp
   updatedAt: number; // Unix timestamp

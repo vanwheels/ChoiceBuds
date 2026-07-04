@@ -28,7 +28,7 @@ export default function ImportTeamModal({
 }: ImportTeamModalProps) {
   const [pastedText, setPastedText] = useState('');
   const [teamName, setTeamName] = useState('');
-  const [teamFormat, setTeamFormat] = useState<'VGC' | 'Singles' | 'Doubles' | 'Other'>('VGC');
+  const [teamFormat, setTeamFormat] = useState<'Reg M-A' | 'Reg M-B'>('Reg M-A');
   const [isImporting, setIsImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [importProgress, setImportProgress] = useState<string>('');
@@ -104,7 +104,7 @@ export default function ImportTeamModal({
         // Reset form and close modal
         setPastedText('');
         setTeamName('');
-        setTeamFormat('VGC');
+        setTeamFormat('Reg M-A');
         setImportProgress('');
         onClose();
       } else {
@@ -179,10 +179,8 @@ export default function ImportTeamModal({
               disabled={isImporting}
               className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
             >
-              <option value="VGC">VGC</option>
-              <option value="Singles">Singles</option>
-              <option value="Doubles">Doubles</option>
-              <option value="Other">Other</option>
+              <option value="Reg M-A">Reg M-A</option>
+              <option value="Reg M-B">Reg M-B</option>
             </select>
           </div>
 
