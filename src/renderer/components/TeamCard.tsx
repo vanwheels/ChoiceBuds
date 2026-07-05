@@ -116,7 +116,12 @@ export default function TeamCard({
         <div className="border-t border-gray-700 bg-gray-850">
           <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 w-full">
             {team.pokemon.map((pokemon, index) => (
-              <PokemonCard key={index} pokemon={pokemon} />
+              <PokemonCard 
+                key={index} 
+                pokemon={pokemon} 
+                teamId={team.id}
+                pokemonIndex={index}
+              />
             ))}
           </div>
         </div>

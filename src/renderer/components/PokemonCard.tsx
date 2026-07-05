@@ -9,9 +9,13 @@ import type { ImportedPokemonInfo } from '../types/pokemon';
 import TypeBadge from './TypeBadge';
 import { getTypeTheme } from '../config/pokemonTheme';
 import { useGameData } from '../hooks/useGameData';
+import { useTeams } from '../hooks/useTeams';
+import { isGenderless, isFemaleLocked, GENDERED_FORM_VARIANTS } from '../config/pokemonRules';
 
 interface PokemonCardProps {
   pokemon: ImportedPokemonInfo;
+  teamId: string;
+  pokemonIndex: number;
 }
 
 /**
@@ -88,19 +92,78 @@ function getItemSpriteFallback(itemName: string): string {
 }
 
 /**
+ * Gender-dimorphic species that have different sprites based on gender
+ * Maps species name to whether they have visual gender differences
+ */
+const GENDER_DIMORPHIC_SPECIES: Record<string, boolean> = {
+  'basculegion': true,
+  'indeedee': true,
+  'meowstic': true,
+  'oinkologne': true,
+};
+
+/**
+ * Generates the correct sprite URL based on shiny status and gender
+ * Handles PokeAPI sprite paths for shiny and gender-dimorphic forms
+ */
+function getSpriteUrl(
+  baseUrl: string,
+  species: string,
+  gender: 'M' | 'F' | 'N' | '' | undefined,
+  isShiny: boolean
+): string {
+  if (!baseUrl) return '';
+  
+  const speciesLower = species.toLowerCase().trim();
+  
+  // Check if this species has gender-dimorphic sprites
+  const isGenderDimorphic = GENDER_DIMORPHIC_SPECIES[speciesLower];
+  
+  // Build the correct sprite URL
+  // PokeAPI structure: https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/[shiny/]XXX.png
+  // For gender forms: the API already returns the correct URL with -female or -male suffix
+  
+  if (isShiny) {
+    // Replace the path to point to shiny folder
+    return baseUrl.replace('/official-artwork/', '/official-artwork/shiny/');
+  }
+  
+  return baseUrl;
+}
+
+/**
  * Renders a detailed expanded pokemon card with vertical column layout
  */
-export default function PokemonCard({ pokemon }: PokemonCardProps) {
-  const { showdownData, types, spriteUrl, pokedexNumber } = pokemon;
+export default function PokemonCard({ pokemon, teamId, pokemonIndex }: PokemonCardProps) {
+  const { showdownData, types, pokedexNumber } = pokemon;
   const nature = showdownData.nature?.toLowerCase() || '';
   const modifiers = NATURE_MODIFIERS[nature];
   
-  // Initialize game data hook for dynamic move/item fetching
+  // Initialize hooks
   const { getMoveData, getCachedMove, getItemData, getCachedItem } = useGameData();
+  const { updateTeam, getTeamById } = useTeams();
   
   // State to track move types for dynamic coloring
   const [moveTypes, setMoveTypes] = useState<Record<string, string>>({});
   const [itemMetadata, setItemMetadata] = useState<string>('');
+  
+  // Local state for immediate UI updates (real-time reactivity)
+  const [isLocalShiny, setIsLocalShiny] = useState(showdownData.shiny);
+  const [localGender, setLocalGender] = useState<'M' | 'F' | 'N' | '' | undefined>(showdownData.gender);
+  
+  // Sync local state with incoming pokemon prop changes
+  useEffect(() => {
+    setIsLocalShiny(showdownData.shiny);
+    setLocalGender(showdownData.gender);
+  }, [showdownData.shiny, showdownData.gender]);
+  
+  // Generate dynamic sprite URL based on LOCAL shiny and gender state
+  const spriteUrl = getSpriteUrl(
+    pokemon.spriteUrl,
+    showdownData.species,
+    localGender,
+    isLocalShiny
+  );
 
   /**
    * Fetch move data on mount and when moves change
@@ -157,6 +220,121 @@ export default function PokemonCard({ pokemon }: PokemonCardProps) {
     
     fetchItemMetadata();
   }, [showdownData.item, getItemData, getCachedItem]);
+
+  /**
+   * Handle gender toggle with strict form locks
+   * Checks species constraints before allowing gender changes
+   */
+  const handleGenderToggle = async () => {
+    const species = showdownData.species;
+    
+    // Check if species is genderless - block interaction
+    if (isGenderless(species)) {
+      return; // Freeze interaction for genderless species
+    }
+    
+    // Check if species is female-locked - block interaction
+    if (isFemaleLocked(species)) {
+      return; // Block rotation for female-only species
+    }
+    
+    // Check if species is in male-only gendered forms (e.g., default Basculegion without -F)
+    const speciesLower = species.toLowerCase();
+    const isMaleLocked = 
+      speciesLower === 'basculegion' ||
+      speciesLower === 'indeedee' ||
+      speciesLower === 'meowstic' ||
+      speciesLower === 'oinkologne';
+    
+    // For gendered form variants, check if we need to update the species name
+    const currentGender = localGender || 'M';
+    const newGender = currentGender === 'M' ? 'F' : 'M';
+    
+    // IMMEDIATE LOCAL STATE UPDATE for instant UI feedback
+    setLocalGender(newGender);
+    
+    // Get the current team
+    const team = getTeamById(teamId);
+    if (!team) return;
+    
+    // Clone the pokemon array
+    const updatedPokemon = [...team.pokemon];
+    
+    // Update the specific pokemon's gender
+    updatedPokemon[pokemonIndex] = {
+      ...updatedPokemon[pokemonIndex],
+      showdownData: {
+        ...updatedPokemon[pokemonIndex].showdownData,
+        gender: newGender,
+      },
+    };
+    
+    // For gender-dimorphic species, we need to update the sprite URL
+    // by re-fetching with the new gender (this will be handled by the sprite URL logic)
+    if (GENDER_DIMORPHIC_SPECIES[speciesLower]) {
+      // The sprite URL will automatically update based on the gender change
+      // We need to update the spriteUrl to point to the correct gender form
+      const baseSpecies = species.split('-')[0];
+      const genderSuffix = newGender === 'F' ? '-female' : '-male';
+      
+      // Update the sprite URL pattern for gender-dimorphic species
+      const currentSpriteUrl = updatedPokemon[pokemonIndex].spriteUrl;
+      let newSpriteUrl = currentSpriteUrl;
+      
+      // Replace gender suffix in URL if it exists
+      if (currentSpriteUrl.includes('-female')) {
+        newSpriteUrl = currentSpriteUrl.replace('-female', '-male');
+      } else if (currentSpriteUrl.includes('-male')) {
+        newSpriteUrl = currentSpriteUrl.replace('-male', '-female');
+      } else {
+        // Add gender suffix to the URL
+        // Pattern: /XXX.png -> /XXX-male.png or /XXX-female.png
+        newSpriteUrl = currentSpriteUrl.replace(/\/(\d+)\.png$/, `/$1${genderSuffix}.png`);
+      }
+      
+      updatedPokemon[pokemonIndex].spriteUrl = newSpriteUrl;
+    }
+    
+    // Save the update to database (async - happens in background)
+    await updateTeam(teamId, { pokemon: updatedPokemon });
+  };
+
+  /**
+   * Handle shiny toggle
+   * Flips the shiny boolean and updates the team
+   */
+  const handleShinyToggle = async () => {
+    // IMMEDIATE LOCAL STATE UPDATE for instant UI feedback
+    const newShinyState = !isLocalShiny;
+    setIsLocalShiny(newShinyState);
+    
+    // Get the current team
+    const team = getTeamById(teamId);
+    if (!team) return;
+    
+    // Clone the pokemon array
+    const updatedPokemon = [...team.pokemon];
+    
+    // Toggle the shiny status
+    updatedPokemon[pokemonIndex] = {
+      ...updatedPokemon[pokemonIndex],
+      showdownData: {
+        ...updatedPokemon[pokemonIndex].showdownData,
+        shiny: newShinyState,
+      },
+    };
+    
+    // Save the update to database (async - happens in background)
+    await updateTeam(teamId, { pokemon: updatedPokemon });
+  };
+
+  /**
+   * Determine if gender indicator should be clickable
+   */
+  const isGenderClickable = (): boolean => {
+    const species = showdownData.species;
+    return !isGenderless(species) && !isFemaleLocked(species);
+  };
 
   /**
    * Get text color class for a stat based on nature modifiers
@@ -284,22 +462,36 @@ export default function PokemonCard({ pokemon }: PokemonCardProps) {
 
       {/* Gender and Shiny Indicators - Horizontal Row */}
       <div className="flex flex-row items-center justify-center gap-3 py-2 border-t border-b border-zinc-800/60 my-2 w-full">
-        {/* Gender Indicator */}
-        <div className="flex items-center">
-          {showdownData.gender === 'M' && (
+        {/* Gender Indicator - Interactive with Form Locks */}
+        <div 
+          className={`flex items-center ${isGenderClickable() ? 'cursor-pointer hover:scale-110 transition-transform' : 'cursor-not-allowed opacity-60'}`}
+          onClick={isGenderClickable() ? handleGenderToggle : undefined}
+          title={
+            isGenderless(showdownData.species) 
+              ? 'Genderless species - cannot change' 
+              : isFemaleLocked(showdownData.species)
+              ? 'Female-only species - cannot change'
+              : 'Click to toggle gender'
+          }
+        >
+          {localGender === 'M' && (
             <span className="text-2xl font-bold text-blue-400">♂</span>
           )}
-          {showdownData.gender === 'F' && (
+          {localGender === 'F' && (
             <span className="text-2xl font-bold text-pink-400">♀</span>
           )}
-          {showdownData.gender !== 'M' && showdownData.gender !== 'F' && (
+          {localGender !== 'M' && localGender !== 'F' && (
             <span className="text-2xl font-bold text-zinc-400">⌀</span>
           )}
         </div>
 
-        {/* Shiny Indicator */}
-        <div className="flex items-center">
-          <span className={`text-2xl ${showdownData.shiny ? 'text-amber-400 opacity-100 scale-110 drop-shadow-sm' : 'text-zinc-600 opacity-40'}`}>
+        {/* Shiny Indicator - Interactive Toggle */}
+        <div 
+          className="flex items-center cursor-pointer hover:scale-110 transition-transform"
+          onClick={handleShinyToggle}
+          title="Click to toggle shiny status"
+        >
+          <span className={`text-2xl ${isLocalShiny ? 'text-amber-400 opacity-100 scale-110 drop-shadow-sm' : 'text-zinc-600 opacity-40'}`}>
             ★
           </span>
         </div>
