@@ -174,12 +174,24 @@ export interface ItemData {
 }
 
 /**
- * Game data cache for moves and items
- * Reduces redundant API calls by caching move/item metadata
+ * Ability metadata from PokeAPI
+ * Stores comprehensive ability data for tooltips and descriptions
+ */
+export interface AbilityData {
+  name: string; // Lowercase normalized ability name
+  description: string; // Effect description
+  cachedAt: number; // Unix timestamp
+  expiresAt: number; // Unix timestamp
+}
+
+/**
+ * Game data cache for moves, items, and abilities
+ * Reduces redundant API calls by caching game metadata
  */
 export interface GameDataCache {
   version: number;
   moves: Record<string, MoveData>; // Key: lowercase move name
   items: Record<string, ItemData>; // Key: lowercase item name
+  abilities: Record<string, AbilityData>; // Key: lowercase ability name
   lastCleaned: number; // Unix timestamp
 }

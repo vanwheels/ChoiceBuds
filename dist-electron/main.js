@@ -1,80 +1,110 @@
-import { app as o, BrowserWindow as u, ipcMain as n } from "electron";
-import { fileURLToPath as m } from "url";
-import i from "path";
-import l from "fs/promises";
-const p = m(import.meta.url), c = i.dirname(p);
-let t = null;
-function s() {
-  return o.getPath("userData");
+import { app, BrowserWindow, ipcMain } from "electron";
+import { fileURLToPath } from "url";
+import path from "path";
+import fs from "fs/promises";
+const __filename$1 = fileURLToPath(import.meta.url);
+const __dirname$1 = path.dirname(__filename$1);
+let mainWindow = null;
+function getUserDataPath() {
+  return app.getPath("userData");
 }
-function h() {
-  return i.join(s(), "teams.json");
+function getTeamsDatabasePath() {
+  return path.join(getUserDataPath(), "teams.json");
 }
-function d() {
-  return i.join(s(), "pokeapi-cache.json");
+function getPokeAPICachePath() {
+  return path.join(getUserDataPath(), "pokeapi-cache.json");
 }
-function f() {
-  t = new u({
+function createWindow() {
+  mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
     minWidth: 1024,
     minHeight: 768,
     webPreferences: {
-      preload: i.join(c, "preload.mjs"),
-      contextIsolation: !0,
-      nodeIntegration: !1,
-      sandbox: !1
+      preload: path.join(__dirname$1, "preload.mjs"),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false
     },
     title: "ChoiceBuds - VGC Team Importer",
     backgroundColor: "#1a1a1a",
-    show: !1
+    show: false
     // Don't show until ready-to-show event
-  }), t.once("ready-to-show", () => {
-    t == null || t.show();
-  }), process.env.NODE_ENV === "development" ? t.loadURL("http://localhost:5173") : t.loadFile(i.join(c, "../renderer/index.html")), t.on("closed", () => {
-    t = null;
+  });
+  mainWindow.once("ready-to-show", () => {
+    mainWindow == null ? void 0 : mainWindow.show();
+  });
+  if (process.env.NODE_ENV === "development") {
+    mainWindow.loadURL("http://localhost:5173");
+  } else {
+    mainWindow.loadFile(path.join(__dirname$1, "../renderer/index.html"));
+  }
+  mainWindow.on("closed", () => {
+    mainWindow = null;
   });
 }
-function w() {
-  n.handle("file:read-teams-database", async () => {
+function registerIPCHandlers() {
+  ipcMain.handle("file:read-teams-database", async () => {
     try {
-      const e = h(), r = await l.readFile(e, "utf-8");
-      return JSON.parse(r);
-    } catch (e) {
-      if (e.code === "ENOENT")
+      const filePath = getTeamsDatabasePath();
+      const fileContent = await fs.readFile(filePath, "utf-8");
+      return JSON.parse(fileContent);
+    } catch (err) {
+      if (err.code === "ENOENT") {
         return null;
-      throw console.error("Error reading teams database:", e), e;
+      }
+      console.error("Error reading teams database:", err);
+      throw err;
     }
-  }), n.handle("file:write-teams-database", async (e, r) => {
+  });
+  ipcMain.handle("file:write-teams-database", async (_event, data) => {
     try {
-      const a = h();
-      return await l.writeFile(a, JSON.stringify(r, null, 2), "utf-8"), !0;
-    } catch (a) {
-      return console.error("Error writing teams database:", a), !1;
+      const filePath = getTeamsDatabasePath();
+      await fs.writeFile(filePath, JSON.stringify(data, null, 2), "utf-8");
+      return true;
+    } catch (err) {
+      console.error("Error writing teams database:", err);
+      return false;
     }
-  }), n.handle("file:read-pokeapi-cache", async () => {
+  });
+  ipcMain.handle("file:read-pokeapi-cache", async () => {
     try {
-      const e = d(), r = await l.readFile(e, "utf-8");
-      return JSON.parse(r);
-    } catch (e) {
-      if (e.code === "ENOENT")
+      const filePath = getPokeAPICachePath();
+      const fileContent = await fs.readFile(filePath, "utf-8");
+      return JSON.parse(fileContent);
+    } catch (err) {
+      if (err.code === "ENOENT") {
         return null;
-      throw console.error("Error reading PokeAPI cache:", e), e;
+      }
+      console.error("Error reading PokeAPI cache:", err);
+      throw err;
     }
-  }), n.handle("file:write-pokeapi-cache", async (e, r) => {
+  });
+  ipcMain.handle("file:write-pokeapi-cache", async (_event, data) => {
     try {
-      const a = d();
-      return await l.writeFile(a, JSON.stringify(r, null, 2), "utf-8"), !0;
-    } catch (a) {
-      return console.error("Error writing PokeAPI cache:", a), !1;
+      const filePath = getPokeAPICachePath();
+      await fs.writeFile(filePath, JSON.stringify(data, null, 2), "utf-8");
+      return true;
+    } catch (err) {
+      console.error("Error writing PokeAPI cache:", err);
+      return false;
     }
-  }), n.handle("file:get-userdata-path", async () => s());
+  });
+  ipcMain.handle("file:get-userdata-path", async () => {
+    return getUserDataPath();
+  });
 }
-o.whenReady().then(() => {
-  w(), f(), o.on("activate", () => {
-    u.getAllWindows().length === 0 && f();
+app.whenReady().then(() => {
+  registerIPCHandlers();
+  createWindow();
+  app.on("activate", () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
   });
 });
-o.on("window-all-closed", () => {
-  process.platform !== "darwin" && o.quit();
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    app.quit();
+  }
 });

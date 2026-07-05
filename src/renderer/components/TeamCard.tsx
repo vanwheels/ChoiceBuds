@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Team } from '../types/pokemon';
 import PokemonCard from './PokemonCard';
+import { useTeams } from '../hooks/useTeams';
 
 interface TeamCardProps {
   team: Team;
@@ -10,6 +11,9 @@ interface TeamCardProps {
 
 export default function TeamCard({ team, onDelete, onEdit }: TeamCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isEditingTeam, setIsEditingTeam] = useState(false);
+  const [localTeamName, setLocalTeamName] = useState(team.name);
+  const { updateTeam } = useTeams();
 
   return (
     <div className="w-auto mx-6 bg-zinc-900/40 border border-zinc-800/80 rounded-xl mb-4 overflow-hidden transition-all">
@@ -28,10 +32,38 @@ export default function TeamCard({ team, onDelete, onEdit }: TeamCardProps) {
           ))}
         </div>
 
-        {/* Team Title */}
-        <h2 className="flex-1 text-left font-bold text-sm text-zinc-100 truncate tracking-wide">
-          {team.name.replace(/^(Reg\s*M-[AB]\s*)+/i, '').trim() || 'Untitled Team'}
-        </h2>
+        {/* Team Title - Editable when in edit mode */}
+        {isEditingTeam ? (
+          <input
+            type="text"
+            value={localTeamName}
+            onChange={(e) => setLocalTeamName(e.target.value)}
+            onBlur={async () => {
+              // Save team name on blur
+              if (localTeamName !== team.name) {
+                await updateTeam(team.id, { name: localTeamName });
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.currentTarget.blur();
+              }
+            }}
+            className="flex-1 text-left font-bold text-sm text-zinc-100 truncate tracking-wide"
+            style={{
+              backgroundColor: 'transparent',
+              borderBottom: '1px dashed #4b5563',
+              color: '#ffffff',
+              fontWeight: 'bold',
+              outline: 'none',
+              padding: '0.125rem 0.25rem',
+            }}
+          />
+        ) : (
+          <h2 className="flex-1 text-left font-bold text-sm text-zinc-100 truncate tracking-wide">
+            {team.name.replace(/^(Reg\s*M-[AB]\s*)+/i, '').trim() || 'Untitled Team'}
+          </h2>
+        )}
 
         {/* Far-Right Controls Cluster */}
         <div className="flex flex-row items-center gap-2 shrink-0 ml-4">
@@ -53,7 +85,15 @@ export default function TeamCard({ team, onDelete, onEdit }: TeamCardProps) {
 
           {/* C. Edit Button */}
           <button
-            onClick={onEdit}
+            onClick={() => {
+              setIsEditingTeam(!isEditingTeam);
+              if (!isExpanded) {
+                setIsExpanded(true);
+              }
+              if (onEdit) {
+                onEdit();
+              }
+            }}
             title="Edit Team"
             className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-blue-400 hover:bg-zinc-800 text-sm transition-all cursor-pointer"
           >
@@ -76,7 +116,7 @@ export default function TeamCard({ team, onDelete, onEdit }: TeamCardProps) {
         <div className="p-6 border-t border-zinc-800/60 bg-zinc-900/10">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 w-full">
             {team.pokemon && team.pokemon.map((p, idx) => (
-              <PokemonCard key={idx} pokemon={p} teamId={team.id} pokemonIndex={idx} />
+              <PokemonCard key={idx} pokemon={p} teamId={team.id} pokemonIndex={idx} isEditing={isEditingTeam} />
             ))}
           </div>
         </div>

@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import type { GameDataCache, MoveData, ItemData } from '../types/pokemon';
+import type { GameDataCache, MoveData, ItemData, AbilityData } from '../types/pokemon';
 
 export interface UseGameDataReturn {
   cache: GameDataCache | null;
@@ -20,6 +20,10 @@ export interface UseGameDataReturn {
   // Item operations
   getItemData: (itemName: string) => Promise<ItemData | null>;
   getCachedItem: (itemName: string) => ItemData | null;
+  
+  // Ability operations
+  getAbilityData: (abilityName: string) => Promise<AbilityData | null>;
+  getCachedAbility: (abilityName: string) => AbilityData | null;
   
   // Maintenance
   clearCache: () => Promise<boolean>;
@@ -63,6 +67,7 @@ export function useGameData(): UseGameDataReturn {
         version: 1,
         moves: {},
         items: {},
+        abilities: {},
         lastCleaned: Date.now(),
       };
       
@@ -125,6 +130,25 @@ export function useGameData(): UseGameDataReturn {
     }
     
     return itemData;
+  }, [cache]);
+
+  /**
+   * Get cached ability data (synchronous)
+   */
+  const getCachedAbility = useCallback((abilityName: string): AbilityData | null => {
+    if (!cache) return null;
+    
+    const normalizedName = normalizeNameForAPI(abilityName);
+    const abilityData = cache.abilities[normalizedName];
+    
+    if (!abilityData) return null;
+    
+    // Check if entry is expired
+    if (abilityData.expiresAt < Date.now()) {
+      return null;
+    }
+    
+    return abilityData;
   }, [cache]);
 
   /**
@@ -278,6 +302,70 @@ export function useGameData(): UseGameDataReturn {
   }, [cache, getCachedItem]);
 
   /**
+   * Fetch ability data from PokeAPI and cache it
+   */
+  const getAbilityData = useCallback(async (abilityName: string): Promise<AbilityData | null> => {
+    if (!cache) return null;
+    
+    const normalizedName = normalizeNameForAPI(abilityName);
+    
+    // Check cache first
+    const cachedAbility = getCachedAbility(abilityName);
+    if (cachedAbility) {
+      return cachedAbility;
+    }
+    
+    // Fetch from API
+    setIsLoading(true);
+    try {
+      const url = `${POKEAPI_BASE_URL}/ability/${normalizedName}`;
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.warn(`Ability "${abilityName}" not found in PokeAPI`);
+          return null;
+        }
+        throw new Error(`PokeAPI request failed with status ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Extract ability data
+      const now = Date.now();
+      const abilityData: AbilityData = {
+        name: normalizedName,
+        description: extractEffectDescription(data.effect_entries),
+        cachedAt: now,
+        expiresAt: now + CACHE_EXPIRATION_MS,
+      };
+      
+      // Update cache
+      const updatedCache: GameDataCache = {
+        ...cache,
+        abilities: {
+          ...cache.abilities,
+          [normalizedName]: abilityData,
+        },
+      };
+      
+      setCache(updatedCache);
+      setError(null);
+      
+      console.log(`[useGameData] Cached ability: ${abilityName}`);
+      
+      return abilityData;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch ability data';
+      setError(errorMessage);
+      console.error(`Error fetching ability "${abilityName}":`, err);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [cache, getCachedAbility]);
+
+  /**
    * Clear entire cache
    */
   const clearCache = useCallback(async (): Promise<boolean> => {
@@ -286,6 +374,7 @@ export function useGameData(): UseGameDataReturn {
         version: 1,
         moves: {},
         items: {},
+        abilities: {},
         lastCleaned: Date.now(),
       };
       
@@ -310,6 +399,8 @@ export function useGameData(): UseGameDataReturn {
     getCachedMove,
     getItemData,
     getCachedItem,
+    getAbilityData,
+    getCachedAbility,
     clearCache,
   };
 }

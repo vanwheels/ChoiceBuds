@@ -1,130 +1,77 @@
 /**
- * StatsColumn.tsx - Pokemon Stats Display Component
- * Left column layout showing Level, Gender, Nature, EVs, and IVs
- * Nature modifiers highlighted: red for boosted stats, blue for hindered stats
+ * StatsColumn.tsx - Tiny EV Stats Component
+ * 3x2 CSS grid with inline +/- buttons for editing
  */
 
+import { useState } from 'react';
 import type { ImportedPokemonInfo } from '../types/pokemon';
 
 interface StatsColumnProps {
   pokemon: ImportedPokemonInfo;
+  isEditing?: boolean;
 }
 
-/**
- * Nature stat modifier mappings
- * Maps nature name to { boosted: stat, hindered: stat }
- */
-const NATURE_MODIFIERS: Record<string, { boosted: string; hindered: string }> = {
-  // Attack boosting
-  lonely: { boosted: 'attack', hindered: 'defense' },
-  brave: { boosted: 'attack', hindered: 'speed' },
-  adamant: { boosted: 'attack', hindered: 'specialAttack' },
-  naughty: { boosted: 'attack', hindered: 'specialDefense' },
-  // Defense boosting
-  bold: { boosted: 'defense', hindered: 'attack' },
-  relaxed: { boosted: 'defense', hindered: 'speed' },
-  impish: { boosted: 'defense', hindered: 'specialAttack' },
-  lax: { boosted: 'defense', hindered: 'specialDefense' },
-  // Speed boosting
-  timid: { boosted: 'speed', hindered: 'attack' },
-  hasty: { boosted: 'speed', hindered: 'defense' },
-  jolly: { boosted: 'speed', hindered: 'specialAttack' },
-  naive: { boosted: 'speed', hindered: 'specialDefense' },
-  // Special Attack boosting
-  modest: { boosted: 'specialAttack', hindered: 'attack' },
-  mild: { boosted: 'specialAttack', hindered: 'defense' },
-  quiet: { boosted: 'specialAttack', hindered: 'speed' },
-  rash: { boosted: 'specialAttack', hindered: 'specialDefense' },
-  // Special Defense boosting
-  calm: { boosted: 'specialDefense', hindered: 'attack' },
-  gentle: { boosted: 'specialDefense', hindered: 'defense' },
-  sassy: { boosted: 'specialDefense', hindered: 'speed' },
-  careful: { boosted: 'specialDefense', hindered: 'specialAttack' },
-};
-
-/**
- * Stat display labels
- */
-const STAT_LABELS: Record<string, string> = {
-  hp: 'HP',
-  attack: 'Atk',
-  defense: 'Def',
-  specialAttack: 'SpA',
-  specialDefense: 'SpD',
-  speed: 'Spe',
-};
-
-/**
- * Renders the left column with pokemon stats, nature, EVs, and IVs
- */
-export default function StatsColumn({ pokemon }: StatsColumnProps) {
-  const { showdownData } = pokemon;
-  const nature = showdownData.nature?.toLowerCase() || '';
-  const modifiers = NATURE_MODIFIERS[nature];
-
-  /**
-   * Get text color class for a stat based on nature modifiers
-   */
-  const getStatColor = (statKey: string): string => {
-    if (!modifiers) return 'text-gray-300';
-    if (modifiers.boosted === statKey) return 'text-red-400';
-    if (modifiers.hindered === statKey) return 'text-blue-400';
-    return 'text-gray-300';
+export default function StatsColumn({ pokemon, isEditing = false }: StatsColumnProps) {
+  const evs = pokemon.showdownData.evs;
+  const [activeStat, setActiveStat] = useState<string | null>(null);
+  const [localEVs, setLocalEVs] = useState(evs);
+  
+  const totalEVs = Object.values(localEVs).reduce((sum, val) => sum + val, 0);
+  
+  const handleIncrement = (key: keyof typeof localEVs) => {
+    if (localEVs[key] >= 32 || totalEVs >= 66) return;
+    setLocalEVs(prev => ({ ...prev, [key]: prev[key] + 1 }));
+  };
+  
+  const handleDecrement = (key: keyof typeof localEVs) => {
+    if (localEVs[key] <= 0) return;
+    setLocalEVs(prev => ({ ...prev, [key]: prev[key] - 1 }));
   };
 
+  const stats = [
+    { label: 'HP', key: 'hp' as keyof typeof localEVs },
+    { label: 'Atk', key: 'attack' as keyof typeof localEVs },
+    { label: 'Def', key: 'defense' as keyof typeof localEVs },
+    { label: 'SpA', key: 'specialAttack' as keyof typeof localEVs },
+    { label: 'SpD', key: 'specialDefense' as keyof typeof localEVs },
+    { label: 'Spe', key: 'speed' as keyof typeof localEVs }
+  ];
+
   return (
-    <div className="space-y-4">
-      {/* Level and Gender */}
-      <div className="flex items-center gap-4">
-        <div>
-          <p className="text-xs text-gray-400 uppercase tracking-wide">Level</p>
-          <p className="text-lg font-bold text-gray-100">{showdownData.level}</p>
-        </div>
-        {showdownData.gender && (
-          <div>
-            <p className="text-xs text-gray-400 uppercase tracking-wide">Gender</p>
-            <p className="text-lg font-bold text-gray-100">
-              {showdownData.gender === 'M' ? '♂' : '♀'}
-            </p>
-          </div>
-        )}
-        {showdownData.shiny && (
-          <div className="px-2 py-1 bg-yellow-600 text-white rounded text-xs font-bold">
-            ✨ SHINY
-          </div>
+    <div className="bg-gray-800 rounded px-2 py-1.5 border border-gray-600">
+      <div className="flex justify-between items-center mb-1">
+        <p className="text-xs text-gray-400 uppercase tracking-wide">EVs</p>
+        {isEditing && (
+          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{
+            backgroundColor: totalEVs === 66 ? '#10b981' : '#374151',
+            color: totalEVs === 66 ? '#fff' : '#9ca3af'
+          }}>{totalEVs}/66</span>
         )}
       </div>
-
-      {/* Nature */}
-      {showdownData.nature && (
-        <div>
-          <p className="text-xs text-gray-400 uppercase tracking-wide">Nature</p>
-          <p className="text-sm text-gray-100 font-medium">{showdownData.nature}</p>
-          {modifiers && (
-            <p className="text-xs text-gray-500 mt-1">
-              <span className="text-red-400">+{STAT_LABELS[modifiers.boosted]}</span>
-              {' / '}
-              <span className="text-blue-400">-{STAT_LABELS[modifiers.hindered]}</span>
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* EVs Spread */}
-      <div>
-        <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">EVs</p>
-        <div className="grid grid-cols-2 gap-2">
-          {Object.entries(showdownData.evs).map(([stat, value]) => (
-            <div key={stat} className="flex justify-between text-sm">
-              <span className={getStatColor(stat)}>
-                {STAT_LABELS[stat as keyof typeof STAT_LABELS]}:
-              </span>
-              <span className="text-gray-100 font-mono">{value}</span>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginTop: '0.5rem' }}>
+        {stats.map(stat => {
+          const val = isEditing ? localEVs[stat.key] : evs[stat.key];
+          const isActive = activeStat === stat.label;
+          return (
+            <div key={stat.label} className="flex flex-col items-center relative">
+              <span className="text-[10px] font-bold text-gray-400 uppercase">{stat.label}</span>
+              {isEditing ? (
+                <div className="relative">
+                  <span onClick={() => setActiveStat(isActive ? null : stat.label)} className="text-sm font-mono font-bold cursor-pointer px-1 rounded" style={{ color: val >= 32 ? '#ef4444' : '#f3f4f6', backgroundColor: isActive ? '#374151' : 'transparent' }}>{val}</span>
+                  {isActive && (
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 flex gap-1 mt-1 z-10">
+                      <button onClick={() => handleDecrement(stat.key)} disabled={val <= 0} className="w-6 h-6 text-xs font-bold rounded border" style={{ backgroundColor: val <= 0 ? '#1f2937' : '#374151', color: val <= 0 ? '#6b7280' : '#f3f4f6', borderColor: '#4b5563', cursor: val <= 0 ? 'not-allowed' : 'pointer' }}>−</button>
+                      <button onClick={() => handleIncrement(stat.key)} disabled={val >= 32 || totalEVs >= 66} className="w-6 h-6 text-xs font-bold rounded border" style={{ backgroundColor: (val >= 32 || totalEVs >= 66) ? '#1f2937' : '#374151', color: (val >= 32 || totalEVs >= 66) ? '#6b7280' : '#f3f4f6', borderColor: '#4b5563', cursor: (val >= 32 || totalEVs >= 66) ? 'not-allowed' : 'pointer' }}>+</button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <span className="text-sm font-mono font-bold text-gray-100">{val}</span>
+              )}
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
-
     </div>
   );
 }
