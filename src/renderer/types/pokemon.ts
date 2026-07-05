@@ -35,7 +35,7 @@ export interface EVSpread {
 export interface ShowdownPokemon {
   nickname?: string;
   species: string;
-  gender?: 'M' | 'F' | '';
+  gender?: 'M' | 'F' | 'N' | ''; // Male, Female, Genderless/Null, or empty
   item?: string;
   ability?: string;
   level: number;

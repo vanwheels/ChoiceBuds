@@ -4,6 +4,7 @@
  */
 
 import type { ShowdownPokemon, ParseResult, EVSpread } from '../types/pokemon';
+import { getFallbackGender } from '../config/pokemonRules';
 
 /**
  * Default EV spread (all zeros)
@@ -109,12 +110,14 @@ export function parsePokemonBlock(block: string): ShowdownPokemon {
  *   - "Pikachu (M) @ Light Ball"
  *   - "Sparky (Pikachu) (F) @ Light Ball"
  *   - "Charizard"
+ *   - "Basculegion-F @ Choice Scarf"
  * 
  * @param line - First line of the Pokémon block
  * @param pokemon - Pokemon object to populate
  */
 function parseFirstLine(line: string, pokemon: ShowdownPokemon): void {
   let remaining = line;
+  let explicitGender = false;
 
   // Extract item (@ symbol)
   const itemMatch = remaining.match(/@\s*(.+)$/);
@@ -123,10 +126,11 @@ function parseFirstLine(line: string, pokemon: ShowdownPokemon): void {
     remaining = remaining.substring(0, itemMatch.index).trim();
   }
 
-  // Extract gender
+  // Extract explicit gender from (M) or (F) notation
   const genderMatch = remaining.match(/\(([MF])\)\s*$/);
   if (genderMatch) {
     pokemon.gender = genderMatch[1] as 'M' | 'F';
+    explicitGender = true;
     remaining = remaining.substring(0, genderMatch.index).trim();
   }
 
@@ -137,6 +141,14 @@ function parseFirstLine(line: string, pokemon: ShowdownPokemon): void {
     pokemon.species = nicknameMatch[2].trim();
   } else {
     pokemon.species = remaining.trim();
+  }
+
+  // Apply gender fallback logic if no explicit gender was provided
+  if (!explicitGender && pokemon.species) {
+    const fallbackGender = getFallbackGender(pokemon.species);
+    if (fallbackGender) {
+      pokemon.gender = fallbackGender;
+    }
   }
 }
 

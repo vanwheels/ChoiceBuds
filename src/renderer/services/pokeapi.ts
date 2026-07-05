@@ -55,12 +55,13 @@ interface PokeAPISpeciesResponse {
 /**
  * Fetches Pokémon data from PokeAPI
  * @param speciesName - Pokémon species name (will be normalized to lowercase)
+ * @param gender - Optional gender for species with gender-divergent forms
  * @returns Promise resolving to PokeAPICacheEntry
  * @throws Error if fetch fails or species not found
  */
-export async function fetchPokemonData(speciesName: string): Promise<PokeAPICacheEntry> {
+export async function fetchPokemonData(speciesName: string, gender?: 'M' | 'F' | 'N' | ''): Promise<PokeAPICacheEntry> {
   // Normalize species name to lowercase and remove special characters
-  const normalizedName = normalizeSpeciesName(speciesName);
+  const normalizedName = normalizeSpeciesForAPI(speciesName, gender);
   
   // Construct API URL
   const url = `${POKEAPI_BASE_URL}/pokemon/${normalizedName}`;
@@ -88,16 +89,62 @@ export async function fetchPokemonData(speciesName: string): Promise<PokeAPICach
 }
 
 /**
- * Normalizes species name for API requests
+ * Normalizes species name for API requests with gender-divergent form handling
  * Converts to lowercase, handles special forms and characters
+ * Maps Showdown names to correct PokeAPI slugs for gender-divergent species
  * @param name - Raw species name
- * @returns Normalized lowercase species name
+ * @param gender - Optional gender for species with gender-divergent forms
+ * @returns Normalized lowercase species name for PokeAPI endpoint
  */
-function normalizeSpeciesName(name: string): string {
-  let normalized = name.toLowerCase().trim();
+function normalizeSpeciesForAPI(name: string, gender?: 'M' | 'F' | 'N' | ''): string {
+  const nameLower = name.toLowerCase().trim();
+  
+  // Handle Basculegion Form/Gender Divergence
+  if (nameLower === 'basculegion') {
+    return gender === 'F' ? 'basculegion-female' : 'basculegion-male';
+  }
+  if (nameLower === 'basculegion-f') {
+    return 'basculegion-female';
+  }
+  if (nameLower === 'basculegion-m') {
+    return 'basculegion-male';
+  }
+  
+  // Handle Indeedee Gender Divergence
+  if (nameLower === 'indeedee') {
+    return gender === 'F' ? 'indeedee-female' : 'indeedee-male';
+  }
+  if (nameLower === 'indeedee-f') {
+    return 'indeedee-female';
+  }
+  if (nameLower === 'indeedee-m') {
+    return 'indeedee-male';
+  }
+
+  // Handle Oinkologne Gender Divergence
+  if (nameLower === 'oinkologne') {
+    return gender === 'F' ? 'oinkologne-female' : 'oinkologne-male';
+  }
+  if (nameLower === 'oinkologne-f') {
+    return 'oinkologne-female';
+  }
+  if (nameLower === 'oinkologne-m') {
+    return 'oinkologne-male';
+  }
+
+  // Handle Meowstic Gender Divergence
+  if (nameLower === 'meowstic') {
+    return gender === 'F' ? 'meowstic-female' : 'meowstic-male';
+  }
+  if (nameLower === 'meowstic-f') {
+    return 'meowstic-female';
+  }
+  if (nameLower === 'meowstic-m') {
+    return 'meowstic-male';
+  }
   
   // Handle common special cases
-  normalized = normalized.replace(/['']/g, ''); // Remove apostrophes
+  let normalized = nameLower.replace(/['']/g, ''); // Remove apostrophes
   normalized = normalized.replace(/\s+/g, '-'); // Spaces to hyphens
   normalized = normalized.replace(/[.]/g, ''); // Remove periods
   
@@ -243,6 +290,7 @@ export async function fetchPokemonBatch(
 /**
  * Enriches parsed Showdown Pokémon data with PokeAPI metadata
  * Checks cache first, fetches from API if needed, then caches result
+ * Handles gender-divergent species by passing gender to API normalization
  * @param showdownPokemon - Parsed Showdown format Pokémon
  * @param getCachedEntry - Cache getter function
  * @param setCacheEntry - Cache setter function
@@ -254,16 +302,20 @@ export async function enrichPokemonWithAPI(
   setCacheEntry: (species: string, entry: PokeAPICacheEntry) => Promise<boolean>
 ): Promise<ImportedPokemonInfo> {
   const species = showdownPokemon.species;
+  const gender = showdownPokemon.gender;
   
-  // Step 1: Check cache first
-  let apiData = getCachedEntry(species);
+  // Generate cache key using normalized API name to ensure consistency
+  const cacheKey = normalizeSpeciesForAPI(species, gender);
+  
+  // Step 1: Check cache first using the normalized cache key
+  let apiData = getCachedEntry(cacheKey);
   
   // Step 2: If not cached or expired, fetch from API
   if (!apiData) {
-    apiData = await fetchPokemonData(species);
+    apiData = await fetchPokemonData(species, gender);
     
-    // Step 3: Cache the fetched data
-    await setCacheEntry(species, apiData);
+    // Step 3: Cache the fetched data using the normalized cache key
+    await setCacheEntry(cacheKey, apiData);
   }
   
   // Step 4: Combine Showdown data with API data

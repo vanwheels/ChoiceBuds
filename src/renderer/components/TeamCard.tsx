@@ -26,9 +26,9 @@ export default function TeamCard({
   onEdit,
 }: TeamCardProps) {
   return (
-    <div className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
+    <div className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden w-full">
       {/* Team Header - Horizontal Card Slot Container */}
-      <div className="flex items-center gap-4 p-4 hover:bg-gray-750 transition-colors">
+      <div className="flex flex-row justify-between items-center w-full mb-4 pb-2 border-b border-zinc-800/40 p-4 hover:bg-gray-750 transition-colors">
         {/* Left Side: Team Name and Regulation Tag */}
         <div className="flex-1 min-w-0">
           <h3 className="text-lg font-semibold text-gray-100 truncate">
@@ -109,10 +109,10 @@ export default function TeamCard({
         </div>
       </div>
 
-      {/* Expanded Pokemon Details - Vertical Column List */}
+      {/* Expanded Pokemon Details - Horizontal Grid Layout */}
       {isExpanded && (
         <div className="border-t border-gray-700 bg-gray-850">
-          <div className="p-4 space-y-4">
+          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 w-full">
             {team.pokemon.map((pokemon, index) => (
               <PokemonCard key={index} pokemon={pokemon} />
             ))}

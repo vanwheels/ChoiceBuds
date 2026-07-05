@@ -81,7 +81,7 @@ export default function TeamsPage({
       </header>
 
       {/* Teams Content Area */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="w-full flex-1 overflow-y-auto p-6">
         {teamsState.isLoading ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-gray-400">Loading teams...</div>
@@ -96,7 +96,7 @@ export default function TeamsPage({
             <p className="text-sm mt-2">Click "Add New Team" to import your first team</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="flex flex-col gap-4 w-full">
             {filteredTeams.map(team => (
               <TeamCard
                 key={team.id}
