@@ -142,3 +142,44 @@ export interface ParseResult {
   errors: string[];
   rawBlocks: string[]; // Original text blocks for debugging
 }
+
+/**
+ * Move metadata from PokeAPI
+ * Stores comprehensive move data for dynamic card rendering
+ */
+export interface MoveData {
+  name: string; // Lowercase normalized move name
+  type: string; // Move type (e.g., "fighting", "fire")
+  category: 'physical' | 'special' | 'status'; // Damage class
+  power: number | null; // Base power (null for status moves)
+  pp: number; // Power points
+  accuracy: number | null; // Accuracy percentage (null for moves that never miss)
+  description: string; // Effect description
+  cachedAt: number; // Unix timestamp
+  expiresAt: number; // Unix timestamp
+}
+
+/**
+ * Item metadata from PokeAPI
+ * Stores comprehensive item data for tooltips and descriptions
+ */
+export interface ItemData {
+  name: string; // Lowercase normalized item name
+  category: string; // Item category (e.g., "held-items", "choice")
+  effect: string; // Short effect description
+  description: string; // Full flavor text description
+  spriteUrl: string; // Official sprite URL
+  cachedAt: number; // Unix timestamp
+  expiresAt: number; // Unix timestamp
+}
+
+/**
+ * Game data cache for moves and items
+ * Reduces redundant API calls by caching move/item metadata
+ */
+export interface GameDataCache {
+  version: number;
+  moves: Record<string, MoveData>; // Key: lowercase move name
+  items: Record<string, ItemData>; // Key: lowercase item name
+  lastCleaned: number; // Unix timestamp
+}

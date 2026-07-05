@@ -4,8 +4,11 @@
  * Displays comprehensive pokemon details with type-themed styling
  */
 
+import { useState, useEffect } from 'react';
 import type { ImportedPokemonInfo } from '../types/pokemon';
 import TypeBadge from './TypeBadge';
+import { getTypeTheme } from '../config/pokemonTheme';
+import { useGameData } from '../hooks/useGameData';
 
 interface PokemonCardProps {
   pokemon: ImportedPokemonInfo;
@@ -91,6 +94,69 @@ export default function PokemonCard({ pokemon }: PokemonCardProps) {
   const { showdownData, types, spriteUrl, pokedexNumber } = pokemon;
   const nature = showdownData.nature?.toLowerCase() || '';
   const modifiers = NATURE_MODIFIERS[nature];
+  
+  // Initialize game data hook for dynamic move/item fetching
+  const { getMoveData, getCachedMove, getItemData, getCachedItem } = useGameData();
+  
+  // State to track move types for dynamic coloring
+  const [moveTypes, setMoveTypes] = useState<Record<string, string>>({});
+  const [itemMetadata, setItemMetadata] = useState<string>('');
+
+  /**
+   * Fetch move data on mount and when moves change
+   */
+  useEffect(() => {
+    const fetchMoveTypes = async () => {
+      const types: Record<string, string> = {};
+      
+      for (const move of showdownData.moves) {
+        // Check cache first (synchronous)
+        const cachedMove = getCachedMove(move);
+        if (cachedMove) {
+          types[move] = cachedMove.type;
+        } else {
+          // Fetch from API if not cached
+          const moveData = await getMoveData(move);
+          if (moveData) {
+            types[move] = moveData.type;
+          } else {
+            // Fallback to 'normal' if fetch fails
+            types[move] = 'normal';
+          }
+        }
+      }
+      
+      setMoveTypes(types);
+    };
+    
+    fetchMoveTypes();
+  }, [showdownData.moves, getMoveData, getCachedMove]);
+
+  /**
+   * Fetch item metadata on mount and when item changes
+   */
+  useEffect(() => {
+    const fetchItemMetadata = async () => {
+      if (!showdownData.item) {
+        setItemMetadata('');
+        return;
+      }
+      
+      // Check cache first
+      const cachedItem = getCachedItem(showdownData.item);
+      if (cachedItem) {
+        setItemMetadata(cachedItem.effect);
+      } else {
+        // Fetch from API if not cached
+        const itemData = await getItemData(showdownData.item);
+        if (itemData) {
+          setItemMetadata(itemData.effect);
+        }
+      }
+    };
+    
+    fetchItemMetadata();
+  }, [showdownData.item, getItemData, getCachedItem]);
 
   /**
    * Get text color class for a stat based on nature modifiers
@@ -135,7 +201,7 @@ export default function PokemonCard({ pokemon }: PokemonCardProps) {
 
       {/* Pokemon Sprite */}
       <div className="flex justify-center">
-        <div className="w-24 h-24 bg-gray-800 rounded-lg border border-gray-600 flex items-center justify-center overflow-hidden">
+        <div className="w-full max-w-[128px] mx-auto h-24 bg-gray-800 rounded-lg border border-gray-600 flex items-center justify-center overflow-hidden">
           {spriteUrl ? (
             <img
               src={spriteUrl}
@@ -148,24 +214,29 @@ export default function PokemonCard({ pokemon }: PokemonCardProps) {
         </div>
       </div>
 
-      {/* Dual Type Badges */}
-      <div className="flex gap-1 justify-center mx-auto flex-wrap">
-        {types.map((type, index) => (
-          <TypeBadge key={index} type={type} />
-        ))}
+      {/* Dual Type Badges - Full Width Centered Container */}
+      <div className="w-full flex justify-center items-center my-1.5 px-2">
+        <div className="flex flex-row items-center justify-center gap-1.5 w-full">
+          {types.map((type, index) => (
+            <TypeBadge key={index} type={type} />
+          ))}
+        </div>
       </div>
 
-      {/* Held Item - Compact Centered Container */}
+      {/* Held Item - Compact Centered Container with Dynamic Metadata */}
       {showdownData.item && (
         <div className="w-full flex justify-center items-center my-2">
-          <div className="mx-auto w-full max-w-[124px] bg-zinc-800/80 border border-zinc-700/30 rounded-lg p-2 flex flex-col items-center justify-center text-center mt-1">
+          <div 
+            className="w-full max-w-[128px] mx-auto bg-zinc-800/80 border border-zinc-700/30 rounded-lg p-2 flex flex-col items-center justify-center text-center mt-1 cursor-help"
+            title={itemMetadata || showdownData.item}
+          >
             <span className="text-[10px] text-gray-400 font-semibold tracking-wide uppercase truncate max-w-full mb-1">
               {showdownData.item}
             </span>
             <img
               src={getItemSpriteUrl(showdownData.item)}
               alt={showdownData.item}
-              title={showdownData.item}
+              title={itemMetadata || showdownData.item}
               onError={handleItemSpriteError}
               className="w-8 h-8 md:w-9 md:h-9 object-contain drop-shadow-md transition-transform hover:scale-110"
             />
@@ -175,9 +246,9 @@ export default function PokemonCard({ pokemon }: PokemonCardProps) {
 
       {/* Ability */}
       {showdownData.ability && (
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center px-2">
           <p className="text-xs text-gray-400 uppercase tracking-wide text-center mb-1">Ability</p>
-          <div className="w-full bg-zinc-800/80 hover:bg-zinc-700/50 rounded-md py-1 px-2 text-center text-xs text-zinc-200 border border-zinc-700/30 font-medium tracking-wide my-1 transition-colors">
+          <div className="w-full h-7 flex items-center justify-center bg-zinc-800/80 hover:bg-zinc-700/50 rounded-md px-2 text-center text-xs text-zinc-200 border border-zinc-700/30 font-medium tracking-wide my-1 transition-colors">
             {showdownData.ability}
           </div>
         </div>
@@ -191,14 +262,24 @@ export default function PokemonCard({ pokemon }: PokemonCardProps) {
         </div>
       )}
 
-      {/* 4 Move Banners */}
-      <div className="flex flex-col items-center">
+      {/* 4 Move Banners - Dynamically Colored by Type from PokeAPI */}
+      <div className="flex flex-col items-center px-2">
         <p className="text-xs text-gray-400 uppercase tracking-wide text-center mb-1">Moves</p>
-        {showdownData.moves.slice(0, 4).map((move, index) => (
-          <div key={index} className="w-full bg-zinc-800/80 hover:bg-zinc-700/50 rounded-md py-1 px-2 text-center text-xs text-zinc-200 border border-zinc-700/30 font-medium tracking-wide my-1 transition-colors">
-            {move}
-          </div>
-        ))}
+        {showdownData.moves.slice(0, 4).map((move, index) => {
+          // Look up move type from dynamically fetched cache, default to 'normal' if not yet loaded
+          const moveType = moveTypes[move] || 'normal';
+          const theme = getTypeTheme(moveType);
+          
+          return (
+            <div 
+              key={index} 
+              className={`w-full h-7 flex items-center justify-center rounded-md px-2 text-center text-xs font-medium tracking-wide my-1 transition-colors hover:opacity-90 ${theme.bg} ${theme.text}`}
+              title={moveTypes[move] ? `${move} (${moveType})` : `${move} (loading...)`}
+            >
+              {move}
+            </div>
+          );
+        })}
       </div>
 
       {/* Gender and Shiny Indicators - Horizontal Row */}
