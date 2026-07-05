@@ -6,7 +6,6 @@
 
 import type { ImportedPokemonInfo } from '../types/pokemon';
 import TypeBadge from './TypeBadge';
-import MoveBanner from './MoveBanner';
 
 interface PokemonCardProps {
   pokemon: ImportedPokemonInfo;
@@ -158,25 +157,29 @@ export default function PokemonCard({ pokemon }: PokemonCardProps) {
 
       {/* Held Item - Compact Centered Container */}
       {showdownData.item && (
-        <div className="mx-auto w-full max-w-[120px] bg-gray-800 border border-gray-600 rounded-lg p-2 flex flex-col items-center justify-center text-center">
-          <span className="text-[10px] text-gray-400 font-semibold tracking-wide uppercase truncate max-w-full mb-1">
-            {showdownData.item}
-          </span>
-          <img
-            src={getItemSpriteUrl(showdownData.item)}
-            alt={showdownData.item}
-            title={showdownData.item}
-            onError={handleItemSpriteError}
-            className="w-6 h-6 object-contain"
-          />
+        <div className="w-full flex justify-center items-center my-2">
+          <div className="mx-auto w-full max-w-[124px] bg-zinc-800/80 border border-zinc-700/30 rounded-lg p-2 flex flex-col items-center justify-center text-center mt-1">
+            <span className="text-[10px] text-gray-400 font-semibold tracking-wide uppercase truncate max-w-full mb-1">
+              {showdownData.item}
+            </span>
+            <img
+              src={getItemSpriteUrl(showdownData.item)}
+              alt={showdownData.item}
+              title={showdownData.item}
+              onError={handleItemSpriteError}
+              className="w-8 h-8 md:w-9 md:h-9 object-contain drop-shadow-md transition-transform hover:scale-110"
+            />
+          </div>
         </div>
       )}
 
       {/* Ability */}
       {showdownData.ability && (
-        <div className="bg-gray-800 rounded px-2 py-1.5 border border-gray-600">
-          <p className="text-xs text-gray-400 uppercase tracking-wide">Ability</p>
-          <p className="text-xs text-gray-100 font-medium truncate">{showdownData.ability}</p>
+        <div className="flex flex-col items-center">
+          <p className="text-xs text-gray-400 uppercase tracking-wide text-center mb-1">Ability</p>
+          <div className="w-full bg-zinc-800/80 hover:bg-zinc-700/50 rounded-md py-1 px-2 text-center text-xs text-zinc-200 border border-zinc-700/30 font-medium tracking-wide my-1 transition-colors">
+            {showdownData.ability}
+          </div>
         </div>
       )}
 
@@ -189,17 +192,19 @@ export default function PokemonCard({ pokemon }: PokemonCardProps) {
       )}
 
       {/* 4 Move Banners */}
-      <div className="space-y-1">
-        <p className="text-xs text-gray-400 uppercase tracking-wide">Moves</p>
+      <div className="flex flex-col items-center">
+        <p className="text-xs text-gray-400 uppercase tracking-wide text-center mb-1">Moves</p>
         {showdownData.moves.slice(0, 4).map((move, index) => (
-          <MoveBanner key={index} moveName={move} />
+          <div key={index} className="w-full bg-zinc-800/80 hover:bg-zinc-700/50 rounded-md py-1 px-2 text-center text-xs text-zinc-200 border border-zinc-700/30 font-medium tracking-wide my-1 transition-colors">
+            {move}
+          </div>
         ))}
       </div>
 
-      {/* Gender Indicator - Replaces Level Display */}
-      <div className="bg-gray-800 rounded px-2 py-1.5 border border-gray-600">
-        <p className="text-xs text-gray-400 uppercase tracking-wide text-center">Gender</p>
-        <div className="flex justify-center items-center">
+      {/* Gender and Shiny Indicators - Horizontal Row */}
+      <div className="flex flex-row items-center justify-center gap-3 py-2 border-t border-b border-zinc-800/60 my-2 w-full">
+        {/* Gender Indicator */}
+        <div className="flex items-center">
           {showdownData.gender === 'M' && (
             <span className="text-2xl font-bold text-blue-400">♂</span>
           )}
@@ -210,14 +215,14 @@ export default function PokemonCard({ pokemon }: PokemonCardProps) {
             <span className="text-2xl font-bold text-zinc-400">⌀</span>
           )}
         </div>
-      </div>
 
-      {/* Shiny Badge */}
-      {showdownData.shiny && (
-        <div className="px-2 py-1 bg-yellow-600 text-white rounded text-xs font-bold text-center">
-          ✨ SHINY
+        {/* Shiny Indicator */}
+        <div className="flex items-center">
+          <span className={`text-2xl ${showdownData.shiny ? 'text-amber-400 opacity-100 scale-110 drop-shadow-sm' : 'text-zinc-600 opacity-40'}`}>
+            ★
+          </span>
         </div>
-      )}
+      </div>
 
       {/* Nature */}
       {showdownData.nature && (
