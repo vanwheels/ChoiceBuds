@@ -80,32 +80,34 @@ export default function TeamCard({
               Edit
             </button>
           )}
-          <button
-            onClick={onDelete}
-            className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-medium transition-colors"
-            title="Delete team"
-          >
-            Delete
-          </button>
-          <button
-            onClick={onToggleExpand}
-            className="p-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded transition-colors"
-            title={isExpanded ? 'Collapse' : 'Expand'}
-          >
-            <svg
-              className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={onDelete}
+              className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-red-400 hover:bg-zinc-850 text-base font-medium transition-all cursor-pointer"
+              title="Delete team"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </button>
+              ×
+            </button>
+            <button
+              onClick={onToggleExpand}
+              className="p-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded transition-colors"
+              title={isExpanded ? 'Collapse' : 'Expand'}
+            >
+              <svg
+                className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 

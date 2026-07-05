@@ -101,7 +101,7 @@ export function useTeams(): UseTeamsReturn {
    * Add a newly parsed team block to the database
    */
   const addTeam = useCallback(async (team: Team): Promise<boolean> => {
-    const updatedTeams = [...teams, team];
+    const updatedTeams = [team, ...teams];
     const success = await persistTeamsToDisk(updatedTeams);
     
     if (success) {
