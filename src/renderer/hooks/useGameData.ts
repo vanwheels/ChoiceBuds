@@ -79,14 +79,14 @@ export function useGameData(): UseGameDataReturn {
 
   /**
    * Normalize move/item name for API requests and cache keys
+   * Enhanced sanitizer for items like 'Fairy Feather' to map cleanly to 'fairy-feather'
    */
   const normalizeNameForAPI = (name: string): string => {
     return name
       .toLowerCase()
       .trim()
-      .replace(/['']/g, '') // Remove apostrophes
-      .replace(/\s+/g, '-') // Spaces to hyphens
-      .replace(/[.]/g, ''); // Remove periods
+      .replace(/[^a-z0-9\s\-]/g, '') // Remove all non-alphanumeric except spaces and hyphens
+      .replace(/[\s_]+/g, '-'); // Spaces and underscores to hyphens
   };
 
   /**
@@ -228,11 +228,25 @@ export function useGameData(): UseGameDataReturn {
       
       // Extract item data
       const now = Date.now();
+      
+      // Bug Fix 1: Hardcoded fallback for Fairy Feather description
+      let itemEffect = extractItemEffect(data.effect_entries);
+      let itemDescription = extractItemDescription(data.flavor_text_entries);
+      
+      if (normalizedName === 'fairy-feather') {
+        if (!itemEffect || itemEffect === 'No effect available') {
+          itemEffect = "An item to be held by a Pokémon. It boosts the power of Fairy-type moves.";
+        }
+        if (!itemDescription || itemDescription === 'No description available') {
+          itemDescription = "An item to be held by a Pokémon. It boosts the power of Fairy-type moves.";
+        }
+      }
+      
       const itemData: ItemData = {
         name: normalizedName,
         category: data.category?.name?.toLowerCase() || 'held-items',
-        effect: extractItemEffect(data.effect_entries),
-        description: extractItemDescription(data.flavor_text_entries),
+        effect: itemEffect,
+        description: itemDescription,
         spriteUrl: data.sprites?.default || '',
         cachedAt: now,
         expiresAt: now + CACHE_EXPIRATION_MS,

@@ -16,6 +16,36 @@ interface TeamCardProps {
 }
 
 /**
+ * Global Sprite Resolver Utility - 2D Pixel Art Asset System
+ * Dynamically calculates the correct 2D pixel path across both file layers
+ * Supports real-time gender modifications and shiny hot-swaps without 404 errors
+ */
+function getPixelSpriteUrl(
+  pokemonId: number,
+  name: string,
+  gender: string,
+  isShiny: boolean
+): string {
+  const nameLower = name.toLowerCase().trim();
+  const shinyPath = isShiny ? 'shiny/' : '';
+
+  // Rule A: True Form-Split Species group checks (Basculegion, Indeedee, Oinkologne)
+  // For these, their gender is locked and their IDs/Names already map to unique endpoints.
+  if (nameLower.includes('basculegion') || nameLower.includes('indeedee')) {
+    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${shinyPath}${pokemonId}.png`;
+  }
+
+  // Rule B: Standard species with native cosmetic gender-dimorphic /female/ asset folder support
+  // (Add staples with distinct visual pixel profiles like: pikachu, eevee, venusaur, raichu, torchic, wobuffet)
+  if (gender === 'F' && ['pikachu', 'eevee', 'venusaur', 'raichu', 'torchic', 'wobbuffet'].includes(nameLower)) {
+    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${shinyPath}female/${pokemonId}.png`;
+  }
+
+  // Rule C: Standard fallback baseline
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${shinyPath}${pokemonId}.png`;
+}
+
+/**
  * Renders a collapsible team card with header and expandable pokemon details
  */
 export default function TeamCard({
@@ -46,27 +76,37 @@ export default function TeamCard({
           </div>
         </div>
 
-        {/* Middle: 6 Small Horizontal Pokemon Thumbnail Sprites */}
+        {/* Middle: 6 Small Horizontal Pokemon Thumbnail Sprites - 2D Pixel Art System */}
         <div className="flex gap-2">
-          {team.pokemon.slice(0, 6).map((pokemon, index) => (
-            <div
-              key={index}
-              className="w-12 h-12 bg-gray-700 rounded border border-gray-600 flex items-center justify-center overflow-hidden flex-shrink-0"
-              title={pokemon.showdownData.nickname || pokemon.showdownData.species}
-            >
-              {pokemon.spriteUrl ? (
-                <img
-                  src={pokemon.spriteUrl}
-                  alt={pokemon.showdownData.species}
-                  className="w-full h-full object-contain"
-                />
-              ) : (
-                <span className="text-xs text-gray-400">
-                  #{pokemon.pokedexNumber}
-                </span>
-              )}
-            </div>
-          ))}
+          {team.pokemon.slice(0, 6).map((pokemon, index) => {
+            // Generate pixel art sprite URL with real-time shiny/gender state
+            const spriteUrl = getPixelSpriteUrl(
+              pokemon.pokedexNumber,
+              pokemon.showdownData.species,
+              pokemon.showdownData.gender || 'M',
+              pokemon.showdownData.shiny || false
+            );
+            
+            return (
+              <div
+                key={index}
+                className="w-12 h-12 bg-gray-700 rounded border border-gray-600 flex items-center justify-center overflow-hidden flex-shrink-0"
+                title={pokemon.showdownData.nickname || pokemon.showdownData.species}
+              >
+                {spriteUrl ? (
+                  <img
+                    src={spriteUrl}
+                    alt={pokemon.showdownData.species}
+                    className="w-8 h-8 object-contain [image-rendering:pixelated]"
+                  />
+                ) : (
+                  <span className="text-xs text-gray-400">
+                    #{pokemon.pokedexNumber}
+                  </span>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* Right Side: Action Buttons */}
