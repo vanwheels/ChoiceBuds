@@ -5,18 +5,21 @@
  */
 
 import { contextBridge, ipcRenderer } from 'electron';
-import type { TeamsDatabase, PokeAPICache } from '../renderer/types/pokemon';
 
 /**
  * Exposed API surface for renderer process
  * All file operations route through main process for security
+ * 
+ * Note: Using 'any' for data types to avoid importing renderer types,
+ * which would cause duplicate bundling. The renderer will cast these
+ * to the proper types defined in src/renderer/types/pokemon.ts
  */
 const electronAPI = {
   /**
    * Reads the teams database from userData directory
    * @returns Promise resolving to TeamsDatabase or null if file doesn't exist
    */
-  readTeamsDatabase: async (): Promise<TeamsDatabase | null> => {
+  readTeamsDatabase: async (): Promise<any> => {
     return ipcRenderer.invoke('file:read-teams-database');
   },
 
@@ -25,7 +28,7 @@ const electronAPI = {
    * @param data - TeamsDatabase object to persist
    * @returns Promise resolving to success boolean
    */
-  writeTeamsDatabase: async (data: TeamsDatabase): Promise<boolean> => {
+  writeTeamsDatabase: async (data: any): Promise<boolean> => {
     return ipcRenderer.invoke('file:write-teams-database', data);
   },
 
@@ -33,7 +36,7 @@ const electronAPI = {
    * Reads the PokeAPI cache from userData directory
    * @returns Promise resolving to PokeAPICache or null if file doesn't exist
    */
-  readPokeAPICache: async (): Promise<PokeAPICache | null> => {
+  readPokeAPICache: async (): Promise<any> => {
     return ipcRenderer.invoke('file:read-pokeapi-cache');
   },
 
@@ -42,7 +45,7 @@ const electronAPI = {
    * @param data - PokeAPICache object to persist
    * @returns Promise resolving to success boolean
    */
-  writePokeAPICache: async (data: PokeAPICache): Promise<boolean> => {
+  writePokeAPICache: async (data: any): Promise<boolean> => {
     return ipcRenderer.invoke('file:write-pokeapi-cache', data);
   },
 

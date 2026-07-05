@@ -10,7 +10,7 @@ import TypeBadge from './TypeBadge';
 import { getTypeTheme } from '../config/pokemonTheme';
 import { useGameData } from '../hooks/useGameData';
 import { useTeams } from '../hooks/useTeams';
-import { isGenderless, isFemaleLocked, GENDERED_FORM_VARIANTS } from '../config/pokemonRules';
+import { isGenderless, isFemaleLocked } from '../config/pokemonRules';
 
 interface PokemonCardProps {
   pokemon: ImportedPokemonInfo;
@@ -249,15 +249,8 @@ export default function PokemonCard({ pokemon, teamId, pokemonIndex }: PokemonCa
       return; // Block rotation for female-only species
     }
     
-    // Check if species is in male-only gendered forms (e.g., default Basculegion without -F)
-    const speciesLower = species.toLowerCase();
-    const isMaleLocked = 
-      speciesLower === 'basculegion' ||
-      speciesLower === 'indeedee' ||
-      speciesLower === 'meowstic' ||
-      speciesLower === 'oinkologne';
-    
     // For gendered form variants, check if we need to update the species name
+    const speciesLower = species.toLowerCase();
     const currentGender = localGender || 'M';
     const newGender = currentGender === 'M' ? 'F' : 'M';
     

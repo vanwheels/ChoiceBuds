@@ -81,7 +81,7 @@ export default function TeamsPage({
       </header>
 
       {/* Teams Content Area */}
-      <div className="w-full flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto px-8 py-6">
         {teamsState.isLoading ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-gray-400">Loading teams...</div>
@@ -96,14 +96,15 @@ export default function TeamsPage({
             <p className="text-sm mt-2">Click "Add New Team" to import your first team</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-4 w-full">
+          <div 
+            className="flex flex-col gap-4 w-full"
+            style={{ paddingLeft: '4rem', paddingRight: '4rem' }}
+          >
             {filteredTeams.map(team => (
               <TeamCard
                 key={team.id}
                 team={team}
                 onDelete={() => teamsState.deleteTeam(team.id)}
-                isExpanded={teamsState.expandedCardIds.has(team.id)}
-                onToggleExpand={() => teamsState.toggleCardExpansion(team.id)}
               />
             ))}
           </div>

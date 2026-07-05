@@ -1,167 +1,82 @@
-/**
- * TeamCard.tsx - Individual Team Card Layout Renderer
- * Displays team header with name, regulation, pokemon thumbnails, and action buttons
- * Expands to show detailed PokemonCard list when toggled
- */
-
-import type { Team } from '../types/pokemon';
+import { useState } from 'react';
+import { Team } from '../types/pokemon';
 import PokemonCard from './PokemonCard';
 
 interface TeamCardProps {
   team: Team;
-  isExpanded: boolean;
-  onToggleExpand: () => void;
-  onDelete: () => void;
+  onDelete?: () => void;
   onEdit?: () => void;
 }
 
-/**
- * Global Sprite Resolver Utility - 2D Pixel Art Asset System
- * Dynamically calculates the correct 2D pixel path across both file layers
- * Supports real-time gender modifications and shiny hot-swaps without 404 errors
- */
-function getPixelSpriteUrl(
-  pokemonId: number,
-  name: string,
-  gender: string,
-  isShiny: boolean
-): string {
-  const nameLower = name.toLowerCase().trim();
-  const shinyPath = isShiny ? 'shiny/' : '';
+export default function TeamCard({ team, onDelete, onEdit }: TeamCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  // Rule A: True Form-Split Species group checks (Basculegion, Indeedee, Oinkologne)
-  // For these, their gender is locked and their IDs/Names already map to unique endpoints.
-  if (nameLower.includes('basculegion') || nameLower.includes('indeedee')) {
-    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${shinyPath}${pokemonId}.png`;
-  }
-
-  // Rule B: Standard species with native cosmetic gender-dimorphic /female/ asset folder support
-  // (Add staples with distinct visual pixel profiles like: pikachu, eevee, venusaur, raichu, torchic, wobuffet)
-  if (gender === 'F' && ['pikachu', 'eevee', 'venusaur', 'raichu', 'torchic', 'wobbuffet'].includes(nameLower)) {
-    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${shinyPath}female/${pokemonId}.png`;
-  }
-
-  // Rule C: Standard fallback baseline
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${shinyPath}${pokemonId}.png`;
-}
-
-/**
- * Renders a collapsible team card with header and expandable pokemon details
- */
-export default function TeamCard({
-  team,
-  isExpanded,
-  onToggleExpand,
-  onDelete,
-  onEdit,
-}: TeamCardProps) {
   return (
-    <div className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden w-full">
-      {/* Team Header - Horizontal Card Slot Container */}
-      <div className="flex flex-row justify-between items-center w-full mb-4 pb-2 border-b border-zinc-800/40 p-4 hover:bg-gray-750 transition-colors">
-        {/* Left Side: Team Name and Regulation Tag */}
-        <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-semibold text-gray-100 truncate">
-            {team.name}
-          </h3>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-xs px-2 py-1 bg-blue-600 text-white rounded font-medium">
-              {team.format}
-            </span>
-            {team.pokemon[0]?.showdownData.teraType && (
-              <span className="text-xs px-2 py-1 bg-purple-600 text-white rounded font-medium">
-                Reg: {team.pokemon[0].showdownData.teraType}
-              </span>
-            )}
+    <div className="w-auto mx-6 bg-zinc-900/40 border border-zinc-800/80 rounded-xl mb-4 overflow-hidden transition-all">
+      
+      {/* MINIMIZED VIEW CONTAINER ROW - Enhanced Header with Controls */}
+      <div className="w-full flex flex-row items-center h-16 px-6 bg-zinc-950/40 transition-colors">
+        {/* Horizontal Mini Sprites Row with clean end-to-end padding and internal spacing gaps */}
+        <div className="flex flex-row items-center gap-3 mr-6">
+          {team.pokemon && team.pokemon.map((p, idx) => (
+            <img
+              key={idx}
+              src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.showdownData.shiny ? 'shiny/' : ''}${p.pokedexNumber}.png`}
+              alt={p.showdownData.species}
+              className="w-8 h-8 object-contain [image-rendering:pixelated] shrink-0"
+            />
+          ))}
+        </div>
+
+        {/* Team Title */}
+        <h2 className="flex-1 text-left font-bold text-sm text-zinc-100 truncate tracking-wide">
+          {team.name.replace(/^(Reg\s*M-[AB]\s*)+/i, '').trim() || 'Untitled Team'}
+        </h2>
+
+        {/* Far-Right Controls Cluster */}
+        <div className="flex flex-row items-center gap-2 shrink-0 ml-4">
+          {/* A. Regulation Indicator Badge */}
+          <div className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-blue-600 text-white mr-2">
+            {team.format || 'Reg M-A'}
           </div>
-        </div>
 
-        {/* Middle: 6 Small Horizontal Pokemon Thumbnail Sprites - 2D Pixel Art System */}
-        <div className="flex gap-2">
-          {team.pokemon.slice(0, 6).map((pokemon, index) => {
-            // Generate pixel art sprite URL with real-time shiny/gender state
-            const spriteUrl = getPixelSpriteUrl(
-              pokemon.pokedexNumber,
-              pokemon.showdownData.species,
-              pokemon.showdownData.gender || 'M',
-              pokemon.showdownData.shiny || false
-            );
-            
-            return (
-              <div
-                key={index}
-                className="w-12 h-12 bg-gray-700 rounded border border-gray-600 flex items-center justify-center overflow-hidden flex-shrink-0"
-                title={pokemon.showdownData.nickname || pokemon.showdownData.species}
-              >
-                {spriteUrl ? (
-                  <img
-                    src={spriteUrl}
-                    alt={pokemon.showdownData.species}
-                    className="w-8 h-8 object-contain [image-rendering:pixelated]"
-                  />
-                ) : (
-                  <span className="text-xs text-gray-400">
-                    #{pokemon.pokedexNumber}
-                  </span>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Right Side: Action Buttons */}
-        <div className="flex items-center gap-2">
-          {onEdit && (
-            <button
-              onClick={onEdit}
-              className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded text-sm font-medium transition-colors"
-              title="Edit team"
-            >
-              Edit
-            </button>
-          )}
-          <div className="flex items-center gap-1.5">
+          {/* B. Delete Button */}
+          {onDelete && (
             <button
               onClick={onDelete}
-              className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-red-400 hover:bg-zinc-850 text-base font-medium transition-all cursor-pointer"
-              title="Delete team"
+              className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-red-400 hover:bg-zinc-800 text-sm transition-all cursor-pointer"
+              title="Delete Team"
             >
               ×
             </button>
-            <button
-              onClick={onToggleExpand}
-              className="p-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded transition-colors"
-              title={isExpanded ? 'Collapse' : 'Expand'}
-            >
-              <svg
-                className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
-          </div>
+          )}
+
+          {/* C. Edit Button */}
+          <button
+            onClick={onEdit}
+            title="Edit Team"
+            className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-blue-400 hover:bg-zinc-800 text-sm transition-all cursor-pointer"
+          >
+            ✎
+          </button>
+
+          {/* D. Expand/Collapse Toggle Button */}
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 text-sm transition-all cursor-pointer"
+            title={isExpanded ? 'Collapse' : 'Expand'}
+          >
+            ▼
+          </button>
         </div>
       </div>
 
-      {/* Expanded Pokemon Details - Horizontal Grid Layout */}
+      {/* EXPANDED VIEW CONTAINER - RENDERS THE INDIVIDUAL EXPANDED POKEMON CARDS */}
       {isExpanded && (
-        <div className="border-t border-gray-700 bg-gray-850">
-          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 w-full">
-            {team.pokemon.map((pokemon, index) => (
-              <PokemonCard 
-                key={index} 
-                pokemon={pokemon} 
-                teamId={team.id}
-                pokemonIndex={index}
-              />
+        <div className="p-6 border-t border-zinc-800/60 bg-zinc-900/10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 w-full">
+            {team.pokemon && team.pokemon.map((p, idx) => (
+              <PokemonCard key={idx} pokemon={p} teamId={team.id} pokemonIndex={idx} />
             ))}
           </div>
         </div>

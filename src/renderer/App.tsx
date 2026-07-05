@@ -21,7 +21,7 @@ export default function App() {
   return (
     <div className="flex h-screen bg-gray-900 text-gray-100">
       {/* Fixed Navigation Sidebar - Left Side */}
-      <aside className="w-64 bg-gray-800 border-r border-gray-700 flex flex-col">
+      <aside className="w-64 bg-gray-800 border-r border-gray-700 flex flex-col" style={{ paddingLeft: '1.25rem', paddingRight: '1.25rem', paddingTop: '1rem', paddingBottom: '1rem' }}>
         {/* App Header */}
         <div className="p-6 border-b border-gray-700">
           <h1 className="text-2xl font-bold text-blue-400">ChoiceBuds</h1>
@@ -65,7 +65,7 @@ export default function App() {
       </aside>
 
       {/* Primary Content Viewport - Right Side */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto" style={{ paddingLeft: '2rem', paddingRight: '2rem', paddingTop: '1.5rem', paddingBottom: '1.5rem' }}>
         <TeamsPage
           teamsState={teamsState}
           databaseState={databaseState}
