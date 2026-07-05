@@ -15,9 +15,9 @@ export default function TeamCard({ team, onDelete, onEdit }: TeamCardProps) {
     <div className="w-auto mx-6 bg-zinc-900/40 border border-zinc-800/80 rounded-xl mb-4 overflow-hidden transition-all">
       
       {/* MINIMIZED VIEW CONTAINER ROW - Enhanced Header with Controls */}
-      <div className="w-full flex flex-row items-center h-16 px-6 bg-zinc-950/40 transition-colors">
+      <div className="w-full flex flex-row items-center h-16 px-6 bg-zinc-950/40 transition-colors" style={{ paddingLeft: '1.25rem', paddingRight: '1.25rem' }}>
         {/* Horizontal Mini Sprites Row with clean end-to-end padding and internal spacing gaps */}
-        <div className="flex flex-row items-center gap-3 mr-6">
+        <div className="flex flex-row items-center gap-3 mr-6" style={{ marginRight: '1.5rem' }}>
           {team.pokemon && team.pokemon.map((p, idx) => (
             <img
               key={idx}

@@ -42,7 +42,7 @@ export default function TeamsPage({
   return (
     <div className="h-full flex flex-col">
       {/* Header Control Bar */}
-      <header className="bg-gray-800 border-b border-gray-700 px-6 py-4">
+      <header className="bg-gray-800 border-b border-gray-700 px-6 py-4" style={{ paddingLeft: '2rem', paddingRight: '2rem' }}>
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-100">My Teams</h2>
@@ -63,7 +63,7 @@ export default function TeamsPage({
         </div>
 
         {/* Format Filter Buttons */}
-        <div className="flex gap-2 mt-4">
+        <div className="flex gap-2 mt-4" style={{ paddingLeft: '0.75rem', paddingRight: '0.75rem' }}>
           {filterButtons.map(filter => (
             <button
               key={filter}
