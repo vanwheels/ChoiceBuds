@@ -612,16 +612,34 @@ export default function PokemonCard({ pokemon, teamId, pokemonIndex }: PokemonCa
         </div>
       )}
 
-      {/* EVs Spread - Compact 2-column grid */}
+      {/* EVs Spread - Clean 3x2 Grid Layout */}
       <div className="bg-gray-800 rounded px-2 py-1.5 border border-gray-600">
         <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">EVs</p>
-        <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-xs">
-          {Object.entries(showdownData.evs).map(([stat, value]) => (
-            <div key={stat} className="flex justify-between">
-              <span className={getStatColor(stat)}>
-                {STAT_LABELS[stat as keyof typeof STAT_LABELS]}:
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(3, 1fr)', 
+          rowGap: '0.5rem',
+          columnGap: '0.25rem', 
+          width: '100%', 
+          marginTop: '0.75rem', 
+          paddingLeft: '0.5rem', 
+          paddingRight: '0.5rem' 
+        }}>
+          {[
+            { label: 'HP', val: showdownData.evs?.hp || 0 },
+            { label: 'Atk', val: showdownData.evs?.attack || 0 },
+            { label: 'Def', val: showdownData.evs?.defense || 0 },
+            { label: 'SpA', val: showdownData.evs?.specialAttack || 0 },
+            { label: 'SpD', val: showdownData.evs?.specialDefense || 0 },
+            { label: 'Spe', val: showdownData.evs?.speed || 0 }
+          ].map((stat) => (
+            <div key={stat.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.65rem', fontWeight: 'bold', color: '#9ca3af', textTransform: 'uppercase' }}>
+                {stat.label}
               </span>
-              <span className="text-gray-100 font-mono">{value}</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: '800', fontFamily: 'monospace', color: '#f3f4f6', marginTop: '0.125rem' }}>
+                {stat.val}
+              </span>
             </div>
           ))}
         </div>
