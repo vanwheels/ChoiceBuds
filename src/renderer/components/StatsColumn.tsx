@@ -42,22 +42,33 @@ export default function StatsColumn({ pokemon, isEditing = false }: StatsColumnP
       <div className="flex justify-between items-center mb-1">
         <p className="text-xs text-gray-400 uppercase tracking-wide">EVs</p>
         {isEditing && (
-          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{
-            backgroundColor: totalEVs === 66 ? '#10b981' : '#374151',
-            color: totalEVs === 66 ? '#fff' : '#9ca3af'
-          }}>{totalEVs}/66</span>
+          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+            totalEVs > 66
+              ? 'bg-red-600 text-white border border-red-400'
+              : totalEVs === 66
+                ? 'bg-emerald-500 text-white'
+                : 'bg-gray-700 text-gray-400'
+          }`}>{totalEVs > 66 ? '⚠ ' : ''}{totalEVs}/66</span>
         )}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginTop: '0.5rem' }}>
         {stats.map(stat => {
           const val = isEditing ? localEVs[stat.key] : evs[stat.key];
           const isActive = activeStat === stat.label;
+          const exceedsMax = val > 32;
           return (
             <div key={stat.label} className="flex flex-col items-center relative">
               <span className="text-[10px] font-bold text-gray-400 uppercase">{stat.label}</span>
               {isEditing ? (
                 <div className="relative">
-                  <span onClick={() => setActiveStat(isActive ? null : stat.label)} className="text-sm font-mono font-bold cursor-pointer px-1 rounded" style={{ color: val >= 32 ? '#ef4444' : '#f3f4f6', backgroundColor: isActive ? '#374151' : 'transparent' }}>{val}</span>
+                  <span
+                    onClick={() => setActiveStat(isActive ? null : stat.label)}
+                    className={`text-sm font-mono font-bold cursor-pointer px-1.5 py-0.5 rounded border ${
+                      exceedsMax
+                        ? 'border-red-500 text-red-400 bg-red-950/20'
+                        : 'border-transparent text-gray-100'
+                    } ${isActive ? 'bg-gray-700' : ''}`}
+                  >{val}</span>
                   {isActive && (
                     <div className="absolute top-full left-1/2 -translate-x-1/2 flex gap-1 mt-1 z-10">
                       <button onClick={() => handleDecrement(stat.key)} disabled={val <= 0} className="w-6 h-6 text-xs font-bold rounded border" style={{ backgroundColor: val <= 0 ? '#1f2937' : '#374151', color: val <= 0 ? '#6b7280' : '#f3f4f6', borderColor: '#4b5563', cursor: val <= 0 ? 'not-allowed' : 'pointer' }}>−</button>
@@ -66,7 +77,9 @@ export default function StatsColumn({ pokemon, isEditing = false }: StatsColumnP
                   )}
                 </div>
               ) : (
-                <span className="text-sm font-mono font-bold text-gray-100">{val}</span>
+                <span className={`text-sm font-mono font-bold px-1.5 py-0.5 rounded border ${
+                  exceedsMax ? 'border-red-500 text-red-400 bg-red-950/20' : 'border-transparent text-gray-100'
+                }`}>{val}</span>
               )}
             </div>
           );

@@ -6,6 +6,7 @@
  */
 
 import type { MoveData } from '../types/pokemon';
+import type { RegulationId } from '../utils/pokemonRules';
 import { ShowdownPopover } from './ShowdownPopover';
 import { getTypeTheme } from '../config/pokemonTheme';
 
@@ -17,6 +18,7 @@ interface MoveBubbleGridProps {
   legalMoves: MoveData[];
   activeMenu: string | null;
   isEditing: boolean;
+  rulesetId: RegulationId;
   onToggleMenu: (key: string) => void;
   onCloseMenu: () => void;
   onHoverEnter: (key: HoverKey) => void;
@@ -30,6 +32,7 @@ export default function MoveBubbleGrid({
   legalMoves,
   activeMenu,
   isEditing,
+  rulesetId,
   onToggleMenu,
   onCloseMenu,
   onHoverEnter,
@@ -53,7 +56,7 @@ export default function MoveBubbleGrid({
               {selectedMoves[index] || `Move ${index + 1}`}
             </div>
             {activeMenu === key && (
-              <ShowdownPopover mode="move" data={legalMoves} onSelect={(move) => onMoveSelect(index, move)} onClose={onCloseMenu} />
+              <ShowdownPopover mode="move" data={legalMoves} rulesetId={rulesetId} onSelect={(move) => onMoveSelect(index, move)} onClose={onCloseMenu} />
             )}
           </div>
         );

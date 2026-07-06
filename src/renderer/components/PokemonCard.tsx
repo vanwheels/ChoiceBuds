@@ -19,6 +19,7 @@ import StatsColumn from './StatsColumn';
 import EditOverlays from './EditOverlays';
 import { ShowdownPopover } from './ShowdownPopover';
 import { isGenderless, isFemaleLocked } from '../config/pokemonRules';
+import { toRegulationId } from '../utils/pokemonRules';
 
 interface PokemonCardProps {
   pokemon: ImportedPokemonInfo;
@@ -48,6 +49,7 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
   const [localNickname, setLocalNickname] = useState(showdownData.nickname || '');
   const [isSwapPickerOpen, setIsSwapPickerOpen] = useState(false);
   const spriteUrl = getPixelSpriteUrl(pokedexNumber, showdownData.species, localGender || 'M', isLocalShiny);
+  const rulesetId = toRegulationId(team.format);
 
   const handleGenderToggle = async () => {
     const species = showdownData.species;
@@ -144,6 +146,7 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
             <ShowdownPopover
               mode="pokemon"
               data={speciesRosterState.roster}
+              rulesetId={rulesetId}
               onSelect={handleSwapSelect}
               onClose={() => setIsSwapPickerOpen(false)}
             />
@@ -161,7 +164,7 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
       </div>
 
       {/* Item Sprite Box / Ability Capsule / Move Bubbles */}
-      <EditOverlays pokemon={pokemon} isEditing={isEditing} gameDataState={gameDataState} />
+      <EditOverlays pokemon={pokemon} isEditing={isEditing} gameDataState={gameDataState} rulesetId={rulesetId} />
 
       {/* EVs Grid Block */}
       <StatsColumn pokemon={pokemon} isEditing={isEditing} />

@@ -5,6 +5,7 @@ import type { UseDatabaseReturn } from '../hooks/useDatabase';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
 import { useRosterActions } from '../hooks/useRosterActions';
+import { toRegulationId } from '../utils/pokemonRules';
 import PokemonCard from './PokemonCard';
 import { ShowdownPopover } from './ShowdownPopover';
 
@@ -37,10 +38,12 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
   };
 
   return (
-    <div className="w-auto mx-6 bg-zinc-900/40 border border-zinc-800/80 rounded-xl mb-4 overflow-hidden transition-all">
+    <div className="w-auto mx-6 bg-zinc-900/40 border border-zinc-800/80 rounded-xl mb-4 transition-all">
 
       {/* MINIMIZED VIEW CONTAINER ROW - Enhanced Header with Controls */}
-      <div className="w-full flex flex-row items-center h-16 px-6 bg-zinc-950/40 transition-colors" style={{ paddingLeft: '1.25rem', paddingRight: '1.25rem' }}>
+      {/* rounded-t-xl replaces the parent's old overflow-hidden clip (removed so
+          tooltips/popovers from expanded cards below are never cut off) */}
+      <div className="w-full flex flex-row items-center h-16 px-6 bg-zinc-950/40 rounded-t-xl transition-colors" style={{ paddingLeft: '1.25rem', paddingRight: '1.25rem' }}>
         {/* Horizontal Mini Sprites Row with clean end-to-end padding and internal spacing gaps */}
         <div className="flex flex-row items-center gap-3 mr-6" style={{ marginRight: '1.5rem' }}>
           {team.pokemon && team.pokemon.map((p, idx) => (
@@ -134,7 +137,7 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
 
       {/* EXPANDED VIEW CONTAINER - RENDERS THE INDIVIDUAL EXPANDED POKEMON CARDS */}
       {isExpanded && (
-        <div className="p-6 border-t border-zinc-800/60 bg-zinc-900/10">
+        <div className="p-6 border-t border-zinc-800/60 bg-zinc-900/10 rounded-b-xl">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 w-full">
             {team.pokemon && team.pokemon.map((p, idx) => (
               <PokemonCard
@@ -163,6 +166,7 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
                   <ShowdownPopover
                     mode="pokemon"
                     data={speciesRosterState.roster}
+                    rulesetId={toRegulationId(team.format)}
                     onSelect={handleAddSpecies}
                     onClose={() => setIsAddPickerOpen(false)}
                   />

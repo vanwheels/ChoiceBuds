@@ -2,15 +2,25 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import type { ItemData, MoveData, AbilityData, SpeciesRosterEntry } from '../types/pokemon';
 import { getTypeTheme } from '../config/pokemonTheme';
+import { validateSpeciesLegality, validateMoveLegality, getRegulationLabel, type RegulationId } from '../utils/pokemonRules';
 
 type ShowdownPopoverProps =
-  | { mode: 'pokemon'; data: SpeciesRosterEntry[]; onSelect: (selected: SpeciesRosterEntry) => void; onClose: () => void }
+  | { mode: 'pokemon'; data: SpeciesRosterEntry[]; onSelect: (selected: SpeciesRosterEntry) => void; onClose: () => void; rulesetId?: RegulationId }
   | { mode: 'item'; data: ItemData[]; onSelect: (selected: ItemData) => void; onClose: () => void }
   | { mode: 'ability'; data: AbilityData[]; onSelect: (selected: AbilityData) => void; onClose: () => void }
-  | { mode: 'move'; data: MoveData[]; onSelect: (selected: MoveData) => void; onClose: () => void };
+  | { mode: 'move'; data: MoveData[]; onSelect: (selected: MoveData) => void; onClose: () => void; rulesetId?: RegulationId };
 
 function matchesSearch(name: string, search: string): boolean {
   return name.toLowerCase().includes(search.toLowerCase());
+}
+
+/** Small "Not Legal in Reg M-B" flag - illegal choices stay visible/selectable, just visually flagged */
+function IllegalBadge({ rulesetId }: { rulesetId: RegulationId }) {
+  return (
+    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-red-900/40 text-red-300 border border-red-800 whitespace-nowrap">
+      Not Legal in {getRegulationLabel(rulesetId)}
+    </span>
+  );
 }
 
 function PopoverShell({
@@ -27,7 +37,7 @@ function PopoverShell({
   return (
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
-      <div className="absolute z-50 bg-gray-800 border-2 border-gray-600 rounded-lg shadow-2xl w-[600px] max-h-[500px] flex flex-col">
+      <div className="absolute z-50 top-full left-0 mt-1 bg-gray-800 border-2 border-gray-600 rounded-lg shadow-2xl w-[600px] max-h-[500px] flex flex-col">
         <input
           type="text"
           placeholder="Search..."
@@ -47,21 +57,26 @@ export function ShowdownPopover(props: ShowdownPopoverProps) {
   const { onClose } = props;
 
   if (props.mode === 'pokemon') {
+    const { rulesetId } = props;
     const filtered = props.data.filter(pkmn => matchesSearch(pkmn.name, search));
     return (
       <PopoverShell search={search} onSearchChange={setSearch} onClose={onClose}>
         <div className="divide-y divide-gray-700">
-          {filtered.map((pkmn, idx) => (
-            <div
-              key={idx}
-              onClick={() => { props.onSelect(pkmn); onClose(); }}
-              className="flex items-center gap-3 px-4 py-2 hover:bg-gray-700 cursor-pointer"
-            >
-              <img src={pkmn.spriteUrl} alt={pkmn.name} className="w-10 h-10 object-contain [image-rendering:pixelated]" />
-              <span className="text-white font-medium flex-1">{pkmn.name}</span>
-              <span className="text-gray-400 text-xs">#{pkmn.id}</span>
-            </div>
-          ))}
+          {filtered.map((pkmn, idx) => {
+            const isLegal = !rulesetId || validateSpeciesLegality(pkmn.name, rulesetId);
+            return (
+              <div
+                key={idx}
+                onClick={() => { props.onSelect(pkmn); onClose(); }}
+                className={`flex items-center gap-3 px-4 py-2 hover:bg-gray-700 cursor-pointer ${!isLegal ? 'opacity-50' : ''}`}
+              >
+                <img src={pkmn.spriteUrl} alt={pkmn.name} className="w-10 h-10 object-contain [image-rendering:pixelated]" />
+                <span className={`font-medium flex-1 ${isLegal ? 'text-white' : 'text-gray-400'}`}>{pkmn.name}</span>
+                {!isLegal && rulesetId && <IllegalBadge rulesetId={rulesetId} />}
+                <span className="text-gray-400 text-xs">#{pkmn.id}</span>
+              </div>
+            );
+          })}
         </div>
       </PopoverShell>
     );
@@ -107,24 +122,27 @@ export function ShowdownPopover(props: ShowdownPopoverProps) {
     );
   }
 
+  const { rulesetId } = props;
   const filtered = props.data.filter(move => matchesSearch(move.name, search));
   return (
     <PopoverShell search={search} onSearchChange={setSearch} onClose={onClose}>
       <div className="divide-y divide-gray-700">
         {filtered.map((move, idx) => {
           const theme = getTypeTheme(move.type);
+          const isLegal = !rulesetId || validateMoveLegality(move.name, rulesetId);
           return (
             <div
               key={idx}
               onClick={() => { props.onSelect(move); onClose(); }}
-              className="px-4 py-2 hover:bg-gray-700 cursor-pointer"
+              className={`px-4 py-2 hover:bg-gray-700 cursor-pointer ${!isLegal ? 'opacity-50' : ''}`}
             >
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-white font-medium">{move.name}</span>
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <span className={`font-medium ${isLegal ? 'text-white' : 'text-gray-400'}`}>{move.name}</span>
                 <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${theme.bg} ${theme.text}`}>
                   {move.type}
                 </span>
                 <span className="text-gray-300 text-sm capitalize">{move.category}</span>
+                {!isLegal && rulesetId && <IllegalBadge rulesetId={rulesetId} />}
                 <span className="text-gray-400 text-xs ml-auto">
                   Pow: {move.power ?? '--'} | Acc: {move.accuracy ?? '--'} | PP: {move.pp}
                 </span>

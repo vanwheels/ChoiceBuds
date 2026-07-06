@@ -15,6 +15,7 @@
 import { useState, useEffect } from 'react';
 import type { ImportedPokemonInfo, ItemData, MoveData, AbilityData } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
+import type { RegulationId } from '../utils/pokemonRules';
 import { ShowdownPopover } from './ShowdownPopover';
 import MoveBubbleGrid, { type HoverKey } from './MoveBubbleGrid';
 import ItemSpriteBox from './ItemSpriteBox';
@@ -25,6 +26,7 @@ interface EditOverlaysProps {
   pokemon: ImportedPokemonInfo;
   isEditing?: boolean;
   gameDataState: UseGameDataReturn;
+  rulesetId: RegulationId;
 }
 
 // Serebii.net category badge sprites (Physical path verified live via fetch;
@@ -35,7 +37,7 @@ const MOVE_CATEGORY_BADGE: Record<string, string> = {
   status: 'https://www.serebii.net/pokedex-dp/type/other.png',
 };
 
-export default function EditOverlays({ pokemon, isEditing = false, gameDataState }: EditOverlaysProps) {
+export default function EditOverlays({ pokemon, isEditing = false, gameDataState, rulesetId }: EditOverlaysProps) {
   const { items, getItemData, getAbilityData, getMoveData, getEnrichedSpeciesOptions } = gameDataState;
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [hoveredKey, setHoveredKey] = useState<HoverKey>(null);
@@ -225,6 +227,7 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
         legalMoves={legalMoves}
         activeMenu={activeMenu}
         isEditing={isEditing}
+        rulesetId={rulesetId}
         onToggleMenu={toggleMenu}
         onCloseMenu={closeMenu}
         onHoverEnter={hoverEnter}
