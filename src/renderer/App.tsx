@@ -7,16 +7,26 @@
 import { useTeams } from './hooks/useTeams';
 import { useDatabase } from './hooks/useDatabase';
 import { useActiveEditor } from './hooks/useActiveEditor';
+import { useGameData } from './hooks/useGameData';
+import { useSpeciesRoster } from './hooks/useSpeciesRoster';
 import TeamsPage from './components/TeamsPage';
 
 /**
  * Main application shell component
  * Manages global state and layout structure
+ *
+ * useTeams/useGameData/useSpeciesRoster are each instantiated exactly once
+ * here and threaded down as props through TeamsPage -> TeamCard -> PokemonCard.
+ * Components further down must never call these hooks themselves - a second
+ * instance would hold its own disconnected copy of team/cache state, so
+ * writes made through it would silently not appear in what's on screen.
  */
 export default function App() {
   const teamsState = useTeams();
   const databaseState = useDatabase();
   const editorState = useActiveEditor();
+  const gameDataState = useGameData();
+  const speciesRosterState = useSpeciesRoster();
 
   return (
     <div className="flex h-screen bg-gray-900 text-gray-100">
@@ -70,6 +80,8 @@ export default function App() {
           teamsState={teamsState}
           databaseState={databaseState}
           editorState={editorState}
+          gameDataState={gameDataState}
+          speciesRosterState={speciesRosterState}
         />
       </main>
     </div>

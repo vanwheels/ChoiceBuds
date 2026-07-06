@@ -1,22 +1,34 @@
 /**
  * PokemonCard.tsx - Lightweight Pokemon Card Shell
- * Core structural layout: Nickname, Sprite, Type badges only
- * Delegates editing to StatsColumn and EditOverlays components
+ * Layout order: Nickname -> Name/Number -> Sprite -> Type Badges ->
+ * Item/Ability/Moves (EditOverlays) -> EVs (StatsColumn) -> Gender/Shiny footer
+ *
+ * Receives `team`/`updateTeam`/`gameDataState`/`speciesRosterState`/`rosterActions`
+ * as props from TeamCard rather than calling useTeams()/useGameData() itself -
+ * see TeamCard.tsx for why a second hook instance here would desync from what's
+ * actually on screen.
  */
 
 import { useState } from 'react';
-import type { ImportedPokemonInfo } from '../types/pokemon';
+import type { ImportedPokemonInfo, Team, SpeciesRosterEntry } from '../types/pokemon';
+import type { UseGameDataReturn } from '../hooks/useGameData';
+import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
+import type { UseRosterActionsReturn } from '../hooks/useRosterActions';
 import TypeBadge from './TypeBadge';
 import StatsColumn from './StatsColumn';
 import EditOverlays from './EditOverlays';
+import { ShowdownPopover } from './ShowdownPopover';
 import { isGenderless, isFemaleLocked } from '../config/pokemonRules';
-import { useTeams } from '../hooks/useTeams';
 
 interface PokemonCardProps {
   pokemon: ImportedPokemonInfo;
-  teamId: string;
+  team: Team;
   pokemonIndex: number;
   isEditing?: boolean;
+  updateTeam: (teamId: string, updates: Partial<Team>) => Promise<boolean>;
+  gameDataState: UseGameDataReturn;
+  speciesRosterState: UseSpeciesRosterReturn;
+  rosterActions: UseRosterActionsReturn;
 }
 
 const FORM_DIVERGENT: Record<string, boolean> = { 'basculegion': true, 'indeedee': true, 'meowstic': true, 'oinkologne': true };
@@ -29,12 +41,12 @@ function getPixelSpriteUrl(id: number, name: string, gender: string, shiny: bool
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${s}${id}.png`;
 }
 
-export default function PokemonCard({ pokemon, teamId, pokemonIndex, isEditing = false }: PokemonCardProps) {
+export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = false, updateTeam, gameDataState, speciesRosterState, rosterActions }: PokemonCardProps) {
   const { showdownData, types, pokedexNumber } = pokemon;
-  const { updateTeam, getTeamById } = useTeams();
   const [isLocalShiny, setIsLocalShiny] = useState(showdownData.shiny);
   const [localGender, setLocalGender] = useState<'M' | 'F' | 'N' | '' | undefined>(showdownData.gender);
   const [localNickname, setLocalNickname] = useState(showdownData.nickname || '');
+  const [isSwapPickerOpen, setIsSwapPickerOpen] = useState(false);
   const spriteUrl = getPixelSpriteUrl(pokedexNumber, showdownData.species, localGender || 'M', isLocalShiny);
 
   const handleGenderToggle = async () => {
@@ -44,8 +56,6 @@ export default function PokemonCard({ pokemon, teamId, pokemonIndex, isEditing =
     const currentGender = localGender || 'M';
     const newGender = currentGender === 'M' ? 'F' : 'M';
     setLocalGender(newGender);
-    const team = getTeamById(teamId);
-    if (!team) return;
     const updatedPokemon = [...team.pokemon];
     updatedPokemon[pokemonIndex] = {
       ...updatedPokemon[pokemonIndex],
@@ -63,20 +73,27 @@ export default function PokemonCard({ pokemon, teamId, pokemonIndex, isEditing =
       }
       updatedPokemon[pokemonIndex].spriteUrl = newSpriteUrl;
     }
-    await updateTeam(teamId, { pokemon: updatedPokemon });
+    await updateTeam(team.id, { pokemon: updatedPokemon });
   };
 
   const handleShinyToggle = async () => {
     const newShinyState = !isLocalShiny;
     setIsLocalShiny(newShinyState);
-    const team = getTeamById(teamId);
-    if (!team) return;
     const updatedPokemon = [...team.pokemon];
     updatedPokemon[pokemonIndex] = {
       ...updatedPokemon[pokemonIndex],
       showdownData: { ...updatedPokemon[pokemonIndex].showdownData, shiny: newShinyState },
     };
-    await updateTeam(teamId, { pokemon: updatedPokemon });
+    await updateTeam(team.id, { pokemon: updatedPokemon });
+  };
+
+  const handleSwapSelect = async (species: SpeciesRosterEntry) => {
+    setIsSwapPickerOpen(false);
+    await rosterActions.swapSlot(team, pokemonIndex, species.name);
+  };
+
+  const handleDelete = async () => {
+    await rosterActions.removeSlot(team, pokemonIndex);
   };
 
   const isGenderClickable = (): boolean => {
@@ -87,7 +104,18 @@ export default function PokemonCard({ pokemon, teamId, pokemonIndex, isEditing =
   };
 
   return (
-    <div className="bg-gray-700 border border-gray-600 rounded-lg p-3 flex flex-col gap-3 max-w-[280px]">
+    <div className="relative bg-gray-700 border border-gray-600 rounded-lg p-3 flex flex-col gap-3 max-w-[280px]">
+      {/* Left-Shifting Slot Deletion */}
+      {isEditing && (
+        <button
+          onClick={handleDelete}
+          title="Remove from roster"
+          className="absolute top-2 right-2 z-10 w-6 h-6 flex items-center justify-center rounded-full bg-gray-800 border border-gray-600 text-zinc-500 hover:text-red-400 hover:border-red-500 transition-colors cursor-pointer text-sm"
+        >
+          ×
+        </button>
+      )}
+
       {/* Nickname Input */}
       <div className="text-center">
         {isEditing ? (
@@ -98,13 +126,27 @@ export default function PokemonCard({ pokemon, teamId, pokemonIndex, isEditing =
         <p className="text-xs text-gray-300 truncate">{showdownData.species} #{pokedexNumber}</p>
       </div>
 
-      {/* Sprite Container */}
+      {/* Sprite Container - clickable in edit mode to open the Roster Swap picker */}
       <div className="flex justify-center">
-        <div className="w-full max-w-[128px] mx-auto h-24 bg-gray-800 rounded-lg border border-gray-600 flex items-center justify-center overflow-hidden">
-          {spriteUrl ? (
-            <img src={spriteUrl} alt={showdownData.species} className="w-24 h-24 object-contain mx-auto transition-transform duration-150 [image-rendering:pixelated]" />
-          ) : (
-            <span className="text-xs text-gray-400">No sprite</span>
+        <div className="relative">
+          <div
+            onClick={isEditing ? () => setIsSwapPickerOpen(prev => !prev) : undefined}
+            className={`w-full max-w-[128px] mx-auto h-24 bg-gray-800 rounded-lg border border-gray-600 flex items-center justify-center overflow-hidden ${isEditing ? 'cursor-pointer hover:border-blue-500 transition-colors' : ''}`}
+            title={isEditing ? 'Click to swap this Pokémon' : undefined}
+          >
+            {spriteUrl ? (
+              <img src={spriteUrl} alt={showdownData.species} className="w-24 h-24 object-contain mx-auto transition-transform duration-150 [image-rendering:pixelated]" />
+            ) : (
+              <span className="text-xs text-gray-400">No sprite</span>
+            )}
+          </div>
+          {isSwapPickerOpen && (
+            <ShowdownPopover
+              mode="pokemon"
+              data={speciesRosterState.roster}
+              onSelect={handleSwapSelect}
+              onClose={() => setIsSwapPickerOpen(false)}
+            />
           )}
         </div>
       </div>
@@ -118,8 +160,14 @@ export default function PokemonCard({ pokemon, teamId, pokemonIndex, isEditing =
         </div>
       </div>
 
-      {/* Gender and Shiny Indicators */}
-      <div className="flex flex-row items-center justify-center gap-3 py-2 border-t border-b border-zinc-800/60 my-2 w-full">
+      {/* Item Sprite Box / Ability Capsule / Move Bubbles */}
+      <EditOverlays pokemon={pokemon} isEditing={isEditing} gameDataState={gameDataState} />
+
+      {/* EVs Grid Block */}
+      <StatsColumn pokemon={pokemon} isEditing={isEditing} />
+
+      {/* Footer: Gender and Shiny Indicators */}
+      <div className="flex flex-row items-center justify-center gap-3 pt-2 mt-1 border-t border-zinc-800/60 w-full">
         <div className={`flex items-center ${isGenderClickable() ? 'cursor-pointer hover:scale-110 transition-transform' : 'cursor-not-allowed opacity-60'}`} onClick={isGenderClickable() ? handleGenderToggle : undefined} title={isGenderless(showdownData.species) ? 'Genderless species' : isFemaleLocked(showdownData.species) ? 'Female-only species' : 'Click to toggle gender'}>
           {localGender === 'M' && <span className="text-2xl font-bold text-blue-400">♂</span>}
           {localGender === 'F' && <span className="text-2xl font-bold text-pink-400">♀</span>}
@@ -127,12 +175,6 @@ export default function PokemonCard({ pokemon, teamId, pokemonIndex, isEditing =
         </div>
         <span className={isLocalShiny ? 'text-base select-none cursor-pointer filter-none opacity-100' : 'text-base select-none cursor-pointer grayscale opacity-30'} onClick={handleShinyToggle} title="Click to toggle shiny status">✨</span>
       </div>
-
-      {/* Edit Overlays Component */}
-      <EditOverlays pokemon={pokemon} isEditing={isEditing} />
-
-      {/* Stats Column Component */}
-      <StatsColumn pokemon={pokemon} isEditing={isEditing} />
     </div>
   );
 }

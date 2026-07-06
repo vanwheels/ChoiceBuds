@@ -59,5 +59,5 @@ When adding a new gender-divergent or gender-locked/genderless species, update b
 - `src/renderer/components/*` must stay under 250 lines; extract sub-components rather than growing one file.
 - All core app state changes flow through custom hooks in `src/renderer/hooks/`; never manage cross-render state directly in JSX/markup.
 - Static theme tables, hex colors, and type/category maps live in `src/renderer/config/`, never inlined in components or utilities.
-- Only direct JSON `fetch` calls to `pokeapi.co` are allowed — no scraping, no third-party proxy middleware.
+- Only direct JSON `fetch` calls to `pokeapi.co` are allowed for game data — no scraping, no third-party proxy middleware. **Exception (explicitly authorized):** `serebii.net` may be hotlinked as a static `<img>` source for assets PokeAPI doesn't cleanly provide (move category badges, item sprite fallbacks like Fairy Feather). This is image hotlinking only — never fetched/parsed as data, and never used as a stand-in for the pokeapi.co JSON endpoints above.
 - Use explicit TypeScript interfaces for every data contract; `as any` is forbidden except at external boundary wrappers (e.g. the preload bridge, per the rule above).

@@ -197,6 +197,16 @@ export interface SpeciesLearnsetEntry {
 }
 
 /**
+ * A single entry in the full national dex roster, used by the roster
+ * swap/add pickers (Team Builder). Loaded once app-wide, not per-card.
+ */
+export interface SpeciesRosterEntry {
+  name: string; // Display name (Title-Case, hyphens preserved for forms)
+  id: number; // National Pokedex number
+  spriteUrl: string; // Pixel sprite URL (same convention as PokemonCard)
+}
+
+/**
  * Game data cache for moves, items, abilities, and species learnsets
  * Reduces redundant API calls by caching game metadata
  */

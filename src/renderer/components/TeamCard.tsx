@@ -1,23 +1,44 @@
 import { useState } from 'react';
-import { Team } from '../types/pokemon';
+import { Team, SpeciesRosterEntry } from '../types/pokemon';
+import type { UseTeamsReturn } from '../hooks/useTeams';
+import type { UseDatabaseReturn } from '../hooks/useDatabase';
+import type { UseGameDataReturn } from '../hooks/useGameData';
+import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
+import { useRosterActions } from '../hooks/useRosterActions';
 import PokemonCard from './PokemonCard';
-import { useTeams } from '../hooks/useTeams';
+import { ShowdownPopover } from './ShowdownPopover';
 
 interface TeamCardProps {
   team: Team;
   onDelete?: () => void;
   onEdit?: () => void;
+  teamsState: UseTeamsReturn;
+  databaseState: UseDatabaseReturn;
+  gameDataState: UseGameDataReturn;
+  speciesRosterState: UseSpeciesRosterReturn;
 }
 
-export default function TeamCard({ team, onDelete, onEdit }: TeamCardProps) {
+export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseState, gameDataState, speciesRosterState }: TeamCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditingTeam, setIsEditingTeam] = useState(false);
   const [localTeamName, setLocalTeamName] = useState(team.name);
-  const { updateTeam } = useTeams();
+  const [isAddPickerOpen, setIsAddPickerOpen] = useState(false);
+  const { updateTeam } = teamsState;
+  const rosterActions = useRosterActions(
+    updateTeam,
+    databaseState.getCachedEntry,
+    databaseState.setCacheEntry,
+    gameDataState.getEnrichedSpeciesOptions
+  );
+
+  const handleAddSpecies = async (species: SpeciesRosterEntry) => {
+    setIsAddPickerOpen(false);
+    await rosterActions.addSlot(team, species.name);
+  };
 
   return (
     <div className="w-auto mx-6 bg-zinc-900/40 border border-zinc-800/80 rounded-xl mb-4 overflow-hidden transition-all">
-      
+
       {/* MINIMIZED VIEW CONTAINER ROW - Enhanced Header with Controls */}
       <div className="w-full flex flex-row items-center h-16 px-6 bg-zinc-950/40 transition-colors" style={{ paddingLeft: '1.25rem', paddingRight: '1.25rem' }}>
         {/* Horizontal Mini Sprites Row with clean end-to-end padding and internal spacing gaps */}
@@ -116,8 +137,38 @@ export default function TeamCard({ team, onDelete, onEdit }: TeamCardProps) {
         <div className="p-6 border-t border-zinc-800/60 bg-zinc-900/10">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 w-full">
             {team.pokemon && team.pokemon.map((p, idx) => (
-              <PokemonCard key={idx} pokemon={p} teamId={team.id} pokemonIndex={idx} isEditing={isEditingTeam} />
+              <PokemonCard
+                key={idx}
+                pokemon={p}
+                team={team}
+                pokemonIndex={idx}
+                isEditing={isEditingTeam}
+                updateTeam={updateTeam}
+                gameDataState={gameDataState}
+                speciesRosterState={speciesRosterState}
+                rosterActions={rosterActions}
+              />
             ))}
+
+            {/* Append Add Button - only while editing and roster has room */}
+            {isEditingTeam && team.pokemon.length < 6 && (
+              <div className="relative">
+                <button
+                  onClick={() => setIsAddPickerOpen(prev => !prev)}
+                  className="w-full h-full min-h-[280px] flex items-center justify-center rounded-lg border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-blue-400 hover:border-blue-500 transition-colors cursor-pointer"
+                >
+                  <span className="text-sm font-semibold">+ Add Pokémon</span>
+                </button>
+                {isAddPickerOpen && (
+                  <ShowdownPopover
+                    mode="pokemon"
+                    data={speciesRosterState.roster}
+                    onSelect={handleAddSpecies}
+                    onClose={() => setIsAddPickerOpen(false)}
+                  />
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

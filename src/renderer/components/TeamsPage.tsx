@@ -8,6 +8,8 @@ import { useState } from 'react';
 import type { UseTeamsReturn } from '../hooks/useTeams';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
 import type { UseActiveEditorReturn } from '../hooks/useActiveEditor';
+import type { UseGameDataReturn } from '../hooks/useGameData';
+import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
 import ImportTeamModal from './ImportTeamModal';
 import TeamCard from './TeamCard';
 
@@ -16,6 +18,8 @@ interface TeamsPageProps {
   teamsState: UseTeamsReturn;
   databaseState: UseDatabaseReturn;
   editorState: UseActiveEditorReturn;
+  gameDataState: UseGameDataReturn;
+  speciesRosterState: UseSpeciesRosterReturn;
 }
 
 type FormatFilter = 'All' | 'Reg M-A' | 'Reg M-B';
@@ -27,6 +31,8 @@ type FormatFilter = 'All' | 'Reg M-A' | 'Reg M-B';
 export default function TeamsPage({
   teamsState,
   databaseState,
+  gameDataState,
+  speciesRosterState,
 }: TeamsPageProps) {
   const [activeFilter, setActiveFilter] = useState<FormatFilter>('All');
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -105,6 +111,10 @@ export default function TeamsPage({
                 key={team.id}
                 team={team}
                 onDelete={() => teamsState.deleteTeam(team.id)}
+                teamsState={teamsState}
+                databaseState={databaseState}
+                gameDataState={gameDataState}
+                speciesRosterState={speciesRosterState}
               />
             ))}
           </div>
