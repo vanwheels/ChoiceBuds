@@ -11,6 +11,13 @@ import fs from 'fs/promises';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Works around a real Chromium GPU process crash seen on this machine at
+// startup ("GPU state invalid after WaitForGetOffsetInRange" /
+// "Failed to send GpuControl.CreateCommandBuffer") - the GPU command buffer
+// fails to initialize on some GPU driver/virtualized-GPU combinations. Must
+// be called before app.whenReady() / any BrowserWindow is created.
+app.disableHardwareAcceleration();
+
 let mainWindow: BrowserWindow | null = null;
 
 /**

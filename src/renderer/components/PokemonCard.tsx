@@ -17,7 +17,7 @@ import type { UseRosterActionsReturn } from '../hooks/useRosterActions';
 import TypeBadge from './TypeBadge';
 import StatsColumn from './StatsColumn';
 import EditOverlays from './EditOverlays';
-import { ShowdownPopover } from './ShowdownPopover';
+import SpeciesPickerCard from './SpeciesPickerCard';
 import { isGenderless, isFemaleLocked } from '../config/pokemonRules';
 import { toRegulationId } from '../utils/pokemonRules';
 
@@ -105,6 +105,19 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
     return !isGenderless(species) && !isFemaleLocked(species);
   };
 
+  // Roster Swap fills this slot with an in-card species picker rather than
+  // floating a dropdown under the sprite - see SpeciesPickerCard.tsx
+  if (isSwapPickerOpen) {
+    return (
+      <SpeciesPickerCard
+        roster={speciesRosterState.roster}
+        rulesetId={rulesetId}
+        onSelect={handleSwapSelect}
+        onClose={() => setIsSwapPickerOpen(false)}
+      />
+    );
+  }
+
   return (
     <div className="relative bg-gray-700 border border-gray-600 rounded-lg p-3 flex flex-col gap-3 max-w-[280px]">
       {/* Left-Shifting Slot Deletion */}
@@ -118,38 +131,27 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
         </button>
       )}
 
-      {/* Nickname Input */}
+      {/* Nickname Input - falls back to the species name when there's no nickname set */}
       <div className="text-center">
         {isEditing ? (
-          <input type="text" value={localNickname} onChange={(e) => setLocalNickname(e.target.value)} placeholder="Enter nickname" className="w-full px-2 py-1 text-sm font-bold text-white bg-gray-800 border border-gray-600 rounded text-center outline-none" />
+          <input type="text" value={localNickname} onChange={(e) => setLocalNickname(e.target.value)} placeholder={showdownData.species} className="w-full px-2 py-1 text-sm font-bold text-white bg-gray-800 border border-gray-600 rounded text-center outline-none" />
         ) : (
-          showdownData.nickname && <h4 className="text-sm font-bold text-gray-100 truncate">{showdownData.nickname}</h4>
+          <h4 className="text-sm font-bold text-gray-100 truncate">{showdownData.nickname || showdownData.species}</h4>
         )}
         <p className="text-xs text-gray-300 truncate">{showdownData.species} #{pokedexNumber}</p>
       </div>
 
       {/* Sprite Container - clickable in edit mode to open the Roster Swap picker */}
       <div className="flex justify-center">
-        <div className="relative">
-          <div
-            onClick={isEditing ? () => setIsSwapPickerOpen(prev => !prev) : undefined}
-            className={`w-full max-w-[128px] mx-auto h-24 bg-gray-800 rounded-lg border border-gray-600 flex items-center justify-center overflow-hidden ${isEditing ? 'cursor-pointer hover:border-blue-500 transition-colors' : ''}`}
-            title={isEditing ? 'Click to swap this Pokémon' : undefined}
-          >
-            {spriteUrl ? (
-              <img src={spriteUrl} alt={showdownData.species} className="w-24 h-24 object-contain mx-auto transition-transform duration-150 [image-rendering:pixelated]" />
-            ) : (
-              <span className="text-xs text-gray-400">No sprite</span>
-            )}
-          </div>
-          {isSwapPickerOpen && (
-            <ShowdownPopover
-              mode="pokemon"
-              data={speciesRosterState.roster}
-              rulesetId={rulesetId}
-              onSelect={handleSwapSelect}
-              onClose={() => setIsSwapPickerOpen(false)}
-            />
+        <div
+          onClick={isEditing ? () => setIsSwapPickerOpen(true) : undefined}
+          className={`w-full max-w-[128px] mx-auto h-24 bg-gray-800 rounded-lg border border-gray-600 flex items-center justify-center overflow-hidden ${isEditing ? 'cursor-pointer hover:border-blue-500 transition-colors' : ''}`}
+          title={isEditing ? 'Click to swap this Pokémon' : undefined}
+        >
+          {spriteUrl ? (
+            <img src={spriteUrl} alt={showdownData.species} className="w-24 h-24 object-contain mx-auto transition-transform duration-150 [image-rendering:pixelated]" />
+          ) : (
+            <span className="text-xs text-gray-400">No sprite</span>
           )}
         </div>
       </div>

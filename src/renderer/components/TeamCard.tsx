@@ -7,7 +7,7 @@ import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
 import { useRosterActions } from '../hooks/useRosterActions';
 import { toRegulationId } from '../utils/pokemonRules';
 import PokemonCard from './PokemonCard';
-import { ShowdownPopover } from './ShowdownPopover';
+import SpeciesPickerCard from './SpeciesPickerCard';
 
 interface TeamCardProps {
   team: Team;
@@ -141,7 +141,7 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 w-full">
             {team.pokemon && team.pokemon.map((p, idx) => (
               <PokemonCard
-                key={idx}
+                key={`${idx}-${p.importedAt}`}
                 pokemon={p}
                 team={team}
                 pokemonIndex={idx}
@@ -155,23 +155,21 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
 
             {/* Append Add Button - only while editing and roster has room */}
             {isEditingTeam && team.pokemon.length < 6 && (
-              <div className="relative">
+              isAddPickerOpen ? (
+                <SpeciesPickerCard
+                  roster={speciesRosterState.roster}
+                  rulesetId={toRegulationId(team.format)}
+                  onSelect={handleAddSpecies}
+                  onClose={() => setIsAddPickerOpen(false)}
+                />
+              ) : (
                 <button
-                  onClick={() => setIsAddPickerOpen(prev => !prev)}
+                  onClick={() => setIsAddPickerOpen(true)}
                   className="w-full h-full min-h-[280px] flex items-center justify-center rounded-lg border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-blue-400 hover:border-blue-500 transition-colors cursor-pointer"
                 >
                   <span className="text-sm font-semibold">+ Add Pokémon</span>
                 </button>
-                {isAddPickerOpen && (
-                  <ShowdownPopover
-                    mode="pokemon"
-                    data={speciesRosterState.roster}
-                    rulesetId={toRegulationId(team.format)}
-                    onSelect={handleAddSpecies}
-                    onClose={() => setIsAddPickerOpen(false)}
-                  />
-                )}
-              </div>
+              )
             )}
           </div>
         </div>

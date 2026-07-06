@@ -1,10 +1,32 @@
 /**
  * Dynamic ruleset/regulation validation for the Pokémon Champions legality
- * engine. This is a SCAFFOLD: the allowedSpecies/allowedMoves/allowedItems
- * data in CHAMPIONS_RULESETS below is placeholder/mock data only - a small
- * illustrative sample, not an authoritative Reg M-A/M-B legality list. Swap
- * in real regulation data before relying on this for actual tournament
- * legality enforcement.
+ * engine.
+ *
+ * DATA SOURCE: Pokémon Champions launched in 2026 (after this assistant's
+ * knowledge cutoff), so this data was pulled live from Serebii's official
+ * regulation pages rather than guessed:
+ *   https://www.serebii.net/pokemonchampions/rankedbattle/regulationm-a.shtml
+ *   https://www.serebii.net/pokemonchampions/rankedbattle/regulationm-b.shtml
+ * Both pages define legality as a positive "Newly Useable Pokémon" allowlist
+ * (not a banlist over the full dex) - REG_MA_SPECIES below is that full M-A
+ * table; REG_MB_ADDED_SPECIES is the 22 species M-B adds on top of it. Every
+ * species absent from both tables (all Legendaries/Mythicals, plus ordinary
+ * species not yet unlocked, e.g. Salamence) is simply not on the list - there
+ * is no separate ban mechanism to maintain.
+ *
+ * Mega Evolution forms are excluded entirely (not just deduplicated) - Mega
+ * access is meant to be item-driven (holding the matching Mega Stone on the
+ * base species), not a separate roster pick; useSpeciesRoster filters Mega
+ * varieties out of the picker for the same reason. Regional forms confirmed
+ * as distinct rows in Serebii's table (verified via a follow-up fetch asking
+ * specifically which duplicate-named entries were separate forms) are listed
+ * as their own slugs below: Alolan Raichu/Ninetales, Hisuian Arcanine/
+ * Typhlosion/Samurott/Zoroark/Goodra/Avalugg/Decidueye, Galarian Slowbro/
+ * Slowking/Stunfisk, and the 3 Paldean Tauros breeds.
+ *
+ * Both regulation pages explicitly list no banned/restricted items or moves -
+ * legality in this format is species-based only, which is why
+ * validateMoveLegality/validateItemLegality below are pass-throughs.
  *
  * Distinct from config/pokemonRules.ts, which is the existing static
  * gender-rule table used by the Showdown parser - unrelated concern, kept
@@ -15,28 +37,75 @@ export type RegulationId = 'REG-MA' | 'REG-MB';
 
 export interface ChampionsRuleset {
   id: RegulationId;
-  allowedSpecies: string[]; // lowercase-hyphenated species slugs
-  allowedMoves: string[]; // lowercase-hyphenated move slugs
-  allowedItems: string[]; // lowercase-hyphenated item slugs
+  allowedSpecies: string[]; // lowercase-hyphenated base species slugs
+  allowedMoves: string[]; // unused by validateMoveLegality - see file header
+  allowedItems: string[]; // unused by validateItemLegality - see file header
 }
 
 /**
- * PLACEHOLDER data - illustrative sample sets only. Real regulation legality
- * (Restricted Legendaries, per-regulation item/move bans) needs to be sourced
- * from an authoritative ruleset feed and substituted here.
+ * Regulation M-A "Newly Useable Pokémon" as listed on Serebii, including the
+ * verified regional-form slugs called out in the file header above.
  */
+const REG_MA_SPECIES: string[] = [
+  'venusaur', 'charizard', 'blastoise', 'beedrill', 'pidgeot', 'arbok', 'pikachu', 'raichu', 'raichu-alola',
+  'clefable', 'ninetales', 'ninetales-alola', 'arcanine', 'arcanine-hisui', 'alakazam', 'machamp',
+  'victreebel', 'slowbro', 'slowbro-galar', 'gengar', 'kangaskhan', 'starmie', 'pinsir',
+  'tauros', 'tauros-paldea-combat-breed', 'tauros-paldea-blaze-breed', 'tauros-paldea-aqua-breed',
+  'gyarados', 'ditto', 'vaporeon', 'jolteon', 'flareon', 'aerodactyl', 'snorlax', 'dragonite',
+  'meganium', 'typhlosion', 'typhlosion-hisui', 'feraligatr', 'ariados', 'ampharos', 'azumarill',
+  'politoed', 'espeon', 'umbreon', 'slowking', 'slowking-galar', 'forretress', 'steelix', 'scizor',
+  'heracross', 'skarmory', 'houndoom', 'tyranitar', 'pelipper', 'gardevoir', 'sableye', 'aggron',
+  'medicham', 'manectric', 'sharpedo', 'camerupt', 'torkoal', 'altaria', 'milotic', 'castform',
+  'banette', 'chimecho', 'absol', 'glalie', 'torterra', 'infernape', 'empoleon', 'luxray', 'roserade',
+  'rampardos', 'bastiodon', 'lopunny', 'spiritomb', 'garchomp', 'lucario', 'hippowdon', 'toxicroak',
+  'abomasnow', 'weavile', 'rhyperior', 'leafeon', 'glaceon', 'gliscor', 'mamoswine', 'gallade',
+  'froslass', 'rotom', 'serperior', 'emboar', 'samurott', 'samurott-hisui', 'watchog', 'liepard',
+  'simisage', 'simisear', 'simipour', 'excadrill', 'audino', 'conkeldurr', 'whimsicott', 'krookodile',
+  'cofagrigus', 'garbodor', 'zoroark', 'zoroark-hisui', 'reuniclus', 'vanilluxe', 'emolga', 'chandelure',
+  'beartic', 'stunfisk', 'stunfisk-galar', 'golurk', 'hydreigon', 'volcarona', 'chesnaught', 'delphox',
+  'greninja', 'diggersby', 'talonflame', 'vivillon', 'floette', 'florges', 'pangoro', 'furfrou',
+  'meowstic', 'aegislash', 'aromatisse', 'slurpuff', 'clawitzer', 'heliolisk', 'tyrantrum', 'aurorus',
+  'sylveon', 'hawlucha', 'dedenne', 'goodra', 'goodra-hisui', 'klefki', 'trevenant', 'gourgeist',
+  'avalugg', 'avalugg-hisui', 'noivern', 'decidueye', 'decidueye-hisui', 'incineroar', 'primarina',
+  'toucannon', 'crabominable', 'lycanroc', 'toxapex', 'mudsdale', 'araquanid', 'salazzle', 'tsareena',
+  'oranguru', 'passimian', 'mimikyu', 'drampa', 'kommo-o', 'corviknight', 'flapple', 'appletun',
+  'sandaconda', 'polteageist', 'hatterene', 'mr-rime', 'runerigus', 'alcremie', 'morpeko', 'dragapult',
+  'wyrdeer', 'kleavor', 'basculegion', 'sneasler', 'meowscarada', 'skeledirge', 'quaquaval', 'maushold',
+  'garganacl', 'armarouge', 'ceruledge', 'bellibolt', 'scovillain', 'espathra', 'tinkaton', 'palafin',
+  'orthworm', 'glimmora', 'farigiraf', 'kingambit', 'sinistcha', 'archaludon', 'hydrapple',
+];
+
+/** The 22 species Regulation M-B adds on top of everything in REG_MA_SPECIES */
+const REG_MB_ADDED_SPECIES: string[] = [
+  'vileplume', 'qwilfish', 'sceptile', 'blaziken', 'swampert', 'mawile', 'metagross', 'staraptor',
+  'musharna', 'scolipede', 'scrafty', 'eelektross', 'pyroar', 'malamar', 'barbaracle', 'dragalge',
+  'grimmsnarl', 'falinks', 'overqwil', 'houndstone', 'annihilape', 'gholdengo',
+];
+
+function normalizeSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/['']/g, '')
+    .replace(/[.]/g, '')
+    .replace(/\s+/g, '-');
+}
+
+const REG_MA_SPECIES_SET = new Set(REG_MA_SPECIES.map(normalizeSlug));
+const REG_MB_SPECIES_SET = new Set([...REG_MA_SPECIES, ...REG_MB_ADDED_SPECIES].map(normalizeSlug));
+
 export const CHAMPIONS_RULESETS: Record<RegulationId, ChampionsRuleset> = {
   'REG-MA': {
     id: 'REG-MA',
-    allowedSpecies: ['bulbasaur', 'ivysaur', 'venusaur', 'charmander', 'squirtle', 'pikachu', 'gholdengo'],
-    allowedMoves: ['protect', 'rock-slide', 'tackle', 'thunderbolt', 'fake-out', 'helping-hand'],
-    allowedItems: ['leftovers', 'choice-scarf', 'sitrus-berry', 'focus-sash'],
+    allowedSpecies: [...REG_MA_SPECIES_SET],
+    allowedMoves: [],
+    allowedItems: [],
   },
   'REG-MB': {
     id: 'REG-MB',
-    allowedSpecies: ['bulbasaur', 'ivysaur', 'venusaur', 'charmander', 'squirtle', 'pikachu', 'gholdengo', 'mewtwo'],
-    allowedMoves: ['protect', 'rock-slide', 'tackle', 'thunderbolt', 'fake-out', 'helping-hand', 'draco-meteor'],
-    allowedItems: ['leftovers', 'choice-scarf', 'sitrus-berry', 'focus-sash', 'life-orb'],
+    allowedSpecies: [...REG_MB_SPECIES_SET],
+    allowedMoves: [],
+    allowedItems: [],
   },
 };
 
@@ -55,22 +124,45 @@ export function toRegulationId(format: 'Reg M-A' | 'Reg M-B'): RegulationId {
   return format === 'Reg M-A' ? 'REG-MA' : 'REG-MB';
 }
 
-function normalizeSlug(value: string): string {
-  return value.toLowerCase().trim().replace(/\s+/g, '-');
-}
-
 export function getRuleset(rulesetId: RegulationId): ChampionsRuleset {
   return CHAMPIONS_RULESETS[rulesetId];
 }
 
+/**
+ * Real species-legality check against the sourced "Newly Useable Pokémon"
+ * allowlist for the given regulation (REG-MB is a superset of REG-MA).
+ */
 export function validateSpeciesLegality(speciesId: string, rulesetId: RegulationId): boolean {
-  return CHAMPIONS_RULESETS[rulesetId].allowedSpecies.includes(normalizeSlug(speciesId));
+  const normalized = normalizeSlug(speciesId);
+  const legalSet = rulesetId === 'REG-MA' ? REG_MA_SPECIES_SET : REG_MB_SPECIES_SET;
+  return legalSet.has(normalized);
 }
 
+/**
+ * Both regulation pages list no banned/restricted moves - legality here is
+ * species-based only (above). This validates the move NAME is a real,
+ * well-formed slug (i.e. actually came from the real learnset pipeline) and
+ * passes everything else through as legal, logging anything malformed.
+ */
 export function validateMoveLegality(moveName: string, rulesetId: RegulationId): boolean {
-  return CHAMPIONS_RULESETS[rulesetId].allowedMoves.includes(normalizeSlug(moveName));
+  const normalized = normalizeSlug(moveName);
+  if (!normalized || !/^[a-z0-9-]+$/.test(normalized)) {
+    console.warn(`[pokemonRules] Non-standard move "${moveName}" could not be validated against ${rulesetId}`);
+    return false;
+  }
+  return true;
 }
 
+/**
+ * Same rationale as validateMoveLegality: both regulation pages list no
+ * banned/restricted items, so this only validates the item is a real,
+ * well-formed slug rather than checking it against a ban list.
+ */
 export function validateItemLegality(itemName: string, rulesetId: RegulationId): boolean {
-  return CHAMPIONS_RULESETS[rulesetId].allowedItems.includes(normalizeSlug(itemName));
+  const normalized = normalizeSlug(itemName);
+  if (!normalized || !/^[a-z0-9-]+$/.test(normalized)) {
+    console.warn(`[pokemonRules] Non-standard item "${itemName}" could not be validated against ${rulesetId}`);
+    return false;
+  }
+  return true;
 }

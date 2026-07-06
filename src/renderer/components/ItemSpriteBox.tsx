@@ -6,6 +6,7 @@
  * the project's 250-line component cap.
  */
 
+import type { MouseEvent } from 'react';
 import type { ItemData } from '../types/pokemon';
 import { ShowdownPopover } from './ShowdownPopover';
 
@@ -21,7 +22,7 @@ interface ItemSpriteBoxProps {
   fallbackSpriteFailed: boolean;
   onSpriteError: () => void;
   onFallbackSpriteError: () => void;
-  onHoverEnter: () => void;
+  onHoverEnter: (e: MouseEvent<HTMLDivElement>) => void;
   onHoverLeave: () => void;
   onToggleMenu: () => void;
   onCloseMenu: () => void;
@@ -59,6 +60,7 @@ export default function ItemSpriteBox({
           <img
             src={itemData.spriteUrl}
             alt={selectedItem}
+            loading="lazy"
             className="w-9 h-9 object-contain [image-rendering:pixelated]"
             onError={onSpriteError}
           />
@@ -68,6 +70,7 @@ export default function ItemSpriteBox({
           <img
             src={FAIRY_FEATHER_FALLBACK_SPRITE}
             alt={selectedItem}
+            loading="lazy"
             className="w-9 h-9 object-contain"
             onError={onFallbackSpriteError}
           />

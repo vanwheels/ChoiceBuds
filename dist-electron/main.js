@@ -4,6 +4,7 @@ import path from "path";
 import fs from "fs/promises";
 const __filename$1 = fileURLToPath(import.meta.url);
 const __dirname$1 = path.dirname(__filename$1);
+app.disableHardwareAcceleration();
 let mainWindow = null;
 function getUserDataPath() {
   return app.getPath("userData");

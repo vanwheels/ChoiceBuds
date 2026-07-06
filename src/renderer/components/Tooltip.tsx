@@ -1,28 +1,47 @@
 /**
- * Tooltip.tsx - Card-Anchored Tooltip Panel
+ * Tooltip.tsx - Cursor-Anchored Tooltip Panel
  * A single, parent-controlled floating panel. The caller owns hover state and
- * decides *when* to render this; this component only decides *where* it sits.
+ * captures the hovered element's `getBoundingClientRect()` once on hover-enter
+ * (see EditOverlays.tsx); this component just renders near that rect.
  *
- * It renders with no positioning context of its own (no `relative` wrapper,
- * no per-trigger sizing) so it always resolves against the nearest positioned
- * ancestor up the tree - which should be the whole card container (e.g.
- * PokemonCard's root `relative` div), not the small element that triggered it.
- * That keeps every tooltip (item/ability/move) at one uniform, card-width size
- * instead of shrinking to whatever tiny element was hovered.
+ * Uses `position: fixed`, so it renders relative to the viewport rather than
+ * any ancestor - it always appears right next to whatever was actually
+ * hovered (flipping above/below to stay on screen) instead of at the bottom
+ * of the whole card, and it can never be clipped by a card/grid boundary.
  *
  * Deliberately avoids `transform`, `backdrop-blur`, and animated transitions:
  * those were triggering an Electron GPU process freeze under rapid hovering.
+ * Horizontal/vertical placement is plain arithmetic on `left`/`top`/`bottom`.
  */
 
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 
 interface TooltipProps {
   content: ReactNode;
+  anchorRect: DOMRect;
 }
 
-export default function Tooltip({ content }: TooltipProps) {
+const TOOLTIP_WIDTH = 256; // px, matches w-64 below
+const VIEWPORT_MARGIN = 8;
+const MIN_SPACE_ABOVE = 160; // rough tooltip height - flip below if less room than this
+
+export default function Tooltip({ content, anchorRect }: TooltipProps) {
+  const centerX = anchorRect.left + anchorRect.width / 2;
+  const left = Math.min(
+    Math.max(centerX - TOOLTIP_WIDTH / 2, VIEWPORT_MARGIN),
+    window.innerWidth - TOOLTIP_WIDTH - VIEWPORT_MARGIN
+  );
+
+  const placeBelow = anchorRect.top < MIN_SPACE_ABOVE;
+  const style: CSSProperties = placeBelow
+    ? { left, top: anchorRect.bottom + VIEWPORT_MARGIN }
+    : { left, bottom: window.innerHeight - anchorRect.top + VIEWPORT_MARGIN };
+
   return (
-    <div className="absolute z-50 top-full left-0 right-0 w-full mt-2 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs shadow-md pointer-events-none break-words">
+    <div
+      className="fixed z-50 w-64 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs shadow-md pointer-events-none break-words"
+      style={style}
+    >
       {content}
     </div>
   );

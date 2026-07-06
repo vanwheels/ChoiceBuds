@@ -1,24 +1,20 @@
 /**
- * EditOverlays.tsx - Item Sprite Box, Ability Capsule, and Move Bubble Renderer
- * Displays the equipped item/ability/moves as themed, tooltip-driven UI in both
- * view and edit mode. In edit mode, each element opens a ShowdownPopover selector
- * backed by the species' real legal item/ability/move pool from useGameData.
+ * EditOverlays.tsx - Orchestrates ItemSpriteBox, AbilityCapsule, and MoveBubbleGrid.
+ * Owns the shared selection/tooltip state; each child is presentational only.
  *
- * Hover state for tooltips is lifted to a single `hoveredKey`, and only one
- * shared <Tooltip> is rendered (as a direct child of this component's root,
- * not nested inside any of the per-element `relative` wrappers used for the
- * ShowdownPopover). That lets it escape straight up to PokemonCard's `relative`
- * root and render at the card's exact width, instead of being sized/positioned
- * off whichever small element was hovered.
+ * Hover state is lifted to a single `hoveredKey` + `hoveredRect` (the trigger's
+ * own getBoundingClientRect(), captured once on hover-enter); one shared
+ * <Tooltip> renders `position: fixed` next to whatever was actually hovered.
  */
 
 import { useState, useEffect } from 'react';
 import type { ImportedPokemonInfo, ItemData, MoveData, AbilityData } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { RegulationId } from '../utils/pokemonRules';
-import { ShowdownPopover } from './ShowdownPopover';
+import { toReadableName } from '../utils/displayName';
 import MoveBubbleGrid, { type HoverKey } from './MoveBubbleGrid';
 import ItemSpriteBox from './ItemSpriteBox';
+import AbilityCapsule from './AbilityCapsule';
 import Tooltip from './Tooltip';
 import TypeBadge from './TypeBadge';
 
@@ -41,6 +37,7 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
   const { items, getItemData, getAbilityData, getMoveData, getEnrichedSpeciesOptions } = gameDataState;
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [hoveredKey, setHoveredKey] = useState<HoverKey>(null);
+  const [hoveredRect, setHoveredRect] = useState<DOMRect | null>(null);
   const [selectedItem, setSelectedItem] = useState<string>(pokemon.showdownData.item || '');
   const [selectedAbility, setSelectedAbility] = useState<string>(pokemon.showdownData.ability || '');
   const [selectedMoves, setSelectedMoves] = useState<string[]>([
@@ -61,17 +58,26 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
   const toggleMenu = (menuName: string) => setActiveMenu(activeMenu === menuName ? null : menuName);
   const closeMenu = () => setActiveMenu(null);
 
-  const hoverEnter = (key: HoverKey) => setHoveredKey(key);
+  const hoverEnter = (key: HoverKey, rect: DOMRect) => {
+    setHoveredKey(key);
+    setHoveredRect(rect);
+  };
   const hoverLeave = (key: HoverKey) => setHoveredKey(prev => (prev === key ? null : prev));
 
   const handleItemClick = (item: ItemData) => {
-    setSelectedItem(item.name);
+    // Store the readable form ("Fairy Feather"), not the raw API slug
+    // ("fairy-feather") - keeps display text/tooltips readable and keeps
+    // exact-match checks (e.g. the Fairy Feather sprite fallback) working
+    // regardless of whether the item came from pasted Showdown text or a
+    // picker selection. normalizeNameForAPI still re-derives the correct
+    // slug from this when re-fetching, so nothing downstream breaks.
+    setSelectedItem(toReadableName(item.name));
     setItemData(item);
     closeMenu();
   };
 
   const handleAbilityClick = (ability: AbilityData) => {
-    setSelectedAbility(ability.name);
+    setSelectedAbility(toReadableName(ability.name));
     setAbilityData(ability);
     closeMenu();
   };
@@ -79,7 +85,7 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
   const handleMoveClick = (index: number, move: MoveData) => {
     setSelectedMoves(prev => {
       const next = [...prev];
-      next[index] = move.name;
+      next[index] = toReadableName(move.name);
       return next;
     });
     setMoveDataSlots(prev => {
@@ -163,7 +169,7 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
       return (
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-white">{move.name}</span>
+            <span className="font-bold text-white">{toReadableName(move.name)}</span>
             <TypeBadge type={move.type} />
           </div>
           <div className="flex items-center gap-1.5 text-gray-300">
@@ -171,6 +177,7 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
               <img
                 src={MOVE_CATEGORY_BADGE[move.category]}
                 alt={move.category}
+                loading="lazy"
                 className="h-4 w-auto"
                 onError={() => setFailedBadges(prev => ({ ...prev, [move.category]: true }))}
               />
@@ -197,7 +204,7 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
         fallbackSpriteFailed={itemFallbackSpriteFailed}
         onSpriteError={() => setItemSpriteFailed(true)}
         onFallbackSpriteError={() => setItemFallbackSpriteFailed(true)}
-        onHoverEnter={() => hoverEnter('item')}
+        onHoverEnter={(e) => hoverEnter('item', e.currentTarget.getBoundingClientRect())}
         onHoverLeave={() => hoverLeave('item')}
         onToggleMenu={() => toggleMenu('item')}
         onCloseMenu={closeMenu}
@@ -205,20 +212,17 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
       />
 
       {/* Ability Capsule */}
-      <div className="relative">
-        <div
-          onMouseEnter={() => hoverEnter('ability')}
-          onMouseLeave={() => hoverLeave('ability')}
-          onClick={isEditing ? () => toggleMenu('ability') : undefined}
-          className={`px-4 py-1.5 rounded-full border bg-gray-800 text-xs font-semibold text-white truncate max-w-[180px] transition-colors ${isEditing ? 'cursor-pointer hover:border-blue-500' : ''}`}
-          style={{ borderColor: activeMenu === 'ability' ? '#3b82f6' : '#4b5563' }}
-        >
-          {selectedAbility || 'Select Ability'}
-        </div>
-        {activeMenu === 'ability' && (
-          <ShowdownPopover mode="ability" data={legalAbilities} onSelect={handleAbilityClick} onClose={closeMenu} />
-        )}
-      </div>
+      <AbilityCapsule
+        selectedAbility={selectedAbility}
+        legalAbilities={legalAbilities}
+        activeMenu={activeMenu}
+        isEditing={isEditing}
+        onHoverEnter={(e) => hoverEnter('ability', e.currentTarget.getBoundingClientRect())}
+        onHoverLeave={() => hoverLeave('ability')}
+        onToggleMenu={() => toggleMenu('ability')}
+        onCloseMenu={closeMenu}
+        onAbilitySelect={handleAbilityClick}
+      />
 
       {/* Move Bubbles - strict 2x2 grid, identical widths, wraps long names */}
       <MoveBubbleGrid
@@ -235,8 +239,8 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
         onMoveSelect={handleMoveClick}
       />
 
-      {/* Single shared tooltip, anchored to PokemonCard's `relative` root - not to whatever tiny element is hovered */}
-      {hoveredKey && <Tooltip content={renderTooltipContent()} />}
+      {/* Single shared tooltip, fixed-positioned next to whatever was actually hovered */}
+      {hoveredKey && hoveredRect && <Tooltip content={renderTooltipContent()} anchorRect={hoveredRect} />}
     </div>
   );
 }
