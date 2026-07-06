@@ -16,7 +16,10 @@
 
 const REGIONAL_SUFFIXES = ['-alola', '-galar', '-hisui', '-paldea'];
 const GENDER_SUFFIX = '-f';
-const MEGA_SUFFIX_RE = /-mega(-x|-y)?$/i;
+/** Matches -Mega, -Mega-X/-Y (Charizard/Mewtwo/Raichu) and -Mega-Z (a
+ * non-standard third variant @smogon/calc includes for Absol/Garchomp/
+ * Lucario) - any single-letter suffix, so it keeps matching if more show up. */
+const MEGA_SUFFIX_RE = /-mega(-[a-z])?$/i;
 const GMAX_SUFFIX_RE = /-gmax$/i;
 /** "Aegislash-Both" etc. - a synthetic combined-stats entry the engine uses
  * internally for stance-change auto-detection, not a real forme a player

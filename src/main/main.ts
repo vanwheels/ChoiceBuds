@@ -44,14 +44,14 @@ function getPokeAPICachePath(): string {
 
 /**
  * Creates the main application window with strict dimension constraints
- * Enforces minWidth: 1024 and minHeight: 768 for layout container integrity
+ * Enforces minWidth: 1280 and minHeight: 720 for layout container integrity
  */
 function createWindow(): void {
   mainWindow = new BrowserWindow({
     width: 1280,
-    height: 800,
-    minWidth: 1024,
-    minHeight: 768,
+    height: 720,
+    minWidth: 1280,
+    minHeight: 720,
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
       contextIsolation: true,

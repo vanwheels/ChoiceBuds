@@ -13,7 +13,7 @@ import { useDismissable } from '../../hooks/useDismissable';
 const MAX_RESULTS = 50;
 
 interface CalcAutocompleteProps {
-  label: string;
+  label?: string;
   value: string;
   options: string[];
   placeholder?: string;
@@ -42,7 +42,7 @@ export default function CalcAutocomplete({ label, value, options, placeholder, o
 
   return (
     <div ref={ref} className="relative flex flex-col gap-1">
-      <label className="text-[10px] text-gray-400 uppercase tracking-wide">{label}</label>
+      {label && <label className="text-[10px] text-gray-400 uppercase tracking-wide">{label}</label>}
       <input
         type="text"
         value={query}

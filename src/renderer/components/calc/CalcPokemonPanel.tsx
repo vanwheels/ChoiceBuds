@@ -21,7 +21,7 @@ import type { FormeFamily } from '../../utils/calcFormes';
 import { formeDisplayLabel } from '../../utils/calcFormes';
 import type { NatureName } from '@smogon/calc/dist/data/interface';
 import CalcAutocomplete from './CalcAutocomplete';
-import CalcStatsGrid from './CalcStatsGrid';
+import CalcStatRows from './CalcStatRows';
 
 interface CalcPokemonPanelProps {
   title: string;
@@ -157,22 +157,11 @@ export default function CalcPokemonPanel({
         </div>
       </div>
 
-      <CalcStatsGrid
-        title="SPs"
-        values={state.sps}
-        min={0}
-        max={32}
-        step={1}
-        showTotal
-        onChange={(key, value) => onChange({ sps: { ...state.sps, [key]: value } })}
-      />
-      <CalcStatsGrid
-        title="Boosts"
-        values={state.boosts}
-        min={-6}
-        max={6}
-        step={1}
-        onChange={(key, value) => onChange({ boosts: { ...state.boosts, [key]: value } })}
+      <CalcStatRows
+        sps={state.sps}
+        boosts={state.boosts}
+        onChangeSp={(key, value) => onChange({ sps: { ...state.sps, [key]: value } })}
+        onChangeBoost={(key, value) => onChange({ boosts: { ...state.boosts, [key]: value } })}
       />
     </div>
   );

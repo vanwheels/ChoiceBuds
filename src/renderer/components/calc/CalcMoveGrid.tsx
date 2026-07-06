@@ -1,9 +1,11 @@
 /**
  * CalcMoveGrid.tsx - One Pokémon's 4-Move Damage Grid
- * Each row is a move slot: name autocomplete + crit checkbox + live damage
- * %. Clicking a row selects it as the detailed result shown in
- * CalcResultPanel - mirrors the real Champions calc's "select one to show
- * detailed results" move buttons.
+ * Each row is a move slot: name autocomplete + crit toggle + (for
+ * multi-hit moves) a hit-count picker + live damage %. Clicking a row
+ * selects it as the detailed result shown in CalcResultPanel - mirrors the
+ * real Champions calc's "select one to show detailed results" move
+ * buttons. No per-row "Move 1"/"Move 2" label - kept compact since the
+ * grid title already establishes what these rows are.
  */
 
 import type { CalcMoveSlot, CalcMoveResultEntry } from '../../hooks/useDamageCalc';
@@ -26,6 +28,7 @@ export default function CalcMoveGrid({ title, moves, results, moveOptions, selec
       {moves.map((slot, index) => {
         const result = results[index];
         const isSelected = selectedIndex === index;
+        const [minHits, maxHits] = result?.multihitRange ?? [null, null];
         return (
           <div
             key={index}
@@ -36,25 +39,34 @@ export default function CalcMoveGrid({ title, moves, results, moveOptions, selec
           >
             <div className="flex-1" onClick={(e) => e.stopPropagation()}>
               <CalcAutocomplete
-                label={`Move ${index + 1}`}
                 value={slot.name}
                 options={moveOptions}
                 placeholder="Search moves..."
-                onChange={(name) => onChangeMove(index, { name })}
+                onChange={(name) => onChangeMove(index, { name, hits: undefined })}
               />
             </div>
-            <label
-              className="flex items-center gap-1 text-[10px] text-zinc-400 cursor-pointer"
-              onClick={(e) => e.stopPropagation()}
+            {minHits !== null && maxHits !== null && (
+              <select
+                value={slot.hits ?? result?.effectiveHits ?? minHits}
+                onChange={(e) => { e.stopPropagation(); onChangeMove(index, { hits: Number(e.target.value) }); }}
+                onClick={(e) => e.stopPropagation()}
+                title="Number of hits"
+                className="px-1 py-1 text-xs bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500 cursor-pointer"
+              >
+                {Array.from({ length: maxHits - minHits + 1 }, (_, i) => minHits + i).map(n => (
+                  <option key={n} value={n}>×{n}</option>
+                ))}
+              </select>
+            )}
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onChangeMove(index, { isCrit: !slot.isCrit }); }}
+              className={`px-2 py-1 text-[10px] font-bold rounded transition-colors cursor-pointer shrink-0 ${
+                slot.isCrit ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+              }`}
             >
-              <input
-                type="checkbox"
-                checked={slot.isCrit}
-                onChange={(e) => onChangeMove(index, { isCrit: e.target.checked })}
-                className="cursor-pointer"
-              />
               Crit
-            </label>
+            </button>
             <span className="w-28 text-right text-xs font-semibold text-zinc-200 shrink-0">
               {result?.errorMessage ? '—' : result?.percent ?? ''}
             </span>

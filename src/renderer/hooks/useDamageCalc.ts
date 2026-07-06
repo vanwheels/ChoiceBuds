@@ -21,7 +21,7 @@
  */
 
 import { useEffect, useMemo, useState } from 'react';
-import { calculate, Generations, Pokemon, Move, Field } from '@smogon/calc';
+import { calculate, Generations, Pokemon, Move, Field, toID } from '@smogon/calc';
 import type {
   StatsTable,
   GameType,
@@ -76,6 +76,8 @@ function spsToEvs(sps: StatsTable): StatsTable {
 export interface CalcMoveSlot {
   name: string;
   isCrit: boolean;
+  /** Explicit hit count for multi-hit moves - undefined lets the engine use its own default (see getMultihitRange) */
+  hits?: number;
 }
 
 function defaultMoves(): CalcMoveSlot[] {
@@ -174,16 +176,24 @@ export interface CalcMoveResultEntry {
   kochanceText: string | null;
   possibleDamages: number[];
   errorMessage: string | null;
+  /** [min, max] selectable hit count if this move hits multiple times, else null */
+  multihitRange: [number, number] | null;
+  /** The hit count actually used for this result (engine default if the slot didn't set one) */
+  effectiveHits: number | null;
 }
 
 function emptyEntry(moveName: string): CalcMoveResultEntry {
-  return { moveName, percent: null, desc: null, range: null, kochanceText: null, possibleDamages: [], errorMessage: null };
+  return {
+    moveName, percent: null, desc: null, range: null, kochanceText: null, possibleDamages: [],
+    errorMessage: null, multihitRange: null, effectiveHits: null,
+  };
 }
 
 function errorEntry(moveName: string, err: unknown): CalcMoveResultEntry {
   return {
     moveName, percent: null, desc: null, range: null, kochanceText: null, possibleDamages: [],
     errorMessage: err instanceof Error ? err.message : 'Unable to calculate damage for this matchup',
+    multihitRange: null, effectiveHits: null,
   };
 }
 
@@ -191,6 +201,21 @@ function flattenDamage(damage: number | number[] | number[][]): number[] {
   if (typeof damage === 'number') return [damage];
   if (damage.length > 0 && Array.isArray(damage[0])) return (damage as number[][]).flat();
   return damage as number[];
+}
+
+/**
+ * A move's own base data (not the constructed Move instance, which always
+ * resolves to a single concrete .hits) exposes "multihit" as: undefined (not
+ * multi-hit), a plain number (a fixed hit count, e.g. Triple Axel/Population
+ * Bomb - treated as a 1..N pick range so a partial connect can be modeled),
+ * or a [min, max] tuple (e.g. Bullet Seed 2-5).
+ */
+function getMultihitRange(gen: Generation, moveName: string): [number, number] | null {
+  const moveData = gen.moves.get(toID(moveName));
+  const multihit = moveData?.multihit;
+  if (multihit === undefined) return null;
+  if (typeof multihit === 'number') return [1, multihit];
+  return [multihit[0], multihit[1]];
 }
 
 function buildPokemon(gen: Generation, state: CalcPokemonState): InstanceType<typeof Pokemon> {
@@ -240,12 +265,14 @@ function computeSideResults(
 
   return attacker.moves.map(slot => {
     if (!slot.name) return emptyEntry('');
+    const multihitRange = getMultihitRange(gen, slot.name);
     try {
       const move = new Move(gen, slot.name, {
         ability: attacker.ability || undefined,
         item: attacker.item || undefined,
         species: attacker.species,
         isCrit: slot.isCrit,
+        hits: slot.hits,
       });
       const result = calculate(gen, atkPokemon, defPokemon, move, field);
       const range = result.range();
@@ -259,6 +286,8 @@ function computeSideResults(
         kochanceText: result.kochance().text,
         possibleDamages: [...new Set(flattenDamage(result.damage))].sort((a, b) => a - b),
         errorMessage: null,
+        multihitRange,
+        effectiveHits: multihitRange ? move.hits : null,
       };
     } catch (err) {
       return errorEntry(slot.name, err);

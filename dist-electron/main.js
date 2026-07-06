@@ -18,9 +18,9 @@ function getPokeAPICachePath() {
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
-    height: 800,
-    minWidth: 1024,
-    minHeight: 768,
+    height: 720,
+    minWidth: 1280,
+    minHeight: 720,
     webPreferences: {
       preload: path.join(__dirname$1, "preload.mjs"),
       contextIsolation: true,

@@ -38,11 +38,11 @@ export default function App() {
   return (
     <div className="flex h-screen bg-gray-900 text-gray-100">
       {/* Fixed Navigation Sidebar - Left Side */}
-      <aside className="w-64 bg-gray-800 border-r border-gray-700 flex flex-col" style={{ paddingLeft: '1.25rem', paddingRight: '1.25rem', paddingTop: '1rem', paddingBottom: '1rem' }}>
+      <aside className="w-32 bg-gray-800 border-r border-gray-700 flex flex-col" style={{ paddingLeft: '1.25rem', paddingRight: '1.25rem', paddingTop: '1rem', paddingBottom: '1rem' }}>
         {/* App Header */}
-        <div className="p-6 border-b border-gray-700">
-          <h1 className="text-2xl font-bold text-blue-400">ChoiceBuds</h1>
-          <p className="text-sm text-gray-400 mt-1">VGC Team Manager</p>
+        <div className="pb-4 border-b border-gray-700">
+          <h1 className="text-base font-bold text-blue-400 leading-tight">ChoiceBuds</h1>
+          <p className="text-xs text-gray-400 mt-1">VGC Team Manager</p>
         </div>
 
         {/* Navigation Menu */}
@@ -66,11 +66,6 @@ export default function App() {
                 }`}
               >
                 Calc
-              </button>
-            </li>
-            <li>
-              <button className="w-full text-left px-4 py-2 rounded-lg text-gray-400 hover:bg-gray-700 transition-colors">
-                Builder
               </button>
             </li>
             <li>
