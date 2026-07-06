@@ -82,7 +82,7 @@ const REG_MB_ADDED_SPECIES: string[] = [
   'grimmsnarl', 'falinks', 'overqwil', 'houndstone', 'annihilape', 'gholdengo',
 ];
 
-function normalizeSlug(value: string): string {
+export function normalizeSlug(value: string): string {
   return value
     .toLowerCase()
     .trim()

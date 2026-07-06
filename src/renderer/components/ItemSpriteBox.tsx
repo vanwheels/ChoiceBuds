@@ -23,7 +23,7 @@ interface ItemSpriteBoxProps {
   onFallbackSpriteError: () => void;
   onHoverEnter: (e: MouseEvent<HTMLDivElement>) => void;
   onHoverLeave: () => void;
-  onToggleMenu: () => void;
+  onToggleMenu: (e: MouseEvent<HTMLDivElement>) => void;
 }
 
 export default function ItemSpriteBox({

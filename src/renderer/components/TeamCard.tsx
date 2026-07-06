@@ -8,6 +8,7 @@ import { useRosterActions } from '../hooks/useRosterActions';
 import { toRegulationId } from '../utils/pokemonRules';
 import PokemonCard from './PokemonCard';
 import SpeciesPickerCard from './SpeciesPickerCard';
+import TeamValidationButton from './TeamValidationButton';
 
 interface TeamCardProps {
   team: Team;
@@ -95,6 +96,9 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
           <div className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-blue-600 text-white mr-2">
             {team.format || 'Reg M-A'}
           </div>
+
+          {/* A2. Validate Team Button + Popup */}
+          <TeamValidationButton team={team} rulesetId={toRegulationId(team.format)} />
 
           {/* B. Delete Button */}
           {onDelete && (

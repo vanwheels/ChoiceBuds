@@ -11,18 +11,24 @@ import { useState } from 'react';
 import type { ItemData } from '../types/pokemon';
 import { useDismissable } from '../hooks/useDismissable';
 import { toReadableName } from '../utils/displayName';
+import { itemMatchesTag } from '../config/vgcData';
+import { parseTagFilter } from '../utils/tagSearch';
 
 interface ItemPickerPanelProps {
   items: ItemData[];
+  maxHeight: number;
   onSelect: (item: ItemData) => void;
   onClose: () => void;
 }
 
-export default function ItemPickerPanel({ items, onSelect, onClose }: ItemPickerPanelProps) {
+export default function ItemPickerPanel({ items, maxHeight, onSelect, onClose }: ItemPickerPanelProps) {
   const [search, setSearch] = useState('');
   const ref = useDismissable<HTMLDivElement>(onClose);
 
-  const filtered = items.filter(item => toReadableName(item.name).toLowerCase().includes(search.toLowerCase()));
+  const tag = parseTagFilter(search);
+  const filtered = items.filter(item =>
+    tag !== null ? itemMatchesTag(item.name, tag) : toReadableName(item.name).toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div ref={ref} className="w-full flex flex-col gap-2 bg-gray-800 border-2 border-blue-500 rounded-lg p-2">
@@ -30,11 +36,11 @@ export default function ItemPickerPanel({ items, onSelect, onClose }: ItemPicker
         type="text"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search items..."
+        placeholder="Search items... (#MegaStone, #Berry, #HoldItem)"
         autoFocus
         className="w-full px-2 py-1 text-sm font-bold text-white bg-gray-900 border border-gray-600 rounded text-center outline-none focus:border-blue-500"
       />
-      <div className="max-h-[32rem] overflow-y-auto flex flex-col gap-1">
+      <div className="overflow-y-auto flex flex-col gap-1" style={{ maxHeight }}>
         {filtered.length === 0 ? (
           <p className="text-xs text-gray-400 text-center mt-2">No items found</p>
         ) : (

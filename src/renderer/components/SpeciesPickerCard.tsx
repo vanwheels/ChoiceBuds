@@ -18,6 +18,8 @@ import type { SpeciesRosterEntry } from '../types/pokemon';
 import type { RegulationId } from '../utils/pokemonRules';
 import { validateSpeciesLegality } from '../utils/pokemonRules';
 import { useDismissable } from '../hooks/useDismissable';
+import { usePokemonTypeFilter } from '../hooks/usePokemonTypeFilter';
+import { parseTagFilter } from '../utils/tagSearch';
 
 interface SpeciesPickerCardProps {
   roster: SpeciesRosterEntry[];
@@ -30,9 +32,13 @@ export default function SpeciesPickerCard({ roster, rulesetId, onSelect, onClose
   const [search, setSearch] = useState('');
   const ref = useDismissable<HTMLDivElement>(onClose);
 
-  const filtered = roster
-    .filter(pkmn => validateSpeciesLegality(pkmn.name, rulesetId))
-    .filter(pkmn => pkmn.name.toLowerCase().includes(search.toLowerCase()));
+  const tag = parseTagFilter(search);
+  const typeMembers = usePokemonTypeFilter(tag);
+
+  const legalRoster = roster.filter(pkmn => validateSpeciesLegality(pkmn.name, rulesetId));
+  const filtered = tag !== null
+    ? legalRoster.filter(pkmn => typeMembers?.has(pkmn.name.toLowerCase()) ?? false)
+    : legalRoster.filter(pkmn => pkmn.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div ref={ref} className="relative bg-gray-700 border-2 border-blue-500 rounded-lg p-3 flex flex-col gap-3 max-w-[280px] min-h-[280px] max-h-[32rem]">
@@ -50,7 +56,7 @@ export default function SpeciesPickerCard({ roster, rulesetId, onSelect, onClose
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search species..."
+          placeholder="Search species... (#fire, #grass, ...)"
           autoFocus
           className="w-full px-2 py-1 text-sm font-bold text-white bg-gray-800 border border-gray-600 rounded text-center outline-none focus:border-blue-500"
         />
@@ -59,7 +65,9 @@ export default function SpeciesPickerCard({ roster, rulesetId, onSelect, onClose
       {/* Results fill the rest of the slot, capped and scrollable */}
       <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-1">
         {filtered.length === 0 ? (
-          <p className="text-xs text-gray-400 text-center mt-4">No legal species found</p>
+          <p className="text-xs text-gray-400 text-center mt-4">
+            {tag !== null && typeMembers === null ? 'Loading type…' : 'No legal species found'}
+          </p>
         ) : (
           filtered.map(pkmn => (
             <div

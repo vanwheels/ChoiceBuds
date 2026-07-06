@@ -1,44 +1,78 @@
 /**
  * StatsColumn.tsx - Tiny EV Stats Component
- * 3x2 CSS grid with inline +/- buttons for editing
+ * 3x2 CSS grid; only one cell (`activeStat`) is ever expanded into its
+ * hold-to-repeat +/- editor at a time - see EVStatCell.tsx. Clicking outside
+ * the grid (or Escape) collapses back to the compact label+value buttons.
  */
 
 import { useState } from 'react';
-import type { ImportedPokemonInfo } from '../types/pokemon';
+import type { EVSpread, ShowdownPokemon } from '../types/pokemon';
+import { useDismissable } from '../hooks/useDismissable';
+import EVStatCell from './EVStatCell';
 
 interface StatsColumnProps {
-  pokemon: ImportedPokemonInfo;
+  evs: EVSpread;
   isEditing?: boolean;
+  onUpdatePokemon: (updates: Partial<ShowdownPokemon>) => void;
 }
 
-export default function StatsColumn({ pokemon, isEditing = false }: StatsColumnProps) {
-  const evs = pokemon.showdownData.evs;
-  const [activeStat, setActiveStat] = useState<string | null>(null);
+const STATS: Array<{ label: string; key: keyof EVSpread }> = [
+  { label: 'HP', key: 'hp' },
+  { label: 'Atk', key: 'attack' },
+  { label: 'Def', key: 'defense' },
+  { label: 'SpA', key: 'specialAttack' },
+  { label: 'SpD', key: 'specialDefense' },
+  { label: 'Spe', key: 'speed' },
+];
+
+export default function StatsColumn({ evs, isEditing = false, onUpdatePokemon }: StatsColumnProps) {
   const [localEVs, setLocalEVs] = useState(evs);
-  
+  const [activeStat, setActiveStat] = useState<keyof EVSpread | null>(null);
+  const ref = useDismissable<HTMLDivElement>(() => setActiveStat(null));
+
   const totalEVs = Object.values(localEVs).reduce((sum, val) => sum + val, 0);
-  
-  const handleIncrement = (key: keyof typeof localEVs) => {
-    if (localEVs[key] >= 32 || totalEVs >= 66) return;
-    setLocalEVs(prev => ({ ...prev, [key]: prev[key] + 1 }));
-  };
-  
-  const handleDecrement = (key: keyof typeof localEVs) => {
-    if (localEVs[key] <= 0) return;
-    setLocalEVs(prev => ({ ...prev, [key]: prev[key] - 1 }));
+
+  // Functional updates so hold-to-repeat always checks the true latest
+  // state on every tick, rather than the totalEVs/localEVs closured from
+  // whichever render the interval's callback was created in. Every tick
+  // also persists immediately, matching the rest of the app's "write on
+  // every mutation" convention (see useTeams.ts).
+  const handleIncrement = (key: keyof EVSpread) => {
+    setLocalEVs(prev => {
+      const currentTotal = Object.values(prev).reduce((sum, v) => sum + v, 0);
+      if (prev[key] >= 32 || currentTotal >= 66) return prev;
+      const next = { ...prev, [key]: prev[key] + 1 };
+      onUpdatePokemon({ evs: next });
+      return next;
+    });
   };
 
-  const stats = [
-    { label: 'HP', key: 'hp' as keyof typeof localEVs },
-    { label: 'Atk', key: 'attack' as keyof typeof localEVs },
-    { label: 'Def', key: 'defense' as keyof typeof localEVs },
-    { label: 'SpA', key: 'specialAttack' as keyof typeof localEVs },
-    { label: 'SpD', key: 'specialDefense' as keyof typeof localEVs },
-    { label: 'Spe', key: 'speed' as keyof typeof localEVs }
-  ];
+  const handleDecrement = (key: keyof EVSpread) => {
+    setLocalEVs(prev => {
+      if (prev[key] <= 0) return prev;
+      const next = { ...prev, [key]: prev[key] - 1 };
+      onUpdatePokemon({ evs: next });
+      return next;
+    });
+  };
+
+  const handleDirectInput = (key: keyof EVSpread, rawValue: number) => {
+    if (Number.isNaN(rawValue)) return;
+    setLocalEVs(prev => {
+      const clampedForStat = Math.max(0, Math.min(32, Math.floor(rawValue)));
+      const totalWithoutThisStat = Object.entries(prev).reduce(
+        (sum, [k, v]) => (k === key ? sum : sum + v), 0
+      );
+      const maxAllowedForStat = Math.min(32, 66 - totalWithoutThisStat);
+      const finalValue = Math.max(0, Math.min(clampedForStat, maxAllowedForStat));
+      const next = { ...prev, [key]: finalValue };
+      onUpdatePokemon({ evs: next });
+      return next;
+    });
+  };
 
   return (
-    <div className="bg-gray-800 rounded px-2 py-1.5 border border-gray-600">
+    <div ref={ref} className="bg-gray-800 rounded px-2 py-1.5 border border-gray-600">
       <div className="flex justify-between items-center mb-1">
         <p className="text-xs text-gray-400 uppercase tracking-wide">EVs</p>
         {isEditing && (
@@ -52,36 +86,22 @@ export default function StatsColumn({ pokemon, isEditing = false }: StatsColumnP
         )}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginTop: '0.5rem' }}>
-        {stats.map(stat => {
+        {STATS.map(stat => {
           const val = isEditing ? localEVs[stat.key] : evs[stat.key];
-          const isActive = activeStat === stat.label;
-          const exceedsMax = val > 32;
           return (
-            <div key={stat.label} className="flex flex-col items-center relative">
-              <span className="text-[10px] font-bold text-gray-400 uppercase">{stat.label}</span>
-              {isEditing ? (
-                <div className="relative">
-                  <span
-                    onClick={() => setActiveStat(isActive ? null : stat.label)}
-                    className={`text-sm font-mono font-bold cursor-pointer px-1.5 py-0.5 rounded border ${
-                      exceedsMax
-                        ? 'border-red-500 text-red-400 bg-red-950/20'
-                        : 'border-transparent text-gray-100'
-                    } ${isActive ? 'bg-gray-700' : ''}`}
-                  >{val}</span>
-                  {isActive && (
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 flex gap-1 mt-1 z-10">
-                      <button onClick={() => handleDecrement(stat.key)} disabled={val <= 0} className="w-6 h-6 text-xs font-bold rounded border" style={{ backgroundColor: val <= 0 ? '#1f2937' : '#374151', color: val <= 0 ? '#6b7280' : '#f3f4f6', borderColor: '#4b5563', cursor: val <= 0 ? 'not-allowed' : 'pointer' }}>−</button>
-                      <button onClick={() => handleIncrement(stat.key)} disabled={val >= 32 || totalEVs >= 66} className="w-6 h-6 text-xs font-bold rounded border" style={{ backgroundColor: (val >= 32 || totalEVs >= 66) ? '#1f2937' : '#374151', color: (val >= 32 || totalEVs >= 66) ? '#6b7280' : '#f3f4f6', borderColor: '#4b5563', cursor: (val >= 32 || totalEVs >= 66) ? 'not-allowed' : 'pointer' }}>+</button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <span className={`text-sm font-mono font-bold px-1.5 py-0.5 rounded border ${
-                  exceedsMax ? 'border-red-500 text-red-400 bg-red-950/20' : 'border-transparent text-gray-100'
-                }`}>{val}</span>
-              )}
-            </div>
+            <EVStatCell
+              key={stat.label}
+              label={stat.label}
+              value={val}
+              isEditing={isEditing}
+              isActive={activeStat === stat.key}
+              exceedsMax={val > 32}
+              canIncrement={val < 32 && totalEVs < 66}
+              onActivate={() => setActiveStat(stat.key)}
+              onIncrement={() => handleIncrement(stat.key)}
+              onDecrement={() => handleDecrement(stat.key)}
+              onDirectInput={(value) => handleDirectInput(stat.key, value)}
+            />
           );
         })}
       </div>

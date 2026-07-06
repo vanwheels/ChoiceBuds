@@ -8,35 +8,33 @@
  */
 
 import { useState, useEffect } from 'react';
-import type { ImportedPokemonInfo, ItemData, MoveData, AbilityData } from '../types/pokemon';
+import type { MouseEvent } from 'react';
+import type { ImportedPokemonInfo, ItemData, MoveData, AbilityData, ShowdownPokemon } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { RegulationId } from '../utils/pokemonRules';
 import { toReadableName } from '../utils/displayName';
+import { measureDropdownMaxHeight } from '../utils/measureDropdownHeight';
 import MoveBubbleGrid, { type HoverKey } from './MoveBubbleGrid';
 import ItemSpriteBox from './ItemSpriteBox';
 import ItemPickerPanel from './ItemPickerPanel';
 import AbilityCapsule from './AbilityCapsule';
+import AbilityPickerPanel from './AbilityPickerPanel';
+import MovePickerPanel from './MovePickerPanel';
 import Tooltip from './Tooltip';
-import TypeBadge from './TypeBadge';
+import TooltipContent from './TooltipContent';
 
 interface EditOverlaysProps {
   pokemon: ImportedPokemonInfo;
   isEditing?: boolean;
   gameDataState: UseGameDataReturn;
   rulesetId: RegulationId;
+  onUpdatePokemon: (updates: Partial<ShowdownPokemon>) => void;
 }
 
-// Serebii.net category badge sprites (Physical path verified live via fetch;
-// special/status follow the same /pokedex-dp/type/ folder + filename convention).
-const MOVE_CATEGORY_BADGE: Record<string, string> = {
-  physical: 'https://www.serebii.net/pokedex-dp/type/physical.png',
-  special: 'https://www.serebii.net/pokedex-dp/type/special.png',
-  status: 'https://www.serebii.net/pokedex-dp/type/other.png',
-};
-
-export default function EditOverlays({ pokemon, isEditing = false, gameDataState, rulesetId }: EditOverlaysProps) {
+export default function EditOverlays({ pokemon, isEditing = false, gameDataState, rulesetId, onUpdatePokemon }: EditOverlaysProps) {
   const { items, getItemData, getAbilityData, getMoveData, getEnrichedSpeciesOptions } = gameDataState;
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [activeMenuMaxHeight, setActiveMenuMaxHeight] = useState(400);
   const [hoveredKey, setHoveredKey] = useState<HoverKey>(null);
   const [hoveredRect, setHoveredRect] = useState<DOMRect | null>(null);
   const [selectedItem, setSelectedItem] = useState<string>(pokemon.showdownData.item || '');
@@ -52,11 +50,19 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
   const [itemData, setItemData] = useState<ItemData | null>(null);
   const [itemSpriteFailed, setItemSpriteFailed] = useState(false);
   const [itemFallbackSpriteFailed, setItemFallbackSpriteFailed] = useState(false);
-  const [failedBadges, setFailedBadges] = useState<Record<string, boolean>>({});
   const [abilityData, setAbilityData] = useState<AbilityData | null>(null);
   const [moveDataSlots, setMoveDataSlots] = useState<Array<MoveData | null>>([null, null, null, null]);
 
-  const toggleMenu = (menuName: string) => setActiveMenu(activeMenu === menuName ? null : menuName);
+  // Caps the dropdown/panel at whatever room is left between the trigger and
+  // the bottom of this PokemonCard, not a fixed height - see measureDropdownHeight.ts
+  const toggleMenu = (menuName: string, e: MouseEvent<HTMLElement>) => {
+    if (activeMenu === menuName) {
+      setActiveMenu(null);
+      return;
+    }
+    setActiveMenuMaxHeight(measureDropdownMaxHeight(e.currentTarget));
+    setActiveMenu(menuName);
+  };
   const closeMenu = () => setActiveMenu(null);
 
   const hoverEnter = (key: HoverKey, rect: DOMRect) => {
@@ -74,12 +80,14 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
     // slug from this when re-fetching, so nothing downstream breaks.
     setSelectedItem(toReadableName(item.name));
     setItemData(item);
+    onUpdatePokemon({ item: toReadableName(item.name) });
     closeMenu();
   };
 
   const handleAbilityClick = (ability: AbilityData) => {
     setSelectedAbility(toReadableName(ability.name));
     setAbilityData(ability);
+    onUpdatePokemon({ ability: toReadableName(ability.name) });
     closeMenu();
   };
 
@@ -87,6 +95,7 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
     setSelectedMoves(prev => {
       const next = [...prev];
       next[index] = toReadableName(move.name);
+      onUpdatePokemon({ moves: next });
       return next;
     });
     setMoveDataSlots(prev => {
@@ -144,58 +153,27 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
     return () => { cancelled = true; };
   }, [selectedMoves, getMoveData]);
 
-  const renderTooltipContent = () => {
-    if (hoveredKey === 'item') {
-      return (
-        <>
-          <div className="font-bold text-white mb-1">{selectedItem || 'No Item'}</div>
-          {selectedItem && <div className="text-gray-300">{itemData?.description || 'Loading…'}</div>}
-        </>
-      );
-    }
-    if (hoveredKey === 'ability') {
-      return (
-        <>
-          <div className="font-bold text-white mb-1">{selectedAbility || 'No Ability'}</div>
-          {selectedAbility && <div className="text-gray-300">{abilityData?.description || 'Loading…'}</div>}
-        </>
-      );
-    }
-    if (hoveredKey?.startsWith('move')) {
-      const index = Number(hoveredKey.slice(4));
-      const move = moveDataSlots[index];
-      if (!move) {
-        return <div className="text-gray-400">{selectedMoves[index] || 'No move selected'}</div>;
-      }
-      return (
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-white">{toReadableName(move.name)}</span>
-            <TypeBadge type={move.type} />
-          </div>
-          <div className="flex items-center gap-1.5 text-gray-300">
-            {!failedBadges[move.category] ? (
-              <img
-                src={MOVE_CATEGORY_BADGE[move.category]}
-                alt={move.category}
-                loading="lazy"
-                className="h-4 w-auto"
-                onError={() => setFailedBadges(prev => ({ ...prev, [move.category]: true }))}
-              />
-            ) : null}
-            <span className="capitalize">{move.category}</span> · PP {move.pp} · Pow {move.power ?? '—'} · Acc {move.accuracy != null ? `${move.accuracy}%` : '--'}
-          </div>
-          <div className="text-gray-400">{move.description}</div>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  // Picking an item replaces this whole region in place, starting at the
-  // item box's own position (not the card's top - that's species swap's job).
+  // Picking an item/ability/move replaces this whole region in place (not
+  // the card's top - that's species swap's job), so the picker always sits
+  // solely inside the PokemonCard's own width instead of floating past it.
   if (activeMenu === 'item') {
-    return <ItemPickerPanel items={items} onSelect={handleItemClick} onClose={closeMenu} />;
+    return <ItemPickerPanel items={items} maxHeight={activeMenuMaxHeight} onSelect={handleItemClick} onClose={closeMenu} />;
+  }
+  if (activeMenu === 'ability') {
+    return <AbilityPickerPanel abilities={legalAbilities} maxHeight={activeMenuMaxHeight} onSelect={handleAbilityClick} onClose={closeMenu} />;
+  }
+  if (activeMenu?.startsWith('move')) {
+    const moveIndex = Number(activeMenu.slice(4));
+    return (
+      <MovePickerPanel
+        moveIndex={moveIndex}
+        moves={legalMoves}
+        rulesetId={rulesetId}
+        maxHeight={activeMenuMaxHeight}
+        onSelect={(move) => handleMoveClick(moveIndex, move)}
+        onClose={closeMenu}
+      />
+    );
   }
 
   return (
@@ -211,39 +189,45 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
         onFallbackSpriteError={() => setItemFallbackSpriteFailed(true)}
         onHoverEnter={(e) => hoverEnter('item', e.currentTarget.getBoundingClientRect())}
         onHoverLeave={() => hoverLeave('item')}
-        onToggleMenu={() => toggleMenu('item')}
+        onToggleMenu={(e) => toggleMenu('item', e)}
       />
 
       {/* Ability Capsule */}
       <AbilityCapsule
         selectedAbility={selectedAbility}
-        legalAbilities={legalAbilities}
-        activeMenu={activeMenu}
         isEditing={isEditing}
         onHoverEnter={(e) => hoverEnter('ability', e.currentTarget.getBoundingClientRect())}
         onHoverLeave={() => hoverLeave('ability')}
-        onToggleMenu={() => toggleMenu('ability')}
-        onCloseMenu={closeMenu}
-        onAbilitySelect={handleAbilityClick}
+        onToggleMenu={(e) => toggleMenu('ability', e)}
       />
 
       {/* Move Bubbles - strict 2x2 grid, identical widths, wraps long names */}
       <MoveBubbleGrid
         moveDataSlots={moveDataSlots}
         selectedMoves={selectedMoves}
-        legalMoves={legalMoves}
-        activeMenu={activeMenu}
         isEditing={isEditing}
-        rulesetId={rulesetId}
         onToggleMenu={toggleMenu}
-        onCloseMenu={closeMenu}
         onHoverEnter={hoverEnter}
         onHoverLeave={hoverLeave}
-        onMoveSelect={handleMoveClick}
       />
 
       {/* Single shared tooltip, fixed-positioned next to whatever was actually hovered */}
-      {hoveredKey && hoveredRect && <Tooltip content={renderTooltipContent()} anchorRect={hoveredRect} />}
+      {hoveredKey && hoveredRect && (
+        <Tooltip
+          content={
+            <TooltipContent
+              hoveredKey={hoveredKey}
+              selectedItem={selectedItem}
+              itemData={itemData}
+              selectedAbility={selectedAbility}
+              abilityData={abilityData}
+              selectedMoves={selectedMoves}
+              moveDataSlots={moveDataSlots}
+            />
+          }
+          anchorRect={hoveredRect}
+        />
+      )}
     </div>
   );
 }
