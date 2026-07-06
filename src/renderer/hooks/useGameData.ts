@@ -4,27 +4,39 @@
  * Eliminates hardcoded MOVE_TYPE_MAP by dynamically querying and caching metadata
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import type { GameDataCache, MoveData, ItemData, AbilityData } from '../types/pokemon';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import type { GameDataCache, MoveData, ItemData, AbilityData, SpeciesLearnsetEntry } from '../types/pokemon';
+import { normalizeSpeciesForAPI } from '../services/pokeapi';
+import { VGC_ITEMS } from '../config/vgcData';
 
 export interface UseGameDataReturn {
   cache: GameDataCache | null;
   isInitialized: boolean;
   isLoading: boolean;
   error: string | null;
-  
+
+  // Global legal items collection (VGC_ITEMS enriched with live PokeAPI metadata)
+  items: ItemData[];
+
   // Move operations
   getMoveData: (moveName: string) => Promise<MoveData | null>;
   getCachedMove: (moveName: string) => MoveData | null;
-  
+
   // Item operations
   getItemData: (itemName: string) => Promise<ItemData | null>;
   getCachedItem: (itemName: string) => ItemData | null;
-  
+
   // Ability operations
   getAbilityData: (abilityName: string) => Promise<AbilityData | null>;
   getCachedAbility: (abilityName: string) => AbilityData | null;
-  
+
+  // Species learnset operations (validates real legal movepool/abilities per species)
+  getSpeciesLearnset: (species: string, gender?: 'M' | 'F' | 'N' | '') => Promise<SpeciesLearnsetEntry | null>;
+  getEnrichedSpeciesOptions: (
+    species: string,
+    gender?: 'M' | 'F' | 'N' | ''
+  ) => Promise<{ moves: MoveData[]; abilities: AbilityData[] }>;
+
   // Maintenance
   clearCache: () => Promise<boolean>;
 }
@@ -68,9 +80,10 @@ export function useGameData(): UseGameDataReturn {
         moves: {},
         items: {},
         abilities: {},
+        learnsets: {},
         lastCleaned: Date.now(),
       };
-      
+
       setCache(emptyCache);
       setIsInitialized(true);
       setError(null);
@@ -152,6 +165,28 @@ export function useGameData(): UseGameDataReturn {
   }, [cache]);
 
   /**
+   * Get cached species learnset (synchronous)
+   */
+  const getCachedSpeciesLearnset = useCallback((
+    species: string,
+    gender?: 'M' | 'F' | 'N' | ''
+  ): SpeciesLearnsetEntry | null => {
+    if (!cache) return null;
+
+    const normalizedSpecies = normalizeSpeciesForAPI(species, gender);
+    const learnset = cache.learnsets[normalizedSpecies];
+
+    if (!learnset) return null;
+
+    // Check if entry is expired
+    if (learnset.expiresAt < Date.now()) {
+      return null;
+    }
+
+    return learnset;
+  }, [cache]);
+
+  /**
    * Fetch move data from PokeAPI and cache it
    */
   const getMoveData = useCallback(async (moveName: string): Promise<MoveData | null> => {
@@ -196,15 +231,13 @@ export function useGameData(): UseGameDataReturn {
       };
       
       // Update cache
-      const updatedCache: GameDataCache = {
-        ...cache,
+      setCache(prev => prev ? {
+        ...prev,
         moves: {
-          ...cache.moves,
+          ...prev.moves,
           [normalizedName]: moveData,
         },
-      };
-      
-      setCache(updatedCache);
+      } : prev);
       setError(null);
       
       console.log(`[useGameData] Cached move: ${moveName} (${moveData.type}, ${moveData.category})`);
@@ -277,15 +310,13 @@ export function useGameData(): UseGameDataReturn {
       };
       
       // Update cache
-      const updatedCache: GameDataCache = {
-        ...cache,
+      setCache(prev => prev ? {
+        ...prev,
         items: {
-          ...cache.items,
+          ...prev.items,
           [normalizedName]: itemData,
         },
-      };
-      
-      setCache(updatedCache);
+      } : prev);
       setError(null);
       
       console.log(`[useGameData] Cached item: ${itemName} (${itemData.category})`);
@@ -341,15 +372,13 @@ export function useGameData(): UseGameDataReturn {
       };
       
       // Update cache
-      const updatedCache: GameDataCache = {
-        ...cache,
+      setCache(prev => prev ? {
+        ...prev,
         abilities: {
-          ...cache.abilities,
+          ...prev.abilities,
           [normalizedName]: abilityData,
         },
-      };
-      
-      setCache(updatedCache);
+      } : prev);
       setError(null);
       
       console.log(`[useGameData] Cached ability: ${abilityName}`);
@@ -366,6 +395,123 @@ export function useGameData(): UseGameDataReturn {
   }, [cache, getCachedAbility]);
 
   /**
+   * Fetch a species' true legal learnset (abilities + learnable moves) from PokeAPI
+   * and cache it. This is the validation source of truth for what a given species
+   * can actually have equipped - never a static or per-Pokemon fallback list.
+   */
+  const getSpeciesLearnset = useCallback(async (
+    species: string,
+    gender?: 'M' | 'F' | 'N' | ''
+  ): Promise<SpeciesLearnsetEntry | null> => {
+    if (!cache) return null;
+
+    const normalizedSpecies = normalizeSpeciesForAPI(species, gender);
+
+    // Check cache first
+    const cachedLearnset = getCachedSpeciesLearnset(species, gender);
+    if (cachedLearnset) {
+      return cachedLearnset;
+    }
+
+    setIsLoading(true);
+    try {
+      const url = `${POKEAPI_BASE_URL}/pokemon/${normalizedSpecies}`;
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.warn(`Species "${species}" not found in PokeAPI`);
+          return null;
+        }
+        throw new Error(`PokeAPI request failed with status ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      const now = Date.now();
+      const learnset: SpeciesLearnsetEntry = {
+        species: normalizedSpecies,
+        abilities: (data.abilities || []).map((a: { ability: { name: string } }) => a.ability.name.toLowerCase()),
+        moves: (data.moves || []).map((m: { move: { name: string } }) => m.move.name.toLowerCase()),
+        cachedAt: now,
+        expiresAt: now + CACHE_EXPIRATION_MS,
+      };
+
+      setCache(prev => prev ? {
+        ...prev,
+        learnsets: {
+          ...prev.learnsets,
+          [normalizedSpecies]: learnset,
+        },
+      } : prev);
+      setError(null);
+
+      console.log(`[useGameData] Cached learnset: ${normalizedSpecies} (${learnset.moves.length} moves, ${learnset.abilities.length} abilities)`);
+
+      return learnset;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch species learnset';
+      setError(errorMessage);
+      console.error(`Error fetching learnset for "${species}":`, err);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [cache, getCachedSpeciesLearnset]);
+
+  /**
+   * Resolve a species' full legal option set: its real learnable moves and real
+   * possible abilities, each enriched with full metadata via the move/ability caches
+   */
+  const getEnrichedSpeciesOptions = useCallback(async (
+    species: string,
+    gender?: 'M' | 'F' | 'N' | ''
+  ): Promise<{ moves: MoveData[]; abilities: AbilityData[] }> => {
+    const learnset = await getSpeciesLearnset(species, gender);
+    if (!learnset) {
+      return { moves: [], abilities: [] };
+    }
+
+    const [moveResults, abilityResults] = await Promise.all([
+      Promise.all(learnset.moves.map(name => getMoveData(name))),
+      Promise.all(learnset.abilities.map(name => getAbilityData(name))),
+    ]);
+
+    return {
+      moves: moveResults.filter((move): move is MoveData => move !== null),
+      abilities: abilityResults.filter((ability): ability is AbilityData => ability !== null),
+    };
+  }, [getSpeciesLearnset, getMoveData, getAbilityData]);
+
+  /**
+   * The true global items collection: every VGC-legal item (config/vgcData.ts),
+   * enriched with live PokeAPI metadata as each entry is fetched and cached
+   */
+  const items = useMemo((): ItemData[] => {
+    if (!cache) return [];
+    return VGC_ITEMS
+      .map(itemName => getCachedItem(itemName))
+      .filter((item): item is ItemData => item !== null);
+  }, [cache, getCachedItem]);
+
+  /**
+   * Background-load every VGC-legal item once the cache is ready, so the
+   * global items collection is complete rather than populated one-slot-at-a-time
+   */
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    const missingItems = VGC_ITEMS.filter(itemName => !getCachedItem(itemName));
+    if (missingItems.length === 0) return;
+
+    missingItems.forEach(itemName => {
+      getItemData(itemName);
+    });
+    // Runs once per cache initialization; getItemData itself is cache-aware and idempotent
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isInitialized]);
+
+  /**
    * Clear entire cache
    */
   const clearCache = useCallback(async (): Promise<boolean> => {
@@ -375,12 +521,13 @@ export function useGameData(): UseGameDataReturn {
         moves: {},
         items: {},
         abilities: {},
+        learnsets: {},
         lastCleaned: Date.now(),
       };
-      
+
       setCache(emptyCache);
       setError(null);
-      
+
       return true;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to clear cache';
@@ -395,12 +542,15 @@ export function useGameData(): UseGameDataReturn {
     isInitialized,
     isLoading,
     error,
+    items,
     getMoveData,
     getCachedMove,
     getItemData,
     getCachedItem,
     getAbilityData,
     getCachedAbility,
+    getSpeciesLearnset,
+    getEnrichedSpeciesOptions,
     clearCache,
   };
 }

@@ -60,13 +60,10 @@ export const ShowdownPopover: React.FC<ShowdownPopoverProps> = ({ mode, data, on
                 <div
                   key={idx}
                   onClick={() => handleRowClick(item)}
-                  className="flex items-center gap-3 px-4 py-2 hover:bg-gray-700 cursor-pointer"
+                  className="px-4 py-2 hover:bg-gray-700 cursor-pointer"
                 >
-                  <img src={item.sprite} alt={item.name} className="w-8 h-8" />
-                  <div className="flex-1">
-                    <div className="text-white font-medium">{item.name}</div>
-                    <div className="text-gray-400 text-sm">{item.description}</div>
-                  </div>
+                  <div className="text-white font-medium">{item.name}</div>
+                  <div className="text-gray-400 text-sm">{item.description}</div>
                 </div>
               ))}
             </div>

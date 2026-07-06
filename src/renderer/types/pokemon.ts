@@ -185,7 +185,19 @@ export interface AbilityData {
 }
 
 /**
- * Game data cache for moves, items, and abilities
+ * Per-species legal learnset: which moves and abilities a given species
+ * can actually have, as reported by PokeAPI's /pokemon/{species} endpoint
+ */
+export interface SpeciesLearnsetEntry {
+  species: string; // Normalized PokeAPI slug (gender-form aware)
+  abilities: string[]; // Lowercase ability names this species can have
+  moves: string[]; // Lowercase move names this species can naturally learn
+  cachedAt: number; // Unix timestamp
+  expiresAt: number; // Unix timestamp
+}
+
+/**
+ * Game data cache for moves, items, abilities, and species learnsets
  * Reduces redundant API calls by caching game metadata
  */
 export interface GameDataCache {
@@ -193,5 +205,6 @@ export interface GameDataCache {
   moves: Record<string, MoveData>; // Key: lowercase move name
   items: Record<string, ItemData>; // Key: lowercase item name
   abilities: Record<string, AbilityData>; // Key: lowercase ability name
+  learnsets: Record<string, SpeciesLearnsetEntry>; // Key: normalized species slug
   lastCleaned: number; // Unix timestamp
 }

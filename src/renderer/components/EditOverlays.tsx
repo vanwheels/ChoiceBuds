@@ -4,8 +4,8 @@
  * Wires real data from useGameData and PokeAPI cache
  */
 
-import React, { useState, useEffect } from 'react';
-import type { ImportedPokemonInfo } from '../types/pokemon';
+import { useState, useEffect } from 'react';
+import type { ImportedPokemonInfo, ItemData, MoveData, AbilityData } from '../types/pokemon';
 import { ShowdownPopover } from './ShowdownPopover';
 import { useGameData } from '../hooks/useGameData';
 
@@ -15,26 +15,35 @@ interface EditOverlaysProps {
 }
 
 export default function EditOverlays({ pokemon, isEditing = false }: EditOverlaysProps) {
-  const { items, speciesLearnsets } = useGameData();
+  const { items, getEnrichedSpeciesOptions } = useGameData();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [selectedAbility, setSelectedAbility] = useState(null);
-  const [selectedMoves, setSelectedMoves] = useState(['', '', '', '']);
+  const [selectedItem, setSelectedItem] = useState<string>(pokemon.showdownData.item || '');
+  const [selectedAbility, setSelectedAbility] = useState<string>(pokemon.showdownData.ability || '');
+  const [selectedMoves, setSelectedMoves] = useState<string[]>([
+    pokemon.showdownData.moves[0] || '',
+    pokemon.showdownData.moves[1] || '',
+    pokemon.showdownData.moves[2] || '',
+    pokemon.showdownData.moves[3] || '',
+  ]);
+  const [legalMoves, setLegalMoves] = useState<MoveData[]>([]);
+  const [legalAbilities, setLegalAbilities] = useState<AbilityData[]>([]);
 
-  const handleItemClick = (item) => {
+  const handleItemClick = (item: ItemData) => {
     setSelectedItem(item.name);
     closeMenu();
   };
 
-  const handleAbilityClick = (ability) => {
+  const handleAbilityClick = (ability: AbilityData) => {
     setSelectedAbility(ability.name);
     closeMenu();
   };
 
-  const handleMoveClick = (index, move) => {
-    const newMoves = [...selectedMoves];
-    newMoves[index] = move.name;
-    setSelectedMoves(newMoves);
+  const handleMoveClick = (index: number, move: MoveData) => {
+    setSelectedMoves(prev => {
+      const next = [...prev];
+      next[index] = move.name;
+      return next;
+    });
     closeMenu();
   };
 
@@ -46,33 +55,26 @@ export default function EditOverlays({ pokemon, isEditing = false }: EditOverlay
     setActiveMenu(null);
   };
 
+  // Pull the species' real legal movepool + ability pool from PokeAPI (via useGameData),
+  // instead of falling back to whatever this one Pokemon happens to already have equipped.
   useEffect(() => {
-    if (!speciesLearnsets[pokemon.showdownData.species]) {
-      console.warn(`No learnset data available for species: ${pokemon.showdownData.species}`);
-    }
-  }, [speciesLearnsets, pokemon.showdownData.species]);
+    let cancelled = false;
 
-  const filteredItems = items.filter(item =>
-    item.category === 'held-items' || item.category === 'choice'
-  );
+    getEnrichedSpeciesOptions(pokemon.showdownData.species, pokemon.showdownData.gender)
+      .then(({ moves, abilities }) => {
+        if (cancelled) return;
+        setLegalMoves(moves);
+        setLegalAbilities(abilities);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        console.warn(`No learnset data available for species: ${pokemon.showdownData.species}`);
+      });
 
-  const filteredAbilities = Object.keys(speciesLearnsets[pokemon.showdownData.species] || {})
-    .map(ability => ({
-      name: ability,
-      description: speciesLearnsets[pokemon.showdownData.species][ability]
-    }));
-
-  const filteredMoves = (speciesLearnsets[pokemon.showdownData.species] || []).flatMap(moveSet =>
-    moveSet.moves.map(move => ({
-      name: move.move.name,
-      type: move.move.type.name,
-      category: move.move.damage_class.name,
-      power: move.move.power,
-      pp: move.move.pp,
-      accuracy: move.move.accuracy,
-      description: move.move.effect_entries.find(entry => entry.language.name === 'en')?.short_effect || 'No description available'
-    }))
-  );
+    return () => {
+      cancelled = true;
+    };
+  }, [pokemon.showdownData.species, pokemon.showdownData.gender, getEnrichedSpeciesOptions]);
 
   if (!isEditing) {
     return (
@@ -125,7 +127,7 @@ export default function EditOverlays({ pokemon, isEditing = false }: EditOverlay
         {activeMenu === 'item' && (
           <ShowdownPopover
             mode="item"
-            data={filteredItems}
+            data={items}
             onSelect={handleItemClick}
             onClose={closeMenu}
           />
@@ -149,7 +151,7 @@ export default function EditOverlays({ pokemon, isEditing = false }: EditOverlay
         {activeMenu === 'ability' && (
           <ShowdownPopover
             mode="ability"
-            data={filteredAbilities}
+            data={legalAbilities}
             onSelect={handleAbilityClick}
             onClose={closeMenu}
           />
@@ -175,8 +177,8 @@ export default function EditOverlays({ pokemon, isEditing = false }: EditOverlay
             {activeMenu === `move${index}` && (
               <ShowdownPopover
                 mode="move"
-                data={filteredMoves}
-                onSelect={(move) => handleMoveClick(index, move)}
+                data={legalMoves}
+                onSelect={(move: MoveData) => handleMoveClick(index, move)}
                 onClose={closeMenu}
               />
             )}

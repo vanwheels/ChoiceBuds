@@ -96,7 +96,7 @@ export async function fetchPokemonData(speciesName: string, gender?: 'M' | 'F' |
  * @param gender - Optional gender for species with gender-divergent forms
  * @returns Normalized lowercase species name for PokeAPI endpoint
  */
-function normalizeSpeciesForAPI(name: string, gender?: 'M' | 'F' | 'N' | ''): string {
+export function normalizeSpeciesForAPI(name: string, gender?: 'M' | 'F' | 'N' | ''): string {
   const nameLower = name.toLowerCase().trim();
   
   // Handle Basculegion Form/Gender Divergence
