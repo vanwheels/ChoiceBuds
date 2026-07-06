@@ -1,15 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import type { ItemData, MoveData, AbilityData } from '../types/pokemon';
+import type { MoveData, AbilityData } from '../types/pokemon';
 import { getTypeTheme } from '../config/pokemonTheme';
 import { validateMoveLegality, getRegulationLabel, type RegulationId } from '../utils/pokemonRules';
 import { toReadableName } from '../utils/displayName';
 
-// Species selection uses the dedicated SpeciesPickerCard instead of this
-// generic dropdown - see SpeciesPickerCard.tsx for why (fills the card slot
-// rather than floating below it).
+// Species selection uses SpeciesPickerCard and item selection uses
+// ItemPickerPanel instead of this generic dropdown - both fill their slot in
+// place rather than floating below it. This is left for ability/move, which
+// stay as floating dropdowns (moves just get a wider one - see below).
 type ShowdownPopoverProps =
-  | { mode: 'item'; data: ItemData[]; onSelect: (selected: ItemData) => void; onClose: () => void }
   | { mode: 'ability'; data: AbilityData[]; onSelect: (selected: AbilityData) => void; onClose: () => void }
   | { mode: 'move'; data: MoveData[]; onSelect: (selected: MoveData) => void; onClose: () => void; rulesetId?: RegulationId };
 
@@ -30,17 +30,29 @@ function PopoverShell({
   search,
   onSearchChange,
   onClose,
+  widthClassName,
   children,
 }: {
   search: string;
   onSearchChange: (value: string) => void;
   onClose: () => void;
+  widthClassName: string;
   children: ReactNode;
 }) {
+  // Escape cancels, same as clicking the invisible full-screen catcher below -
+  // neither ever calls onSelect, so the underlying data is never touched.
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   return (
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
-      <div className="absolute z-50 top-full left-0 mt-1 drop-shadow-xl bg-slate-900 border-2 border-slate-700 rounded-lg w-[600px] max-h-[500px] flex flex-col">
+      <div className={`absolute z-50 top-full left-0 mt-1 drop-shadow-xl bg-slate-900 border-2 border-slate-700 rounded-lg max-h-[32rem] flex flex-col ${widthClassName}`}>
         <input
           type="text"
           placeholder="Search..."
@@ -59,30 +71,10 @@ export function ShowdownPopover(props: ShowdownPopoverProps) {
   const [search, setSearch] = useState('');
   const { onClose } = props;
 
-  if (props.mode === 'item') {
-    const filtered = props.data.filter(item => matchesSearch(toReadableName(item.name), search));
-    return (
-      <PopoverShell search={search} onSearchChange={setSearch} onClose={onClose}>
-        <div className="divide-y divide-gray-700">
-          {filtered.map((item, idx) => (
-            <div
-              key={idx}
-              onClick={() => { props.onSelect(item); onClose(); }}
-              className="px-4 py-2 hover:bg-gray-700 cursor-pointer"
-            >
-              <div className="text-white font-medium">{toReadableName(item.name)}</div>
-              <div className="text-gray-400 text-sm">{item.description}</div>
-            </div>
-          ))}
-        </div>
-      </PopoverShell>
-    );
-  }
-
   if (props.mode === 'ability') {
     const filtered = props.data.filter(ability => matchesSearch(toReadableName(ability.name), search));
     return (
-      <PopoverShell search={search} onSearchChange={setSearch} onClose={onClose}>
+      <PopoverShell search={search} onSearchChange={setSearch} onClose={onClose} widthClassName="w-[600px]">
         <div className="divide-y divide-gray-700">
           {filtered.map((ability, idx) => (
             <div
@@ -102,7 +94,8 @@ export function ShowdownPopover(props: ShowdownPopoverProps) {
   const { rulesetId } = props;
   const filtered = props.data.filter(move => matchesSearch(toReadableName(move.name), search));
   return (
-    <PopoverShell search={search} onSearchChange={setSearch} onClose={onClose}>
+    // 2 PokemonCard-widths (280px each + grid gap) so descriptions are easy to read
+    <PopoverShell search={search} onSearchChange={setSearch} onClose={onClose} widthClassName="w-[576px]">
       <div className="divide-y divide-gray-700">
         {filtered.map((move, idx) => {
           const theme = getTypeTheme(move.type);

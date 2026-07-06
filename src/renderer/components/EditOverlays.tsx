@@ -14,6 +14,7 @@ import type { RegulationId } from '../utils/pokemonRules';
 import { toReadableName } from '../utils/displayName';
 import MoveBubbleGrid, { type HoverKey } from './MoveBubbleGrid';
 import ItemSpriteBox from './ItemSpriteBox';
+import ItemPickerPanel from './ItemPickerPanel';
 import AbilityCapsule from './AbilityCapsule';
 import Tooltip from './Tooltip';
 import TypeBadge from './TypeBadge';
@@ -191,14 +192,18 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
     return null;
   };
 
+  // Picking an item replaces this whole region in place, starting at the
+  // item box's own position (not the card's top - that's species swap's job).
+  if (activeMenu === 'item') {
+    return <ItemPickerPanel items={items} onSelect={handleItemClick} onClose={closeMenu} />;
+  }
+
   return (
     <div className="flex flex-col items-center gap-2.5">
       {/* Item Sprite Box */}
       <ItemSpriteBox
         selectedItem={selectedItem}
         itemData={itemData}
-        items={items}
-        activeMenu={activeMenu}
         isEditing={isEditing}
         spriteFailed={itemSpriteFailed}
         fallbackSpriteFailed={itemFallbackSpriteFailed}
@@ -207,8 +212,6 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
         onHoverEnter={(e) => hoverEnter('item', e.currentTarget.getBoundingClientRect())}
         onHoverLeave={() => hoverLeave('item')}
         onToggleMenu={() => toggleMenu('item')}
-        onCloseMenu={closeMenu}
-        onItemSelect={handleItemClick}
       />
 
       {/* Ability Capsule */}

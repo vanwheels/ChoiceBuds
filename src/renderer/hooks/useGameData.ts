@@ -14,8 +14,9 @@ import {
   fetchItemData,
   fetchAbilityData,
   fetchSpeciesLearnset,
+  CACHE_EXPIRATION_MS,
 } from '../services/pokeapiService';
-import { readCacheEntry, runCachedFetch, createEmptyGameDataCache } from '../utils/cacheManager';
+import { readCacheEntry, runCachedFetch, withCacheEntry, createEmptyGameDataCache } from '../utils/cacheManager';
 
 type Gender = 'M' | 'F' | 'N' | '';
 
@@ -139,13 +140,36 @@ export function useGameData(): UseGameDataReturn {
 
   /**
    * Background-load every VGC-legal item once the cache is ready, so the
-   * global items collection is complete rather than populated one-slot-at-a-time
+   * global items collection is complete rather than populated one-slot-at-a-time.
+   *
+   * Some configured items (newly-introduced Mega Stones this game added for
+   * species that never had one in mainline Pokemon, e.g. Falinksite,
+   * Scovillainite) don't exist in PokeAPI yet and 404. Rather than silently
+   * dropping them from the picker, synthesize a minimal placeholder entry so
+   * every item in VGC_ITEMS still shows up and is selectable, just without
+   * a sprite/description until PokeAPI catches up.
    */
   useEffect(() => {
     if (!isInitialized) return;
     VGC_ITEMS
       .filter(itemName => !getCachedItem(itemName))
-      .forEach(itemName => { getItemData(itemName); });
+      .forEach(itemName => {
+        getItemData(itemName).then(data => {
+          if (data) return;
+          const normalizedName = normalizeNameForAPI(itemName);
+          const now = Date.now();
+          const fallback: ItemData = {
+            name: normalizedName,
+            category: 'unknown',
+            effect: 'No effect data available',
+            description: 'No description available',
+            spriteUrl: '',
+            cachedAt: now,
+            expiresAt: now + CACHE_EXPIRATION_MS,
+          };
+          setCache(prev => prev ? withCacheEntry(prev, 'items', normalizedName, fallback) : prev);
+        });
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isInitialized]);
 
