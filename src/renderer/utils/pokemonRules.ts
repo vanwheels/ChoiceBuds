@@ -35,6 +35,9 @@
 
 export type RegulationId = 'REG-MA' | 'REG-MB';
 
+/** Every regulation the app knows about, in display order - drives the regulation-picker dropdown */
+export const ALL_REGULATION_IDS: RegulationId[] = ['REG-MA', 'REG-MB'];
+
 export interface ChampionsRuleset {
   id: RegulationId;
   allowedSpecies: string[]; // lowercase-hyphenated base species slugs
@@ -51,6 +54,9 @@ const REG_MA_SPECIES: string[] = [
   'clefable', 'ninetales', 'ninetales-alola', 'arcanine', 'arcanine-hisui', 'alakazam', 'machamp',
   'victreebel', 'slowbro', 'slowbro-galar', 'gengar', 'kangaskhan', 'starmie', 'pinsir',
   'tauros', 'tauros-paldea-combat-breed', 'tauros-paldea-blaze-breed', 'tauros-paldea-aqua-breed',
+  // @smogon/calc's own species data spells these without "-breed" - both spellings kept
+  // since Showdown-text parsing (Teams tab) may still produce the "-breed" form.
+  'tauros-paldea-combat', 'tauros-paldea-blaze', 'tauros-paldea-aqua',
   'gyarados', 'ditto', 'vaporeon', 'jolteon', 'flareon', 'aerodactyl', 'snorlax', 'dragonite',
   'meganium', 'typhlosion', 'typhlosion-hisui', 'feraligatr', 'ariados', 'ampharos', 'azumarill',
   'politoed', 'espeon', 'umbreon', 'slowking', 'slowking-galar', 'forretress', 'steelix', 'scizor',
@@ -64,13 +70,15 @@ const REG_MA_SPECIES: string[] = [
   'cofagrigus', 'garbodor', 'zoroark', 'zoroark-hisui', 'reuniclus', 'vanilluxe', 'emolga', 'chandelure',
   'beartic', 'stunfisk', 'stunfisk-galar', 'golurk', 'hydreigon', 'volcarona', 'chesnaught', 'delphox',
   'greninja', 'diggersby', 'talonflame', 'vivillon', 'floette', 'florges', 'pangoro', 'furfrou',
-  'meowstic', 'aegislash', 'aromatisse', 'slurpuff', 'clawitzer', 'heliolisk', 'tyrantrum', 'aurorus',
+  'meowstic-male', 'meowstic-female', 'aegislash', 'aromatisse', 'slurpuff', 'clawitzer', 'heliolisk', 'tyrantrum', 'aurorus',
+  // @smogon/calc has no bare "Aegislash" entry - only its Blade/Shield stat-formes
+  'aegislash-blade', 'aegislash-shield',
   'sylveon', 'hawlucha', 'dedenne', 'goodra', 'goodra-hisui', 'klefki', 'trevenant', 'gourgeist',
   'avalugg', 'avalugg-hisui', 'noivern', 'decidueye', 'decidueye-hisui', 'incineroar', 'primarina',
   'toucannon', 'crabominable', 'lycanroc', 'toxapex', 'mudsdale', 'araquanid', 'salazzle', 'tsareena',
   'oranguru', 'passimian', 'mimikyu', 'drampa', 'kommo-o', 'corviknight', 'flapple', 'appletun',
   'sandaconda', 'polteageist', 'hatterene', 'mr-rime', 'runerigus', 'alcremie', 'morpeko', 'dragapult',
-  'wyrdeer', 'kleavor', 'basculegion', 'sneasler', 'meowscarada', 'skeledirge', 'quaquaval', 'maushold',
+  'wyrdeer', 'kleavor', 'basculegion-male', 'basculegion-female', 'sneasler', 'meowscarada', 'skeledirge', 'quaquaval', 'maushold',
   'garganacl', 'armarouge', 'ceruledge', 'bellibolt', 'scovillain', 'espathra', 'tinkaton', 'palafin',
   'orthworm', 'glimmora', 'farigiraf', 'kingambit', 'sinistcha', 'archaludon', 'hydrapple',
 ];
@@ -89,6 +97,23 @@ export function normalizeSlug(value: string): string {
     .replace(/['']/g, '')
     .replace(/[.]/g, '')
     .replace(/\s+/g, '-');
+}
+
+/**
+ * Meowstic/Basculegion are modeled as PokeAPI-style "-male"/"-female" slugs
+ * in REG_MA_SPECIES (matching the species roster's naming), but Showdown
+ * import text and manual entry use "-F"/"-M"/bare-name conventions instead
+ * (see config/pokemonRules.ts's GENDERED_FORM_VARIANTS). Canonicalize both
+ * spellings to the same slug before checking legality.
+ */
+const GENDER_DIVERGENT_BASE_SPECIES = ['basculegion', 'meowstic'];
+
+function canonicalizeGenderDivergentSlug(slug: string): string {
+  for (const base of GENDER_DIVERGENT_BASE_SPECIES) {
+    if (slug === base || slug === `${base}-m`) return `${base}-male`;
+    if (slug === `${base}-f`) return `${base}-female`;
+  }
+  return slug;
 }
 
 const REG_MA_SPECIES_SET = new Set(REG_MA_SPECIES.map(normalizeSlug));
@@ -133,7 +158,7 @@ export function getRuleset(rulesetId: RegulationId): ChampionsRuleset {
  * allowlist for the given regulation (REG-MB is a superset of REG-MA).
  */
 export function validateSpeciesLegality(speciesId: string, rulesetId: RegulationId): boolean {
-  const normalized = normalizeSlug(speciesId);
+  const normalized = canonicalizeGenderDivergentSlug(normalizeSlug(speciesId));
   const legalSet = rulesetId === 'REG-MA' ? REG_MA_SPECIES_SET : REG_MB_SPECIES_SET;
   return legalSet.has(normalized);
 }

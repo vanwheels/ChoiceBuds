@@ -1,0 +1,179 @@
+/**
+ * CalcPokemonPanel.tsx - One Pokémon's Damage Calc Config
+ * Reused for both Pokémon - species/forme (unified autocomplete - typing an
+ * exact regional/gendered forme name like "Ninetales-Alola" or "Meowstic-F"
+ * selects it directly), level, gender (icon toggle matching PokemonCard.tsx
+ * in the Teams tab), item, ability, nature, status, SPs, and stat boosts.
+ * No IV editor and no Tera type - the real Champions calc's stat table only
+ * shows Base/SPs (IVs passed to the engine fixed at max, see
+ * useDamageCalc), and Tera isn't modeled here currently.
+ *
+ * Same-species alternate-stat-block formes (e.g. Aegislash Blade/Shield) and
+ * Mega Evolution get their own in-panel toggle rows instead of requiring a
+ * fresh species search - see utils/calcFormes.ts for why regional/gendered
+ * forms are deliberately excluded from this (they're already independently
+ * searchable). Moves live in CalcMoveGrid, not here.
+ */
+
+import type { CalcPokemonState } from '../../hooks/useDamageCalc';
+import { STATUS_OPTIONS } from '../../hooks/useDamageCalc';
+import type { FormeFamily } from '../../utils/calcFormes';
+import { formeDisplayLabel } from '../../utils/calcFormes';
+import type { NatureName } from '@smogon/calc/dist/data/interface';
+import CalcAutocomplete from './CalcAutocomplete';
+import CalcStatsGrid from './CalcStatsGrid';
+
+interface CalcPokemonPanelProps {
+  title: string;
+  state: CalcPokemonState;
+  speciesOptions: string[];
+  itemOptions: string[];
+  abilityOptions: string[];
+  natureOptions: NatureName[];
+  formes: FormeFamily;
+  onChange: (updates: Partial<CalcPokemonState>) => void;
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  slp: 'Asleep', psn: 'Poisoned', brn: 'Burned', frz: 'Frozen', par: 'Paralyzed', tox: 'Badly Poisoned',
+};
+
+const GENDER_CYCLE: Array<CalcPokemonState['gender']> = ['M', 'F', ''];
+
+function FormeToggle({ group, current, onSelect }: { group: string[]; current: string; onSelect: (name: string) => void }) {
+  return (
+    <div className="flex gap-1 flex-wrap">
+      {group.map(name => (
+        <button
+          key={name}
+          type="button"
+          onClick={() => onSelect(name)}
+          className={`px-2 py-1 text-xs font-bold rounded transition-colors cursor-pointer ${
+            current === name ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+          }`}
+        >
+          {formeDisplayLabel(group, name)}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export default function CalcPokemonPanel({
+  title, state, speciesOptions, itemOptions, abilityOptions, natureOptions, formes, onChange,
+}: CalcPokemonPanelProps) {
+  const cycleGender = () => {
+    const currentIndex = GENDER_CYCLE.indexOf(state.gender);
+    const next = GENDER_CYCLE[(currentIndex + 1) % GENDER_CYCLE.length];
+    onChange({ gender: next });
+  };
+
+  const megaGroup = formes.megaFormes.length > 0 ? [formes.root, ...formes.megaFormes] : [];
+
+  return (
+    <div className="flex-1 min-w-[280px] bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-4 flex flex-col gap-3">
+      <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wide">{title}</h3>
+
+      <div className="flex gap-2 items-end">
+        <div className="flex-1">
+          <CalcAutocomplete
+            label="Species (Forme)"
+            value={state.species}
+            options={speciesOptions}
+            placeholder="Search species..."
+            onChange={(species) => onChange({ species })}
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-[10px] text-gray-400 uppercase tracking-wide">Lv</label>
+          <input
+            type="number"
+            min={1}
+            max={100}
+            value={state.level}
+            onChange={(e) => {
+              const parsed = Number(e.target.value);
+              if (!Number.isNaN(parsed)) onChange({ level: Math.max(1, Math.min(100, parsed)) });
+            }}
+            className="w-14 px-1 py-1 text-sm text-center bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500"
+          />
+        </div>
+        <div
+          className="w-9 h-9 shrink-0 bg-gray-800 rounded-lg border border-gray-600 flex items-center justify-center overflow-hidden cursor-pointer hover:border-blue-500 transition-colors"
+          onClick={cycleGender}
+          title="Click to toggle gender"
+        >
+          {state.gender === 'M' && <span className="text-lg font-bold text-blue-400">♂</span>}
+          {state.gender === 'F' && <span className="text-lg font-bold text-pink-400">♀</span>}
+          {state.gender === '' && <span className="text-lg font-bold text-zinc-400">⌀</span>}
+        </div>
+      </div>
+
+      {formes.statFormes.length > 1 && (
+        <FormeToggle group={formes.statFormes} current={state.species} onSelect={(species) => onChange({ species })} />
+      )}
+      {megaGroup.length > 0 && (
+        <FormeToggle group={megaGroup} current={state.species} onSelect={(species) => onChange({ species })} />
+      )}
+
+      <div className="grid grid-cols-2 gap-2">
+        <CalcAutocomplete
+          label="Item"
+          value={state.item}
+          options={itemOptions}
+          placeholder="None"
+          onChange={(item) => onChange({ item })}
+        />
+        <CalcAutocomplete
+          label="Ability"
+          value={state.ability}
+          options={abilityOptions}
+          placeholder="None"
+          onChange={(ability) => onChange({ ability })}
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div className="flex flex-col gap-1">
+          <label className="text-[10px] text-gray-400 uppercase tracking-wide">Nature</label>
+          <select
+            value={state.nature}
+            onChange={(e) => onChange({ nature: e.target.value as NatureName })}
+            className="px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500"
+          >
+            {natureOptions.map(n => <option key={n} value={n}>{n}</option>)}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-[10px] text-gray-400 uppercase tracking-wide">Status</label>
+          <select
+            value={state.status}
+            onChange={(e) => onChange({ status: e.target.value as CalcPokemonState['status'] })}
+            className="px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500"
+          >
+            <option value="">Healthy</option>
+            {STATUS_OPTIONS.map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <CalcStatsGrid
+        title="SPs"
+        values={state.sps}
+        min={0}
+        max={32}
+        step={1}
+        showTotal
+        onChange={(key, value) => onChange({ sps: { ...state.sps, [key]: value } })}
+      />
+      <CalcStatsGrid
+        title="Boosts"
+        values={state.boosts}
+        min={-6}
+        max={6}
+        step={1}
+        onChange={(key, value) => onChange({ boosts: { ...state.boosts, [key]: value } })}
+      />
+    </div>
+  );
+}

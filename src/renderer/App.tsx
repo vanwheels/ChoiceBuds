@@ -4,12 +4,17 @@
  * Provides core data contexts via custom hooks down the component tree
  */
 
+import { useState } from 'react';
 import { useTeams } from './hooks/useTeams';
 import { useDatabase } from './hooks/useDatabase';
 import { useActiveEditor } from './hooks/useActiveEditor';
 import { useGameData } from './hooks/useGameData';
 import { useSpeciesRoster } from './hooks/useSpeciesRoster';
+import { useDamageCalc } from './hooks/useDamageCalc';
 import TeamsPage from './components/TeamsPage';
+import CalcPage from './components/calc/CalcPage';
+
+type ActiveTab = 'teams' | 'calc';
 
 /**
  * Main application shell component
@@ -22,11 +27,13 @@ import TeamsPage from './components/TeamsPage';
  * writes made through it would silently not appear in what's on screen.
  */
 export default function App() {
+  const [activeTab, setActiveTab] = useState<ActiveTab>('teams');
   const teamsState = useTeams();
   const databaseState = useDatabase();
   const editorState = useActiveEditor();
   const gameDataState = useGameData();
   const speciesRosterState = useSpeciesRoster();
+  const calcState = useDamageCalc(gameDataState);
 
   return (
     <div className="flex h-screen bg-gray-900 text-gray-100">
@@ -42,8 +49,23 @@ export default function App() {
         <nav className="flex-1 p-4">
           <ul className="space-y-2">
             <li>
-              <button className="w-full text-left px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors">
+              <button
+                onClick={() => setActiveTab('teams')}
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
+                  activeTab === 'teams' ? 'bg-blue-600 hover:bg-blue-700' : 'text-gray-400 hover:bg-gray-700'
+                }`}
+              >
                 Teams
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => setActiveTab('calc')}
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
+                  activeTab === 'calc' ? 'bg-blue-600 hover:bg-blue-700' : 'text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                Calc
               </button>
             </li>
             <li>
@@ -76,13 +98,17 @@ export default function App() {
 
       {/* Primary Content Viewport - Right Side */}
       <main className="flex-1 overflow-y-auto" style={{ paddingLeft: '2rem', paddingRight: '2rem', paddingTop: '1.5rem', paddingBottom: '1.5rem' }}>
-        <TeamsPage
-          teamsState={teamsState}
-          databaseState={databaseState}
-          editorState={editorState}
-          gameDataState={gameDataState}
-          speciesRosterState={speciesRosterState}
-        />
+        {activeTab === 'teams' ? (
+          <TeamsPage
+            teamsState={teamsState}
+            databaseState={databaseState}
+            editorState={editorState}
+            gameDataState={gameDataState}
+            speciesRosterState={speciesRosterState}
+          />
+        ) : (
+          <CalcPage calcState={calcState} />
+        )}
       </main>
     </div>
   );

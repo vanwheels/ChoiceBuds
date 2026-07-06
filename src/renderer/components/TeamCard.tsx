@@ -9,6 +9,7 @@ import { toRegulationId } from '../utils/pokemonRules';
 import PokemonCard from './PokemonCard';
 import SpeciesPickerCard from './SpeciesPickerCard';
 import TeamValidationButton from './TeamValidationButton';
+import RegulationBadge from './RegulationBadge';
 
 interface TeamCardProps {
   team: Team;
@@ -93,8 +94,8 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
         {/* Far-Right Controls Cluster */}
         <div className="flex flex-row items-center gap-2 shrink-0 ml-4">
           {/* A. Regulation Indicator Badge */}
-          <div className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-blue-600 text-white mr-2">
-            {team.format || 'Reg M-A'}
+          <div className="mr-2">
+            <RegulationBadge team={team} onChange={(format) => updateTeam(team.id, { format })} />
           </div>
 
           {/* A2. Validate Team Button + Popup */}
