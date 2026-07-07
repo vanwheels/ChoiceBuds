@@ -19,6 +19,14 @@ interface LegacyBattleShape {
   broughtIds?: string[];
   megaEvolvedIds?: string[];
   statStages?: Battle['statStages'];
+  playerActiveIds?: (string | null)[];
+  opponentActiveIds?: (string | null)[];
+}
+
+/** A legacy active-id list had no slot meaning (just insertion order, 0-2 entries) - pad to the fixed 2-slot tuple, best effort. */
+function toActiveSlots(ids: (string | null)[] | undefined): (string | null)[] {
+  const arr = ids ?? [];
+  return [arr[0] ?? null, arr[1] ?? null];
 }
 
 /**
@@ -31,6 +39,8 @@ interface LegacyBattleShape {
  *   marked brought (matches what the old picker screen already enforced)
  * - megaEvolvedIds: added for the click-to-log flow's Mega tracking
  * - statStages: added for stat-stage tracking
+ * - playerActiveIds/opponentActiveIds: were a plain 0-2-length array with no
+ *   slot meaning - padded into the fixed 2-slot tuple (see toActiveSlots)
  * - a logged action's `target` was a single object before spread-move
  *   support - coerce it into a one-element array
  */
@@ -41,6 +51,8 @@ function normalizeBattle(b: Battle & LegacyBattleShape): Battle {
     ...b,
     playerRoster,
     broughtIds,
+    playerActiveIds: toActiveSlots(b.playerActiveIds),
+    opponentActiveIds: toActiveSlots(b.opponentActiveIds),
     megaEvolvedIds: b.megaEvolvedIds ?? [],
     statStages: b.statStages ?? {},
     fieldState: b.fieldState ?? { playerSide: {}, opponentSide: {} },

@@ -17,7 +17,7 @@
  */
 
 import { useState } from 'react';
-import type { MouseEvent } from 'react';
+import type { MouseEvent, DragEvent } from 'react';
 import type { Battle, BattleSide, BroughtPokemonSnapshot, OpponentPokemonEntry } from '../../types/pokemon';
 import type { UseBattleLogActionsReturn } from '../../hooks/useBattleLogActions';
 import { getPixelSpriteUrl } from '../../utils/spriteUrl';
@@ -27,7 +27,10 @@ import { getSwitchInEffect } from '../../config/onSwitchInAbilities';
 import { getReactiveLowerEffect } from '../../config/reactiveAbilities';
 import { STAT_ORDER, STAT_LABELS } from '../../config/statStages';
 import { PLAYER_POKEMON_DRAG_TYPE } from '../../utils/dragTypes';
-import { hasAppliedAbilityEffectSinceSwitchIn, hasUnappliedReactiveLowerEffect } from '../../utils/battleLookup';
+import {
+  hasAppliedAbilityEffectSinceSwitchIn, hasUnappliedReactiveLowerEffect,
+  canActThisTurn, canSwitchOutThisTurn,
+} from '../../utils/battleLookup';
 import { useDismissable } from '../../hooks/useDismissable';
 import MoveLogPopover from './MoveLogPopover';
 import StatStagePopover from './StatStagePopover';
@@ -82,7 +85,7 @@ function BenchPicker({
   return (
     <div ref={ref} className="absolute z-20 top-full mt-1 left-1/2 -translate-x-1/2 w-40 p-2 rounded-lg bg-gray-800 border-2 border-blue-500 shadow-lg flex flex-col gap-1">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Bring in</span>
+        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Switch in</span>
         <button type="button" onClick={onClose} className="text-gray-500 hover:text-red-400 cursor-pointer text-xs">×</button>
       </div>
       {options.length === 0 ? (
@@ -152,6 +155,7 @@ interface BattlefieldSlotProps {
   isStatsOpen: boolean;
   benchOptions: ActiveMon[];
   onSlotClick: () => void;
+  onOpenBench: () => void;
   onDrop?: (pokemonId: string) => void;
   onPickMove: (move: string) => void;
   onCloseMovePopover: () => void;
@@ -164,7 +168,7 @@ interface BattlefieldSlotProps {
 export default function BattlefieldSlot({
   battle, battleLogActions, resolveSprite, side, mon, arrowAbove, switchedIn,
   isArmed, isCandidate, isBenchOpen, isStatsOpen, benchOptions,
-  onSlotClick, onDrop, onPickMove, onCloseMovePopover, onPickBench, onCloseBench, onOpenStats, onCloseStats,
+  onSlotClick, onOpenBench, onDrop, onPickMove, onCloseMovePopover, onPickBench, onCloseBench, onOpenStats, onCloseStats,
 }: BattlefieldSlotProps) {
   const [showMegaPicker, setShowMegaPicker] = useState(false);
 
@@ -196,6 +200,12 @@ export default function BattlefieldSlot({
   const reactiveEffect = getReactiveLowerEffect(knownAbility);
   const showReactiveChip = !!reactiveEffect && !!knownAbility && hasUnappliedReactiveLowerEffect(battle, mon.id, knownAbility);
 
+  const canAct = canActThisTurn(battle, mon.id);
+  const canSwitchOut = canSwitchOutThisTurn(battle, mon.id);
+  const hasReplacement = benchOptions.length > 0;
+  const sideRoster = side === 'player' ? battle.playerRoster : battle.opponentRoster;
+  const sideAlreadyMega = battle.megaEvolvedIds.some(id => sideRoster.some(p => p.id === id));
+
   const megaForms = getMegaFormsForSpecies(mon.species);
   const spriteUrl = megaSprite ? megaSprite.spriteUrl : resolveSprite(getPixelSpriteUrl(mon.pokedexNumber, mon.species, gender, false));
 
@@ -211,13 +221,28 @@ export default function BattlefieldSlot({
     setShowMegaPicker(prev => !prev);
   };
 
+  const handleSwitchClick = (e: MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    if (!canSwitchOut) return;
+    if (hasReplacement) onOpenBench();
+    else battleLogActions.switchOut(battle, side, mon.id);
+  };
+
+  const handleDragOver = onDrop ? (e: DragEvent<HTMLDivElement>) => e.preventDefault() : undefined;
+  const handleDrop = onDrop ? (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const id = e.dataTransfer.getData(PLAYER_POKEMON_DRAG_TYPE);
+    if (id) onDrop(id);
+  } : undefined;
+
   return (
-    <div key={mon.id} className="relative flex flex-col items-center gap-0.5">
+    <div key={mon.id} className="relative flex flex-col items-center gap-0.5" onDragOver={handleDragOver} onDrop={handleDrop}>
       {arrowAbove && switchedIn && arrow}
       <button
         type="button"
         onClick={onSlotClick}
-        className={`relative rounded-lg p-1 cursor-pointer transition-colors ${
+        title={!canAct ? 'Already acted this turn' : undefined}
+        className={`relative rounded-lg p-1 cursor-pointer transition-colors ${!canAct ? 'opacity-50' : ''} ${
           isArmed ? 'bg-blue-600/30 ring-2 ring-blue-400' : isCandidate ? 'bg-yellow-500/20 ring-2 ring-yellow-400' : 'hover:bg-gray-800/60'
         }`}
       >
@@ -251,18 +276,20 @@ export default function BattlefieldSlot({
       <div className="relative flex gap-1">
         <button
           type="button"
-          onClick={e => { e.stopPropagation(); battleLogActions.switchActive(battle, side, mon.id); }}
-          title="Bench this Pokemon"
-          className="text-[9px] px-1 rounded bg-gray-900 text-gray-500 hover:text-gray-300 cursor-pointer"
+          onClick={handleSwitchClick}
+          disabled={!canSwitchOut}
+          title={canSwitchOut ? (hasReplacement ? 'Switch this Pokemon out' : 'Switch this Pokemon out (last one standing)') : "Can't switch out - already acted this turn"}
+          className={`text-[9px] px-1 rounded bg-gray-900 ${canSwitchOut ? 'text-gray-500 hover:text-gray-300 cursor-pointer' : 'text-gray-700 cursor-not-allowed'}`}
         >
-          Bench
+          Switch
         </button>
-        {!isMega && megaForms.length > 0 && (
+        {!isMega && megaForms.length > 0 && !sideAlreadyMega && (
           <button
             type="button"
             onClick={handleMegaClick}
-            title="Mark as Mega Evolved"
-            className="text-[9px] px-1 rounded bg-gray-900 text-gray-500 hover:text-yellow-300 cursor-pointer"
+            disabled={!canAct}
+            title={canAct ? 'Mark as Mega Evolved' : 'Already acted this turn'}
+            className={`text-[9px] px-1 rounded bg-gray-900 ${canAct ? 'text-gray-500 hover:text-yellow-300 cursor-pointer' : 'text-gray-700 cursor-not-allowed'}`}
           >
             Mega
           </button>
@@ -278,6 +305,9 @@ export default function BattlefieldSlot({
 
         {showMegaPicker && (
           <MegaFormPicker forms={megaForms} onPick={declareMega} onClose={() => setShowMegaPicker(false)} />
+        )}
+        {isBenchOpen && (
+          <BenchPicker options={benchOptions} resolveSprite={resolveSprite} onPick={onPickBench} onClose={onCloseBench} />
         )}
       </div>
 

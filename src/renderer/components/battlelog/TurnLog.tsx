@@ -8,6 +8,7 @@
 
 import type { Battle, BattleAction } from '../../types/pokemon';
 import { battlePokemonDisplayName, isRepeatProtectUse } from '../../utils/battleLookup';
+import { isSwitchOutMove } from '../../config/switchOutMoves';
 import type { UseBattleLogActionsReturn } from '../../hooks/useBattleLogActions';
 
 interface TurnLogProps {
@@ -32,7 +33,8 @@ export default function TurnLog({ battle, battleLogActions }: TurnLogProps) {
           ) : (
             <ul className="flex flex-col gap-1">
               {sortByPhase(turn.actions).map(action => {
-                const showFailChip = isRepeatProtectUse(battle, turn.number, action);
+                const showFailChip = isRepeatProtectUse(battle, turn.number, action)
+                  || (action.phase === 'move' && isSwitchOutMove(action.move));
                 return (
                   <li key={action.id} className="text-sm flex items-center gap-1.5">
                     <span className={action.side === 'player' ? 'text-blue-400' : 'text-red-400'}>

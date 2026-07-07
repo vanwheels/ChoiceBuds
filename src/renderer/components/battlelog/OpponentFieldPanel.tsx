@@ -55,7 +55,9 @@ export default function OpponentFieldPanel({ battle, battleLogActions, roster, r
       activeColorClass="border-red-500 bg-red-600/20"
       rows={rows}
       resolveSprite={resolveSprite}
-      onRowClick={id => battleLogActions.switchActive(battle, 'opponent', id)}
+      onRowClick={id => battle.opponentActiveIds.includes(id)
+        ? battleLogActions.switchOut(battle, 'opponent', id)
+        : battleLogActions.switchIn(battle, 'opponent', id)}
       onToggleFainted={toggleFainted}
       addSlot={
         isFull ? null : isAddOpen ? (

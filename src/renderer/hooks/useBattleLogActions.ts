@@ -8,15 +8,16 @@
 
 import { useCallback } from 'react';
 import type {
-  Battle, BattleAction, BattleSide, Team, SpeciesRosterEntry,
+  Battle, BattleAction, BattleSide, FieldState, Team, SpeciesRosterEntry,
   WeatherType, TerrainType, SideConditions, StatKey, StatStages,
 } from '../types/pokemon';
 import type { TurnTrackedCondition, BooleanHazard, StackableHazard } from '../config/fieldConditions';
-import { findBattlePokemon } from '../utils/battleLookup';
+import { findBattlePokemon, canActThisTurn, canSwitchOutThisTurn, requiredActiveCount, compactActiveIds } from '../utils/battleLookup';
 import { getSwitchInEffect } from '../config/onSwitchInAbilities';
 import { getReactiveLowerEffect } from '../config/reactiveAbilities';
+import { getMoveFieldEffect, type MoveFieldEffect } from '../config/moveFieldEffects';
 import { STAT_LABELS } from '../config/statStages';
-import { WEATHER_LABELS, TERRAIN_LABELS } from '../config/fieldConditions';
+import { WEATHER_LABELS, TERRAIN_LABELS, STACKABLE_HAZARD_MAX } from '../config/fieldConditions';
 
 export const MAX_OPPONENT_ROSTER_SIZE = 6;
 export const MAX_BROUGHT = 4;
@@ -42,6 +43,41 @@ function clearStatStages(battle: Battle, pokemonId: string): Record<string, Stat
   return Object.fromEntries(Object.entries(battle.statStages).filter(([id]) => id !== pokemonId));
 }
 
+/**
+ * Pure application of a move's field effect (see config/moveFieldEffects.ts)
+ * onto fieldState - used by logAction so a field-setting move updates the
+ * tracker in the same updateBattle call it's logged in. Hazards always
+ * land on the opposing side; everything else lands on the mover's own
+ * side. Trick Room used while already active cancels it early (real game
+ * behavior) rather than refreshing the duration.
+ */
+function applyMoveFieldEffect(
+  fieldState: FieldState,
+  side: BattleSide,
+  effect: MoveFieldEffect | null,
+  currentTurn: number
+): FieldState {
+  if (!effect) return fieldState;
+  if (effect.kind === 'weather') return { ...fieldState, weather: { type: effect.weather, setOnTurn: currentTurn } };
+  if (effect.kind === 'terrain') return { ...fieldState, terrain: { type: effect.terrain, setOnTurn: currentTurn } };
+  if (effect.kind === 'trickRoom') {
+    return { ...fieldState, trickRoom: fieldState.trickRoom ? undefined : { setOnTurn: currentTurn } };
+  }
+
+  const targetSide: BattleSide = effect.kind === 'sideCondition' ? side : (side === 'player' ? 'opponent' : 'player');
+  const key = targetSide === 'player' ? 'playerSide' : 'opponentSide';
+  const conditions = fieldState[key];
+
+  if (effect.kind === 'sideCondition') {
+    return { ...fieldState, [key]: { ...conditions, [effect.key]: currentTurn } };
+  }
+  if (effect.kind === 'booleanHazard') {
+    return { ...fieldState, [key]: { ...conditions, [effect.key]: true } };
+  }
+  const currentLayers = conditions[effect.key] ?? 0;
+  return { ...fieldState, [key]: { ...conditions, [effect.key]: Math.min(STACKABLE_HAZARD_MAX[effect.key], currentLayers + 1) } };
+}
+
 export interface UseBattleLogActionsReturn {
   startBattle: (team: Team) => Promise<string | null>;
   toggleBrought: (battle: Battle, pokemonId: string) => Promise<boolean>;
@@ -49,7 +85,9 @@ export interface UseBattleLogActionsReturn {
   updateOpponentMoveTags: (battle: Battle, opponentId: string, ability?: string, item?: string) => Promise<boolean>;
   addOpponentMove: (battle: Battle, opponentId: string, move: string) => Promise<boolean>;
   removeOpponentMove: (battle: Battle, opponentId: string, move: string) => Promise<boolean>;
-  switchActive: (battle: Battle, side: BattleSide, pokemonId: string) => Promise<boolean>;
+  switchIn: (battle: Battle, side: BattleSide, pokemonId: string, slotIndex?: number) => Promise<boolean>;
+  switchOut: (battle: Battle, side: BattleSide, pokemonId: string) => Promise<boolean>;
+  swapActive: (battle: Battle, side: BattleSide, outgoingId: string, incomingId: string) => Promise<boolean>;
   setMegaEvolved: (battle: Battle, pokemonId: string, revealedItem?: string) => Promise<boolean>;
   adjustStatStage: (battle: Battle, pokemonId: string, stat: StatKey, delta: number) => Promise<boolean>;
   applyAbilityEffect: (battle: Battle, side: BattleSide, pokemonId: string, ability: string) => Promise<boolean>;
@@ -103,10 +141,10 @@ export function useBattleLogActions(
       format: team.format,
       playerRoster,
       broughtIds: [],
-      playerActiveIds: [],
+      playerActiveIds: [null, null],
       playerFaintedIds: [],
       opponentRoster: [],
-      opponentActiveIds: [],
+      opponentActiveIds: [null, null],
       megaEvolvedIds: [],
       statStages: {},
       turns: [{ number: 1, actions: [] }],
@@ -128,7 +166,8 @@ export function useBattleLogActions(
     const broughtIds = isBrought
       ? battle.broughtIds.filter(id => id !== pokemonId)
       : [...battle.broughtIds, pokemonId];
-    const playerActiveIds = isBrought ? battle.playerActiveIds.filter(id => id !== pokemonId) : battle.playerActiveIds;
+    // .map, not .filter - the tuple's slot positions must never shift.
+    const playerActiveIds = isBrought ? battle.playerActiveIds.map(id => id === pokemonId ? null : id) : battle.playerActiveIds;
     const playerFaintedIds = isBrought ? battle.playerFaintedIds.filter(id => id !== pokemonId) : battle.playerFaintedIds;
     return updateBattle(battle.id, { broughtIds, playerActiveIds, playerFaintedIds });
   }, [updateBattle]);
@@ -202,7 +241,10 @@ export function useBattleLogActions(
    * Appends to the last turn's action list, in the order logged. Logging an
    * opponent's move also reveals it (dedup, same rule as addOpponentMove)
    * in this same updateBattle call - the click-to-log flow never needs a
-   * separate reveal step for a freshly-typed opponent move.
+   * separate reveal step for a freshly-typed opponent move. Logging a move
+   * that sets a field effect (weather/terrain/Trick Room/screens/hazards -
+   * see config/moveFieldEffects.ts) also updates fieldState in this same
+   * call, so the tracker display never needs a separate manual toggle.
    */
   const logAction = useCallback(async (battle: Battle, action: Omit<BattleAction, 'id'>): Promise<boolean> => {
     if (battle.turns.length === 0) return false;
@@ -213,26 +255,77 @@ export function useBattleLogActions(
           return { ...o, moves: [...o.moves, trimmedMove] };
         })
       : battle.opponentRoster;
-    return updateBattle(battle.id, { turns: appendAction(battle.turns, action), opponentRoster });
+    const fieldState = action.failed
+      ? battle.fieldState
+      : applyMoveFieldEffect(battle.fieldState, action.side, getMoveFieldEffect(trimmedMove), battle.turns.length);
+    return updateBattle(battle.id, { turns: appendAction(battle.turns, action), opponentRoster, fieldState });
   }, [updateBattle]);
 
   /**
-   * Toggles a Pokemon in/out of its side's active slots (capped at 2 - to
-   * bring in a 3rd, bench one first, same ergonomic as before). Bringing a
-   * Pokemon IN also logs a switch-phase action, which is what drives the
-   * Battlefield's switched-in arrow for the rest of the current turn - both
-   * changes go through one updateBattle call so they can't race each other.
+   * Brings a benched Pokemon into an active slot - `slotIndex` if given
+   * (a specific empty slot was clicked/dropped on), else the first open
+   * slot. Logs a switch-phase action, which is what drives the
+   * Battlefield's switched-in arrow and blocks that Pokemon from acting
+   * again this turn (see canActThisTurn) - bundled into the same
+   * updateBattle call as the slot assignment so they can't race.
    */
-  const switchActive = useCallback(async (battle: Battle, side: BattleSide, pokemonId: string): Promise<boolean> => {
+  const switchIn = useCallback(async (battle: Battle, side: BattleSide, pokemonId: string, slotIndex?: number): Promise<boolean> => {
     const activeIds = side === 'player' ? battle.playerActiveIds : battle.opponentActiveIds;
-    const isActive = activeIds.includes(pokemonId);
-    if (!isActive && side === 'player' && !battle.broughtIds.includes(pokemonId)) return false;
-    if (!isActive && activeIds.length >= 2) return false;
+    if (activeIds.includes(pokemonId)) return false;
+    if (side === 'player' && !battle.broughtIds.includes(pokemonId)) return false;
+    const targetIndex = slotIndex ?? activeIds.indexOf(null);
+    if (targetIndex === -1 || activeIds[targetIndex] != null) return false;
 
-    const nextActiveIds = isActive ? activeIds.filter(id => id !== pokemonId) : [...activeIds, pokemonId];
-    const turns = isActive ? battle.turns : appendAction(battle.turns, { side, pokemonId, phase: 'switch', note: 'Switched in' });
-    // Benching (isActive -> false) always resets stat stages, same as the real game.
-    const statStages = isActive ? clearStatStages(battle, pokemonId) : battle.statStages;
+    const nextActiveIds = [...activeIds];
+    nextActiveIds[targetIndex] = pokemonId;
+    const turns = appendAction(battle.turns, { side, pokemonId, phase: 'switch', note: 'Switched in' });
+    return updateBattle(battle.id, {
+      ...(side === 'player' ? { playerActiveIds: nextActiveIds } : { opponentActiveIds: nextActiveIds }),
+      turns,
+    });
+  }, [updateBattle]);
+
+  /**
+   * Pure switch-out to an empty slot (no replacement) - only valid when
+   * this wouldn't drop the side below its required active count (see
+   * requiredActiveCount); otherwise a replacement must come in at the
+   * same time via swapActive. Also gated by canSwitchOutThisTurn - can't
+   * switch out a Pokemon that already switched in/Mega'd/used a non-
+   * switch-out move this turn.
+   */
+  const switchOut = useCallback(async (battle: Battle, side: BattleSide, pokemonId: string): Promise<boolean> => {
+    if (!canSwitchOutThisTurn(battle, pokemonId)) return false;
+    const activeIds = side === 'player' ? battle.playerActiveIds : battle.opponentActiveIds;
+    const idx = activeIds.indexOf(pokemonId);
+    if (idx === -1) return false;
+
+    const nextActiveIds = activeIds.map((id, i) => i === idx ? null : id);
+    if (nextActiveIds.filter(Boolean).length < requiredActiveCount(battle, side)) return false;
+
+    const statStages = clearStatStages(battle, pokemonId);
+    return updateBattle(battle.id, {
+      ...(side === 'player' ? { playerActiveIds: nextActiveIds } : { opponentActiveIds: nextActiveIds }),
+      statStages,
+    });
+  }, [updateBattle]);
+
+  /**
+   * Replaces one active Pokemon with a benched one in the SAME slot index -
+   * this is what keeps left/right field position stable through a switch
+   * (see types/pokemon.ts's playerActiveIds/opponentActiveIds doc). Single
+   * updateBattle call: slot reassignment, the incoming switch-phase log
+   * entry, and clearing the outgoing Pokemon's stat stages.
+   */
+  const swapActive = useCallback(async (battle: Battle, side: BattleSide, outgoingId: string, incomingId: string): Promise<boolean> => {
+    if (!canSwitchOutThisTurn(battle, outgoingId)) return false;
+    const activeIds = side === 'player' ? battle.playerActiveIds : battle.opponentActiveIds;
+    const idx = activeIds.indexOf(outgoingId);
+    if (idx === -1 || activeIds.includes(incomingId)) return false;
+    if (side === 'player' && !battle.broughtIds.includes(incomingId)) return false;
+
+    const nextActiveIds = activeIds.map((id, i) => i === idx ? incomingId : id);
+    const statStages = clearStatStages(battle, outgoingId);
+    const turns = appendAction(battle.turns, { side, pokemonId: incomingId, phase: 'switch', note: 'Switched in' });
     return updateBattle(battle.id, {
       ...(side === 'player' ? { playerActiveIds: nextActiveIds } : { opponentActiveIds: nextActiveIds }),
       turns,
@@ -241,12 +334,17 @@ export function useBattleLogActions(
   }, [updateBattle]);
 
   /**
-   * Marks a Pokemon as having Mega Evolved this battle (once only) and
-   * logs a mega-phase action. `revealedItem` (opponent side only) sets
-   * their held-item field to the resolved Mega Stone in the same call -
+   * Marks a Pokemon as having Mega Evolved this battle and logs a
+   * mega-phase action. Only one Mega per side per battle (real game rule -
+   * checked side-wide, not just against this specific pokemonId, so a
+   * second mega-capable Pokemon on the same side can't also Mega after the
+   * first). Also requires the mon hasn't already acted this turn (a move
+   * or switch already used up the slot's action - Mega must precede the
+   * move it accompanies). `revealedItem` (opponent side only) sets their
+   * held-item field to the resolved Mega Stone in the same call -
    * declaring Mega IS revealing that item, and bundling it here avoids
    * the two-sequential-updateBattle race the app already hit once before
-   * (see switchActive/logAction) - calling setMegaEvolved then a separate
+   * (see switchIn/logAction) - calling setMegaEvolved then a separate
    * updateOpponentMoveTags off the same stale `battle` reference silently
    * lost whichever field wasn't in the second call's update, depending on
    * IPC round-trip timing.
@@ -255,6 +353,10 @@ export function useBattleLogActions(
     if (battle.megaEvolvedIds.includes(pokemonId)) return false;
     const side: BattleSide = battle.playerRoster.some(p => p.id === pokemonId) ? 'player' : 'opponent';
     if (!findBattlePokemon(battle, side, pokemonId)) return false;
+    if (!canActThisTurn(battle, pokemonId)) return false;
+
+    const sideRosterIds = new Set((side === 'player' ? battle.playerRoster : battle.opponentRoster).map(p => p.id));
+    if (battle.megaEvolvedIds.some(id => sideRosterIds.has(id))) return false;
 
     const opponentRoster = revealedItem && side === 'opponent'
       ? battle.opponentRoster.map(o => o.id === pokemonId ? { ...o, item: revealedItem } : o)
@@ -315,7 +417,7 @@ export function useBattleLogActions(
 
     const targetIds = effect.target === 'self'
       ? [pokemonId]
-      : (side === 'player' ? battle.opponentActiveIds : battle.playerActiveIds);
+      : compactActiveIds(side === 'player' ? battle.opponentActiveIds : battle.playerActiveIds);
     if (targetIds.length === 0) return false;
     const targetSide: BattleSide = effect.target === 'self' ? side : (side === 'player' ? 'opponent' : 'player');
 
@@ -478,7 +580,9 @@ export function useBattleLogActions(
     updateOpponentMoveTags,
     addOpponentMove,
     removeOpponentMove,
-    switchActive,
+    switchIn,
+    switchOut,
+    swapActive,
     setMegaEvolved,
     adjustStatStage,
     applyAbilityEffect,

@@ -225,10 +225,14 @@ export interface Battle {
   format: Team['format'];
   playerRoster: BroughtPokemonSnapshot[]; // all of the team brought to Team Preview, up to 6
   broughtIds: string[]; // 0-4 ids from playerRoster - which of the 6 were actually brought to this battle
-  playerActiveIds: string[]; // 0-2 ids from broughtIds
+  // Fixed 2-element tuple - index IS the left/right field position, `null` = empty.
+  // Never shrunk/spliced when a Pokemon leaves, so the other slot's position
+  // never shifts - see utils/battleLookup.ts's compactActiveIds for call
+  // sites that just need a plain id list.
+  playerActiveIds: (string | null)[]; // ids from broughtIds
   playerFaintedIds: string[]; // ids from playerRoster
   opponentRoster: OpponentPokemonEntry[]; // starts empty, grows during the battle
-  opponentActiveIds: string[]; // 0-2 ids from opponentRoster
+  opponentActiveIds: (string | null)[]; // ids from opponentRoster, same fixed-slot shape as playerActiveIds
   megaEvolvedIds: string[]; // ids (either roster) that have Mega Evolved this battle
   statStages: Record<string, StatStages>; // keyed by pokemonId, either roster - cleared when that id leaves the field (bench/faint)
   turns: Turn[];

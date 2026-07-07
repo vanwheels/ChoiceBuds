@@ -8,7 +8,7 @@
  * moves wait for a follow-up click on the field (any occupied slot always
  * works, highlighted ones are just a suggestion - this is a log, not a
  * rules enforcer). Click an empty slot to bring in a benched Pokemon, or
- * drag a roster card onto it - both call the same switchActive action, so
+ * drag a roster card onto it - both call switchIn/swapActive, so
  * switch-logging/the arrow indicator work identically either way.
  *
  * Per-slot rendering (sprite/mega/stat-stage/ability-chip presentation)
@@ -30,6 +30,7 @@ import type { Battle, BattleSide, BroughtPokemonSnapshot, OpponentPokemonEntry }
 import type { UseBattleLogActionsReturn } from '../../hooks/useBattleLogActions';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
 import { getTargetCategory } from '../../config/moveTargeting';
+import { canActThisTurn, compactActiveIds } from '../../utils/battleLookup';
 import BattlefieldSlot from './BattlefieldSlot';
 import SideConditionsRow from './SideConditionsRow';
 import FieldWeatherBar from './FieldWeatherBar';
@@ -51,12 +52,14 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
   const [benchSlot, setBenchSlot] = useState<SlotPosition | null>(null);
   const [statsFor, setStatsFor] = useState<SlotRef | null>(null);
 
-  const opponentActive = battle.opponentActiveIds
-    .map(id => battle.opponentRoster.find(o => o.id === id))
-    .filter((o): o is OpponentPokemonEntry => !!o);
-  const playerActive = battle.playerActiveIds
-    .map(id => battle.playerRoster.find(p => p.id === id))
-    .filter((p): p is BroughtPokemonSnapshot => !!p);
+  // Slot-aligned, not compacted - index 0/1 must stay pinned to the
+  // persisted left/right position even when one side is empty (`null`),
+  // otherwise removing the left slot's occupant would visually shift the
+  // right one into its place.
+  const opponentActive: (OpponentPokemonEntry | undefined)[] = battle.opponentActiveIds
+    .map(id => id ? battle.opponentRoster.find(o => o.id === id) : undefined);
+  const playerActive: (BroughtPokemonSnapshot | undefined)[] = battle.playerActiveIds
+    .map(id => id ? battle.playerRoster.find(p => p.id === id) : undefined);
 
   const lastTurn = battle.turns[battle.turns.length - 1];
   const switchedInIds = new Set(lastTurn?.actions.filter(a => a.phase === 'switch').map(a => a.pokemonId) ?? []);
@@ -84,8 +87,8 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
     const category = getTargetCategory(moveData?.target);
 
     const oppSide: BattleSide = side === 'player' ? 'opponent' : 'player';
-    const sameSideActive = side === 'player' ? battle.playerActiveIds : battle.opponentActiveIds;
-    const oppActive = oppSide === 'player' ? battle.playerActiveIds : battle.opponentActiveIds;
+    const sameSideActive = compactActiveIds(side === 'player' ? battle.playerActiveIds : battle.opponentActiveIds);
+    const oppActive = compactActiveIds(oppSide === 'player' ? battle.playerActiveIds : battle.opponentActiveIds);
     const allyIds = sameSideActive.filter(id => id !== pokemonId);
 
     const logWithTargets = (target: SlotRef[]) =>
@@ -114,18 +117,23 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
     setPendingTarget({ side, pokemonId, move, candidates });
   };
 
+  const openBenchPicker = (side: BattleSide, slotIndex: number) => {
+    setArmed(null);
+    setPendingTarget(null);
+    setStatsFor(null);
+    setBenchSlot(prev => prev && prev.side === side && prev.index === slotIndex ? null : { side, index: slotIndex });
+  };
+
   const handleSlotClick = (side: BattleSide, slotIndex: number, pokemonId: string | undefined) => {
     if (!pokemonId) {
-      setArmed(null);
-      setPendingTarget(null);
-      setStatsFor(null);
-      setBenchSlot(prev => prev && prev.side === side && prev.index === slotIndex ? null : { side, index: slotIndex });
+      openBenchPicker(side, slotIndex);
       return;
     }
     if (pendingTarget) {
       finalizeTarget({ side, pokemonId });
       return;
     }
+    if (!canActThisTurn(battle, pokemonId)) return;
     setBenchSlot(null);
     setStatsFor(null);
     setArmed(prev => prev && prev.side === side && prev.pokemonId === pokemonId ? null : { side, pokemonId });
@@ -147,10 +155,19 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
       isStatsOpen={!!mon && statsFor?.side === side && statsFor.pokemonId === mon.id}
       benchOptions={side === 'player' ? playerBench : opponentBench}
       onSlotClick={() => handleSlotClick(side, slotIndex, mon?.id)}
-      onDrop={side === 'player' ? id => { setBenchSlot(null); battleLogActions.switchActive(battle, side, id); } : undefined}
+      onOpenBench={() => openBenchPicker(side, slotIndex)}
+      onDrop={side === 'player' ? id => {
+        setBenchSlot(null);
+        if (mon) battleLogActions.swapActive(battle, side, mon.id, id);
+        else battleLogActions.switchIn(battle, side, id, slotIndex);
+      } : undefined}
       onPickMove={move => mon && handleMovePicked(side, mon.id, move)}
       onCloseMovePopover={() => setArmed(null)}
-      onPickBench={id => { battleLogActions.switchActive(battle, side, id); setBenchSlot(null); }}
+      onPickBench={id => {
+        if (mon) battleLogActions.swapActive(battle, side, mon.id, id);
+        else battleLogActions.switchIn(battle, side, id, slotIndex);
+        setBenchSlot(null);
+      }}
       onCloseBench={() => setBenchSlot(null)}
       onOpenStats={() => mon && setStatsFor(prev => prev && prev.side === side && prev.pokemonId === mon.id ? null : { side, pokemonId: mon.id })}
       onCloseStats={() => setStatsFor(null)}

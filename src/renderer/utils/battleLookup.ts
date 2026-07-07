@@ -6,6 +6,12 @@
 
 import type { Battle, BattleAction, BattleSide, BroughtPokemonSnapshot, OpponentPokemonEntry } from '../types/pokemon';
 import { isProtectFamilyMove } from '../config/protectMoves';
+import { isSwitchOutMove } from '../config/switchOutMoves';
+
+/** Drops the `null` (empty-slot) entries from a fixed 2-slot active-id tuple - for call sites that just need "who's currently active", not slot position. */
+export function compactActiveIds(ids: (string | null)[]): string[] {
+  return ids.filter((id): id is string => id != null);
+}
 
 export function findBattlePokemon(
   battle: Battle,
@@ -79,4 +85,49 @@ export function hasUnappliedReactiveLowerEffect(battle: Battle, pokemonId: strin
   if (lastDecreaseIndex === -1) return false;
   const lowerAbility = ability.toLowerCase();
   return !allActions.slice(lastDecreaseIndex + 1).some(a => a.pokemonId === pokemonId && a.note?.toLowerCase().includes(lowerAbility));
+}
+
+/**
+ * Each active slot gets exactly one action per turn - a move OR a switch,
+ * never both, never twice (a freshly-switched-in Pokemon can't also move
+ * or switch again the same turn). Mega Evolving is folded into "acted"
+ * too (a 'mega' phase action alone doesn't block this - the mon still
+ * needs its move - but see canSwitchOutThisTurn for why it blocks
+ * switching). Only looks at the current (last) turn.
+ */
+export function canActThisTurn(battle: Battle, pokemonId: string): boolean {
+  const lastTurn = battle.turns[battle.turns.length - 1];
+  if (!lastTurn) return true;
+  return !lastTurn.actions.some(a => a.pokemonId === pokemonId && (a.phase === 'switch' || a.phase === 'move'));
+}
+
+/**
+ * Whether this Pokemon can still switch out this turn. False once they've
+ * switched in or Mega Evolved this turn (an incoming switch, or a
+ * committed Mega, IS the slot's action). If they've used a move, only
+ * true when that move is a switch-out move (U-turn/Parting Shot/etc. -
+ * see config/switchOutMoves.ts) and it didn't fail - the switch is a
+ * continuation of that same action, not a second one.
+ */
+export function canSwitchOutThisTurn(battle: Battle, pokemonId: string): boolean {
+  const lastTurn = battle.turns[battle.turns.length - 1];
+  if (!lastTurn) return true;
+  const actions = lastTurn.actions.filter(a => a.pokemonId === pokemonId);
+  if (actions.some(a => a.phase === 'switch' || a.phase === 'mega')) return false;
+  const moveAction = actions.find(a => a.phase === 'move');
+  if (!moveAction) return true;
+  return isSwitchOutMove(moveAction.move) && !moveAction.failed;
+}
+
+/**
+ * How many active slots a side must currently be filling - 2 unless
+ * fewer than 2 of their brought Pokemon are still alive. For the
+ * opponent this is a best-effort proxy off only what's been revealed
+ * (opponentRoster), since we don't know their full bring-4 up front.
+ */
+export function requiredActiveCount(battle: Battle, side: BattleSide): number {
+  const aliveCount = side === 'player'
+    ? battle.broughtIds.filter(id => !battle.playerFaintedIds.includes(id)).length
+    : battle.opponentRoster.filter(o => !o.fainted).length;
+  return Math.min(2, aliveCount);
 }

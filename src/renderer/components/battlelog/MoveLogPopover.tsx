@@ -9,6 +9,7 @@
 
 import { useState } from 'react';
 import { useDismissable } from '../../hooks/useDismissable';
+import { useMoveNameList } from '../../hooks/useMoveNameList';
 
 interface MoveLogPopoverProps {
   actorLabel: string;
@@ -21,6 +22,7 @@ interface MoveLogPopoverProps {
 export default function MoveLogPopover({ actorLabel, moves, allowFreeform, onPickMove, onClose }: MoveLogPopoverProps) {
   const [freeform, setFreeform] = useState('');
   const ref = useDismissable<HTMLDivElement>(onClose);
+  const allMoveNames = useMoveNameList();
 
   const submitFreeform = () => {
     const trimmed = freeform.trim();
@@ -47,15 +49,21 @@ export default function MoveLogPopover({ actorLabel, moves, allowFreeform, onPic
         ))
       )}
       {allowFreeform && (
-        <input
-          type="text"
-          value={freeform}
-          onChange={e => setFreeform(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') submitFreeform(); }}
-          placeholder="+ new move seen..."
-          autoFocus={moves.length === 0}
-          className="w-full px-1.5 py-1 text-[11px] bg-gray-900 border border-gray-700 rounded text-gray-200 outline-none focus:border-blue-500"
-        />
+        <>
+          <input
+            type="text"
+            list="move-name-suggestions"
+            value={freeform}
+            onChange={e => setFreeform(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') submitFreeform(); }}
+            placeholder="+ new move seen..."
+            autoFocus={moves.length === 0}
+            className="w-full px-1.5 py-1 text-[11px] bg-gray-900 border border-gray-700 rounded text-gray-200 outline-none focus:border-blue-500"
+          />
+          <datalist id="move-name-suggestions">
+            {allMoveNames.map(name => <option key={name} value={name} />)}
+          </datalist>
+        </>
       )}
     </div>
   );

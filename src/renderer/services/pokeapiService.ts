@@ -158,6 +158,20 @@ export async function fetchAbilityData(normalizedName: string): Promise<AbilityD
   };
 }
 
+interface PokeAPIMoveListResponse {
+  results?: Array<{ name: string }>;
+}
+
+/**
+ * Fetches every move name PokeAPI knows about, in one cheap call (no
+ * per-move metadata) - used to power the Battle Logger's opponent-move
+ * autocomplete, see hooks/useMoveNameList.ts.
+ */
+export async function fetchAllMoveNames(): Promise<string[]> {
+  const data = await fetchJSON<PokeAPIMoveListResponse>('/move?limit=2000');
+  return (data?.results ?? []).map(r => r.name);
+}
+
 /**
  * Fetches a species' true legal learnset (abilities + learnable moves) from
  * PokeAPI. This is the validation source of truth for what a given species

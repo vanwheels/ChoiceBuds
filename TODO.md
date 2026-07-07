@@ -23,9 +23,10 @@ in a `Why:` line only when it's not obvious from the task itself.
 
 - **Battle Logger - beyond the core MVP**: field/side-condition tracking,
   battlefield redesign Stage 1, Stage 2's interactive click-to-log flow,
-  the layout/drag-to-field/stat-stage-tracking follow-up, and the mega/
-  reactive-ability/more-switch-in-abilities/field-effects-relocation pass
-  are all done (see Done below). **Next up**: status-condition tracking +
+  the layout/drag-to-field/stat-stage-tracking follow-up, the mega/
+  reactive-ability/more-switch-in-abilities/field-effects-relocation pass,
+  and the turn-action-economy/persistent-slots/move-autofill/auto-field-
+  effects pass are all done (see Done below). **Next up**: status-condition tracking +
   move-outcome chips (full paralysis, didn't wake up, flinch, hit-by-a-
   status-move) - explicitly scoped as its own follow-up plan since it
   needs a new status-condition data model (nothing tracks
@@ -51,6 +52,60 @@ in a `Why:` line only when it's not obvious from the task itself.
   the Battle Logger producing real win/loss data).
 
 ## Done
+
+- **Battle Logger: turn action economy, persistent slots, move autofill,
+  auto field-effects** (2026-07-07): a manual testing pass turned up 6 real
+  gaps in how the log modeled doubles' actual turn structure. (1) Each
+  active slot now gets exactly one action per turn - new `utils/
+  battleLookup.ts::canActThisTurn`/`canSwitchOutThisTurn` gate the move-
+  popover, Mega button, and Switch button (renamed from "Bench"), reading
+  the current turn's already-logged actions. Mega Evolving counts as
+  acting (can't Mega then switch out same turn); a switch-out move
+  (U-turn/Volt Switch/Parting Shot/etc. - new `config/switchOutMoves.ts`)
+  is the one exception, since the resulting switch is a continuation of
+  that move's action, not a second one - `TurnLog.tsx`'s "Failed?" chip
+  (previously Protect-repeat-only) now also covers these unconditionally,
+  since whether they trigger the swap depends on typing/abilities the log
+  can't know. (2) A side must field 2 active Pokemon whenever 2+ are still
+  alive - switching out now goes through a forced-replacement picker
+  (`swapActive`, one `updateBattle` call) instead of leaving the slot
+  empty, unless there's truly nobody left to bring in. (3) Opponent moves
+  typed into the freeform field now autocomplete against every PokeAPI
+  move name (new `services/pokeapiService.ts::fetchAllMoveNames` + `hooks/
+  useMoveNameList.ts`, fetched once and cached, wired into a `<datalist>`
+  in `MoveLogPopover.tsx`) - previously a bare text box with no signal
+  whether a typed move would actually resolve. (4) Logging a move that
+  sets a field effect (new `config/moveFieldEffects.ts`: weather/terrain/
+  Trick Room/screens/hazards) now updates the tracker in the same
+  `logAction` call automatically - hazards always land on the *opposing*
+  side, screens/Tailwind on the mover's own, matching real rules; Trick
+  Room used while already active cancels it early instead of refreshing
+  the duration. (5) Fixed the root cause of switching visually "sliding" a
+  Pokemon into the wrong field position: `playerActiveIds`/
+  `opponentActiveIds` changed from a plain `string[]` (order = whichever
+  slot, no persistent meaning) to a fixed 2-element `(string | null)[]`
+  tuple where the index IS the left/right position, never spliced -
+  `swapActive` specifically preserves this by replacing in-place at the
+  outgoing Pokemon's existing index. (6) Only one Mega per side per battle
+  now enforced side-wide (`setMegaEvolved` checks the whole roster's
+  already-used ids, not just the clicked Pokemon), with the Mega button
+  hidden entirely on every other Pokemon on that side once used.
+
+  Live-verified end-to-end (`.claude/skills/run-desktop/`, ground-truth-
+  checked against `battles.json` directly after an early false start where
+  a test-script DOM selector - not the app - matched the wrong popover):
+  a freshly-switched-in Pokemon's Move/Mega/Switch controls dim and
+  no-op; swapping one active Pokemon for a benched one via the forced
+  picker correctly kept the untouched slot's Pokemon pinned to its
+  original side while the new one took the exact vacated slot; Mega-ing
+  one Pokemon correctly hid the Mega button on a second, still
+  Mega-capable Pokemon on the same side for the rest of the battle; typing
+  a partial opponent move populated live suggestions (937 total loaded)
+  and submitting "Trick Room" both logged it and lit up the field tracker
+  at a 5-turn countdown with no manual toggle; a Tailwind use similarly
+  auto-lit the mover's own side tracker. Reopening a legacy pre-tuple
+  battle loaded cleanly with no console errors, confirming the
+  `useBattles.ts` migration (pads old arrays into the new 2-slot shape).
 
 - **Battle Logger: Mega redesign, reactive abilities, more switch-in
   effects, field-effects relocation** (2026-07-07): the Mega button is now
