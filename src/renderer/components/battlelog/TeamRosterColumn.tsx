@@ -8,12 +8,14 @@
  * A row's main body click is the one meaningful action for its side,
  * decided by the caller via onRowClick: for the player side that's
  * "toggle brought" (0-4 of the 6); for the opponent side it's "toggle
- * active". Active-switching for the player side now happens entirely via
- * Battlefield.tsx - isActive here is read-only, just driving the
- * highlighted-border visual.
+ * active". Active-switching for the player side happens via
+ * Battlefield.tsx instead - click an empty slot, or (when `enableDrag` is
+ * set, player side only) drag a brought-but-benched row onto one -
+ * isActive here is read-only, just driving the highlighted-border visual.
  */
 
 import type { ReactNode } from 'react';
+import { PLAYER_POKEMON_DRAG_TYPE } from '../../utils/dragTypes';
 
 export interface RosterRowData {
   id: string;
@@ -35,11 +37,12 @@ interface TeamRosterColumnProps {
   onRowClick: (id: string) => void;
   onToggleFainted: (id: string) => void;
   addSlot?: ReactNode;
+  enableDrag?: boolean; // player side only - lets a brought-but-benched row be dragged onto a Battlefield slot
 }
 
 export default function TeamRosterColumn({
   title, titleColorClass, activeColorClass, rows, resolveSprite,
-  onRowClick, onToggleFainted, addSlot,
+  onRowClick, onToggleFainted, addSlot, enableDrag,
 }: TeamRosterColumnProps) {
   return (
     <div className="flex flex-col gap-2 w-full lg:w-56 shrink-0">
@@ -49,12 +52,15 @@ export default function TeamRosterColumn({
           const isBenched = row.isBrought === false;
           const usesBroughtSemantics = row.isBrought !== undefined;
           const rowTitle = usesBroughtSemantics
-            ? (isBenched ? 'Not brought - click to bring' : 'Brought - click to remove')
+            ? (isBenched ? 'Not brought - click to bring' : 'Brought - click to remove, or drag onto the field')
             : (row.isActive ? 'Active - click to bench' : 'Click to mark active');
+          const isDraggable = !!enableDrag && !isBenched && !row.isActive && !row.isFainted;
           return (
             <div
               key={row.id}
-              className={`relative p-1.5 rounded-lg border-2 transition-colors ${
+              draggable={isDraggable}
+              onDragStart={isDraggable ? e => e.dataTransfer.setData(PLAYER_POKEMON_DRAG_TYPE, row.id) : undefined}
+              className={`relative p-1.5 rounded-lg border-2 transition-colors ${isDraggable ? 'cursor-grab' : ''} ${
                 row.isFainted
                   ? 'border-gray-800 bg-gray-900/40 opacity-40'
                   : isBenched

@@ -42,6 +42,7 @@ export default function PlayerFieldPanel({ battle, battleLogActions, resolveSpri
       resolveSprite={resolveSprite}
       onRowClick={id => battleLogActions.toggleBrought(battle, id)}
       onToggleFainted={toggleFainted}
+      enableDrag
     />
   );
 }

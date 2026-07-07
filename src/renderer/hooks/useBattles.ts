@@ -18,6 +18,7 @@ interface LegacyBattleShape {
   playerRoster?: BroughtPokemonSnapshot[];
   broughtIds?: string[];
   megaEvolvedIds?: string[];
+  statStages?: Battle['statStages'];
 }
 
 /**
@@ -29,6 +30,7 @@ interface LegacyBattleShape {
  *   legacy record's 4 brought Pokemon become playerRoster with all 4
  *   marked brought (matches what the old picker screen already enforced)
  * - megaEvolvedIds: added for the click-to-log flow's Mega tracking
+ * - statStages: added for stat-stage tracking
  * - a logged action's `target` was a single object before spread-move
  *   support - coerce it into a one-element array
  */
@@ -40,6 +42,7 @@ function normalizeBattle(b: Battle & LegacyBattleShape): Battle {
     playerRoster,
     broughtIds,
     megaEvolvedIds: b.megaEvolvedIds ?? [],
+    statStages: b.statStages ?? {},
     fieldState: b.fieldState ?? { playerSide: {}, opponentSide: {} },
     turns: b.turns.map(turn => ({
       ...turn,

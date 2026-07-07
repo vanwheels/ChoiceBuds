@@ -205,6 +205,12 @@ export interface FieldState {
   opponentSide: SideConditions;
 }
 
+/** The 5 stats VGC play actually stages up/down in practice - see config/onSwitchInAbilities.ts. */
+export type StatKey = 'atk' | 'def' | 'spa' | 'spd' | 'spe';
+
+/** One Pokemon's current stat stages, -6..6 each. Absent key = 0 (unboosted). */
+export type StatStages = Partial<Record<StatKey, number>>;
+
 /**
  * One manually-logged Pokemon Champions VGC battle (doubles). See
  * useBattleLogActions.ts for the higher-level mutations that build/update
@@ -223,6 +229,7 @@ export interface Battle {
   opponentRoster: OpponentPokemonEntry[]; // starts empty, grows during the battle
   opponentActiveIds: string[]; // 0-2 ids from opponentRoster
   megaEvolvedIds: string[]; // ids (either roster) that have Mega Evolved this battle
+  statStages: Record<string, StatStages>; // keyed by pokemonId, either roster - cleared when that id leaves the field (bench/faint)
   turns: Turn[];
   fieldState: FieldState;
   result: 'win' | 'loss' | 'in-progress';

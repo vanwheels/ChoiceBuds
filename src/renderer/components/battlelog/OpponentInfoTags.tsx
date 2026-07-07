@@ -7,6 +7,8 @@
 import { useState } from 'react';
 import type { Battle, OpponentPokemonEntry } from '../../types/pokemon';
 import type { UseBattleLogActionsReturn } from '../../hooks/useBattleLogActions';
+import { getSwitchInEffect } from '../../config/onSwitchInAbilities';
+import { hasAppliedAbilityEffectSinceSwitchIn } from '../../utils/battleLookup';
 
 interface OpponentInfoTagsProps {
   battle: Battle;
@@ -22,6 +24,15 @@ export default function OpponentInfoTags({ battle, opponent, battleLogActions }:
   const commitTags = () => {
     battleLogActions.updateOpponentMoveTags(battle, opponent.id, ability || undefined, item || undefined);
   };
+
+  // Covers the case where the ability is revealed after the Pokemon is
+  // already active (not just at switch-in, which Battlefield.tsx's own
+  // chip already covers) - e.g. typed in from Team Preview scouting notes.
+  const committedAbility = opponent.ability;
+  const switchInEffect = getSwitchInEffect(committedAbility);
+  const showAbilityChip = battle.opponentActiveIds.includes(opponent.id)
+    && !!switchInEffect && !!committedAbility
+    && !hasAppliedAbilityEffectSinceSwitchIn(battle, opponent.id, committedAbility);
 
   const submitMove = () => {
     if (!newMove.trim()) return;
@@ -72,6 +83,17 @@ export default function OpponentInfoTags({ battle, opponent, battleLogActions }:
           className="px-1.5 py-0.5 text-[10px] bg-gray-900 border border-gray-700 rounded text-gray-200 outline-none focus:border-blue-500"
         />
       </div>
+
+      {showAbilityChip && (
+        <button
+          type="button"
+          onClick={() => battleLogActions.applyAbilityEffect(battle, 'opponent', opponent.id, committedAbility!)}
+          title="Apply this ability's switch-in effect"
+          className="self-start text-[9px] px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-200 hover:bg-purple-800 cursor-pointer"
+        >
+          {committedAbility}!
+        </button>
+      )}
     </div>
   );
 }

@@ -22,17 +22,21 @@ in a `Why:` line only when it's not obvious from the task itself.
   Entries`, `Update Status`.
 
 - **Battle Logger - beyond the core MVP**: field/side-condition tracking,
-  battlefield redesign Stage 1, and Stage 2's interactive click-to-log flow
-  are all done (see Done below). Still open: Bo3 "set" grouping across
-  games, post-battle damage-calc review (step through a logged battle's
-  turns against the Calc), and the stat-inference idea (needs Limitless/
+  battlefield redesign Stage 1, Stage 2's interactive click-to-log flow,
+  and the layout/drag-to-field/stat-stage-tracking follow-up are all done
+  (see Done below). Still open: Bo3 "set" grouping across games,
+  post-battle damage-calc review (step through a logged battle's turns
+  against the Calc), and the stat-inference idea (needs Limitless/
   championsbattledata-sourced per-species data first). Also noted but not
   built: synthesizing turn-log entries when a field condition changes (the
   countdown display already shows remaining turns implicitly, so this is a
   nice-to-have); generic lightweight outcome tags beyond Protect-fail
   (Missed/No Effect/Blocked by Ability) - considered during Stage 2 design
   but dropped as unrequested scope, could revisit if the Protect-fail chip
-  pattern proves useful enough to generalize.
+  pattern proves useful enough to generalize; Download's ability effect
+  (deliberately excluded from the switch-in effects table - its target
+  stat depends on comparing the opposing side's average Def/SpDef, needs
+  base-stat math not taken on yet).
 - Everything else from the original 9-item roadmap discussion not yet
   built: general UI polish (#1), cross-device sync via file-sync-folder
   (#2), further Calc UI cleanup (#3), Settings page (#4), Limitless usage
@@ -40,6 +44,40 @@ in a `Why:` line only when it's not obvious from the task itself.
   the Battle Logger producing real win/loss data).
 
 ## Done
+
+- **Battle Logger: layout rework, drag-to-field, stat-stage tracking**
+  (2026-07-07): the Battlefield's top row now aligns with the roster
+  boxes, and the turn log + Undo Last/Next Turn controls moved into the
+  space below the Battlefield instead of a separate full-width block.
+  Fixed a real bug: `Battlefield.tsx`'s bench picker only ever rendered
+  inside the *occupied*-slot branch of `renderSlot`, so if both of a
+  side's slots were empty (e.g. right after bringing 4 with none active
+  yet), clicking either did nothing visible - `benchSlot` state now
+  tracks the exact `{side, index}` clicked, and both branches share a
+  wrapper that can render the picker, so it always attaches to the
+  actually-clicked slot. On top of the fix, added the user's preferred
+  interaction: drag a roster card (native HTML5 drag-and-drop, no new
+  dependency) onto an empty Battlefield slot to switch it in - same
+  underlying `switchActive` action as the picker/roster click, so
+  logging/the switch-in arrow work identically either way. Click-to-pick
+  stays as a fallback alongside drag.
+
+  New stat-stage tracking: `Battle.statStages` (keyed by pokemonId,
+  Atk/Def/SpA/SpD/Spe, -6..+6), a "Stats" corner button + new
+  `StatStagePopover.tsx` for manual +/- taps, a summary badge under each
+  active mon, and auto-reset to empty when a Pokemon leaves the field
+  (bench or faint) - matches the real game. New
+  `config/onSwitchInAbilities.ts`: a curated table (Intimidate, Intrepid
+  Sword, Dauntless Shield - deliberately not Download, see In Progress)
+  mapping an ability to its stat effect; a one-tap "apply" chip shows on
+  the Battlefield when a Pokemon's known ability matches, and in
+  `OpponentInfoTags.tsx` when a matching ability is typed in after the
+  Pokemon's already active - never automatic, matches the app's "manual
+  log, not a simulator" philosophy already used for the Protect-fail
+  chip. New `utils/battleLookup.ts::hasAppliedAbilityEffectSinceSwitchIn`
+  correctly scopes "already applied" to the Pokemon's current stint on
+  the field (not just the current turn), since the effect only triggers
+  once per switch-in however many turns it stays out.
 
 - **Battle Logger Stage 2: interactive click-to-log flow** (2026-07-07):
   `ActionEntryBar.tsx`'s manual dropdown bar is gone entirely, replaced by

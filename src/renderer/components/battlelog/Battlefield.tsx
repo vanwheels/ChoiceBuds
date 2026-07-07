@@ -7,23 +7,35 @@
  * self/field/spread moves auto-resolve their target(s), single-target
  * moves wait for a follow-up click on the field (any occupied slot always
  * works, highlighted ones are just a suggestion - this is a log, not a
- * rules enforcer). Click an empty slot to bring in a benched Pokemon.
+ * rules enforcer). Click an empty slot to bring in a benched Pokemon, or
+ * drag a roster card onto it - both call the same switchActive action, so
+ * switch-logging/the arrow indicator work identically either way.
+ *
+ * Also home to per-mon Bench/Mega/Stats corner controls, the stat-stage
+ * summary badge, and a one-tap switch-in ability effect chip (Intimidate
+ * and friends - see config/onSwitchInAbilities.ts).
  *
  * All of this is ephemeral local UI state (which actor is armed, which
- * slots are awaiting a target click, which side's bench picker is open) -
- * the actual battle mutations still go through battleLogActions, matching
- * the same "local useState for popover state, hook for real data" split
- * OpponentFieldPanel already uses for its own add-species popover.
+ * slots are awaiting a target click, which exact slot's bench/stats
+ * popover is open) - the actual battle mutations still go through
+ * battleLogActions, matching the same "local useState for popover state,
+ * hook for real data" split OpponentFieldPanel already uses for its own
+ * add-species popover.
  */
 
 import { useState } from 'react';
-import type { Battle, BattleSide, BroughtPokemonSnapshot, OpponentPokemonEntry } from '../../types/pokemon';
+import type { Battle, BattleSide, BroughtPokemonSnapshot, OpponentPokemonEntry, StatStages } from '../../types/pokemon';
 import type { UseBattleLogActionsReturn } from '../../hooks/useBattleLogActions';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
 import { getPixelSpriteUrl } from '../../utils/spriteUrl';
 import { getTargetCategory } from '../../config/moveTargeting';
+import { getSwitchInEffect } from '../../config/onSwitchInAbilities';
+import { STAT_ORDER, STAT_LABELS } from '../../config/statStages';
+import { PLAYER_POKEMON_DRAG_TYPE } from '../../utils/dragTypes';
+import { hasAppliedAbilityEffectSinceSwitchIn } from '../../utils/battleLookup';
 import { useDismissable } from '../../hooks/useDismissable';
 import MoveLogPopover from './MoveLogPopover';
+import StatStagePopover from './StatStagePopover';
 
 interface BattlefieldProps {
   battle: Battle;
@@ -34,14 +46,33 @@ interface BattlefieldProps {
 
 type ActiveMon = BroughtPokemonSnapshot | OpponentPokemonEntry;
 type SlotRef = { side: BattleSide; pokemonId: string };
+type SlotPosition = { side: BattleSide; index: number };
 
-function EmptySlot({ onClick }: { onClick: () => void }) {
+function formatStatSummary(stages: StatStages): string {
+  return STAT_ORDER
+    .filter(stat => stages[stat])
+    .map(stat => `${STAT_LABELS[stat]} ${(stages[stat] as number) > 0 ? '+' : ''}${stages[stat]}`)
+    .join(', ');
+}
+
+function EmptySlot({ onClick, onDrop }: { onClick: () => void; onDrop?: (pokemonId: string) => void }) {
+  const [isDragOver, setIsDragOver] = useState(false);
   return (
     <button
       type="button"
       onClick={onClick}
-      title="Bring in a benched Pokemon"
-      className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-800 flex items-center justify-center text-gray-700 hover:border-gray-600 hover:text-gray-500 text-xs cursor-pointer transition-colors"
+      onDragOver={onDrop ? e => { e.preventDefault(); setIsDragOver(true); } : undefined}
+      onDragLeave={onDrop ? () => setIsDragOver(false) : undefined}
+      onDrop={onDrop ? e => {
+        e.preventDefault();
+        setIsDragOver(false);
+        const id = e.dataTransfer.getData(PLAYER_POKEMON_DRAG_TYPE);
+        if (id) onDrop(id);
+      } : undefined}
+      title="Bring in a benched Pokemon (click or drag)"
+      className={`w-20 h-20 rounded-lg border-2 border-dashed flex items-center justify-center text-xs cursor-pointer transition-colors ${
+        isDragOver ? 'border-blue-400 bg-blue-500/10 text-blue-300' : 'border-gray-800 text-gray-700 hover:border-gray-600 hover:text-gray-500'
+      }`}
     >
       +
     </button>
@@ -51,7 +82,8 @@ function EmptySlot({ onClick }: { onClick: () => void }) {
 export default function Battlefield({ battle, battleLogActions, gameDataState, resolveSprite }: BattlefieldProps) {
   const [armed, setArmed] = useState<SlotRef | null>(null);
   const [pendingTarget, setPendingTarget] = useState<{ side: BattleSide; pokemonId: string; move: string; candidates: SlotRef[] } | null>(null);
-  const [benchSide, setBenchSide] = useState<BattleSide | null>(null);
+  const [benchSlot, setBenchSlot] = useState<SlotPosition | null>(null);
+  const [statsFor, setStatsFor] = useState<SlotRef | null>(null);
 
   const opponentActive = battle.opponentActiveIds
     .map(id => battle.opponentRoster.find(o => o.id === id))
@@ -116,24 +148,43 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
     setPendingTarget({ side, pokemonId, move, candidates });
   };
 
-  const handleSlotClick = (side: BattleSide, pokemonId: string | undefined) => {
+  const handleSlotClick = (side: BattleSide, slotIndex: number, pokemonId: string | undefined) => {
     if (!pokemonId) {
       setArmed(null);
       setPendingTarget(null);
-      setBenchSide(prev => prev === side ? null : side);
+      setStatsFor(null);
+      setBenchSlot(prev => prev && prev.side === side && prev.index === slotIndex ? null : { side, index: slotIndex });
       return;
     }
     if (pendingTarget) {
       finalizeTarget({ side, pokemonId });
       return;
     }
-    setBenchSide(null);
+    setBenchSlot(null);
+    setStatsFor(null);
     setArmed(prev => prev && prev.side === side && prev.pokemonId === pokemonId ? null : { side, pokemonId });
   };
 
-  const renderSlot = (side: BattleSide, mon: ActiveMon | undefined, arrowAbove: boolean) => {
+  const renderSlot = (side: BattleSide, slotIndex: number, mon: ActiveMon | undefined, arrowAbove: boolean) => {
+    const isBenchOpen = benchSlot?.side === side && benchSlot.index === slotIndex;
+
     if (!mon) {
-      return <EmptySlot onClick={() => handleSlotClick(side, undefined)} />;
+      return (
+        <div className="relative flex flex-col items-center">
+          <EmptySlot
+            onClick={() => handleSlotClick(side, slotIndex, undefined)}
+            onDrop={side === 'player' ? id => { setBenchSlot(null); battleLogActions.switchActive(battle, side, id); } : undefined}
+          />
+          {isBenchOpen && (
+            <BenchPicker
+              options={side === 'player' ? playerBench : opponentBench}
+              resolveSprite={resolveSprite}
+              onPick={id => { battleLogActions.switchActive(battle, side, id); setBenchSlot(null); }}
+              onClose={() => setBenchSlot(null)}
+            />
+          )}
+        </div>
+      );
     }
 
     const isPlayer = 'nickname' in mon;
@@ -143,14 +194,21 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
     const isCandidate = pendingTarget?.candidates.some(c => c.side === side && c.pokemonId === mon.id) ?? false;
     const isMega = battle.megaEvolvedIds.includes(mon.id);
     const switchedIn = switchedInIds.has(mon.id);
+    const isStatsOpen = statsFor?.side === side && statsFor.pokemonId === mon.id;
+    const stages = battle.statStages[mon.id] ?? {};
+    const statSummary = formatStatSummary(stages);
     const arrow = <span className="text-[10px] leading-none text-yellow-400">{arrowAbove ? '▼' : '▲'}</span>;
+
+    const knownAbility = mon.ability;
+    const switchInEffect = getSwitchInEffect(knownAbility);
+    const showAbilityChip = !!switchInEffect && !!knownAbility && !hasAppliedAbilityEffectSinceSwitchIn(battle, mon.id, knownAbility);
 
     return (
       <div key={mon.id} className="relative flex flex-col items-center gap-0.5">
         {arrowAbove && switchedIn && arrow}
         <button
           type="button"
-          onClick={() => handleSlotClick(side, mon.id)}
+          onClick={() => handleSlotClick(side, slotIndex, mon.id)}
           className={`relative rounded-lg p-1 cursor-pointer transition-colors ${
             isArmed ? 'bg-blue-600/30 ring-2 ring-blue-400' : isCandidate ? 'bg-yellow-500/20 ring-2 ring-yellow-400' : 'hover:bg-gray-800/60'
           }`}
@@ -163,6 +221,18 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
         </button>
         <span className={isPlayer ? 'text-xs text-blue-300' : 'text-xs text-red-300'}>{displayName}{isMega ? ' ⚡' : ''}</span>
         {!arrowAbove && switchedIn && arrow}
+        {statSummary && <span className="text-[9px] text-gray-400">{statSummary}</span>}
+
+        {showAbilityChip && (
+          <button
+            type="button"
+            onClick={e => { e.stopPropagation(); battleLogActions.applyAbilityEffect(battle, side, mon.id, knownAbility!); }}
+            title="Apply this ability's switch-in effect"
+            className="text-[9px] px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-200 hover:bg-purple-800 cursor-pointer"
+          >
+            {knownAbility}!
+          </button>
+        )}
 
         <div className="flex gap-1">
           <button
@@ -183,6 +253,19 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
               Mega
             </button>
           )}
+          <button
+            type="button"
+            onClick={e => {
+              e.stopPropagation();
+              setArmed(null);
+              setBenchSlot(null);
+              setStatsFor(prev => prev && prev.side === side && prev.pokemonId === mon.id ? null : { side, pokemonId: mon.id });
+            }}
+            title="Adjust stat stages"
+            className="text-[9px] px-1 rounded bg-gray-900 text-gray-500 hover:text-blue-300 cursor-pointer"
+          >
+            Stats
+          </button>
         </div>
 
         {isArmed && (
@@ -195,12 +278,11 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
           />
         )}
 
-        {benchSide === side && (
-          <BenchPicker
-            options={side === 'player' ? playerBench : opponentBench}
-            resolveSprite={resolveSprite}
-            onPick={id => { battleLogActions.switchActive(battle, side, id); setBenchSide(null); }}
-            onClose={() => setBenchSide(null)}
+        {isStatsOpen && (
+          <StatStagePopover
+            stages={stages}
+            onAdjust={(stat, delta) => battleLogActions.adjustStatStage(battle, mon.id, stat, delta)}
+            onClose={() => setStatsFor(null)}
           />
         )}
       </div>
@@ -208,7 +290,7 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
   };
 
   return (
-    <div className="flex flex-col items-center gap-4 py-4 px-6 rounded-lg bg-gray-900/60 border border-gray-800 flex-1">
+    <div className="flex flex-col items-center gap-4 pt-8 pb-4 px-6 rounded-lg bg-gray-900/60 border border-gray-800 flex-1">
       {pendingTarget && (
         <div className="flex items-center gap-2 px-2 py-1 rounded bg-yellow-500/10 border border-yellow-600 text-[11px] text-yellow-300">
           Choose a target for {pendingTarget.move}...
@@ -218,7 +300,7 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
 
       <div className="flex gap-6">
         {[0, 1].map(slot => (
-          <div key={`opp-${slot}`} className="relative">{renderSlot('opponent', opponentActive[slot], true)}</div>
+          <div key={`opp-${slot}`} className="relative">{renderSlot('opponent', slot, opponentActive[slot], true)}</div>
         ))}
       </div>
 
@@ -226,7 +308,7 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
 
       <div className="flex gap-6">
         {[0, 1].map(slot => (
-          <div key={`player-${slot}`} className="relative">{renderSlot('player', playerActive[slot], false)}</div>
+          <div key={`player-${slot}`} className="relative">{renderSlot('player', slot, playerActive[slot], false)}</div>
         ))}
       </div>
     </div>

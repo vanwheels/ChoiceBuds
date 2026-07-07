@@ -9,13 +9,17 @@
 import { useCallback } from 'react';
 import type {
   Battle, BattleAction, BattleSide, Team, SpeciesRosterEntry,
-  WeatherType, TerrainType, SideConditions,
+  WeatherType, TerrainType, SideConditions, StatKey, StatStages,
 } from '../types/pokemon';
 import type { TurnTrackedCondition, BooleanHazard, StackableHazard } from '../config/fieldConditions';
 import { findBattlePokemon } from '../utils/battleLookup';
+import { getSwitchInEffect } from '../config/onSwitchInAbilities';
+import { STAT_LABELS } from '../config/statStages';
 
 export const MAX_OPPONENT_ROSTER_SIZE = 6;
 export const MAX_BROUGHT = 4;
+
+const clampStage = (n: number): number => Math.max(-6, Math.min(6, n));
 
 /** Pure append - shared by logAction and any mutation that needs to bundle a log entry into its own single updateBattle call (avoids racing two sequential updateBattle calls off the same stale closure). */
 function appendAction(turns: Battle['turns'], action: Omit<BattleAction, 'id'>): Battle['turns'] {
@@ -23,6 +27,17 @@ function appendAction(turns: Battle['turns'], action: Omit<BattleAction, 'id'>):
   const lastTurn = next[next.length - 1];
   next[next.length - 1] = { ...lastTurn, actions: [...lastTurn.actions, { ...action, id: crypto.randomUUID() }] };
   return next;
+}
+
+/** Which roster a pokemonId belongs to - used wherever an action needs `side` but the caller only has an id. */
+function sideOf(battle: Battle, pokemonId: string): BattleSide {
+  return battle.playerRoster.some(p => p.id === pokemonId) ? 'player' : 'opponent';
+}
+
+/** Removes a pokemonId's entry entirely - stat stages always reset to 0 when a Pokemon leaves the field. */
+function clearStatStages(battle: Battle, pokemonId: string): Record<string, StatStages> {
+  if (!(pokemonId in battle.statStages)) return battle.statStages;
+  return Object.fromEntries(Object.entries(battle.statStages).filter(([id]) => id !== pokemonId));
 }
 
 export interface UseBattleLogActionsReturn {
@@ -34,6 +49,8 @@ export interface UseBattleLogActionsReturn {
   removeOpponentMove: (battle: Battle, opponentId: string, move: string) => Promise<boolean>;
   switchActive: (battle: Battle, side: BattleSide, pokemonId: string) => Promise<boolean>;
   setMegaEvolved: (battle: Battle, pokemonId: string) => Promise<boolean>;
+  adjustStatStage: (battle: Battle, pokemonId: string, stat: StatKey, delta: number) => Promise<boolean>;
+  applyAbilityEffect: (battle: Battle, side: BattleSide, pokemonId: string, ability: string) => Promise<boolean>;
   setFainted: (battle: Battle, side: BattleSide, pokemonId: string, fainted: boolean) => Promise<boolean>;
   logAction: (battle: Battle, action: Omit<BattleAction, 'id'>) => Promise<boolean>;
   setActionFailed: (battle: Battle, turnNumber: number, actionId: string, failed: boolean) => Promise<boolean>;
@@ -87,6 +104,7 @@ export function useBattleLogActions(
       opponentRoster: [],
       opponentActiveIds: [],
       megaEvolvedIds: [],
+      statStages: {},
       turns: [{ number: 1, actions: [] }],
       fieldState: { playerSide: {}, opponentSide: {} },
       result: 'in-progress',
@@ -162,15 +180,18 @@ export function useBattleLogActions(
     pokemonId: string,
     fainted: boolean
   ): Promise<boolean> => {
+    // Fainting always leaves the field - stat stages reset, same as any other switch-out.
+    const statStages = fainted ? clearStatStages(battle, pokemonId) : battle.statStages;
+
     if (side === 'player') {
       const playerFaintedIds = fainted
         ? [...new Set([...battle.playerFaintedIds, pokemonId])]
         : battle.playerFaintedIds.filter(id => id !== pokemonId);
-      return updateBattle(battle.id, { playerFaintedIds });
+      return updateBattle(battle.id, { playerFaintedIds, statStages });
     }
 
     const opponentRoster = battle.opponentRoster.map(o => o.id === pokemonId ? { ...o, fainted } : o);
-    return updateBattle(battle.id, { opponentRoster });
+    return updateBattle(battle.id, { opponentRoster, statStages });
   }, [updateBattle]);
 
   /**
@@ -206,9 +227,12 @@ export function useBattleLogActions(
 
     const nextActiveIds = isActive ? activeIds.filter(id => id !== pokemonId) : [...activeIds, pokemonId];
     const turns = isActive ? battle.turns : appendAction(battle.turns, { side, pokemonId, phase: 'switch', note: 'Switched in' });
+    // Benching (isActive -> false) always resets stat stages, same as the real game.
+    const statStages = isActive ? clearStatStages(battle, pokemonId) : battle.statStages;
     return updateBattle(battle.id, {
       ...(side === 'player' ? { playerActiveIds: nextActiveIds } : { opponentActiveIds: nextActiveIds }),
       turns,
+      statStages,
     });
   }, [updateBattle]);
 
@@ -222,6 +246,63 @@ export function useBattleLogActions(
       megaEvolvedIds: [...battle.megaEvolvedIds, pokemonId],
       turns: appendAction(battle.turns, { side, pokemonId, phase: 'mega', note: 'Mega Evolved' }),
     });
+  }, [updateBattle]);
+
+  /** One +/-1 (or any delta) tap from the Stats popover - clamps to -6..6 and logs a note, e.g. "Atk -1". */
+  const adjustStatStage = useCallback(async (
+    battle: Battle,
+    pokemonId: string,
+    stat: StatKey,
+    delta: number
+  ): Promise<boolean> => {
+    const side = sideOf(battle, pokemonId);
+    const current = battle.statStages[pokemonId]?.[stat] ?? 0;
+    const next = clampStage(current + delta);
+    if (next === current) return false;
+
+    const statStages = { ...battle.statStages, [pokemonId]: { ...battle.statStages[pokemonId], [stat]: next } };
+    const note = `${STAT_LABELS[stat]} ${next > current ? '+' : ''}${next - current}`;
+    return updateBattle(battle.id, { statStages, turns: appendAction(battle.turns, { side, pokemonId, note }) });
+  }, [updateBattle]);
+
+  /**
+   * One-tap "apply" for a curated list of switch-in abilities with an
+   * unambiguous stat effect (see config/onSwitchInAbilities.ts) - never
+   * automatic, the user confirms it actually happened. No-ops (false) if
+   * the ability isn't in the table.
+   */
+  const applyAbilityEffect = useCallback(async (
+    battle: Battle,
+    side: BattleSide,
+    pokemonId: string,
+    ability: string
+  ): Promise<boolean> => {
+    const effect = getSwitchInEffect(ability);
+    if (!effect) return false;
+
+    const targetIds = effect.target === 'self'
+      ? [pokemonId]
+      : (side === 'player' ? battle.opponentActiveIds : battle.playerActiveIds);
+    if (targetIds.length === 0) return false;
+    const targetSide: BattleSide = effect.target === 'self' ? side : (side === 'player' ? 'opponent' : 'player');
+
+    let statStages = battle.statStages;
+    let turns = battle.turns;
+    for (const id of targetIds) {
+      const current = statStages[id]?.[effect.stat] ?? 0;
+      const next = clampStage(current + effect.stages);
+      statStages = { ...statStages, [id]: { ...statStages[id], [effect.stat]: next } };
+      const note = `${STAT_LABELS[effect.stat]} ${next > current ? '+' : ''}${next - current} (${ability})`;
+      turns = appendAction(turns, { side: targetSide, pokemonId: id, note });
+    }
+    // For an opposing-active effect the source isn't among the targets, so
+    // it gets no note of its own above - add one so the Battlefield's
+    // "already applied this switch-in" chip check has something to find
+    // against the source's own pokemonId either way.
+    if (effect.target !== 'self') {
+      turns = appendAction(turns, { side, pokemonId, note: `${ability} triggered` });
+    }
+    return updateBattle(battle.id, { statStages, turns });
   }, [updateBattle]);
 
   /** Powers the TurnLog's "Failed?" chip on a repeat Protect-family use. */
@@ -337,6 +418,8 @@ export function useBattleLogActions(
     removeOpponentMove,
     switchActive,
     setMegaEvolved,
+    adjustStatStage,
+    applyAbilityEffect,
     setFainted,
     logAction,
     setActionFailed,
