@@ -204,6 +204,7 @@ export interface SpeciesRosterEntry {
   name: string; // Display name (Title-Case, hyphens preserved for forms)
   id: number; // National Pokedex number
   spriteUrl: string; // Pixel sprite URL (same convention as PokemonCard)
+  shinySpriteUrl: string; // Shiny variant of spriteUrl (same convention as PokemonCard)
 }
 
 /**

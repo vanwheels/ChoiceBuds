@@ -1,181 +1,135 @@
-import { app, BrowserWindow, ipcMain } from "electron";
-import { fileURLToPath } from "url";
-import path from "path";
-import fs from "fs/promises";
-import crypto from "crypto";
-const __filename$1 = fileURLToPath(import.meta.url);
-const __dirname$1 = path.dirname(__filename$1);
-app.disableHardwareAcceleration();
-let mainWindow = null;
-function getUserDataPath() {
-  return app.getPath("userData");
+import { app as l, BrowserWindow as E, ipcMain as i } from "electron";
+import { fileURLToPath as b } from "url";
+import a from "path";
+import n from "fs/promises";
+import j from "crypto";
+const C = b(import.meta.url), u = a.dirname(C);
+l.disableHardwareAcceleration();
+let c = null;
+function h() {
+  return l.getPath("userData");
 }
-function getTeamsDatabasePath() {
-  return path.join(getUserDataPath(), "teams.json");
+function w() {
+  return a.join(h(), "teams.json");
 }
-function getPokeAPICachePath() {
-  return path.join(getUserDataPath(), "pokeapi-cache.json");
+function p() {
+  return a.join(h(), "pokeapi-cache.json");
 }
-function getGameDataCachePath() {
-  return path.join(getUserDataPath(), "game-data-cache.json");
+function m() {
+  return a.join(h(), "game-data-cache.json");
 }
-async function getSpriteCacheDir() {
-  const dir = path.join(getUserDataPath(), "sprites");
-  await fs.mkdir(dir, { recursive: true });
-  return dir;
+async function g() {
+  const o = a.join(h(), "sprites");
+  return await n.mkdir(o, { recursive: !0 }), o;
 }
-function getSpriteCacheFilename(remoteUrl) {
-  const hash = crypto.createHash("sha1").update(remoteUrl).digest("hex");
-  const ext = path.extname(new URL(remoteUrl).pathname) || ".png";
-  return `${hash}${ext}`;
+function y(o) {
+  const e = j.createHash("sha1").update(o).digest("hex"), t = a.extname(new URL(o).pathname) || ".png";
+  return `${e}${t}`;
 }
-function createWindow() {
-  mainWindow = new BrowserWindow({
+function P() {
+  c = new E({
     width: 1280,
     height: 720,
     minWidth: 1280,
     minHeight: 720,
     webPreferences: {
-      preload: path.join(__dirname$1, "preload.mjs"),
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: false
+      preload: a.join(u, "preload.mjs"),
+      contextIsolation: !0,
+      nodeIntegration: !1,
+      sandbox: !1
     },
     title: "ChoiceBuds - VGC Team Importer",
     backgroundColor: "#1a1a1a",
-    show: false
+    show: !1
     // Don't show until ready-to-show event
-  });
-  mainWindow.once("ready-to-show", () => {
-    mainWindow == null ? void 0 : mainWindow.show();
-  });
-  if (process.env.NODE_ENV === "development") {
-    mainWindow.loadURL("http://localhost:5173");
-  } else {
-    mainWindow.loadFile(path.join(__dirname$1, "../renderer/index.html"));
-  }
-  mainWindow.on("closed", () => {
-    mainWindow = null;
+  }), c.once("ready-to-show", () => {
+    c == null || c.show();
+  }), process.env.NODE_ENV === "development" ? c.loadURL("http://localhost:5173") : c.loadFile(a.join(u, "../renderer/index.html")), c.on("closed", () => {
+    c = null;
   });
 }
-function registerIPCHandlers() {
-  ipcMain.handle("file:read-teams-database", async () => {
+function F() {
+  i.handle("file:read-teams-database", async () => {
     try {
-      const filePath = getTeamsDatabasePath();
-      const fileContent = await fs.readFile(filePath, "utf-8");
-      return JSON.parse(fileContent);
-    } catch (err) {
-      if (err.code === "ENOENT") {
+      const e = w(), t = await n.readFile(e, "utf-8");
+      return JSON.parse(t);
+    } catch (e) {
+      if (e.code === "ENOENT")
         return null;
-      }
-      console.error("Error reading teams database:", err);
-      throw err;
+      throw console.error("Error reading teams database:", e), e;
     }
-  });
-  ipcMain.handle("file:write-teams-database", async (_event, data) => {
+  }), i.handle("file:write-teams-database", async (e, t) => {
     try {
-      const filePath = getTeamsDatabasePath();
-      await fs.writeFile(filePath, JSON.stringify(data, null, 2), "utf-8");
-      return true;
-    } catch (err) {
-      console.error("Error writing teams database:", err);
-      return false;
+      const r = w();
+      return await n.writeFile(r, JSON.stringify(t, null, 2), "utf-8"), !0;
+    } catch (r) {
+      return console.error("Error writing teams database:", r), !1;
     }
-  });
-  ipcMain.handle("file:read-pokeapi-cache", async () => {
+  }), i.handle("file:read-pokeapi-cache", async () => {
     try {
-      const filePath = getPokeAPICachePath();
-      const fileContent = await fs.readFile(filePath, "utf-8");
-      return JSON.parse(fileContent);
-    } catch (err) {
-      if (err.code === "ENOENT") {
+      const e = p(), t = await n.readFile(e, "utf-8");
+      return JSON.parse(t);
+    } catch (e) {
+      if (e.code === "ENOENT")
         return null;
-      }
-      console.error("Error reading PokeAPI cache:", err);
-      throw err;
+      throw console.error("Error reading PokeAPI cache:", e), e;
     }
-  });
-  ipcMain.handle("file:write-pokeapi-cache", async (_event, data) => {
+  }), i.handle("file:write-pokeapi-cache", async (e, t) => {
     try {
-      const filePath = getPokeAPICachePath();
-      await fs.writeFile(filePath, JSON.stringify(data, null, 2), "utf-8");
-      return true;
-    } catch (err) {
-      console.error("Error writing PokeAPI cache:", err);
-      return false;
+      const r = p();
+      return await n.writeFile(r, JSON.stringify(t, null, 2), "utf-8"), !0;
+    } catch (r) {
+      return console.error("Error writing PokeAPI cache:", r), !1;
     }
-  });
-  ipcMain.handle("file:get-userdata-path", async () => {
-    return getUserDataPath();
-  });
-  ipcMain.handle("file:read-game-data-cache", async () => {
+  }), i.handle("file:get-userdata-path", async () => h()), i.handle("file:read-game-data-cache", async () => {
     try {
-      const filePath = getGameDataCachePath();
-      const fileContent = await fs.readFile(filePath, "utf-8");
-      return JSON.parse(fileContent);
-    } catch (err) {
-      if (err.code === "ENOENT") {
+      const e = m(), t = await n.readFile(e, "utf-8");
+      return JSON.parse(t);
+    } catch (e) {
+      if (e.code === "ENOENT")
         return null;
-      }
-      console.error("Error reading game data cache:", err);
-      throw err;
+      throw console.error("Error reading game data cache:", e), e;
     }
-  });
-  ipcMain.handle("file:write-game-data-cache", async (_event, data) => {
+  }), i.handle("file:write-game-data-cache", async (e, t) => {
     try {
-      const filePath = getGameDataCachePath();
-      await fs.writeFile(filePath, JSON.stringify(data, null, 2), "utf-8");
-      return true;
-    } catch (err) {
-      console.error("Error writing game data cache:", err);
-      return false;
+      const r = m();
+      return await n.writeFile(r, JSON.stringify(t, null, 2), "utf-8"), !0;
+    } catch (r) {
+      return console.error("Error writing game data cache:", r), !1;
     }
   });
-  function fileToDataUrl(filePath, buffer) {
-    const ext = path.extname(filePath).slice(1).toLowerCase() || "png";
-    return `data:image/${ext};base64,${buffer.toString("base64")}`;
+  function o(e, t) {
+    return `data:image/${a.extname(e).slice(1).toLowerCase() || "png"};base64,${t.toString("base64")}`;
   }
-  ipcMain.handle("sprite:get-path", async (_event, remoteUrl) => {
+  i.handle("sprite:get-path", async (e, t) => {
     try {
-      const dir = await getSpriteCacheDir();
-      const filePath = path.join(dir, getSpriteCacheFilename(remoteUrl));
-      const buffer = await fs.readFile(filePath);
-      return fileToDataUrl(filePath, buffer);
+      const r = await g(), s = a.join(r, y(t)), f = await n.readFile(s);
+      return o(s, f);
     } catch {
       return null;
     }
-  });
-  ipcMain.handle("sprite:download", async (_event, remoteUrl) => {
+  }), i.handle("sprite:download", async (e, t) => {
     try {
-      const dir = await getSpriteCacheDir();
-      const filePath = path.join(dir, getSpriteCacheFilename(remoteUrl));
+      const r = await g(), s = a.join(r, y(t));
       try {
-        const cachedBuffer = await fs.readFile(filePath);
-        return fileToDataUrl(filePath, cachedBuffer);
+        const N = await n.readFile(s);
+        return o(s, N);
       } catch {
       }
-      const response = await fetch(remoteUrl);
-      if (!response.ok) return null;
-      const buffer = Buffer.from(await response.arrayBuffer());
-      await fs.writeFile(filePath, buffer);
-      return fileToDataUrl(filePath, buffer);
-    } catch (err) {
-      console.error(`Error downloading sprite from ${remoteUrl}:`, err);
-      return null;
+      const f = await fetch(t);
+      if (!f.ok) return null;
+      const d = Buffer.from(await f.arrayBuffer());
+      return await n.writeFile(s, d), o(s, d);
+    } catch (r) {
+      return console.error(`Error downloading sprite from ${t}:`, r), null;
     }
   });
 }
-app.whenReady().then(() => {
-  registerIPCHandlers();
-  createWindow();
-  app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
+l.whenReady().then(() => {
+  F(), P(), l.on("activate", () => {
+    E.getAllWindows().length === 0 && P();
   });
 });
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
-  }
+l.on("window-all-closed", () => {
+  process.platform !== "darwin" && l.quit();
 });

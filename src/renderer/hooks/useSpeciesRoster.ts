@@ -34,7 +34,7 @@ interface CachedRoster {
   cachedAt: number;
 }
 
-const CACHE_KEY = 'choicebuds:speciesRoster:v2';
+const CACHE_KEY = 'choicebuds:speciesRoster:v3';
 const CACHE_EXPIRATION_MS = 30 * 24 * 60 * 60 * 1000;
 
 /** Mega Evolution is item-driven (holding the right Mega Stone), not a roster pick */
@@ -61,6 +61,10 @@ function toDisplayName(apiName: string): string {
 
 function getRosterSpriteUrl(id: number): string {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
+}
+
+function getRosterShinySpriteUrl(id: number): string {
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${id}.png`;
 }
 
 function readRosterCache(): SpeciesRosterEntry[] | null {
@@ -99,7 +103,7 @@ export function useSpeciesRoster(): UseSpeciesRosterReturn {
           .filter(({ name }) => !MEGA_FORM_PATTERN.test(name))
           .map(({ name, url }) => {
             const id = extractIdFromUrl(url);
-            return { name: toDisplayName(name), id, spriteUrl: getRosterSpriteUrl(id) };
+            return { name: toDisplayName(name), id, spriteUrl: getRosterSpriteUrl(id), shinySpriteUrl: getRosterShinySpriteUrl(id) };
           });
         setRoster(entries);
         writeRosterCache(entries);
