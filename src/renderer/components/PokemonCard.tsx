@@ -13,6 +13,7 @@ import { useState } from 'react';
 import type { ImportedPokemonInfo, ShowdownPokemon, Team, SpeciesRosterEntry } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
+import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
 import type { UseRosterActionsReturn } from '../hooks/useRosterActions';
 import TypeBadge from './TypeBadge';
 import StatsColumn from './StatsColumn';
@@ -31,6 +32,7 @@ interface PokemonCardProps {
   updateTeam: (teamId: string, updates: Partial<Team>) => Promise<boolean>;
   gameDataState: UseGameDataReturn;
   speciesRosterState: UseSpeciesRosterReturn;
+  spriteCacheState: UseSpriteCacheReturn;
   rosterActions: UseRosterActionsReturn;
 }
 
@@ -44,7 +46,7 @@ function getPixelSpriteUrl(id: number, name: string, gender: string, shiny: bool
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${s}${id}.png`;
 }
 
-export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = false, updateTeam, gameDataState, speciesRosterState, rosterActions }: PokemonCardProps) {
+export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = false, updateTeam, gameDataState, speciesRosterState, spriteCacheState, rosterActions }: PokemonCardProps) {
   const { showdownData, types, pokedexNumber } = pokemon;
   const [isLocalShiny, setIsLocalShiny] = useState(showdownData.shiny);
   const [localGender, setLocalGender] = useState<'M' | 'F' | 'N' | '' | undefined>(showdownData.gender);
@@ -137,6 +139,7 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
       <SpeciesPickerCard
         roster={speciesRosterState.roster}
         rulesetId={rulesetId}
+        resolveSprite={spriteCacheState.resolveSprite}
         onSelect={handleSwapSelect}
         onClose={() => setIsSwapPickerOpen(false)}
       />
@@ -185,7 +188,7 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
           title={isEditing ? 'Click to swap this Pokémon' : undefined}
         >
           {displaySpriteUrl ? (
-            <img src={displaySpriteUrl} alt={showdownData.species} className="w-24 h-24 object-contain mx-auto transition-transform duration-150 [image-rendering:pixelated]" />
+            <img src={spriteCacheState.resolveSprite(displaySpriteUrl)} alt={showdownData.species} className="w-24 h-24 object-contain mx-auto transition-transform duration-150 [image-rendering:pixelated]" />
           ) : (
             <span className="text-xs text-gray-400">No sprite</span>
           )}

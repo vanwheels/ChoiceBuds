@@ -43,6 +43,10 @@ export interface UseGameDataReturn {
   getEnrichedSpeciesOptions: (species: string, gender?: Gender) => Promise<{ moves: MoveData[]; abilities: AbilityData[] }>;
 
   clearCache: () => Promise<boolean>;
+
+  // One-time bulk first-launch sync tracking (see useInitialSync.ts)
+  hasCompletedInitialBulkSync: boolean;
+  markInitialBulkSyncCompleted: () => void;
 }
 
 /**
@@ -54,10 +58,34 @@ export function useGameData(): UseGameDataReturn {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Read the persisted cache from disk on mount (SWR-style, matching
+  // useDatabase.ts) - previously this always reset to empty on every launch,
+  // meaning move/item/ability/learnset data could never survive a restart.
   useEffect(() => {
-    setCache(createEmptyGameDataCache());
-    setIsInitialized(true);
+    let cancelled = false;
+    window.electron.readGameDataCache()
+      .then((persisted: GameDataCache | null) => {
+        if (cancelled) return;
+        setCache(persisted ?? createEmptyGameDataCache());
+        setIsInitialized(true);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        console.error('Error reading game data cache:', err);
+        setCache(createEmptyGameDataCache());
+        setIsInitialized(true);
+      });
+    return () => { cancelled = true; };
   }, []);
+
+  // Write-through to disk on every change, once initialized - mirrors
+  // useTeams.ts/useDatabase.ts's "persist on every mutation" convention.
+  useEffect(() => {
+    if (!isInitialized || !cache) return;
+    window.electron.writeGameDataCache(cache).catch((err: unknown) => {
+      console.error('Error persisting game data cache:', err);
+    });
+  }, [isInitialized, cache]);
 
   const getCachedMove = useCallback((moveName: string): MoveData | null =>
     readCacheEntry(cache?.moves, normalizeNameForAPI(moveName)), [cache]);
@@ -179,6 +207,11 @@ export function useGameData(): UseGameDataReturn {
     return true;
   }, []);
 
+  const hasCompletedInitialBulkSync = cache?.initialBulkSyncCompletedAt != null;
+  const markInitialBulkSyncCompleted = useCallback(() => {
+    setCache(prev => prev && { ...prev, initialBulkSyncCompletedAt: Date.now() });
+  }, []);
+
   return {
     cache,
     isInitialized,
@@ -194,5 +227,7 @@ export function useGameData(): UseGameDataReturn {
     getSpeciesLearnset,
     getEnrichedSpeciesOptions,
     clearCache,
+    hasCompletedInitialBulkSync,
+    markInitialBulkSyncCompleted,
   };
 }

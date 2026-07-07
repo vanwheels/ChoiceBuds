@@ -19,7 +19,7 @@ import type { CalcPokemonState } from '../../hooks/useDamageCalc';
 import { STATUS_OPTIONS } from '../../hooks/useDamageCalc';
 import type { FormeFamily } from '../../utils/calcFormes';
 import { formeDisplayLabel } from '../../utils/calcFormes';
-import type { NatureName } from '@smogon/calc/dist/data/interface';
+import type { NatureName, StatsTable } from '@smogon/calc/dist/data/interface';
 import CalcAutocomplete from './CalcAutocomplete';
 import CalcStatRows from './CalcStatRows';
 
@@ -31,6 +31,7 @@ interface CalcPokemonPanelProps {
   abilityOptions: string[];
   natureOptions: NatureName[];
   formes: FormeFamily;
+  baseStats: StatsTable | null;
   onChange: (updates: Partial<CalcPokemonState>) => void;
 }
 
@@ -60,7 +61,7 @@ function FormeToggle({ group, current, onSelect }: { group: string[]; current: s
 }
 
 export default function CalcPokemonPanel({
-  title, state, speciesOptions, itemOptions, abilityOptions, natureOptions, formes, onChange,
+  title, state, speciesOptions, itemOptions, abilityOptions, natureOptions, formes, baseStats, onChange,
 }: CalcPokemonPanelProps) {
   const cycleGender = () => {
     const currentIndex = GENDER_CYCLE.indexOf(state.gender);
@@ -158,6 +159,7 @@ export default function CalcPokemonPanel({
       </div>
 
       <CalcStatRows
+        baseStats={baseStats}
         sps={state.sps}
         boosts={state.boosts}
         onChangeSp={(key, value) => onChange({ sps: { ...state.sps, [key]: value } })}

@@ -10,6 +10,7 @@ import type { UseDatabaseReturn } from '../hooks/useDatabase';
 import type { UseActiveEditorReturn } from '../hooks/useActiveEditor';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
+import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
 import ImportTeamModal from './ImportTeamModal';
 import TeamCard from './TeamCard';
 
@@ -20,6 +21,7 @@ interface TeamsPageProps {
   editorState: UseActiveEditorReturn;
   gameDataState: UseGameDataReturn;
   speciesRosterState: UseSpeciesRosterReturn;
+  spriteCacheState: UseSpriteCacheReturn;
 }
 
 type FormatFilter = 'All' | 'Reg M-A' | 'Reg M-B';
@@ -33,6 +35,7 @@ export default function TeamsPage({
   databaseState,
   gameDataState,
   speciesRosterState,
+  spriteCacheState,
 }: TeamsPageProps) {
   const [activeFilter, setActiveFilter] = useState<FormatFilter>('All');
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -115,6 +118,7 @@ export default function TeamsPage({
                 databaseState={databaseState}
                 gameDataState={gameDataState}
                 speciesRosterState={speciesRosterState}
+                spriteCacheState={spriteCacheState}
               />
             ))}
           </div>

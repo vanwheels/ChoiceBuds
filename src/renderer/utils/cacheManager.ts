@@ -58,6 +58,7 @@ export function createEmptyGameDataCache(): GameDataCache {
     abilities: {},
     learnsets: {},
     lastCleaned: Date.now(),
+    initialBulkSyncCompletedAt: null,
   };
 }
 

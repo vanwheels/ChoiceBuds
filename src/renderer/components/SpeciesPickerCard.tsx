@@ -24,11 +24,12 @@ import { parseTagFilter } from '../utils/tagSearch';
 interface SpeciesPickerCardProps {
   roster: SpeciesRosterEntry[];
   rulesetId: RegulationId;
+  resolveSprite: (remoteUrl: string) => string;
   onSelect: (species: SpeciesRosterEntry) => void;
   onClose: () => void;
 }
 
-export default function SpeciesPickerCard({ roster, rulesetId, onSelect, onClose }: SpeciesPickerCardProps) {
+export default function SpeciesPickerCard({ roster, rulesetId, resolveSprite, onSelect, onClose }: SpeciesPickerCardProps) {
   const [search, setSearch] = useState('');
   const ref = useDismissable<HTMLDivElement>(onClose);
 
@@ -75,7 +76,7 @@ export default function SpeciesPickerCard({ roster, rulesetId, onSelect, onClose
               onClick={() => onSelect(pkmn)}
               className="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-600 cursor-pointer transition-colors"
             >
-              <img src={pkmn.spriteUrl} alt={pkmn.name} loading="lazy" className="w-8 h-8 object-contain [image-rendering:pixelated] shrink-0" />
+              <img src={resolveSprite(pkmn.spriteUrl)} alt={pkmn.name} loading="lazy" className="w-8 h-8 object-contain [image-rendering:pixelated] shrink-0" />
               <span className="text-xs text-white truncate">{pkmn.name}</span>
             </div>
           ))

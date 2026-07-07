@@ -217,4 +217,7 @@ export interface GameDataCache {
   abilities: Record<string, AbilityData>; // Key: lowercase ability name
   learnsets: Record<string, SpeciesLearnsetEntry>; // Key: normalized species slug
   lastCleaned: number; // Unix timestamp
+  // Set once the one-time bulk first-launch sync (useInitialSync) has completed -
+  // null means it still needs to run.
+  initialBulkSyncCompletedAt: number | null;
 }

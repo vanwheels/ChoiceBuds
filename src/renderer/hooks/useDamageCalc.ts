@@ -321,6 +321,8 @@ export interface UseDamageCalcReturn {
   pokemon2MoveOptions: string[];
   pokemon1Formes: FormeFamily;
   pokemon2Formes: FormeFamily;
+  pokemon1BaseStats: StatsTable | null;
+  pokemon2BaseStats: StatsTable | null;
   p1Results: CalcMoveResultEntry[];
   p2Results: CalcMoveResultEntry[];
   selectedResult: SelectedResultRef | null;
@@ -351,6 +353,15 @@ export function useDamageCalc(gameDataState: UseGameDataReturn): UseDamageCalcRe
 
   const pokemon1Formes = useMemo(() => getFormeFamily(allSpecies, pokemon1.species), [allSpecies, pokemon1.species]);
   const pokemon2Formes = useMemo(() => getFormeFamily(allSpecies, pokemon2.species), [allSpecies, pokemon2.species]);
+
+  const pokemon1BaseStats = useMemo(
+    () => (pokemon1.species ? gen.species.get(toID(pokemon1.species))?.baseStats ?? null : null),
+    [gen, pokemon1.species]
+  );
+  const pokemon2BaseStats = useMemo(
+    () => (pokemon2.species ? gen.species.get(toID(pokemon2.species))?.baseStats ?? null : null),
+    [gen, pokemon2.species]
+  );
 
   const { getEnrichedSpeciesOptions } = gameDataState;
 
@@ -439,6 +450,8 @@ export function useDamageCalc(gameDataState: UseGameDataReturn): UseDamageCalcRe
     pokemon2MoveOptions,
     pokemon1Formes,
     pokemon2Formes,
+    pokemon1BaseStats,
+    pokemon2BaseStats,
     p1Results,
     p2Results,
     selectedResult,

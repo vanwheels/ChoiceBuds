@@ -4,6 +4,7 @@ import type { UseTeamsReturn } from '../hooks/useTeams';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
+import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
 import { useRosterActions } from '../hooks/useRosterActions';
 import { toRegulationId } from '../utils/pokemonRules';
 import PokemonCard from './PokemonCard';
@@ -19,9 +20,10 @@ interface TeamCardProps {
   databaseState: UseDatabaseReturn;
   gameDataState: UseGameDataReturn;
   speciesRosterState: UseSpeciesRosterReturn;
+  spriteCacheState: UseSpriteCacheReturn;
 }
 
-export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseState, gameDataState, speciesRosterState }: TeamCardProps) {
+export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseState, gameDataState, speciesRosterState, spriteCacheState }: TeamCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditingTeam, setIsEditingTeam] = useState(false);
   const [localTeamName, setLocalTeamName] = useState(team.name);
@@ -51,7 +53,7 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
           {team.pokemon && team.pokemon.map((p, idx) => (
             <img
               key={idx}
-              src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.showdownData.shiny ? 'shiny/' : ''}${p.pokedexNumber}.png`}
+              src={spriteCacheState.resolveSprite(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.showdownData.shiny ? 'shiny/' : ''}${p.pokedexNumber}.png`)}
               alt={p.showdownData.species}
               className="w-8 h-8 object-contain [image-rendering:pixelated] shrink-0"
             />
@@ -154,6 +156,7 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
                 updateTeam={updateTeam}
                 gameDataState={gameDataState}
                 speciesRosterState={speciesRosterState}
+                spriteCacheState={spriteCacheState}
                 rosterActions={rosterActions}
               />
             ))}
@@ -164,6 +167,7 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
                 <SpeciesPickerCard
                   roster={speciesRosterState.roster}
                   rulesetId={toRegulationId(team.format)}
+                  resolveSprite={spriteCacheState.resolveSprite}
                   onSelect={handleAddSpecies}
                   onClose={() => setIsAddPickerOpen(false)}
                 />

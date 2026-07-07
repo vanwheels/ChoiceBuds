@@ -24,7 +24,7 @@ export default function CalcPage({ calcState }: CalcPageProps) {
     pokemon1, pokemon2, setPokemon1, setPokemon2, setPokemon1Move, setPokemon2Move,
     field, setField, setPokemon1Side, setPokemon2Side,
     speciesOptions, pokemon1MoveOptions, pokemon2MoveOptions, itemOptions, abilityOptions, natureOptions,
-    pokemon1Formes, pokemon2Formes,
+    pokemon1Formes, pokemon2Formes, pokemon1BaseStats, pokemon2BaseStats,
     p1Results, p2Results, selectedResult, setSelectedResult, selectedEntry,
   } = calcState;
 
@@ -82,6 +82,7 @@ export default function CalcPage({ calcState }: CalcPageProps) {
           abilityOptions={abilityOptions}
           natureOptions={natureOptions}
           formes={pokemon1Formes}
+          baseStats={pokemon1BaseStats}
           onChange={setPokemon1}
         />
         <CalcFieldPanel
@@ -98,6 +99,7 @@ export default function CalcPage({ calcState }: CalcPageProps) {
           abilityOptions={abilityOptions}
           natureOptions={natureOptions}
           formes={pokemon2Formes}
+          baseStats={pokemon2BaseStats}
           onChange={setPokemon2}
         />
       </div>

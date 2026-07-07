@@ -10,9 +10,12 @@ import { useDatabase } from './hooks/useDatabase';
 import { useActiveEditor } from './hooks/useActiveEditor';
 import { useGameData } from './hooks/useGameData';
 import { useSpeciesRoster } from './hooks/useSpeciesRoster';
+import { useSpriteCache } from './hooks/useSpriteCache';
+import { useInitialSync } from './hooks/useInitialSync';
 import { useDamageCalc } from './hooks/useDamageCalc';
 import TeamsPage from './components/TeamsPage';
 import CalcPage from './components/calc/CalcPage';
+import LoadingScreen from './components/LoadingScreen';
 
 type ActiveTab = 'teams' | 'calc';
 
@@ -20,11 +23,16 @@ type ActiveTab = 'teams' | 'calc';
  * Main application shell component
  * Manages global state and layout structure
  *
- * useTeams/useGameData/useSpeciesRoster are each instantiated exactly once
- * here and threaded down as props through TeamsPage -> TeamCard -> PokemonCard.
- * Components further down must never call these hooks themselves - a second
- * instance would hold its own disconnected copy of team/cache state, so
- * writes made through it would silently not appear in what's on screen.
+ * useTeams/useGameData/useSpeciesRoster/useSpriteCache are each instantiated
+ * exactly once here and threaded down as props through TeamsPage -> TeamCard
+ * -> PokemonCard. Components further down must never call these hooks
+ * themselves - a second instance would hold its own disconnected copy of
+ * team/cache state, so writes made through it would silently not appear in
+ * what's on screen.
+ *
+ * useInitialSync gates the whole app behind a LoadingScreen until the
+ * one-time bulk first-launch sync (sprites + move/ability/learnset data for
+ * the full legal dex) completes - see useInitialSync.ts.
  */
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('teams');
@@ -33,7 +41,13 @@ export default function App() {
   const editorState = useActiveEditor();
   const gameDataState = useGameData();
   const speciesRosterState = useSpeciesRoster();
+  const spriteCacheState = useSpriteCache();
+  const { isDone: isInitialSyncDone, progress: initialSyncProgress } = useInitialSync(gameDataState, speciesRosterState, spriteCacheState);
   const calcState = useDamageCalc(gameDataState);
+
+  if (!isInitialSyncDone) {
+    return <LoadingScreen progress={initialSyncProgress} />;
+  }
 
   return (
     <div className="flex h-screen bg-gray-900 text-gray-100">
@@ -100,6 +114,7 @@ export default function App() {
             editorState={editorState}
             gameDataState={gameDataState}
             speciesRosterState={speciesRosterState}
+            spriteCacheState={spriteCacheState}
           />
         ) : (
           <CalcPage calcState={calcState} />
