@@ -95,9 +95,11 @@ export interface TeamsDatabase {
 export type BattleSide = 'player' | 'opponent';
 
 /**
- * Frozen copy of one brought Pokemon at battle-start time, independent of
- * the live Team/ImportedPokemonInfo (which has no stable per-Pokemon id) -
- * editing or deleting the source team later never touches a past log.
+ * Frozen copy of one of the team's up-to-6 Pokemon at battle-start time,
+ * independent of the live Team/ImportedPokemonInfo (which has no stable
+ * per-Pokemon id) - editing or deleting the source team later never
+ * touches a past log. Not all of these are necessarily brought to this
+ * battle - see Battle.broughtIds.
  */
 export interface BroughtPokemonSnapshot {
   id: string; // fresh crypto.randomUUID(), unrelated to the source Team's data
@@ -126,7 +128,6 @@ export interface OpponentPokemonEntry {
   moves: string[]; // revealed moves, a growable tag list (not a fixed 4)
   ability?: string;
   item?: string;
-  teraType?: string;
   fainted: boolean;
   addedAt: number; // Unix timestamp
 }
@@ -139,7 +140,7 @@ export interface OpponentPokemonEntry {
 export interface BattleAction {
   id: string;
   side: BattleSide;
-  pokemonId: string; // id into broughtFour (player) or opponentRoster (opponent)
+  pokemonId: string; // id into playerRoster (player) or opponentRoster (opponent)
   move?: string;
   target?: { side: BattleSide; pokemonId: string };
   note?: string;
@@ -156,6 +157,42 @@ export interface Turn {
   actions: BattleAction[];
 }
 
+export type WeatherType = 'rain' | 'sun' | 'sand' | 'snow';
+export type TerrainType = 'electric' | 'grassy' | 'misty' | 'psychic';
+
+/**
+ * One side's screens/Tailwind/hazards. Turn-tracked fields (tailwind
+ * through mist) store the turn number they were set on, not a live
+ * countdown - see config/fieldConditions.ts's getRemainingTurns for how the
+ * displayed countdown is derived, and useBattleLogActions.ts's
+ * toggleTurnCondition for how they're set/cleared. Hazards have no
+ * duration and persist until manually cleared (Rapid Spin/Defog/etc.).
+ */
+export interface SideConditions {
+  tailwind?: number;
+  reflect?: number;
+  lightScreen?: number;
+  auroraVeil?: number;
+  safeguard?: number;
+  mist?: number;
+  stealthRock?: boolean;
+  stickyWeb?: boolean;
+  spikes?: number; // 0-3 layers
+  toxicSpikes?: number; // 0-2 layers
+}
+
+/**
+ * Current field state for a battle - a single live snapshot (not per-turn
+ * history), matching the existing playerActiveIds/opponentActiveIds
+ * pattern. Weather/terrain are field-wide; screens/hazards are per-side.
+ */
+export interface FieldState {
+  weather?: { type: WeatherType; setOnTurn: number };
+  terrain?: { type: TerrainType; setOnTurn: number };
+  playerSide: SideConditions;
+  opponentSide: SideConditions;
+}
+
 /**
  * One manually-logged Pokemon Champions VGC battle (doubles). See
  * useBattleLogActions.ts for the higher-level mutations that build/update
@@ -167,12 +204,14 @@ export interface Battle {
   teamId: string; // links back to the source Team (may later be edited/deleted)
   teamName: string; // snapshot - display never breaks if the team is renamed/deleted
   format: Team['format'];
-  broughtFour: BroughtPokemonSnapshot[]; // exactly 4, immutable after battle start
-  playerActiveIds: string[]; // 0-2 ids from broughtFour
-  playerFaintedIds: string[]; // ids from broughtFour
+  playerRoster: BroughtPokemonSnapshot[]; // all of the team brought to Team Preview, up to 6
+  broughtIds: string[]; // 0-4 ids from playerRoster - which of the 6 were actually brought to this battle
+  playerActiveIds: string[]; // 0-2 ids from broughtIds
+  playerFaintedIds: string[]; // ids from playerRoster
   opponentRoster: OpponentPokemonEntry[]; // starts empty, grows during the battle
   opponentActiveIds: string[]; // 0-2 ids from opponentRoster
   turns: Turn[];
+  fieldState: FieldState;
   result: 'win' | 'loss' | 'in-progress';
   notes?: string;
   createdAt: number;
@@ -248,6 +287,7 @@ export interface MoveData {
   pp: number; // Power points
   accuracy: number | null; // Accuracy percentage (null for moves that never miss)
   description: string; // Effect description
+  flags: string[]; // Move flags (sound/bullet/punch/etc.) - see config/moveFlags.ts
   cachedAt: number; // Unix timestamp
   expiresAt: number; // Unix timestamp
 }

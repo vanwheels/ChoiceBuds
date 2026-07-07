@@ -7,7 +7,34 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import type { Battle, BattlesDatabase } from '../types/pokemon';
+import type { Battle, BattlesDatabase, BroughtPokemonSnapshot } from '../types/pokemon';
+
+/** Shape of a Battle as it may exist on disk from before a schema change - never exported, read-boundary only. */
+interface LegacyBattleShape {
+  broughtFour?: BroughtPokemonSnapshot[];
+  playerRoster?: BroughtPokemonSnapshot[];
+  broughtIds?: string[];
+}
+
+/**
+ * Backfills battles saved before a schema change, at the read boundary
+ * (mirrors the Champions data-override pattern elsewhere in the app) so
+ * older records don't crash newer UI:
+ * - fieldState: added for field/side-condition tracking
+ * - playerRoster/broughtIds: replaced the old fixed-4 broughtFour - a
+ *   legacy record's 4 brought Pokemon become playerRoster with all 4
+ *   marked brought (matches what the old picker screen already enforced)
+ */
+function normalizeBattle(b: Battle & LegacyBattleShape): Battle {
+  const playerRoster = b.playerRoster ?? b.broughtFour ?? [];
+  const broughtIds = b.broughtIds ?? playerRoster.map(p => p.id);
+  return {
+    ...b,
+    playerRoster,
+    broughtIds,
+    fieldState: b.fieldState ?? { playerSide: {}, opponentSide: {} },
+  };
+}
 
 export interface UseBattlesReturn {
   battles: Battle[];
@@ -39,7 +66,7 @@ export function useBattles(): UseBattlesReturn {
       const database = await window.electron.readBattlesDatabase();
 
       if (database) {
-        setBattles(database.battles);
+        setBattles(database.battles.map(normalizeBattle));
       } else {
         setBattles([]);
       }

@@ -10,6 +10,8 @@ import type { ItemData, MoveData, AbilityData } from '../types/pokemon';
 import type { HoverKey } from './MoveBubbleGrid';
 import { toReadableName } from '../utils/displayName';
 import TypeBadge from './TypeBadge';
+import { VISIBLE_MOVE_FLAGS, MOVE_FLAG_LABELS } from '../config/moveFlags';
+import { getMoveFlagTheme } from '../config/pokemonTheme';
 
 // Serebii.net category badge sprites (Physical path verified live via fetch;
 // special/status follow the same /pokedex-dp/type/ folder + filename convention).
@@ -82,6 +84,21 @@ export default function TooltipContent({
           ) : null}
           <span className="capitalize">{move.category}</span> · PP {move.pp} · Pow {move.power ?? '—'} · Acc {move.accuracy != null ? `${move.accuracy}%` : '--'}
         </div>
+        {move.flags.some(flag => VISIBLE_MOVE_FLAGS.includes(flag as typeof VISIBLE_MOVE_FLAGS[number])) && (
+          <div className="flex flex-wrap items-center gap-1">
+            {VISIBLE_MOVE_FLAGS.filter(flag => move.flags.includes(flag)).map(flag => {
+              const theme = getMoveFlagTheme(flag);
+              return (
+                <span
+                  key={flag}
+                  className={`text-[9px] font-bold px-1 py-0.5 rounded-sm uppercase tracking-wide ${theme.bg} ${theme.text}`}
+                >
+                  {MOVE_FLAG_LABELS[flag]}
+                </span>
+              );
+            })}
+          </div>
+        )}
         <div className="text-gray-400">{move.description}</div>
       </div>
     );

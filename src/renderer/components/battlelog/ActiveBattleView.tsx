@@ -11,8 +11,10 @@ import type { Battle, SpeciesRosterEntry } from '../../types/pokemon';
 import type { UseBattleLogActionsReturn } from '../../hooks/useBattleLogActions';
 import PlayerFieldPanel from './PlayerFieldPanel';
 import OpponentFieldPanel from './OpponentFieldPanel';
+import Battlefield from './Battlefield';
 import TurnLog from './TurnLog';
 import ActionEntryBar from './ActionEntryBar';
+import FieldWeatherBar from './FieldWeatherBar';
 
 interface ActiveBattleViewProps {
   battle: Battle;
@@ -51,14 +53,16 @@ export default function ActiveBattleView({ battle, battleLogActions, roster, res
 
       <ActionEntryBar battle={battle} battleLogActions={battleLogActions} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <FieldWeatherBar battle={battle} battleLogActions={battleLogActions} />
+
+      <div className="flex flex-col lg:flex-row gap-4 items-start">
         <PlayerFieldPanel battle={battle} battleLogActions={battleLogActions} resolveSprite={resolveSprite} />
-
-        <div className="lg:col-span-1 bg-gray-900/40 rounded-lg p-3 max-h-[28rem] overflow-y-auto">
-          <TurnLog battle={battle} />
-        </div>
-
+        <Battlefield battle={battle} resolveSprite={resolveSprite} />
         <OpponentFieldPanel battle={battle} battleLogActions={battleLogActions} roster={roster} resolveSprite={resolveSprite} />
+      </div>
+
+      <div className="bg-gray-900/40 rounded-lg p-3 max-h-[20rem] overflow-y-auto">
+        <TurnLog battle={battle} />
       </div>
 
       <textarea

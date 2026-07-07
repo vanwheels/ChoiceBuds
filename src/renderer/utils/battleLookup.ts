@@ -12,7 +12,7 @@ export function findBattlePokemon(
   pokemonId: string
 ): BroughtPokemonSnapshot | OpponentPokemonEntry | undefined {
   return side === 'player'
-    ? battle.broughtFour.find(p => p.id === pokemonId)
+    ? battle.playerRoster.find(p => p.id === pokemonId)
     : battle.opponentRoster.find(p => p.id === pokemonId);
 }
 

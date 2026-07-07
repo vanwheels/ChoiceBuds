@@ -2,69 +2,391 @@
  * Champions Movepool Changes
  * Champions has given some species moves they can't learn in mainline
  * Scarlet/Violet (our only PokeAPI-sourced learnset source), and taken
- * others away. Sourced from a Reddit thread on v1.1 movepool changes
- * (screenshots provided directly by the user, since automated fetching of
- * reddit.com is blocked): r/stunfisk "Some movepool changes in Champions
- * Version 1.1".
+ * others away.
  *
- * That thread also listed several "Relearns X" entries per species (e.g.
- * "Sceptile relearns Cross Poison") - those are deliberately NOT encoded
- * here. PokeAPI's per-species moves list already includes every learn
- * method (level-up/machine/tutor/egg/etc.) as one combined list, so a move
- * legitimately learnable via any mainline method - just gated behind the
- * in-game Move Reminder there - should already be present in our
- * `fetchSpeciesLearnset` results without needing an override. Only "(now)
- * learns X" (a move that isn't native to that species in mainline at all)
- * and "loses X" need encoding here.
+ * Sourced from the "Pokémon Ch." tab of the "Data Comparative Champions"
+ * spreadsheet by RoiDadadou (see championsMoveOverrides.ts for full source
+ * citation/credits) - fetched directly (not screenshots) via its CSV export
+ * endpoint (`gviz/tq?tqx=out:csv&sheet=...`) and parsed programmatically,
+ * 2026-07-07. That tab lists, per species: its full historical movepool,
+ * its Scarlet/Violet movepool, its Champions movepool, and pre-computed
+ * "Movepool Additions"/"Movepool Returns" (both merged into
+ * CHAMPIONS_MOVEPOOL_ADDITIONS below - a "return" is a move the species
+ * could learn in some older game but not SV specifically, which Champions
+ * restored) and "Movepool Deletions" (CHAMPIONS_MOVEPOOL_REMOVALS, with
+ * Tera Blast filtered out since it's handled by the blanket rule below).
+ * The sheet's own header notes some Pokemon aren't entered in this tab yet
+ * ("Black is not entered so far") - absence from these records isn't
+ * proof Champions made no changes for a species, just that this source
+ * hasn't covered it.
  *
- * One entry from that thread was NOT included: Grimmsnarl "loses False
- * Surrender" - not a recognized Pokemon move in any known game, could be a
- * post error or an unfamiliar Champions-exclusive move. Left out rather
- * than encoding an unverified/possibly-fake move name; Grimmsnarl losing
- * Thunder Wave (the other half of that thread entry) is included since
- * that's a real, recognized move.
+ * This supersedes an earlier, much smaller hand-typed table sourced from a
+ * Reddit thread (r/stunfisk "Some movepool changes in Champions Version
+ * 1.1") - several of that thread's claims didn't hold up against this more
+ * comprehensive, structured, dataminer-backed source and were dropped:
+ * Scolipede "gains Pounce" (not in this data), Barbaracle "gains Chilling
+ * Water" (this data has Close Combat/Waterfall instead), Scrafty/Staraptor
+ * "loses Parting Shot/Knock Off" (no removals listed for either here),
+ * Scolipede/Overqwil "loses Mortal Spin" (not listed as removed for
+ * either), Malamar "loses Octolock" (not listed), Mawile "loses Dazzling
+ * Gleam" (not listed, though Focus Punch is corroborated). Also fixed a
+ * typo carried over from that table: "trailblazer" is not a real move
+ * slug (the actual move is "Trailblaze") - it would have silently never
+ * matched anything.
  *
- * The two balance nerfs also mentioned in that thread (Annihilape's "Rage
- * Punch" - almost certainly Rage Fist - and Gholdengo's Make It Rain) are
- * move-stat changes, not movepool changes - already covered in
- * championsMoveOverrides.ts, not duplicated here.
+ * The user has separately flagged this spreadsheet's overall reliability
+ * as mixed (see TODO.md) - this tab is closer to raw per-species game data
+ * than the more error-prone summary tabs (e.g. `Moves Deleted`, which
+ * conflated roster gaps with move deletions and was discarded entirely),
+ * but it's still a single unverified community source. Re-check against
+ * Serebii/Bulbapedia/in-game observation when in doubt about a specific
+ * entry.
  *
- * INCOMPLETE - this is one thread's account of one patch (v1.1). No
- * comprehensive source exists yet; the community spreadsheet lead noted in
- * TODO.md remains unprocessed (full movepools, not a diff - would need
- * manual cross-referencing against PokeAPI's mainline data per species).
  * Applied at the read boundary in useGameData.ts's getSpeciesLearnset/
  * getCachedSpeciesLearnset, keyed by the same normalized species slug
  * normalizeSpeciesForAPI already produces.
+ *
+ * BLANKET RULE: Tera Blast does not exist in Pokemon Champions at all
+ * (confirmed directly by the user, 2026-07-06 - not a per-species removal,
+ * a game-wide absence). PokeAPI's Scarlet/Violet learnsets include it as a
+ * universal TM move for nearly every species, so it's stripped
+ * unconditionally below rather than needing a per-species entry.
  */
 
+const GLOBALLY_REMOVED_MOVES = ['tera-blast'];
+
 export const CHAMPIONS_MOVEPOOL_ADDITIONS: Record<string, string[]> = {
-  'swampert': ['wave-crash'],
-  'sceptile': ['earth-power'],
-  'scolipede': ['leech-life', 'pounce', 'trailblazer'],
-  'pyroar': ['scorching-sands'],
-  'barbaracle': ['aqua-cutter', 'chilling-water'],
+  'abomasnow': ['frost-breath', 'ice-hammer', 'iron-tail', 'shadow-ball'],
+  'absol': ['phantom-force', 'shadow-sneak', 'trailblaze'],
+  'aegislash': ['poltergeist', 'zen-headbutt'],
+  'alcremie': ['mystical-fire', 'safeguard', 'tri-attack'],
+  'ampharos': ['iron-tail', 'parabolic-charge', 'rising-voltage', 'safeguard'],
+  'annihilape': ['dynamic-punch'],
+  'appletun': ['superpower'],
+  'araquanid': ['attract'],
+  'arbok': ['beat-up', 'iron-tail', 'payback'],
+  'arcanine': ['burn-up', 'iron-tail'],
+  'arcanine-hisui': ['burn-up', 'iron-tail'],
+  'ariados': ['body-slam', 'first-impression', 'psychic-fangs', 'stomping-tantrum'],
+  'armarouge': ['burn-up'],
+  'aromatisse': ['alluring-voice', 'hypnosis'],
+  'aurorus': ['ice-spinner'],
+  'avalugg': ['frost-breath', 'superpower'],
+  'avalugg-hisui': ['ancient-power'],
+  'azumarill': ['future-sight', 'iron-tail'],
+  'banette': ['payback', 'swagger', 'zen-headbutt'],
+  'barbaracle': ['aqua-cutter', 'close-combat', 'waterfall'],
+  'bastiodon': ['attract', 'iron-tail', 'steel-roller'],
+  'beedrill': ['bug-buzz', 'cross-poison', 'dual-wingbeat', 'lunge', 'pollen-puff', 'skitter-smack'],
+  'blastoise': ['bulldoze', 'iron-head', 'iron-tail', 'outrage', 'terrain-pulse', 'waterfall'],
+  'blaziken': ['high-jump-kick', 'superpower'],
+  'camerupt': ['burning-jealousy', 'self-destruct'],
+  'ceruledge': ['burn-up'],
+  'chandelure': ['mystical-fire', 'payback', 'safeguard'],
+  'charizard': ['beat-up', 'roost', 'scale-shot'],
+  'chesnaught': ['growth', 'iron-tail', 'payback', 'sludge-bomb', 'steel-roller', 'superpower'],
+  'chimecho': ['boomburst', 'flash-cannon', 'self-destruct'],
+  'clawitzer': ['terrain-pulse'],
+  'clefable': ['air-slash', 'mystical-fire', 'safeguard', 'tri-attack'],
+  'cofagrigus': ['giga-drain', 'self-destruct'],
+  'conkeldurr': ['attract', 'payback'],
+  'corviknight': ['feather-dance', 'payback'],
+  'crabominable': ['icicle-spear', 'mach-punch', 'swagger'],
+  'decidueye': ['psycho-cut'],
+  'dedenne': ['iron-tail', 'rising-voltage'],
+  'delphox': ['iron-tail', 'safeguard'],
+  'diggersby': ['fissure', 'trailblaze'],
+  'dragalge': ['iron-tail', 'poison-jab'],
+  'dragapult': ['beat-up', 'tri-attack'],
+  'dragonite': ['iron-tail', 'superpower', 'whirlwind'],
+  'drampa': ['body-slam', 'earth-power', 'tri-attack', 'whirlwind'],
+  'eelektross': ['iron-tail', 'psychic-fangs', 'rising-voltage', 'superpower', 'waterfall'],
+  'emboar': ['burn-up', 'iron-tail', 'scorching-sands', 'solar-blade'],
+  'empoleon': ['attract', 'dig'],
+  'espeon': ['safeguard'],
+  'excadrill': ['megahorn', 'sludge-bomb'],
+  'falinks': ['beat-up', 'payback', 'seed-bomb', 'superpower'],
+  'feraligatr': ['dragon-pulse', 'iron-tail'],
+  'flareon': ['superpower'],
+  'floette-eternal': ['alluring-voice', 'baton-pass', 'draining-kiss', 'light-of-ruin', 'light-screen', 'pollen-puff', 'safeguard', 'skill-swap', 'stored-power', 'synthesis', 'trailblaze', 'trick'],
+  'florges': ['grassy-glide'],
+  'forretress': ['steel-roller'],
+  'froslass': ['nasty-plot', 'payback', 'phantom-force', 'safeguard'],
+  'furfrou': ['crunch', 'double-edge', 'endure', 'fire-fang', 'ice-fang', 'psychic-fangs', 'thunder-fang', 'trailblaze'],
+  'gallade': ['safeguard'],
+  'garbodor': ['ancient-power', 'poison-jab'],
+  'garchomp': ['iron-tail'],
+  'gardevoir': ['safeguard', 'swagger'],
+  'garganacl': ['dynamic-punch'],
+  'gengar': ['corrosive-gas', 'self-destruct'],
+  'gholdengo': ['surf'],
+  'glaceon': ['frost-breath'],
+  'glalie': ['explosion', 'payback', 'self-destruct', 'steel-roller'],
+  'gliscor': ['attract', 'dig', 'iron-tail', 'payback', 'pin-missile', 'power-whip'],
+  'golurk': ['headlong-rush', 'iron-head', 'self-destruct', 'superpower'],
+  'goodra': ['giga-drain', 'iron-tail', 'superpower'],
+  'goodra-hisui': ['ancient-power'],
+  'gourgeist': ['hypnosis', 'self-destruct'],
+  'greninja': ['flip-turn', 'skitter-smack'],
+  'grimmsnarl': ['power-whip', 'superpower'],
+  'gyarados': ['dragon-rush', 'iron-tail', 'payback', 'power-whip', 'swagger'],
+  'hatterene': ['power-whip', 'safeguard'],
+  'hawlucha': ['air-slash', 'payback', 'superpower'],
+  'heliolisk': ['morning-sun', 'shed-tail', 'trailblaze'],
+  'hippowdon': ['superpower'],
+  'houndoom': ['iron-tail', 'payback', 'scorching-sands', 'swagger'],
+  'houndstone': ['swagger', 'zen-headbutt'],
+  'hydreigon': ['beat-up', 'iron-tail', 'payback', 'superpower'],
+  'incineroar': ['attract', 'blaze-kick', 'superpower'],
+  'infernape': ['attract', 'blaze-kick', 'iron-tail'],
+  'jolteon': ['charge-beam', 'rising-voltage'],
+  'kleavor': ['ancient-power'],
+  'klefki': ['future-sight', 'safeguard'],
+  'kommo-o': ['attract', 'iron-tail', 'payback', 'superpower'],
+  'krookodile': ['beat-up', 'fissure', 'iron-head', 'iron-tail', 'payback', 'superpower'],
+  'liepard': ['crunch', 'fire-fang', 'ice-fang', 'psychic-fangs', 'thunder-fang', 'trailblaze'],
+  'lopunny': ['cotton-guard', 'draining-kiss', 'dynamic-punch', 'mach-punch', 'swords-dance', 'trailblaze'],
+  'lucario': ['blaze-kick', 'iron-tail', 'payback', 'terrain-pulse'],
+  'luxray': ['iron-tail', 'rising-voltage', 'superpower'],
+  'lycanroc': ['iron-tail', 'tail-slap'],
+  'lycanroc-dusk': ['iron-tail', 'tail-slap'],
+  'lycanroc-midnight': ['iron-tail', 'payback'],
+  'machamp': ['drain-punch'],
+  'malamar': ['poison-jab', 'zen-headbutt'],
+  'mamoswine': ['attract', 'superpower'],
+  'manectric': ['supercell-slam', 'trailblaze'],
+  'medicham': ['agility', 'blaze-kick', 'coaching'],
+  'meganium': ['dazzling-gleam', 'earth-power', 'iron-tail', 'leaf-blade', 'pollen-puff'],
+  'meowstic': ['iron-tail', 'payback', 'safeguard', 'tail-slap', 'wish'],
+  'meowstic-f': ['iron-tail', 'payback', 'safeguard', 'tail-slap'],
+  'metagross': ['cosmic-power', 'psycho-cut', 'self-destruct', 'steel-roller', 'swagger'],
+  'milotic': ['iron-tail'],
+  'mimikyu': ['beat-up', 'night-slash', 'payback', 'safeguard'],
+  'morpeko': ['payback', 'rising-voltage'],
+  'mr-rime': ['frost-breath', 'haze', 'ice-spinner', 'sheer-cold', 'swagger'],
+  'mudsdale': ['payback'],
+  'ninetales': ['attract', 'iron-tail', 'mystical-fire', 'payback', 'tail-slap'],
+  'ninetales-alola': ['attract', 'iron-tail', 'payback', 'safeguard', 'tail-slap'],
+  'noivern': ['iron-tail', 'sky-attack'],
+  'oranguru': ['payback', 'safeguard', 'terrain-pulse'],
+  'pangoro': ['comeuppance', 'headlong-rush'],
+  'passimian': ['iron-tail', 'payback', 'superpower'],
+  'pidgeot': ['dual-wingbeat'],
+  'pikachu': ['rising-voltage', 'zap-cannon'],
+  'pinsir': ['aerial-ace', 'hard-press', 'lunge'],
+  'politoed': ['attract'],
+  'primarina': ['attract', 'iron-tail'],
+  'pyroar': ['iron-tail', 'payback', 'scorching-sands'],
+  'qwilfish': ['payback', 'steel-roller'],
+  'raichu': ['dazzling-gleam', 'drain-punch', 'rising-voltage', 'zap-cannon'],
+  'raichu-alola': ['dazzling-gleam', 'rising-voltage', 'volt-tackle', 'zap-cannon'],
+  'rampardos': ['attract', 'iron-tail', 'meteor-beam', 'payback', 'superpower'],
+  'reuniclus': ['attract', 'safeguard', 'steel-roller', 'superpower'],
+  'rhyperior': ['iron-tail', 'payback', 'superpower'],
+  'roserade': ['trailblaze'],
+  'rotom': ['rising-voltage'],
+  'runerigus': ['giga-drain', 'psyshock', 'self-destruct'],
+  'sableye': ['night-slash', 'payback', 'safeguard', 'swagger'],
+  'salazzle': ['beat-up', 'corrosive-gas', 'cross-poison', 'iron-tail', 'payback'],
+  'samurott': ['iron-tail', 'superpower'],
+  'samurott-hisui': ['iron-tail', 'superpower'],
+  'sceptile': ['cross-poison', 'dragon-rush', 'earth-power', 'iron-tail'],
+  'scizor': ['psycho-cut', 'roost', 'superpower'],
+  'scolipede': ['gunk-shot', 'leech-life', 'trailblaze'],
+  'scovillain': ['flare-blitz', 'swagger', 'thunder-fang'],
+  'scrafty': ['dynamic-punch', 'iron-tail'],
+  'serperior': ['attract'],
+  'simipour': ['belch', 'endure', 'fake-out', 'flip-turn', 'liquidation', 'stuff-cheeks'],
+  'simisage': ['belch', 'endure', 'fake-out', 'grassy-glide', 'solar-blade', 'stuff-cheeks', 'trailblaze'],
+  'simisear': ['blaze-kick', 'burning-jealousy', 'endure', 'fake-out', 'scorching-sands', 'stuff-cheeks', 'temper-flare'],
+  'skeledirge': ['burn-up'],
+  'slowbro': ['iron-tail', 'safeguard', 'tri-attack'],
+  'slowbro-galar': ['future-sight', 'iron-tail', 'safeguard', 'toxic-spikes', 'tri-attack'],
+  'slowking': ['iron-tail', 'safeguard', 'tri-attack'],
+  'slowking-galar': ['ice-punch', 'iron-tail', 'safeguard', 'tri-attack'],
+  'snorlax': ['attract', 'hydro-pump', 'self-destruct', 'superpower', 'terrain-pulse'],
+  'staraptor': ['blaze-kick', 'brick-break', 'bulk-up', 'focus-blast', 'roost', 'sky-attack', 'swagger'],
+  'starmie': ['ancient-power', 'aqua-jet', 'bulk-up', 'charge-beam', 'ice-spinner', 'liquidation', 'safeguard', 'self-destruct', 'zen-headbutt'],
+  'swampert': ['iron-tail', 'sludge-bomb', 'superpower', 'wave-crash'],
+  'sylveon': ['mystical-fire', 'safeguard'],
+  'talonflame': ['blaze-kick', 'sky-attack', 'whirlwind'],
+  'tauros': ['iron-tail', 'megahorn', 'whirlpool'],
+  'tauros-paldea': ['iron-tail', 'megahorn'],
+  'tauros-paldea-aqua': ['iron-tail', 'megahorn'],
+  'tauros-paldea-blaze': ['iron-tail', 'megahorn'],
+  'tinkaton': ['wood-hammer'],
+  'torkoal': ['self-destruct', 'superpower'],
+  'torterra': ['attract'],
+  'toucannon': ['attract'],
+  'toxapex': ['cross-poison', 'light-screen', 'payback'],
+  'toxicroak': ['corrosive-gas', 'cross-poison', 'payback'],
+  'trevenant': ['safeguard', 'swagger'],
+  'tsareena': ['payback'],
+  'typhlosion': ['burn-up'],
+  'typhlosion-hisui': ['burn-up', 'mystical-fire'],
+  'tyranitar': ['iron-tail', 'superpower', 'swagger'],
+  'umbreon': ['payback', 'swagger'],
+  'vanilluxe': ['ice-spinner'],
+  'vaporeon': ['iron-tail'],
+  'venusaur': ['light-screen', 'outrage', 'sludge-wave', 'terrain-pulse'],
+  'victreebel': ['toxic-spikes'],
+  'vileplume': ['attract', 'corrosive-gas'],
+  'vivillon': ['calm-mind', 'whirlwind'],
+  'volcarona': ['mystical-fire', 'safeguard'],
+  'watchog': ['double-edge', 'endure', 'trailblaze'],
+  'weavile': ['payback', 'psycho-cut', 'reflect'],
+  'whimsicott': ['attract', 'safeguard'],
+  'zoroark': ['payback'],
+  'zoroark-hisui': ['payback'],
 };
 
 export const CHAMPIONS_MOVEPOOL_REMOVALS: Record<string, string[]> = {
-  'scolipede': ['mortal-spin'],
-  'annihilape': ['final-gambit'],
+  'absol': ['charge-beam', 'counter', 'hone-claws', 'laser-focus', 'magic-coat', 'psych-up', 'swagger', 'toxic', 'water-pulse', 'wish'],
+  'aegislash': ['after-you', 'autotomize', 'laser-focus', 'magnet-rise', 'swagger', 'toxic'],
+  'aerodactyl': ['aqua-tail', 'celebrate', 'defog', 'double-edge', 'hone-claws', 'laser-focus', 'reflect', 'rock-polish', 'smack-down', 'toxic'],
+  'aggron': ['aerial-ace', 'aqua-tail', 'autotomize', 'block', 'counter', 'dragon-tail', 'dynamic-punch', 'focus-punch', 'hone-claws', 'magnet-rise', 'power-up-punch', 'rock-polish', 'seismic-toss', 'smack-down', 'toxic', 'water-pulse'],
+  'alakazam': ['charge-beam', 'counter', 'curse', 'dig', 'double-edge', 'dynamic-punch', 'focus-punch', 'gravity', 'knock-off', 'laser-focus', 'magic-coat', 'night-shade', 'psych-up', 'psycho-shift', 'recycle', 'seismic-toss', 'swagger', 'teleport', 'toxic', 'zap-cannon'],
+  'annihilape': ['covet', 'final-gambit'],
+  'arbok': ['poison-tail'],
+  'arcanine': ['flame-wheel'],
+  'arcanine-hisui': ['flame-wheel'],
+  'archaludon': ['body-press', 'dragon-claw', 'hone-claws'],
+  'ariados': ['psychic'],
+  'armarouge': ['celebrate'],
+  'aromatisse': ['aromatherapy', 'charge-beam', 'covet', 'endeavor', 'heal-bell', 'magic-coat', 'swagger', 'toxic'],
+  'audino': ['charge-beam', 'covet', 'focus-punch', 'gravity', 'heal-bell', 'knock-off', 'laser-focus', 'magic-coat', 'pain-split', 'power-up-punch', 'psych-up', 'swagger', 'toxic', 'work-up'],
+  'aurorus': ['aqua-tail', 'charge-beam', 'dragon-tail', 'frost-breath', 'magnet-rise', 'nature-power', 'psych-up', 'roar', 'rock-polish', 'swagger', 'toxic', 'water-pulse'],
+  'barbaracle': ['aerial-ace', 'endeavor', 'hone-claws', 'infestation', 'laser-focus', 'nature-power', 'power-up-punch', 'smack-down', 'swagger', 'toxic', 'water-pulse'],
+  'beartic': ['brine'],
+  'beedrill': ['curse', 'defog', 'hidden-power', 'infestation', 'laser-focus', 'natural-gift', 'pursuit', 'reflect', 'roost', 'swagger', 'tailwind'],
+  'blastoise': ['water-pledge'],
+  'blaziken': ['fire-pledge'],
+  'castform': ['clear-smog', 'defog', 'disable', 'double-edge', 'hidden-power', 'natural-gift', 'psych-up', 'reflect-type', 'swagger', 'tailwind', 'toxic', 'water-pulse', 'work-up'],
+  'ceruledge': ['celebrate'],
+  'charizard': ['fire-pledge'],
+  'chesnaught': ['grass-pledge'],
+  'chimecho': ['entrainment', 'hyper-voice'],
+  'clawitzer': ['hone-claws', 'waterfall', 'weather-ball'],
+  'clefable': ['healing-wish'],
+  'cofagrigus': ['after-you', 'block', 'infestation', 'knock-off', 'magic-coat', 'pain-split', 'psych-up', 'revenge', 'swagger', 'toxic'],
+  'corviknight': ['hone-claws'],
+  'decidueye': ['grass-pledge'],
+  'decidueye-hisui': ['grass-pledge'],
+  'delphox': ['fire-pledge'],
+  'diggersby': ['endeavor', 'focus-punch', 'knock-off', 'laser-focus', 'nature-power', 'power-up-punch', 'recycle', 'smack-down', 'swagger', 'toxic', 'work-up'],
+  'dragalge': ['poison-tail'],
+  'dragonite': ['encore'],
+  'drampa': ['block', 'defog', 'dragon-tail', 'endeavor', 'nature-power', 'psych-up', 'roar', 'tailwind', 'toxic', 'water-pulse', 'work-up'],
+  'emboar': ['arm-thrust', 'fire-pledge'],
+  'emolga': ['aerial-ace', 'knock-off', 'swagger', 'tailwind', 'toxic'],
+  'empoleon': ['brine', 'water-pledge'],
+  'excadrill': ['hone-claws'],
+  'feraligatr': ['water-pledge'],
+  'flareon': ['wish'],
+  'florges': ['celebrate'],
+  'forretress': ['zap-cannon'],
+  'furfrou': ['charge-beam', 'hidden-power', 'refresh', 'swagger', 'toxic', 'work-up'],
+  'gallade': ['teleport'],
+  'garbodor': ['autotomize', 'infestation', 'rock-polish', 'smack-down', 'swagger', 'venom-drench'],
+  'gardevoir': ['teleport'],
+  'garganacl': ['ancient-power', 'avalanche'],
+  'gengar': ['encore'],
+  'gholdengo': ['thunder-wave'],
+  'gliscor': ['poison-tail', 'taunt'],
+  'goodra': ['poison-tail'],
+  'goodra-hisui': ['acid-armor'],
+  'gourgeist': ['charge-beam', 'flame-charge', 'magic-coat', 'nature-power', 'swagger', 'synthesis', 'toxic'],
+  'greninja': ['water-pledge'],
   'grimmsnarl': ['thunder-wave'],
-  'scrafty': ['parting-shot'],
-  'overqwil': ['mortal-spin'],
-  'metagross': ['heavy-slam', 'knock-off'],
-  'pyroar': ['earth-power'],
-  'staraptor': ['knock-off'],
-  'mawile': ['focus-punch', 'dazzling-gleam'],
-  'malamar': ['octolock'],
+  'gyarados': ['brine'],
+  'hatterene': ['trick'],
+  'hawlucha': ['hone-claws'],
+  'heliolisk': ['magnet-rise', 'psych-up', 'swagger', 'toxic'],
+  'heracross': ['arm-thrust'],
+  'hippowdon': ['double-edge'],
+  'hydreigon': ['work-up'],
+  'incineroar': ['fire-pledge', 'knock-off', 'u-turn'],
+  'infernape': ['fire-pledge', 'flame-wheel'],
+  'jolteon': ['wish'],
+  'kangaskhan': ['aerial-ace', 'aqua-tail', 'covet', 'curse', 'fissure', 'focus-punch', 'power-up-punch', 'roar', 'seismic-toss', 'sing', 'swagger', 'toxic', 'water-pulse', 'wish', 'work-up', 'yawn', 'zap-cannon'],
+  'kommo-o': ['work-up'],
+  'krookodile': ['hone-claws'],
+  'liepard': ['aerial-ace', 'hone-claws', 'laser-focus', 'psych-up', 'toxic'],
+  'lopunny': ['charge-beam', 'covet', 'endeavor', 'heal-bell', 'laser-focus', 'magic-coat', 'power-up-punch', 'swagger', 'toxic', 'water-pulse', 'work-up'],
+  'lucario': ['force-palm', 'work-up'],
+  'lycanroc-dusk': ['substitute'],
+  'machamp': ['curse', 'fissure', 'focus-punch', 'power-up-punch', 'revenge', 'smack-down', 'swagger', 'toxic', 'vacuum-wave', 'work-up'],
+  'manectric': ['double-edge', 'laser-focus', 'magnet-rise', 'swagger', 'toxic'],
+  'maushold': ['celebrate'],
+  'mawile': ['charge-beam', 'counter', 'focus-punch', 'laser-focus', 'magnet-rise', 'metal-burst', 'pain-split', 'power-up-punch', 'psych-up', 'sing', 'super-fang', 'toxic'],
+  'medicham': ['force-palm', 'work-up'],
+  'meganium': ['grass-pledge'],
+  'meowscarada': ['grass-pledge', 'hone-claws'],
+  'metagross': ['heavy-slam', 'hone-claws', 'knock-off'],
+  'mimikyu': ['hone-claws'],
+  'mr-rime': ['charge-beam', 'covet', 'focus-punch', 'healing-wish', 'infestation', 'magic-coat', 'psych-up', 'toxic'],
+  'musharna': ['after-you', 'baton-pass', 'gravity', 'heal-bell', 'magic-coat', 'pain-split', 'psych-up', 'swagger', 'toxic'],
+  'noivern': ['dragon-tail'],
+  'overqwil': ['brine', 'poison-tail'],
+  'pangoro': ['aerial-ace', 'arm-thrust', 'block', 'covet', 'endeavor', 'focus-punch', 'hone-claws', 'infestation', 'laser-focus', 'power-up-punch', 'revenge', 'roar', 'swagger', 'toxic', 'work-up'],
+  'pelipper': ['brave-bird'],
+  'pidgeot': ['curse', 'defog', 'double-edge', 'hidden-power', 'laser-focus', 'mirror-move', 'natural-gift', 'pursuit', 'reflect', 'refresh', 'swagger', 'toxic', 'work-up'],
+  'pikachu': ['celebrate', 'fly'],
+  'pinsir': ['curse', 'double-edge', 'focus-punch', 'knock-off', 'outrage', 'revenge', 'smack-down', 'swagger', 'toxic'],
+  'primarina': ['water-pledge'],
+  'pyroar': ['work-up'],
+  'quaquaval': ['water-pledge', 'work-up'],
+  'qwilfish': ['brine', 'poison-tail'],
+  'raichu': ['celebrate', 'fly'],
+  'roserade': ['aromatherapy', 'covet', 'double-edge', 'laser-focus', 'nature-power', 'psych-up', 'swagger', 'venom-drench'],
+  'rotom': ['hyper-voice'],
+  'runerigus': ['revenge'],
+  'salazzle': ['poison-tail'],
+  'samurott': ['water-pledge'],
+  'samurott-hisui': ['water-pledge'],
+  'sandaconda': ['poison-tail'],
+  'sceptile': ['grass-pledge'],
+  'scolipede': ['aqua-tail', 'endeavor', 'infestation', 'poison-tail', 'swagger', 'venom-drench'],
+  'serperior': ['grass-pledge'],
+  'sharpedo': ['brine', 'roar', 'super-fang', 'thief', 'toxic'],
+  'simipour': ['aqua-tail', 'brine', 'covet', 'endeavor', 'focus-punch', 'hidden-power', 'hone-claws', 'knock-off', 'natural-gift', 'power-up-punch', 'swagger', 'toxic', 'water-pledge', 'water-pulse', 'work-up'],
+  'simisage': ['covet', 'endeavor', 'focus-punch', 'grass-pledge', 'grass-whistle', 'hidden-power', 'hone-claws', 'knock-off', 'natural-gift', 'nature-power', 'power-up-punch', 'spiky-shield', 'swagger', 'synthesis', 'toxic', 'work-up'],
+  'simisear': ['covet', 'endeavor', 'fire-pledge', 'focus-punch', 'hidden-power', 'hone-claws', 'knock-off', 'natural-gift', 'power-up-punch', 'swagger', 'toxic', 'work-up'],
+  'skeledirge': ['fire-pledge'],
+  'slowbro-galar': ['belch', 'body-press', 'bulldoze', 'expanding-force', 'heal-pulse', 'liquidation', 'psychic-terrain', 'shell-side-arm', 'stored-power'],
+  'slurpuff': ['aromatherapy', 'belly-drum', 'covet', 'heal-bell', 'magic-coat', 'psych-up', 'swagger', 'toxic'],
+  'sneasler': ['hone-claws', 'poison-tail'],
+  'starmie': ['attract', 'brine', 'curse', 'magic-coat', 'pain-split', 'psych-up', 'recycle', 'reflect-type', 'swagger', 'teleport', 'toxic', 'zap-cannon'],
+  'steelix': ['aqua-tail', 'autotomize', 'explosion', 'nature-power', 'psych-up', 'roar', 'swagger', 'toxic'],
+  'stunfisk': ['aqua-tail', 'endeavor', 'infestation', 'magnet-rise', 'revenge', 'swagger', 'toxic', 'water-pulse'],
+  'stunfisk-galar': ['revenge'],
+  'swampert': ['water-pledge'],
+  'tauros': ['work-up'],
+  'tauros-paldea': ['work-up'],
+  'tauros-paldea-aqua': ['work-up'],
+  'tauros-paldea-blaze': ['work-up'],
+  'torkoal': ['flame-wheel'],
+  'torterra': ['grass-pledge'],
+  'tsareena': ['celebrate'],
+  'typhlosion': ['fire-pledge', 'flame-wheel'],
+  'typhlosion-hisui': ['fire-pledge', 'flame-wheel'],
+  'tyrantrum': ['aerial-ace', 'block', 'hone-claws', 'swagger', 'toxic'],
+  'vanilluxe': ['autotomize', 'magic-coat', 'swagger', 'toxic', 'water-pulse'],
+  'vaporeon': ['wish'],
+  'venusaur': ['grass-pledge'],
+  'volcarona': ['flame-wheel'],
+  'watchog': ['aqua-tail', 'covet', 'endeavor', 'focus-punch', 'hidden-power', 'hyper-fang', 'knock-off', 'laser-focus', 'power-up-punch', 'pursuit', 'revenge', 'signal-beam', 'swagger', 'toxic', 'work-up'],
+  'weavile': ['hone-claws'],
+  'zoroark': ['copycat', 'hone-claws'],
+  'zoroark-hisui': ['happy-hour', 'hone-claws'],
 };
 
 export function applyChampionsMovepoolChanges(speciesSlug: string, moves: string[]): string[] {
   const additions = CHAMPIONS_MOVEPOOL_ADDITIONS[speciesSlug];
   const removals = CHAMPIONS_MOVEPOOL_REMOVALS[speciesSlug];
-  if (!additions && !removals) return moves;
 
   const merged = new Set(moves);
+  GLOBALLY_REMOVED_MOVES.forEach(move => merged.delete(move));
   additions?.forEach(move => merged.add(move));
   removals?.forEach(move => merged.delete(move));
   return [...merged];

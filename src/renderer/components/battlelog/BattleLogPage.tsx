@@ -45,7 +45,6 @@ export default function BattleLogPage({ battlesState, teamsState, speciesRosterS
       <StartBattleFlow
         teamsState={teamsState}
         battleLogActions={battleLogActions}
-        resolveSprite={spriteCacheState.resolveSprite}
         onBattleStarted={battleId => { setIsStarting(false); setOpenBattleId(battleId); }}
         onCancel={() => setIsStarting(false)}
       />

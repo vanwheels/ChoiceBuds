@@ -7,12 +7,20 @@
  */
 
 import { useCallback } from 'react';
-import type { Battle, BattleAction, BattleSide, Team, SpeciesRosterEntry } from '../types/pokemon';
+import type {
+  Battle, BattleAction, BattleSide, Team, SpeciesRosterEntry,
+  WeatherType, TerrainType, SideConditions,
+} from '../types/pokemon';
+import type { TurnTrackedCondition, BooleanHazard, StackableHazard } from '../config/fieldConditions';
+
+export const MAX_OPPONENT_ROSTER_SIZE = 6;
+export const MAX_BROUGHT = 4;
 
 export interface UseBattleLogActionsReturn {
-  startBattle: (team: Team, selectedIndices: number[]) => Promise<string | null>;
+  startBattle: (team: Team) => Promise<string | null>;
+  toggleBrought: (battle: Battle, pokemonId: string) => Promise<boolean>;
   addOpponentPokemon: (battle: Battle, species: SpeciesRosterEntry) => Promise<boolean>;
-  updateOpponentMoveTags: (battle: Battle, opponentId: string, ability?: string, item?: string, teraType?: string) => Promise<boolean>;
+  updateOpponentMoveTags: (battle: Battle, opponentId: string, ability?: string, item?: string) => Promise<boolean>;
   addOpponentMove: (battle: Battle, opponentId: string, move: string) => Promise<boolean>;
   removeOpponentMove: (battle: Battle, opponentId: string, move: string) => Promise<boolean>;
   setActive: (battle: Battle, side: BattleSide, ids: string[]) => Promise<boolean>;
@@ -22,6 +30,11 @@ export interface UseBattleLogActionsReturn {
   undoLastAction: (battle: Battle) => Promise<boolean>;
   setResult: (battle: Battle, result: Battle['result']) => Promise<boolean>;
   setNotes: (battle: Battle, notes: string) => Promise<boolean>;
+  setWeather: (battle: Battle, type: WeatherType | null) => Promise<boolean>;
+  setTerrain: (battle: Battle, type: TerrainType | null) => Promise<boolean>;
+  toggleTurnCondition: (battle: Battle, side: BattleSide, key: TurnTrackedCondition) => Promise<boolean>;
+  toggleBooleanHazard: (battle: Battle, side: BattleSide, key: BooleanHazard) => Promise<boolean>;
+  setStackableHazard: (battle: Battle, side: BattleSide, key: StackableHazard, layers: number) => Promise<boolean>;
 }
 
 export function useBattleLogActions(
@@ -29,29 +42,25 @@ export function useBattleLogActions(
   updateBattle: (battleId: string, updates: Partial<Battle>) => Promise<boolean>
 ): UseBattleLogActionsReturn {
   /**
-   * Requires exactly 4 selected slots - VGC brings 4 of the team's up-to-6.
-   * Snapshots each chosen Pokemon with a fresh id, independent of the live
-   * Team, so later roster edits never touch this battle's log.
+   * Snapshots the whole team (up to 6) at battle start - matches real VGC
+   * Team Preview, where you see all 6 before choosing which 4 to bring.
+   * broughtIds starts empty; toggleBrought fills it in live from the
+   * roster column instead of a separate upfront picker screen.
    */
-  const startBattle = useCallback(async (team: Team, selectedIndices: number[]): Promise<string | null> => {
-    if (selectedIndices.length !== 4) return null;
-
-    const broughtFour = selectedIndices.map(index => {
-      const p = team.pokemon[index];
-      return {
-        id: crypto.randomUUID(),
-        species: p.showdownData.species,
-        nickname: p.showdownData.nickname,
-        ability: p.showdownData.ability,
-        item: p.showdownData.item,
-        teraType: p.showdownData.teraType,
-        moves: p.showdownData.moves,
-        gender: p.showdownData.gender,
-        pokedexNumber: p.pokedexNumber,
-        types: p.types,
-        spriteUrl: p.spriteUrl,
-      };
-    });
+  const startBattle = useCallback(async (team: Team): Promise<string | null> => {
+    const playerRoster = team.pokemon.map(p => ({
+      id: crypto.randomUUID(),
+      species: p.showdownData.species,
+      nickname: p.showdownData.nickname,
+      ability: p.showdownData.ability,
+      item: p.showdownData.item,
+      teraType: p.showdownData.teraType,
+      moves: p.showdownData.moves,
+      gender: p.showdownData.gender,
+      pokedexNumber: p.pokedexNumber,
+      types: p.types,
+      spriteUrl: p.spriteUrl,
+    }));
 
     const now = Date.now();
     const battle: Battle = {
@@ -60,12 +69,14 @@ export function useBattleLogActions(
       teamId: team.id,
       teamName: team.name,
       format: team.format,
-      broughtFour,
-      playerActiveIds: broughtFour.slice(0, 2).map(p => p.id),
+      playerRoster,
+      broughtIds: [],
+      playerActiveIds: [],
       playerFaintedIds: [],
       opponentRoster: [],
       opponentActiveIds: [],
       turns: [{ number: 1, actions: [] }],
+      fieldState: { playerSide: {}, opponentSide: {} },
       result: 'in-progress',
       createdAt: now,
       updatedAt: now,
@@ -75,7 +86,21 @@ export function useBattleLogActions(
     return success ? battle.id : null;
   }, [addBattle]);
 
+  /** Capped at MAX_BROUGHT (4) - toggling off also drops the mon from active/fainted if it was there. */
+  const toggleBrought = useCallback(async (battle: Battle, pokemonId: string): Promise<boolean> => {
+    const isBrought = battle.broughtIds.includes(pokemonId);
+    if (!isBrought && battle.broughtIds.length >= MAX_BROUGHT) return false;
+
+    const broughtIds = isBrought
+      ? battle.broughtIds.filter(id => id !== pokemonId)
+      : [...battle.broughtIds, pokemonId];
+    const playerActiveIds = isBrought ? battle.playerActiveIds.filter(id => id !== pokemonId) : battle.playerActiveIds;
+    const playerFaintedIds = isBrought ? battle.playerFaintedIds.filter(id => id !== pokemonId) : battle.playerFaintedIds;
+    return updateBattle(battle.id, { broughtIds, playerActiveIds, playerFaintedIds });
+  }, [updateBattle]);
+
   const addOpponentPokemon = useCallback(async (battle: Battle, species: SpeciesRosterEntry): Promise<boolean> => {
+    if (battle.opponentRoster.length >= MAX_OPPONENT_ROSTER_SIZE) return false;
     const entry = {
       id: crypto.randomUUID(),
       species: species.name,
@@ -92,11 +117,10 @@ export function useBattleLogActions(
     battle: Battle,
     opponentId: string,
     ability?: string,
-    item?: string,
-    teraType?: string
+    item?: string
   ): Promise<boolean> => {
     const opponentRoster = battle.opponentRoster.map(o =>
-      o.id === opponentId ? { ...o, ability, item, teraType } : o
+      o.id === opponentId ? { ...o, ability, item } : o
     );
     return updateBattle(battle.id, { opponentRoster });
   }, [updateBattle]);
@@ -179,8 +203,66 @@ export function useBattleLogActions(
     return updateBattle(battle.id, { notes });
   }, [updateBattle]);
 
+  const setWeather = useCallback(async (battle: Battle, type: WeatherType | null): Promise<boolean> => {
+    const currentTurn = battle.turns.length;
+    return updateBattle(battle.id, {
+      fieldState: { ...battle.fieldState, weather: type ? { type, setOnTurn: currentTurn } : undefined },
+    });
+  }, [updateBattle]);
+
+  const setTerrain = useCallback(async (battle: Battle, type: TerrainType | null): Promise<boolean> => {
+    const currentTurn = battle.turns.length;
+    return updateBattle(battle.id, {
+      fieldState: { ...battle.fieldState, terrain: type ? { type, setOnTurn: currentTurn } : undefined },
+    });
+  }, [updateBattle]);
+
+  const updateSideConditions = useCallback((battle: Battle, side: BattleSide, next: SideConditions) => {
+    const key = side === 'player' ? 'playerSide' : 'opponentSide';
+    return updateBattle(battle.id, { fieldState: { ...battle.fieldState, [key]: next } });
+  }, [updateBattle]);
+
+  const sideConditionsFor = (battle: Battle, side: BattleSide): SideConditions =>
+    side === 'player' ? battle.fieldState.playerSide : battle.fieldState.opponentSide;
+
+  const toggleTurnCondition = useCallback(async (
+    battle: Battle,
+    side: BattleSide,
+    key: TurnTrackedCondition
+  ): Promise<boolean> => {
+    const currentTurn = battle.turns.length;
+    const conditions = sideConditionsFor(battle, side);
+    const next: SideConditions = {
+      ...conditions,
+      [key]: conditions[key] != null ? undefined : currentTurn,
+    };
+    return updateSideConditions(battle, side, next);
+  }, [updateSideConditions]);
+
+  const toggleBooleanHazard = useCallback(async (
+    battle: Battle,
+    side: BattleSide,
+    key: BooleanHazard
+  ): Promise<boolean> => {
+    const conditions = sideConditionsFor(battle, side);
+    const next: SideConditions = { ...conditions, [key]: conditions[key] ? undefined : true };
+    return updateSideConditions(battle, side, next);
+  }, [updateSideConditions]);
+
+  const setStackableHazard = useCallback(async (
+    battle: Battle,
+    side: BattleSide,
+    key: StackableHazard,
+    layers: number
+  ): Promise<boolean> => {
+    const conditions = sideConditionsFor(battle, side);
+    const next: SideConditions = { ...conditions, [key]: layers > 0 ? layers : undefined };
+    return updateSideConditions(battle, side, next);
+  }, [updateSideConditions]);
+
   return {
     startBattle,
+    toggleBrought,
     addOpponentPokemon,
     updateOpponentMoveTags,
     addOpponentMove,
@@ -192,5 +274,10 @@ export function useBattleLogActions(
     undoLastAction,
     setResult,
     setNotes,
+    setWeather,
+    setTerrain,
+    toggleTurnCondition,
+    toggleBooleanHazard,
+    setStackableHazard,
   };
 }

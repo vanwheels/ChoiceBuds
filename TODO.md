@@ -5,72 +5,44 @@ in a `Why:` line only when it's not obvious from the task itself.
 
 ## In progress / up next
 
-- **Champions data-correctness audit (part 2)** (started 2026-07-06): the
-  balance-patch fix covered what we'd found so far, but our PokeAPI-sourced
-  data/calc formulas almost certainly have more Champions-specific gaps we
-  haven't checked yet. Breaking this down by who can actually verify what:
-
-  **Resolved (2026-07-06):**
-  - Stat Point caps confirmed directly in-game by the user: **max 32 per
-    stat, 66 total across all six.** The per-stat 0-32 clamp was already
-    correctly enforced in `CalcStatRows.tsx`; added a soft 66-total warning
-    there (red text, non-blocking - matches the Calc's existing free-form-
-    sandbox philosophy) and updated `useDamageCalc.ts`'s `spToEv` comment
-    from "unconfirmed assumption" to confirmed.
-  - Movepool changes: the Reddit thread lead (r/stunfisk "Some movepool
-    changes in Champions Version 1.1") was processed - user provided
-    screenshots directly since automated fetching was blocked. Added to
-    `config/championsMovepoolChanges.ts` (renamed from
-    `championsMovepoolAdditions.ts` since it now handles removals too):
-    Sceptile/Scolipede/Pyroar/Barbaracle gaining moves, Scolipede/
-    Annihilape/Grimmsnarl/Scrafty/Overqwil/Metagross/Pyroar/Staraptor/
-    Mawile/Malamar losing moves. One entry (Grimmsnarl "loses False
-    Surrender") was left out - not a recognized move in any known game,
-    likely a post error, not encoded without corroboration. The community
-    spreadsheet lead is still unprocessed (see below).
-
-  **Still needs the user (in-game access, or the spreadsheet lead):**
-  - Anything noticed live during play that doesn't match what the app
-    shows - exactly how the Make It Rain gap was originally caught.
-  - The community Google Sheet of full Champions movepools (still
-    unprocessed - not a diff, needs manual cross-referencing against
-    PokeAPI's mainline data per species):
-    https://docs.google.com/spreadsheets/d/1DeXjzohTUdKNERu6dsHsnznneva8MDJjglI3lqDLgm4
-
-  **Self-serve (research only, no game access needed)** - Claude can pick
-  these up directly:
-  - Item mechanics - only the item *list* has been checked so far (which
-    items exist), never whether any existing item's actual behavior
-    differs in Champions (Life Orb recoil %, Choice item locking, etc.)
-  - Whether the ability-changes list (currently just Healer + Unseen Fist)
-    is actually exhaustive, or just what's been noticed/documented so far
-  - Core formula pieces not yet double-checked: crit-hit mechanics, the
-    type effectiveness chart itself (the "extremely/mostly ineffective"
-    4x/0.25x labeling change is presentation-only and already fine, but the
-    underlying chart wasn't independently re-verified)
-  - Patch notes going forward - v1.0.3/v1.1.0 were bugfixes/new-Pokemon
-    only, no further move rebalancing, but this needs periodic re-checking
-    since the game is clearly still being patched (Serebii's
-    `pokemonchampions/patch.shtml`)
-
-- **Move flag tags (Sound/Bullet/etc.)** - Champions added visible tags on
-  moves (e.g. `[Sound]`, `[Bullet]`) so their interactions with abilities
-  like Soundproof/Bulletproof/Overcoat are clear at a glance. Our `MoveData`
-  type doesn't store move flags at all right now - nothing needed them
-  before. Rough shape: add a `flags` field to `MoveData`, populate it from
-  PokeAPI's move response in `fetchMoveData` (PokeAPI already returns this,
-  just never parsed), a small config for which flags Champions actually
-  surfaces (confirm exactly which ones in-game), and a small badge/tag UI
-  on move displays.
+- **RoiDadadou spreadsheet - reliability is mixed, tab by tab**: got direct
+  sheet access via its CSV export endpoint (19 tabs total). Two tabs
+  processed and trusted (`Pokémon Ch.` - see Done below); one tab actively
+  distrusted and dropped (`Moves Deleted` - conflated roster gaps with real
+  move deletions, flagged real moves like Rage Fist/Make It Rain as "not in
+  Champions"); one tab fetched but superseded by a better one
+  (`Learnset` - a raw per-species dump, not a diff; `Pokémon Ch.` has the
+  same info pre-diffed against SV/historical movepools, so `Learnset` isn't
+  needed). The user's own read on the source overall: "the more we look at
+  this spreadsheet the less reliable I am finding it" - so still worth
+  spot-checking any single entry against Serebii/Bulbapedia/in-game play
+  if something looks off, rather than trusting it blindly just because one
+  tab (`Pokémon Ch.`) held up well. Untouched tabs if ever needed: `Items`,
+  `Ability Ch.`, `Mégas`, `New Moves`, `New Abilities`, `Tierlist`, `Dex
+  Entries`, `Update Status`.
 
 - **Battle Logger - beyond the core MVP** (see plan at
   `C:\Users\vanny\.claude\plans\recursive-singing-graham.md` for full
-  context): field/side-condition auto-tracking with turn countdowns
-  (Tailwind, screens, weather, hazards), Bo3 "set" grouping across games,
-  post-battle damage-calc review (step through a logged battle's turns
-  against the Calc), and the stat-inference idea (guess a foe's likely
-  nature/EV spread from observed damage ranges instead of manual entry -
-  needs Limitless/championsbattledata-sourced per-species data first).
+  context): field/side-condition tracking is done, battlefield redesign
+  Stage 1 is done (see Done below). **Stage 2 is next** (planned in full in
+  the plan file, not yet built): replace `ActionEntryBar.tsx`'s dropdown
+  entirely with click-mon -> click-move -> click-target logging on the
+  `Battlefield.tsx` component; add a `target` field to `MoveData` (PokeAPI
+  has it, unparsed today - same story as the move-flags feature); Protect-
+  fail prompts only on a Pokemon's 2nd+ consecutive protect-family move in
+  a row, never the first; lightweight outcome tags (Missed/Failed/No
+  Effect/Blocked by Protect/Blocked by Ability) instead of a rules engine;
+  turn-phase categorization (switch -> mega -> move) so the turn log always
+  displays in real-game resolution order regardless of tap order; weather/
+  terrain source-aware duration confidence (fixed 5 turns if set by a Mega,
+  an uncertainty marker if set by a non-Mega ability trigger since a Heat/
+  Damp/Icy/Smooth Rock could extend it to 8 and isn't knowable up front).
+  Still open beyond Stage 2: Bo3 "set" grouping across games, post-battle
+  damage-calc review (step through a logged battle's turns against the
+  Calc), and the stat-inference idea (needs Limitless/championsbattledata-
+  sourced per-species data first). Also noted but not built: synthesizing
+  turn-log entries when a field condition changes (the countdown display
+  already shows "set N turns ago" implicitly, so this is a nice-to-have).
 - Everything else from the original 9-item roadmap discussion not yet
   built: general UI polish (#1), cross-device sync via file-sync-folder
   (#2), further Calc UI cleanup (#3), Settings page (#4), Limitless usage
@@ -79,6 +51,183 @@ in a `Why:` line only when it's not obvious from the task itself.
 
 ## Done
 
+- **Battle Logger: sprite bug fix + battlefield redesign Stage 1**
+  (2026-07-07): Basculegion's sprite wasn't loading in the Battle Logger -
+  root cause was that `PickBroughtFourGrid.tsx`/`PlayerFieldPanel.tsx` were
+  the only places in the app trusting a raw, copied `spriteUrl` snapshot
+  field instead of recomputing it live via `getPixelSpriteUrl()` like
+  `PokemonCard.tsx`/`TeamCard.tsx` already do; this one Pokemon's stored
+  value was a stale, malformed URL from an older version of the fetch code
+  (`.../902-male.png`, a file that doesn't exist - the real one is
+  `902.png`, no suffix). Fixed generally (recompute live from
+  `pokedexNumber`/`species`/`gender`), not patched as a one-off, so any
+  future staleness of this kind can't recur the same way.
+
+  Then a full battlefield layout redesign (Stage 1 of 2 - see the plan
+  file for Stage 2, not yet built): both full 6-Pokemon rosters now show
+  vertically (`TeamRosterColumn.tsx`, shared/parameterized, replacing the
+  old 2-at-a-time grid); the separate "Pick 4 to Bring" screen is gone -
+  `StartBattleFlow.tsx` now goes straight from team selection into the
+  battle with all 6 snapshotted (`Battle.playerRoster`, renamed from the
+  old fixed-4 `broughtFour`), and which 4 are actually brought is chosen
+  live from the roster column (new `broughtIds` field + `toggleBrought`
+  mutation, capped at 4). Fixed a real bug in the process: the opponent
+  roster had no cap at all - now hard-capped at 6
+  (`MAX_OPPONENT_ROSTER_SIZE`), enforced both in the mutation and the "+
+  Add" button. New `Battlefield.tsx` shows just the 4 currently-active
+  combatants, opponent 2 on top / player 2 on bottom, matching the user's
+  own prototype layout; the turn log now sits below the whole battlefield
+  row instead of squeezed between the two rosters. `OpponentInfoTags.tsx`
+  dropped the `teraType` input entirely (removed from the type too, not
+  left as a dead field) - not reliably discoverable mid-battle, unlike
+  moves/ability/item which stay. Old persisted battles (pre-redesign, with
+  the legacy `broughtFour` shape) are migrated at the read boundary in
+  `useBattles.ts` rather than breaking - verified live against a real
+  legacy in-progress battle, which loaded correctly with all 4 of its old
+  brought Pokemon pre-checked. Also verified live: brought-cap at 4 (5th
+  Pokemon on a 5-mon team correctly stayed un-bringable), opponent cap at
+  6 (add button disappears at 6/6), and Basculegion's sprite rendering
+  correctly in the new roster column and battlefield both.
+- **Battle Logger: field/side-condition tracking** (2026-07-07): weather
+  (Rain/Sun/Sandstorm/Snow) and terrain (Electric/Grassy/Misty/Psychic) are
+  field-wide, one active at a time per group; screens (Reflect/Light
+  Screen/Aurora Veil), Tailwind, Safeguard, and Mist are per-side with a
+  turn countdown computed from standard duration (Tailwind 4, others 5) -
+  a helpful default only, always manually clearable since real games can
+  extend (Light Clay, weather rocks) or end things early (Rapid Spin,
+  Defog). Hazards (Stealth Rock, Sticky Web, Spikes 0-3, Toxic Spikes 0-2)
+  have no countdown since they persist untimed. New
+  `types/pokemon.ts` `FieldState`/`SideConditions` on `Battle` (single
+  current-state snapshot, same pattern as `playerActiveIds`), new
+  `config/fieldConditions.ts` (durations/labels/countdown calc, reuses
+  `pokemonTheme.ts`'s `getTypeTheme()` for weather/terrain colors instead
+  of a new palette), 5 new mutations in `useBattleLogActions.ts`, and two
+  new components (`FieldWeatherBar.tsx`, `SideConditionsRow.tsx` - the
+  latter shared between `PlayerFieldPanel.tsx`/`OpponentFieldPanel.tsx`).
+  Backfills `fieldState` for battles saved before this existed
+  (`useBattles.ts`'s read boundary) so old records don't crash the new UI.
+  Verified live: countdown decrements correctly turn-by-turn (Rain 5->2,
+  Tailwind 4->1 after 3 "Next Turn" clicks), manual clear works at any
+  count, hazard stacking cycles 0-max correctly, and all state survives a
+  tab-switch-away-and-back (confirms persistence through the existing
+  write-through, not just component state).
+- **Full movepool diff processed from the "Pokémon Ch." tab** (2026-07-07):
+  the 227-row `Learnset` tab turned out to be a raw per-species dump, not a
+  diff - the user redirected to `Pokémon Ch.` instead, which has the same
+  ~226 species pre-diffed against their Scarlet/Violet and historical
+  movepools (Additions/Returns/Deletions columns). Fetched directly via the
+  sheet's CSV export endpoint (`gviz/tq?tqx=out:csv&sheet=...`, bypassing
+  WebFetch's AI-summarization layer which had already silently truncated
+  the `Learnset` tab once - not reliable for bulk tabular data) and parsed
+  programmatically (proper quoted-CSV parsing, since several cells have
+  embedded newlines). `championsMovepoolChanges.ts` now covers 182 species
+  with additions and 138 with removals, replacing the ~15-species table
+  sourced from a Reddit thread. Several of that thread's claims didn't
+  survive the cross-check and were dropped: Scolipede "gains Pounce",
+  Barbaracle "gains Chilling Water", Scrafty/Staraptor "loses Parting
+  Shot/Knock Off", Scolipede/Overqwil "loses Mortal Spin", Malamar "loses
+  Octolock", Mawile "loses Dazzling Gleam" - none corroborated by this more
+  comprehensive source. Also fixed a typo inherited from that table:
+  "trailblazer" isn't a real move slug (it's "Trailblaze") - would have
+  silently never matched. Full reasoning and the exact dropped claims are
+  in the config file's header comment.
+- **Mega Evolution list confirmed correct; Tera Blast doesn't exist in
+  Champions at all** (2026-07-06): follow-up to the spreadsheet cross-check
+  above. The user confirmed in-game that all the Mega Evolutions currently
+  in `config/megaEvolution.ts` are valid - the spreadsheet's "doesn't work
+  as of now" list for those species was stale, no code change needed.
+  Separately, Tera Blast is confirmed to not exist in Pokemon Champions at
+  all (not a per-species removal - a game-wide absence), which resolves
+  the "227-row movepool diff, mostly Tera Blast" lead without needing to
+  process most of it: `championsMovepoolChanges.ts` now unconditionally
+  strips `tera-blast` from every species' learnset via a new
+  `GLOBALLY_REMOVED_MOVES` list (PokeAPI's mainline Scarlet/Violet data
+  includes it as a universal TM move for nearly every species). Whatever
+  remains in that 227-row diff beyond Tera Blast is still an open lead,
+  see below.
+- **Move flag tags (Sound/Bullet/Punch/etc.)** (2026-07-06): Champions
+  displays visible tags on moves so interactions with abilities like
+  Soundproof/Bulletproof/Strong Jaw are clear at a glance. Checked first
+  and confirmed PokeAPI does *not* actually expose these flags (an earlier
+  TODO note assumed it did - wrong). Used `@smogon/calc`'s bundled Gen 9
+  Showdown movedex instead, which does track exactly 8 real flags (contact,
+  bite, sound, punch, bullet, pulse, slicing, wind) - extracted to a static
+  `config/moveFlagsData.generated.ts` via a one-off codegen script
+  (`scripts/generateMoveFlags.ts`, rerun with `npx tsx` if the package's
+  bundled data ever changes) rather than importing `@smogon/calc` at
+  runtime, which would've pulled its ~500KB bundle back into the main
+  chunk (it's deliberately lazy-loaded only for the Calc tab). New
+  `config/moveFlags.ts` applies flags at the same read-boundary pattern as
+  the Champions overrides (`useGameData.ts`), added `flags: string[]` to
+  `MoveData`, and a small themed badge row in `TooltipContent.tsx` (colors
+  in `pokemonTheme.ts`). Verified live: Dark Pulse correctly shows a
+  "Pulse" tag, Iron Head (contact-only) shows none. **Contact is
+  deliberately excluded** from the visible set (too common to be a useful
+  callout) and the other 7 are shown as a reasonable default - which flags
+  Champions' own UI actually surfaces hasn't been confirmed in-game yet,
+  flagged as an assumption in the config file's header comment.
+- **Champions data-correctness audit (part 3 - "Data Comparative Champions"
+  spreadsheet cross-check)** (2026-07-06): the user found and shared a much
+  higher-quality source than Serebii/Bulbapedia's summaries - a community
+  spreadsheet by RoiDadadou cross-referencing datamined values (Kaphotics,
+  Anubis) and battle-mechanics research (DaWoblefet); see README Credits.
+  Cross-checked it against everything already in `championsMoveOverrides.ts`
+  - all previously-encoded values matched (including Dire Claw, which the
+  user separately asked about and turned out to already be correct: 30%
+  status chance, unchanged power/accuracy). The spreadsheet also surfaced
+  moves we were missing entirely: **added overrides** for Gear Grind,
+  Anchor Shot, Revelation Dance, Dragon Hammer, Snipe Shot, Bolt Beak,
+  Fishious Rend, Astral Barrage, Triple Dive, Hyper Drill, Blood Moon
+  (power/accuracy changes), and Clangorous Soul (now never misses -
+  `accuracy: null`). **Added missing PP exceptions**: Purify (20->8), Shell
+  Trap (->12), Obstruct (->8), Spin Out (->12), Nihil Light (->8) - these
+  don't fit the standard retiering formula, same category as the
+  Protect-line exceptions already handled. **Found and fixed a real bug in
+  the just-shipped move-flag tags feature**: Dire Claw/Crush Claw/Shadow
+  Claw/Dragon Claw are reclassified as slicing moves in Champions (Sharpness-
+  boostable), but `@smogon/calc`'s mainline-sourced data doesn't know that,
+  so the generated flags table was missing `slicing` for all 4 - added a
+  small `CHAMPIONS_ADDED_FLAGS` correction layer in `config/moveFlags.ts`.
+  All new values spot-verified via a scratch script (see the no-test-runner
+  convention). **Rejected**: the spreadsheet's "15 vs 16 damage rolls"
+  claim - the user flagged this as unconfirmed themselves, and separately
+  noticed Pokemon Showdown's own Champions-mode calc still shows 16 rolls,
+  a second independent signal the claim is stale/wrong. Not encoding it.
+  **Also rejected**: the `Moves Deleted` tab entirely - it conflates "no
+  current Pokemon can learn this move" (a roster gap) with the move not
+  existing, and flags moves we know are real (Rage Fist, Make It Rain) as
+  absent. Two things surfaced that needed a decision, now resolved: the
+  Mega Evolution species list was confirmed valid by the user in-game (no
+  code change needed), and Tera Blast's removal turned out to be a simple
+  blanket rule, not a per-species diff (see Done entry below). See the
+  in-progress section for the spreadsheet's overall reliability downgrade
+  and the still-open `Learnset` tab lead.
+- **Champions data-correctness audit (part 2)** (2026-07-06): follow-up to
+  the balance-patch fix below, checking for further Champions-specific
+  gaps. Stat Points confirmed by the user directly in-game: max 32/stat, 66
+  total (per-stat clamp already existed in `CalcStatRows.tsx`; added a soft
+  66-total warning, updated `useDamageCalc.ts`'s `spToEv` comment from
+  "unconfirmed" to confirmed). Movepool changes from a Reddit thread
+  (r/stunfisk "Some movepool changes in Champions Version 1.1", via
+  user-provided screenshots since reddit.com fetching is blocked) added to
+  `config/championsMovepoolChanges.ts` (renamed from
+  `championsMovepoolAdditions.ts`, now handles removals too): 5 species
+  gaining moves, 10 losing them (one claimed removal, Grimmsnarl "loses
+  False Surrender," excluded as an unrecognized/likely-erroneous move
+  name). Self-serve research pass (no game access needed) confirmed via
+  Bulbapedia's dedicated changes section and Serebii's patch history: the
+  ability-changes list (Healer + Unseen Fist) is exhaustive; crit-hit
+  mechanics and the type chart are unchanged from mainline (only display
+  labels changed); no dedicated "changed items" page exists (unlike moves/
+  abilities/status conditions), and a shared Showdown replay's Life Orb
+  recoil (~10%, matching mainline) backs that up; patch history through
+  v1.1.0 (2026-06-17) has no further balance changes beyond what's already
+  encoded. Two leads remain open, blocked on the user: the community
+  Google Sheet of full Champions movepools (not a diff - needs manual
+  cross-referencing against PokeAPI's mainline data per species:
+  https://docs.google.com/spreadsheets/d/1DeXjzohTUdKNERu6dsHsnznneva8MDJjglI3lqDLgm4)
+  and anything noticed live during play that doesn't match the app (how
+  the original Make It Rain gap was caught).
 - **Champions balance-patch data correctness fix** (2026-07-06): PokeAPI
   (our only game-data source) models mainline Scarlet/Violet with no concept
   of Pokemon Champions' own balance patches - caught concretely when Make It

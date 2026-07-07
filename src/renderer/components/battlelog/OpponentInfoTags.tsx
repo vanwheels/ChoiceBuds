@@ -17,11 +17,10 @@ interface OpponentInfoTagsProps {
 export default function OpponentInfoTags({ battle, opponent, battleLogActions }: OpponentInfoTagsProps) {
   const [ability, setAbility] = useState(opponent.ability || '');
   const [item, setItem] = useState(opponent.item || '');
-  const [teraType, setTeraType] = useState(opponent.teraType || '');
   const [newMove, setNewMove] = useState('');
 
   const commitTags = () => {
-    battleLogActions.updateOpponentMoveTags(battle, opponent.id, ability || undefined, item || undefined, teraType || undefined);
+    battleLogActions.updateOpponentMoveTags(battle, opponent.id, ability || undefined, item || undefined);
   };
 
   const submitMove = () => {
@@ -55,7 +54,7 @@ export default function OpponentInfoTags({ battle, opponent, battleLogActions }:
         placeholder="+ move seen"
         className="w-full px-1.5 py-0.5 text-[10px] bg-gray-900 border border-gray-700 rounded text-gray-200 outline-none focus:border-blue-500"
       />
-      <div className="grid grid-cols-3 gap-1">
+      <div className="grid grid-cols-2 gap-1">
         <input
           type="text"
           value={ability}
@@ -70,14 +69,6 @@ export default function OpponentInfoTags({ battle, opponent, battleLogActions }:
           onChange={e => setItem(e.target.value)}
           onBlur={commitTags}
           placeholder="item"
-          className="px-1.5 py-0.5 text-[10px] bg-gray-900 border border-gray-700 rounded text-gray-200 outline-none focus:border-blue-500"
-        />
-        <input
-          type="text"
-          value={teraType}
-          onChange={e => setTeraType(e.target.value)}
-          onBlur={commitTags}
-          placeholder="tera"
           className="px-1.5 py-0.5 text-[10px] bg-gray-900 border border-gray-700 rounded text-gray-200 outline-none focus:border-blue-500"
         />
       </div>

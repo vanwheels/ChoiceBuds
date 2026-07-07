@@ -102,6 +102,7 @@ export async function fetchMoveData(normalizedName: string): Promise<MoveData | 
     pp: data.pp || 0,
     accuracy: data.accuracy,
     description: extractEffectDescription(data.effect_entries, 'No description available'),
+    flags: [], // populated at the read boundary in useGameData.ts - see config/moveFlags.ts
     cachedAt: now,
     expiresAt: now + CACHE_EXPIRATION_MS,
   };

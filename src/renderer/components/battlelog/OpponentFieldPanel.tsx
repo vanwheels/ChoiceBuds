@@ -1,6 +1,8 @@
 /**
- * OpponentFieldPanel.tsx - Opponent Roster, Built Incrementally
- * Variable-length over battle.opponentRoster (starts empty). Reuses
+ * OpponentFieldPanel.tsx - Opponent Roster, Built Incrementally (Capped at 6)
+ * Thin wrapper over TeamRosterColumn - no "brought" concept here (every
+ * revealed opponent Pokemon is by definition one they've used), just
+ * active/fainted plus the per-mon OpponentInfoTags scouting notes. Reuses
  * SpeciesPickerCard as-is for the "+ Add opponent Pokemon" quick-add, same
  * open/close toggle TeamCard's own add-slot button already uses.
  */
@@ -8,9 +10,11 @@
 import { useState } from 'react';
 import type { SpeciesRosterEntry, Battle } from '../../types/pokemon';
 import type { UseBattleLogActionsReturn } from '../../hooks/useBattleLogActions';
+import { MAX_OPPONENT_ROSTER_SIZE } from '../../hooks/useBattleLogActions';
 import { toRegulationId } from '../../utils/pokemonRules';
 import SpeciesPickerCard from '../SpeciesPickerCard';
 import OpponentInfoTags from './OpponentInfoTags';
+import TeamRosterColumn, { type RosterRowData } from './TeamRosterColumn';
 
 interface OpponentFieldPanelProps {
   battle: Battle;
@@ -21,6 +25,7 @@ interface OpponentFieldPanelProps {
 
 export default function OpponentFieldPanel({ battle, battleLogActions, roster, resolveSprite }: OpponentFieldPanelProps) {
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const isFull = battle.opponentRoster.length >= MAX_OPPONENT_ROSTER_SIZE;
 
   const toggleActive = (id: string) => {
     const isActive = battle.opponentActiveIds.includes(id);
@@ -30,8 +35,10 @@ export default function OpponentFieldPanel({ battle, battleLogActions, roster, r
     battleLogActions.setActive(battle, 'opponent', next);
   };
 
-  const toggleFainted = (id: string, currentlyFainted: boolean) => {
-    battleLogActions.setFainted(battle, 'opponent', id, !currentlyFainted);
+  const toggleFainted = (id: string) => {
+    const opponent = battle.opponentRoster.find(o => o.id === id);
+    if (!opponent) return;
+    battleLogActions.setFainted(battle, 'opponent', id, !opponent.fainted);
   };
 
   const handleAddSpecies = (species: SpeciesRosterEntry) => {
@@ -39,46 +46,27 @@ export default function OpponentFieldPanel({ battle, battleLogActions, roster, r
     battleLogActions.addOpponentPokemon(battle, species);
   };
 
+  const rows: RosterRowData[] = battle.opponentRoster.map(o => ({
+    id: o.id,
+    species: o.species,
+    displayName: o.species,
+    spriteUrl: o.spriteUrl,
+    isActive: battle.opponentActiveIds.includes(o.id),
+    isFainted: o.fainted,
+    extra: <OpponentInfoTags battle={battle} opponent={o} battleLogActions={battleLogActions} />,
+  }));
+
   return (
-    <div className="flex flex-col gap-2">
-      <h3 className="text-xs font-bold text-red-400 uppercase tracking-wide">Opponent</h3>
-      <div className="flex flex-col gap-2">
-        {battle.opponentRoster.map(o => {
-          const isActive = battle.opponentActiveIds.includes(o.id);
-
-          return (
-            <div
-              key={o.id}
-              className={`p-2 rounded-lg border-2 transition-colors ${
-                o.fainted ? 'border-gray-800 bg-gray-900/40 opacity-40' : isActive ? 'border-red-500 bg-red-600/20' : 'border-gray-700 bg-gray-800'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => toggleActive(o.id)}
-                  disabled={o.fainted}
-                  className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer disabled:cursor-not-allowed"
-                  title={isActive ? 'Active - click to bench' : 'Click to mark active'}
-                >
-                  <img src={resolveSprite(o.spriteUrl)} alt={o.species} className="w-10 h-10 object-contain [image-rendering:pixelated] shrink-0" />
-                  <span className="text-xs text-gray-100 truncate">{o.species}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => toggleFainted(o.id, o.fainted)}
-                  title={o.fainted ? 'Fainted - click to revive' : 'Mark fainted'}
-                  className="text-sm shrink-0 opacity-70 hover:opacity-100 cursor-pointer"
-                >
-                  💀
-                </button>
-              </div>
-              <OpponentInfoTags battle={battle} opponent={o} battleLogActions={battleLogActions} />
-            </div>
-          );
-        })}
-
-        {isAddOpen ? (
+    <TeamRosterColumn
+      title={`Opponent (${battle.opponentRoster.length}/${MAX_OPPONENT_ROSTER_SIZE})`}
+      titleColorClass="text-red-400"
+      activeColorClass="border-red-500 bg-red-600/20"
+      rows={rows}
+      resolveSprite={resolveSprite}
+      onRowClick={toggleActive}
+      onToggleFainted={toggleFainted}
+      addSlot={
+        isFull ? null : isAddOpen ? (
           <SpeciesPickerCard
             roster={roster}
             rulesetId={toRegulationId(battle.format)}
@@ -94,8 +82,8 @@ export default function OpponentFieldPanel({ battle, battleLogActions, roster, r
           >
             + Add Opponent Pokemon
           </button>
-        )}
-      </div>
-    </div>
+        )
+      }
+    />
   );
 }

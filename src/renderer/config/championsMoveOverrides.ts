@@ -7,6 +7,12 @@
  *   https://www.serebii.net/pokemonchampions/updatedattacks.shtml
  *   https://bulbapedia.bulbagarden.net/wiki/Pokémon_Champions
  *     ("Changes from Scarlet and Violet and Generation VIII")
+ *   "Data Comparative Champions" - a community spreadsheet by RoiDadadou
+ *     (Discord: roidadadou), cross-referencing datamined values from
+ *     Kaphotics and Anubis plus battle-mechanics research from DaWoblefet.
+ *     Provided directly by the user via screenshots (last updated by its
+ *     author 2026-06-16) - not fetched live, same as the Reddit movepool
+ *     thread in championsMovepoolChanges.ts.
  * Applied at the READ boundary (useGameData.ts's getCachedMove/getMoveData),
  * not at fetch time - so it's self-healing against move data already sitting
  * in a user's 30-day game-data-cache.json, and any future correction here
@@ -64,6 +70,38 @@ const CHAMPIONS_MOVE_OVERRIDES: Record<string, ChampionsMoveOverride> = {
   'crush-claw': { description: 'Considered a slicing move.' },
   'shadow-claw': { description: 'Considered a slicing move. High critical-hit ratio.' },
   'dragon-claw': { description: 'Considered a slicing move.' },
+
+  /**
+   * LOWER CONFIDENCE - the following 11 entries come only from the
+   * spreadsheet's "Move Ch." tab, with no Serebii/Bulbapedia corroboration
+   * (unlike everything above). The user has since found the same
+   * spreadsheet's "Moves Deleted" tab unreliable - it flagged these same
+   * moves (plus several others we know are real, like Rage Fist and Make
+   * It Rain) as "not in Champions," which turned out to conflate "no
+   * current Pokemon has access to this move" (a roster gap - many of
+   * these are signature moves for species not yet in the game, e.g.
+   * Blood Moon/Ursaluna, Dragon Hammer/Zygarde) with the move itself not
+   * existing. That means these 11 values are currently unverifiable in
+   * practice (no Pokemon can use them yet to check against), not
+   * necessarily wrong - keep them since they're harmless if unused and
+   * ready for whenever the roster gap closes, but don't treat them with
+   * the same confidence as the corroborated entries above.
+   */
+  'gear-grind': { power: 60, accuracy: 90 },
+  'anchor-shot': { power: 90 },
+  'revelation-dance': { power: 100 },
+  'dragon-hammer': { power: 100 },
+  'snipe-shot': { power: 85 },
+  'bolt-beak': { power: 80 },
+  'fishious-rend': { power: 80 },
+  'astral-barrage': { power: 110 },
+  'triple-dive': { power: 35 },
+  'hyper-drill': { power: 120 },
+  'blood-moon': { power: 130 },
+  'clangorous-soul': {
+    accuracy: null,
+    description: "Boosts the user's Attack, Sp. Atk, and Speed by 1 stage, at the cost of 1/3 of its max HP. Never misses.",
+  },
 };
 
 /**
@@ -80,6 +118,11 @@ const CHAMPIONS_PP_EXCEPTIONS: Record<string, number> = {
   'night-slash': 20,
   'sandstorm': 8,
   'snowscape': 8,
+  'purify': 8,
+  'shell-trap': 12,
+  'obstruct': 8,
+  'spin-out': 12,
+  'nihil-light': 8,
 };
 
 export function getChampionsPP(moveName: string, basePP: number): number {

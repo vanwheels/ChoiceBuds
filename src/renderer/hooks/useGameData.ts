@@ -18,6 +18,7 @@ import {
 } from '../services/pokeapiService';
 import { readCacheEntry, runCachedFetch, withCacheEntry, createEmptyGameDataCache } from '../utils/cacheManager';
 import { applyChampionsMoveOverride } from '../config/championsMoveOverrides';
+import { applyMoveFlags } from '../config/moveFlags';
 import { applyChampionsAbilityOverride } from '../config/championsAbilityOverrides';
 import { applyChampionsMovepoolChanges } from '../config/championsMovepoolChanges';
 
@@ -97,7 +98,7 @@ export function useGameData(): UseGameDataReturn {
   // config/championsMoveOverrides.ts.
   const getCachedMove = useCallback((moveName: string): MoveData | null => {
     const move = readCacheEntry(cache?.moves, normalizeNameForAPI(moveName));
-    return move ? applyChampionsMoveOverride(move) : null;
+    return move ? applyMoveFlags(applyChampionsMoveOverride(move)) : null;
   }, [cache]);
 
   const getCachedItem = useCallback((itemName: string): ItemData | null =>
@@ -120,7 +121,7 @@ export function useGameData(): UseGameDataReturn {
     const normalizedName = normalizeNameForAPI(moveName);
     const fresh = await runCachedFetch(setCache, setIsLoading, setError, 'moves', normalizedName,
       () => fetchMoveData(normalizedName), `Failed to fetch move "${moveName}"`);
-    return fresh ? applyChampionsMoveOverride(fresh) : null;
+    return fresh ? applyMoveFlags(applyChampionsMoveOverride(fresh)) : null;
   }, [getCachedMove]);
 
   const getItemData = useCallback(async (itemName: string): Promise<ItemData | null> => {

@@ -27,19 +27,20 @@ export default function ActionEntryBar({ battle, battleLogActions }: ActionEntry
   const [targetKey, setTargetKey] = useState(''); // "side:pokemonId" or ''
   const [note, setNote] = useState('');
 
-  const actorOptions = side === 'player' ? battle.broughtFour : battle.opponentRoster;
+  const broughtRoster = battle.playerRoster.filter(p => battle.broughtIds.includes(p.id));
+  const actorOptions = side === 'player' ? broughtRoster : battle.opponentRoster;
   const actor = actorOptions.find(p => p.id === pokemonId);
   const actorMoves = actor && 'moves' in actor ? actor.moves : [];
 
   const allTargets = [
-    ...battle.broughtFour.map(p => ({ side: 'player' as const, id: p.id })),
+    ...broughtRoster.map(p => ({ side: 'player' as const, id: p.id })),
     ...battle.opponentRoster.map(p => ({ side: 'opponent' as const, id: p.id })),
   ];
 
   const handleSideChange = (nextSide: BattleSide) => {
     setSide(nextSide);
     const defaultId = nextSide === 'player' ? battle.playerActiveIds[0] : battle.opponentActiveIds[0];
-    setPokemonId(defaultId || (nextSide === 'player' ? battle.broughtFour[0]?.id : battle.opponentRoster[0]?.id) || '');
+    setPokemonId(defaultId || (nextSide === 'player' ? broughtRoster[0]?.id : battle.opponentRoster[0]?.id) || '');
   };
 
   const handleSubmit = () => {

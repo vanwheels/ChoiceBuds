@@ -109,3 +109,23 @@ export function getTypeTheme(type: string): TypeTheme {
   const normalizedType = type.toLowerCase().trim();
   return TYPE_THEMES[normalizedType] || DEFAULT_TYPE_THEME;
 }
+
+/**
+ * Move flag badge theme configuration (see config/moveFlags.ts) - one color
+ * per flag so Sound/Bullet/Punch/etc. tags stay visually distinct from each
+ * other and from type badges.
+ */
+export const MOVE_FLAG_THEMES: Record<string, TypeTheme> = {
+  contact: { bg: 'bg-zinc-400', text: 'text-gray-900' },
+  bite: { bg: 'bg-amber-600', text: 'text-white' },
+  sound: { bg: 'bg-fuchsia-500', text: 'text-white' },
+  punch: { bg: 'bg-rose-500', text: 'text-white' },
+  bullet: { bg: 'bg-stone-500', text: 'text-white' },
+  pulse: { bg: 'bg-violet-500', text: 'text-white' },
+  slicing: { bg: 'bg-slate-400', text: 'text-gray-900' },
+  wind: { bg: 'bg-teal-400', text: 'text-gray-900' },
+};
+
+export function getMoveFlagTheme(flag: string): TypeTheme {
+  return MOVE_FLAG_THEMES[flag] || DEFAULT_TYPE_THEME;
+}
