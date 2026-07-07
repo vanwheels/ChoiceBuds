@@ -1,9 +1,12 @@
 /**
- * FieldWeatherBar.tsx - Field-Wide Weather/Terrain Tracker
- * One button group each for weather and terrain, mutually exclusive within
- * each group (selecting a new one replaces, doesn't stack). Countdown is a
- * helpful default (see config/fieldConditions.ts) - clickable off at any
- * time, not auto-cleared, since real games can extend/shorten it.
+ * FieldWeatherBar.tsx - Overall Field-Wide Effects: Weather/Terrain/Trick Room
+ * Weather and terrain are each a button group, mutually exclusive within
+ * the group (selecting a new one replaces, doesn't stack); Trick Room is
+ * just an on/off toggle. Countdown is a helpful default (see
+ * config/fieldConditions.ts) - clickable off at any time, not
+ * auto-cleared, since real games can extend/shorten it. Lives in the
+ * top-right corner of Battlefield.tsx, alongside SideConditionsRow's
+ * per-side content on the left.
  *
  * Duration confidence: a Mega Evolution's ability-triggered weather/terrain
  * is always the fixed 5-turn duration (the Mega Stone occupies the item
@@ -11,6 +14,7 @@
  * trigger is uncertain (5 or 8 turns, depending on an unrevealed held
  * rock). The small "via Mega" chip is the one extra tap needed to record
  * that certainty - unchecked (the common case) shows the honest 5-8 range.
+ * Trick Room has no such ambiguity - it's always move-set, fixed 5 turns.
  */
 
 import type { Battle, WeatherType, TerrainType } from '../../types/pokemon';
@@ -38,7 +42,7 @@ function formatDuration(setOnTurn: number, currentTurn: number, wasMegaEvolved: 
 
 export default function FieldWeatherBar({ battle, battleLogActions }: FieldWeatherBarProps) {
   const currentTurn = battle.turns.length;
-  const { weather, terrain } = battle.fieldState;
+  const { weather, terrain, trickRoom } = battle.fieldState;
 
   const handleWeather = (type: WeatherType) => {
     battleLogActions.setWeather(battle, weather?.type === type ? null : type);
@@ -49,8 +53,8 @@ export default function FieldWeatherBar({ battle, battleLogActions }: FieldWeath
   };
 
   return (
-    <div className="flex flex-wrap gap-4 p-2 rounded-lg bg-gray-800 border border-gray-700">
-      <div className="flex items-center gap-1.5">
+    <div className="flex flex-col gap-1.5 p-2 rounded-lg bg-gray-800 border border-gray-700 w-full">
+      <div className="flex flex-wrap items-center gap-1.5">
         <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mr-1">Weather</span>
         {WEATHER_OPTIONS.map(type => {
           const isActive = weather?.type === type;
@@ -82,7 +86,7 @@ export default function FieldWeatherBar({ battle, battleLogActions }: FieldWeath
         )}
       </div>
 
-      <div className="flex items-center gap-1.5">
+      <div className="flex flex-wrap items-center gap-1.5">
         <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mr-1">Terrain</span>
         {TERRAIN_OPTIONS.map(type => {
           const isActive = terrain?.type === type;
@@ -112,6 +116,19 @@ export default function FieldWeatherBar({ battle, battleLogActions }: FieldWeath
             via Mega
           </button>
         )}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mr-1">Field</span>
+        <button
+          type="button"
+          onClick={() => battleLogActions.setTrickRoom(battle, !trickRoom)}
+          className={`px-2 py-0.5 text-[10px] font-semibold rounded-sm cursor-pointer transition-colors ${
+            trickRoom ? 'bg-pink-700 text-white' : 'bg-gray-900 text-gray-500 hover:text-gray-300'
+          }`}
+        >
+          Trick Room{trickRoom ? ` (${getRemainingTurns(trickRoom.setOnTurn, FIXED_DURATION, currentTurn)})` : ''}
+        </button>
       </div>
     </div>
   );

@@ -23,16 +23,23 @@ in a `Why:` line only when it's not obvious from the task itself.
 
 - **Battle Logger - beyond the core MVP**: field/side-condition tracking,
   battlefield redesign Stage 1, Stage 2's interactive click-to-log flow,
-  and the layout/drag-to-field/stat-stage-tracking follow-up are all done
-  (see Done below). Still open: Bo3 "set" grouping across games,
-  post-battle damage-calc review (step through a logged battle's turns
-  against the Calc), and the stat-inference idea (needs Limitless/
-  championsbattledata-sourced per-species data first). Also noted but not
-  built: synthesizing turn-log entries when a field condition changes (the
-  countdown display already shows remaining turns implicitly, so this is a
-  nice-to-have); generic lightweight outcome tags beyond Protect-fail
-  (Missed/No Effect/Blocked by Ability) - considered during Stage 2 design
-  but dropped as unrequested scope, could revisit if the Protect-fail chip
+  the layout/drag-to-field/stat-stage-tracking follow-up, and the mega/
+  reactive-ability/more-switch-in-abilities/field-effects-relocation pass
+  are all done (see Done below). **Next up**: status-condition tracking +
+  move-outcome chips (full paralysis, didn't wake up, flinch, hit-by-a-
+  status-move) - explicitly scoped as its own follow-up plan since it
+  needs a new status-condition data model (nothing tracks
+  paralysis/sleep/etc. yet) plus fetching PokeAPI's move `meta` data
+  (flinch_chance/ailment_chance) that nothing reads today. Also still
+  open: Bo3 "set" grouping across games, post-battle damage-calc review
+  (step through a logged battle's turns against the Calc), and the
+  stat-inference idea (needs Limitless/championsbattledata-sourced
+  per-species data first). Also noted but not built: synthesizing
+  turn-log entries when a field condition changes (the countdown display
+  already shows remaining turns implicitly, so this is a nice-to-have);
+  generic lightweight outcome tags beyond Protect-fail (Missed/No
+  Effect/Blocked by Ability) - considered during Stage 2 design but
+  dropped as unrequested scope, could revisit if the Protect-fail chip
   pattern proves useful enough to generalize; Download's ability effect
   (deliberately excluded from the switch-in effects table - its target
   stat depends on comparing the opposing side's average Def/SpDef, needs
@@ -44,6 +51,61 @@ in a `Why:` line only when it's not obvious from the task itself.
   the Battle Logger producing real win/loss data).
 
 ## Done
+
+- **Battle Logger: Mega redesign, reactive abilities, more switch-in
+  effects, field-effects relocation** (2026-07-07): the Mega button is now
+  hidden entirely for non-mega-capable species (`config/megaEvolution.ts`'s
+  new `getMegaFormsForSpecies`), resolves automatically from the holder's
+  known item when unambiguous, and only shows a small X/Y picker for the
+  genuinely ambiguous case (Charizard/Raichu, item not yet confirmed).
+  Declaring Mega now also swaps the Battlefield sprite to the real Mega
+  form (`hooks/useMegaSprite.ts`, already used by the Team Builder,
+  finally reused here) and - opponent side only - auto-fills their item
+  field with the resolved Mega Stone, since declaring Mega always reveals
+  it. `Battlefield.tsx`'s per-slot rendering moved into a new
+  `BattlefieldSlot.tsx` real component specifically so `useMegaSprite` (a
+  hook) has a legal per-slot lifecycle - the old `renderSlot` was a plain
+  helper called a variable number of times per render, which would have
+  violated the Rules of Hooks the moment a hook call was added to it.
+
+  New reactive-ability chip (Defiant/Competitive - `config/
+  reactiveAbilities.ts`): shows whenever a Pokemon's most recent stat
+  change was a decrease and hasn't yet had a matching reactive-ability
+  note logged since (`utils/battleLookup.ts::hasUnappliedReactiveLowerEffect`) -
+  can re-trigger multiple times per stint on the field, unlike the
+  switch-in chip which only fires once per switch-in.
+
+  `config/onSwitchInAbilities.ts` widened to a discriminated union so an
+  ability's effect can be a stat change OR a weather/terrain set - added
+  Drought/Drizzle/Sand Stream/Snow Warning and the 4 Surge abilities.
+  Applying a weather/terrain switch-in effect auto-computes
+  `wasMegaEvolved` from whether the source is currently Mega Evolved, so
+  `FieldWeatherBar`'s existing duration-confidence display (fixed 5 turns
+  vs. an honest 5-8 range) needed no new UI to pick this up. Added Trick
+  Room as a new field-wide effect (`FieldState.trickRoom`, fixed 5-turn
+  duration, never ability-triggered).
+
+  Relocated field-effect display into the Battlefield's previously-empty
+  side margins, matching the user's own mockup screenshots:
+  `SideConditionsRow.tsx` (screens/Tailwind/hazards) next to each side's
+  active row - discovered it had been dead code, built earlier this
+  session but never actually imported anywhere, so this is also where it
+  finally got wired in - and the relocated `FieldWeatherBar` (now also
+  covering Trick Room) in the top-right.
+
+  Two bugs caught during verification: (1) declaring Mega and syncing the
+  opponent's item were two separate sequential `battleLogActions` calls
+  off the same stale `battle` reference - the same class of lost-update
+  race already hit and fixed once this session for `switchActive` -
+  combined into one `updateBattle` call (`setMegaEvolved` now takes an
+  optional `revealedItem` param). (2) Even after that fix, the opponent's
+  ability/item text inputs in `OpponentInfoTags.tsx` kept showing stale
+  (usually blank) values after an external change like the mega-sync or
+  an ability-effect chip - their local draft `useState` only seeded from
+  props on mount and never resynced; added a `useEffect` per field to fix
+  it. Verified the underlying fix directly against the persisted
+  `battles.json` (not just the DOM) after the second bug's discovery made
+  DOM-only verification suspect.
 
 - **Battle Logger: layout rework, drag-to-field, stat-stage tracking**
   (2026-07-07): the Battlefield's top row now aligns with the roster

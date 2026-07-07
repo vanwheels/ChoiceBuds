@@ -107,3 +107,19 @@ export function getMegaApiSlug(heldItem: string | undefined, species: string): s
   if (!entry) return null;
   return entry.species === species.trim().toLowerCase() ? `${entry.species}-${entry.suffix}` : null;
 }
+
+/**
+ * Every Mega Stone (and therefore every Mega form) available to a species -
+ * empty for a non-mega-capable species, one entry for most mega-capable
+ * ones, two for Charizard/Raichu's X/Y split. Powers the Battle Logger's
+ * Mega button: hidden entirely when empty, resolved automatically when
+ * there's exactly one form (even if the holder's item isn't confirmed yet -
+ * declaring Mega IS revealing that item), and a small X/Y picker only when
+ * there's real ambiguity to resolve.
+ */
+export function getMegaFormsForSpecies(species: string): { item: string; suffix: string }[] {
+  const normalized = species.trim().toLowerCase();
+  return Object.entries(MEGA_STONE_TO_SPECIES)
+    .filter(([, entry]) => entry.species === normalized)
+    .map(([item, entry]) => ({ item, suffix: entry.suffix }));
+}

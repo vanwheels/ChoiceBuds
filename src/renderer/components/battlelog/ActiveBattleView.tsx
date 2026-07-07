@@ -17,7 +17,6 @@ import PlayerFieldPanel from './PlayerFieldPanel';
 import OpponentFieldPanel from './OpponentFieldPanel';
 import Battlefield from './Battlefield';
 import TurnLog from './TurnLog';
-import FieldWeatherBar from './FieldWeatherBar';
 
 interface ActiveBattleViewProps {
   battle: Battle;
@@ -54,8 +53,6 @@ export default function ActiveBattleView({ battle, battleLogActions, roster, res
           <button onClick={onClose} className="text-sm text-gray-400 hover:text-gray-200 ml-2">Back</button>
         </div>
       </div>
-
-      <FieldWeatherBar battle={battle} battleLogActions={battleLogActions} />
 
       <div className="flex flex-col lg:flex-row gap-4 items-start">
         <PlayerFieldPanel battle={battle} battleLogActions={battleLogActions} resolveSprite={resolveSprite} />

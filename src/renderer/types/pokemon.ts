@@ -201,6 +201,7 @@ export interface SideConditions {
 export interface FieldState {
   weather?: { type: WeatherType; setOnTurn: number; wasMegaEvolved?: boolean };
   terrain?: { type: TerrainType; setOnTurn: number; wasMegaEvolved?: boolean };
+  trickRoom?: { setOnTurn: number }; // always move-set, fixed 5-turn duration - never ability-triggered, so no mega confidence needed
   playerSide: SideConditions;
   opponentSide: SideConditions;
 }

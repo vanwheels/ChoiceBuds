@@ -4,7 +4,7 @@
  * filled in as revealed during the battle. Ephemeral, per-battle only.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Battle, OpponentPokemonEntry } from '../../types/pokemon';
 import type { UseBattleLogActionsReturn } from '../../hooks/useBattleLogActions';
 import { getSwitchInEffect } from '../../config/onSwitchInAbilities';
@@ -20,6 +20,13 @@ export default function OpponentInfoTags({ battle, opponent, battleLogActions }:
   const [ability, setAbility] = useState(opponent.ability || '');
   const [item, setItem] = useState(opponent.item || '');
   const [newMove, setNewMove] = useState('');
+
+  // These start as local drafts (so typing doesn't commit on every
+  // keystroke), but the underlying value can also change from elsewhere -
+  // the Mega button auto-revealing an item, or the ability effect chip -
+  // without this the input would keep showing a stale value after a mount.
+  useEffect(() => { setAbility(opponent.ability || ''); }, [opponent.ability]);
+  useEffect(() => { setItem(opponent.item || ''); }, [opponent.item]);
 
   const commitTags = () => {
     battleLogActions.updateOpponentMoveTags(battle, opponent.id, ability || undefined, item || undefined);

@@ -56,3 +56,27 @@ export function hasAppliedAbilityEffectSinceSwitchIn(battle: Battle, pokemonId: 
   const lowerAbility = ability.toLowerCase();
   return allActions.slice(lastSwitchInIndex + 1).some(a => a.pokemonId === pokemonId && a.note?.toLowerCase().includes(lowerAbility));
 }
+
+const STAT_DECREASE_NOTE = /^(Atk|Def|SpA|SpD|Spe) -\d/;
+
+/**
+ * Whether a reactive stat-raise ability (Defiant/Competitive - see
+ * config/reactiveAbilities.ts) still has an unacknowledged trigger -
+ * finds the most recent stat-decrease note logged for this pokemonId
+ * (adjustStatStage/applyAbilityEffect both produce notes matching
+ * STAT_DECREASE_NOTE) and checks whether a note referencing the reactive
+ * ability has been logged for them since. Scoped to "since the last
+ * lowering", not "since switch-in" - unlike a switch-in effect, Defiant
+ * can legitimately re-trigger multiple times during one stint on the
+ * field (once per new lowering), so switch-in-scoping would hide it after
+ * the first trigger even though a later, separate lowering deserves its
+ * own chip.
+ */
+export function hasUnappliedReactiveLowerEffect(battle: Battle, pokemonId: string, ability: string): boolean {
+  const allActions = battle.turns.flatMap(t => t.actions);
+  let lastDecreaseIndex = -1;
+  allActions.forEach((a, i) => { if (a.pokemonId === pokemonId && a.note && STAT_DECREASE_NOTE.test(a.note)) lastDecreaseIndex = i; });
+  if (lastDecreaseIndex === -1) return false;
+  const lowerAbility = ability.toLowerCase();
+  return !allActions.slice(lastDecreaseIndex + 1).some(a => a.pokemonId === pokemonId && a.note?.toLowerCase().includes(lowerAbility));
+}

@@ -14,7 +14,9 @@ import type {
 import type { TurnTrackedCondition, BooleanHazard, StackableHazard } from '../config/fieldConditions';
 import { findBattlePokemon } from '../utils/battleLookup';
 import { getSwitchInEffect } from '../config/onSwitchInAbilities';
+import { getReactiveLowerEffect } from '../config/reactiveAbilities';
 import { STAT_LABELS } from '../config/statStages';
+import { WEATHER_LABELS, TERRAIN_LABELS } from '../config/fieldConditions';
 
 export const MAX_OPPONENT_ROSTER_SIZE = 6;
 export const MAX_BROUGHT = 4;
@@ -48,9 +50,10 @@ export interface UseBattleLogActionsReturn {
   addOpponentMove: (battle: Battle, opponentId: string, move: string) => Promise<boolean>;
   removeOpponentMove: (battle: Battle, opponentId: string, move: string) => Promise<boolean>;
   switchActive: (battle: Battle, side: BattleSide, pokemonId: string) => Promise<boolean>;
-  setMegaEvolved: (battle: Battle, pokemonId: string) => Promise<boolean>;
+  setMegaEvolved: (battle: Battle, pokemonId: string, revealedItem?: string) => Promise<boolean>;
   adjustStatStage: (battle: Battle, pokemonId: string, stat: StatKey, delta: number) => Promise<boolean>;
   applyAbilityEffect: (battle: Battle, side: BattleSide, pokemonId: string, ability: string) => Promise<boolean>;
+  applyReactiveLowerEffect: (battle: Battle, pokemonId: string, ability: string) => Promise<boolean>;
   setFainted: (battle: Battle, side: BattleSide, pokemonId: string, fainted: boolean) => Promise<boolean>;
   logAction: (battle: Battle, action: Omit<BattleAction, 'id'>) => Promise<boolean>;
   setActionFailed: (battle: Battle, turnNumber: number, actionId: string, failed: boolean) => Promise<boolean>;
@@ -60,6 +63,7 @@ export interface UseBattleLogActionsReturn {
   setNotes: (battle: Battle, notes: string) => Promise<boolean>;
   setWeather: (battle: Battle, type: WeatherType | null, wasMegaEvolved?: boolean) => Promise<boolean>;
   setTerrain: (battle: Battle, type: TerrainType | null, wasMegaEvolved?: boolean) => Promise<boolean>;
+  setTrickRoom: (battle: Battle, active: boolean) => Promise<boolean>;
   toggleTurnCondition: (battle: Battle, side: BattleSide, key: TurnTrackedCondition) => Promise<boolean>;
   toggleBooleanHazard: (battle: Battle, side: BattleSide, key: BooleanHazard) => Promise<boolean>;
   setStackableHazard: (battle: Battle, side: BattleSide, key: StackableHazard, layers: number) => Promise<boolean>;
@@ -236,14 +240,29 @@ export function useBattleLogActions(
     });
   }, [updateBattle]);
 
-  /** Marks a Pokemon as having Mega Evolved this battle (once only) and logs a mega-phase action. */
-  const setMegaEvolved = useCallback(async (battle: Battle, pokemonId: string): Promise<boolean> => {
+  /**
+   * Marks a Pokemon as having Mega Evolved this battle (once only) and
+   * logs a mega-phase action. `revealedItem` (opponent side only) sets
+   * their held-item field to the resolved Mega Stone in the same call -
+   * declaring Mega IS revealing that item, and bundling it here avoids
+   * the two-sequential-updateBattle race the app already hit once before
+   * (see switchActive/logAction) - calling setMegaEvolved then a separate
+   * updateOpponentMoveTags off the same stale `battle` reference silently
+   * lost whichever field wasn't in the second call's update, depending on
+   * IPC round-trip timing.
+   */
+  const setMegaEvolved = useCallback(async (battle: Battle, pokemonId: string, revealedItem?: string): Promise<boolean> => {
     if (battle.megaEvolvedIds.includes(pokemonId)) return false;
     const side: BattleSide = battle.playerRoster.some(p => p.id === pokemonId) ? 'player' : 'opponent';
     if (!findBattlePokemon(battle, side, pokemonId)) return false;
 
+    const opponentRoster = revealedItem && side === 'opponent'
+      ? battle.opponentRoster.map(o => o.id === pokemonId ? { ...o, item: revealedItem } : o)
+      : battle.opponentRoster;
+
     return updateBattle(battle.id, {
       megaEvolvedIds: [...battle.megaEvolvedIds, pokemonId],
+      opponentRoster,
       turns: appendAction(battle.turns, { side, pokemonId, phase: 'mega', note: 'Mega Evolved' }),
     });
   }, [updateBattle]);
@@ -266,10 +285,10 @@ export function useBattleLogActions(
   }, [updateBattle]);
 
   /**
-   * One-tap "apply" for a curated list of switch-in abilities with an
-   * unambiguous stat effect (see config/onSwitchInAbilities.ts) - never
-   * automatic, the user confirms it actually happened. No-ops (false) if
-   * the ability isn't in the table.
+   * One-tap "apply" for a curated list of switch-in abilities (see
+   * config/onSwitchInAbilities.ts) - stat, weather, or terrain effects -
+   * never automatic, the user confirms it actually happened. No-ops
+   * (false) if the ability isn't in the table.
    */
   const applyAbilityEffect = useCallback(async (
     battle: Battle,
@@ -279,6 +298,20 @@ export function useBattleLogActions(
   ): Promise<boolean> => {
     const effect = getSwitchInEffect(ability);
     if (!effect) return false;
+    const currentTurn = battle.turns.length;
+
+    if (effect.kind === 'weather' || effect.kind === 'terrain') {
+      // A weather/terrain ability's duration confidence depends on whether
+      // its holder is currently Mega Evolved (fixed 5 turns, no held rock
+      // possible) - see FieldWeatherBar.tsx.
+      const wasMegaEvolved = battle.megaEvolvedIds.includes(pokemonId);
+      const label = effect.kind === 'weather' ? WEATHER_LABELS[effect.weather] : TERRAIN_LABELS[effect.terrain];
+      const fieldState = effect.kind === 'weather'
+        ? { ...battle.fieldState, weather: { type: effect.weather, setOnTurn: currentTurn, wasMegaEvolved } }
+        : { ...battle.fieldState, terrain: { type: effect.terrain, setOnTurn: currentTurn, wasMegaEvolved } };
+      const turns = appendAction(battle.turns, { side, pokemonId, note: `${label} set (${ability})` });
+      return updateBattle(battle.id, { fieldState, turns });
+    }
 
     const targetIds = effect.target === 'self'
       ? [pokemonId]
@@ -303,6 +336,27 @@ export function useBattleLogActions(
       turns = appendAction(turns, { side, pokemonId, note: `${ability} triggered` });
     }
     return updateBattle(battle.id, { statStages, turns });
+  }, [updateBattle]);
+
+  /**
+   * One-tap "apply" for a reactive stat-raise ability (Defiant/Competitive
+   * - see config/reactiveAbilities.ts), always self-target. No-ops (false)
+   * if the ability isn't in the table.
+   */
+  const applyReactiveLowerEffect = useCallback(async (
+    battle: Battle,
+    pokemonId: string,
+    ability: string
+  ): Promise<boolean> => {
+    const effect = getReactiveLowerEffect(ability);
+    if (!effect) return false;
+    const side = sideOf(battle, pokemonId);
+
+    const current = battle.statStages[pokemonId]?.[effect.stat] ?? 0;
+    const next = clampStage(current + effect.stages);
+    const statStages = { ...battle.statStages, [pokemonId]: { ...battle.statStages[pokemonId], [effect.stat]: next } };
+    const note = `${STAT_LABELS[effect.stat]} ${next > current ? '+' : ''}${next - current} (${ability})`;
+    return updateBattle(battle.id, { statStages, turns: appendAction(battle.turns, { side, pokemonId, note }) });
   }, [updateBattle]);
 
   /** Powers the TurnLog's "Failed?" chip on a repeat Protect-family use. */
@@ -366,6 +420,14 @@ export function useBattleLogActions(
     });
   }, [updateBattle]);
 
+  /** Trick Room is always move-set (never ability-triggered) - fixed 5-turn duration, no mega confidence needed. */
+  const setTrickRoom = useCallback(async (battle: Battle, active: boolean): Promise<boolean> => {
+    const currentTurn = battle.turns.length;
+    return updateBattle(battle.id, {
+      fieldState: { ...battle.fieldState, trickRoom: active ? { setOnTurn: currentTurn } : undefined },
+    });
+  }, [updateBattle]);
+
   const updateSideConditions = useCallback((battle: Battle, side: BattleSide, next: SideConditions) => {
     const key = side === 'player' ? 'playerSide' : 'opponentSide';
     return updateBattle(battle.id, { fieldState: { ...battle.fieldState, [key]: next } });
@@ -420,6 +482,7 @@ export function useBattleLogActions(
     setMegaEvolved,
     adjustStatStage,
     applyAbilityEffect,
+    applyReactiveLowerEffect,
     setFainted,
     logAction,
     setActionFailed,
@@ -429,6 +492,7 @@ export function useBattleLogActions(
     setNotes,
     setWeather,
     setTerrain,
+    setTrickRoom,
     toggleTurnCondition,
     toggleBooleanHazard,
     setStackableHazard,
