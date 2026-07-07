@@ -34,6 +34,7 @@ import type {
 } from '@smogon/calc/dist/data/interface';
 import { validateSpeciesLegality, ALL_REGULATION_IDS, type RegulationId } from '../utils/pokemonRules';
 import { getFormeFamily, type FormeFamily } from '../utils/calcFormes';
+import { getChampionsCalcMoveOverride } from '../config/championsMoveOverrides';
 import type { UseGameDataReturn } from './useGameData';
 
 const GEN_NUM = 9;
@@ -42,7 +43,9 @@ const MOVE_SLOT_COUNT = 4;
 const ZERO_STATS: StatsTable = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
 const MAX_IVS: StatsTable = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 };
 
-export const WEATHER_OPTIONS: Weather[] = ['Sun', 'Rain', 'Sand', 'Hail', 'Snow', 'Harsh Sunshine', 'Heavy Rain', 'Strong Winds'];
+// 'Hail' omitted - Gen 9 replaced it game-wide with 'Snow' (Ice Body/Snow
+// Warning etc. key off Snow, not Hail), so it's never a real Gen 9 state.
+export const WEATHER_OPTIONS: Weather[] = ['Sun', 'Rain', 'Sand', 'Snow', 'Harsh Sunshine', 'Heavy Rain', 'Strong Winds'];
 export const TERRAIN_OPTIONS: Terrain[] = ['Electric', 'Grassy', 'Psychic', 'Misty'];
 export const STATUS_OPTIONS: StatusName[] = ['slp', 'psn', 'brn', 'frz', 'par', 'tox'];
 export const GENDER_OPTIONS: GenderName[] = ['M', 'F', 'N'];
@@ -54,14 +57,14 @@ function normalizeMoveSlug(name: string): string {
 }
 
 /**
- * Champions replaces traditional 0-252 EVs with 0-32 "Stat Points" (SPs) -
- * confirmed against the real calc.pokemonshowdown.com Champions tab, and
- * matching this app's own team EV editor (StatsColumn.tsx) which already
- * used this scale. @smogon/calc has no native SP concept, so this converts
- * at the boundary: the standard stat formula already computes floor(ev/4),
- * so SP is treated as directly supplying that pre-divided term (ev = sp*4).
- * ASSUMPTION - not independently confirmed against the real conversion
- * factor; a one-line fix here if that turns out wrong.
+ * Champions replaces traditional 0-252 EVs with 0-32 "Stat Points" (SPs) per
+ * stat, 66 total across all six - confirmed twice over: against the real
+ * calc.pokemonshowdown.com Champions tab, and directly in-game (max 32/stat,
+ * max 66 total). @smogon/calc has no native SP concept, so this converts at
+ * the boundary: the standard stat formula already computes floor(ev/4), so
+ * SP is treated as directly supplying that pre-divided term (ev = sp*4).
+ * See CalcStatRows.tsx for where the 0-32 per-stat and 66-total caps are
+ * actually enforced/surfaced in the UI.
  */
 function spToEv(sp: number): number {
   return sp * 4;
@@ -273,6 +276,7 @@ function computeSideResults(
         species: attacker.species,
         isCrit: slot.isCrit,
         hits: slot.hits,
+        overrides: getChampionsCalcMoveOverride(slot.name),
       });
       const result = calculate(gen, atkPokemon, defPokemon, move, field);
       const range = result.range();

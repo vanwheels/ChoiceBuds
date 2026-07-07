@@ -17,6 +17,9 @@ import {
   CACHE_EXPIRATION_MS,
 } from '../services/pokeapiService';
 import { readCacheEntry, runCachedFetch, withCacheEntry, createEmptyGameDataCache } from '../utils/cacheManager';
+import { applyChampionsMoveOverride } from '../config/championsMoveOverrides';
+import { applyChampionsAbilityOverride } from '../config/championsAbilityOverrides';
+import { applyChampionsMovepoolChanges } from '../config/championsMovepoolChanges';
 
 type Gender = 'M' | 'F' | 'N' | '';
 
@@ -87,24 +90,37 @@ export function useGameData(): UseGameDataReturn {
     });
   }, [isInitialized, cache]);
 
-  const getCachedMove = useCallback((moveName: string): MoveData | null =>
-    readCacheEntry(cache?.moves, normalizeNameForAPI(moveName)), [cache]);
+  // Champions overrides are applied at this read boundary (not baked into
+  // what's fetched/cached) so corrections are self-healing against data
+  // already sitting in a user's 30-day game-data-cache.json, and any future
+  // tweak to the override tables takes effect immediately - see
+  // config/championsMoveOverrides.ts.
+  const getCachedMove = useCallback((moveName: string): MoveData | null => {
+    const move = readCacheEntry(cache?.moves, normalizeNameForAPI(moveName));
+    return move ? applyChampionsMoveOverride(move) : null;
+  }, [cache]);
 
   const getCachedItem = useCallback((itemName: string): ItemData | null =>
     readCacheEntry(cache?.items, normalizeNameForAPI(itemName)), [cache]);
 
-  const getCachedAbility = useCallback((abilityName: string): AbilityData | null =>
-    readCacheEntry(cache?.abilities, normalizeNameForAPI(abilityName)), [cache]);
+  const getCachedAbility = useCallback((abilityName: string): AbilityData | null => {
+    const ability = readCacheEntry(cache?.abilities, normalizeNameForAPI(abilityName));
+    return ability ? applyChampionsAbilityOverride(ability) : null;
+  }, [cache]);
 
-  const getCachedSpeciesLearnset = useCallback((species: string, gender?: Gender): SpeciesLearnsetEntry | null =>
-    readCacheEntry(cache?.learnsets, normalizeSpeciesForAPI(species, gender)), [cache]);
+  const getCachedSpeciesLearnset = useCallback((species: string, gender?: Gender): SpeciesLearnsetEntry | null => {
+    const learnset = readCacheEntry(cache?.learnsets, normalizeSpeciesForAPI(species, gender));
+    if (!learnset) return null;
+    return { ...learnset, moves: applyChampionsMovepoolChanges(learnset.species, learnset.moves) };
+  }, [cache]);
 
   const getMoveData = useCallback(async (moveName: string): Promise<MoveData | null> => {
     const cached = getCachedMove(moveName);
     if (cached) return cached;
     const normalizedName = normalizeNameForAPI(moveName);
-    return runCachedFetch(setCache, setIsLoading, setError, 'moves', normalizedName,
+    const fresh = await runCachedFetch(setCache, setIsLoading, setError, 'moves', normalizedName,
       () => fetchMoveData(normalizedName), `Failed to fetch move "${moveName}"`);
+    return fresh ? applyChampionsMoveOverride(fresh) : null;
   }, [getCachedMove]);
 
   const getItemData = useCallback(async (itemName: string): Promise<ItemData | null> => {
@@ -119,16 +135,18 @@ export function useGameData(): UseGameDataReturn {
     const cached = getCachedAbility(abilityName);
     if (cached) return cached;
     const normalizedName = normalizeNameForAPI(abilityName);
-    return runCachedFetch(setCache, setIsLoading, setError, 'abilities', normalizedName,
+    const fresh = await runCachedFetch(setCache, setIsLoading, setError, 'abilities', normalizedName,
       () => fetchAbilityData(normalizedName), `Failed to fetch ability "${abilityName}"`);
+    return fresh ? applyChampionsAbilityOverride(fresh) : null;
   }, [getCachedAbility]);
 
   const getSpeciesLearnset = useCallback(async (species: string, gender?: Gender): Promise<SpeciesLearnsetEntry | null> => {
     const cached = getCachedSpeciesLearnset(species, gender);
     if (cached) return cached;
     const normalizedSpecies = normalizeSpeciesForAPI(species, gender);
-    return runCachedFetch(setCache, setIsLoading, setError, 'learnsets', normalizedSpecies,
+    const fresh = await runCachedFetch(setCache, setIsLoading, setError, 'learnsets', normalizedSpecies,
       () => fetchSpeciesLearnset(species, gender), `Failed to fetch learnset for "${species}"`);
+    return fresh ? { ...fresh, moves: applyChampionsMovepoolChanges(fresh.species, fresh.moves) } : null;
   }, [getCachedSpeciesLearnset]);
 
   /**

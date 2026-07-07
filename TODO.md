@@ -5,6 +5,64 @@ in a `Why:` line only when it's not obvious from the task itself.
 
 ## In progress / up next
 
+- **Champions data-correctness audit (part 2)** (started 2026-07-06): the
+  balance-patch fix covered what we'd found so far, but our PokeAPI-sourced
+  data/calc formulas almost certainly have more Champions-specific gaps we
+  haven't checked yet. Breaking this down by who can actually verify what:
+
+  **Resolved (2026-07-06):**
+  - Stat Point caps confirmed directly in-game by the user: **max 32 per
+    stat, 66 total across all six.** The per-stat 0-32 clamp was already
+    correctly enforced in `CalcStatRows.tsx`; added a soft 66-total warning
+    there (red text, non-blocking - matches the Calc's existing free-form-
+    sandbox philosophy) and updated `useDamageCalc.ts`'s `spToEv` comment
+    from "unconfirmed assumption" to confirmed.
+  - Movepool changes: the Reddit thread lead (r/stunfisk "Some movepool
+    changes in Champions Version 1.1") was processed - user provided
+    screenshots directly since automated fetching was blocked. Added to
+    `config/championsMovepoolChanges.ts` (renamed from
+    `championsMovepoolAdditions.ts` since it now handles removals too):
+    Sceptile/Scolipede/Pyroar/Barbaracle gaining moves, Scolipede/
+    Annihilape/Grimmsnarl/Scrafty/Overqwil/Metagross/Pyroar/Staraptor/
+    Mawile/Malamar losing moves. One entry (Grimmsnarl "loses False
+    Surrender") was left out - not a recognized move in any known game,
+    likely a post error, not encoded without corroboration. The community
+    spreadsheet lead is still unprocessed (see below).
+
+  **Still needs the user (in-game access, or the spreadsheet lead):**
+  - Anything noticed live during play that doesn't match what the app
+    shows - exactly how the Make It Rain gap was originally caught.
+  - The community Google Sheet of full Champions movepools (still
+    unprocessed - not a diff, needs manual cross-referencing against
+    PokeAPI's mainline data per species):
+    https://docs.google.com/spreadsheets/d/1DeXjzohTUdKNERu6dsHsnznneva8MDJjglI3lqDLgm4
+
+  **Self-serve (research only, no game access needed)** - Claude can pick
+  these up directly:
+  - Item mechanics - only the item *list* has been checked so far (which
+    items exist), never whether any existing item's actual behavior
+    differs in Champions (Life Orb recoil %, Choice item locking, etc.)
+  - Whether the ability-changes list (currently just Healer + Unseen Fist)
+    is actually exhaustive, or just what's been noticed/documented so far
+  - Core formula pieces not yet double-checked: crit-hit mechanics, the
+    type effectiveness chart itself (the "extremely/mostly ineffective"
+    4x/0.25x labeling change is presentation-only and already fine, but the
+    underlying chart wasn't independently re-verified)
+  - Patch notes going forward - v1.0.3/v1.1.0 were bugfixes/new-Pokemon
+    only, no further move rebalancing, but this needs periodic re-checking
+    since the game is clearly still being patched (Serebii's
+    `pokemonchampions/patch.shtml`)
+
+- **Move flag tags (Sound/Bullet/etc.)** - Champions added visible tags on
+  moves (e.g. `[Sound]`, `[Bullet]`) so their interactions with abilities
+  like Soundproof/Bulletproof/Overcoat are clear at a glance. Our `MoveData`
+  type doesn't store move flags at all right now - nothing needed them
+  before. Rough shape: add a `flags` field to `MoveData`, populate it from
+  PokeAPI's move response in `fetchMoveData` (PokeAPI already returns this,
+  just never parsed), a small config for which flags Champions actually
+  surfaces (confirm exactly which ones in-game), and a small badge/tag UI
+  on move displays.
+
 - **Battle Logger - beyond the core MVP** (see plan at
   `C:\Users\vanny\.claude\plans\recursive-singing-graham.md` for full
   context): field/side-condition auto-tracking with turn countdowns
@@ -21,6 +79,29 @@ in a `Why:` line only when it's not obvious from the task itself.
 
 ## Done
 
+- **Champions balance-patch data correctness fix** (2026-07-06): PokeAPI
+  (our only game-data source) models mainline Scarlet/Violet with no concept
+  of Pokemon Champions' own balance patches - caught concretely when Make It
+  Rain's tooltip showed 100%/-1 Sp.Atk instead of Champions' actual 95%/-2.
+  Turned out to be systemic: ~19 moves with power/accuracy/type/effect
+  changes, PP retiered game-wide (not just those 19 - nearly every move's PP
+  changed via a formula), 2 ability changes (Healer, Unseen Fist), and 3
+  status condition changes (freeze/paralysis/sleep odds), verified against
+  Serebii's Updated Attacks/Status Conditions pages and Bulbapedia's
+  Champions article. New `config/championsMoveOverrides.ts` (+PP retier),
+  `championsAbilityOverrides.ts`, `championsMechanics.ts` (status condition
+  reference, not wired into UI yet - for future Battle Logger stat-inference
+  use), `championsMovepoolAdditions.ts` (seeded with only the one confirmed
+  example, Swampert + Wave Crash - see backlog below). Applied at the read
+  boundary in `useGameData.ts` (self-healing against already-cached stale
+  entries, no cache-version bump needed) and via `@smogon/calc`'s own
+  `Move` `overrides` option in `useDamageCalc.ts` - confirmed the live damage
+  calculator was actually under-calculating every Champions-buffed move
+  before this fix, not just showing wrong tooltip text. Also removed 'Hail'
+  from the Calc's weather options (Gen 9 replaced it with 'Snow' game-wide,
+  unrelated to Champions specifically but directly adjacent). Bulbapedia
+  added as a second dev-time reference source alongside Serebii (Credits +
+  CLAUDE.md updated).
 - **Battle Logger MVP** (2026-07-06): the project's primary objective.
   Manually log a live VGC battle turn-by-turn while playing on a separate
   device - pick a saved team, bring 4 of its Pokemon, log an ordered
@@ -82,3 +163,9 @@ in a `Why:` line only when it's not obvious from the task itself.
   behind the missing dependency wasn't investigated; worth a look.
 - No app icon set yet for packaging - electron-builder is using the default
   Electron icon. Add `.ico`/`.icns` assets whenever branding is ready.
+- **Unseen Fist-through-Protect deep interaction** - our override only
+  corrects the tooltip description (25% not 100%); if `@smogon/calc` has its
+  own internal logic for this specific interaction, the live calculator may
+  still assume the old mainline value. Not chased further - low-frequency
+  edge case (needs Unseen Fist + a contact move + the target having used
+  Protect that turn).

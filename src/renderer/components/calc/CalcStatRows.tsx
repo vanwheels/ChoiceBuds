@@ -8,6 +8,9 @@
 
 import type { StatsTable } from '@smogon/calc/dist/data/interface';
 
+/** Confirmed in-game: max 32 Stat Points per stat, 66 total across all six. */
+const MAX_SP_TOTAL = 66;
+
 const STAT_FIELDS: Array<{ label: string; key: keyof StatsTable }> = [
   { label: 'HP', key: 'hp' },
   { label: 'Atk', key: 'atk' },
@@ -66,7 +69,9 @@ export default function CalcStatRows({ baseStats, sps, boosts, onChangeSp, onCha
           />
         </div>
       ))}
-      <p className="text-[10px] text-gray-500 text-right">{total} SP total</p>
+      <p className={`text-[10px] text-right ${total > MAX_SP_TOTAL ? 'text-red-400' : 'text-gray-500'}`}>
+        {total} / {MAX_SP_TOTAL} SP total
+      </p>
     </div>
   );
 }
