@@ -142,6 +142,7 @@ export default function App() {
               teamsState={teamsState}
               speciesRosterState={speciesRosterState}
               spriteCacheState={spriteCacheState}
+              gameDataState={gameDataState}
             />
           </Suspense>
         )}

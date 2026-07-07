@@ -45,6 +45,7 @@ interface PokeAPIMoveResponse {
   pp?: number;
   accuracy: number | null;
   effect_entries?: PokeAPIEffectEntry[];
+  target?: { name?: string };
 }
 
 interface PokeAPIItemResponse {
@@ -103,6 +104,7 @@ export async function fetchMoveData(normalizedName: string): Promise<MoveData | 
     accuracy: data.accuracy,
     description: extractEffectDescription(data.effect_entries, 'No description available'),
     flags: [], // populated at the read boundary in useGameData.ts - see config/moveFlags.ts
+    target: data.target?.name?.toLowerCase() || 'selected-pokemon',
     cachedAt: now,
     expiresAt: now + CACHE_EXPIRATION_MS,
   };

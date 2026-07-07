@@ -134,15 +134,22 @@ export interface OpponentPokemonEntry {
 
 /**
  * One logged action within a turn. `move`/`note` are freeform strings, not
- * an enum, so "mega evolved", "Protect", "fainted to residual" etc. all just
- * live in `note` - this is a flexible manual log, not a rigid simulator.
+ * an enum, so "Protect", "fainted to residual" etc. all just live in `note`
+ * - this is a flexible manual log, not a rigid simulator. `target` is an
+ * array since spread moves can hit 2 Pokemon at once. `phase` orders
+ * display within a turn (switches, then Mega Evolutions, then moves,
+ * regardless of the order they were tapped in) - undefined is treated as
+ * `'move'` so pre-existing logged actions still render correctly. `failed`
+ * is only meaningful for Protect-family moves - see config/protectMoves.ts.
  */
 export interface BattleAction {
   id: string;
   side: BattleSide;
   pokemonId: string; // id into playerRoster (player) or opponentRoster (opponent)
   move?: string;
-  target?: { side: BattleSide; pokemonId: string };
+  target?: { side: BattleSide; pokemonId: string }[];
+  phase?: 'switch' | 'mega' | 'move';
+  failed?: boolean;
   note?: string;
 }
 
@@ -185,10 +192,15 @@ export interface SideConditions {
  * Current field state for a battle - a single live snapshot (not per-turn
  * history), matching the existing playerActiveIds/opponentActiveIds
  * pattern. Weather/terrain are field-wide; screens/hazards are per-side.
+ * `wasMegaEvolved` drives duration confidence in FieldWeatherBar - a Mega's
+ * ability-triggered weather/terrain is always the fixed 5-turn duration
+ * (a Mega Stone occupies the item slot, so no duration-extending rock is
+ * possible), while a regular ability trigger is uncertain (5 or 8 turns,
+ * depending on an unrevealed held rock).
  */
 export interface FieldState {
-  weather?: { type: WeatherType; setOnTurn: number };
-  terrain?: { type: TerrainType; setOnTurn: number };
+  weather?: { type: WeatherType; setOnTurn: number; wasMegaEvolved?: boolean };
+  terrain?: { type: TerrainType; setOnTurn: number; wasMegaEvolved?: boolean };
   playerSide: SideConditions;
   opponentSide: SideConditions;
 }
@@ -210,6 +222,7 @@ export interface Battle {
   playerFaintedIds: string[]; // ids from playerRoster
   opponentRoster: OpponentPokemonEntry[]; // starts empty, grows during the battle
   opponentActiveIds: string[]; // 0-2 ids from opponentRoster
+  megaEvolvedIds: string[]; // ids (either roster) that have Mega Evolved this battle
   turns: Turn[];
   fieldState: FieldState;
   result: 'win' | 'loss' | 'in-progress';
@@ -288,6 +301,7 @@ export interface MoveData {
   accuracy: number | null; // Accuracy percentage (null for moves that never miss)
   description: string; // Effect description
   flags: string[]; // Move flags (sound/bullet/punch/etc.) - see config/moveFlags.ts
+  target: string; // Raw PokeAPI target slug (e.g. "selected-pokemon", "all-opponents") - see config/moveTargeting.ts
   cachedAt: number; // Unix timestamp
   expiresAt: number; // Unix timestamp
 }

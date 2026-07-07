@@ -6,3 +6,4 @@ release/
 .vscode/
 *.log
 .aider*
+.claude/skills/run-desktop/shots/

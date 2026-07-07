@@ -4,6 +4,13 @@
  * each group (selecting a new one replaces, doesn't stack). Countdown is a
  * helpful default (see config/fieldConditions.ts) - clickable off at any
  * time, not auto-cleared, since real games can extend/shorten it.
+ *
+ * Duration confidence: a Mega Evolution's ability-triggered weather/terrain
+ * is always the fixed 5-turn duration (the Mega Stone occupies the item
+ * slot, so no duration-extending rock is possible); a regular ability
+ * trigger is uncertain (5 or 8 turns, depending on an unrevealed held
+ * rock). The small "via Mega" chip is the one extra tap needed to record
+ * that certainty - unchecked (the common case) shows the honest 5-8 range.
  */
 
 import type { Battle, WeatherType, TerrainType } from '../../types/pokemon';
@@ -19,7 +26,15 @@ interface FieldWeatherBarProps {
   battleLogActions: UseBattleLogActionsReturn;
 }
 
-const DURATION = 5;
+const FIXED_DURATION = 5;
+const EXTENDED_DURATION = 8;
+
+function formatDuration(setOnTurn: number, currentTurn: number, wasMegaEvolved: boolean | undefined): string {
+  const fixed = getRemainingTurns(setOnTurn, FIXED_DURATION, currentTurn);
+  if (wasMegaEvolved) return `${fixed}`;
+  const extended = getRemainingTurns(setOnTurn, EXTENDED_DURATION, currentTurn);
+  return extended > fixed ? `${fixed}-${extended}?` : `${fixed}`;
+}
 
 export default function FieldWeatherBar({ battle, battleLogActions }: FieldWeatherBarProps) {
   const currentTurn = battle.turns.length;
@@ -40,7 +55,6 @@ export default function FieldWeatherBar({ battle, battleLogActions }: FieldWeath
         {WEATHER_OPTIONS.map(type => {
           const isActive = weather?.type === type;
           const theme = getWeatherTheme(type);
-          const remaining = isActive ? getRemainingTurns(weather.setOnTurn, DURATION, currentTurn) : null;
           return (
             <button
               key={type}
@@ -50,10 +64,22 @@ export default function FieldWeatherBar({ battle, battleLogActions }: FieldWeath
                 isActive ? `${theme.bg} ${theme.text}` : 'bg-gray-900 text-gray-500 hover:text-gray-300'
               }`}
             >
-              {WEATHER_LABELS[type]}{remaining != null ? ` (${remaining})` : ''}
+              {WEATHER_LABELS[type]}{isActive ? ` (${formatDuration(weather.setOnTurn, currentTurn, weather.wasMegaEvolved)})` : ''}
             </button>
           );
         })}
+        {weather && (
+          <button
+            type="button"
+            onClick={() => battleLogActions.setWeather(battle, weather.type, !weather.wasMegaEvolved)}
+            title="Toggle whether this was set by a Mega Evolution's ability (fixed 5-turn duration, no held rock possible)"
+            className={`px-1.5 py-0.5 text-[9px] font-semibold rounded-sm cursor-pointer transition-colors ${
+              weather.wasMegaEvolved ? 'bg-yellow-600 text-white' : 'bg-gray-900 text-gray-600 hover:text-gray-400'
+            }`}
+          >
+            via Mega
+          </button>
+        )}
       </div>
 
       <div className="flex items-center gap-1.5">
@@ -61,7 +87,6 @@ export default function FieldWeatherBar({ battle, battleLogActions }: FieldWeath
         {TERRAIN_OPTIONS.map(type => {
           const isActive = terrain?.type === type;
           const theme = getTerrainTheme(type);
-          const remaining = isActive ? getRemainingTurns(terrain.setOnTurn, DURATION, currentTurn) : null;
           return (
             <button
               key={type}
@@ -71,10 +96,22 @@ export default function FieldWeatherBar({ battle, battleLogActions }: FieldWeath
                 isActive ? `${theme.bg} ${theme.text}` : 'bg-gray-900 text-gray-500 hover:text-gray-300'
               }`}
             >
-              {TERRAIN_LABELS[type]}{remaining != null ? ` (${remaining})` : ''}
+              {TERRAIN_LABELS[type]}{isActive ? ` (${formatDuration(terrain.setOnTurn, currentTurn, terrain.wasMegaEvolved)})` : ''}
             </button>
           );
         })}
+        {terrain && (
+          <button
+            type="button"
+            onClick={() => battleLogActions.setTerrain(battle, terrain.type, !terrain.wasMegaEvolved)}
+            title="Toggle whether this was set by a Mega Evolution's ability (fixed 5-turn duration, no held rock possible)"
+            className={`px-1.5 py-0.5 text-[9px] font-semibold rounded-sm cursor-pointer transition-colors ${
+              terrain.wasMegaEvolved ? 'bg-yellow-600 text-white' : 'bg-gray-900 text-gray-600 hover:text-gray-400'
+            }`}
+          >
+            via Mega
+          </button>
+        )}
       </div>
     </div>
   );

@@ -1,17 +1,27 @@
 /**
  * TurnLog.tsx - Read-Only Chronological Turn/Action Render
- * Renders battle.turns exactly as logged, in order - no reordering or
- * priority computation (see useBattleLogActions.ts's logAction).
+ * Renders battle.turns in phase order (switch -> mega -> move, undefined
+ * treated as move) regardless of the order actions were tapped in while
+ * logging - real turns resolve switches, then Mega Evolutions, then moves.
+ * See useBattleLogActions.ts for how actions get their phase.
  */
 
-import type { Battle } from '../../types/pokemon';
-import { battlePokemonDisplayName } from '../../utils/battleLookup';
+import type { Battle, BattleAction } from '../../types/pokemon';
+import { battlePokemonDisplayName, isRepeatProtectUse } from '../../utils/battleLookup';
+import type { UseBattleLogActionsReturn } from '../../hooks/useBattleLogActions';
 
 interface TurnLogProps {
   battle: Battle;
+  battleLogActions: UseBattleLogActionsReturn;
 }
 
-export default function TurnLog({ battle }: TurnLogProps) {
+const PHASE_ORDER: Record<NonNullable<BattleAction['phase']>, number> = { switch: 0, mega: 1, move: 2 };
+
+function sortByPhase(actions: BattleAction[]): BattleAction[] {
+  return [...actions].sort((a, b) => PHASE_ORDER[a.phase ?? 'move'] - PHASE_ORDER[b.phase ?? 'move']);
+}
+
+export default function TurnLog({ battle, battleLogActions }: TurnLogProps) {
   return (
     <div className="flex flex-col gap-3">
       {battle.turns.map(turn => (
@@ -21,20 +31,33 @@ export default function TurnLog({ battle }: TurnLogProps) {
             <p className="text-xs text-gray-600 italic">No actions logged yet</p>
           ) : (
             <ul className="flex flex-col gap-1">
-              {turn.actions.map(action => (
-                <li key={action.id} className="text-sm">
-                  <span className={action.side === 'player' ? 'text-blue-400' : 'text-red-400'}>
-                    {battlePokemonDisplayName(battle, action.side, action.pokemonId)}
-                  </span>
-                  {action.move && <span className="text-gray-200"> used {action.move}</span>}
-                  {action.target && (
-                    <span className="text-gray-400">
-                      {' '}on {battlePokemonDisplayName(battle, action.target.side, action.target.pokemonId)}
+              {sortByPhase(turn.actions).map(action => {
+                const showFailChip = isRepeatProtectUse(battle, turn.number, action);
+                return (
+                  <li key={action.id} className="text-sm flex items-center gap-1.5">
+                    <span className={action.side === 'player' ? 'text-blue-400' : 'text-red-400'}>
+                      {battlePokemonDisplayName(battle, action.side, action.pokemonId)}
                     </span>
-                  )}
-                  {action.note && <span className="text-gray-500 italic"> ({action.note})</span>}
-                </li>
-              ))}
+                    {action.move && <span className="text-gray-200"> used {action.move}</span>}
+                    {action.target && action.target.length > 0 && (
+                      <span className="text-gray-400">
+                        {' '}on {action.target.map(t => battlePokemonDisplayName(battle, t.side, t.pokemonId)).join(' and ')}
+                      </span>
+                    )}
+                    {action.note && <span className="text-gray-500 italic"> ({action.note})</span>}
+                    {action.failed && <span className="text-red-400 text-xs italic">- failed</span>}
+                    {showFailChip && !action.failed && (
+                      <button
+                        type="button"
+                        onClick={() => battleLogActions.setActionFailed(battle, turn.number, action.id, true)}
+                        className="text-[10px] px-1.5 py-0.5 rounded bg-gray-800 text-gray-400 hover:text-red-300 hover:bg-red-900/40 cursor-pointer"
+                      >
+                        Failed?
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>

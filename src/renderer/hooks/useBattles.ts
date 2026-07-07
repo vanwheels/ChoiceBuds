@@ -7,13 +7,17 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import type { Battle, BattlesDatabase, BroughtPokemonSnapshot } from '../types/pokemon';
+import type { Battle, BattleAction, BattlesDatabase, BroughtPokemonSnapshot } from '../types/pokemon';
+
+/** A BattleAction's target as it may exist on disk before `target` became an array. */
+type LegacyTarget = NonNullable<BattleAction['target']> | { side: BattleAction['side']; pokemonId: string };
 
 /** Shape of a Battle as it may exist on disk from before a schema change - never exported, read-boundary only. */
 interface LegacyBattleShape {
   broughtFour?: BroughtPokemonSnapshot[];
   playerRoster?: BroughtPokemonSnapshot[];
   broughtIds?: string[];
+  megaEvolvedIds?: string[];
 }
 
 /**
@@ -24,6 +28,9 @@ interface LegacyBattleShape {
  * - playerRoster/broughtIds: replaced the old fixed-4 broughtFour - a
  *   legacy record's 4 brought Pokemon become playerRoster with all 4
  *   marked brought (matches what the old picker screen already enforced)
+ * - megaEvolvedIds: added for the click-to-log flow's Mega tracking
+ * - a logged action's `target` was a single object before spread-move
+ *   support - coerce it into a one-element array
  */
 function normalizeBattle(b: Battle & LegacyBattleShape): Battle {
   const playerRoster = b.playerRoster ?? b.broughtFour ?? [];
@@ -32,7 +39,15 @@ function normalizeBattle(b: Battle & LegacyBattleShape): Battle {
     ...b,
     playerRoster,
     broughtIds,
+    megaEvolvedIds: b.megaEvolvedIds ?? [],
     fieldState: b.fieldState ?? { playerSide: {}, opponentSide: {} },
+    turns: b.turns.map(turn => ({
+      ...turn,
+      actions: turn.actions.map(action => {
+        const target = action.target as unknown as LegacyTarget | undefined;
+        return { ...action, target: target && !Array.isArray(target) ? [target] : target };
+      }),
+    })),
   };
 }
 

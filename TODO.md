@@ -21,28 +21,18 @@ in a `Why:` line only when it's not obvious from the task itself.
   `Ability Ch.`, `Mégas`, `New Moves`, `New Abilities`, `Tierlist`, `Dex
   Entries`, `Update Status`.
 
-- **Battle Logger - beyond the core MVP** (see plan at
-  `C:\Users\vanny\.claude\plans\recursive-singing-graham.md` for full
-  context): field/side-condition tracking is done, battlefield redesign
-  Stage 1 is done (see Done below). **Stage 2 is next** (planned in full in
-  the plan file, not yet built): replace `ActionEntryBar.tsx`'s dropdown
-  entirely with click-mon -> click-move -> click-target logging on the
-  `Battlefield.tsx` component; add a `target` field to `MoveData` (PokeAPI
-  has it, unparsed today - same story as the move-flags feature); Protect-
-  fail prompts only on a Pokemon's 2nd+ consecutive protect-family move in
-  a row, never the first; lightweight outcome tags (Missed/Failed/No
-  Effect/Blocked by Protect/Blocked by Ability) instead of a rules engine;
-  turn-phase categorization (switch -> mega -> move) so the turn log always
-  displays in real-game resolution order regardless of tap order; weather/
-  terrain source-aware duration confidence (fixed 5 turns if set by a Mega,
-  an uncertainty marker if set by a non-Mega ability trigger since a Heat/
-  Damp/Icy/Smooth Rock could extend it to 8 and isn't knowable up front).
-  Still open beyond Stage 2: Bo3 "set" grouping across games, post-battle
-  damage-calc review (step through a logged battle's turns against the
-  Calc), and the stat-inference idea (needs Limitless/championsbattledata-
-  sourced per-species data first). Also noted but not built: synthesizing
-  turn-log entries when a field condition changes (the countdown display
-  already shows "set N turns ago" implicitly, so this is a nice-to-have).
+- **Battle Logger - beyond the core MVP**: field/side-condition tracking,
+  battlefield redesign Stage 1, and Stage 2's interactive click-to-log flow
+  are all done (see Done below). Still open: Bo3 "set" grouping across
+  games, post-battle damage-calc review (step through a logged battle's
+  turns against the Calc), and the stat-inference idea (needs Limitless/
+  championsbattledata-sourced per-species data first). Also noted but not
+  built: synthesizing turn-log entries when a field condition changes (the
+  countdown display already shows remaining turns implicitly, so this is a
+  nice-to-have); generic lightweight outcome tags beyond Protect-fail
+  (Missed/No Effect/Blocked by Ability) - considered during Stage 2 design
+  but dropped as unrequested scope, could revisit if the Protect-fail chip
+  pattern proves useful enough to generalize.
 - Everything else from the original 9-item roadmap discussion not yet
   built: general UI polish (#1), cross-device sync via file-sync-folder
   (#2), further Calc UI cleanup (#3), Settings page (#4), Limitless usage
@@ -50,6 +40,52 @@ in a `Why:` line only when it's not obvious from the task itself.
   the Battle Logger producing real win/loss data).
 
 ## Done
+
+- **Battle Logger Stage 2: interactive click-to-log flow** (2026-07-07):
+  `ActionEntryBar.tsx`'s manual dropdown bar is gone entirely, replaced by
+  click-mon -> click-move -> click-target directly on `Battlefield.tsx`
+  (new `MoveLogPopover.tsx` for the move list). Target resolution uses a
+  new `MoveData.target` field (fetched from PokeAPI like power/pp/accuracy)
+  mapped to a coarse category in `config/moveTargeting.ts` - self/field
+  moves auto-log immediately, spread moves auto-target every foe/ally, a
+  genuinely single-target move highlights the field and waits for one
+  click (manual override always allowed regardless of highlight, since
+  this is a log, not a rules enforcer). Also: player roster rows now
+  toggle brought status on a full-box click (was a tiny "+" corner
+  button), matching the opponent roster's existing box-click-to-toggle-
+  active feel; active-switching for the player moved entirely into the
+  Battlefield (click an empty slot for a bench picker, a corner "Bench"
+  button to swap out) since the roster click was now claimed by brought-
+  toggling. New `Battle.megaEvolvedIds` + a per-slot "Mega" button. New
+  small arrow (▲/▼) under/above a Battlefield slot for a Pokemon that
+  switched in that turn, cleared automatically next turn. `TurnLog.tsx`
+  now groups each turn's actions switch -> mega -> move regardless of tap
+  order, and shows a "Failed?" chip on Protect-family moves - but only on
+  a repeat use (`utils/battleLookup.ts::isRepeatProtectUse`), never the
+  first, per the user's ask not to waste a tap on the common case.
+  `FieldWeatherBar.tsx` gained a "via Mega" toggle: a Mega Evolution's
+  ability-triggered weather/terrain is always a fixed 5-turn duration (no
+  held-rock ambiguity possible), shown as `(5)`; anything else shows the
+  honest `(5-8?)` uncertain range until confirmed.
+
+  Two bugs caught during verification (see the run-desktop skill below):
+  a stale `game-data-cache.json` entry for a move fetched before `target`
+  existed had no `target` field at all, silently falling into the
+  "unknown target" bucket - fixed by treating a cached move without
+  `target` as a cache miss in `useGameData.ts::getCachedMove`, forcing one
+  self-healing re-fetch (same read-boundary philosophy as the Champions
+  override tables). Also: deleting `ActionEntryBar.tsx` silently dropped
+  the only "Next Turn"/"Undo Last" controls in the app - added a small
+  turn-controls row back in `ActiveBattleView.tsx` above the turn log.
+
+  Also built **`.claude/skills/run-desktop/`**: a Playwright `_electron`
+  driver + SKILL.md for automated UI testing (click by DOM text/selector,
+  read console/page errors directly, screenshot) instead of driving the
+  real OS mouse - the old approach couldn't distinguish a real renderer
+  crash from a missed click. `playwright-core` added as a devDependency.
+  Gotcha worth remembering: `ELECTRON_RUN_AS_NODE` (often already set in
+  this shell) makes `electron.exe` boot as plain Node with no window -
+  the driver strips it defensively before every launch.
 
 - **Battle Logger: sprite bug fix + battlefield redesign Stage 1**
   (2026-07-07): Basculegion's sprite wasn't loading in the Battle Logger -

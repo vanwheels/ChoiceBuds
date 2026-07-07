@@ -1,7 +1,8 @@
 /**
  * ActiveBattleView.tsx - Live Battle Log Screen
- * Composes both field panels, the turn/action log, and the entry bar. Every
- * mutation already persists immediately through useBattles (see
+ * Composes both roster panels, the interactive Battlefield (see
+ * Battlefield.tsx for the click-to-log flow), and the turn log below it.
+ * Every mutation already persists immediately through useBattles (see
  * useBattleLogActions.ts) - there's no separate "save" step, matching the
  * rest of the app's write-on-every-mutation convention.
  */
@@ -9,11 +10,11 @@
 import { useState } from 'react';
 import type { Battle, SpeciesRosterEntry } from '../../types/pokemon';
 import type { UseBattleLogActionsReturn } from '../../hooks/useBattleLogActions';
+import type { UseGameDataReturn } from '../../hooks/useGameData';
 import PlayerFieldPanel from './PlayerFieldPanel';
 import OpponentFieldPanel from './OpponentFieldPanel';
 import Battlefield from './Battlefield';
 import TurnLog from './TurnLog';
-import ActionEntryBar from './ActionEntryBar';
 import FieldWeatherBar from './FieldWeatherBar';
 
 interface ActiveBattleViewProps {
@@ -21,10 +22,11 @@ interface ActiveBattleViewProps {
   battleLogActions: UseBattleLogActionsReturn;
   roster: SpeciesRosterEntry[];
   resolveSprite: (remoteUrl: string) => string;
+  gameDataState: UseGameDataReturn;
   onClose: () => void;
 }
 
-export default function ActiveBattleView({ battle, battleLogActions, roster, resolveSprite, onClose }: ActiveBattleViewProps) {
+export default function ActiveBattleView({ battle, battleLogActions, roster, resolveSprite, gameDataState, onClose }: ActiveBattleViewProps) {
   const [notes, setNotes] = useState(battle.notes || '');
 
   return (
@@ -51,18 +53,36 @@ export default function ActiveBattleView({ battle, battleLogActions, roster, res
         </div>
       </div>
 
-      <ActionEntryBar battle={battle} battleLogActions={battleLogActions} />
-
       <FieldWeatherBar battle={battle} battleLogActions={battleLogActions} />
 
       <div className="flex flex-col lg:flex-row gap-4 items-start">
         <PlayerFieldPanel battle={battle} battleLogActions={battleLogActions} resolveSprite={resolveSprite} />
-        <Battlefield battle={battle} resolveSprite={resolveSprite} />
+        <Battlefield battle={battle} battleLogActions={battleLogActions} gameDataState={gameDataState} resolveSprite={resolveSprite} />
         <OpponentFieldPanel battle={battle} battleLogActions={battleLogActions} roster={roster} resolveSprite={resolveSprite} />
       </div>
 
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">Turn {battle.turns.length}</span>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => battleLogActions.undoLastAction(battle)}
+            className="px-3 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-gray-300 cursor-pointer"
+          >
+            Undo Last
+          </button>
+          <button
+            type="button"
+            onClick={() => battleLogActions.advanceTurn(battle)}
+            className="px-3 py-1 text-xs rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold cursor-pointer"
+          >
+            Next Turn
+          </button>
+        </div>
+      </div>
+
       <div className="bg-gray-900/40 rounded-lg p-3 max-h-[20rem] overflow-y-auto">
-        <TurnLog battle={battle} />
+        <TurnLog battle={battle} battleLogActions={battleLogActions} />
       </div>
 
       <textarea

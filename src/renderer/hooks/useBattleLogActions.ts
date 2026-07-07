@@ -12,9 +12,18 @@ import type {
   WeatherType, TerrainType, SideConditions,
 } from '../types/pokemon';
 import type { TurnTrackedCondition, BooleanHazard, StackableHazard } from '../config/fieldConditions';
+import { findBattlePokemon } from '../utils/battleLookup';
 
 export const MAX_OPPONENT_ROSTER_SIZE = 6;
 export const MAX_BROUGHT = 4;
+
+/** Pure append - shared by logAction and any mutation that needs to bundle a log entry into its own single updateBattle call (avoids racing two sequential updateBattle calls off the same stale closure). */
+function appendAction(turns: Battle['turns'], action: Omit<BattleAction, 'id'>): Battle['turns'] {
+  const next = [...turns];
+  const lastTurn = next[next.length - 1];
+  next[next.length - 1] = { ...lastTurn, actions: [...lastTurn.actions, { ...action, id: crypto.randomUUID() }] };
+  return next;
+}
 
 export interface UseBattleLogActionsReturn {
   startBattle: (team: Team) => Promise<string | null>;
@@ -23,15 +32,17 @@ export interface UseBattleLogActionsReturn {
   updateOpponentMoveTags: (battle: Battle, opponentId: string, ability?: string, item?: string) => Promise<boolean>;
   addOpponentMove: (battle: Battle, opponentId: string, move: string) => Promise<boolean>;
   removeOpponentMove: (battle: Battle, opponentId: string, move: string) => Promise<boolean>;
-  setActive: (battle: Battle, side: BattleSide, ids: string[]) => Promise<boolean>;
+  switchActive: (battle: Battle, side: BattleSide, pokemonId: string) => Promise<boolean>;
+  setMegaEvolved: (battle: Battle, pokemonId: string) => Promise<boolean>;
   setFainted: (battle: Battle, side: BattleSide, pokemonId: string, fainted: boolean) => Promise<boolean>;
   logAction: (battle: Battle, action: Omit<BattleAction, 'id'>) => Promise<boolean>;
+  setActionFailed: (battle: Battle, turnNumber: number, actionId: string, failed: boolean) => Promise<boolean>;
   advanceTurn: (battle: Battle) => Promise<boolean>;
   undoLastAction: (battle: Battle) => Promise<boolean>;
   setResult: (battle: Battle, result: Battle['result']) => Promise<boolean>;
   setNotes: (battle: Battle, notes: string) => Promise<boolean>;
-  setWeather: (battle: Battle, type: WeatherType | null) => Promise<boolean>;
-  setTerrain: (battle: Battle, type: TerrainType | null) => Promise<boolean>;
+  setWeather: (battle: Battle, type: WeatherType | null, wasMegaEvolved?: boolean) => Promise<boolean>;
+  setTerrain: (battle: Battle, type: TerrainType | null, wasMegaEvolved?: boolean) => Promise<boolean>;
   toggleTurnCondition: (battle: Battle, side: BattleSide, key: TurnTrackedCondition) => Promise<boolean>;
   toggleBooleanHazard: (battle: Battle, side: BattleSide, key: BooleanHazard) => Promise<boolean>;
   setStackableHazard: (battle: Battle, side: BattleSide, key: StackableHazard, layers: number) => Promise<boolean>;
@@ -75,6 +86,7 @@ export function useBattleLogActions(
       playerFaintedIds: [],
       opponentRoster: [],
       opponentActiveIds: [],
+      megaEvolvedIds: [],
       turns: [{ number: 1, actions: [] }],
       fieldState: { playerSide: {}, opponentSide: {} },
       result: 'in-progress',
@@ -144,10 +156,6 @@ export function useBattleLogActions(
     return updateBattle(battle.id, { opponentRoster });
   }, [updateBattle]);
 
-  const setActive = useCallback(async (battle: Battle, side: BattleSide, ids: string[]): Promise<boolean> => {
-    return updateBattle(battle.id, side === 'player' ? { playerActiveIds: ids } : { opponentActiveIds: ids });
-  }, [updateBattle]);
-
   const setFainted = useCallback(async (
     battle: Battle,
     side: BattleSide,
@@ -165,16 +173,68 @@ export function useBattleLogActions(
     return updateBattle(battle.id, { opponentRoster });
   }, [updateBattle]);
 
-  /** Appends to the last turn's action list, in the order logged. */
+  /**
+   * Appends to the last turn's action list, in the order logged. Logging an
+   * opponent's move also reveals it (dedup, same rule as addOpponentMove)
+   * in this same updateBattle call - the click-to-log flow never needs a
+   * separate reveal step for a freshly-typed opponent move.
+   */
   const logAction = useCallback(async (battle: Battle, action: Omit<BattleAction, 'id'>): Promise<boolean> => {
     if (battle.turns.length === 0) return false;
+    const trimmedMove = action.move?.trim();
+    const opponentRoster = action.side === 'opponent' && trimmedMove
+      ? battle.opponentRoster.map(o => {
+          if (o.id !== action.pokemonId || o.moves.some(m => m.toLowerCase() === trimmedMove.toLowerCase())) return o;
+          return { ...o, moves: [...o.moves, trimmedMove] };
+        })
+      : battle.opponentRoster;
+    return updateBattle(battle.id, { turns: appendAction(battle.turns, action), opponentRoster });
+  }, [updateBattle]);
 
-    const turns = [...battle.turns];
-    const lastTurn = turns[turns.length - 1];
-    turns[turns.length - 1] = {
-      ...lastTurn,
-      actions: [...lastTurn.actions, { ...action, id: crypto.randomUUID() }],
-    };
+  /**
+   * Toggles a Pokemon in/out of its side's active slots (capped at 2 - to
+   * bring in a 3rd, bench one first, same ergonomic as before). Bringing a
+   * Pokemon IN also logs a switch-phase action, which is what drives the
+   * Battlefield's switched-in arrow for the rest of the current turn - both
+   * changes go through one updateBattle call so they can't race each other.
+   */
+  const switchActive = useCallback(async (battle: Battle, side: BattleSide, pokemonId: string): Promise<boolean> => {
+    const activeIds = side === 'player' ? battle.playerActiveIds : battle.opponentActiveIds;
+    const isActive = activeIds.includes(pokemonId);
+    if (!isActive && side === 'player' && !battle.broughtIds.includes(pokemonId)) return false;
+    if (!isActive && activeIds.length >= 2) return false;
+
+    const nextActiveIds = isActive ? activeIds.filter(id => id !== pokemonId) : [...activeIds, pokemonId];
+    const turns = isActive ? battle.turns : appendAction(battle.turns, { side, pokemonId, phase: 'switch', note: 'Switched in' });
+    return updateBattle(battle.id, {
+      ...(side === 'player' ? { playerActiveIds: nextActiveIds } : { opponentActiveIds: nextActiveIds }),
+      turns,
+    });
+  }, [updateBattle]);
+
+  /** Marks a Pokemon as having Mega Evolved this battle (once only) and logs a mega-phase action. */
+  const setMegaEvolved = useCallback(async (battle: Battle, pokemonId: string): Promise<boolean> => {
+    if (battle.megaEvolvedIds.includes(pokemonId)) return false;
+    const side: BattleSide = battle.playerRoster.some(p => p.id === pokemonId) ? 'player' : 'opponent';
+    if (!findBattlePokemon(battle, side, pokemonId)) return false;
+
+    return updateBattle(battle.id, {
+      megaEvolvedIds: [...battle.megaEvolvedIds, pokemonId],
+      turns: appendAction(battle.turns, { side, pokemonId, phase: 'mega', note: 'Mega Evolved' }),
+    });
+  }, [updateBattle]);
+
+  /** Powers the TurnLog's "Failed?" chip on a repeat Protect-family use. */
+  const setActionFailed = useCallback(async (
+    battle: Battle,
+    turnNumber: number,
+    actionId: string,
+    failed: boolean
+  ): Promise<boolean> => {
+    const turns = battle.turns.map(turn => turn.number !== turnNumber ? turn : {
+      ...turn,
+      actions: turn.actions.map(action => action.id !== actionId ? action : { ...action, failed }),
+    });
     return updateBattle(battle.id, { turns });
   }, [updateBattle]);
 
@@ -203,17 +263,25 @@ export function useBattleLogActions(
     return updateBattle(battle.id, { notes });
   }, [updateBattle]);
 
-  const setWeather = useCallback(async (battle: Battle, type: WeatherType | null): Promise<boolean> => {
+  const setWeather = useCallback(async (
+    battle: Battle,
+    type: WeatherType | null,
+    wasMegaEvolved?: boolean
+  ): Promise<boolean> => {
     const currentTurn = battle.turns.length;
     return updateBattle(battle.id, {
-      fieldState: { ...battle.fieldState, weather: type ? { type, setOnTurn: currentTurn } : undefined },
+      fieldState: { ...battle.fieldState, weather: type ? { type, setOnTurn: currentTurn, wasMegaEvolved } : undefined },
     });
   }, [updateBattle]);
 
-  const setTerrain = useCallback(async (battle: Battle, type: TerrainType | null): Promise<boolean> => {
+  const setTerrain = useCallback(async (
+    battle: Battle,
+    type: TerrainType | null,
+    wasMegaEvolved?: boolean
+  ): Promise<boolean> => {
     const currentTurn = battle.turns.length;
     return updateBattle(battle.id, {
-      fieldState: { ...battle.fieldState, terrain: type ? { type, setOnTurn: currentTurn } : undefined },
+      fieldState: { ...battle.fieldState, terrain: type ? { type, setOnTurn: currentTurn, wasMegaEvolved } : undefined },
     });
   }, [updateBattle]);
 
@@ -267,9 +335,11 @@ export function useBattleLogActions(
     updateOpponentMoveTags,
     addOpponentMove,
     removeOpponentMove,
-    setActive,
+    switchActive,
+    setMegaEvolved,
     setFainted,
     logAction,
+    setActionFailed,
     advanceTurn,
     undoLastAction,
     setResult,

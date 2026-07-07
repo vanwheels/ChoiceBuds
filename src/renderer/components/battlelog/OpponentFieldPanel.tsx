@@ -27,14 +27,6 @@ export default function OpponentFieldPanel({ battle, battleLogActions, roster, r
   const [isAddOpen, setIsAddOpen] = useState(false);
   const isFull = battle.opponentRoster.length >= MAX_OPPONENT_ROSTER_SIZE;
 
-  const toggleActive = (id: string) => {
-    const isActive = battle.opponentActiveIds.includes(id);
-    const next = isActive
-      ? battle.opponentActiveIds.filter(activeId => activeId !== id)
-      : battle.opponentActiveIds.length < 2 ? [...battle.opponentActiveIds, id] : battle.opponentActiveIds;
-    battleLogActions.setActive(battle, 'opponent', next);
-  };
-
   const toggleFainted = (id: string) => {
     const opponent = battle.opponentRoster.find(o => o.id === id);
     if (!opponent) return;
@@ -63,7 +55,7 @@ export default function OpponentFieldPanel({ battle, battleLogActions, roster, r
       activeColorClass="border-red-500 bg-red-600/20"
       rows={rows}
       resolveSprite={resolveSprite}
-      onRowClick={toggleActive}
+      onRowClick={id => battleLogActions.switchActive(battle, 'opponent', id)}
       onToggleFainted={toggleFainted}
       addSlot={
         isFull ? null : isAddOpen ? (
