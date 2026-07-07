@@ -5,10 +5,37 @@ in a `Why:` line only when it's not obvious from the task itself.
 
 ## In progress / up next
 
-(nothing queued right now)
+- **Battle Logger - beyond the core MVP** (see plan at
+  `C:\Users\vanny\.claude\plans\recursive-singing-graham.md` for full
+  context): field/side-condition auto-tracking with turn countdowns
+  (Tailwind, screens, weather, hazards), Bo3 "set" grouping across games,
+  post-battle damage-calc review (step through a logged battle's turns
+  against the Calc), and the stat-inference idea (guess a foe's likely
+  nature/EV spread from observed damage ranges instead of manual entry -
+  needs Limitless/championsbattledata-sourced per-species data first).
+- Everything else from the original 9-item roadmap discussion not yet
+  built: general UI polish (#1), cross-device sync via file-sync-folder
+  (#2), further Calc UI cleanup (#3), Settings page (#4), Limitless usage
+  data once the API key is approved (#7), Statistics page (#9, depends on
+  the Battle Logger producing real win/loss data).
 
 ## Done
 
+- **Battle Logger MVP** (2026-07-06): the project's primary objective.
+  Manually log a live VGC battle turn-by-turn while playing on a separate
+  device - pick a saved team, bring 4 of its Pokemon, log an ordered
+  sequence of actions per turn exactly as observed (no turn-order
+  prediction), track which 2 Pokemon are active/fainted per side, build an
+  opponent roster incrementally with simple revealed move/ability/item tags
+  (ephemeral, per-battle), set a win/loss result, and browse/delete past
+  battles. New `battles.json` store (`useBattles.ts` CRUD +
+  `useBattleLogActions.ts` for the higher-level mutations, mirroring
+  `useTeams.ts`/`useRosterActions.ts` exactly) and a new lazy-loaded
+  `components/battlelog/` tab. Verified end-to-end in a real running
+  instance (not just type-check/lint) - team pick, 4-pick cap, battle
+  start, action logging, opponent quick-add via the reused
+  `SpeciesPickerCard`, win/loss, persistence, and delete all confirmed
+  working against real saved teams.
 - **Project health/cleanup pass** (2026-07-06): removed 12 stale one-off doc
   files (content already in git history/CLAUDE.md); removed dead code
   (`MoveBanner.tsx`, unused move-category-theme block, unused `VGC_MOVES`);

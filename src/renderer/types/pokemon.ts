@@ -92,6 +92,99 @@ export interface TeamsDatabase {
   lastModified: number; // Unix timestamp
 }
 
+export type BattleSide = 'player' | 'opponent';
+
+/**
+ * Frozen copy of one brought Pokemon at battle-start time, independent of
+ * the live Team/ImportedPokemonInfo (which has no stable per-Pokemon id) -
+ * editing or deleting the source team later never touches a past log.
+ */
+export interface BroughtPokemonSnapshot {
+  id: string; // fresh crypto.randomUUID(), unrelated to the source Team's data
+  species: string;
+  nickname?: string;
+  ability?: string;
+  item?: string;
+  teraType?: string;
+  moves: string[];
+  gender?: 'M' | 'F' | 'N' | '';
+  pokedexNumber: number;
+  types: string[];
+  spriteUrl: string;
+}
+
+/**
+ * One opponent Pokemon as revealed during a battle. Grows incrementally as
+ * the user adds foes they see - ephemeral, per-battle only, never persisted
+ * or aggregated across battles.
+ */
+export interface OpponentPokemonEntry {
+  id: string;
+  species: string;
+  pokedexNumber: number;
+  spriteUrl: string;
+  moves: string[]; // revealed moves, a growable tag list (not a fixed 4)
+  ability?: string;
+  item?: string;
+  teraType?: string;
+  fainted: boolean;
+  addedAt: number; // Unix timestamp
+}
+
+/**
+ * One logged action within a turn. `move`/`note` are freeform strings, not
+ * an enum, so "mega evolved", "Protect", "fainted to residual" etc. all just
+ * live in `note` - this is a flexible manual log, not a rigid simulator.
+ */
+export interface BattleAction {
+  id: string;
+  side: BattleSide;
+  pokemonId: string; // id into broughtFour (player) or opponentRoster (opponent)
+  move?: string;
+  target?: { side: BattleSide; pokemonId: string };
+  note?: string;
+}
+
+/**
+ * A single in-game turn: an ordered sequence of actions exactly as observed
+ * live (doubles = up to 4 actions/turn, 2 per side). No attempt is made to
+ * predict/compute turn order from priority/abilities/speed - the user is
+ * watching the real battle and records what actually happened, in order.
+ */
+export interface Turn {
+  number: number;
+  actions: BattleAction[];
+}
+
+/**
+ * One manually-logged Pokemon Champions VGC battle (doubles). See
+ * useBattleLogActions.ts for the higher-level mutations that build/update
+ * these records.
+ */
+export interface Battle {
+  id: string;
+  date: number; // Unix timestamp
+  teamId: string; // links back to the source Team (may later be edited/deleted)
+  teamName: string; // snapshot - display never breaks if the team is renamed/deleted
+  format: Team['format'];
+  broughtFour: BroughtPokemonSnapshot[]; // exactly 4, immutable after battle start
+  playerActiveIds: string[]; // 0-2 ids from broughtFour
+  playerFaintedIds: string[]; // ids from broughtFour
+  opponentRoster: OpponentPokemonEntry[]; // starts empty, grows during the battle
+  opponentActiveIds: string[]; // 0-2 ids from opponentRoster
+  turns: Turn[];
+  result: 'win' | 'loss' | 'in-progress';
+  notes?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface BattlesDatabase {
+  version: number;
+  battles: Battle[];
+  lastModified: number; // Unix timestamp
+}
+
 /**
  * Database schema state for PokeAPI cache
  * Reduces redundant API calls by caching species data

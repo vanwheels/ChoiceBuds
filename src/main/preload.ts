@@ -76,6 +76,23 @@ const electronAPI = {
   },
 
   /**
+   * Reads the battle logs database from userData directory
+   * @returns Promise resolving to BattlesDatabase or null if file doesn't exist
+   */
+  readBattlesDatabase: async (): Promise<any> => {
+    return ipcRenderer.invoke('file:read-battles-database');
+  },
+
+  /**
+   * Writes the battle logs database to userData directory
+   * @param data - BattlesDatabase object to persist
+   * @returns Promise resolving to success boolean
+   */
+  writeBattlesDatabase: async (data: any): Promise<boolean> => {
+    return ipcRenderer.invoke('file:write-battles-database', data);
+  },
+
+  /**
    * Checks whether a sprite is already cached locally, without fetching it
    * @param remoteUrl - the original remote sprite URL
    * @returns Promise resolving to a local data: URL, or null if not cached

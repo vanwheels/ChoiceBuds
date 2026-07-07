@@ -51,6 +51,13 @@ function getGameDataCachePath(): string {
 }
 
 /**
+ * Get the full path to the battle logs database file
+ */
+function getBattlesDatabasePath(): string {
+  return path.join(getUserDataPath(), 'battles.json');
+}
+
+/**
  * Get (and ensure exists) the local sprite cache directory
  */
 async function getSpriteCacheDir(): Promise<string> {
@@ -183,6 +190,37 @@ function registerIPCHandlers(): void {
    */
   ipcMain.handle('file:get-userdata-path', async () => {
     return getUserDataPath();
+  });
+
+  /**
+   * Read battle logs database from userData directory
+   */
+  ipcMain.handle('file:read-battles-database', async () => {
+    try {
+      const filePath = getBattlesDatabasePath();
+      const fileContent = await fs.readFile(filePath, 'utf-8');
+      return JSON.parse(fileContent);
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+        return null;
+      }
+      console.error('Error reading battles database:', err);
+      throw err;
+    }
+  });
+
+  /**
+   * Write battle logs database to userData directory
+   */
+  ipcMain.handle('file:write-battles-database', async (_event, data) => {
+    try {
+      const filePath = getBattlesDatabasePath();
+      await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
+      return true;
+    } catch (err) {
+      console.error('Error writing battles database:', err);
+      return false;
+    }
   });
 
   /**

@@ -12,15 +12,17 @@ import { useGameData } from './hooks/useGameData';
 import { useSpeciesRoster } from './hooks/useSpeciesRoster';
 import { useSpriteCache } from './hooks/useSpriteCache';
 import { useInitialSync } from './hooks/useInitialSync';
+import { useBattles } from './hooks/useBattles';
 import TeamsPage from './components/TeamsPage';
 import LoadingScreen from './components/LoadingScreen';
 
-// Lazy-loaded so the Calc tab's code - including @smogon/calc, the app's
-// heaviest dependency - is only fetched/parsed once a user actually opens
-// the Calc tab, not on every app startup.
+// Lazy-loaded so each tab's code is only fetched/parsed once a user actually
+// opens it, not on every app startup - CalcPage in particular pulls in
+// @smogon/calc, the app's heaviest dependency.
 const CalcPage = lazy(() => import('./components/calc/CalcPage'));
+const BattleLogPage = lazy(() => import('./components/battlelog/BattleLogPage'));
 
-type ActiveTab = 'teams' | 'calc';
+type ActiveTab = 'teams' | 'calc' | 'battles';
 
 /**
  * Main application shell component
@@ -45,6 +47,7 @@ export default function App() {
   const gameDataState = useGameData();
   const speciesRosterState = useSpeciesRoster();
   const spriteCacheState = useSpriteCache();
+  const battlesState = useBattles();
   const { isDone: isInitialSyncDone, progress: initialSyncProgress } = useInitialSync(gameDataState, speciesRosterState, spriteCacheState);
 
   if (!isInitialSyncDone) {
@@ -85,6 +88,16 @@ export default function App() {
               </button>
             </li>
             <li>
+              <button
+                onClick={() => setActiveTab('battles')}
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
+                  activeTab === 'battles' ? 'bg-blue-600 hover:bg-blue-700' : 'text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                Battle Log
+              </button>
+            </li>
+            <li>
               <button className="w-full text-left px-4 py-2 rounded-lg text-gray-400 hover:bg-gray-700 transition-colors">
                 Settings
               </button>
@@ -118,9 +131,18 @@ export default function App() {
             speciesRosterState={speciesRosterState}
             spriteCacheState={spriteCacheState}
           />
-        ) : (
+        ) : activeTab === 'calc' ? (
           <Suspense fallback={<div className="text-gray-400 text-sm">Loading calculator...</div>}>
             <CalcPage gameDataState={gameDataState} />
+          </Suspense>
+        ) : (
+          <Suspense fallback={<div className="text-gray-400 text-sm">Loading battle log...</div>}>
+            <BattleLogPage
+              battlesState={battlesState}
+              teamsState={teamsState}
+              speciesRosterState={speciesRosterState}
+              spriteCacheState={spriteCacheState}
+            />
           </Suspense>
         )}
       </main>
