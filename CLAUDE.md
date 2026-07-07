@@ -23,7 +23,7 @@ There is no test runner wired up. `src/renderer/services/parser.test.ts` is a st
 - `src/main/preload.ts` — contextBridge script exposing `window.electron.{readTeamsDatabase, writeTeamsDatabase, readPokeAPICache, writePokeAPICache, getUserDataPath}`.
 - `src/renderer/` — the React app (Vite root aliases `@` → `src/renderer`).
 
-**Hard rule:** `src/main/**` must never import from `src/renderer/**`. The preload script intentionally types its IPC payloads as `any` instead of importing renderer types — an earlier bug (see `DUPLICATE_BUNDLING_FIX.md`) caused Vite to bundle every renderer component twice (once for the renderer, once for the preload build) because `preload.ts` imported a type from `../renderer/types/pokemon`, breaking HMR. The renderer casts `window.electron` results to the real types from `src/renderer/types/pokemon.ts` itself.
+**Hard rule:** `src/main/**` must never import from `src/renderer/**`. The preload script intentionally types its IPC payloads as `any` instead of importing renderer types. Previously `preload.ts` imported a type from `../renderer/types/pokemon`, which caused Vite's electron plugin to bundle every renderer component twice — once for the renderer entry, once for the separately-compiled preload build — since importing from the renderer directory pulls all of that code into whichever bundle references it. That broke HMR (DevTools Sources showed every component appearing twice, and file edits stopped being picked up). The renderer casts `window.electron` results to the real types from `src/renderer/types/pokemon.ts` itself instead.
 
 ### Renderer layers
 
@@ -56,7 +56,7 @@ When adding a new gender-divergent or gender-locked/genderless species, update b
 ## Style rules (from `.clinerules`)
 
 - Strict decoupled architecture — no monolithic files.
-- `src/renderer/components/*` must stay under 250 lines; extract sub-components rather than growing one file.
+- `src/renderer/components/*` should stay small and single-purpose; extract sub-components when a file starts mixing unrelated concerns rather than growing one file. This used to be a hard 250-line cap — that number was tuned for a previous pay-per-token AI workflow's cost pressure, not for its own sake. Treat it as a smell test now (does this file still do one thing?), not a line-count gate — a cohesive file a bit over 250 lines doesn't need to be split just to hit a number, but a file dragging in unrelated responsibilities should still be split regardless of length.
 - All core app state changes flow through custom hooks in `src/renderer/hooks/`; never manage cross-render state directly in JSX/markup.
 - Static theme tables, hex colors, and type/category maps live in `src/renderer/config/`, never inlined in components or utilities.
 - Only direct JSON `fetch` calls to `pokeapi.co` are allowed for game data at runtime — no scraping, no third-party proxy middleware. **Exception (project policy — a decision made for this codebase, not a documented grant of permission from Serebii itself):** `serebii.net` may be used two ways:

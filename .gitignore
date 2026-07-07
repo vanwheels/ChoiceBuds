@@ -1,8 +1,8 @@
 node_modules/
 dist/
+dist-electron/
 out/
-.git/
+release/
 .vscode/
 *.log
-package-lock.json
 .aider*

@@ -23,7 +23,7 @@ export function normalizeNameForAPI(name: string): string {
   return name
     .toLowerCase()
     .trim()
-    .replace(/[^a-z0-9\s\-]/g, '') // Remove all non-alphanumeric except spaces and hyphens
+    .replace(/[^a-z0-9\s-]/g, '') // Remove all non-alphanumeric except spaces and hyphens
     .replace(/[\s_]+/g, '-'); // Spaces and underscores to hyphens
 }
 

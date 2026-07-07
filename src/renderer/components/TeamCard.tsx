@@ -7,6 +7,7 @@ import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
 import { useRosterActions } from '../hooks/useRosterActions';
 import { toRegulationId } from '../utils/pokemonRules';
+import { getPixelSpriteUrl } from '../utils/spriteUrl';
 import PokemonCard from './PokemonCard';
 import SpeciesPickerCard from './SpeciesPickerCard';
 import TeamValidationButton from './TeamValidationButton';
@@ -53,7 +54,7 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
           {team.pokemon && team.pokemon.map((p, idx) => (
             <img
               key={idx}
-              src={spriteCacheState.resolveSprite(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.showdownData.shiny ? 'shiny/' : ''}${p.pokedexNumber}.png`)}
+              src={spriteCacheState.resolveSprite(getPixelSpriteUrl(p.pokedexNumber, p.showdownData.species, p.showdownData.gender || 'M', p.showdownData.shiny))}
               alt={p.showdownData.species}
               className="w-8 h-8 object-contain [image-rendering:pixelated] shrink-0"
             />

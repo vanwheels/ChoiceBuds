@@ -23,6 +23,7 @@ import { isGenderless, isFemaleLocked } from '../config/pokemonRules';
 import { toRegulationId } from '../utils/pokemonRules';
 import { getMegaApiSlug } from '../config/megaEvolution';
 import { useMegaSprite } from '../hooks/useMegaSprite';
+import { getPixelSpriteUrl } from '../utils/spriteUrl';
 
 interface PokemonCardProps {
   pokemon: ImportedPokemonInfo;
@@ -37,14 +38,6 @@ interface PokemonCardProps {
 }
 
 const FORM_DIVERGENT: Record<string, boolean> = { 'basculegion': true, 'indeedee': true, 'meowstic': true, 'oinkologne': true };
-
-function getPixelSpriteUrl(id: number, name: string, gender: string, shiny: boolean): string {
-  const n = name.toLowerCase().trim();
-  const s = shiny ? 'shiny/' : '';
-  if (n.includes('basculegion') || n.includes('indeedee')) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${s}${id}.png`;
-  if (gender === 'F' && ['pikachu', 'eevee', 'venusaur', 'raichu', 'torchic', 'wobbuffet'].includes(n)) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${s}female/${id}.png`;
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${s}${id}.png`;
-}
 
 export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = false, updateTeam, gameDataState, speciesRosterState, spriteCacheState, rosterActions }: PokemonCardProps) {
   const { showdownData, types, pokedexNumber } = pokemon;

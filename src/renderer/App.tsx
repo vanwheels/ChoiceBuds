@@ -4,7 +4,7 @@
  * Provides core data contexts via custom hooks down the component tree
  */
 
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { useTeams } from './hooks/useTeams';
 import { useDatabase } from './hooks/useDatabase';
 import { useActiveEditor } from './hooks/useActiveEditor';
@@ -12,10 +12,13 @@ import { useGameData } from './hooks/useGameData';
 import { useSpeciesRoster } from './hooks/useSpeciesRoster';
 import { useSpriteCache } from './hooks/useSpriteCache';
 import { useInitialSync } from './hooks/useInitialSync';
-import { useDamageCalc } from './hooks/useDamageCalc';
 import TeamsPage from './components/TeamsPage';
-import CalcPage from './components/calc/CalcPage';
 import LoadingScreen from './components/LoadingScreen';
+
+// Lazy-loaded so the Calc tab's code - including @smogon/calc, the app's
+// heaviest dependency - is only fetched/parsed once a user actually opens
+// the Calc tab, not on every app startup.
+const CalcPage = lazy(() => import('./components/calc/CalcPage'));
 
 type ActiveTab = 'teams' | 'calc';
 
@@ -43,7 +46,6 @@ export default function App() {
   const speciesRosterState = useSpeciesRoster();
   const spriteCacheState = useSpriteCache();
   const { isDone: isInitialSyncDone, progress: initialSyncProgress } = useInitialSync(gameDataState, speciesRosterState, spriteCacheState);
-  const calcState = useDamageCalc(gameDataState);
 
   if (!isInitialSyncDone) {
     return <LoadingScreen progress={initialSyncProgress} />;
@@ -117,7 +119,9 @@ export default function App() {
             spriteCacheState={spriteCacheState}
           />
         ) : (
-          <CalcPage calcState={calcState} />
+          <Suspense fallback={<div className="text-gray-400 text-sm">Loading calculator...</div>}>
+            <CalcPage gameDataState={gameDataState} />
+          </Suspense>
         )}
       </main>
     </div>

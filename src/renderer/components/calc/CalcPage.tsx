@@ -4,10 +4,15 @@
  * move grids (one per Pokémon) up top, a shared result detail panel below
  * them, then a 3-column row (Pokémon 1 | Field | Pokémon 2). Not yet wired
  * into the teams database - see useDamageCalc.ts.
+ *
+ * useDamageCalc (and its @smogon/calc import - the heaviest dependency in
+ * the app) is instantiated here rather than in App.tsx specifically so that
+ * this whole module stays behind App.tsx's React.lazy() boundary - a
+ * Teams-only session never has to parse/load the calc engine.
  */
 
-import type { UseDamageCalcReturn } from '../../hooks/useDamageCalc';
-import { ALL_REGULATION_IDS } from '../../hooks/useDamageCalc';
+import { useDamageCalc, ALL_REGULATION_IDS } from '../../hooks/useDamageCalc';
+import type { UseGameDataReturn } from '../../hooks/useGameData';
 import { getRegulationLabel } from '../../utils/pokemonRules';
 import CalcPokemonPanel from './CalcPokemonPanel';
 import CalcMoveGrid from './CalcMoveGrid';
@@ -15,10 +20,11 @@ import CalcFieldPanel from './CalcFieldPanel';
 import CalcResultPanel from './CalcResultPanel';
 
 interface CalcPageProps {
-  calcState: UseDamageCalcReturn;
+  gameDataState: UseGameDataReturn;
 }
 
-export default function CalcPage({ calcState }: CalcPageProps) {
+export default function CalcPage({ gameDataState }: CalcPageProps) {
+  const calcState = useDamageCalc(gameDataState);
   const {
     regulationId, setRegulationId,
     pokemon1, pokemon2, setPokemon1, setPokemon2, setPokemon1Move, setPokemon2Move,

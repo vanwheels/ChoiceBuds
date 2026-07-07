@@ -93,52 +93,11 @@ export const TYPE_THEMES: Record<string, TypeTheme> = {
 };
 
 /**
- * Move category theme configuration
- * Maps physical/special/status to color schemes
- */
-export interface MoveCategoryTheme {
-  bg: string;
-  text: string;
-  border: string;
-}
-
-/**
- * Move category color mappings
- * Physical = red, Special = blue, Status = gray
- */
-export const MOVE_CATEGORY_THEMES: Record<string, MoveCategoryTheme> = {
-  physical: {
-    bg: 'bg-red-100',
-    text: 'text-red-800',
-    border: 'border-red-300',
-  },
-  special: {
-    bg: 'bg-blue-100',
-    text: 'text-blue-800',
-    border: 'border-blue-300',
-  },
-  status: {
-    bg: 'bg-gray-100',
-    text: 'text-gray-800',
-    border: 'border-gray-300',
-  },
-};
-
-/**
  * Default fallback theme for unknown types
  */
 export const DEFAULT_TYPE_THEME: TypeTheme = {
   bg: 'bg-gray-300',
   text: 'text-gray-900',
-};
-
-/**
- * Default fallback theme for unknown move categories
- */
-export const DEFAULT_MOVE_CATEGORY_THEME: MoveCategoryTheme = {
-  bg: 'bg-gray-100',
-  text: 'text-gray-700',
-  border: 'border-gray-300',
 };
 
 /**
@@ -149,14 +108,4 @@ export const DEFAULT_MOVE_CATEGORY_THEME: MoveCategoryTheme = {
 export function getTypeTheme(type: string): TypeTheme {
   const normalizedType = type.toLowerCase().trim();
   return TYPE_THEMES[normalizedType] || DEFAULT_TYPE_THEME;
-}
-
-/**
- * Retrieves theme for a given move category
- * @param category - Category name (physical/special/status, case-insensitive)
- * @returns MoveCategoryTheme object with Tailwind classes
- */
-export function getMoveCategoryTheme(category: string): MoveCategoryTheme {
-  const normalizedCategory = category.toLowerCase().trim();
-  return MOVE_CATEGORY_THEMES[normalizedCategory] || DEFAULT_MOVE_CATEGORY_THEME;
 }
