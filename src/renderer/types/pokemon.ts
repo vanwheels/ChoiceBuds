@@ -125,9 +125,11 @@ export interface OpponentPokemonEntry {
   species: string;
   pokedexNumber: number;
   spriteUrl: string;
+  types: string[]; // fetched live at add-time (see useBattleLogActions.ts::addOpponentPokemon) - powers type-effectiveness tags
   moves: string[]; // revealed moves, a growable tag list (not a fixed 4)
   ability?: string;
   item?: string;
+  itemConsumed?: boolean; // true once a one-time consumable item (berry, Focus Sash, etc.) has triggered - see config/vgcData.ts::isConsumableItem
   fainted: boolean;
   addedAt: number; // Unix timestamp
 }
@@ -151,6 +153,10 @@ export interface BattleAction {
   phase?: 'switch' | 'mega' | 'move';
   failed?: boolean;
   note?: string;
+  // Type-effectiveness multiplier per target, computed at log time from the
+  // move's type and each target's types (see config/typeEffectiveness.ts) -
+  // only present for damaging moves, absent for status moves/self/field.
+  effectiveness?: { pokemonId: string; multiplier: number }[];
 }
 
 /**
@@ -186,6 +192,12 @@ export interface SideConditions {
   stickyWeb?: boolean;
   spikes?: number; // 0-3 layers
   toxicSpikes?: number; // 0-2 layers
+  // Light Clay extends Reflect/Light Screen/Aurora Veil to 8 turns instead of
+  // the standard 5 - Tailwind/Safeguard/Mist have no extending item in this
+  // game, so they have no equivalent flag. See config/fieldConditions.ts.
+  reflectExtended?: boolean;
+  lightScreenExtended?: boolean;
+  auroraVeilExtended?: boolean;
 }
 
 /**

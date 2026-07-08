@@ -9,7 +9,7 @@
  * convention.
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Battle, SpeciesRosterEntry } from '../../types/pokemon';
 import type { UseBattleLogActionsReturn } from '../../hooks/useBattleLogActions';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
@@ -29,6 +29,15 @@ interface ActiveBattleViewProps {
 
 export default function ActiveBattleView({ battle, battleLogActions, roster, resolveSprite, gameDataState, onClose }: ActiveBattleViewProps) {
   const [notes, setNotes] = useState(battle.notes || '');
+  const turnLogRef = useRef<HTMLDivElement>(null);
+
+  // Always scroll to the newest turn as the log grows, so the latest
+  // action is visible without the user having to manually scroll down.
+  const lastTurn = battle.turns[battle.turns.length - 1];
+  useEffect(() => {
+    const el = turnLogRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [battle.turns.length, lastTurn?.actions.length]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -80,12 +89,18 @@ export default function ActiveBattleView({ battle, battleLogActions, roster, res
             </div>
           </div>
 
-          <div className="flex-1 min-h-[12rem] max-h-[24rem] bg-gray-900/40 rounded-lg p-3 overflow-y-auto">
+          <div ref={turnLogRef} className="flex-1 min-h-[12rem] max-h-[24rem] bg-gray-900/40 rounded-lg p-3 overflow-y-auto">
             <TurnLog battle={battle} battleLogActions={battleLogActions} />
           </div>
         </div>
 
-        <OpponentFieldPanel battle={battle} battleLogActions={battleLogActions} roster={roster} resolveSprite={resolveSprite} />
+        <OpponentFieldPanel
+          battle={battle}
+          battleLogActions={battleLogActions}
+          roster={roster}
+          resolveSprite={resolveSprite}
+          gameDataState={gameDataState}
+        />
       </div>
 
       <textarea

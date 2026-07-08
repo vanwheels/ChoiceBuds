@@ -16,8 +16,15 @@ import { findBattlePokemon, canActThisTurn, canSwitchOutThisTurn, requiredActive
 import { getSwitchInEffect } from '../config/onSwitchInAbilities';
 import { getReactiveLowerEffect } from '../config/reactiveAbilities';
 import { getMoveFieldEffect, type MoveFieldEffect } from '../config/moveFieldEffects';
+import { getMoveStatEffect } from '../config/moveStatEffects';
+import { getMegaApiSlug } from '../config/megaEvolution';
+import { getMegaAbility } from '../config/megaAbilities';
+import { fetchPokemonData } from '../services/pokeapi';
 import { STAT_LABELS } from '../config/statStages';
-import { WEATHER_LABELS, TERRAIN_LABELS, STACKABLE_HAZARD_MAX } from '../config/fieldConditions';
+import {
+  WEATHER_LABELS, TERRAIN_LABELS, STACKABLE_HAZARD_MAX,
+  SIDE_CONDITION_EXTENDED_FIELD,
+} from '../config/fieldConditions';
 
 export const MAX_OPPONENT_ROSTER_SIZE = 6;
 export const MAX_BROUGHT = 4;
@@ -83,6 +90,7 @@ export interface UseBattleLogActionsReturn {
   toggleBrought: (battle: Battle, pokemonId: string) => Promise<boolean>;
   addOpponentPokemon: (battle: Battle, species: SpeciesRosterEntry) => Promise<boolean>;
   updateOpponentMoveTags: (battle: Battle, opponentId: string, ability?: string, item?: string) => Promise<boolean>;
+  setItemConsumed: (battle: Battle, opponentId: string, consumed: boolean) => Promise<boolean>;
   addOpponentMove: (battle: Battle, opponentId: string, move: string) => Promise<boolean>;
   removeOpponentMove: (battle: Battle, opponentId: string, move: string) => Promise<boolean>;
   switchIn: (battle: Battle, side: BattleSide, pokemonId: string, slotIndex?: number) => Promise<boolean>;
@@ -103,6 +111,7 @@ export interface UseBattleLogActionsReturn {
   setTerrain: (battle: Battle, type: TerrainType | null, wasMegaEvolved?: boolean) => Promise<boolean>;
   setTrickRoom: (battle: Battle, active: boolean) => Promise<boolean>;
   toggleTurnCondition: (battle: Battle, side: BattleSide, key: TurnTrackedCondition) => Promise<boolean>;
+  toggleScreenExtended: (battle: Battle, side: BattleSide, key: TurnTrackedCondition) => Promise<boolean>;
   toggleBooleanHazard: (battle: Battle, side: BattleSide, key: BooleanHazard) => Promise<boolean>;
   setStackableHazard: (battle: Battle, side: BattleSide, key: StackableHazard, layers: number) => Promise<boolean>;
 }
@@ -172,13 +181,24 @@ export function useBattleLogActions(
     return updateBattle(battle.id, { broughtIds, playerActiveIds, playerFaintedIds });
   }, [updateBattle]);
 
+  /**
+   * The species roster picker (SpeciesRosterEntry) is a bulk name/id/sprite
+   * list only - no type data (fetching that for all ~1300 entries up front
+   * would be far too heavy). Types are fetched live here instead, a single
+   * per-species cost paid once per opponent reveal, so type-effectiveness
+   * tags (see config/typeEffectiveness.ts) work for opponent targets too. A
+   * fetch failure (offline, unrecognized name) still adds the Pokemon, just
+   * without effectiveness tags for it until corrected.
+   */
   const addOpponentPokemon = useCallback(async (battle: Battle, species: SpeciesRosterEntry): Promise<boolean> => {
     if (battle.opponentRoster.length >= MAX_OPPONENT_ROSTER_SIZE) return false;
+    const types = await fetchPokemonData(species.name).then(d => d.types).catch(() => []);
     const entry = {
       id: crypto.randomUUID(),
       species: species.name,
       pokedexNumber: species.id,
       spriteUrl: species.spriteUrl,
+      types,
       moves: [],
       fainted: false,
       addedAt: Date.now(),
@@ -195,6 +215,11 @@ export function useBattleLogActions(
     const opponentRoster = battle.opponentRoster.map(o =>
       o.id === opponentId ? { ...o, ability, item } : o
     );
+    return updateBattle(battle.id, { opponentRoster });
+  }, [updateBattle]);
+
+  const setItemConsumed = useCallback(async (battle: Battle, opponentId: string, consumed: boolean): Promise<boolean> => {
+    const opponentRoster = battle.opponentRoster.map(o => o.id === opponentId ? { ...o, itemConsumed: consumed } : o);
     return updateBattle(battle.id, { opponentRoster });
   }, [updateBattle]);
 
@@ -217,6 +242,14 @@ export function useBattleLogActions(
     return updateBattle(battle.id, { opponentRoster });
   }, [updateBattle]);
 
+  /**
+   * Marked directly from the Battlefield (a Pokemon can only faint while
+   * active - it can't take damage off-field). Also clears the mon's active
+   * slot to null (same as switchOut), so the now-empty slot is immediately
+   * ready for a replacement via the usual picker/drag flow - single
+   * updateBattle call. Un-fainting (correcting a misclick) does not
+   * restore active state, just the flag.
+   */
   const setFainted = useCallback(async (
     battle: Battle,
     side: BattleSide,
@@ -225,16 +258,20 @@ export function useBattleLogActions(
   ): Promise<boolean> => {
     // Fainting always leaves the field - stat stages reset, same as any other switch-out.
     const statStages = fainted ? clearStatStages(battle, pokemonId) : battle.statStages;
+    const activeIds = side === 'player' ? battle.playerActiveIds : battle.opponentActiveIds;
+    const nextActiveIds = fainted && activeIds.includes(pokemonId)
+      ? activeIds.map(id => id === pokemonId ? null : id)
+      : activeIds;
 
     if (side === 'player') {
       const playerFaintedIds = fainted
         ? [...new Set([...battle.playerFaintedIds, pokemonId])]
         : battle.playerFaintedIds.filter(id => id !== pokemonId);
-      return updateBattle(battle.id, { playerFaintedIds, statStages });
+      return updateBattle(battle.id, { playerFaintedIds, statStages, playerActiveIds: nextActiveIds });
     }
 
     const opponentRoster = battle.opponentRoster.map(o => o.id === pokemonId ? { ...o, fainted } : o);
-    return updateBattle(battle.id, { opponentRoster, statStages });
+    return updateBattle(battle.id, { opponentRoster, statStages, opponentActiveIds: nextActiveIds });
   }, [updateBattle]);
 
   /**
@@ -245,6 +282,11 @@ export function useBattleLogActions(
    * that sets a field effect (weather/terrain/Trick Room/screens/hazards -
    * see config/moveFieldEffects.ts) also updates fieldState in this same
    * call, so the tracker display never needs a separate manual toggle.
+   * Same for a move with a deterministic stat-stage side effect (Draco
+   * Meteor's self SpA drop, Charm's target Atk drop - see
+   * config/moveStatEffects.ts) - unlike a switch-in ability chip, these are
+   * as certain as the move's own damage, so no manual confirm is needed.
+   * Both are skipped when the action is marked failed.
    */
   const logAction = useCallback(async (battle: Battle, action: Omit<BattleAction, 'id'>): Promise<boolean> => {
     if (battle.turns.length === 0) return false;
@@ -255,10 +297,30 @@ export function useBattleLogActions(
           return { ...o, moves: [...o.moves, trimmedMove] };
         })
       : battle.opponentRoster;
-    const fieldState = action.failed
-      ? battle.fieldState
-      : applyMoveFieldEffect(battle.fieldState, action.side, getMoveFieldEffect(trimmedMove), battle.turns.length);
-    return updateBattle(battle.id, { turns: appendAction(battle.turns, action), opponentRoster, fieldState });
+
+    let turns = appendAction(battle.turns, action);
+    let fieldState = battle.fieldState;
+    let statStages = battle.statStages;
+
+    if (!action.failed) {
+      fieldState = applyMoveFieldEffect(battle.fieldState, action.side, getMoveFieldEffect(trimmedMove), battle.turns.length);
+
+      const statEffect = getMoveStatEffect(trimmedMove);
+      if (statEffect) {
+        const targetIds = statEffect.appliesTo === 'self' ? [action.pokemonId] : (action.target ?? []).map(t => t.pokemonId);
+        for (const id of targetIds) {
+          for (const change of statEffect.changes) {
+            const current = statStages[id]?.[change.stat] ?? 0;
+            const next = clampStage(current + change.stages);
+            statStages = { ...statStages, [id]: { ...statStages[id], [change.stat]: next } };
+            const note = `${STAT_LABELS[change.stat]} ${next > current ? '+' : ''}${next - current} (${trimmedMove})`;
+            turns = appendAction(turns, { side: sideOf(battle, id), pokemonId: id, note });
+          }
+        }
+      }
+    }
+
+    return updateBattle(battle.id, { turns, opponentRoster, fieldState, statStages });
   }, [updateBattle]);
 
   /**
@@ -348,24 +410,60 @@ export function useBattleLogActions(
    * updateOpponentMoveTags off the same stale `battle` reference silently
    * lost whichever field wasn't in the second call's update, depending on
    * IPC round-trip timing.
+   *
+   * Also updates the mon's known ability to its guaranteed Mega ability
+   * (see config/megaAbilities.ts - only covers real mainline Megas, a
+   * no-op for Champions-invented ones) and, if that ability sets weather/
+   * terrain (Drought, Drizzle, etc. - reuses config/onSwitchInAbilities.ts),
+   * auto-applies it to fieldState right here too - no separate confirm
+   * chip needed since a Mega's ability is deterministic the instant it's
+   * declared, unlike an observed switch-in trigger.
    */
   const setMegaEvolved = useCallback(async (battle: Battle, pokemonId: string, revealedItem?: string): Promise<boolean> => {
     if (battle.megaEvolvedIds.includes(pokemonId)) return false;
     const side: BattleSide = battle.playerRoster.some(p => p.id === pokemonId) ? 'player' : 'opponent';
-    if (!findBattlePokemon(battle, side, pokemonId)) return false;
+    const mon = findBattlePokemon(battle, side, pokemonId);
+    if (!mon) return false;
     if (!canActThisTurn(battle, pokemonId)) return false;
 
     const sideRosterIds = new Set((side === 'player' ? battle.playerRoster : battle.opponentRoster).map(p => p.id));
     if (battle.megaEvolvedIds.some(id => sideRosterIds.has(id))) return false;
 
-    const opponentRoster = revealedItem && side === 'opponent'
-      ? battle.opponentRoster.map(o => o.id === pokemonId ? { ...o, item: revealedItem } : o)
+    const effectiveItem = revealedItem ?? mon.item;
+    const megaSlug = getMegaApiSlug(effectiveItem, mon.species);
+    const megaAbility = getMegaAbility(megaSlug);
+
+    const playerRoster = side === 'player' && megaAbility
+      ? battle.playerRoster.map(p => p.id === pokemonId ? { ...p, ability: megaAbility } : p)
+      : battle.playerRoster;
+    const opponentRoster = side === 'opponent'
+      ? battle.opponentRoster.map(o => o.id === pokemonId
+          ? { ...o, ...(revealedItem ? { item: revealedItem } : {}), ...(megaAbility ? { ability: megaAbility } : {}) }
+          : o)
       : battle.opponentRoster;
+
+    const currentTurn = battle.turns.length;
+    const megaEffect = getSwitchInEffect(megaAbility);
+    const fieldState = megaEffect?.kind === 'weather'
+      ? { ...battle.fieldState, weather: { type: megaEffect.weather, setOnTurn: currentTurn, wasMegaEvolved: true } }
+      : megaEffect?.kind === 'terrain'
+        ? { ...battle.fieldState, terrain: { type: megaEffect.terrain, setOnTurn: currentTurn, wasMegaEvolved: true } }
+        : battle.fieldState;
+
+    // Mentioning the ability in the note (when its effect was auto-applied
+    // above) matters, not just flavor - hasAppliedAbilityEffectSinceSwitchIn
+    // scans notes for the ability's name, and without it here the Battlefield/
+    // OpponentInfoTags switch-in chip would think the effect still needs a
+    // manual confirm and show a redundant "Drought!"-style chip for an
+    // effect that's already been applied.
+    const note = megaEffect ? `Mega Evolved (${megaAbility})` : 'Mega Evolved';
 
     return updateBattle(battle.id, {
       megaEvolvedIds: [...battle.megaEvolvedIds, pokemonId],
+      playerRoster,
       opponentRoster,
-      turns: appendAction(battle.turns, { side, pokemonId, phase: 'mega', note: 'Mega Evolved' }),
+      fieldState,
+      turns: appendAction(battle.turns, { side, pokemonId, phase: 'mega', note }),
     });
   }, [updateBattle]);
 
@@ -552,6 +650,19 @@ export function useBattleLogActions(
     return updateSideConditions(battle, side, next);
   }, [updateSideConditions]);
 
+  /** Toggles whether an active Reflect/Light Screen/Aurora Veil was set by a Pokemon holding Light Clay (8-turn duration instead of 5) - see config/fieldConditions.ts. No-op for conditions with no extending item. */
+  const toggleScreenExtended = useCallback(async (
+    battle: Battle,
+    side: BattleSide,
+    key: TurnTrackedCondition
+  ): Promise<boolean> => {
+    const extendedField = SIDE_CONDITION_EXTENDED_FIELD[key];
+    if (!extendedField) return false;
+    const conditions = sideConditionsFor(battle, side);
+    const next: SideConditions = { ...conditions, [extendedField]: !conditions[extendedField] };
+    return updateSideConditions(battle, side, next);
+  }, [updateSideConditions]);
+
   const toggleBooleanHazard = useCallback(async (
     battle: Battle,
     side: BattleSide,
@@ -578,6 +689,7 @@ export function useBattleLogActions(
     toggleBrought,
     addOpponentPokemon,
     updateOpponentMoveTags,
+    setItemConsumed,
     addOpponentMove,
     removeOpponentMove,
     switchIn,
@@ -598,6 +710,7 @@ export function useBattleLogActions(
     setTerrain,
     setTrickRoom,
     toggleTurnCondition,
+    toggleScreenExtended,
     toggleBooleanHazard,
     setStackableHazard,
   };

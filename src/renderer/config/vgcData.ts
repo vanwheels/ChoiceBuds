@@ -214,6 +214,23 @@ export function itemMatchesTag(itemName: string, tag: string): boolean {
 }
 
 /**
+ * Items that are used up (removed from the holder) the moment they trigger,
+ * rather than persisting for the whole battle - every berry, plus the 3
+ * hold items in this game's pool that are also one-time-use (Focus Sash,
+ * Mental Herb, White Herb). Powers the Battle Logger's "consumed"
+ * checkbox on the opponent item field - see components/battlelog/
+ * OpponentInfoTags.tsx.
+ */
+const CONSUMABLE_HOLD_ITEMS = ['Focus Sash', 'Mental Herb', 'White Herb'];
+export const CONSUMABLE_ITEMS = [...VGC_BERRIES, ...CONSUMABLE_HOLD_ITEMS] as const;
+const CONSUMABLE_ITEM_SLUGS = new Set(CONSUMABLE_ITEMS.map(toSlug));
+
+export function isConsumableItem(itemName: string | undefined): boolean {
+  if (!itemName) return false;
+  return CONSUMABLE_ITEM_SLUGS.has(toSlug(itemName));
+}
+
+/**
  * Type for VGC items
  */
 export type VGCItem = typeof VGC_ITEMS[number];

@@ -26,7 +26,7 @@ import { useMegaSprite } from '../../hooks/useMegaSprite';
 import { getSwitchInEffect } from '../../config/onSwitchInAbilities';
 import { getReactiveLowerEffect } from '../../config/reactiveAbilities';
 import { STAT_ORDER, STAT_LABELS } from '../../config/statStages';
-import { PLAYER_POKEMON_DRAG_TYPE } from '../../utils/dragTypes';
+import { POKEMON_DRAG_TYPE, type PokemonDragPayload } from '../../utils/dragTypes';
 import {
   hasAppliedAbilityEffectSinceSwitchIn, hasUnappliedReactiveLowerEffect,
   canActThisTurn, canSwitchOutThisTurn,
@@ -49,7 +49,7 @@ function titleCase(text: string): string {
   return text.replace(/\b\w/g, c => c.toUpperCase());
 }
 
-function EmptySlot({ onClick, onDrop }: { onClick: () => void; onDrop?: (pokemonId: string) => void }) {
+function EmptySlot({ onClick, onDrop }: { onClick: () => void; onDrop?: (dataTransfer: DataTransfer) => void }) {
   const [isDragOver, setIsDragOver] = useState(false);
   return (
     <button
@@ -60,8 +60,7 @@ function EmptySlot({ onClick, onDrop }: { onClick: () => void; onDrop?: (pokemon
       onDrop={onDrop ? e => {
         e.preventDefault();
         setIsDragOver(false);
-        const id = e.dataTransfer.getData(PLAYER_POKEMON_DRAG_TYPE);
-        if (id) onDrop(id);
+        onDrop(e.dataTransfer);
       } : undefined}
       title="Bring in a benched Pokemon (click or drag)"
       className={`w-20 h-20 rounded-lg border-2 border-dashed flex items-center justify-center text-xs cursor-pointer transition-colors ${
@@ -176,10 +175,25 @@ export default function BattlefieldSlot({
   const resolvedMegaSlug = mon ? getMegaApiSlug(mon.item, mon.species) : null;
   const megaSprite = useMegaSprite(isMega ? resolvedMegaSlug : null);
 
+  // Parses the drag payload (see utils/dragTypes.ts) and only forwards to
+  // the parent's onDrop when it was dragged from this same side - a
+  // player card dropped on an opponent slot (or vice versa) is ignored.
+  const handleDropPayload = (dataTransfer: DataTransfer) => {
+    if (!onDrop) return;
+    const raw = dataTransfer.getData(POKEMON_DRAG_TYPE);
+    if (!raw) return;
+    try {
+      const payload: PokemonDragPayload = JSON.parse(raw);
+      if (payload.side === side) onDrop(payload.pokemonId);
+    } catch {
+      // malformed/foreign drag payload - ignore
+    }
+  };
+
   if (!mon) {
     return (
       <div className="relative flex flex-col items-center">
-        <EmptySlot onClick={onSlotClick} onDrop={onDrop} />
+        <EmptySlot onClick={onSlotClick} onDrop={onDrop ? handleDropPayload : undefined} />
         {isBenchOpen && (
           <BenchPicker options={benchOptions} resolveSprite={resolveSprite} onPick={onPickBench} onClose={onCloseBench} />
         )}
@@ -231,8 +245,7 @@ export default function BattlefieldSlot({
   const handleDragOver = onDrop ? (e: DragEvent<HTMLDivElement>) => e.preventDefault() : undefined;
   const handleDrop = onDrop ? (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    const id = e.dataTransfer.getData(PLAYER_POKEMON_DRAG_TYPE);
-    if (id) onDrop(id);
+    handleDropPayload(e.dataTransfer);
   } : undefined;
 
   return (
@@ -301,6 +314,14 @@ export default function BattlefieldSlot({
           className="text-[9px] px-1 rounded bg-gray-900 text-gray-500 hover:text-blue-300 cursor-pointer"
         >
           Stats
+        </button>
+        <button
+          type="button"
+          onClick={e => { e.stopPropagation(); battleLogActions.setFainted(battle, side, mon.id, true); }}
+          title="Mark fainted"
+          className="text-[9px] px-1 rounded bg-gray-900 text-gray-500 hover:text-red-400 cursor-pointer"
+        >
+          Fainted
         </button>
 
         {showMegaPicker && (

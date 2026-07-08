@@ -10,6 +10,7 @@
 import { useState } from 'react';
 import type { SpeciesRosterEntry, Battle } from '../../types/pokemon';
 import type { UseBattleLogActionsReturn } from '../../hooks/useBattleLogActions';
+import type { UseGameDataReturn } from '../../hooks/useGameData';
 import { MAX_OPPONENT_ROSTER_SIZE } from '../../hooks/useBattleLogActions';
 import { toRegulationId } from '../../utils/pokemonRules';
 import SpeciesPickerCard from '../SpeciesPickerCard';
@@ -21,17 +22,12 @@ interface OpponentFieldPanelProps {
   battleLogActions: UseBattleLogActionsReturn;
   roster: SpeciesRosterEntry[];
   resolveSprite: (remoteUrl: string) => string;
+  gameDataState: UseGameDataReturn;
 }
 
-export default function OpponentFieldPanel({ battle, battleLogActions, roster, resolveSprite }: OpponentFieldPanelProps) {
+export default function OpponentFieldPanel({ battle, battleLogActions, roster, resolveSprite, gameDataState }: OpponentFieldPanelProps) {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const isFull = battle.opponentRoster.length >= MAX_OPPONENT_ROSTER_SIZE;
-
-  const toggleFainted = (id: string) => {
-    const opponent = battle.opponentRoster.find(o => o.id === id);
-    if (!opponent) return;
-    battleLogActions.setFainted(battle, 'opponent', id, !opponent.fainted);
-  };
 
   const handleAddSpecies = (species: SpeciesRosterEntry) => {
     setIsAddOpen(false);
@@ -43,9 +39,11 @@ export default function OpponentFieldPanel({ battle, battleLogActions, roster, r
     species: o.species,
     displayName: o.species,
     spriteUrl: o.spriteUrl,
+    item: o.item,
+    isMega: battle.megaEvolvedIds.includes(o.id),
     isActive: battle.opponentActiveIds.includes(o.id),
     isFainted: o.fainted,
-    extra: <OpponentInfoTags battle={battle} opponent={o} battleLogActions={battleLogActions} />,
+    extra: <OpponentInfoTags battle={battle} opponent={o} battleLogActions={battleLogActions} gameDataState={gameDataState} />,
   }));
 
   return (
@@ -53,12 +51,11 @@ export default function OpponentFieldPanel({ battle, battleLogActions, roster, r
       title={`Opponent (${battle.opponentRoster.length}/${MAX_OPPONENT_ROSTER_SIZE})`}
       titleColorClass="text-red-400"
       activeColorClass="border-red-500 bg-red-600/20"
+      side="opponent"
       rows={rows}
       resolveSprite={resolveSprite}
-      onRowClick={id => battle.opponentActiveIds.includes(id)
-        ? battleLogActions.switchOut(battle, 'opponent', id)
-        : battleLogActions.switchIn(battle, 'opponent', id)}
-      onToggleFainted={toggleFainted}
+      onRowClick={() => {}}
+      enableDrag
       addSlot={
         isFull ? null : isAddOpen ? (
           <SpeciesPickerCard

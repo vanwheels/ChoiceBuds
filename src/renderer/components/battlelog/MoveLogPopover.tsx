@@ -31,6 +31,19 @@ export default function MoveLogPopover({ actorLabel, moves, allowFreeform, onPic
     setFreeform('');
   };
 
+  // A native <datalist> pick fires a real 'input' event with the option's
+  // value already set - if the new value is an exact match for a real move
+  // name, treat it as "selected" and log immediately rather than waiting
+  // for Enter/blur. Typing the full name by hand behaves identically,
+  // since the match only completes on the final keystroke either way.
+  const handleFreeformChange = (value: string) => {
+    setFreeform(value);
+    if (allMoveNames.some(name => name.toLowerCase() === value.toLowerCase())) {
+      onPickMove(value);
+      setFreeform('');
+    }
+  };
+
   return (
     <div ref={ref} className="absolute z-20 top-full mt-1 left-1/2 -translate-x-1/2 w-48 p-2 rounded-lg bg-gray-800 border-2 border-blue-500 shadow-lg flex flex-col gap-1">
       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide truncate">{actorLabel}</span>
@@ -54,7 +67,7 @@ export default function MoveLogPopover({ actorLabel, moves, allowFreeform, onPic
             type="text"
             list="move-name-suggestions"
             value={freeform}
-            onChange={e => setFreeform(e.target.value)}
+            onChange={e => handleFreeformChange(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') submitFreeform(); }}
             placeholder="+ new move seen..."
             autoFocus={moves.length === 0}

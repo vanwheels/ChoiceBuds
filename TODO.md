@@ -25,17 +25,21 @@ in a `Why:` line only when it's not obvious from the task itself.
   battlefield redesign Stage 1, Stage 2's interactive click-to-log flow,
   the layout/drag-to-field/stat-stage-tracking follow-up, the mega/
   reactive-ability/more-switch-in-abilities/field-effects-relocation pass,
-  and the turn-action-economy/persistent-slots/move-autofill/auto-field-
-  effects pass are all done (see Done below). **Next up**: status-condition tracking +
-  move-outcome chips (full paralysis, didn't wake up, flinch, hit-by-a-
-  status-move) - explicitly scoped as its own follow-up plan since it
-  needs a new status-condition data model (nothing tracks
-  paralysis/sleep/etc. yet) plus fetching PokeAPI's move `meta` data
-  (flinch_chance/ailment_chance) that nothing reads today. Also still
-  open: Bo3 "set" grouping across games, post-battle damage-calc review
-  (step through a logged battle's turns against the Calc), and the
-  stat-inference idea (needs Limitless/championsbattledata-sourced
-  per-species data first). Also noted but not built: synthesizing
+  the turn-action-economy/persistent-slots/move-autofill/auto-field-
+  effects pass, and the type-effectiveness/opponent-pickers/screen-
+  duration/mega-ability/auto-scroll/faint-relocation/stat-changing-moves
+  pass are all done (see Done below). **Next up**: status-condition
+  tracking + move-outcome chips (full paralysis, didn't wake up, flinch,
+  hit-by-a-status-move, crit/miss) - explicitly scoped as its own
+  follow-up plan since it needs a new status-condition data model
+  (nothing tracks paralysis/sleep/etc. yet) plus fetching PokeAPI's move
+  `meta` data (flinch_chance/ailment_chance) that nothing reads today.
+  Crit/miss specifically flagged by the user as "something to keep an eye
+  on" rather than a concrete ask yet - folds into this same follow-up.
+  Also still open: Bo3 "set" grouping across games, post-battle
+  damage-calc review (step through a logged battle's turns against the
+  Calc), and the stat-inference idea (needs Limitless/championsbattledata-
+  sourced per-species data first). Also noted but not built: synthesizing
   turn-log entries when a field condition changes (the countdown display
   already shows remaining turns implicitly, so this is a nice-to-have);
   generic lightweight outcome tags beyond Protect-fail (Missed/No
@@ -52,6 +56,76 @@ in a `Why:` line only when it's not obvious from the task itself.
   the Battle Logger producing real win/loss data).
 
 ## Done
+
+- **Battle Logger: type effectiveness, opponent ability/item pickers,
+  screen duration, Mega ability change, log auto-scroll, faint-on-
+  Battlefield, deterministic stat-changing moves** (2026-07-07): another
+  manual-testing punch list. Turn 1's initial send-in no longer counts as
+  a turn action (`canActThisTurn`/`canSwitchOutThisTurn` now ignore a
+  `'switch'` phase entry when `turns.length === 1`) - leads can move
+  immediately, matching real Team Preview. Opponent Pokemon selection now
+  matches the player side exactly: roster-row clicks are a no-op, active-
+  switching only via a Battlefield empty-slot picker or drag - `utils/
+  dragTypes.ts`'s payload widened to JSON `{side, pokemonId}` so a drop
+  target can reject a mismatched-side drag, and `TeamRosterColumn.tsx`
+  split into a real `RosterRow.tsx` component (needed for the Mega-sprite
+  work below).
+
+  New `config/typeEffectiveness.ts` (the standard 18-type chart, confirmed
+  unchanged from mainline by an earlier Champions audit) computes a
+  per-target multiplier at log time, shown as a "Super Effective!"/"Not
+  Very Effective"/"No Effect" tag in `TurnLog.tsx` - live-verified an
+  Earth Power (Ground) into a Fire/Flying target correctly tags "No
+  Effect" (immunity). `OpponentPokemonEntry` gained `types`, fetched live
+  (not from the bulk species-list picker, which has no type data) the
+  moment an opponent is added.
+
+  The opponent move datalist (added last round) now submits on click
+  instead of requiring Enter - the input's `onChange` treats an exact
+  match against the suggestion list as a pick. `OpponentInfoTags.tsx`'s
+  ability field is now a real `<select>` populated from the same
+  species-learnset call the Team Builder's own picker uses, item gained a
+  `VGC_ITEMS` datalist, and a "Consumed" checkbox appears for actually-
+  consumable items (`config/vgcData.ts::isConsumableItem` - berries +
+  Focus Sash/Mental Herb/White Herb). Reflect/Light Screen/Aurora Veil
+  gained the same "via Light Clay" extended-duration confidence toggle
+  weather already had (8 turns vs. 5) - `SideConditions` gained 3 new
+  optional flags, no migration needed.
+
+  Mega Evolving now sets the mon's ability to its real guaranteed Mega
+  ability (new `config/megaAbilities.ts`, ~40 entries - deliberately
+  covers only real mainline Megas, not the Champions-invented ones like
+  Raichu X/Y that have no canonical ability to verify against) and, if
+  that ability sets weather/terrain, auto-applies it to the field in the
+  same call (no separate confirm chip, since a Mega's ability is
+  deterministic the instant it's declared) - live-verified Charizard-Y
+  auto-setting Sun with the correct fixed "via Mega" duration. Caught and
+  fixed a real bug during verification: the auto-applied weather's note
+  didn't mention the ability by name, so the (already-redundant) manual
+  "Drought!" switch-in chip kept showing since `hasAppliedAbilityEffect
+  SinceSwitchIn` had nothing to match against - fixed by folding the
+  ability name into the Mega Evolved note. Also fixed the roster-panel
+  sprite to Mega-swap alongside the Battlefield one (previously only the
+  Battlefield did) - confirmed both show the same Mega form's numeric
+  PokeAPI id.
+
+  The turn log now auto-scrolls to the newest turn as it grows
+  (`ActiveBattleView.tsx`, a ref + effect keyed on turn/action count).
+  The fainted toggle moved off the roster panel (a Pokemon can only faint
+  while active) onto the Battlefield's control row - marking fainted now
+  also clears that Pokemon's active slot in the same call, live-verified
+  the slot re-opens for a replacement. New `config/moveStatEffects.ts`
+  auto-applies deterministic stat changes when a move is logged (Draco
+  Meteor's self -2 SpA, Charm's target -2 Atk, etc., not exhaustive) -
+  reuses the exact stat-note format the reactive-ability chip already
+  scans for, so a move-inflicted drop correctly triggers a target's
+  Defiant/Competitive chip with no extra wiring; live-verified Draco
+  Meteor correctly dropping the user's own SpA by 2.
+
+  Crit/miss outcome tracking, raised in the same round, was explicitly
+  flagged by the user as "something to keep an eye on" rather than a
+  concrete ask - folded into the already-deferred status-condition/
+  move-outcome-chips backlog item above instead of built here.
 
 - **Battle Logger: turn action economy, persistent slots, move autofill,
   auto field-effects** (2026-07-07): a manual testing pass turned up 6 real

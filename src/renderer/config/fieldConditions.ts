@@ -39,6 +39,26 @@ export const SIDE_CONDITION_DURATIONS: Record<TurnTrackedCondition, number> = {
   mist: 5,
 };
 
+/**
+ * Light Clay extends Reflect/Light Screen/Aurora Veil to 8 turns - the only
+ * 3 turn-tracked conditions with an extending held item in this game
+ * (Tailwind/Safeguard/Mist have none), so this is intentionally a partial
+ * map. See types/pokemon.ts's SideConditions.*Extended flags and
+ * useBattleLogActions.ts::toggleScreenExtended.
+ */
+export const SIDE_CONDITION_EXTENDED_DURATIONS: Partial<Record<TurnTrackedCondition, number>> = {
+  reflect: 8,
+  lightScreen: 8,
+  auroraVeil: 8,
+};
+
+/** Maps a turn-tracked condition to its SideConditions "extended" flag key, for the 3 that have one. */
+export const SIDE_CONDITION_EXTENDED_FIELD: Partial<Record<TurnTrackedCondition, keyof SideConditions>> = {
+  reflect: 'reflectExtended',
+  lightScreen: 'lightScreenExtended',
+  auroraVeil: 'auroraVeilExtended',
+};
+
 export const SIDE_CONDITION_LABELS: Record<TurnTrackedCondition, string> = {
   tailwind: 'Tailwind',
   reflect: 'Reflect',
@@ -104,5 +124,8 @@ export function getSideConditionRemaining(
 ): number | null {
   const setOnTurn = conditions[key];
   if (setOnTurn == null) return null;
-  return getRemainingTurns(setOnTurn, SIDE_CONDITION_DURATIONS[key], currentTurn);
+  const extendedField = SIDE_CONDITION_EXTENDED_FIELD[key];
+  const isExtended = extendedField ? !!conditions[extendedField] : false;
+  const duration = isExtended ? SIDE_CONDITION_EXTENDED_DURATIONS[key]! : SIDE_CONDITION_DURATIONS[key];
+  return getRemainingTurns(setOnTurn, duration, currentTurn);
 }

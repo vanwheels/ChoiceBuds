@@ -7,6 +7,7 @@
 import type { Battle, BattleAction, BattleSide, BroughtPokemonSnapshot, OpponentPokemonEntry } from '../types/pokemon';
 import { isProtectFamilyMove } from '../config/protectMoves';
 import { isSwitchOutMove } from '../config/switchOutMoves';
+import { getEffectivenessMultiplier } from '../config/typeEffectiveness';
 
 /** Drops the `null` (empty-slot) entries from a fixed 2-slot active-id tuple - for call sites that just need "who's currently active", not slot position. */
 export function compactActiveIds(ids: (string | null)[]): string[] {
@@ -94,29 +95,54 @@ export function hasUnappliedReactiveLowerEffect(battle: Battle, pokemonId: strin
  * too (a 'mega' phase action alone doesn't block this - the mon still
  * needs its move - but see canSwitchOutThisTurn for why it blocks
  * switching). Only looks at the current (last) turn.
+ *
+ * Turn 1 is an exception: the initial send-in of a battle's leads isn't a
+ * choice made instead of moving (unlike a genuine mid-battle switch), so a
+ * 'switch' phase action doesn't block acting while `turns.length === 1`.
  */
 export function canActThisTurn(battle: Battle, pokemonId: string): boolean {
   const lastTurn = battle.turns[battle.turns.length - 1];
   if (!lastTurn) return true;
-  return !lastTurn.actions.some(a => a.pokemonId === pokemonId && (a.phase === 'switch' || a.phase === 'move'));
+  const isInitialSendIn = lastTurn.number === 1;
+  return !lastTurn.actions.some(a => a.pokemonId === pokemonId
+    && (a.phase === 'move' || (a.phase === 'switch' && !isInitialSendIn)));
 }
 
 /**
  * Whether this Pokemon can still switch out this turn. False once they've
  * switched in or Mega Evolved this turn (an incoming switch, or a
- * committed Mega, IS the slot's action). If they've used a move, only
- * true when that move is a switch-out move (U-turn/Parting Shot/etc. -
- * see config/switchOutMoves.ts) and it didn't fail - the switch is a
+ * committed Mega, IS the slot's action) - except turn 1's initial send-in,
+ * same exception as canActThisTurn. If they've used a move, only true
+ * when that move is a switch-out move (U-turn/Parting Shot/etc. - see
+ * config/switchOutMoves.ts) and it didn't fail - the switch is a
  * continuation of that same action, not a second one.
  */
 export function canSwitchOutThisTurn(battle: Battle, pokemonId: string): boolean {
   const lastTurn = battle.turns[battle.turns.length - 1];
   if (!lastTurn) return true;
+  const isInitialSendIn = lastTurn.number === 1;
   const actions = lastTurn.actions.filter(a => a.pokemonId === pokemonId);
-  if (actions.some(a => a.phase === 'switch' || a.phase === 'mega')) return false;
+  if (actions.some(a => (a.phase === 'switch' && !isInitialSendIn) || a.phase === 'mega')) return false;
   const moveAction = actions.find(a => a.phase === 'move');
   if (!moveAction) return true;
   return isSwitchOutMove(moveAction.move) && !moveAction.failed;
+}
+
+/**
+ * Type-effectiveness multiplier for a move against each target, looked up
+ * via each target's real types (getEffectivenessMultiplier handles dual
+ * typing). Used to attach BattleAction.effectiveness at log time - see
+ * Battlefield.tsx.
+ */
+export function computeMoveEffectiveness(
+  battle: Battle,
+  moveType: string,
+  targets: { side: BattleSide; pokemonId: string }[]
+): { pokemonId: string; multiplier: number }[] {
+  return targets.map(t => {
+    const mon = findBattlePokemon(battle, t.side, t.pokemonId);
+    return { pokemonId: t.pokemonId, multiplier: mon ? getEffectivenessMultiplier(moveType, mon.types) : 1 };
+  });
 }
 
 /**

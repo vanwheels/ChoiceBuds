@@ -22,6 +22,14 @@ function sortByPhase(actions: BattleAction[]): BattleAction[] {
   return [...actions].sort((a, b) => PHASE_ORDER[a.phase ?? 'move'] - PHASE_ORDER[b.phase ?? 'move']);
 }
 
+/** Only non-neutral matchups get a callout - a 1x hit shows nothing, matching the "only call out what's notable" pattern used elsewhere in this log. */
+function effectivenessLabel(multiplier: number | undefined): { text: string; className: string } | null {
+  if (multiplier == null || multiplier === 1) return null;
+  if (multiplier === 0) return { text: 'No Effect', className: 'text-gray-500' };
+  if (multiplier > 1) return { text: 'Super Effective!', className: 'text-green-400' };
+  return { text: 'Not Very Effective', className: 'text-orange-400' };
+}
+
 export default function TurnLog({ battle, battleLogActions }: TurnLogProps) {
   return (
     <div className="flex flex-col gap-3">
@@ -43,7 +51,17 @@ export default function TurnLog({ battle, battleLogActions }: TurnLogProps) {
                     {action.move && <span className="text-gray-200"> used {action.move}</span>}
                     {action.target && action.target.length > 0 && (
                       <span className="text-gray-400">
-                        {' '}on {action.target.map(t => battlePokemonDisplayName(battle, t.side, t.pokemonId)).join(' and ')}
+                        {' '}on{' '}
+                        {action.target.map((t, i) => {
+                          const label = effectivenessLabel(action.effectiveness?.find(e => e.pokemonId === t.pokemonId)?.multiplier);
+                          return (
+                            <span key={`${t.side}-${t.pokemonId}`}>
+                              {i > 0 && ' and '}
+                              {battlePokemonDisplayName(battle, t.side, t.pokemonId)}
+                              {label && <span className={`text-xs ${label.className}`}> ({label.text})</span>}
+                            </span>
+                          );
+                        })}
                       </span>
                     )}
                     {action.note && <span className="text-gray-500 italic"> ({action.note})</span>}

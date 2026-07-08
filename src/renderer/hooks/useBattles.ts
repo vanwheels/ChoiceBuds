@@ -7,7 +7,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import type { Battle, BattleAction, BattlesDatabase, BroughtPokemonSnapshot } from '../types/pokemon';
+import type { Battle, BattleAction, BattlesDatabase, BroughtPokemonSnapshot, OpponentPokemonEntry } from '../types/pokemon';
 
 /** A BattleAction's target as it may exist on disk before `target` became an array. */
 type LegacyTarget = NonNullable<BattleAction['target']> | { side: BattleAction['side']; pokemonId: string };
@@ -21,6 +21,7 @@ interface LegacyBattleShape {
   statStages?: Battle['statStages'];
   playerActiveIds?: (string | null)[];
   opponentActiveIds?: (string | null)[];
+  opponentRoster?: (OpponentPokemonEntry & { types?: string[] })[];
 }
 
 /** A legacy active-id list had no slot meaning (just insertion order, 0-2 entries) - pad to the fixed 2-slot tuple, best effort. */
@@ -41,6 +42,9 @@ function toActiveSlots(ids: (string | null)[] | undefined): (string | null)[] {
  * - statStages: added for stat-stage tracking
  * - playerActiveIds/opponentActiveIds: were a plain 0-2-length array with no
  *   slot meaning - padded into the fixed 2-slot tuple (see toActiveSlots)
+ * - opponentRoster entries: gained `types` (for type-effectiveness tags) -
+ *   backfilled empty for pre-existing entries, since there's no live-fetch
+ *   opportunity at the read boundary the way there was at add-time
  * - a logged action's `target` was a single object before spread-move
  *   support - coerce it into a one-element array
  */
@@ -53,6 +57,7 @@ function normalizeBattle(b: Battle & LegacyBattleShape): Battle {
     broughtIds,
     playerActiveIds: toActiveSlots(b.playerActiveIds),
     opponentActiveIds: toActiveSlots(b.opponentActiveIds),
+    opponentRoster: (b.opponentRoster ?? []).map(o => ({ ...o, types: o.types ?? [] })),
     megaEvolvedIds: b.megaEvolvedIds ?? [],
     statStages: b.statStages ?? {},
     fieldState: b.fieldState ?? { playerSide: {}, opponentSide: {} },

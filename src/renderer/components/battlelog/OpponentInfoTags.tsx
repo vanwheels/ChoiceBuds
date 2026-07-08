@@ -7,29 +7,50 @@
 import { useState, useEffect } from 'react';
 import type { Battle, OpponentPokemonEntry } from '../../types/pokemon';
 import type { UseBattleLogActionsReturn } from '../../hooks/useBattleLogActions';
+import type { UseGameDataReturn } from '../../hooks/useGameData';
 import { getSwitchInEffect } from '../../config/onSwitchInAbilities';
 import { hasAppliedAbilityEffectSinceSwitchIn } from '../../utils/battleLookup';
+import { VGC_ITEMS, isConsumableItem } from '../../config/vgcData';
 
 interface OpponentInfoTagsProps {
   battle: Battle;
   opponent: OpponentPokemonEntry;
   battleLogActions: UseBattleLogActionsReturn;
+  gameDataState: UseGameDataReturn;
 }
 
-export default function OpponentInfoTags({ battle, opponent, battleLogActions }: OpponentInfoTagsProps) {
-  const [ability, setAbility] = useState(opponent.ability || '');
+/** "sand-stream" -> "Sand Stream" - AbilityData.name is a normalized lowercase-hyphenated slug. */
+function formatAbilityName(slug: string): string {
+  return slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+}
+
+export default function OpponentInfoTags({ battle, opponent, battleLogActions, gameDataState }: OpponentInfoTagsProps) {
   const [item, setItem] = useState(opponent.item || '');
   const [newMove, setNewMove] = useState('');
+  const [legalAbilities, setLegalAbilities] = useState<string[]>([]);
 
-  // These start as local drafts (so typing doesn't commit on every
-  // keystroke), but the underlying value can also change from elsewhere -
-  // the Mega button auto-revealing an item, or the ability effect chip -
-  // without this the input would keep showing a stale value after a mount.
-  useEffect(() => { setAbility(opponent.ability || ''); }, [opponent.ability]);
+  // Item stays a local draft (so typing doesn't commit on every keystroke),
+  // but the underlying value can also change from elsewhere - the Mega
+  // button auto-revealing it - without this the input would keep showing
+  // a stale value after a mount.
   useEffect(() => { setItem(opponent.item || ''); }, [opponent.item]);
 
-  const commitTags = () => {
-    battleLogActions.updateOpponentMoveTags(battle, opponent.id, ability || undefined, item || undefined);
+  // Real possible abilities for this species (same call the Team Builder's
+  // own ability picker uses - see EditOverlays.tsx), not a freeform guess.
+  useEffect(() => {
+    let cancelled = false;
+    gameDataState.getEnrichedSpeciesOptions(opponent.species).then(({ abilities }) => {
+      if (!cancelled) setLegalAbilities(abilities.map(a => formatAbilityName(a.name)));
+    });
+    return () => { cancelled = true; };
+  }, [opponent.species, gameDataState]);
+
+  const commitItem = () => {
+    battleLogActions.updateOpponentMoveTags(battle, opponent.id, opponent.ability || undefined, item || undefined);
+  };
+
+  const handleAbilityChange = (value: string) => {
+    battleLogActions.updateOpponentMoveTags(battle, opponent.id, value || undefined, opponent.item || undefined);
   };
 
   // Covers the case where the ability is revealed after the Pokemon is
@@ -73,23 +94,42 @@ export default function OpponentInfoTags({ battle, opponent, battleLogActions }:
         className="w-full px-1.5 py-0.5 text-[10px] bg-gray-900 border border-gray-700 rounded text-gray-200 outline-none focus:border-blue-500"
       />
       <div className="grid grid-cols-2 gap-1">
-        <input
-          type="text"
-          value={ability}
-          onChange={e => setAbility(e.target.value)}
-          onBlur={commitTags}
-          placeholder="ability"
+        <select
+          value={committedAbility && legalAbilities.includes(committedAbility) ? committedAbility : (committedAbility || '')}
+          onChange={e => handleAbilityChange(e.target.value)}
           className="px-1.5 py-0.5 text-[10px] bg-gray-900 border border-gray-700 rounded text-gray-200 outline-none focus:border-blue-500"
-        />
+        >
+          <option value="">ability</option>
+          {committedAbility && !legalAbilities.includes(committedAbility) && (
+            <option value={committedAbility}>{committedAbility}</option>
+          )}
+          {legalAbilities.map(a => <option key={a} value={a}>{a}</option>)}
+        </select>
         <input
           type="text"
+          list="opponent-item-suggestions"
           value={item}
           onChange={e => setItem(e.target.value)}
-          onBlur={commitTags}
+          onBlur={commitItem}
           placeholder="item"
           className="px-1.5 py-0.5 text-[10px] bg-gray-900 border border-gray-700 rounded text-gray-200 outline-none focus:border-blue-500"
         />
       </div>
+      <datalist id="opponent-item-suggestions">
+        {VGC_ITEMS.map(name => <option key={name} value={name} />)}
+      </datalist>
+
+      {isConsumableItem(opponent.item) && (
+        <label className="flex items-center gap-1.5 text-[10px] text-gray-400 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={!!opponent.itemConsumed}
+            onChange={e => battleLogActions.setItemConsumed(battle, opponent.id, e.target.checked)}
+            className="cursor-pointer"
+          />
+          Consumed
+        </label>
+      )}
 
       {showAbilityChip && (
         <button

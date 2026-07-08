@@ -30,7 +30,7 @@ import type { Battle, BattleSide, BroughtPokemonSnapshot, OpponentPokemonEntry }
 import type { UseBattleLogActionsReturn } from '../../hooks/useBattleLogActions';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
 import { getTargetCategory } from '../../config/moveTargeting';
-import { canActThisTurn, compactActiveIds } from '../../utils/battleLookup';
+import { canActThisTurn, compactActiveIds, computeMoveEffectiveness } from '../../utils/battleLookup';
 import BattlefieldSlot from './BattlefieldSlot';
 import SideConditionsRow from './SideConditionsRow';
 import FieldWeatherBar from './FieldWeatherBar';
@@ -48,7 +48,9 @@ type SlotPosition = { side: BattleSide; index: number };
 
 export default function Battlefield({ battle, battleLogActions, gameDataState, resolveSprite }: BattlefieldProps) {
   const [armed, setArmed] = useState<SlotRef | null>(null);
-  const [pendingTarget, setPendingTarget] = useState<{ side: BattleSide; pokemonId: string; move: string; candidates: SlotRef[] } | null>(null);
+  const [pendingTarget, setPendingTarget] = useState<{
+    side: BattleSide; pokemonId: string; move: string; moveType?: string; isDamaging: boolean; candidates: SlotRef[];
+  } | null>(null);
   const [benchSlot, setBenchSlot] = useState<SlotPosition | null>(null);
   const [statsFor, setStatsFor] = useState<SlotRef | null>(null);
 
@@ -71,12 +73,16 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
 
   const finalizeTarget = async (clicked: SlotRef) => {
     if (!pendingTarget) return;
+    const effectiveness = pendingTarget.isDamaging && pendingTarget.moveType
+      ? computeMoveEffectiveness(battle, pendingTarget.moveType, [clicked])
+      : undefined;
     await battleLogActions.logAction(battle, {
       side: pendingTarget.side,
       pokemonId: pendingTarget.pokemonId,
       move: pendingTarget.move,
       target: [clicked],
       phase: 'move',
+      effectiveness,
     });
     setPendingTarget(null);
   };
@@ -85,14 +91,17 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
     setArmed(null);
     const moveData = gameDataState.getCachedMove(move) ?? await gameDataState.getMoveData(move);
     const category = getTargetCategory(moveData?.target);
+    const isDamaging = !!moveData && moveData.category !== 'status';
 
     const oppSide: BattleSide = side === 'player' ? 'opponent' : 'player';
     const sameSideActive = compactActiveIds(side === 'player' ? battle.playerActiveIds : battle.opponentActiveIds);
     const oppActive = compactActiveIds(oppSide === 'player' ? battle.playerActiveIds : battle.opponentActiveIds);
     const allyIds = sameSideActive.filter(id => id !== pokemonId);
 
-    const logWithTargets = (target: SlotRef[]) =>
-      battleLogActions.logAction(battle, { side, pokemonId, move, target, phase: 'move' });
+    const logWithTargets = (target: SlotRef[]) => {
+      const effectiveness = isDamaging && moveData ? computeMoveEffectiveness(battle, moveData.type, target) : undefined;
+      return battleLogActions.logAction(battle, { side, pokemonId, move, target, phase: 'move', effectiveness });
+    };
 
     if (category === 'self') return void logWithTargets([{ side, pokemonId }]);
     if (category === 'field') return void logWithTargets([]);
@@ -114,7 +123,7 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
       : category === 'unknown'
         ? [...oppActive.map(id => ({ side: oppSide, pokemonId: id })), ...sameSideActive.map(id => ({ side, pokemonId: id }))]
         : oppActive.map(id => ({ side: oppSide, pokemonId: id }));
-    setPendingTarget({ side, pokemonId, move, candidates });
+    setPendingTarget({ side, pokemonId, move, moveType: moveData?.type, isDamaging, candidates });
   };
 
   const openBenchPicker = (side: BattleSide, slotIndex: number) => {
@@ -156,11 +165,11 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
       benchOptions={side === 'player' ? playerBench : opponentBench}
       onSlotClick={() => handleSlotClick(side, slotIndex, mon?.id)}
       onOpenBench={() => openBenchPicker(side, slotIndex)}
-      onDrop={side === 'player' ? id => {
+      onDrop={id => {
         setBenchSlot(null);
         if (mon) battleLogActions.swapActive(battle, side, mon.id, id);
         else battleLogActions.switchIn(battle, side, id, slotIndex);
-      } : undefined}
+      }}
       onPickMove={move => mon && handleMovePicked(side, mon.id, move)}
       onCloseMovePopover={() => setArmed(null)}
       onPickBench={id => {

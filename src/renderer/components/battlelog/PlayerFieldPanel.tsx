@@ -19,15 +19,13 @@ interface PlayerFieldPanelProps {
 }
 
 export default function PlayerFieldPanel({ battle, battleLogActions, resolveSprite }: PlayerFieldPanelProps) {
-  const toggleFainted = (id: string) => {
-    battleLogActions.setFainted(battle, 'player', id, !battle.playerFaintedIds.includes(id));
-  };
-
   const rows: RosterRowData[] = battle.playerRoster.map(p => ({
     id: p.id,
     species: p.species,
     displayName: p.nickname || p.species,
     spriteUrl: getPixelSpriteUrl(p.pokedexNumber, p.species, p.gender || 'M', false),
+    item: p.item,
+    isMega: battle.megaEvolvedIds.includes(p.id),
     isBrought: battle.broughtIds.includes(p.id),
     isActive: battle.playerActiveIds.includes(p.id),
     isFainted: battle.playerFaintedIds.includes(p.id),
@@ -38,10 +36,10 @@ export default function PlayerFieldPanel({ battle, battleLogActions, resolveSpri
       title="My Team"
       titleColorClass="text-blue-400"
       activeColorClass="border-blue-500 bg-blue-600/20"
+      side="player"
       rows={rows}
       resolveSprite={resolveSprite}
       onRowClick={id => battleLogActions.toggleBrought(battle, id)}
-      onToggleFainted={toggleFainted}
       enableDrag
     />
   );
