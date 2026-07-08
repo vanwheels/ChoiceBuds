@@ -25,10 +25,11 @@ import { getMegaApiSlug, getMegaFormsForSpecies } from '../../config/megaEvoluti
 import { useMegaSprite } from '../../hooks/useMegaSprite';
 import { getSwitchInEffect } from '../../config/onSwitchInAbilities';
 import { getReactiveLowerEffect } from '../../config/reactiveAbilities';
+import { getHitReactiveEffect } from '../../config/hitReactiveAbilities';
 import { STAT_ORDER, STAT_LABELS } from '../../config/statStages';
 import { POKEMON_DRAG_TYPE, pokemonDragTypeForSide, type PokemonDragPayload } from '../../utils/dragTypes';
 import {
-  hasAppliedAbilityEffectSinceSwitchIn, hasUnappliedReactiveLowerEffect,
+  hasAppliedAbilityEffectSinceSwitchIn, hasUnappliedReactiveLowerEffect, hasUnappliedHitReactiveEffect,
   canActThisTurn, canSwitchOutThisTurn,
 } from '../../utils/battleLookup';
 import { useDismissable } from '../../hooks/useDismissable';
@@ -228,6 +229,8 @@ export default function BattlefieldSlot({
   const showAbilityChip = !!switchInEffect && !!knownAbility && !hasAppliedAbilityEffectSinceSwitchIn(battle, mon.id, knownAbility);
   const reactiveEffect = getReactiveLowerEffect(knownAbility);
   const showReactiveChip = !!reactiveEffect && !!knownAbility && hasUnappliedReactiveLowerEffect(battle, mon.id, knownAbility);
+  const hitReactiveEffect = getHitReactiveEffect(knownAbility);
+  const showHitReactiveChip = !!hitReactiveEffect && !!knownAbility && hasUnappliedHitReactiveEffect(battle, mon.id, knownAbility, hitReactiveEffect.trigger);
 
   const canAct = canActThisTurn(battle, mon.id);
   const canSwitchOut = canSwitchOutThisTurn(battle, mon.id);
@@ -295,6 +298,16 @@ export default function BattlefieldSlot({
           type="button"
           onClick={e => { e.stopPropagation(); battleLogActions.applyReactiveLowerEffect(battle, mon.id, knownAbility!); }}
           title="Apply this ability's reactive stat raise"
+          className="text-[9px] px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-200 hover:bg-purple-800 cursor-pointer"
+        >
+          {knownAbility}!
+        </button>
+      )}
+      {showHitReactiveChip && (
+        <button
+          type="button"
+          onClick={e => { e.stopPropagation(); battleLogActions.applyHitReactiveEffect(battle, mon.id, knownAbility!); }}
+          title="Apply this ability's hit-triggered stat change"
           className="text-[9px] px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-200 hover:bg-purple-800 cursor-pointer"
         >
           {knownAbility}!

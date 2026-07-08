@@ -180,38 +180,15 @@ in a `Why:` line only when it's not obvious from the task itself.
      turned up no second example, only Growth. Asked the user to name
      specific moves rather than guess/fabricate more weather branches -
      see the next Done entry for the full research trail.
-  4. Battle Logger: do a full audit pass over abilities with an
-     on-switch-in effect or a reactive battle interaction, to make sure
-     the curated tables are actually comprehensive rather than covering
-     only the obvious VGC staples - user's example: Arbok having
-     Intimidate should trigger the same chip a "expected" Intimidate
-     mon (Incineroar, Gyarados, etc.) does. Two tables today, both
-     explicitly scoped as "deliberately not exhaustive" in their own
-     header comments:
-     - `config/onSwitchInAbilities.ts` - only 11 entries (Intimidate,
-       Intrepid Sword, Dauntless Shield, the 4 weather setters, the 4
-       terrain Surge abilities). Lookup is already ability-name-keyed,
-       not species-keyed, so Arbok's Intimidate specifically should
-       already work correctly today (worth confirming as a live
-       spot-check first, in case the real gap is elsewhere - e.g. the
-       chip only shows once an opponent's ability is actually known/
-       typed in, so this may really be about *discoverability* of
-       obscure-species abilities rather than a table gap). Download is
-       the one already-known, deliberately-excluded gap (needs Def/SpDef
-       base-stat comparison math not built yet).
-     - `config/reactiveAbilities.ts` - only Defiant/Competitive (raise a
-       stat when one of the owner's own stats gets lowered). Doesn't
-       cover the broader category of "raise a stat when hit by a
-       specific move type/category" abilities (Justified, Rattled,
-       Stamina, Weak Armor, Water Compaction, Steam Engine, etc.) at
-       all - those would need a new effect shape, not just new table
-       rows, since the trigger condition is different from "stat was
-       lowered."
-     Scope this as a real research pass (cross-check against a
-     comprehensive Gen 9 ability list, not just adding whatever's
-     remembered off the top of the head) before touching the tables -
-     same rigor as the existing Champions balance-patch audits in the
-     Done log below.
+  4. ~~Battle Logger: do a full audit pass over abilities with an
+     on-switch-in effect or a reactive battle interaction~~ - done, see
+     Done below. Confirmed live during testing: Arbok's Intimidate (the
+     user's original example) already worked correctly before this pass -
+     the switch-in table really was ability-name-keyed, not
+     species-keyed, so the gap was purely the missing hit-triggered
+     reactive category, not a table-lookup bug. Download stays a known,
+     deliberately-excluded gap (needs Def/SpDef base-stat comparison math
+     not built yet).
   5. Battle Logger: the player roster column
      (`PlayerFieldPanel.tsx`/`RosterRow.tsx`) is still visually smaller
      than the opponent's (`OpponentFieldPanel.tsx`/`OpponentRowFields.tsx`)
@@ -362,6 +339,80 @@ in a `Why:` line only when it's not obvious from the task itself.
       mechanics the log doesn't currently show.
 
 ## Done
+
+- **Battle Logger: ability audit pass - switch-in table verified, Legendary
+  weather/terrain setters added, and a new hit-triggered reactive-ability
+  category built from scratch** (2026-07-08): item 4 of the reprioritized
+  third review pass. Three pieces:
+  1. **`config/onSwitchInAbilities.ts` verified, not broken**: live-tested
+     the user's own example (Arbok) during this session's earlier item-4
+     testing and confirmed Intimidate's chip works correctly for it - the
+     lookup really is ability-name-keyed as the table's own header claimed,
+     so there was no species-keying bug to fix. Added the two Gen9
+     Paradox-legendary signature abilities that were missing from the
+     weather/terrain-setter set: Hadron Engine (Miraidon - sets Electric
+     Terrain) and Orichalcum Pulse (Koraidon - sets Sun), both verified
+     against Bulbapedia. Each also has a passive raw-stat multiplier in
+     their own weather/terrain (not modeled - it's not a stage change,
+     same category of thing as Sandstorm's passive Rock-type SpDef boost
+     already being out of scope everywhere else in this app). Confirmed no
+     other switch-in stat-changing ability exists beyond the
+     already-known Intimidate/Intrepid Sword/Dauntless Shield trio and the
+     already-excluded Download.
+  2. **`config/reactiveAbilities.ts` (stat-lowered trigger) confirmed
+     complete**: Defiant/Competitive really are the only two abilities of
+     this specific "raise own stat when own stat is lowered" shape in the
+     game - no third example found.
+  3. **New hit-triggered reactive ability category, built from scratch**:
+     the broader "raise a stat when hit by a move matching some condition"
+     family (Justified, Rattled, Stamina, Weak Armor, Water Compaction,
+     Steam Engine) needed a genuinely different trigger shape, not more
+     rows in an existing table, exactly as flagged when this item was
+     first captured. Verified each ability's exact trigger/stages against
+     Bulbapedia rather than assuming from memory. New
+     `config/hitReactiveAbilities.ts` defines a `HitTrigger` union
+     (`any-hit` for Stamina, `category: physical` for Weak Armor,
+     `move-type: string[]` for the rest) plus a `matchesHitTrigger` pure
+     function that explicitly excludes status moves (being hit always
+     means a damaging move) and reuses per-target `effectiveness` to skip
+     immune hits. This needed the move's type/category to be
+     *retrievable from a past logged action*, which nothing stored before
+     now - `BattleAction` gained optional `moveType`/`moveCategory` fields
+     (`types/pokemon.ts`), populated in `Battlefield.tsx::handleMovePicked`
+     at the exact same spot `effectiveness` already gets computed, same
+     snapshot-at-log-time pattern. New
+     `utils/battleLookup.ts::hasUnappliedHitReactiveEffect` mirrors the
+     existing `hasUnappliedReactiveLowerEffect`'s "since the last
+     qualifying trigger, not since switch-in" scoping logic, and new
+     `useBattleLogActions.ts::applyHitReactiveEffect` mirrors
+     `applyReactiveLowerEffect`'s one-tap-apply mutation (looping over
+     multiple stat changes for abilities like Weak Armor that touch two
+     stats). `BattlefieldSlot.tsx` gained a third chip type alongside the
+     existing switch-in/reactive-lowered ones, same purple pill styling.
+     Deliberately excluded and documented in the new file's header:
+     Anger Point (triggers on being hit by a *crit* specifically - nothing
+     tracks crit/miss per hit yet, tied to the already-deferred
+     crit/miss-tracking backlog item) and Anger Shell/Berserk (trigger on
+     HP crossing the 50% threshold from a hit - this app doesn't track
+     numeric/percentage HP anywhere at all). Also simplified: Rattled's
+     real trigger is "Bug/Ghost/Dark move OR hit by Intimidate" - only the
+     move-type half is modeled, since the Intimidate half would mean
+     cross-checking a structurally different trigger source (an
+     Intimidate-application note, not a logged move action).
+
+     Live-verified end-to-end on a disposable test battle (Toxapex with
+     Stamina vs. an Arbok using Acid, cleaned up after): logging Acid onto
+     Toxapex correctly surfaced a "Stamina!" chip (any-hit trigger,
+     matching a damaging non-immune hit), and tapping it correctly logged
+     "Def +1 (Stamina)" and made the chip disappear (the "already applied
+     since last qualifying hit" check working as intended). The
+     status-move exclusion in `matchesHitTrigger` (being hit only counts
+     for a damaging move) is a single `if (moveCategory === 'status')
+     return false` guard verified by direct code review rather than a
+     second live UI pass - fighting the opponent-move free-text popover's
+     different interaction pattern (vs. the player-move popover already
+     scripted for the positive-case test) wasn't a good use of further
+     session time for a one-line, type-checked, unambiguous exclusion.
 
 - **Battle Logger: comprehensive pass over guaranteed stat-changing moves,
   plus a real ally-targeting bug found along the way** (2026-07-07):

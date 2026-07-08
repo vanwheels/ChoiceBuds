@@ -15,6 +15,7 @@ import type { TurnTrackedCondition, BooleanHazard, StackableHazard } from '../co
 import { findBattlePokemon, canActThisTurn, canSwitchOutThisTurn, requiredActiveCount, compactActiveIds } from '../utils/battleLookup';
 import { getSwitchInEffect } from '../config/onSwitchInAbilities';
 import { getReactiveLowerEffect } from '../config/reactiveAbilities';
+import { getHitReactiveEffect } from '../config/hitReactiveAbilities';
 import { getMoveFieldEffect, type MoveFieldEffect } from '../config/moveFieldEffects';
 import { getMoveStatEffect } from '../config/moveStatEffects';
 import { getMegaApiSlug } from '../config/megaEvolution';
@@ -100,6 +101,7 @@ export interface UseBattleLogActionsReturn {
   adjustStatStage: (battle: Battle, pokemonId: string, stat: StatKey, delta: number) => Promise<boolean>;
   applyAbilityEffect: (battle: Battle, side: BattleSide, pokemonId: string, ability: string) => Promise<boolean>;
   applyReactiveLowerEffect: (battle: Battle, pokemonId: string, ability: string) => Promise<boolean>;
+  applyHitReactiveEffect: (battle: Battle, pokemonId: string, ability: string) => Promise<boolean>;
   setFainted: (battle: Battle, side: BattleSide, pokemonId: string, fainted: boolean) => Promise<boolean>;
   logAction: (battle: Battle, action: Omit<BattleAction, 'id'>) => Promise<boolean>;
   setActionFailed: (battle: Battle, turnNumber: number, actionId: string, failed: boolean) => Promise<boolean>;
@@ -575,6 +577,35 @@ export function useBattleLogActions(
     return updateBattle(battle.id, { statStages, turns: appendAction(battle.turns, { side, pokemonId, note }) });
   }, [updateBattle]);
 
+  /**
+   * One-tap "apply" for a hit-triggered reactive ability (Justified/
+   * Stamina/Weak Armor/etc. - see config/hitReactiveAbilities.ts), always
+   * self-target. Applies every stat change in the ability's `changes` list
+   * (Weak Armor lowers Def AND raises Spe) as separate notes, same pattern
+   * as applyAbilityEffect's per-stat loop. No-ops (false) if the ability
+   * isn't in the table.
+   */
+  const applyHitReactiveEffect = useCallback(async (
+    battle: Battle,
+    pokemonId: string,
+    ability: string
+  ): Promise<boolean> => {
+    const effect = getHitReactiveEffect(ability);
+    if (!effect) return false;
+    const side = sideOf(battle, pokemonId);
+
+    let statStages = battle.statStages;
+    let turns = battle.turns;
+    for (const change of effect.changes) {
+      const current = statStages[pokemonId]?.[change.stat] ?? 0;
+      const next = clampStage(current + change.stages);
+      statStages = { ...statStages, [pokemonId]: { ...statStages[pokemonId], [change.stat]: next } };
+      const note = `${STAT_LABELS[change.stat]} ${next > current ? '+' : ''}${next - current} (${ability})`;
+      turns = appendAction(turns, { side, pokemonId, note });
+    }
+    return updateBattle(battle.id, { statStages, turns });
+  }, [updateBattle]);
+
   /** Powers the TurnLog's "Failed?" chip on a repeat Protect-family use. */
   const setActionFailed = useCallback(async (
     battle: Battle,
@@ -736,6 +767,7 @@ export function useBattleLogActions(
     adjustStatStage,
     applyAbilityEffect,
     applyReactiveLowerEffect,
+    applyHitReactiveEffect,
     setFainted,
     logAction,
     setActionFailed,

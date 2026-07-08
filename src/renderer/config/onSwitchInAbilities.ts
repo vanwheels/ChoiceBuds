@@ -30,6 +30,8 @@ const SWITCH_IN_ABILITY_EFFECTS: Record<string, SwitchInEffect> = {
   'grassy-surge': { kind: 'terrain', terrain: 'grassy' },
   'misty-surge': { kind: 'terrain', terrain: 'misty' },
   'psychic-surge': { kind: 'terrain', terrain: 'psychic' },
+  'hadron-engine': { kind: 'terrain', terrain: 'electric' }, // Miraidon - also a passive SpA multiplier in Electric Terrain, not modeled (not a stage change)
+  'orichalcum-pulse': { kind: 'weather', weather: 'sun' }, // Koraidon - also a passive Atk multiplier in Sun, not modeled (not a stage change)
 };
 
 export function getSwitchInEffect(ability: string | undefined): SwitchInEffect | null {

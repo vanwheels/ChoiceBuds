@@ -107,7 +107,11 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
 
     const logWithTargets = (target: SlotRef[]) => {
       const effectiveness = isDamaging && moveData ? computeMoveEffectiveness(battle, moveData.type, target) : undefined;
-      return battleLogActions.logAction(battle, { side, pokemonId, move, target, phase: 'move', effectiveness });
+      return battleLogActions.logAction(battle, {
+        side, pokemonId, move, target, phase: 'move', effectiveness,
+        moveType: moveData?.type,
+        moveCategory: moveData?.category,
+      });
     };
 
     if (category === 'self') return void logWithTargets([{ side, pokemonId }]);

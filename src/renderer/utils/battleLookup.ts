@@ -8,6 +8,7 @@ import type { Battle, BattleAction, BattleSide, BroughtPokemonSnapshot, Opponent
 import { isProtectFamilyMove } from '../config/protectMoves';
 import { isSwitchOutMove } from '../config/switchOutMoves';
 import { getEffectivenessMultiplier } from '../config/typeEffectiveness';
+import { matchesHitTrigger, type HitTrigger } from '../config/hitReactiveAbilities';
 
 /** Drops the `null` (empty-slot) entries from a fixed 2-slot active-id tuple - for call sites that just need "who's currently active", not slot position. */
 export function compactActiveIds(ids: (string | null)[]): string[] {
@@ -86,6 +87,31 @@ export function hasUnappliedReactiveLowerEffect(battle: Battle, pokemonId: strin
   if (lastDecreaseIndex === -1) return false;
   const lowerAbility = ability.toLowerCase();
   return !allActions.slice(lastDecreaseIndex + 1).some(a => a.pokemonId === pokemonId && a.note?.toLowerCase().includes(lowerAbility));
+}
+
+/**
+ * Whether a hit-triggered reactive ability (Justified/Stamina/Weak Armor/
+ * etc. - see config/hitReactiveAbilities.ts) still has an unacknowledged
+ * trigger - finds the most recent logged 'move' action that (a) targeted
+ * this pokemonId, (b) actually connected (a 0x effectiveness multiplier
+ * means immune - the real game's ability never triggers off a blocked
+ * hit), and (c) matches the ability's trigger condition via the move's
+ * snapshotted type/category. Same "since the last matching hit, not since
+ * switch-in" scoping as hasUnappliedReactiveLowerEffect, for the same
+ * reason - these can re-trigger every time a new qualifying hit lands.
+ */
+export function hasUnappliedHitReactiveEffect(battle: Battle, pokemonId: string, ability: string, trigger: HitTrigger): boolean {
+  const allActions = battle.turns.flatMap(t => t.actions);
+  let lastHitIndex = -1;
+  allActions.forEach((a, i) => {
+    if (a.phase !== 'move' || !a.target?.some(t => t.pokemonId === pokemonId)) return;
+    const multiplier = a.effectiveness?.find(e => e.pokemonId === pokemonId)?.multiplier ?? 1;
+    if (multiplier === 0) return;
+    if (matchesHitTrigger(trigger, a.moveCategory, a.moveType)) lastHitIndex = i;
+  });
+  if (lastHitIndex === -1) return false;
+  const lowerAbility = ability.toLowerCase();
+  return !allActions.slice(lastHitIndex + 1).some(a => a.pokemonId === pokemonId && a.note?.toLowerCase().includes(lowerAbility));
 }
 
 /**

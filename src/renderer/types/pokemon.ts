@@ -162,6 +162,12 @@ export interface BattleAction {
   // move's type and each target's types (see config/typeEffectiveness.ts) -
   // only present for damaging moves, absent for status moves/self/field.
   effectiveness?: { pokemonId: string; multiplier: number }[];
+  // The move's type/damage-class, snapshotted at log time (same pattern as
+  // effectiveness above) - lets utils/battleLookup.ts's hit-reactive-ability
+  // check (config/hitReactiveAbilities.ts) work from the stored action alone
+  // without re-fetching move data. Absent for non-damaging/self/field moves.
+  moveType?: string;
+  moveCategory?: 'physical' | 'special' | 'status';
 }
 
 /**
