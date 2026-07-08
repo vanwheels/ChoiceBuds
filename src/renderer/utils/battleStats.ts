@@ -127,16 +127,3 @@ export function getMostFacedOpponents(battles: Battle[], topN = 10): OpponentFac
     .slice(0, topN);
 }
 
-export function getMegaUsageRecord(battles: Battle[]): { withMega: WinLossRecord; withoutMega: WinLossRecord } {
-  const completed = completedBattles(battles);
-  const withMegaBattles = completed.filter(b => b.megaEvolvedIds.length > 0);
-  const withoutMegaBattles = completed.filter(b => b.megaEvolvedIds.length === 0);
-
-  const withMegaWins = withMegaBattles.filter(b => b.result === 'win').length;
-  const withoutMegaWins = withoutMegaBattles.filter(b => b.result === 'win').length;
-
-  return {
-    withMega: toRecord(withMegaWins, withMegaBattles.length - withMegaWins),
-    withoutMega: toRecord(withoutMegaWins, withoutMegaBattles.length - withoutMegaWins),
-  };
-}

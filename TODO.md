@@ -63,6 +63,18 @@ focused on what's actually next.
   blocked externally on API key approval, can't start regardless of
   priority.
 
+- **Season-level breakdowns (Statistics page + Battle Logger)**: a season
+  is a sub-division of a Regulation, not something either system tracks
+  today - `Team['format']`/`Battle['format']` only distinguish `'Reg M-A'`
+  vs `'Reg M-B'` as a whole, with no season field anywhere. Reg M-A ran 2
+  total seasons; Reg M-B has 3 scheduled, and season 2 of Reg M-B started
+  2026-07-08. Eventually want win rate/data splittable by season (e.g. a
+  team's Reg M-B season 1 record distinguishable from its season 2
+  record), for both the Statistics page's breakdowns and the Battle
+  Logger's own per-battle data. Needs a new season field/schema addition
+  before any of this can be built (nothing to derive it from today) - not
+  scoped in detail yet, just captured as a known future want.
+
 - **2026-07-07 manual-testing/UI-polish batch**: items 1-2, 4, 6-7 done, no
   remaining notes (see COMPLETED.md). Item 3 done - its "Battlefield.tsx
   itself is the tallest column" scrollbar finding is what the "New,

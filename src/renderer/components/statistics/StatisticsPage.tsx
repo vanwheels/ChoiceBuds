@@ -16,12 +16,10 @@ import {
   getRecentForm,
   getMostUsedPokemon,
   getMostFacedOpponents,
-  getMegaUsageRecord,
 } from '../../utils/battleStats';
 import OverallRecordCard from './OverallRecordCard';
 import RecentFormStrip from './RecentFormStrip';
 import BreakdownPanel from './BreakdownPanel';
-import MegaUsagePanel from './MegaUsagePanel';
 import PokemonUsagePanel from './PokemonUsagePanel';
 import OpponentFacedPanel from './OpponentFacedPanel';
 
@@ -39,7 +37,6 @@ export default function StatisticsPage({ battlesState, spriteCacheState }: Stati
   const recentForm = useMemo(() => getRecentForm(battles), [battles]);
   const mostUsedPokemon = useMemo(() => getMostUsedPokemon(battles), [battles]);
   const mostFacedOpponents = useMemo(() => getMostFacedOpponents(battles), [battles]);
-  const megaUsageRecord = useMemo(() => getMegaUsageRecord(battles), [battles]);
 
   if (overallRecord.total === 0) {
     return (
@@ -60,7 +57,6 @@ export default function StatisticsPage({ battlesState, spriteCacheState }: Stati
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <BreakdownPanel title="By Format" records={recordByFormat} emptyMessage="No completed battles yet." />
         <BreakdownPanel title="By Team" records={recordByTeam} emptyMessage="No completed battles yet." />
-        <MegaUsagePanel withMega={megaUsageRecord.withMega} withoutMega={megaUsageRecord.withoutMega} />
         <PokemonUsagePanel stats={mostUsedPokemon} resolveSprite={spriteCacheState.resolveSprite} />
         <OpponentFacedPanel stats={mostFacedOpponents} resolveSprite={spriteCacheState.resolveSprite} />
       </div>
