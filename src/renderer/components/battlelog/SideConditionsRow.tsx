@@ -5,6 +5,12 @@
  * Turn-tracked conditions show a countdown and toggle on/off; stackable
  * hazards (Spikes/Toxic Spikes) cycle 0..max..0 on click since there's no
  * room here for separate +/- controls.
+ *
+ * Vertically stacked (one condition per row) rather than a wrapped chip
+ * cluster - narrows this column down to just the width of its longest
+ * label instead of however wide a multi-per-row wrapped layout needed,
+ * freeing up horizontal room in Battlefield.tsx (see its own header
+ * comment for why that mattered).
  */
 
 import type { Battle, BattleSide } from '../../types/pokemon';
@@ -27,7 +33,7 @@ export default function SideConditionsRow({ battle, side, battleLogActions }: Si
   const activeColor = side === 'player' ? 'bg-blue-600 text-white' : 'bg-red-600 text-white';
 
   return (
-    <div className="flex flex-wrap gap-1">
+    <div className="flex flex-col items-start gap-1">
       {TURN_TRACKED_CONDITIONS.map(key => {
         const remaining = getSideConditionRemaining(conditions, key, currentTurn);
         const isActive = remaining != null;

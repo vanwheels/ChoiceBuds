@@ -23,8 +23,8 @@ const STAT_FIELDS: Array<{ label: string; key: keyof StatsTable }> = [
 
 interface CalcStatRowsProps {
   baseStats: StatsTable | null;
-  /** Base+SPs+nature only (no stage boost) - see useDamageCalc's computeRawStats. */
-  rawStats: StatsTable | null;
+  /** Base+SPs+nature+stage boost (Speed also paralysis-halved) - see useDamageCalc's computeBoostedStats. */
+  boostedStats: StatsTable | null;
   sps: StatsTable;
   boosts: StatsTable;
   natureEffect: NatureStatEffect;
@@ -32,7 +32,7 @@ interface CalcStatRowsProps {
   onChangeBoost: (key: keyof StatsTable, value: number) => void;
 }
 
-export default function CalcStatRows({ baseStats, rawStats, sps, boosts, natureEffect, onChangeSp, onChangeBoost }: CalcStatRowsProps) {
+export default function CalcStatRows({ baseStats, boostedStats, sps, boosts, natureEffect, onChangeSp, onChangeBoost }: CalcStatRowsProps) {
   const total = Object.values(sps).reduce((sum, v) => sum + v, 0);
 
   return (
@@ -86,9 +86,9 @@ export default function CalcStatRows({ baseStats, rawStats, sps, boosts, natureE
             className={`w-10 text-center text-xs font-bold shrink-0 ${
               isBoosted ? 'text-red-400' : isLowered ? 'text-blue-400' : 'text-zinc-200'
             }`}
-            title="Base + SP + nature (stage boost not included)"
+            title="Base + SP + nature + stage boost"
           >
-            {rawStats ? rawStats[key] : '—'}
+            {boostedStats ? boostedStats[key] : '—'}
           </span>
         </div>
         );

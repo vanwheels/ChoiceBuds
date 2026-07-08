@@ -92,10 +92,11 @@ in a `Why:` line only when it's not obvious from the task itself.
      `Battlefield.tsx`'s own sizing (slot spacing, weather/side-condition
      bar padding, etc.) - not scoped or touched during item 3.
 
-- **2026-07-07 second review pass** (items 2-3/5-9 done, see Done below; 1
-  and 4 not yet built - captured from another manual-testing round,
-  reference screenshots of the real calc.pokemonshowdown.com Champions
-  mode provided for items 1-3):
+- **2026-07-07 second review pass** (items 2-3/5-10 done, item 4's layout
+  idea done but didn't fix the root cause (see its entry below), item 1
+  partial - see Done below for all; captured from another manual-testing
+  round, reference screenshots of the real calc.pokemonshowdown.com
+  Champions mode provided for items 1-3):
   1. Calc page: tighten overall spacing so more fits without scrolling at
      1920x1080, closer to how the real Showdown calc packs its panels -
      builds on the Stage 4 "doesn't eliminate scrolling" caveat above.
@@ -112,14 +113,25 @@ in a `Why:` line only when it's not obvious from the task itself.
      `SideConditionsRow.tsx` into one shared component instead of two
      different-looking implementations of the same idea - not done here,
      both still exist separately.
-  4. Battle Logger: opponent roster boxes are still visually bigger than
-     the player's despite the Stage 3 compacting pass - still wants them
-     even. New layout idea to get there: move Weather/Terrain/field
-     effects (currently `FieldWeatherBar`) to a horizontal row *above*
-     the Battlefield box instead of a corner, and change each side's
-     active conditions (`SideConditionsRow.tsx`) from wrapped-horizontal
-     to vertically stacked - frees up the horizontal space that's
-     currently forcing the opponent panel wider.
+  4. ~~Battle Logger: opponent roster boxes are still visually bigger than
+     the player's~~ - the specific layout idea (move `FieldWeatherBar` to
+     its own full-width row above the Battlefield, stack
+     `SideConditionsRow.tsx` vertically) is done, see Done below. **But**
+     verifying it turned up a real problem with the premise: both roster
+     columns (`PlayerFieldPanel`/`OpponentFieldPanel`) are already pinned
+     to an identical fixed width (`w-full lg:w-56 shrink-0`, 224px at the
+     `lg` breakpoint) regardless of anything inside `Battlefield.tsx` -
+     confirmed via direct `getBoundingClientRect()` measurement, both
+     came back exactly 224px. So structurally, Battlefield's own sizing
+     was never capable of "forcing the opponent panel wider" the way this
+     item assumed - that specific causal link doesn't exist in the
+     current code. If the opponent panel still looks bigger day to day,
+     it's more likely the *height* difference the Stage 3 Done entry
+     already measured (500px vs 608px column height, from
+     `OpponentRowFields`'s ability-select/item-input/growable-move-chips
+     needing more vertical room per Pokemon than the player's static
+     text) - not width. Left open: a real fix for that would be a
+     height-focused pass at `OpponentRowFields.tsx`, not a width one.
   5. ~~Battle Logger bug: clicking Undo on a Pokemon-sent-in action removes
      the turn-log entry but leaves the Pokemon still occupying its
      Battlefield slot~~ - done, see Done below.
@@ -136,8 +148,63 @@ in a `Why:` line only when it's not obvious from the task itself.
      below.
   9. ~~Teams page (`TeamCard.tsx`): swap the Edit and Delete button
      positions in the header controls cluster~~ - done, see Done below.
+  10. ~~The Calc page's new "Total" column currently only folds in
+      Base+SPs+nature, deliberately excluding the stage boost~~ - done,
+      see Done below.
 
 ## Done
+
+- **Battle Logger: move weather/terrain above the Battlefield, stack side
+  conditions vertically** (2026-07-07): item 4 of the second review pass.
+  `FieldWeatherBar` moved out of the opponent row's right-hand column
+  into its own full-width row above both active-mon rows in
+  `Battlefield.tsx`; `SideConditionsRow.tsx` changed from `flex flex-wrap`
+  (chips wrapping into however many lines fit) to `flex flex-col
+  items-start` (one condition per row), narrowing each side's column
+  down to just its longest active label instead of a multi-chip-wide
+  wrapped block. Live-verified on a disposable test battle with several
+  conditions active on both sides (Tailwind/Reflect+Clay on one side,
+  Stealth Rock/Spikes on the other) - weather/terrain/Trick Room render
+  as one row up top, each side's conditions stack narrowly next to its 2
+  active Pokemon.
+
+  **However**, verifying this against the item's actual goal (shrink the
+  opponent roster panel to match the player's) turned up a real gap in
+  the premise: `getBoundingClientRect()` on both `PlayerFieldPanel`'s and
+  `OpponentFieldPanel`'s outer containers measured exactly 224px wide,
+  both - because both are already pinned to a fixed `w-full lg:w-56
+  shrink-0` regardless of `Battlefield.tsx`'s own content width. This
+  session's Battlefield changes are still a real, verified improvement to
+  Battlefield's own layout, but they were never capable of "freeing up
+  space forcing the opponent panel wider" the way item 4 assumed - that
+  causal link doesn't exist in the current code (the panels' widths are
+  independent of Battlefield's). If the opponent panel still reads as
+  bigger day to day, it's more likely the *height* difference the Stage 3
+  Done entry already measured and left unresolved (500px vs 608px column
+  height) - not width. Flagged rather than silently claiming this fully
+  solves item 4's stated goal.
+
+- **Calc page: fold stat-stage boosts into the Total column** (2026-07-07):
+  item 10 of the second review pass, filed and picked up in the same
+  session right after item 2 shipped without it. `useDamageCalc.ts`'s
+  `computeRawStats` was renamed/repurposed to `computeBoostedStats`
+  (`pokemon1RawStats`/`pokemon2RawStats` -> `pokemon1BoostedStats`/
+  `pokemon2BoostedStats`, threaded through `CalcPage.tsx` ->
+  `CalcPokemonPanel.tsx` -> `CalcStatRows.tsx`'s "Total" column) -
+  generalizes what `computeEffectiveSpeed` already did for Speed alone
+  (stage-boost multiplier, paralysis-halving) to all 6 stats; Speed still
+  gets the paralysis-halving special case since that's the only stat it
+  affects in the real games, the other 5 just get the plain multiplier.
+  `computeEffectiveSpeed` itself now delegates to `computeBoostedStats`
+  instead of duplicating the formula. Also fixed a latent rounding bug
+  caught while generalizing: the pre-existing non-paralyzed branch never
+  floored the boosted value, so a boost multiplier landing on a non-clean
+  fraction (any base stat not evenly divisible by the stage's multiplier)
+  could have rendered a fractional Speed number in the tier banner -
+  `computeBoostedStats` floors per-stat, matching how the real stat
+  formula rounds. Live-verified: neutral 60-base Speed correctly showed
+  Total 80 at 0 SP/boost, 160 at +2 boost (80 * 2), and 80 again once
+  Paralyzed was set with the +2 boost still applied (floor(160/2)).
 
 - **Calc page: stat-total column, trimmed/relayouted field-condition
   toggles, spacing pass** (2026-07-07): items 1 (partial)/2/3 of the

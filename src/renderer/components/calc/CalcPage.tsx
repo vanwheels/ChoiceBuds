@@ -35,7 +35,7 @@ export default function CalcPage({ gameDataState, teamsState, spriteCacheState }
     field, setField, setPokemon1Side, setPokemon2Side,
     speciesOptions, pokemon1MoveOptions, pokemon2MoveOptions, itemOptions, abilityOptions, natureOptions,
     pokemon1Formes, pokemon2Formes, pokemon1BaseStats, pokemon2BaseStats,
-    pokemon1RawStats, pokemon2RawStats,
+    pokemon1BoostedStats, pokemon2BoostedStats,
     pokemon1NatureEffect, pokemon2NatureEffect, pokemon1Speed, pokemon2Speed,
     p1Results, p2Results, selectedResult, setSelectedResult, selectedEntry,
   } = calcState;
@@ -89,7 +89,7 @@ export default function CalcPage({ gameDataState, teamsState, spriteCacheState }
           natureOptions={natureOptions}
           formes={pokemon1Formes}
           baseStats={pokemon1BaseStats}
-          rawStats={pokemon1RawStats}
+          boostedStats={pokemon1BoostedStats}
           natureEffect={pokemon1NatureEffect}
           teams={teamsState.teams}
           resolveSprite={spriteCacheState.resolveSprite}
@@ -114,7 +114,7 @@ export default function CalcPage({ gameDataState, teamsState, spriteCacheState }
           natureOptions={natureOptions}
           formes={pokemon2Formes}
           baseStats={pokemon2BaseStats}
-          rawStats={pokemon2RawStats}
+          boostedStats={pokemon2BoostedStats}
           natureEffect={pokemon2NatureEffect}
           teams={teamsState.teams}
           resolveSprite={spriteCacheState.resolveSprite}

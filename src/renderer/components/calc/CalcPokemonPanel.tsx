@@ -37,7 +37,7 @@ interface CalcPokemonPanelProps {
   natureOptions: NatureName[];
   formes: FormeFamily;
   baseStats: StatsTable | null;
-  rawStats: StatsTable | null;
+  boostedStats: StatsTable | null;
   natureEffect: NatureStatEffect;
   teams: Team[];
   resolveSprite: (remoteUrl: string) => string;
@@ -70,7 +70,7 @@ function FormeToggle({ group, current, onSelect }: { group: string[]; current: s
 }
 
 export default function CalcPokemonPanel({
-  title, state, speciesOptions, itemOptions, abilityOptions, natureOptions, formes, baseStats, rawStats, natureEffect,
+  title, state, speciesOptions, itemOptions, abilityOptions, natureOptions, formes, baseStats, boostedStats, natureEffect,
   teams, resolveSprite, onChange,
 }: CalcPokemonPanelProps) {
   const cycleGender = () => {
@@ -193,7 +193,7 @@ export default function CalcPokemonPanel({
 
       <CalcStatRows
         baseStats={baseStats}
-        rawStats={rawStats}
+        boostedStats={boostedStats}
         sps={state.sps}
         boosts={state.boosts}
         natureEffect={natureEffect}

@@ -19,10 +19,17 @@
  * computed booleans/callbacks, matching the "local useState in the
  * container" split OpponentFieldPanel already uses for its own popover.
  *
- * Also hosts the overall field-effect display: SideConditionsRow (per-side
- * screens/Tailwind/hazards) beside each row, FieldWeatherBar
- * (weather/terrain/Trick Room) in the top-right - see the two mockup
- * screenshots this layout was built from.
+ * Also hosts the overall field-effect display: FieldWeatherBar
+ * (weather/terrain/Trick Room) as its own full-width row above both
+ * sides, and SideConditionsRow (per-side screens/Tailwind/hazards,
+ * vertically stacked - see SideConditionsRow.tsx) beside each row.
+ * Previously FieldWeatherBar sat squeezed into the opponent row's right
+ * column and SideConditionsRow wrapped its chips horizontally - both
+ * pushed this component's own minimum width wider than it needed to be,
+ * indirectly starving the roster columns flanking it (OpponentFieldPanel/
+ * PlayerFieldPanel) of the room to shrink to match each other. Moving
+ * weather out to its own row and stacking conditions narrows this
+ * component's footprint instead.
  */
 
 import { useState } from 'react';
@@ -195,6 +202,8 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
         </div>
       )}
 
+      <FieldWeatherBar battle={battle} battleLogActions={battleLogActions} />
+
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <SideConditionsRow battle={battle} side="opponent" battleLogActions={battleLogActions} />
@@ -205,9 +214,7 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
             {[0, 1].map(slot => renderSlot('opponent', slot, opponentActive[slot], true))}
           </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <FieldWeatherBar battle={battle} battleLogActions={battleLogActions} />
-        </div>
+        <div className="flex-1 min-w-0" />
       </div>
 
       <div className="w-full border-t border-dashed border-gray-800" />

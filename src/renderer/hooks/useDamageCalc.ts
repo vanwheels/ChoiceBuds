@@ -247,37 +247,38 @@ function boostMultiplier(stage: number): number {
 }
 
 /**
- * Speed with stage boosts and paralysis applied - unlike rawStats.spe (base+
- * nature+SPs only), this is what actually determines turn order. Doesn't
- * model Tailwind/weather-based speed abilities (Swift Swim etc.) - the field
- * state here doesn't track which Pokemon's ability is actually active, so
- * factoring those in would be guessing; stage boosts and paralysis are both
- * already explicit, unambiguous inputs on this panel.
+ * Base+SPs+nature+stage boost for all 6 stats - what the Calc's stat table
+ * shows as a single computed "Total" per row (see CalcStatRows.tsx),
+ * matching what the real games display as a Pokemon's current stat (unlike
+ * @smogon/calc's own `rawStats`, which is base+nature+SPs only, no boost).
+ * Speed additionally applies paralysis-halving, since that's the only stat
+ * paralysis affects in the real games - this is also what actually
+ * determines turn order for the Speed-tier banner. Doesn't model Tailwind/
+ * weather-based speed abilities (Swift Swim etc.) - the field state here
+ * doesn't track which Pokemon's ability is actually active, so factoring
+ * those in would be guessing; stage boosts and paralysis are both already
+ * explicit, unambiguous inputs on this panel. Floored per-stat (not just at
+ * the end) since that's how the real stat formula rounds a fractional
+ * boost multiplier.
  */
-function computeEffectiveSpeed(gen: Generation, state: CalcPokemonState): number | null {
+function computeBoostedStats(gen: Generation, state: CalcPokemonState): StatsTable | null {
   if (!state.species) return null;
   try {
     const pokemon = buildPokemon(gen, state);
-    const boosted = pokemon.rawStats.spe * boostMultiplier(state.boosts.spe);
-    return state.status === 'par' ? Math.floor(boosted / 2) : boosted;
+    const keys = Object.keys(pokemon.rawStats) as (keyof StatsTable)[];
+    const entries = keys.map(key => {
+      const boosted = Math.floor(pokemon.rawStats[key] * boostMultiplier(state.boosts[key]));
+      const final = key === 'spe' && state.status === 'par' ? Math.floor(boosted / 2) : boosted;
+      return [key, final] as const;
+    });
+    return Object.fromEntries(entries) as StatsTable;
   } catch {
     return null;
   }
 }
 
-/**
- * Base+SPs+nature only (no stage boost) for all 6 stats - what the real
- * calc's stat table shows as a single computed "total" number per row
- * (see CalcStatRows.tsx). Same underlying value as computeEffectiveSpeed's
- * pre-boost figure, just exposed for every stat instead of only Speed.
- */
-function computeRawStats(gen: Generation, state: CalcPokemonState): StatsTable | null {
-  if (!state.species) return null;
-  try {
-    return buildPokemon(gen, state).rawStats;
-  } catch {
-    return null;
-  }
+function computeEffectiveSpeed(gen: Generation, state: CalcPokemonState): number | null {
+  return computeBoostedStats(gen, state)?.spe ?? null;
 }
 
 function buildPokemon(gen: Generation, state: CalcPokemonState): InstanceType<typeof Pokemon> {
@@ -386,8 +387,8 @@ export interface UseDamageCalcReturn {
   pokemon2Formes: FormeFamily;
   pokemon1BaseStats: StatsTable | null;
   pokemon2BaseStats: StatsTable | null;
-  pokemon1RawStats: StatsTable | null;
-  pokemon2RawStats: StatsTable | null;
+  pokemon1BoostedStats: StatsTable | null;
+  pokemon2BoostedStats: StatsTable | null;
   pokemon1NatureEffect: NatureStatEffect;
   pokemon2NatureEffect: NatureStatEffect;
   pokemon1Speed: number | null;
@@ -429,8 +430,8 @@ export function useDamageCalc(gameDataState: UseGameDataReturn): UseDamageCalcRe
   const pokemon1Speed = useMemo(() => computeEffectiveSpeed(gen, pokemon1), [gen, pokemon1]);
   const pokemon2Speed = useMemo(() => computeEffectiveSpeed(gen, pokemon2), [gen, pokemon2]);
 
-  const pokemon1RawStats = useMemo(() => computeRawStats(gen, pokemon1), [gen, pokemon1]);
-  const pokemon2RawStats = useMemo(() => computeRawStats(gen, pokemon2), [gen, pokemon2]);
+  const pokemon1BoostedStats = useMemo(() => computeBoostedStats(gen, pokemon1), [gen, pokemon1]);
+  const pokemon2BoostedStats = useMemo(() => computeBoostedStats(gen, pokemon2), [gen, pokemon2]);
 
   const pokemon1BaseStats = useMemo(
     () => (pokemon1.species ? gen.species.get(toID(pokemon1.species))?.baseStats ?? null : null),
@@ -530,8 +531,8 @@ export function useDamageCalc(gameDataState: UseGameDataReturn): UseDamageCalcRe
     pokemon2Formes,
     pokemon1BaseStats,
     pokemon2BaseStats,
-    pokemon1RawStats,
-    pokemon2RawStats,
+    pokemon1BoostedStats,
+    pokemon2BoostedStats,
     pokemon1NatureEffect,
     pokemon2NatureEffect,
     pokemon1Speed,
