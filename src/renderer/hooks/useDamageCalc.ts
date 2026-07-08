@@ -265,6 +265,21 @@ function computeEffectiveSpeed(gen: Generation, state: CalcPokemonState): number
   }
 }
 
+/**
+ * Base+SPs+nature only (no stage boost) for all 6 stats - what the real
+ * calc's stat table shows as a single computed "total" number per row
+ * (see CalcStatRows.tsx). Same underlying value as computeEffectiveSpeed's
+ * pre-boost figure, just exposed for every stat instead of only Speed.
+ */
+function computeRawStats(gen: Generation, state: CalcPokemonState): StatsTable | null {
+  if (!state.species) return null;
+  try {
+    return buildPokemon(gen, state).rawStats;
+  } catch {
+    return null;
+  }
+}
+
 function buildPokemon(gen: Generation, state: CalcPokemonState): InstanceType<typeof Pokemon> {
   return new Pokemon(gen, state.species, {
     level: state.level,
@@ -371,6 +386,8 @@ export interface UseDamageCalcReturn {
   pokemon2Formes: FormeFamily;
   pokemon1BaseStats: StatsTable | null;
   pokemon2BaseStats: StatsTable | null;
+  pokemon1RawStats: StatsTable | null;
+  pokemon2RawStats: StatsTable | null;
   pokemon1NatureEffect: NatureStatEffect;
   pokemon2NatureEffect: NatureStatEffect;
   pokemon1Speed: number | null;
@@ -411,6 +428,9 @@ export function useDamageCalc(gameDataState: UseGameDataReturn): UseDamageCalcRe
 
   const pokemon1Speed = useMemo(() => computeEffectiveSpeed(gen, pokemon1), [gen, pokemon1]);
   const pokemon2Speed = useMemo(() => computeEffectiveSpeed(gen, pokemon2), [gen, pokemon2]);
+
+  const pokemon1RawStats = useMemo(() => computeRawStats(gen, pokemon1), [gen, pokemon1]);
+  const pokemon2RawStats = useMemo(() => computeRawStats(gen, pokemon2), [gen, pokemon2]);
 
   const pokemon1BaseStats = useMemo(
     () => (pokemon1.species ? gen.species.get(toID(pokemon1.species))?.baseStats ?? null : null),
@@ -510,6 +530,8 @@ export function useDamageCalc(gameDataState: UseGameDataReturn): UseDamageCalcRe
     pokemon2Formes,
     pokemon1BaseStats,
     pokemon2BaseStats,
+    pokemon1RawStats,
+    pokemon2RawStats,
     pokemon1NatureEffect,
     pokemon2NatureEffect,
     pokemon1Speed,

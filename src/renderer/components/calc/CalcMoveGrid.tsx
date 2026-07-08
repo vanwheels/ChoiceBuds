@@ -23,7 +23,7 @@ interface CalcMoveGridProps {
 
 export default function CalcMoveGrid({ title, moves, results, moveOptions, selectedIndex, onChangeMove, onSelect }: CalcMoveGridProps) {
   return (
-    <div className="flex-1 min-w-[280px] bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-4 flex flex-col gap-2">
+    <div className="flex-1 min-w-[280px] bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-1.5">
       <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wide">{title}</h3>
       {moves.map((slot, index) => {
         const result = results[index];
@@ -33,7 +33,7 @@ export default function CalcMoveGrid({ title, moves, results, moveOptions, selec
           <div
             key={index}
             onClick={() => slot.name && onSelect(index)}
-            className={`flex items-center gap-2 px-2 py-1.5 rounded border transition-colors ${
+            className={`flex items-center gap-2 px-2 py-1 rounded border transition-colors ${
               isSelected ? 'border-blue-500 bg-blue-950/40' : 'border-zinc-800 hover:border-zinc-700'
             } ${slot.name ? 'cursor-pointer' : ''}`}
           >

@@ -15,6 +15,8 @@ interface CalcFieldPanelProps {
   onChangeField: (updates: Partial<Pick<CalcFieldState, 'gameType' | 'weather' | 'terrain'>>) => void;
   onChangePokemon1Side: (updates: Partial<CalcSideConditionsState>) => void;
   onChangePokemon2Side: (updates: Partial<CalcSideConditionsState>) => void;
+  pokemon1Ability: string;
+  pokemon2Ability: string;
   pokemon1Speed: number | null;
   pokemon2Speed: number | null;
 }
@@ -37,10 +39,11 @@ function SpeedTierBanner({ pokemon1Speed, pokemon2Speed }: { pokemon1Speed: numb
 }
 
 export default function CalcFieldPanel({
-  field, onChangeField, onChangePokemon1Side, onChangePokemon2Side, pokemon1Speed, pokemon2Speed,
+  field, onChangeField, onChangePokemon1Side, onChangePokemon2Side,
+  pokemon1Ability, pokemon2Ability, pokemon1Speed, pokemon2Speed,
 }: CalcFieldPanelProps) {
   return (
-    <div className="flex-1 min-w-[280px] bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-4 flex flex-col gap-3">
+    <div className="flex-1 min-w-[280px] bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-2">
       <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wide">Field</h3>
 
       <SpeedTierBanner pokemon1Speed={pokemon1Speed} pokemon2Speed={pokemon2Speed} />
@@ -86,8 +89,20 @@ export default function CalcFieldPanel({
       </div>
 
       <div className="flex gap-3 pt-1 border-t border-zinc-800">
-        <CalcSideConditions title="Pokémon 1's Side" side={field.pokemon1Side} onChange={onChangePokemon1Side} />
-        <CalcSideConditions title="Pokémon 2's Side" side={field.pokemon2Side} onChange={onChangePokemon2Side} />
+        <CalcSideConditions
+          title="Pokémon 1's Side"
+          side={field.pokemon1Side}
+          align="left"
+          ownAbility={pokemon1Ability}
+          onChange={onChangePokemon1Side}
+        />
+        <CalcSideConditions
+          title="Pokémon 2's Side"
+          side={field.pokemon2Side}
+          align="right"
+          ownAbility={pokemon2Ability}
+          onChange={onChangePokemon2Side}
+        />
       </div>
     </div>
   );

@@ -13,7 +13,7 @@ interface CalcResultPanelProps {
 
 export default function CalcResultPanel({ entry }: CalcResultPanelProps) {
   return (
-    <div className="bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-4 flex flex-col gap-2">
+    <div className="bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-1.5">
       <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wide">Result</h3>
       {!entry ? (
         <p className="text-sm text-zinc-500">Set up both Pokémon, pick a move, then click a move row to see the full result.</p>

@@ -35,12 +35,13 @@ export default function CalcPage({ gameDataState, teamsState, spriteCacheState }
     field, setField, setPokemon1Side, setPokemon2Side,
     speciesOptions, pokemon1MoveOptions, pokemon2MoveOptions, itemOptions, abilityOptions, natureOptions,
     pokemon1Formes, pokemon2Formes, pokemon1BaseStats, pokemon2BaseStats,
+    pokemon1RawStats, pokemon2RawStats,
     pokemon1NatureEffect, pokemon2NatureEffect, pokemon1Speed, pokemon2Speed,
     p1Results, p2Results, selectedResult, setSelectedResult, selectedEntry,
   } = calcState;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2">
       <div className="flex justify-end gap-2">
         {ALL_REGULATION_IDS.map(id => (
           <button
@@ -55,7 +56,7 @@ export default function CalcPage({ gameDataState, teamsState, spriteCacheState }
         ))}
       </div>
 
-      <div className="flex flex-wrap gap-4">
+      <div className="flex flex-wrap gap-3">
         <CalcMoveGrid
           title="Pokémon 1's Moves"
           moves={pokemon1.moves}
@@ -78,7 +79,7 @@ export default function CalcPage({ gameDataState, teamsState, spriteCacheState }
 
       <CalcResultPanel entry={selectedEntry} />
 
-      <div className="flex flex-wrap gap-4">
+      <div className="flex flex-wrap gap-3">
         <CalcPokemonPanel
           title="Pokémon 1"
           state={pokemon1}
@@ -88,6 +89,7 @@ export default function CalcPage({ gameDataState, teamsState, spriteCacheState }
           natureOptions={natureOptions}
           formes={pokemon1Formes}
           baseStats={pokemon1BaseStats}
+          rawStats={pokemon1RawStats}
           natureEffect={pokemon1NatureEffect}
           teams={teamsState.teams}
           resolveSprite={spriteCacheState.resolveSprite}
@@ -98,6 +100,8 @@ export default function CalcPage({ gameDataState, teamsState, spriteCacheState }
           onChangeField={setField}
           onChangePokemon1Side={setPokemon1Side}
           onChangePokemon2Side={setPokemon2Side}
+          pokemon1Ability={pokemon1.ability}
+          pokemon2Ability={pokemon2.ability}
           pokemon1Speed={pokemon1Speed}
           pokemon2Speed={pokemon2Speed}
         />
@@ -110,6 +114,7 @@ export default function CalcPage({ gameDataState, teamsState, spriteCacheState }
           natureOptions={natureOptions}
           formes={pokemon2Formes}
           baseStats={pokemon2BaseStats}
+          rawStats={pokemon2RawStats}
           natureEffect={pokemon2NatureEffect}
           teams={teamsState.teams}
           resolveSprite={spriteCacheState.resolveSprite}

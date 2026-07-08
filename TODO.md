@@ -92,30 +92,26 @@ in a `Why:` line only when it's not obvious from the task itself.
      `Battlefield.tsx`'s own sizing (slot spacing, weather/side-condition
      bar padding, etc.) - not scoped or touched during item 3.
 
-- **2026-07-07 second review pass** (items 5-9 done, see Done below; 1-4
-  not yet built - captured from another manual-testing round, reference
-  screenshots of the real calc.pokemonshowdown.com Champions mode provided
-  for items 1-3):
+- **2026-07-07 second review pass** (items 2-3/5-9 done, see Done below; 1
+  and 4 not yet built - captured from another manual-testing round,
+  reference screenshots of the real calc.pokemonshowdown.com Champions
+  mode provided for items 1-3):
   1. Calc page: tighten overall spacing so more fits without scrolling at
      1920x1080, closer to how the real Showdown calc packs its panels -
-     builds on the Stage 4 "doesn't eliminate scrolling" caveat above,
-     this time with a concrete visual reference to match rather than
-     guessing at a target density.
-  2. Calc page: show each stat's final computed total next to the
-     Boost column (`CalcStatRows.tsx`), matching Showdown's own stat
-     table - e.g. base 92 Sp.Atk + 32 SPs + Modest nature reads as a
-     single "158" total column, not just Base/SP/Boost separately.
-  3. Calc page (`CalcSideConditions.tsx`): trim the field-effect toggle
-     list down to exactly what the real Showdown calc offers (we may have
-     extras it doesn't need), drop the "+1 to all stats" button entirely,
-     and switch the two sides' layout to left-aligned/right-aligned
-     columns like the reference screenshot instead of the current
-     symmetric stacked-button styling from Stage 4. Since this and item 4
-     both touch a field-condition widget in the same session, worth
-     finally doing the still-open Stage 4 follow-up here too: unify
-     `CalcSideConditions.tsx` and the Battle Logger's
+     builds on the Stage 4 "doesn't eliminate scrolling" caveat above.
+     **Partially done** as a side effect of item 2/3's redesign pass (see
+     Done below - padding/gaps tightened across every Calc panel,
+     measured 924px vs the old 1102px scrollHeight at the 1280x720
+     minimum), but not the dedicated 1920x1080-targeted pass this item
+     originally asked for - still open if further tightening is wanted.
+  2. ~~Calc page: show each stat's final computed total next to the
+     Boost column~~ - done, see Done below.
+  3. ~~Calc page (`CalcSideConditions.tsx`): trim the field-effect toggle
+     list~~ - done, see Done below. Still open: the Stage 4 follow-up to
+     unify `CalcSideConditions.tsx` and the Battle Logger's
      `SideConditionsRow.tsx` into one shared component instead of two
-     different-looking implementations of the same idea.
+     different-looking implementations of the same idea - not done here,
+     both still exist separately.
   4. Battle Logger: opponent roster boxes are still visually bigger than
      the player's despite the Stage 3 compacting pass - still wants them
      even. New layout idea to get there: move Weather/Terrain/field
@@ -142,6 +138,65 @@ in a `Why:` line only when it's not obvious from the task itself.
      positions in the header controls cluster~~ - done, see Done below.
 
 ## Done
+
+- **Calc page: stat-total column, trimmed/relayouted field-condition
+  toggles, spacing pass** (2026-07-07): items 1 (partial)/2/3 of the
+  second review pass, built against real calc.pokemonshowdown.com
+  reference screenshots the user provided (vs. our own current-state
+  screenshot for comparison). Three pieces, plus a set of decisions asked
+  and answered up front since the reference images contradicted or
+  extended the item text as originally written:
+  1. **Stat total column**: `useDamageCalc.ts` gained `computeRawStats`
+     (+ `pokemon1RawStats`/`pokemon2RawStats`) - base+SPs+nature only, no
+     stage boost, reusing the same underlying `Pokemon.rawStats` the
+     existing Speed-tier banner already relies on (just exposed for all 6
+     stats instead of only Speed). `CalcStatRows.tsx` shows it as a new
+     "Total" column next to the existing Base/SP/Boost ones (Boost - the
+     battle-stage -6..+6 input - kept as its own editable field, since
+     the engine still needs it; the new Total intentionally excludes it,
+     matching the item's own example calculation). Live-verified: neutral
+     Hardy/0 SP Abomasnow correctly showed HP 165/Atk 112/Def 95/SpA
+     112/SpD 105/Spe 80, matching the base-stat formula with no boost
+     applied.
+  2. **Field-condition toggle trim + relayout**: cross-referencing the
+     real calc's field column against ours found 4 extras (Flower
+     Gift/Battery/Power Spot/Steely Spirit) and a couple of differences
+     the user resolved via up-front questions rather than guessing: the
+     4 extras are now conditionally rendered in `CalcSideConditions.tsx`
+     (only shown when that side's own Pokémon's `ability` field actually
+     matches - not removed outright, since Champions definitely has
+     Pokémon with these abilities), "+1 All Stats" was left out per the
+     original item text (even though the reference screenshot shows it
+     in the real calc - flagged as a real contradiction, user chose to
+     keep the original "drop it" instruction), and two real-calc toggles
+     we don't have at all (Power Trick, Switching Out - both natively
+     supported by `@smogon/calc`'s `Side` class already) were explicitly
+     deferred rather than added. Also switched the two side columns from
+     identical/symmetric to mirrored left-aligned (Pokémon 1) /
+     right-aligned (Pokémon 2) text and Spikes button order (0,1,2,3 vs
+     3,2,1,0), matching the reference exactly - `CalcSideConditions`
+     gained an `align: 'left' | 'right'` prop and `CalcFieldPanel`/
+     `CalcPage` now thread each Pokémon's live `ability` value down so
+     the conditional toggles have something to check against.
+     Live-verified: setting Pokémon 1's ability to "Flower Gift" made
+     that toggle appear at the bottom of Pokémon 1's column only, with
+     Pokémon 2's column (ability still "None") showing no such toggle;
+     spikes buttons and toggle text alignment mirror correctly per side.
+  3. **Spacing pass**: `p-4`/`gap-3`/`gap-4` trimmed to `p-3`/`gap-2`/
+     `gap-1.5` across `CalcPage.tsx`, `CalcMoveGrid.tsx`,
+     `CalcResultPanel.tsx`, `CalcPokemonPanel.tsx`, and
+     `CalcFieldPanel.tsx`. Only a general tightening pass, not the
+     dedicated 1920x1080-targeted density match the item originally
+     asked for - measured a real improvement at the 1280x720 minimum
+     window regardless (924px `main.scrollHeight` vs the Stage 4
+     baseline's 1102px, both against `clientHeight` 661px), but the
+     scrollbar isn't eliminated and no specific 1920x1080 verification
+     was done. Left open as the remainder of item 1 if further
+     tightening is wanted.
+
+  The Stage 4 follow-up to unify this file with the Battle Logger's
+  `SideConditionsRow.tsx` into one shared component is still open - both
+  still exist as separate, now differently-laid-out implementations.
 
 - **Teams page: fixed sprite-row width + Edit/Delete button order**
   (2026-07-07): items 8-9 of the second review pass. `TeamCard.tsx`'s

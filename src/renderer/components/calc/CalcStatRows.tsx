@@ -23,6 +23,8 @@ const STAT_FIELDS: Array<{ label: string; key: keyof StatsTable }> = [
 
 interface CalcStatRowsProps {
   baseStats: StatsTable | null;
+  /** Base+SPs+nature only (no stage boost) - see useDamageCalc's computeRawStats. */
+  rawStats: StatsTable | null;
   sps: StatsTable;
   boosts: StatsTable;
   natureEffect: NatureStatEffect;
@@ -30,7 +32,7 @@ interface CalcStatRowsProps {
   onChangeBoost: (key: keyof StatsTable, value: number) => void;
 }
 
-export default function CalcStatRows({ baseStats, sps, boosts, natureEffect, onChangeSp, onChangeBoost }: CalcStatRowsProps) {
+export default function CalcStatRows({ baseStats, rawStats, sps, boosts, natureEffect, onChangeSp, onChangeBoost }: CalcStatRowsProps) {
   const total = Object.values(sps).reduce((sum, v) => sum + v, 0);
 
   return (
@@ -40,6 +42,7 @@ export default function CalcStatRows({ baseStats, sps, boosts, natureEffect, onC
         <span className="w-10 text-center shrink-0">Base</span>
         <span className="w-10 text-center shrink-0">SP</span>
         <span className="w-10 text-center shrink-0">Boost</span>
+        <span className="w-10 text-center shrink-0">Total</span>
       </div>
       {STAT_FIELDS.map(({ label, key }) => {
         const isBoosted = natureEffect.plus === key;
@@ -79,6 +82,14 @@ export default function CalcStatRows({ baseStats, sps, boosts, natureEffect, onC
             title="Stat stage boost (-6 to +6)"
             className="w-10 shrink-0 px-1 py-0.5 text-xs text-center bg-gray-900 border border-gray-600 rounded text-white outline-none focus:border-blue-500"
           />
+          <span
+            className={`w-10 text-center text-xs font-bold shrink-0 ${
+              isBoosted ? 'text-red-400' : isLowered ? 'text-blue-400' : 'text-zinc-200'
+            }`}
+            title="Base + SP + nature (stage boost not included)"
+          >
+            {rawStats ? rawStats[key] : '—'}
+          </span>
         </div>
         );
       })}
