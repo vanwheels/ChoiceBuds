@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { parseShowdownText } from '../services/parser';
 import { enrichPokemonWithAPI } from '../services/pokeapi';
+import { extractPokepasteId, fetchPokepaste, detectRegulationFromNotes } from '../services/pokepaste';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
 import type { Team, ImportedPokemonInfo } from '../types/pokemon';
 
@@ -33,8 +34,37 @@ export default function ImportTeamModal({
   const [isImporting, setIsImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [importProgress, setImportProgress] = useState<string>('');
+  const [isFetchingPokepaste, setIsFetchingPokepaste] = useState(false);
 
   if (!isOpen) return null;
+
+  /**
+   * If the paste box holds nothing but a pokepast.es link, fetch that paste's
+   * own JSON (title/author/notes/paste) and use it in place of the link -
+   * team name/author are only auto-filled when still empty, so this never
+   * clobbers something the user already typed. Format is applied whenever
+   * detected since it's a low-risk best-effort guess the Format dropdown
+   * still lets the user override.
+   */
+  const handlePasteAreaBlur = async () => {
+    const id = extractPokepasteId(pastedText);
+    if (!id) return;
+
+    setIsFetchingPokepaste(true);
+    setError(null);
+    try {
+      const data = await fetchPokepaste(id);
+      setPastedText(data.paste);
+      if (!teamName.trim() && data.title) setTeamName(data.title);
+      if (!author.trim() && data.author) setAuthor(data.author);
+      const detectedFormat = detectRegulationFromNotes(data.notes || '');
+      if (detectedFormat) setTeamFormat(detectedFormat);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch Pokepaste link');
+    } finally {
+      setIsFetchingPokepaste(false);
+    }
+  };
 
   /**
    * Handle the import process
@@ -204,21 +234,33 @@ export default function ImportTeamModal({
             </select>
           </div>
 
-          {/* Paste Area */}
+          {/* Paste Area - also accepts a pokepast.es link directly (see handlePasteAreaBlur) */}
           <div>
             <label htmlFor="pasteArea" className="block text-sm font-medium text-gray-300 mb-2">
-              Paste Team (Showdown Format)
+              Paste Team (Showdown Format or a pokepast.es link)
             </label>
             <textarea
               id="pasteArea"
               value={pastedText}
               onChange={(e) => setPastedText(e.target.value)}
+              onBlur={handlePasteAreaBlur}
               disabled={isImporting}
-              placeholder="Paste your Showdown/Pokepaste team here..."
+              placeholder="Paste your Showdown/Pokepaste team, or a pokepast.es link, here..."
               rows={12}
               className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-500 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 resize-none"
             />
           </div>
+
+          {/* Pokepaste Fetch Progress */}
+          {isFetchingPokepaste && (
+            <div className="flex items-center gap-2 text-blue-400 text-sm">
+              <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              <span>Fetching from Pokepaste...</span>
+            </div>
+          )}
 
           {/* Progress Message */}
           {importProgress && (

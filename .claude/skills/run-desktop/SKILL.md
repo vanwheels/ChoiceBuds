@@ -145,3 +145,12 @@ crash or a missed click.
   looks like a "not found" signal but isn't one. Log `!!el` (or the
   element's own class/text) separately if you need to confirm a click
   actually fired, rather than trusting `.click()`'s return value.
+- To trigger a React `onBlur` handler from `eval` (e.g. after setting a
+  field's value via the native-setter trick), dispatch a `'focusout'`
+  event, not `'blur'`. Native `blur` doesn't bubble even when the dispatched
+  `Event` object has `bubbles: true` set on it - React's synthetic
+  `onBlur` is implemented via a delegated listener for the bubbling
+  `focusout` event, so a plain `el.dispatchEvent(new Event('blur', {
+  bubbles: true }))` silently does nothing.
+  `el.dispatchEvent(new FocusEvent('focusout', { bubbles: true }))` is what
+  actually reaches the handler.

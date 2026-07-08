@@ -216,29 +216,10 @@ in a `Why:` line only when it's not obvious from the task itself.
      writing to an external third-party service is new territory for this
      project's external-integration rules, not something to bolt on
      silently.
-  9. Verify Pokepaste *link* import compatibility - the user recalls an
-     earlier (pre-rebuild) version of the app could take a raw
-     `pokepast.es/<id>` URL directly (not just pasted export text) and
-     pull both the team data and the paste's own team name. Checked the
-     current code: this doesn't exist at all right now -
-     `ImportTeamModal.tsx` only accepts pasted text
-     (`services/parser.ts::parseShowdownText`), no URL detection or fetch
-     logic exists anywhere in the codebase. So this is "build it back
-     in," not "verify it still works." Test link provided:
-     `https://pokepast.es/fd6420a3f2b82487`. Needs research before
-     implementing: pokepast.es may serve a raw-text endpoint (common for
-     paste sites, e.g. an `/raw` suffix) which would avoid HTML scraping -
-     worth confirming before assuming the fetch shape. Also a CLAUDE.md
-     policy question: the project's current external-fetch allowlist only
-     covers `pokeapi.co` (game data) and Serebii/Bulbapedia (hotlinked
-     images + manual dev-time reference) - a live runtime fetch to
-     pokepast.es for team import is a new category not yet covered by
-     that policy and would need an explicit addition (with a matching
-     README Credits entry) before shipping, not an assumed extension of
-     the existing rule. Ranked below the other items despite restoring
-     previously-existing functionality because it needs this policy
-     decision plus fetch-shape research before implementation can even
-     start, unlike the others which are just build work.
+  9. ~~Verify Pokepaste *link* import compatibility~~ - done, see Done
+     below. Confirmed "build it back in," not "verify it still works,"
+     as suspected - the pre-rebuild behavior the user recalled didn't
+     exist in the current codebase at all.
   10. Teams page (`TeamCard.tsx`): while in edit mode, let a Pokemon card
       be reordered within the team via click-and-drag instead of the
       roster order being fixed to import/add order. `useRosterActions.ts`
@@ -327,6 +308,52 @@ in a `Why:` line only when it's not obvious from the task itself.
       mechanics the log doesn't currently show.
 
 ## Done
+
+- **Teams: import a team directly from a pokepast.es link** (2026-07-08):
+  item 9 of the reprioritized third review pass. Did the research the item
+  called for before writing any code: `curl`-probed the test link
+  (`https://pokepast.es/fd6420a3f2b82487`) for a raw-text endpoint and found
+  something better than expected - `pokepast.es/<id>/json` returns
+  structured JSON directly (`{title, author, notes, paste}`), no HTML
+  scraping needed at all, and it conveniently already has an `author` field
+  matching the Author feature from earlier today. Brought the CLAUDE.md
+  policy question (a new external-fetch source) and an auto-fill-scope
+  question to the user rather than assuming - both confirmed: add the
+  policy exception, and also best-effort parse a Reg M-A/Reg M-B guess out
+  of the paste's own `notes` field (commonly "Format:
+  gen9championsvgc2026regmb"-style), not just name/author.
+  - **Policy additions** (required before writing the fetch itself, per the
+    item's own "don't bolt this on silently" framing): CLAUDE.md gained a
+    second `pokepast.es` exception scoped tightly to its own `/<id>/json`
+    endpoint only, invoked only when a user pastes a link - never scraped,
+    never polled. `README.md`'s Credits section gained a matching entry.
+  - New `services/pokepaste.ts`: `extractPokepasteId()` (matches a trimmed
+    `pokepast.es/<id>` link), `fetchPokepaste()` (the JSON call), and
+    `detectRegulationFromNotes()` (regex-matches "reg m[-\s]?[ab]",
+    case-insensitively, returning `null` on no match - pokepast.es doesn't
+    guarantee this convention, so callers keep their existing default when
+    it doesn't hit).
+  - `ImportTeamModal.tsx`'s existing paste `<textarea>` now doubles as the
+    link input - no new field. `onBlur` checks whether the box holds
+    nothing but a pokepast.es link; if so, fetches it and replaces the
+    textarea with the real Showdown text, auto-filling Team Name/Author
+    only if they're still empty (never clobbers something the user already
+    typed) and always applying a detected Format (low-risk best-effort, the
+    dropdown still lets them override). A small spinner reuses the same
+    inline-SVG pattern the existing import-progress indicator already had.
+  - Live-verified end-to-end with the exact test link from the item text:
+    pasted it, confirmed the "Fetching from Pokepaste..." indicator
+    appeared then resolved to Team Name "Computah, Fry This Guy", Author
+    "vanwheels", Format correctly flipped to Reg M-B, and the textarea
+    swapped to the real 6-Pokemon Showdown text (Kryptonite the Metagross,
+    etc.) - then completed the actual import and confirmed all 6 Pokemon/
+    sprites/name/author/format landed correctly on the Teams page, deleting
+    the test team afterward (never touching the user's real "blaze"/
+    "metagross team" teams). Also caught and fixed a driver-only gotcha
+    along the way (see `run-desktop`'s SKILL.md): dispatching a plain
+    `'blur'` event doesn't reach a React `onBlur` handler since native
+    `blur` doesn't bubble - `'focusout'` (bubbling, which is what React
+    actually listens for) does.
 
 - **Teams: per-Pokemon Showdown export, same-day follow-up to the whole-team
   export** (2026-07-08): new ask (not in the original numbered list) after
