@@ -97,7 +97,7 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
   const handleMovePicked = async (side: BattleSide, pokemonId: string, move: string) => {
     setArmed(null);
     const moveData = gameDataState.getCachedMove(move) ?? await gameDataState.getMoveData(move);
-    const category = getTargetCategory(moveData?.target);
+    const category = getTargetCategory(moveData?.target, move);
     const isDamaging = !!moveData && moveData.category !== 'status';
 
     const oppSide: BattleSide = side === 'player' ? 'opponent' : 'player';
@@ -114,6 +114,7 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
     if (category === 'field') return void logWithTargets([]);
     if (category === 'all-foes') return void logWithTargets(oppActive.map(id => ({ side: oppSide, pokemonId: id })));
     if (category === 'all-allies') return void logWithTargets(sameSideActive.map(id => ({ side, pokemonId: id })));
+    if (category === 'other-allies') return void logWithTargets(allyIds.map(id => ({ side, pokemonId: id })));
     if (category === 'all-except-self') {
       return void logWithTargets([
         ...allyIds.map(id => ({ side, pokemonId: id })),

@@ -288,9 +288,14 @@ export function useBattleLogActions(
    * see config/moveFieldEffects.ts) also updates fieldState in this same
    * call, so the tracker display never needs a separate manual toggle.
    * Same for a move with a deterministic stat-stage side effect (Draco
-   * Meteor's self SpA drop, Charm's target Atk drop - see
-   * config/moveStatEffects.ts) - unlike a switch-in ability chip, these are
-   * as certain as the move's own damage, so no manual confirm is needed.
+   * Meteor's self SpA drop, Charm's target Atk drop, Growth's weather-
+   * conditional self Atk/SpA raise - see config/moveStatEffects.ts) -
+   * unlike a switch-in ability chip, these are as certain as the move's
+   * own damage, so no manual confirm is needed. The stat-effect lookup
+   * reads the field's *post*-this-action weather (the local `fieldState`
+   * reassigned just above, not `battle.fieldState`), so a hypothetical
+   * future move that both sets weather and has a weather-conditional
+   * stat effect in the same log call would still resolve correctly.
    * Both are skipped when the action is marked failed.
    */
   const logAction = useCallback(async (battle: Battle, action: Omit<BattleAction, 'id'>): Promise<boolean> => {
@@ -310,7 +315,7 @@ export function useBattleLogActions(
     if (!action.failed) {
       fieldState = applyMoveFieldEffect(battle.fieldState, action.side, getMoveFieldEffect(trimmedMove), battle.turns.length);
 
-      const statEffect = getMoveStatEffect(trimmedMove);
+      const statEffect = getMoveStatEffect(trimmedMove, fieldState.weather?.type);
       if (statEffect) {
         const targetIds = statEffect.appliesTo === 'self' ? [action.pokemonId] : (action.target ?? []).map(t => t.pokemonId);
         for (const id of targetIds) {

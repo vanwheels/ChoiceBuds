@@ -169,19 +169,17 @@ in a `Why:` line only when it's not obvious from the task itself.
      of the row is clickable for row-selection~~ - done, see Done below.
   2. ~~Teams page (`TeamCard.tsx`): collapsing a team while in edit mode
      should also exit edit mode~~ - done, see Done below.
-  3. Battle Logger: deterministic move stat-effects
-     (`config/moveStatEffects.ts`) need to cover every stat-changing move,
-     not just the current curated subset - Growth flagged as the first
-     concrete gap (currently absent from the table entirely). Growth is
-     also a real complication beyond "just add a row": it normally raises
-     Atk/SpA by 1 stage each but doubles to +2 each in Sun, and the
-     current `MoveStatEffect` shape (`changes: {stat, stages}[]`) has no
-     way to express a weather-conditional stage count - `logAction`
-     (`useBattleLogActions.ts`) also doesn't currently pass the field's
-     weather into `getMoveStatEffect` at all. Needs a small model
-     extension (e.g. a per-weather override on `changes`) plus wiring
-     `battle.fieldState.weather` through to the lookup, not just a
-     data-table addition.
+  3. ~~Battle Logger: deterministic move stat-effects need to cover
+     Growth (weather-conditional stage count) and comprehensively cover
+     all guaranteed stat-changing moves, not just a curated subset~~ -
+     done, see Done below (both the Growth pass and the follow-up
+     comprehensive pass, done in the same session after the user flagged
+     the first pass as too narrow). Still open: the user's belief that
+     several OTHER moves besides Growth have a weather-conditional stage
+     *amount* - research (multiple cross-checked Bulbapedia sources)
+     turned up no second example, only Growth. Asked the user to name
+     specific moves rather than guess/fabricate more weather branches -
+     see the next Done entry for the full research trail.
   4. Battle Logger: do a full audit pass over abilities with an
      on-switch-in effect or a reactive battle interaction, to make sure
      the curated tables are actually comprehensive rather than covering
@@ -338,8 +336,125 @@ in a `Why:` line only when it's not obvious from the task itself.
         to blank. Needs a naming scheme for saved sets too, since more
         than one could exist per species (e.g. two different Dracovish
         sets) - nickname, a user-entered label, or both.
+  13. **New**: Battle Logger - moves whose *non-stat* effect changes with
+      weather (accuracy, power, healing amount, charge-turn skipping),
+      distinct from `config/moveStatEffects.ts`'s stat-stage table above.
+      Raised when the user recalled "several moves change with weather"
+      for item 3, but research there turned up no second stat-stage
+      example - the user's own guess, confirmed when asked, is that
+      they're actually thinking of this different category instead:
+      Thunder/Hurricane (70% accuracy normally, always-hits in Rain, 50%
+      in Sun), Solar Beam/Solar Blade (need a charge turn normally, fire
+      immediately in Sun; half power in Rain/Sand/Snow), Weather Ball
+      (type and power both change per active weather), Synthesis/
+      Moonlight/Morning Sun (heal 50% normally, 67% in Sun, 25% in Rain/
+      Sand/Snow), Blizzard (never misses in Snow). None of this is
+      currently modeled anywhere in the Battle Logger - unlike the Calc
+      tab, the log doesn't track computed damage/accuracy/heal numbers at
+      all today, so this needs its own scoping pass before implementation:
+      most likely an informational note/chip shown when logging one of
+      these moves while the relevant weather is active (same "manual log,
+      not a simulator" pattern as the switch-in ability chips), not an
+      attempt to actually compute or auto-apply anything. Worth checking
+      for overlap with the already-planned status-condition/move-outcome-
+      chips follow-up (see "Battle Logger - beyond the core MVP" above)
+      before scoping in detail, since both are about surfacing move
+      mechanics the log doesn't currently show.
 
 ## Done
+
+- **Battle Logger: comprehensive pass over guaranteed stat-changing moves,
+  plus a real ally-targeting bug found along the way** (2026-07-07):
+  follow-up to the Growth-only pass below, after the user pushed back that
+  item 3 needed full coverage of every guaranteed stat-changing move, not
+  just Growth. Did real research rather than assembling the list from
+  memory - cross-checked Bulbapedia's stat-modifier reference page,
+  Bulbapedia's "Moves by stat modification" category tree (which cleanly
+  splits into per-stat/per-direction subcategories, confirming which
+  moves are candidates at all), and individual move pages for anything
+  ambiguous, specifically to exclude *chance*-based secondary effects
+  (Rock Smash's 50% Def-1, Ancient Power's 10% +1-all, Charge Beam's 70%
+  SpA+1, etc.) - those aren't "guaranteed" the way this table requires,
+  and there's no way to know from a log alone whether the chance actually
+  triggered. `config/moveStatEffects.ts` grew from ~30 entries to ~65:
+  new self-boosting moves (Work Up, Hone Claws, Cosmic Power, Geomancy,
+  Shift Gear, No Retreat, Clangorous Soul, Victory Dance, Fillet Away,
+  Tidy Up, Take Heart, Trailblaze, Psyshield Bash, Torch Song, Mystical
+  Power, Flame Charge, Electro Shot, Barrier, Withdraw, Defense Curl,
+  Charge, Stockpile), a self-lowering addition (Fleur Cannon), new
+  target-lowering moves (Mystical Fire, Snarl, Struggle Bug, Acid Spray,
+  Skitter Smack, Spirit Break, Bitter Malice, Lunge, Breaking Swipe, Trop
+  Kick, Screech, Metal Sound, Fake Tears, Cotton Spore, Tickle, Tearful
+  Look, Icy Wind, Bulldoze, Rock Tomb, Mud Shot), and a new
+  target-*raising* category for ally-support moves (Decorate, Coaching,
+  Aromatic Mist, Flower Shield) that didn't exist in the table before.
+  Documented in the file's header exactly which moves and mechanics are
+  deliberately still excluded and why: Belly Drum (sets Attack to exactly
+  +6, not a "+6 delta" - would land wrong from a non-zero starting stage),
+  Curse (completely different effect depending on the user's own type -
+  needs a conditional branch this table doesn't model), Psych Up/Spectral
+  Thief (copy/steal the target's *current* stages, unknowable in advance),
+  and the various Swap/Split moves (average or exchange stages between
+  two Pokemon rather than applying a fixed delta to one).
+
+  Live-verifying the new entries on a disposable test battle (2 player
+  Pokemon + 1 opponent, cleaned up after) surfaced a real, previously-
+  unnoticed bug unrelated to the stat-effects table itself: Coaching
+  (an ally-only support move, should never buff the user who casts it)
+  logged as boosting *both* the user and the ally. Root-caused to
+  `config/moveTargeting.ts`: PokeAPI's raw move-target vocabulary
+  distinguishes `"user-and-allies"` (includes the user) from
+  `"all-allies"` (every other Pokemon on the side, explicitly NOT the
+  user), but this app's `TargetCategory` mapping collapsed both into one
+  `'all-allies'` bucket that always included the mover - fixed by adding
+  a separate `'other-allies'` category and correctly splitting the two
+  raw PokeAPI slugs across it (`Battlefield.tsx` gained the matching
+  auto-resolve branch). That fix alone didn't actually fix Coaching,
+  though: checking the cached move data showed PokeAPI itself reports
+  Coaching's target as `"user-and-allies"`, which is simply wrong for
+  this specific move (Coaching's own documented effect explicitly
+  excludes the user) - a PokeAPI *data* gap, not a category-mapping bug,
+  same category of issue as the various Champions balance-patch overrides
+  already hand-corrected elsewhere in this app. Added a small
+  `MOVE_TARGET_OVERRIDES` table (currently just Coaching) checked by move
+  name before the raw-target mapping, same override-table pattern as
+  `config/championsMoveOverrides.ts`. Live-verified end-to-end: Trailblaze
+  correctly gave the user Spe+1 regardless of what was clicked as the
+  move's (damage) target - confirming self-effects are independent of
+  target selection; Icy Wind correctly applied Spe-1 to the opponent;
+  Coaching incorrectly applied Atk+1/Def+1 to both the user and the ally
+  before the fix, and correctly applied it to only the ally after.
+
+- **Battle Logger: Growth's weather-conditional stat effect, plus a model
+  extension for weather-conditional move stat-effects generally**
+  (2026-07-07): item 3 of the reprioritized third review pass. Growth was
+  entirely absent from `config/moveStatEffects.ts` and posed a real model
+  gap beyond "just add a row": it raises Atk/SpA by 1 stage each normally
+  but doubles to +2 each in Sun, and the existing `MoveStatEffect` shape
+  (`changes: {stat, stages}[]`) had no way to express a weather-
+  conditional stage count. Added a new `MoveStatEffectEntry` internal
+  shape (not exported - callers still only ever see the plain
+  `MoveStatEffect` `{changes, appliesTo}` they already know how to
+  consume) with an optional `inWeather?: Partial<Record<WeatherType,
+  {stat, stages}[]>>` that fully *replaces* `changes` while a listed
+  weather is active, rather than stacking with it - matches how Growth
+  (the only currently-known example) actually works. `getMoveStatEffect`
+  gained an optional second `weather` parameter and resolves the override
+  internally before returning, so `useBattleLogActions.ts::logAction`'s
+  consumption code needed only a one-line change: passing
+  `fieldState.weather?.type` (the already-reassigned local `fieldState`
+  after this action's own field effects are applied, not the stale
+  `battle.fieldState`, so a hypothetical future move that both sets
+  weather and has a weather-conditional stat effect in the same log call
+  would still resolve correctly) instead of no weather argument at all.
+  Live-verified on a disposable test battle (a Ninetales with Growth in
+  its moveset, cleaned up after): logging Growth with no weather active
+  correctly recorded "Atk +1 (Growth)" / "SpA +1 (Growth)" turn-log notes
+  and a "Atk +1, SpA +1" stage-summary badge; advancing to turn 2, setting
+  Sun, and logging Growth again correctly recorded the doubled delta -
+  "Atk +2 (Growth)" / "SpA +2 (Growth)" - bringing the summary badge to
+  "Atk +3, SpA +3" (1 + 2, the stage math compounding correctly across
+  both logs).
 
 - **Teams page: collapsing a team while in edit mode now exits edit mode
   too** (2026-07-07): item 2 of the reprioritized third review pass (a
