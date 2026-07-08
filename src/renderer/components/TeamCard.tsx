@@ -140,7 +140,13 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
 
           {/* D. Expand/Collapse Toggle Button */}
           <button
-            onClick={() => setIsExpanded(!isExpanded)}
+            onClick={() => {
+              const nextExpanded = !isExpanded;
+              setIsExpanded(nextExpanded);
+              if (!nextExpanded) {
+                setIsEditingTeam(false);
+              }
+            }}
             className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 text-sm transition-all cursor-pointer"
             title={isExpanded ? 'Collapse' : 'Expand'}
           >

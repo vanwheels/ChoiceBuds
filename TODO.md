@@ -167,15 +167,8 @@ in a `Why:` line only when it's not obvious from the task itself.
   rather than build it immediately):
   1. ~~Calc page (`CalcMoveGrid.tsx`): narrow the move-search box so more
      of the row is clickable for row-selection~~ - done, see Done below.
-  2. Teams page (`TeamCard.tsx`): collapsing a team (`isExpanded` ->
-     false) while it's in edit mode should also exit edit mode
-     (`isEditingTeam` -> false), instead of leaving `isEditingTeam` true
-     silently. Concretely visible today: the team-name header switches
-     between a plain `<h2>` and an editable `<input>` based on
-     `isEditingTeam` alone, and that header renders outside the
-     `isExpanded` block - so collapsing mid-edit currently leaves the
-     name as a live editable input in the collapsed header instead of
-     reverting to read-only display.
+  2. ~~Teams page (`TeamCard.tsx`): collapsing a team while in edit mode
+     should also exit edit mode~~ - done, see Done below.
   3. Battle Logger: deterministic move stat-effects
      (`config/moveStatEffects.ts`) need to cover every stat-changing move,
      not just the current curated subset - Growth flagged as the first
@@ -347,6 +340,24 @@ in a `Why:` line only when it's not obvious from the task itself.
         sets) - nickname, a user-entered label, or both.
 
 ## Done
+
+- **Teams page: collapsing a team while in edit mode now exits edit mode
+  too** (2026-07-07): item 2 of the reprioritized third review pass (a
+  confirmed bug with a small fix). `TeamCard.tsx`'s Expand/Collapse toggle
+  button's `onClick` now also calls `setIsEditingTeam(false)` whenever the
+  click collapses the card (`nextExpanded === false`) - previously it only
+  ever toggled `isExpanded`, leaving `isEditingTeam` true underneath a
+  collapsed card. This was concretely visible via the team-name header,
+  which renders as a plain `<h2>` vs. an editable `<input>` based on
+  `isEditingTeam` alone, outside the `isExpanded` block - so re-expanding
+  a team that had been collapsed mid-edit previously still showed the
+  editable input and every Pokémon card's edit controls (since
+  `isEditingTeam` is also threaded down as `PokemonCard`'s `isEditing`
+  prop). Live-verified: entered edit mode (confirmed the dashed-underline
+  editable name input existed), clicked Collapse, then Expand again - the
+  header rendered back as plain read-only text and the roster cards no
+  longer showed their edit controls, confirming edit mode was actually
+  exited by the collapse rather than just visually hidden.
 
 - **Calc page: narrow the move-search box for easier row-selection**
   (2026-07-07): item 1 of the reprioritized third review pass (highest-
