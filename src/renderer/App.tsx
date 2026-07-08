@@ -61,11 +61,10 @@ export default function App() {
         {/* App Header */}
         <div className="pb-4 border-b border-gray-700">
           <h1 className="text-base font-bold text-blue-400 leading-tight">ChoiceBuds</h1>
-          <p className="text-xs text-gray-400 mt-1">VGC Team Manager</p>
         </div>
 
         {/* Navigation Menu */}
-        <nav className="flex-1 p-4">
+        <nav className="flex-1 flex flex-col pt-4">
           <ul className="space-y-2">
             <li>
               <button
@@ -97,6 +96,9 @@ export default function App() {
                 Battle Log
               </button>
             </li>
+          </ul>
+
+          <ul className="mt-auto pt-2">
             <li>
               <button className="w-full text-left px-4 py-2 rounded-lg text-gray-400 hover:bg-gray-700 transition-colors">
                 Settings
@@ -106,7 +108,7 @@ export default function App() {
         </nav>
 
         {/* Status Footer */}
-        <div className="p-4 border-t border-gray-700 text-xs text-gray-500">
+        <div className="pt-4 border-t border-gray-700 text-xs text-gray-500">
           <div className="flex items-center justify-between">
             <span>Cache Status:</span>
             <span className={databaseState.isInitialized ? 'text-green-400' : 'text-yellow-400'}>

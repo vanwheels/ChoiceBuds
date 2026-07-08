@@ -58,7 +58,7 @@ export function isRepeatProtectUse(battle: Battle, turnNumber: number, action: B
 export function hasAppliedAbilityEffectSinceSwitchIn(battle: Battle, pokemonId: string, ability: string): boolean {
   const allActions = battle.turns.flatMap(t => t.actions);
   let lastSwitchInIndex = -1;
-  allActions.forEach((a, i) => { if (a.pokemonId === pokemonId && a.phase === 'switch') lastSwitchInIndex = i; });
+  allActions.forEach((a, i) => { if (a.pokemonId === pokemonId && (a.phase === 'switch' || a.phase === 'sendIn')) lastSwitchInIndex = i; });
   if (lastSwitchInIndex === -1) return false;
   const lowerAbility = ability.toLowerCase();
   return allActions.slice(lastSwitchInIndex + 1).some(a => a.pokemonId === pokemonId && a.note?.toLowerCase().includes(lowerAbility));
@@ -96,33 +96,32 @@ export function hasUnappliedReactiveLowerEffect(battle: Battle, pokemonId: strin
  * needs its move - but see canSwitchOutThisTurn for why it blocks
  * switching). Only looks at the current (last) turn.
  *
- * Turn 1 is an exception: the initial send-in of a battle's leads isn't a
- * choice made instead of moving (unlike a genuine mid-battle switch), so a
- * 'switch' phase action doesn't block acting while `turns.length === 1`.
+ * A 'sendIn' (filling a slot that was empty - the start of battle, or a
+ * just-fainted slot's replacement) is never a choice made instead of
+ * acting, unlike a genuine 'switch', so it never blocks acting - see
+ * useBattleLogActions.ts's switchIn vs swapActive for how the two phases
+ * are assigned.
  */
 export function canActThisTurn(battle: Battle, pokemonId: string): boolean {
   const lastTurn = battle.turns[battle.turns.length - 1];
   if (!lastTurn) return true;
-  const isInitialSendIn = lastTurn.number === 1;
-  return !lastTurn.actions.some(a => a.pokemonId === pokemonId
-    && (a.phase === 'move' || (a.phase === 'switch' && !isInitialSendIn)));
+  return !lastTurn.actions.some(a => a.pokemonId === pokemonId && (a.phase === 'move' || a.phase === 'switch'));
 }
 
 /**
  * Whether this Pokemon can still switch out this turn. False once they've
- * switched in or Mega Evolved this turn (an incoming switch, or a
- * committed Mega, IS the slot's action) - except turn 1's initial send-in,
- * same exception as canActThisTurn. If they've used a move, only true
- * when that move is a switch-out move (U-turn/Parting Shot/etc. - see
- * config/switchOutMoves.ts) and it didn't fail - the switch is a
- * continuation of that same action, not a second one.
+ * switched in (not sent in - see canActThisTurn) or Mega Evolved this turn
+ * (an incoming switch, or a committed Mega, IS the slot's action). If
+ * they've used a move, only true when that move is a switch-out move
+ * (U-turn/Parting Shot/etc. - see config/switchOutMoves.ts) and it didn't
+ * fail - the switch is a continuation of that same action, not a second
+ * one.
  */
 export function canSwitchOutThisTurn(battle: Battle, pokemonId: string): boolean {
   const lastTurn = battle.turns[battle.turns.length - 1];
   if (!lastTurn) return true;
-  const isInitialSendIn = lastTurn.number === 1;
   const actions = lastTurn.actions.filter(a => a.pokemonId === pokemonId);
-  if (actions.some(a => (a.phase === 'switch' && !isInitialSendIn) || a.phase === 'mega')) return false;
+  if (actions.some(a => a.phase === 'switch' || a.phase === 'mega')) return false;
   const moveAction = actions.find(a => a.phase === 'move');
   if (!moveAction) return true;
   return isSwitchOutMove(moveAction.move) && !moveAction.failed;

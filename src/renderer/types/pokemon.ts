@@ -139,9 +139,14 @@ export interface OpponentPokemonEntry {
  * an enum, so "Protect", "fainted to residual" etc. all just live in `note`
  * - this is a flexible manual log, not a rigid simulator. `target` is an
  * array since spread moves can hit 2 Pokemon at once. `phase` orders
- * display within a turn (switches, then Mega Evolutions, then moves,
- * regardless of the order they were tapped in) - undefined is treated as
- * `'move'` so pre-existing logged actions still render correctly. `failed`
+ * display within a turn (send-ins/switches, then Mega Evolutions, then
+ * moves, regardless of the order they were tapped in) - undefined is
+ * treated as `'move'` so pre-existing logged actions still render
+ * correctly. `'sendIn'` (an empty slot being filled - the start of battle
+ * or a fainted slot's replacement) never costs the slot's turn action;
+ * `'switch'` (a manual mid-turn swap of an already-occupied slot, or the
+ * continuation of a switch-out move like U-turn) does - see
+ * canActThisTurn/canSwitchOutThisTurn in utils/battleLookup.ts. `failed`
  * is only meaningful for Protect-family moves - see config/protectMoves.ts.
  */
 export interface BattleAction {
@@ -150,7 +155,7 @@ export interface BattleAction {
   pokemonId: string; // id into playerRoster (player) or opponentRoster (opponent)
   move?: string;
   target?: { side: BattleSide; pokemonId: string }[];
-  phase?: 'switch' | 'mega' | 'move';
+  phase?: 'sendIn' | 'switch' | 'mega' | 'move';
   failed?: boolean;
   note?: string;
   // Type-effectiveness multiplier per target, computed at log time from the

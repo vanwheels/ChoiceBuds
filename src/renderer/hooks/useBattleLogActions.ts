@@ -248,7 +248,9 @@ export function useBattleLogActions(
    * slot to null (same as switchOut), so the now-empty slot is immediately
    * ready for a replacement via the usual picker/drag flow - single
    * updateBattle call. Un-fainting (correcting a misclick) does not
-   * restore active state, just the flag.
+   * restore active state or turn log, just the flag - only the fainted=true
+   * direction logs a "Fainted" note (matches match-flow readability, not a
+   * misclick correction).
    */
   const setFainted = useCallback(async (
     battle: Battle,
@@ -262,16 +264,19 @@ export function useBattleLogActions(
     const nextActiveIds = fainted && activeIds.includes(pokemonId)
       ? activeIds.map(id => id === pokemonId ? null : id)
       : activeIds;
+    const turns = fainted && battle.turns.length > 0
+      ? appendAction(battle.turns, { side, pokemonId, note: 'Fainted' })
+      : battle.turns;
 
     if (side === 'player') {
       const playerFaintedIds = fainted
         ? [...new Set([...battle.playerFaintedIds, pokemonId])]
         : battle.playerFaintedIds.filter(id => id !== pokemonId);
-      return updateBattle(battle.id, { playerFaintedIds, statStages, playerActiveIds: nextActiveIds });
+      return updateBattle(battle.id, { playerFaintedIds, statStages, playerActiveIds: nextActiveIds, turns });
     }
 
     const opponentRoster = battle.opponentRoster.map(o => o.id === pokemonId ? { ...o, fainted } : o);
-    return updateBattle(battle.id, { opponentRoster, statStages, opponentActiveIds: nextActiveIds });
+    return updateBattle(battle.id, { opponentRoster, statStages, opponentActiveIds: nextActiveIds, turns });
   }, [updateBattle]);
 
   /**
@@ -324,12 +329,15 @@ export function useBattleLogActions(
   }, [updateBattle]);
 
   /**
-   * Brings a benched Pokemon into an active slot - `slotIndex` if given
-   * (a specific empty slot was clicked/dropped on), else the first open
-   * slot. Logs a switch-phase action, which is what drives the
-   * Battlefield's switched-in arrow and blocks that Pokemon from acting
-   * again this turn (see canActThisTurn) - bundled into the same
-   * updateBattle call as the slot assignment so they can't race.
+   * Brings a benched Pokemon into an EMPTY active slot - `slotIndex` if
+   * given (a specific empty slot was clicked/dropped on), else the first
+   * open slot. This is always a "sending in" (start of battle, or filling
+   * a just-fainted slot), never a "switching in" - swapActive below is the
+   * one that replaces an already-occupied slot. Logs a sendIn-phase
+   * action, which is what drives the Battlefield's switched-in arrow but
+   * never costs the slot's turn action (see canActThisTurn/
+   * canSwitchOutThisTurn) - bundled into the same updateBattle call as the
+   * slot assignment so they can't race.
    */
   const switchIn = useCallback(async (battle: Battle, side: BattleSide, pokemonId: string, slotIndex?: number): Promise<boolean> => {
     const activeIds = side === 'player' ? battle.playerActiveIds : battle.opponentActiveIds;
@@ -340,7 +348,7 @@ export function useBattleLogActions(
 
     const nextActiveIds = [...activeIds];
     nextActiveIds[targetIndex] = pokemonId;
-    const turns = appendAction(battle.turns, { side, pokemonId, phase: 'switch', note: 'Switched in' });
+    const turns = appendAction(battle.turns, { side, pokemonId, phase: 'sendIn', note: 'Sent in' });
     return updateBattle(battle.id, {
       ...(side === 'player' ? { playerActiveIds: nextActiveIds } : { opponentActiveIds: nextActiveIds }),
       turns,
@@ -372,9 +380,12 @@ export function useBattleLogActions(
   }, [updateBattle]);
 
   /**
-   * Replaces one active Pokemon with a benched one in the SAME slot index -
-   * this is what keeps left/right field position stable through a switch
-   * (see types/pokemon.ts's playerActiveIds/opponentActiveIds doc). Single
+   * Replaces one active (already-occupied) Pokemon with a benched one in
+   * the SAME slot index - the real "switching in" (manual Switch button,
+   * or the follow-up to a switch-out move like U-turn/Parting Shot),
+   * unlike switchIn above which only ever fills an empty slot. Also what
+   * keeps left/right field position stable through a switch (see
+   * types/pokemon.ts's playerActiveIds/opponentActiveIds doc). Single
    * updateBattle call: slot reassignment, the incoming switch-phase log
    * entry, and clearing the outgoing Pokemon's stat stages.
    */

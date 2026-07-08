@@ -26,7 +26,7 @@ import { useMegaSprite } from '../../hooks/useMegaSprite';
 import { getSwitchInEffect } from '../../config/onSwitchInAbilities';
 import { getReactiveLowerEffect } from '../../config/reactiveAbilities';
 import { STAT_ORDER, STAT_LABELS } from '../../config/statStages';
-import { POKEMON_DRAG_TYPE, type PokemonDragPayload } from '../../utils/dragTypes';
+import { POKEMON_DRAG_TYPE, pokemonDragTypeForSide, type PokemonDragPayload } from '../../utils/dragTypes';
 import {
   hasAppliedAbilityEffectSinceSwitchIn, hasUnappliedReactiveLowerEffect,
   canActThisTurn, canSwitchOutThisTurn,
@@ -49,25 +49,40 @@ function titleCase(text: string): string {
   return text.replace(/\b\w/g, c => c.toUpperCase());
 }
 
-function EmptySlot({ onClick, onDrop }: { onClick: () => void; onDrop?: (dataTransfer: DataTransfer) => void }) {
-  const [isDragOver, setIsDragOver] = useState(false);
+/**
+ * `side` is this slot's own side - compared against the side-specific drag
+ * type set at drag start (see dragTypes.ts::pokemonDragTypeForSide) to show
+ * a live valid/invalid indicator while the drag is still in progress, not
+ * just reject a mismatched drop silently (handleDropPayload in the parent
+ * already does that part). `dataTransfer.getData()` can't be read until
+ * `drop`, but `.types` can be checked during `dragover`.
+ */
+function EmptySlot({ side, onClick, onDrop }: { side: BattleSide; onClick: () => void; onDrop?: (dataTransfer: DataTransfer) => void }) {
+  const [dragState, setDragState] = useState<'none' | 'valid' | 'invalid'>('none');
   return (
     <button
       type="button"
       onClick={onClick}
-      onDragOver={onDrop ? e => { e.preventDefault(); setIsDragOver(true); } : undefined}
-      onDragLeave={onDrop ? () => setIsDragOver(false) : undefined}
+      onDragOver={onDrop ? e => {
+        e.preventDefault();
+        setDragState(e.dataTransfer.types.includes(pokemonDragTypeForSide(side)) ? 'valid' : 'invalid');
+      } : undefined}
+      onDragLeave={onDrop ? () => setDragState('none') : undefined}
       onDrop={onDrop ? e => {
         e.preventDefault();
-        setIsDragOver(false);
+        setDragState('none');
         onDrop(e.dataTransfer);
       } : undefined}
-      title="Bring in a benched Pokemon (click or drag)"
+      title={dragState === 'invalid' ? `Can't send in a Pokemon from the other side` : 'Bring in a benched Pokemon (click or drag)'}
       className={`w-20 h-20 rounded-lg border-2 border-dashed flex items-center justify-center text-xs cursor-pointer transition-colors ${
-        isDragOver ? 'border-blue-400 bg-blue-500/10 text-blue-300' : 'border-gray-800 text-gray-700 hover:border-gray-600 hover:text-gray-500'
+        dragState === 'valid'
+          ? 'border-blue-400 bg-blue-500/10 text-blue-300'
+          : dragState === 'invalid'
+            ? 'border-red-500 bg-red-500/10 text-red-400 cursor-not-allowed'
+            : 'border-gray-800 text-gray-700 hover:border-gray-600 hover:text-gray-500'
       }`}
     >
-      +
+      {dragState === 'invalid' ? '⊘' : '+'}
     </button>
   );
 }
@@ -193,7 +208,7 @@ export default function BattlefieldSlot({
   if (!mon) {
     return (
       <div className="relative flex flex-col items-center">
-        <EmptySlot onClick={onSlotClick} onDrop={onDrop ? handleDropPayload : undefined} />
+        <EmptySlot side={side} onClick={onSlotClick} onDrop={onDrop ? handleDropPayload : undefined} />
         {isBenchOpen && (
           <BenchPicker options={benchOptions} resolveSprite={resolveSprite} onPick={onPickBench} onClose={onCloseBench} />
         )}

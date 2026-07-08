@@ -64,7 +64,7 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
     .map(id => id ? battle.playerRoster.find(p => p.id === id) : undefined);
 
   const lastTurn = battle.turns[battle.turns.length - 1];
-  const switchedInIds = new Set(lastTurn?.actions.filter(a => a.phase === 'switch').map(a => a.pokemonId) ?? []);
+  const switchedInIds = new Set(lastTurn?.actions.filter(a => a.phase === 'switch' || a.phase === 'sendIn').map(a => a.pokemonId) ?? []);
 
   const playerBench = battle.playerRoster.filter(p =>
     battle.broughtIds.includes(p.id) && !battle.playerActiveIds.includes(p.id) && !battle.playerFaintedIds.includes(p.id));
@@ -196,8 +196,11 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
         <div className="flex-1 min-w-0">
           <SideConditionsRow battle={battle} side="opponent" battleLogActions={battleLogActions} />
         </div>
-        <div className="flex gap-6 shrink-0">
-          {[0, 1].map(slot => renderSlot('opponent', slot, opponentActive[slot], true))}
+        <div className="flex flex-col items-center gap-1 shrink-0">
+          <span className="text-[9px] font-bold uppercase tracking-wide text-red-400">Opponent&apos;s Side</span>
+          <div className="flex gap-6">
+            {[0, 1].map(slot => renderSlot('opponent', slot, opponentActive[slot], true))}
+          </div>
         </div>
         <div className="flex-1 min-w-0">
           <FieldWeatherBar battle={battle} battleLogActions={battleLogActions} />
@@ -210,8 +213,11 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
         <div className="flex-1 min-w-0">
           <SideConditionsRow battle={battle} side="player" battleLogActions={battleLogActions} />
         </div>
-        <div className="flex gap-6 shrink-0">
-          {[0, 1].map(slot => renderSlot('player', slot, playerActive[slot], false))}
+        <div className="flex flex-col items-center gap-1 shrink-0">
+          <div className="flex gap-6">
+            {[0, 1].map(slot => renderSlot('player', slot, playerActive[slot], false))}
+          </div>
+          <span className="text-[9px] font-bold uppercase tracking-wide text-blue-400">Your Side</span>
         </div>
         <div className="flex-1 min-w-0" />
       </div>

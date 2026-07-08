@@ -55,7 +55,178 @@ in a `Why:` line only when it's not obvious from the task itself.
   data once the API key is approved (#7), Statistics page (#9, depends on
   the Battle Logger producing real win/loss data).
 
+- **2026-07-07 manual-testing/UI-polish batch** (not yet built - captured
+  from a review pass, user still adding more items):
+  1. ~~Battle Logger: distinguish "sending in" from "switching in"~~ -
+     done, see Done below.
+  2. ~~Battle Logger: side labels + invalid cross-side drag indicator~~ -
+     done, see Done below.
+  3. Battle Logger: battlefield roster columns don't fit all 6 Pokemon
+     vertically at the minimum window size without scrolling. Proposed
+     per-Pokemon layout to compact it: Sprite+Name row / `Ability | Move 1
+     + Move 2` row / `Item | Move 3 + Move 4` row - the player-side
+     roster column should be changed to match this same layout (not just
+     a visually-similar one), so both sides end up structurally
+     identical.
+  4. ~~Battle Logger: log a turn-log entry when a Pokemon is marked
+     fainted~~ - done, see Done below.
+  5. Calc page: fit the minimum window size without scrolling - drop the
+     redundant "Damage Calculator" header text, move "Powered by
+     @smogon/calc" to the bottom of the page, delete the "Champions"
+     text, and nudge the Regulation selector up slightly to reclaim room
+     for the rest of the calculator.
+  6. ~~Side menu: remove the "VGC Team Manager" subtext, move Settings to
+     the bottom~~ - done, see Done below.
+  7. ~~Teams page: 6-Pokemon warning + Item Clause~~ - done, see Done
+     below.
+  8. Calc page: visual/UX updates inspired by the Platinum Kaizo Damage
+     Calculator fork (https://pkcalc.anastarawneh.com, a Showdown-calc
+     fork for a specific ROM hack - only borrowing UI ideas, not its
+     ROM-hack-specific data). Three concrete pieces:
+     - Color-coded nature modifier indicators on each stat row
+       (`CalcStatRows.tsx` currently shows Base/SP/Boost with no nature
+       up/down coloring at all).
+     - A quick speed-tier visual showing at a glance which of the two
+       active Pokémon out-speeds the other (nothing like this exists
+       today - speed is just a plain number in the stat rows).
+     - Replace the current Team/Box concept (Kaizo's version is a
+       drag-between-boxes Pokémon storage UI, which doesn't map to our
+       app) with a dropdown of the user's saved Teams (from the Teams
+       tab), letting them set up to 6 "active" Pokémon for the calc
+       session and drag/click to quick-swap which one is loaded into
+       Pokémon 1 or Pokémon 2. This should mirror on **both** sides -
+       Kaizo's enemy side shows ROM-hack-specific "Team AI Flags" and
+       "Experience Dropped" panels that don't apply to us at all, so our
+       enemy side gets the same team-dropdown/quick-switch treatment
+       instead of those.
+     - Restyle the Field conditions panel (`CalcFieldPanel.tsx` /
+       `CalcSideConditions.tsx`) to match Kaizo's/the original Showdown
+       calc's style: each condition (Reflect, Light Screen, Stealth Rock,
+       Protect, Leech Seed, Helping Hand, Tailwind, etc.) as its own
+       full-width stacked button/row, not the current tight
+       `flex-wrap` cluster of tiny 10px chips crammed together
+       (`CalcSideConditions.tsx`'s `TOGGLES` list currently all wraps
+       into one dense block).
+     Overlaps with item 5 above (both touch the Calc page layout) but is
+     a broader redesign, not just a fit-in-minimum-window pass - worth
+     scoping together when implementation starts. Once the field-panel
+     restyle lands, revisit the Battle Logger's `SideConditionsRow.tsx`
+     (same dense-toggle-chip pattern as the old `CalcSideConditions.tsx`)
+     and unify both into one shared component so the app doesn't end up
+     with two different-looking field-condition widgets.
+
 ## Done
+
+- **Battle Logger: log a turn-log entry when a Pokemon faints**
+  (2026-07-07): Stage 2 (part 3, completing Stage 2).
+  `useBattleLogActions.ts::setFainted` now appends a "Fainted" note action
+  to the current turn (same `appendAction` helper `logAction` already
+  uses) whenever a Pokemon is marked fainted - only on the `fainted=true`
+  direction, not when un-fainting to correct a misclick, since that's not
+  a game event worth logging. Renders via `TurnLog.tsx`'s existing
+  note-only path (no new UI needed) as e.g. "Accelorate *(Fainted)*" in
+  the mover's side color. Live-verified on a disposable test battle.
+
+- **Battle Logger: side labels + invalid cross-side drag indicator**
+  (2026-07-07): Stage 2 (part 2). Added small "OPPONENT'S SIDE"/"YOUR
+  SIDE" labels (red/blue, matching the existing player=blue/opponent=red
+  convention from `TurnLog.tsx`) above/below each row's two active slots
+  in `Battlefield.tsx`. For the drag feedback: HTML5 drag-and-drop only
+  lets a drop target read `dataTransfer.getData()`'s actual payload on the
+  `drop` event itself (blanked out during `dragover` for security), but
+  `dataTransfer.types` (the list of MIME type strings, not their values)
+  *is* readable during `dragover` - so `dragTypes.ts` gained a second,
+  side-specific type (`pokemonDragTypeForSide(side)`, e.g.
+  `...-pokemon-player`) set alongside the existing payload type at drag
+  start (`RosterRow.tsx`). `BattlefieldSlot.tsx`'s `EmptySlot` now checks
+  `dataTransfer.types.includes(...)` on every `dragover` to show a live
+  valid (blue, existing style) vs. invalid (red border/background, ⊘ icon,
+  "Can't send in a Pokemon from the other side" title) state per slot,
+  rather than the old always-blue-on-any-drag-over highlight. The actual
+  drop-rejection logic (`handleDropPayload`'s `payload.side === side`
+  check) was already correct and untouched - this only adds the missing
+  *feedback while still dragging*. Live-verified on a disposable test
+  battle: dragging a player-side roster card over an opponent slot showed
+  the red ⊘ indicator, while dragging the same card over a same-side
+  empty slot showed the normal blue valid state, simultaneously and
+  independently per slot (confirmed via direct React-prop invocation
+  through the run-desktop driver, since Chromium's synthetic `DragEvent`
+  dispatch doesn't reliably fire real `dragover` listeners for automated
+  testing - real mouse-driven drags in actual use go through the normal
+  browser drag pipeline unaffected by this testing quirk).
+
+- **Battle Logger: "sending in" vs "switching in" for fainted-slot
+  replacement** (2026-07-07): Stage 2 (part 1) of the 2026-07-07
+  UI-polish batch. `useBattleLogActions.ts::switchIn` (fills an EMPTY
+  active slot - the start of battle, or a just-fainted slot's
+  replacement) and `swapActive` (replaces an already-OCCUPIED slot - a
+  manual Switch-button swap, or the continuation of a switch-out move
+  like U-turn) were already two cleanly-separate functions, just not
+  tagged differently - the existing "doesn't cost a turn action" carve-out
+  only checked `turns.length === 1`, so it covered Turn 1's initial leads
+  but not a later-turn fainted-slot replacement. Gave `BattleAction` a new
+  `phase: 'sendIn'` (alongside the existing `'switch'`/`'mega'`/`'move'`),
+  used only by `switchIn` (note text also changed to "Sent in" vs
+  "Switched in", so the turn log now reads correctly either way).
+  `canActThisTurn`/`canSwitchOutThisTurn` (`utils/battleLookup.ts`) now
+  simply never block on a `'sendIn'` phase action regardless of turn
+  number, and the old turn-1-only special case is gone entirely - Turn 1
+  leads and fainted-slot replacements are now the same code path.
+  `hasAppliedAbilityEffectSinceSwitchIn` and the Battlefield's switched-in
+  arrow indicator both widened to match `'sendIn'` too, so switch-in
+  abilities (Intimidate etc.) and the arrow still work for both cases.
+  Live-verified end-to-end on a disposable test battle (created and
+  deleted via direct `battles.json` edits, not the user's real data): sent
+  a Pokemon in on turn 1 (log correctly read "Sent in"), advanced to turn
+  2, fainted it, sent in a replacement mid-turn, and confirmed via the
+  Mega button's title attribute ("Mark as Mega Evolved", not "Already
+  acted this turn") that the replacement could still act the same turn -
+  the exact bug this fixed. Caught and fixed a real mistake mid-session:
+  briefly mutated the user's actual in-progress "metagross team" battle
+  while first attempting this test via ambiguous `click-text "Fainted"`
+  (multiple matching buttons on screen) - restored via direct
+  `battles.json` edits back to the exact original `playerFaintedIds`/
+  `playerActiveIds`, confirmed by re-screenshotting. Lesson for future
+  live-testing: use a disposable battle for anything that mutates state,
+  not an existing real one.
+
+- **Side menu cleanup, Teams validator warnings, and a major CSS bug fix**
+  (2026-07-07): Stage 1 of the 2026-07-07 UI-polish batch. Dropped the
+  "VGC Team Manager" subtext and moved Settings to the bottom of the
+  sidebar (`App.tsx`, a second `<ul className="mt-auto">` inside the now
+  `flex flex-col` `<nav>`). `teamValidation.ts::validateTeam` gained two
+  new checks, same warning-only severity as the existing checks (the
+  function is only ever called from `TeamValidationButton.tsx`'s on-demand
+  popup - nothing gates save/export on it): a team-size check (<6
+  Pokemon) and **Item Clause** (two Pokemon holding the same item),
+  mirroring the existing Species Clause duplicate-detection pattern
+  exactly. Both live-verified (`blaze`, a 5-mon team, correctly shows "1
+  issue found - Team has only 5 Pokémon (6 required)").
+
+  While chasing why `mt-auto` wasn't visibly pushing Settings down, found
+  a real, app-wide bug: `src/renderer/index.css`'s global
+  `* { margin: 0; padding: 0; }` reset sat *outside* any `@layer` block,
+  right after `@import "tailwindcss"`. Per the CSS Cascade Layers spec,
+  unlayered CSS unconditionally beats layered CSS regardless of
+  specificity or source order - and Tailwind v4 wraps every one of its
+  own utility classes (including every `p-*`/`m-*`/`space-y-*`) in
+  layers. Confirmed via computed styles that this had been silently
+  zeroing out **every margin and padding utility class in the entire
+  app**, the whole time (`py-2 px-4` on a nav button was resolving to
+  `0px 0px`). Fixed by wrapping the reset in `@layer base { ... }`, the
+  standard fix. This is a real, previously-invisible root cause behind a
+  lot of the "doesn't quite fit" cramped feeling driving the rest of this
+  UI-polish batch - since spacing now actually renders as intended, later
+  stages (Battle Logger layout, Calc redesign) need to budget real
+  padding/gaps, not the accidentally-collapsed space seen before. Also
+  fixed a double-padding/misalignment side effect this exposed in the
+  sidebar (`nav`/the status-footer `div` both had their own redundant
+  `p-4` on top of the `aside`'s own inline padding, previously invisible
+  since padding was zeroed - dropped down to `pt-4`). Spot-checked
+  Teams/Calc/Battle Log tabs post-fix for other breakage - none found,
+  though Calc's already-known "doesn't fit minimum window" issue (item
+  5/8 below) is now confirmed still open and unaffected by this fix
+  either way.
 
 - **Battle Logger: type effectiveness, opponent ability/item pickers,
   screen duration, Mega ability change, log auto-scroll, faint-on-

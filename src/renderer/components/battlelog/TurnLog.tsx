@@ -1,6 +1,6 @@
 /**
  * TurnLog.tsx - Read-Only Chronological Turn/Action Render
- * Renders battle.turns in phase order (switch -> mega -> move, undefined
+ * Renders battle.turns in phase order (sendIn/switch -> mega -> move, undefined
  * treated as move) regardless of the order actions were tapped in while
  * logging - real turns resolve switches, then Mega Evolutions, then moves.
  * See useBattleLogActions.ts for how actions get their phase.
@@ -16,7 +16,7 @@ interface TurnLogProps {
   battleLogActions: UseBattleLogActionsReturn;
 }
 
-const PHASE_ORDER: Record<NonNullable<BattleAction['phase']>, number> = { switch: 0, mega: 1, move: 2 };
+const PHASE_ORDER: Record<NonNullable<BattleAction['phase']>, number> = { sendIn: 0, switch: 0, mega: 1, move: 2 };
 
 function sortByPhase(actions: BattleAction[]): BattleAction[] {
   return [...actions].sort((a, b) => PHASE_ORDER[a.phase ?? 'move'] - PHASE_ORDER[b.phase ?? 'move']);

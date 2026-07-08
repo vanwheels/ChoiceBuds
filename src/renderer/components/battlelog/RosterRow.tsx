@@ -11,7 +11,7 @@ import type { DragEvent } from 'react';
 import type { BattleSide } from '../../types/pokemon';
 import { getMegaApiSlug } from '../../config/megaEvolution';
 import { useMegaSprite } from '../../hooks/useMegaSprite';
-import { POKEMON_DRAG_TYPE } from '../../utils/dragTypes';
+import { POKEMON_DRAG_TYPE, pokemonDragTypeForSide } from '../../utils/dragTypes';
 import type { RosterRowData } from './TeamRosterColumn';
 
 interface RosterRowProps {
@@ -35,7 +35,11 @@ export default function RosterRow({ row, side, activeColorClass, resolveSprite, 
   const spriteUrl = megaSprite ? megaSprite.spriteUrl : resolveSprite(row.spriteUrl);
 
   const handleDragStart = isDraggable
-    ? (e: DragEvent<HTMLDivElement>) => e.dataTransfer.setData(POKEMON_DRAG_TYPE, JSON.stringify({ side, pokemonId: row.id }))
+    ? (e: DragEvent<HTMLDivElement>) => {
+        e.dataTransfer.setData(POKEMON_DRAG_TYPE, JSON.stringify({ side, pokemonId: row.id }));
+        // Side-only marker, readable during dragover unlike the payload above - see dragTypes.ts.
+        e.dataTransfer.setData(pokemonDragTypeForSide(side), '');
+      }
     : undefined;
 
   return (

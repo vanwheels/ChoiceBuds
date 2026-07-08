@@ -11,6 +11,7 @@ import { validateSpeciesLegality, getRegulationLabel, type RegulationId } from '
 import { normalizeSlug } from './pokemonRules';
 
 const MAX_NICKNAME_LENGTH = 12;
+const REQUIRED_TEAM_SIZE = 6;
 
 export interface TeamValidationResult {
   valid: boolean;
@@ -24,6 +25,10 @@ function label(nickname: string | undefined, species: string): string {
 export function validateTeam(team: Team, rulesetId: RegulationId): TeamValidationResult {
   const issues: string[] = [];
   const regLabel = getRegulationLabel(rulesetId);
+
+  if (team.pokemon.length < REQUIRED_TEAM_SIZE) {
+    issues.push(`Team has only ${team.pokemon.length} Pokémon (${REQUIRED_TEAM_SIZE} required)`);
+  }
 
   team.pokemon.forEach(({ showdownData }) => {
     const who = label(showdownData.nickname, showdownData.species);
@@ -52,6 +57,19 @@ export function validateTeam(team: Team, rulesetId: RegulationId): TeamValidatio
   for (const [, whos] of speciesSeen) {
     if (whos.length > 1) {
       issues.push(`Duplicate Pokémon: ${whos.join(', ')} are the same species`);
+    }
+  }
+
+  const itemsSeen = new Map<string, string[]>();
+  team.pokemon.forEach(({ showdownData }) => {
+    if (!showdownData.item) return;
+    const key = normalizeSlug(showdownData.item);
+    const who = label(showdownData.nickname, showdownData.species);
+    itemsSeen.set(key, [...(itemsSeen.get(key) ?? []), who]);
+  });
+  for (const [, whos] of itemsSeen) {
+    if (whos.length > 1) {
+      issues.push(`Item Clause: ${whos.join(', ')} are holding the same item`);
     }
   }
 
