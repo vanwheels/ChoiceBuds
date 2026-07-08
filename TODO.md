@@ -92,7 +92,7 @@ in a `Why:` line only when it's not obvious from the task itself.
      `Battlefield.tsx`'s own sizing (slot spacing, weather/side-condition
      bar padding, etc.) - not scoped or touched during item 3.
 
-- **2026-07-07 second review pass** (items 5-7 done, see Done below; 1-4/8-9
+- **2026-07-07 second review pass** (items 5-9 done, see Done below; 1-4
   not yet built - captured from another manual-testing round, reference
   screenshots of the real calc.pokemonshowdown.com Champions mode provided
   for items 1-3):
@@ -134,17 +134,26 @@ in a `Why:` line only when it's not obvious from the task itself.
   7. ~~Battle Logger: moves can currently only be logged against the
      opponent's side - need an "ally" target option too~~ - done, see Done
      below.
-  8. Teams page (`TeamCard.tsx`): the sprite row only renders as many
+  8. ~~Teams page (`TeamCard.tsx`): the sprite row only renders as many
      sprites as the team actually has, so the team name's starting
-     x-position drifts per team based on roster size - want it to always
-     reserve space for 6 slots (padding in empty ones) so every team's
-     name lines up in the same column regardless of how many Pokemon are
-     filled in.
-  9. Teams page (`TeamCard.tsx`): swap the Edit and Delete button
-     positions in the header controls cluster (Delete currently comes
-     before Edit).
+     x-position drifts per team based on roster size~~ - done, see Done
+     below.
+  9. ~~Teams page (`TeamCard.tsx`): swap the Edit and Delete button
+     positions in the header controls cluster~~ - done, see Done below.
 
 ## Done
+
+- **Teams page: fixed sprite-row width + Edit/Delete button order**
+  (2026-07-07): items 8-9 of the second review pass. `TeamCard.tsx`'s
+  sprite row now always renders 6 slots (`Array.from({ length: 6 }, (_,
+  idx) => team.pokemon?.[idx])`), with an empty `w-8 h-8` placeholder div
+  standing in for any unfilled slot - live-verified the "blaze" (5
+  Pokemon) and "metagross team" (6 Pokemon) cards' name headers both now
+  start at the exact same x-coordinate (577px), where before the shorter
+  roster's name sat further left. Also swapped the header controls
+  cluster so Edit renders before Delete (previously Delete-then-Edit) -
+  live-verified via button x-coordinates (Edit at 991px, Delete at
+  1027px).
 
 - **Battle Logger: undo/sendIn field-state fix, Mega+switch-out-move fix,
   ally move targeting** (2026-07-07): items 5-7 of the second review pass.

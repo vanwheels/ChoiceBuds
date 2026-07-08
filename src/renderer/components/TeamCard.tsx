@@ -49,15 +49,21 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
       {/* rounded-t-xl replaces the parent's old overflow-hidden clip (removed so
           tooltips/popovers from expanded cards below are never cut off) */}
       <div className="w-full flex flex-row items-center h-16 px-6 bg-zinc-950/40 rounded-t-xl transition-colors" style={{ paddingLeft: '1.25rem', paddingRight: '1.25rem' }}>
-        {/* Horizontal Mini Sprites Row with clean end-to-end padding and internal spacing gaps */}
+        {/* Horizontal Mini Sprites Row - always reserves 6 slots (padding
+            empty ones) so the team name's starting x-position stays fixed
+            regardless of roster size, instead of drifting per team. */}
         <div className="flex flex-row items-center gap-3 mr-6" style={{ marginRight: '1.5rem' }}>
-          {team.pokemon && team.pokemon.map((p, idx) => (
-            <img
-              key={idx}
-              src={spriteCacheState.resolveSprite(getPixelSpriteUrl(p.pokedexNumber, p.showdownData.species, p.showdownData.gender || 'M', p.showdownData.shiny))}
-              alt={p.showdownData.species}
-              className="w-8 h-8 object-contain [image-rendering:pixelated] shrink-0"
-            />
+          {Array.from({ length: 6 }, (_, idx) => team.pokemon?.[idx]).map((p, idx) => (
+            p ? (
+              <img
+                key={idx}
+                src={spriteCacheState.resolveSprite(getPixelSpriteUrl(p.pokedexNumber, p.showdownData.species, p.showdownData.gender || 'M', p.showdownData.shiny))}
+                alt={p.showdownData.species}
+                className="w-8 h-8 object-contain [image-rendering:pixelated] shrink-0"
+              />
+            ) : (
+              <div key={idx} className="w-8 h-8 shrink-0" />
+            )
           ))}
         </div>
 
@@ -104,18 +110,7 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
           {/* A2. Validate Team Button + Popup */}
           <TeamValidationButton team={team} rulesetId={toRegulationId(team.format)} />
 
-          {/* B. Delete Button */}
-          {onDelete && (
-            <button
-              onClick={onDelete}
-              className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-red-400 hover:bg-zinc-800 text-sm transition-all cursor-pointer"
-              title="Delete Team"
-            >
-              ×
-            </button>
-          )}
-
-          {/* C. Edit Button */}
+          {/* B. Edit Button */}
           <button
             onClick={() => {
               setIsEditingTeam(!isEditingTeam);
@@ -131,6 +126,17 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
           >
             ✎
           </button>
+
+          {/* C. Delete Button */}
+          {onDelete && (
+            <button
+              onClick={onDelete}
+              className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-red-400 hover:bg-zinc-800 text-sm transition-all cursor-pointer"
+              title="Delete Team"
+            >
+              ×
+            </button>
+          )}
 
           {/* D. Expand/Collapse Toggle Button */}
           <button
