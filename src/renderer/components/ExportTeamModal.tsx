@@ -1,9 +1,12 @@
 /**
- * ExportTeamModal.tsx - Team Export Modal Component
+ * ExportTeamModal.tsx - Showdown-Format Export Modal
  * Mirrors ImportTeamModal.tsx's layout for the reverse direction: renders
- * the team back into Showdown export text (services/parser.ts::formatShowdownText)
- * for copying elsewhere. The on-screen preview additionally colors each EVs
- * line's stat abbreviations using the app's own per-stat color convention
+ * one or more Pokemon back into Showdown export text
+ * (services/parser.ts::formatShowdownText) for copying elsewhere. Shared
+ * between TeamCard.tsx's whole-team export and PokemonCard.tsx's
+ * single-Pokemon export - both just pass a different-length `pokemonList`
+ * and `title`. The on-screen preview additionally colors each EVs line's
+ * stat abbreviations using the app's own per-stat color convention
  * (config/pokemonTheme.ts::getStatLabelColor, same one used in StatsColumn.tsx/
  * CalcStatRows.tsx) - purely a display aid, since plain text can't carry color;
  * the copied text itself is the same plain string real Showdown expects.
@@ -12,19 +15,19 @@
 import { useState } from 'react';
 import { formatPokemonLines, formatShowdownText } from '../services/parser';
 import { getStatLabelColor } from '../config/pokemonTheme';
-import type { Team } from '../types/pokemon';
+import type { ShowdownPokemon } from '../types/pokemon';
 
 interface ExportTeamModalProps {
-  team: Team;
+  pokemonList: ShowdownPokemon[];
+  title: string;
   onClose: () => void;
 }
 
 const COPY_CONFIRMATION_MS = 2000;
 
-export default function ExportTeamModal({ team, onClose }: ExportTeamModalProps) {
+export default function ExportTeamModal({ pokemonList, title, onClose }: ExportTeamModalProps) {
   const [copied, setCopied] = useState(false);
-  const showdownData = team.pokemon.map(p => p.showdownData);
-  const plainText = formatShowdownText(showdownData);
+  const plainText = formatShowdownText(pokemonList);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(plainText);
@@ -36,7 +39,7 @@ export default function ExportTeamModal({ team, onClose }: ExportTeamModalProps)
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
         <div className="px-6 py-4 border-b border-gray-700 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-100">Export Team</h2>
+          <h2 className="text-xl font-bold text-gray-100">{title}</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-200 transition-colors"
@@ -49,7 +52,7 @@ export default function ExportTeamModal({ team, onClose }: ExportTeamModalProps)
 
         <div className="flex-1 overflow-y-auto p-6">
           <div className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg font-mono text-sm text-gray-100 whitespace-pre-wrap">
-            {showdownData.map((pokemon, pIdx) => (
+            {pokemonList.map((pokemon, pIdx) => (
               <div key={pIdx} className={pIdx > 0 ? 'mt-4' : ''}>
                 {formatPokemonLines(pokemon).map((line, lIdx) => (
                   <div key={lIdx}>

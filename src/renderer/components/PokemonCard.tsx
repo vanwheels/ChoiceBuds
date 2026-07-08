@@ -19,6 +19,7 @@ import TypeBadge from './TypeBadge';
 import StatsColumn from './StatsColumn';
 import EditOverlays from './EditOverlays';
 import SpeciesPickerCard from './SpeciesPickerCard';
+import ExportTeamModal from './ExportTeamModal';
 import { isGenderless, isFemaleLocked } from '../config/pokemonRules';
 import { toRegulationId } from '../utils/pokemonRules';
 import { getMegaApiSlug } from '../config/megaEvolution';
@@ -45,6 +46,7 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
   const [localGender, setLocalGender] = useState<'M' | 'F' | 'N' | '' | undefined>(showdownData.gender);
   const [localNickname, setLocalNickname] = useState(showdownData.nickname || '');
   const [isSwapPickerOpen, setIsSwapPickerOpen] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
   const spriteUrl = getPixelSpriteUrl(pokedexNumber, showdownData.species, localGender || 'M', isLocalShiny);
   const rulesetId = toRegulationId(team.format);
 
@@ -152,6 +154,18 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
         </button>
       )}
 
+      {/* Single-Pokemon Export - same Showdown-format modal as TeamCard's whole-team
+          export, just given a one-element list. Shifts left of the Delete button
+          (which also lives in this corner) while editing, otherwise sits in the
+          bare top-right corner. */}
+      <button
+        onClick={() => setIsExportOpen(true)}
+        title="Export Pokémon (Showdown format)"
+        className={`absolute top-2 z-10 w-6 h-6 flex items-center justify-center rounded-full bg-gray-800 border border-gray-600 text-zinc-500 hover:text-blue-400 hover:border-blue-500 transition-colors cursor-pointer text-sm ${isEditing ? 'right-9' : 'right-2'}`}
+      >
+        ⇩
+      </button>
+
       {/* Nickname Input - falls back to the species name when there's no nickname set */}
       <div className="text-center">
         {isEditing ? (
@@ -222,6 +236,14 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
           <span className={isLocalShiny ? 'text-2xl select-none filter-none opacity-100' : 'text-2xl select-none grayscale opacity-30'}>✨</span>
         </div>
       </div>
+
+      {isExportOpen && (
+        <ExportTeamModal
+          pokemonList={[showdownData]}
+          title={`Export ${showdownData.nickname || showdownData.species}`}
+          onClose={() => setIsExportOpen(false)}
+        />
+      )}
     </div>
   );
 }

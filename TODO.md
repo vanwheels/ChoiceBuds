@@ -328,6 +328,27 @@ in a `Why:` line only when it's not obvious from the task itself.
 
 ## Done
 
+- **Teams: per-Pokemon Showdown export, same-day follow-up to the whole-team
+  export** (2026-07-08): new ask (not in the original numbered list) after
+  the user tried the whole-team export and liked it, with a reference image
+  showing a small download-arrow icon in each Pokemon card's top-right
+  corner. `ExportTeamModal.tsx` was generalized from a `team: Team` prop to
+  `pokemonList: ShowdownPokemon[]` + `title: string` - `TeamCard.tsx` now
+  passes the full `team.pokemon.map(p => p.showdownData)` array (unchanged
+  behavior), and a new "⇩" button in `PokemonCard.tsx`'s top-right corner
+  (matching the reference image exactly) passes a one-element array and a
+  title built from the Pokemon's nickname/species. Kept as one shared
+  modal component rather than a second copy, since the two call sites
+  differ only in how many Pokemon they pass in. The button shifts from
+  `right-2` to `right-9` while `isEditing` (sharing that corner with the
+  pre-existing per-slot Delete "×" button, which only shows in edit mode)
+  so the two never overlap - confirmed both side-by-side with no collision
+  in a screenshot. Live-verified against the user's real "blaze" team
+  (never mutated - export is read-only, and edit mode was entered to check
+  button positioning without changing any field) that exporting a single
+  Pokemon (Accelorate/Blaziken) produces only that Pokemon's text/clipboard
+  contents, not the whole team's.
+
 - **Teams: export a team back to Showdown text format** (2026-07-08): item 8
   of the reprioritized third review pass. Asked the user 3 clarifying
   questions up front rather than guessing from the (unavailable-to-this-

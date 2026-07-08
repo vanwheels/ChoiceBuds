@@ -231,7 +231,13 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
         </div>
       )}
 
-      {isExportOpen && <ExportTeamModal team={team} onClose={() => setIsExportOpen(false)} />}
+      {isExportOpen && (
+        <ExportTeamModal
+          pokemonList={team.pokemon.map(p => p.showdownData)}
+          title="Export Team"
+          onClose={() => setIsExportOpen(false)}
+        />
+      )}
     </div>
   );
 }
