@@ -21,8 +21,9 @@ import LoadingScreen from './components/LoadingScreen';
 // @smogon/calc, the app's heaviest dependency.
 const CalcPage = lazy(() => import('./components/calc/CalcPage'));
 const BattleLogPage = lazy(() => import('./components/battlelog/BattleLogPage'));
+const StatisticsPage = lazy(() => import('./components/statistics/StatisticsPage'));
 
-type ActiveTab = 'teams' | 'calc' | 'battles';
+type ActiveTab = 'teams' | 'calc' | 'battles' | 'statistics';
 
 /**
  * Main application shell component
@@ -96,6 +97,16 @@ export default function App() {
                 Battle Log
               </button>
             </li>
+            <li>
+              <button
+                onClick={() => setActiveTab('statistics')}
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
+                  activeTab === 'statistics' ? 'bg-blue-600 hover:bg-blue-700' : 'text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                Statistics
+              </button>
+            </li>
           </ul>
 
           <ul className="mt-auto pt-2">
@@ -137,7 +148,7 @@ export default function App() {
           <Suspense fallback={<div className="text-gray-400 text-sm">Loading calculator...</div>}>
             <CalcPage gameDataState={gameDataState} teamsState={teamsState} spriteCacheState={spriteCacheState} />
           </Suspense>
-        ) : (
+        ) : activeTab === 'battles' ? (
           <Suspense fallback={<div className="text-gray-400 text-sm">Loading battle log...</div>}>
             <BattleLogPage
               battlesState={battlesState}
@@ -146,6 +157,10 @@ export default function App() {
               spriteCacheState={spriteCacheState}
               gameDataState={gameDataState}
             />
+          </Suspense>
+        ) : (
+          <Suspense fallback={<div className="text-gray-400 text-sm">Loading statistics...</div>}>
+            <StatisticsPage battlesState={battlesState} spriteCacheState={spriteCacheState} />
           </Suspense>
         )}
       </main>
