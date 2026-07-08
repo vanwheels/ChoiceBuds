@@ -15,13 +15,18 @@
  * searchable). Moves live in CalcMoveGrid, not here.
  */
 
-import type { CalcPokemonState } from '../../hooks/useDamageCalc';
+import type { DragEvent } from 'react';
+import type { CalcPokemonState, NatureStatEffect } from '../../hooks/useDamageCalc';
 import { STATUS_OPTIONS } from '../../hooks/useDamageCalc';
 import type { FormeFamily } from '../../utils/calcFormes';
 import { formeDisplayLabel } from '../../utils/calcFormes';
 import type { NatureName, StatsTable } from '@smogon/calc/dist/data/interface';
+import type { Team } from '../../types/pokemon';
+import { CALC_TEAM_POKEMON_DRAG_TYPE, type CalcTeamPokemonDragPayload } from '../../utils/calcDragTypes';
+import { teamPokemonToCalcUpdates } from '../../utils/calcTeamImport';
 import CalcAutocomplete from './CalcAutocomplete';
 import CalcStatRows from './CalcStatRows';
+import CalcTeamTray from './CalcTeamTray';
 
 interface CalcPokemonPanelProps {
   title: string;
@@ -32,6 +37,9 @@ interface CalcPokemonPanelProps {
   natureOptions: NatureName[];
   formes: FormeFamily;
   baseStats: StatsTable | null;
+  natureEffect: NatureStatEffect;
+  teams: Team[];
+  resolveSprite: (remoteUrl: string) => string;
   onChange: (updates: Partial<CalcPokemonState>) => void;
 }
 
@@ -61,7 +69,8 @@ function FormeToggle({ group, current, onSelect }: { group: string[]; current: s
 }
 
 export default function CalcPokemonPanel({
-  title, state, speciesOptions, itemOptions, abilityOptions, natureOptions, formes, baseStats, onChange,
+  title, state, speciesOptions, itemOptions, abilityOptions, natureOptions, formes, baseStats, natureEffect,
+  teams, resolveSprite, onChange,
 }: CalcPokemonPanelProps) {
   const cycleGender = () => {
     const currentIndex = GENDER_CYCLE.indexOf(state.gender);
@@ -71,9 +80,32 @@ export default function CalcPokemonPanel({
 
   const megaGroup = formes.megaFormes.length > 0 ? [formes.root, ...formes.megaFormes] : [];
 
+  // Accepts a drag from either panel's own CalcTeamTray (or the other panel's -
+  // dragging across sides is a deliberate way to quick-swap which Pokemon
+  // loads into which slot, unlike a click which always targets its own tray).
+  const handleDrop = (e: DragEvent) => {
+    const raw = e.dataTransfer.getData(CALC_TEAM_POKEMON_DRAG_TYPE);
+    if (!raw) return;
+    e.preventDefault();
+    try {
+      const payload: CalcTeamPokemonDragPayload = JSON.parse(raw);
+      const team = teams.find(t => t.id === payload.teamId);
+      const pokemon = team?.pokemon[payload.pokemonIndex];
+      if (pokemon) onChange(teamPokemonToCalcUpdates(pokemon));
+    } catch {
+      // malformed/foreign drag payload - ignore
+    }
+  };
+
   return (
-    <div className="flex-1 min-w-[280px] bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-4 flex flex-col gap-3">
+    <div
+      className="flex-1 min-w-[280px] bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-4 flex flex-col gap-3"
+      onDragOver={(e) => { if (e.dataTransfer.types.includes(CALC_TEAM_POKEMON_DRAG_TYPE)) e.preventDefault(); }}
+      onDrop={handleDrop}
+    >
       <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wide">{title}</h3>
+
+      <CalcTeamTray teams={teams} resolveSprite={resolveSprite} onLoadPokemon={(p) => onChange(teamPokemonToCalcUpdates(p))} />
 
       <div className="flex gap-2 items-end">
         <div className="flex-1">
@@ -162,6 +194,7 @@ export default function CalcPokemonPanel({
         baseStats={baseStats}
         sps={state.sps}
         boosts={state.boosts}
+        natureEffect={natureEffect}
         onChangeSp={(key, value) => onChange({ sps: { ...state.sps, [key]: value } })}
         onChangeBoost={(key, value) => onChange({ boosts: { ...state.boosts, [key]: value } })}
       />

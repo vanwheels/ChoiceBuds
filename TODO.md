@@ -67,50 +67,20 @@ in a `Why:` line only when it's not obvious from the task itself.
      itself, not the rosters, turned out to be the tallest column).
   4. ~~Battle Logger: log a turn-log entry when a Pokemon is marked
      fainted~~ - done, see Done below.
-  5. Calc page: fit the minimum window size without scrolling - drop the
-     redundant "Damage Calculator" header text, move "Powered by
-     @smogon/calc" to the bottom of the page, delete the "Champions"
-     text, and nudge the Regulation selector up slightly to reclaim room
-     for the rest of the calculator.
+  5. ~~Calc page: drop redundant header text, move regulation selector
+     up~~ - done, see Done below. Note: the page still doesn't fit the
+     minimum window without scrolling - see the Done entry.
   6. ~~Side menu: remove the "VGC Team Manager" subtext, move Settings to
      the bottom~~ - done, see Done below.
   7. ~~Teams page: 6-Pokemon warning + Item Clause~~ - done, see Done
      below.
-  8. Calc page: visual/UX updates inspired by the Platinum Kaizo Damage
-     Calculator fork (https://pkcalc.anastarawneh.com, a Showdown-calc
-     fork for a specific ROM hack - only borrowing UI ideas, not its
-     ROM-hack-specific data). Three concrete pieces:
-     - Color-coded nature modifier indicators on each stat row
-       (`CalcStatRows.tsx` currently shows Base/SP/Boost with no nature
-       up/down coloring at all).
-     - A quick speed-tier visual showing at a glance which of the two
-       active Pokémon out-speeds the other (nothing like this exists
-       today - speed is just a plain number in the stat rows).
-     - Replace the current Team/Box concept (Kaizo's version is a
-       drag-between-boxes Pokémon storage UI, which doesn't map to our
-       app) with a dropdown of the user's saved Teams (from the Teams
-       tab), letting them set up to 6 "active" Pokémon for the calc
-       session and drag/click to quick-swap which one is loaded into
-       Pokémon 1 or Pokémon 2. This should mirror on **both** sides -
-       Kaizo's enemy side shows ROM-hack-specific "Team AI Flags" and
-       "Experience Dropped" panels that don't apply to us at all, so our
-       enemy side gets the same team-dropdown/quick-switch treatment
-       instead of those.
-     - Restyle the Field conditions panel (`CalcFieldPanel.tsx` /
-       `CalcSideConditions.tsx`) to match Kaizo's/the original Showdown
-       calc's style: each condition (Reflect, Light Screen, Stealth Rock,
-       Protect, Leech Seed, Helping Hand, Tailwind, etc.) as its own
-       full-width stacked button/row, not the current tight
-       `flex-wrap` cluster of tiny 10px chips crammed together
-       (`CalcSideConditions.tsx`'s `TOGGLES` list currently all wraps
-       into one dense block).
-     Overlaps with item 5 above (both touch the Calc page layout) but is
-     a broader redesign, not just a fit-in-minimum-window pass - worth
-     scoping together when implementation starts. Once the field-panel
-     restyle lands, revisit the Battle Logger's `SideConditionsRow.tsx`
-     (same dense-toggle-chip pattern as the old `CalcSideConditions.tsx`)
-     and unify both into one shared component so the app doesn't end up
-     with two different-looking field-condition widgets.
+  8. ~~Calc page: Kaizo-inspired nature colors, speed tier, team
+     dropdown, field-panel restyle~~ - done, see Done below. Follow-up
+     still open: once satisfied with the field-panel style, revisit the
+     Battle Logger's `SideConditionsRow.tsx` (same dense-toggle-chip
+     pattern the old `CalcSideConditions.tsx` had) and unify both into
+     one shared component so the app doesn't end up with two
+     different-looking field-condition widgets.
   9. **New, discovered while doing item 3**: the Battle Log page still
      needs to scroll at the 1280x720 minimum window size even after the
      roster compacting - `Battlefield.tsx` itself (428.5px) + turn
@@ -121,6 +91,85 @@ in a `Why:` line only when it's not obvious from the task itself.
      bar padding, etc.) - not scoped or touched during item 3.
 
 ## Done
+
+- **Calc page: Kaizo-inspired redesign - nature colors, speed tier, team
+  dropdown, field-panel restyle, header cleanup** (2026-07-07): Stage 4,
+  the last of the 2026-07-07 UI-polish batch. Five pieces:
+  1. Dropped the redundant "Damage Calculator" h1 and "Champions" text
+     entirely; "Powered by @smogon/calc" moved to a small centered line
+     at the very bottom of the page; the Regulation selector is now the
+     first element on the page (was previously sharing a row with the
+     deleted header).
+  2. Nature color coding: `useDamageCalc.ts` gained `getNatureStatEffect`
+     (reads `gen.natures.get()` - @smogon/calc always sets both
+     `plus`/`minus` to the *same* stat for a genuinely neutral nature
+     like Hardy, rather than leaving them undefined, so equality is
+     checked explicitly) and exposes `pokemon1NatureEffect`/
+     `pokemon2NatureEffect`, threaded through `CalcPokemonPanel.tsx` into
+     `CalcStatRows.tsx` - the boosted stat label shows red+`"+"`, the
+     lowered one blue+`"-"`, matching the mainline-games convention.
+     Live-verified: Modest Charizard correctly showed `SPA+` red /
+     `ATK-` blue.
+  3. Speed-tier banner: `useDamageCalc.ts` also exposes `pokemon1Speed`/
+     `pokemon2Speed` (`rawStats.spe` with the stage-boost multiplier and
+     paralysis halving applied manually - @smogon/calc's own `rawStats`
+     doesn't factor in stage boosts, only base/nature/SPs). Doesn't model
+     Tailwind/weather speed abilities since the field state has no
+     concept of which ability is actually active - would be guessing.
+     Rendered as a banner in `CalcFieldPanel.tsx`. Live-verified: a
+     Charizard/Ninetales speed tie at 120 correctly flipped to "Pokémon 1
+     is faster (240 vs 120)" after a live +2 Speed boost edit.
+  4. Field-conditions panel restyle: `CalcSideConditions.tsx`'s 14
+     boolean toggles are now full-width stacked buttons (one per row)
+     instead of a `flex-wrap` chip cluster, matching the Kaizo/Showdown
+     calc reference style; Spikes stays a compact 4-button row (0-3, not
+     worth 4 full-width rows for one stackable stat).
+  5. Team dropdown (replacing the Kaizo Team/Box concept): new
+     `CalcTeamTray.tsx` (a team-name dropdown + up to 6 sprites) is
+     embedded directly in `CalcPokemonPanel.tsx` - identical on both the
+     Pokémon 1 and Pokémon 2 panels, so unlike Kaizo's opponent-side
+     AI-flags/exp-dropped panels, ours gets the same picker both sides.
+     Clicking a tray sprite loads it into *that panel's own* slot;
+     dragging one (new `utils/calcDragTypes.ts`) can drop onto *either*
+     panel, so a Pokémon 1 tray item can be dragged onto the Pokémon 2
+     slot and vice versa - deliberately two different affordances for
+     "quick-swap which one is loaded into Pokémon 1 or Pokémon 2" per the
+     original ask. New `utils/calcTeamImport.ts::teamPokemonToCalcUpdates`
+     maps a saved team's `ImportedPokemonInfo` into `CalcPokemonState` -
+     species/item/ability/moves are copied as-is (no fuzzy name
+     resolution against @smogon/calc's own list; Showdown export names
+     already match closely enough, and a rare mismatch just surfaces as
+     a normal per-move calc error, not a crash) - and confirmed the
+     Team Builder's own `evs` field is already Champions' 0-32 SP scale
+     (enforced in `StatsColumn.tsx`), not traditional 0-252 EVs, so it
+     copies directly into `CalcPokemonState.sps` with no conversion.
+     `App.tsx` now threads `teamsState`/`spriteCacheState` into
+     `CalcPage` (previously only `gameDataState` was passed).
+     Live-verified end-to-end: clicking a team's Metagross correctly
+     populated species/moves/item (Metagrossite, correctly surfacing the
+     Mega forme toggle)/ability/nature (Adamant, colored correctly)/SPs
+     (66/66 total, matching the saved team exactly); dragging a
+     different team member onto the *other* panel correctly cross-loaded
+     it (species/moves/item/ability/gender icon all correct).
+
+  **However, like the Battle Logger roster pass in Stage 3, this does
+  not achieve "fits the minimum window without scrolling."** Measured
+  directly: `main.scrollHeight` 1102px vs `clientHeight` 661px at the
+  1280x720 minimum size, even at the page's emptiest default state - and
+  this is likely *worse* than before this pass, not better. The
+  full-width-stacked-buttons field panel (explicitly requested, item 8)
+  and the new per-panel team tray (item 8) both add real height that the
+  removed header (~48px saved) doesn't come close to offsetting - the
+  Field panel alone now measures 623px tall (14 stacked condition rows ×
+  2 columns + weather/terrain + the speed banner). Every individual
+  piece of this item was implemented as asked and verified working -
+  this is a real tension between "each condition as its own legible
+  full-width row" and "fit everything in 661px," not a bug. Flagging
+  for a decision rather than picking one unilaterally: worth a dedicated
+  compacting pass (e.g. collapsing the two condition columns into a
+  single shared table - see the discarded design note in this session -
+  or making the team tray collapsible) if eliminating the scrollbar is
+  still a priority now that the requested visual/UX pieces are in place.
 
 - **Battle Logger: compact symmetric roster layout (Sprite+Name /
   Ability|Moves / Item|Moves)** (2026-07-07): Stage 3. Both

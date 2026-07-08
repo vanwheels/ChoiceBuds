@@ -15,12 +15,35 @@ interface CalcFieldPanelProps {
   onChangeField: (updates: Partial<Pick<CalcFieldState, 'gameType' | 'weather' | 'terrain'>>) => void;
   onChangePokemon1Side: (updates: Partial<CalcSideConditionsState>) => void;
   onChangePokemon2Side: (updates: Partial<CalcSideConditionsState>) => void;
+  pokemon1Speed: number | null;
+  pokemon2Speed: number | null;
 }
 
-export default function CalcFieldPanel({ field, onChangeField, onChangePokemon1Side, onChangePokemon2Side }: CalcFieldPanelProps) {
+/** "who moves first" at a glance - null when either side's species/stats aren't set up yet. */
+function SpeedTierBanner({ pokemon1Speed, pokemon2Speed }: { pokemon1Speed: number | null; pokemon2Speed: number | null }) {
+  if (pokemon1Speed == null || pokemon2Speed == null) return null;
+
+  const label = pokemon1Speed === pokemon2Speed
+    ? `Speed tie (${pokemon1Speed})`
+    : pokemon1Speed > pokemon2Speed
+      ? `⚡ Pokémon 1 is faster (${pokemon1Speed} vs ${pokemon2Speed})`
+      : `⚡ Pokémon 2 is faster (${pokemon2Speed} vs ${pokemon1Speed})`;
+
+  return (
+    <p className="text-center text-[11px] font-bold text-amber-300 bg-amber-500/10 border border-amber-600/40 rounded px-2 py-1">
+      {label}
+    </p>
+  );
+}
+
+export default function CalcFieldPanel({
+  field, onChangeField, onChangePokemon1Side, onChangePokemon2Side, pokemon1Speed, pokemon2Speed,
+}: CalcFieldPanelProps) {
   return (
     <div className="flex-1 min-w-[280px] bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-4 flex flex-col gap-3">
       <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wide">Field</h3>
+
+      <SpeedTierBanner pokemon1Speed={pokemon1Speed} pokemon2Speed={pokemon2Speed} />
 
       <div className="flex gap-2">
         {(['Singles', 'Doubles'] as const).map(type => (

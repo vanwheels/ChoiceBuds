@@ -31,6 +31,7 @@ import type {
   GenderName,
   StatusName,
   Generation,
+  StatID,
 } from '@smogon/calc/dist/data/interface';
 import { validateSpeciesLegality, ALL_REGULATION_IDS, type RegulationId } from '../utils/pokemonRules';
 import { getFormeFamily, type FormeFamily } from '../utils/calcFormes';
@@ -74,6 +75,24 @@ function spsToEvs(sps: StatsTable): StatsTable {
     hp: spToEv(sps.hp), atk: spToEv(sps.atk), def: spToEv(sps.def),
     spa: spToEv(sps.spa), spd: spToEv(sps.spd), spe: spToEv(sps.spe),
   };
+}
+
+/**
+ * Which stat a nature boosts/lowers (both undefined for a genuinely neutral
+ * nature - Hardy/Docile/Serious/Bashful/Quirky). @smogon/calc's own Nature
+ * data always sets both `plus`/`minus` to a StatID even for these, using the
+ * SAME stat for both as its way of encoding "no effect" - a plus===minus
+ * match is filtered out here rather than shown as simultaneously boosted
+ * and lowered. Powers the nature color-coding on CalcStatRows.tsx.
+ */
+export interface NatureStatEffect {
+  plus?: StatID;
+  minus?: StatID;
+}
+function getNatureStatEffect(gen: Generation, natureName: NatureName): NatureStatEffect {
+  const nature = gen.natures.get(toID(natureName));
+  if (!nature || nature.plus === nature.minus) return {};
+  return { plus: nature.plus, minus: nature.minus };
 }
 
 export interface CalcMoveSlot {
@@ -221,6 +240,31 @@ function getMultihitRange(gen: Generation, moveName: string): [number, number] |
   return [multihit[0], multihit[1]];
 }
 
+/** Standard stage-boost multiplier (-6..+6): >=0 stages are (2+n)/2, negative are 2/(2-n). */
+function boostMultiplier(stage: number): number {
+  const clamped = Math.max(-6, Math.min(6, stage));
+  return clamped >= 0 ? (2 + clamped) / 2 : 2 / (2 - clamped);
+}
+
+/**
+ * Speed with stage boosts and paralysis applied - unlike rawStats.spe (base+
+ * nature+SPs only), this is what actually determines turn order. Doesn't
+ * model Tailwind/weather-based speed abilities (Swift Swim etc.) - the field
+ * state here doesn't track which Pokemon's ability is actually active, so
+ * factoring those in would be guessing; stage boosts and paralysis are both
+ * already explicit, unambiguous inputs on this panel.
+ */
+function computeEffectiveSpeed(gen: Generation, state: CalcPokemonState): number | null {
+  if (!state.species) return null;
+  try {
+    const pokemon = buildPokemon(gen, state);
+    const boosted = pokemon.rawStats.spe * boostMultiplier(state.boosts.spe);
+    return state.status === 'par' ? Math.floor(boosted / 2) : boosted;
+  } catch {
+    return null;
+  }
+}
+
 function buildPokemon(gen: Generation, state: CalcPokemonState): InstanceType<typeof Pokemon> {
   return new Pokemon(gen, state.species, {
     level: state.level,
@@ -327,6 +371,10 @@ export interface UseDamageCalcReturn {
   pokemon2Formes: FormeFamily;
   pokemon1BaseStats: StatsTable | null;
   pokemon2BaseStats: StatsTable | null;
+  pokemon1NatureEffect: NatureStatEffect;
+  pokemon2NatureEffect: NatureStatEffect;
+  pokemon1Speed: number | null;
+  pokemon2Speed: number | null;
   p1Results: CalcMoveResultEntry[];
   p2Results: CalcMoveResultEntry[];
   selectedResult: SelectedResultRef | null;
@@ -357,6 +405,12 @@ export function useDamageCalc(gameDataState: UseGameDataReturn): UseDamageCalcRe
 
   const pokemon1Formes = useMemo(() => getFormeFamily(allSpecies, pokemon1.species), [allSpecies, pokemon1.species]);
   const pokemon2Formes = useMemo(() => getFormeFamily(allSpecies, pokemon2.species), [allSpecies, pokemon2.species]);
+
+  const pokemon1NatureEffect = useMemo(() => getNatureStatEffect(gen, pokemon1.nature), [gen, pokemon1.nature]);
+  const pokemon2NatureEffect = useMemo(() => getNatureStatEffect(gen, pokemon2.nature), [gen, pokemon2.nature]);
+
+  const pokemon1Speed = useMemo(() => computeEffectiveSpeed(gen, pokemon1), [gen, pokemon1]);
+  const pokemon2Speed = useMemo(() => computeEffectiveSpeed(gen, pokemon2), [gen, pokemon2]);
 
   const pokemon1BaseStats = useMemo(
     () => (pokemon1.species ? gen.species.get(toID(pokemon1.species))?.baseStats ?? null : null),
@@ -456,6 +510,10 @@ export function useDamageCalc(gameDataState: UseGameDataReturn): UseDamageCalcRe
     pokemon2Formes,
     pokemon1BaseStats,
     pokemon2BaseStats,
+    pokemon1NatureEffect,
+    pokemon2NatureEffect,
+    pokemon1Speed,
+    pokemon2Speed,
     p1Results,
     p2Results,
     selectedResult,

@@ -13,6 +13,8 @@
 
 import { useDamageCalc, ALL_REGULATION_IDS } from '../../hooks/useDamageCalc';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
+import type { UseTeamsReturn } from '../../hooks/useTeams';
+import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import { getRegulationLabel } from '../../utils/pokemonRules';
 import CalcPokemonPanel from './CalcPokemonPanel';
 import CalcMoveGrid from './CalcMoveGrid';
@@ -21,9 +23,11 @@ import CalcResultPanel from './CalcResultPanel';
 
 interface CalcPageProps {
   gameDataState: UseGameDataReturn;
+  teamsState: UseTeamsReturn;
+  spriteCacheState: UseSpriteCacheReturn;
 }
 
-export default function CalcPage({ gameDataState }: CalcPageProps) {
+export default function CalcPage({ gameDataState, teamsState, spriteCacheState }: CalcPageProps) {
   const calcState = useDamageCalc(gameDataState);
   const {
     regulationId, setRegulationId,
@@ -31,29 +35,24 @@ export default function CalcPage({ gameDataState }: CalcPageProps) {
     field, setField, setPokemon1Side, setPokemon2Side,
     speciesOptions, pokemon1MoveOptions, pokemon2MoveOptions, itemOptions, abilityOptions, natureOptions,
     pokemon1Formes, pokemon2Formes, pokemon1BaseStats, pokemon2BaseStats,
+    pokemon1NatureEffect, pokemon2NatureEffect, pokemon1Speed, pokemon2Speed,
     p1Results, p2Results, selectedResult, setSelectedResult, selectedEntry,
   } = calcState;
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-blue-400">Damage Calculator</h1>
-          <p className="text-sm text-gray-400 mt-1">Champions · powered by @smogon/calc</p>
-        </div>
-        <div className="flex gap-2">
-          {ALL_REGULATION_IDS.map(id => (
-            <button
-              key={id}
-              onClick={() => setRegulationId(id)}
-              className={`px-3 py-1 text-xs font-bold uppercase tracking-wide rounded transition-colors cursor-pointer ${
-                regulationId === id ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-              }`}
-            >
-              {getRegulationLabel(id)}
-            </button>
-          ))}
-        </div>
+    <div className="flex flex-col gap-3">
+      <div className="flex justify-end gap-2">
+        {ALL_REGULATION_IDS.map(id => (
+          <button
+            key={id}
+            onClick={() => setRegulationId(id)}
+            className={`px-3 py-1 text-xs font-bold uppercase tracking-wide rounded transition-colors cursor-pointer ${
+              regulationId === id ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+            }`}
+          >
+            {getRegulationLabel(id)}
+          </button>
+        ))}
       </div>
 
       <div className="flex flex-wrap gap-4">
@@ -89,6 +88,9 @@ export default function CalcPage({ gameDataState }: CalcPageProps) {
           natureOptions={natureOptions}
           formes={pokemon1Formes}
           baseStats={pokemon1BaseStats}
+          natureEffect={pokemon1NatureEffect}
+          teams={teamsState.teams}
+          resolveSprite={spriteCacheState.resolveSprite}
           onChange={setPokemon1}
         />
         <CalcFieldPanel
@@ -96,6 +98,8 @@ export default function CalcPage({ gameDataState }: CalcPageProps) {
           onChangeField={setField}
           onChangePokemon1Side={setPokemon1Side}
           onChangePokemon2Side={setPokemon2Side}
+          pokemon1Speed={pokemon1Speed}
+          pokemon2Speed={pokemon2Speed}
         />
         <CalcPokemonPanel
           title="Pokémon 2"
@@ -106,9 +110,14 @@ export default function CalcPage({ gameDataState }: CalcPageProps) {
           natureOptions={natureOptions}
           formes={pokemon2Formes}
           baseStats={pokemon2BaseStats}
+          natureEffect={pokemon2NatureEffect}
+          teams={teamsState.teams}
+          resolveSprite={spriteCacheState.resolveSprite}
           onChange={setPokemon2}
         />
       </div>
+
+      <p className="text-center text-[10px] text-gray-600">Powered by @smogon/calc</p>
     </div>
   );
 }

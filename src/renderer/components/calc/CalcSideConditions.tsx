@@ -6,6 +6,11 @@
  * per direction using these same two objects). Buttons, not checkboxes,
  * matching this app's other toggle styling (Teams regulation/format
  * filters, the Singles/Doubles and Reg M-A/M-B toggles elsewhere in Calc).
+ *
+ * Each condition is its own full-width stacked row (not a wrapped chip
+ * cluster) - matches the Platinum Kaizo calc fork's field-panel style (see
+ * TODO.md), which is what a real Showdown-style calc's Field column looks
+ * like: one legible row per condition instead of a dense tag cloud.
  */
 
 import type { CalcSideConditions as CalcSideConditionsState } from '../../hooks/useDamageCalc';
@@ -40,7 +45,7 @@ function ToggleButton({ active, label, onClick }: { active: boolean; label: stri
     <button
       type="button"
       onClick={onClick}
-      className={`px-2 py-1 text-[10px] font-bold rounded transition-colors cursor-pointer ${
+      className={`w-full px-2 py-1 text-left text-xs font-bold rounded transition-colors cursor-pointer ${
         active ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
       }`}
     >
@@ -51,24 +56,28 @@ function ToggleButton({ active, label, onClick }: { active: boolean; label: stri
 
 export default function CalcSideConditions({ title, side, onChange }: CalcSideConditionsProps) {
   return (
-    <div className="flex-1 flex flex-col gap-1.5">
+    <div className="flex-1 flex flex-col gap-1 min-w-0">
       <p className="text-[10px] text-gray-400 uppercase tracking-wide">{title}</p>
 
       <div className="flex flex-col gap-1">
         <label className="text-[10px] text-gray-400 uppercase tracking-wide">Spikes</label>
         <div className="flex gap-1">
           {SPIKES_OPTIONS.map(count => (
-            <ToggleButton
+            <button
               key={count}
-              active={side.spikes === count}
-              label={count === 0 ? 'None' : String(count)}
+              type="button"
               onClick={() => onChange({ spikes: count })}
-            />
+              className={`flex-1 px-1 py-1 text-xs font-bold rounded transition-colors cursor-pointer ${
+                side.spikes === count ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+              }`}
+            >
+              {count === 0 ? 'None' : count}
+            </button>
           ))}
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-1">
+      <div className="flex flex-col gap-1">
         {TOGGLES.map(([key, label]) => (
           <ToggleButton
             key={key}

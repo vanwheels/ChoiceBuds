@@ -135,7 +135,7 @@ export default function App() {
           />
         ) : activeTab === 'calc' ? (
           <Suspense fallback={<div className="text-gray-400 text-sm">Loading calculator...</div>}>
-            <CalcPage gameDataState={gameDataState} />
+            <CalcPage gameDataState={gameDataState} teamsState={teamsState} spriteCacheState={spriteCacheState} />
           </Suspense>
         ) : (
           <Suspense fallback={<div className="text-gray-400 text-sm">Loading battle log...</div>}>
