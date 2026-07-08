@@ -50,12 +50,17 @@ in a `Why:` line only when it's not obvious from the task itself.
   stat depends on comparing the opposing side's average Def/SpDef, needs
   base-stat math not taken on yet).
 - Everything else from the original 9-item roadmap discussion not yet
-  built: general UI polish (#1), cross-device sync via file-sync-folder
-  (#2), further Calc UI cleanup (#3), Settings page (#4, not started),
-  Limitless usage data once the API key is approved (#7), Statistics page
-  (#9) - this one is no longer actually blocked, the Battle Logger has
-  been producing real win/loss data for a while now, just hasn't been
-  scoped/built yet.
+  built, reordered by priority: Statistics page (#9) - no longer actually
+  blocked, the Battle Logger has been producing real win/loss data for a
+  while now, just hasn't been scoped/built yet, and is the most
+  immediately valuable of this group since the data already exists;
+  Settings page (#4, not started) - foundational, other deferred items
+  (regulation defaults, sync config) will likely want a home here;
+  further Calc UI cleanup (#3) - overlaps with Calc work already in
+  flight elsewhere in this file; general UI polish (#1) - vague/ongoing,
+  no concrete scope; cross-device sync via file-sync-folder (#2) - larger
+  infra lift; Limitless usage data (#7) - blocked externally on API key
+  approval, can't start regardless of priority.
 
 - **2026-07-07 manual-testing/UI-polish batch** (not yet built - captured
   from a review pass, user still adding more items):
@@ -152,7 +157,215 @@ in a `Why:` line only when it's not obvious from the task itself.
       Base+SPs+nature, deliberately excluding the stage boost~~ - done,
       see Done below.
 
+- **2026-07-07 third review pass** (not yet built - originally captured in
+  the order the user raised them during a manual-testing/reference-
+  screenshot session; reordered here highest-to-lowest priority. Roughly:
+  cheap/trivial fixes and confirmed bugs first, then correctness gaps in
+  the actively-used Battle Logger, then clear-scope builds with no
+  blockers, then items blocked on a research/policy decision, then the
+  largest net-new subsystem last, per the user's own choice to defer it
+  rather than build it immediately):
+  1. ~~Calc page (`CalcMoveGrid.tsx`): narrow the move-search box so more
+     of the row is clickable for row-selection~~ - done, see Done below.
+  2. Teams page (`TeamCard.tsx`): collapsing a team (`isExpanded` ->
+     false) while it's in edit mode should also exit edit mode
+     (`isEditingTeam` -> false), instead of leaving `isEditingTeam` true
+     silently. Concretely visible today: the team-name header switches
+     between a plain `<h2>` and an editable `<input>` based on
+     `isEditingTeam` alone, and that header renders outside the
+     `isExpanded` block - so collapsing mid-edit currently leaves the
+     name as a live editable input in the collapsed header instead of
+     reverting to read-only display.
+  3. Battle Logger: deterministic move stat-effects
+     (`config/moveStatEffects.ts`) need to cover every stat-changing move,
+     not just the current curated subset - Growth flagged as the first
+     concrete gap (currently absent from the table entirely). Growth is
+     also a real complication beyond "just add a row": it normally raises
+     Atk/SpA by 1 stage each but doubles to +2 each in Sun, and the
+     current `MoveStatEffect` shape (`changes: {stat, stages}[]`) has no
+     way to express a weather-conditional stage count - `logAction`
+     (`useBattleLogActions.ts`) also doesn't currently pass the field's
+     weather into `getMoveStatEffect` at all. Needs a small model
+     extension (e.g. a per-weather override on `changes`) plus wiring
+     `battle.fieldState.weather` through to the lookup, not just a
+     data-table addition.
+  4. Battle Logger: do a full audit pass over abilities with an
+     on-switch-in effect or a reactive battle interaction, to make sure
+     the curated tables are actually comprehensive rather than covering
+     only the obvious VGC staples - user's example: Arbok having
+     Intimidate should trigger the same chip a "expected" Intimidate
+     mon (Incineroar, Gyarados, etc.) does. Two tables today, both
+     explicitly scoped as "deliberately not exhaustive" in their own
+     header comments:
+     - `config/onSwitchInAbilities.ts` - only 11 entries (Intimidate,
+       Intrepid Sword, Dauntless Shield, the 4 weather setters, the 4
+       terrain Surge abilities). Lookup is already ability-name-keyed,
+       not species-keyed, so Arbok's Intimidate specifically should
+       already work correctly today (worth confirming as a live
+       spot-check first, in case the real gap is elsewhere - e.g. the
+       chip only shows once an opponent's ability is actually known/
+       typed in, so this may really be about *discoverability* of
+       obscure-species abilities rather than a table gap). Download is
+       the one already-known, deliberately-excluded gap (needs Def/SpDef
+       base-stat comparison math not built yet).
+     - `config/reactiveAbilities.ts` - only Defiant/Competitive (raise a
+       stat when one of the owner's own stats gets lowered). Doesn't
+       cover the broader category of "raise a stat when hit by a
+       specific move type/category" abilities (Justified, Rattled,
+       Stamina, Weak Armor, Water Compaction, Steam Engine, etc.) at
+       all - those would need a new effect shape, not just new table
+       rows, since the trigger condition is different from "stat was
+       lowered."
+     Scope this as a real research pass (cross-check against a
+     comprehensive Gen 9 ability list, not just adding whatever's
+     remembered off the top of the head) before touching the tables -
+     same rigor as the existing Champions balance-patch audits in the
+     Done log below.
+  5. Battle Logger: the player roster column
+     (`PlayerFieldPanel.tsx`/`RosterRow.tsx`) is still visually smaller
+     than the opponent's (`OpponentFieldPanel.tsx`/`OpponentRowFields.tsx`)
+     - acknowledged by the user as an inherent consequence of the player
+     side rendering plain static text (its set is fixed at battle start)
+     vs. the opponent side's live selects/inputs/growable move-chip list,
+     but still wants them visually consistent regardless (e.g. style the
+     player's read-only fields to occupy the same visual footprint as the
+     opponent's form controls, even though they're not actually
+     editable). Directly the height-not-width gap flagged as still open
+     in the "move weather/terrain above the Battlefield" Done entry above
+     (500px vs 608px column height).
+  6. Add an editable "Author" field to the TeamBuilder (team-level data,
+     not per-Pokemon) and the import modal (`ImportTeamModal.tsx`) -
+     Pokepaste pages have an author, Showdown's own export text doesn't.
+     Needs a new optional `author?: string` on the `Team` interface
+     (`types/pokemon.ts`) plus wiring through `useTeams.ts`. Auto-fill
+     target once the Pokepaste-link-import item below is built: it should
+     be able to pull the author directly from the paste; a plain-text
+     paste leaves it blank/manually editable either way.
+  7. TeamBuilder + Calc: add Pokepaste/Showdown-standard per-stat coloring
+     (HP red, Atk orange, Def yellow, SpA blue, SpD green, Spe pink - a
+     user-provided reference screenshot of pokepast.es's own rendering
+     confirms this exact convention) to `StatsColumn.tsx`/`EVStatCell.tsx`
+     in the Teams tab and `CalcStatRows.tsx` in the Calc tab. New color
+     config belongs in `config/pokemonTheme.ts` per the existing "no
+     inline hex values" rule - nothing there currently maps stat keys to
+     colors.
+  8. Add team export in Showdown's own text format (the reverse of
+     `services/parser.ts::parseShowdownText` - a new
+     `formatShowdownText`-style function) - reference screenshot shows
+     the target format/coloring. Stretch goal, explicitly flagged by the
+     user as uncertain: exporting *to* Pokepaste (creating a new paste
+     via their API, not just formatting local text) - unconfirmed whether
+     pokepast.es exposes a usable public write API, needs research before
+     scoping. Same CLAUDE.md policy question as the Pokepaste-link-import
+     item below: writing to an external third-party service is new
+     territory for this project's external-integration rules, not
+     something to bolt on silently.
+  9. Verify Pokepaste *link* import compatibility - the user recalls an
+     earlier (pre-rebuild) version of the app could take a raw
+     `pokepast.es/<id>` URL directly (not just pasted export text) and
+     pull both the team data and the paste's own team name. Checked the
+     current code: this doesn't exist at all right now -
+     `ImportTeamModal.tsx` only accepts pasted text
+     (`services/parser.ts::parseShowdownText`), no URL detection or fetch
+     logic exists anywhere in the codebase. So this is "build it back
+     in," not "verify it still works." Test link provided:
+     `https://pokepast.es/fd6420a3f2b82487`. Needs research before
+     implementing: pokepast.es may serve a raw-text endpoint (common for
+     paste sites, e.g. an `/raw` suffix) which would avoid HTML scraping -
+     worth confirming before assuming the fetch shape. Also a CLAUDE.md
+     policy question: the project's current external-fetch allowlist only
+     covers `pokeapi.co` (game data) and Serebii/Bulbapedia (hotlinked
+     images + manual dev-time reference) - a live runtime fetch to
+     pokepast.es for team import is a new category not yet covered by
+     that policy and would need an explicit addition (with a matching
+     README Credits entry) before shipping, not an assumed extension of
+     the existing rule. Ranked below the other items despite restoring
+     previously-existing functionality because it needs this policy
+     decision plus fetch-shape research before implementation can even
+     start, unlike the others which are just build work.
+  10. Teams page (`TeamCard.tsx`): while in edit mode, let a Pokemon card
+      be reordered within the team via click-and-drag instead of the
+      roster order being fixed to import/add order. `useRosterActions.ts`
+      has no reorder mutation today - only `swapSlot` (replaces one
+      index's species entirely, not a move), `addSlot`, and `removeSlot`
+      - so this needs a new `reorderSlot(team, fromIndex, toIndex)`-style
+      mutation that repositions an existing `ImportedPokemonInfo` within
+      `team.pokemon`, plus wiring HTML5 drag-and-drop onto
+      `PokemonCard.tsx` (matching the drag pattern already used for
+      Battle Logger roster cards - see `utils/dragTypes.ts` - and the
+      Calc team tray - see `utils/calcDragTypes.ts` - rather than
+      inventing a third convention).
+  11. Teams page (`TeamsPage.tsx`): let teams be reordered in the list via
+      click-and-drag (same drag convention as the Pokemon-card-reorder
+      item above). `useTeams.ts` has no reorder mutation today either -
+      `teams` order is whatever `teams.json` happens to have (append-on-
+      add via `addTeam`). Open design question worth settling before
+      implementing: the page renders `filteredTeams`
+      (`teams.filter(t => t.format === activeFilter)`, or the full list
+      under "All") - dragging within a filtered view (e.g. only Reg M-B
+      teams showing) needs a decision on how that maps back onto the
+      underlying full-`teams` array order, since hidden (filtered-out)
+      teams' relative positions still need to make sense afterward.
+      Ranked below the Pokemon-card reorder above since it has this extra
+      unresolved design question on top of the same missing-mutation
+      work.
+  12. Calc page: bulk-import Pokemon via pasted Showdown text (reference
+      screenshot: a standard single-Pokemon Showdown export block), able
+      to import more than one at once, and save each as an individually
+      reusable set - then when searching for a species anywhere on the
+      Calc page, offer a choice between starting from a blank set or
+      loading a saved one for that species if any exist. A genuinely new
+      concept, not just wiring - "saved individual Pokemon" doesn't exist
+      anywhere in the app today (Teams are the only persisted grouping,
+      always a 6-slot roster, never a flat library of standalone sets).
+      Ranked last: the user explicitly chose "add to TODO for later" over
+      "implement now" when asked, and it's the largest net-new subsystem
+      of this whole batch (own persistence layer, new UI, a naming
+      scheme). Real scope, and what's already reusable:
+      - Persistence: needs a new store alongside `teams.json`/
+        `battles.json` (own IPC handlers in `main.ts`, preload bridge
+        methods, a new `useSavedPokemon.ts` hook mirroring `useTeams.ts`)
+        - a flat list, not nested under a team.
+      - Parsing/import: `services/parser.ts::parseShowdownText` already
+        splits pasted text into multiple Pokemon blocks and handles a
+        single block equally well - the bulk-multi-import part is mostly
+        already there, just needs a Calc-page entry point (a modal/panel,
+        not the existing Teams-only `ImportTeamModal.tsx`) and running
+        each block through `enrichPokemonWithAPI` like team import does.
+      - Calc-state mapping: `utils/calcTeamImport.ts::teamPokemonToCalcUpdates`
+        already converts `ImportedPokemonInfo` -> `Partial<CalcPokemonState>`
+        (built for "Load from Team" tray) - directly reusable for loading
+        a saved individual Pokemon into a Calc panel too, no new mapper
+        needed there.
+      - Net-new UI: the species search itself
+        (`CalcAutocomplete.tsx`, used generically for species/item/
+        ability/move) needs species-specific behavior added on top - once
+        a species is picked, if saved sets exist for it, prompt/offer
+        "blank" vs. each saved set by name rather than always defaulting
+        to blank. Needs a naming scheme for saved sets too, since more
+        than one could exist per species (e.g. two different Dracovish
+        sets) - nickname, a user-entered label, or both.
+
 ## Done
+
+- **Calc page: narrow the move-search box for easier row-selection**
+  (2026-07-07): item 1 of the reprioritized third review pass (highest-
+  priority item in the batch - a trivial fix with a real daily-use
+  annoyance behind it). `CalcMoveGrid.tsx`'s move-name `CalcAutocomplete`
+  wrapper changed from `className="flex-1"` (stretched to fill nearly the
+  whole row) to `className="w-40 shrink-0"` (fixed 160px) - the row's
+  other children (hit-count select, Crit button, percent span) were
+  already fixed-width, so removing the one `flex-1` grow item leaves a
+  large genuinely-empty stretch of row background between the search box
+  and the percent display, all still wired to the row's own `onClick`
+  (unaffected - only the search-box wrapper's `stopPropagation` was ever
+  blocking it). Live-verified: set Metagross + Meteor Mash in slot 1,
+  confirmed via `elementFromPoint` that a click 75% across the row now
+  lands on the row `<div>` itself (previously would have hit the
+  search-box wrapper), and confirmed clicking there actually flips the
+  row's class to the selected state (`border-blue-500 bg-blue-950/40`),
+  same as clicking used to require finding the narrow sliver right next
+  to the Crit button.
 
 - **Battle Logger: move weather/terrain above the Battlefield, stack side
   conditions vertically** (2026-07-07): item 4 of the second review pass.
@@ -1086,12 +1299,19 @@ in a `Why:` line only when it's not obvious from the task itself.
 - Refactor editors and add team validation
 - Add in-slot item picker and dismissable hook
 
-## Backlog / ideas (not yet scoped)
+## Backlog / ideas (not yet scoped, reordered highest-to-lowest priority)
 
 - **Electron is well behind current** (`^28.0.0`; latest is 43+) - carries
   several high-severity advisories fixed only in newer majors. Bumping is a
   real (if likely modest) migration, not a one-line version bump - worth its
-  own dedicated pass rather than doing it blind.
+  own dedicated pass rather than doing it blind. Top of this list since
+  it's the only item here with a security dimension, even for a
+  locally-run desktop app.
+- Two pre-existing `react-hooks/exhaustive-deps` warnings in `useDatabase.ts`
+  (lines 54, 260, missing `initializeCacheWithSWR` dependency) surfaced by
+  restoring ESLint - not fixed as part of the cleanup pass since the intent
+  behind the missing dependency wasn't investigated; worth a look. Cheap to
+  investigate once picked up.
 - **Dev tooling has also drifted behind current majors** (checked
   2026-07-07 via `npm outdated`): Vite 5.4→8.1, TypeScript 5.9→6.0, ESLint
   9.39→10.6. Lower urgency than the Electron security-advisory situation,
@@ -1102,16 +1322,15 @@ in a `Why:` line only when it's not obvious from the task itself.
   pass). Still fine functionally (lazy-loaded, only fetched when the Calc
   tab opens), but worth a look once the Calc compacting pass (second
   review pass items 1-3 above) is done, since that pass is already
-  touching the same code.
-- Two pre-existing `react-hooks/exhaustive-deps` warnings in `useDatabase.ts`
-  (lines 54, 260, missing `initializeCacheWithSWR` dependency) surfaced by
-  restoring ESLint - not fixed as part of the cleanup pass since the intent
-  behind the missing dependency wasn't investigated; worth a look.
+  touching the same code. Purely a build-warning threshold, no functional
+  impact.
 - No app icon set yet for packaging - electron-builder is using the default
-  Electron icon. Add `.ico`/`.icns` assets whenever branding is ready.
+  Electron icon. Add `.ico`/`.icns` assets whenever branding is ready -
+  cosmetic/branding only, no functional impact.
 - **Unseen Fist-through-Protect deep interaction** - our override only
   corrects the tooltip description (25% not 100%); if `@smogon/calc` has its
   own internal logic for this specific interaction, the live calculator may
   still assume the old mainline value. Not chased further - low-frequency
   edge case (needs Unseen Fist + a contact move + the target having used
-  Protect that turn).
+  Protect that turn). Lowest priority: narrowest, rarest edge case in this
+  list.

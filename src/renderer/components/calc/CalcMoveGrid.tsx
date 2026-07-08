@@ -37,7 +37,7 @@ export default function CalcMoveGrid({ title, moves, results, moveOptions, selec
               isSelected ? 'border-blue-500 bg-blue-950/40' : 'border-zinc-800 hover:border-zinc-700'
             } ${slot.name ? 'cursor-pointer' : ''}`}
           >
-            <div className="flex-1" onClick={(e) => e.stopPropagation()}>
+            <div className="w-40 shrink-0" onClick={(e) => e.stopPropagation()}>
               <CalcAutocomplete
                 value={slot.name}
                 options={moveOptions}
