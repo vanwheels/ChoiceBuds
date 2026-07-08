@@ -205,8 +205,97 @@ function parseStatLine(line: string, stats: EVSpread): void {
 }
 
 /**
+ * One line of a formatted Pokémon block. The EVs line is kept structured
+ * (rather than a plain string like every other line) so callers that want a
+ * colored on-screen preview (matching the app's per-stat color convention -
+ * see config/pokemonTheme.ts::getStatLabelColor) can render it themselves
+ * without re-parsing plain text back into stat/value pairs.
+ */
+export type FormattedLine =
+  | { kind: 'text'; text: string }
+  | { kind: 'evs'; parts: Array<{ stat: string; value: number }> };
+
+const EV_STAT_LABELS: Array<{ key: keyof EVSpread; label: string }> = [
+  { key: 'hp', label: 'HP' },
+  { key: 'attack', label: 'Atk' },
+  { key: 'defense', label: 'Def' },
+  { key: 'specialAttack', label: 'SpA' },
+  { key: 'specialDefense', label: 'SpD' },
+  { key: 'speed', label: 'Spe' },
+];
+
+/**
+ * Builds one Pokémon's export lines from its parsed/edited data - the
+ * reverse of parsePokemonBlock. Line order matches real Showdown's own
+ * export convention (name/item, Ability, Level, Shiny, Tera Type, EVs,
+ * Nature, moves); optional lines are omitted whenever the value is still
+ * at its Showdown-assumed default (mirroring what real exports do), except
+ * Level - always stated explicitly since VGC/Champions defaults to 50,
+ * not real Showdown's own implicit 100 default, so omitting it would
+ * silently change the Pokémon if pasted elsewhere. IVs are never emitted:
+ * this app doesn't model them at all (see git history - "Remove IV
+ * handling from renderer flow").
+ *
+ * Note: this app's "EVs:" field is actually Champions' 0-32 Stat Point
+ * scale, not real Showdown's 0-252 EVs - exported as-is under the same
+ * "EVs:" label so re-importing through this app's own parser round-trips
+ * exactly, even though the numbers would misread if pasted into the real
+ * Showdown client.
+ */
+export function formatPokemonLines(pokemon: ShowdownPokemon): FormattedLine[] {
+  const lines: FormattedLine[] = [];
+
+  const namePart = pokemon.nickname && pokemon.nickname !== pokemon.species
+    ? `${pokemon.nickname} (${pokemon.species})`
+    : pokemon.species;
+  const fallbackGender = getFallbackGender(pokemon.species);
+  const genderPart = pokemon.gender && pokemon.gender !== 'N' && pokemon.gender !== fallbackGender
+    ? ` (${pokemon.gender})`
+    : '';
+  const itemPart = pokemon.item ? ` @ ${pokemon.item}` : '';
+  lines.push({ kind: 'text', text: `${namePart}${genderPart}${itemPart}` });
+
+  if (pokemon.ability) lines.push({ kind: 'text', text: `Ability: ${pokemon.ability}` });
+  lines.push({ kind: 'text', text: `Level: ${pokemon.level}` });
+  if (pokemon.shiny) lines.push({ kind: 'text', text: 'Shiny: Yes' });
+  if (pokemon.gigantamax) lines.push({ kind: 'text', text: 'Gigantamax: Yes' });
+  if (pokemon.happiness !== 255) lines.push({ kind: 'text', text: `Happiness: ${pokemon.happiness}` });
+  if (pokemon.teraType) lines.push({ kind: 'text', text: `Tera Type: ${pokemon.teraType}` });
+
+  const evParts = EV_STAT_LABELS
+    .map(({ key, label }) => ({ stat: label, value: pokemon.evs[key] }))
+    .filter(part => part.value > 0);
+  if (evParts.length > 0) lines.push({ kind: 'evs', parts: evParts });
+
+  if (pokemon.nature) lines.push({ kind: 'text', text: `${pokemon.nature} Nature` });
+
+  for (const move of pokemon.moves) {
+    lines.push({ kind: 'text', text: `- ${move}` });
+  }
+
+  return lines;
+}
+
+function linesToText(lines: FormattedLine[]): string {
+  return lines
+    .map(line => line.kind === 'text'
+      ? line.text
+      : `EVs: ${line.parts.map(p => `${p.value} ${p.stat}`).join(' / ')}`)
+    .join('\n');
+}
+
+/**
+ * Formats a list of Pokémon back into Showdown/Pokepaste export text - the
+ * reverse of parseShowdownText. Blocks are separated by a blank line,
+ * matching splitIntoBlocks' own expected delimiter.
+ */
+export function formatShowdownText(pokemonList: ShowdownPokemon[]): string {
+  return pokemonList.map(p => linesToText(formatPokemonLines(p))).join('\n\n');
+}
+
+/**
  * Main parser function: converts Showdown/Pokepaste text into structured data
- * 
+ *
  * @param text - Raw Showdown/Pokepaste format text
  * @returns ParseResult with parsed Pokémon and any errors
  */

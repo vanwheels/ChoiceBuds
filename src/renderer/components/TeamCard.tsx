@@ -12,6 +12,7 @@ import PokemonCard from './PokemonCard';
 import SpeciesPickerCard from './SpeciesPickerCard';
 import TeamValidationButton from './TeamValidationButton';
 import RegulationBadge from './RegulationBadge';
+import ExportTeamModal from './ExportTeamModal';
 
 interface TeamCardProps {
   team: Team;
@@ -30,6 +31,7 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
   const [localTeamName, setLocalTeamName] = useState(team.name);
   const [localAuthor, setLocalAuthor] = useState(team.author || '');
   const [isAddPickerOpen, setIsAddPickerOpen] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
   const { updateTeam } = teamsState;
   const rosterActions = useRosterActions(
     updateTeam,
@@ -133,6 +135,15 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
           {/* A2. Validate Team Button + Popup */}
           <TeamValidationButton team={team} rulesetId={toRegulationId(team.format)} />
 
+          {/* A3. Export Button - opens a modal with Showdown-format text (services/parser.ts::formatShowdownText) */}
+          <button
+            onClick={() => setIsExportOpen(true)}
+            title="Export Team (Showdown format)"
+            className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-blue-400 hover:bg-zinc-800 text-sm transition-all cursor-pointer"
+          >
+            ⇩
+          </button>
+
           {/* B. Edit Button */}
           <button
             onClick={() => {
@@ -219,6 +230,8 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
           </div>
         </div>
       )}
+
+      {isExportOpen && <ExportTeamModal team={team} onClose={() => setIsExportOpen(false)} />}
     </div>
   );
 }

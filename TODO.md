@@ -205,17 +205,17 @@ in a `Why:` line only when it's not obvious from the task itself.
      (HP red, Atk orange, Def yellow, SpA blue, SpD green, Spe pink) to
      `StatsColumn.tsx`/`EVStatCell.tsx` in the Teams tab and
      `CalcStatRows.tsx` in the Calc tab~~ - done, see Done below.
-  8. Add team export in Showdown's own text format (the reverse of
+  8. ~~Add team export in Showdown's own text format (the reverse of
      `services/parser.ts::parseShowdownText` - a new
-     `formatShowdownText`-style function) - reference screenshot shows
-     the target format/coloring. Stretch goal, explicitly flagged by the
-     user as uncertain: exporting *to* Pokepaste (creating a new paste
-     via their API, not just formatting local text) - unconfirmed whether
-     pokepast.es exposes a usable public write API, needs research before
-     scoping. Same CLAUDE.md policy question as the Pokepaste-link-import
-     item below: writing to an external third-party service is new
-     territory for this project's external-integration rules, not
-     something to bolt on silently.
+     `formatShowdownText`-style function)~~ - done, see Done below. Stretch
+     goal still open, explicitly flagged by the user as uncertain:
+     exporting *to* Pokepaste (creating a new paste via their API, not just
+     formatting local text) - unconfirmed whether pokepast.es exposes a
+     usable public write API, needs research before scoping. Same
+     CLAUDE.md policy question as the Pokepaste-link-import item below:
+     writing to an external third-party service is new territory for this
+     project's external-integration rules, not something to bolt on
+     silently.
   9. Verify Pokepaste *link* import compatibility - the user recalls an
      earlier (pre-rebuild) version of the app could take a raw
      `pokepast.es/<id>` URL directly (not just pasted export text) and
@@ -327,6 +327,51 @@ in a `Why:` line only when it's not obvious from the task itself.
       mechanics the log doesn't currently show.
 
 ## Done
+
+- **Teams: export a team back to Showdown text format** (2026-07-08): item 8
+  of the reprioritized third review pass. Asked the user 3 clarifying
+  questions up front rather than guessing from the (unavailable-to-this-
+  session) reference screenshot mentioned in the item text: modal-with-
+  copy-button vs. direct clipboard copy (chose modal), whether "coloring"
+  meant a colored on-screen preview or literal Showdown syntax (chose
+  colored preview, plain-text clipboard), and how to handle this app's
+  "EVs:" field actually being Champions' 0-32 SP scale rather than real
+  Showdown's 0-252 (chose: export the raw stored numbers as-is under the
+  same "EVs:" label, so re-importing through this app's own parser
+  round-trips exactly).
+  - `services/parser.ts` gained `formatPokemonLines()` (the reverse of
+    `parsePokemonBlock` - one Pokemon's data -> a `FormattedLine[]`, EVs
+    kept as structured `{stat, value}` pairs rather than a plain string so
+    callers can color them without re-parsing) and `formatShowdownText()`
+    (joins multiple Pokemon into full paste text via the same lines).
+    Optional lines are omitted whenever at their Showdown-assumed default
+    (mirroring real exports) - except Level, always stated explicitly
+    since VGC/Champions defaults to 50, not real Showdown's own implicit
+    100, so omitting it would silently change the Pokemon if pasted
+    elsewhere. Gender is only written explicitly when it deviates from
+    `getFallbackGender(species)`, matching the parser's own "explicit only
+    when it deviates" logic on the way in. IVs are never emitted - this
+    app has never modeled them (see earlier "Remove IV handling from
+    renderer flow" commit).
+  - New `ExportTeamModal.tsx` (mirrors `ImportTeamModal.tsx`'s layout) is
+    wired to a new "⇩" button in `TeamCard.tsx`'s header cluster (next to
+    Validate). The preview colors each EVs line's stat abbreviations via
+    the same `getStatLabelColor()` used in `StatsColumn.tsx`/
+    `CalcStatRows.tsx` from the item 6-7 pass - a "Copy to Clipboard"
+    button copies the plain-text form (color can't survive a real
+    clipboard paste anyway) with a brief "Copied!" confirmation.
+  - Verified round-trip correctness two ways: a throwaway `tsx` script
+    (parse -> format -> re-parse, deep-equal-compared against the original
+    parse, including a gender-deviation case) confirmed byte-for-byte
+    equivalent structured data; then live end-to-end on a disposable test
+    team (a Shiny Tera-Electric Pikachu with an explicit female gender tag,
+    created via import, exported, copied, deleted after) - the modal's
+    colored preview and the actual clipboard contents (read back via
+    `navigator.clipboard.readText()`) both matched exactly, "4 HP"/"32
+    Atk"/"32 Spe" rendering in the correct red/orange/pink.
+  - Stretch goal (exporting *to* Pokepaste via their write API) intentionally
+    not attempted - still gated on the research/policy question noted in
+    the item text above.
 
 - **Teams tab: colored nature +/- stat denotation, EVs box renamed to SP**
   (2026-07-08): second same-day follow-up round after the user reviewed the
