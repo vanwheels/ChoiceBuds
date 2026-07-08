@@ -189,34 +189,22 @@ in a `Why:` line only when it's not obvious from the task itself.
      reactive category, not a table-lookup bug. Download stays a known,
      deliberately-excluded gap (needs Def/SpDef base-stat comparison math
      not built yet).
-  5. Battle Logger: the player roster column
+  5. ~~Battle Logger: the player roster column
      (`PlayerFieldPanel.tsx`/`RosterRow.tsx`) is still visually smaller
-     than the opponent's (`OpponentFieldPanel.tsx`/`OpponentRowFields.tsx`)
-     - acknowledged by the user as an inherent consequence of the player
-     side rendering plain static text (its set is fixed at battle start)
-     vs. the opponent side's live selects/inputs/growable move-chip list,
-     but still wants them visually consistent regardless (e.g. style the
-     player's read-only fields to occupy the same visual footprint as the
-     opponent's form controls, even though they're not actually
-     editable). Directly the height-not-width gap flagged as still open
-     in the "move weather/terrain above the Battlefield" Done entry above
-     (500px vs 608px column height).
-  6. Add an editable "Author" field to the TeamBuilder (team-level data,
-     not per-Pokemon) and the import modal (`ImportTeamModal.tsx`) -
-     Pokepaste pages have an author, Showdown's own export text doesn't.
-     Needs a new optional `author?: string` on the `Team` interface
-     (`types/pokemon.ts`) plus wiring through `useTeams.ts`. Auto-fill
-     target once the Pokepaste-link-import item below is built: it should
-     be able to pull the author directly from the paste; a plain-text
-     paste leaves it blank/manually editable either way.
-  7. TeamBuilder + Calc: add Pokepaste/Showdown-standard per-stat coloring
-     (HP red, Atk orange, Def yellow, SpA blue, SpD green, Spe pink - a
-     user-provided reference screenshot of pokepast.es's own rendering
-     confirms this exact convention) to `StatsColumn.tsx`/`EVStatCell.tsx`
-     in the Teams tab and `CalcStatRows.tsx` in the Calc tab. New color
-     config belongs in `config/pokemonTheme.ts` per the existing "no
-     inline hex values" rule - nothing there currently maps stat keys to
-     colors.
+     than the opponent's (`OpponentFieldPanel.tsx`/`OpponentRowFields.tsx`)~~
+     - done, see Done below. Acknowledged by the user as an inherent
+     consequence of the player side rendering plain static text (its set
+     is fixed at battle start) vs. the opponent side's live selects/
+     inputs/growable move-chip list - only the per-cell footprint was
+     equalized, not the whole column height (still open - see the Done
+     entry).
+  6. ~~Add an editable "Author" field to the TeamBuilder (team-level data,
+     not per-Pokemon) and the import modal (`ImportTeamModal.tsx`)~~ -
+     done, see Done below.
+  7. ~~TeamBuilder + Calc: add Pokepaste/Showdown-standard per-stat coloring
+     (HP red, Atk orange, Def yellow, SpA blue, SpD green, Spe pink) to
+     `StatsColumn.tsx`/`EVStatCell.tsx` in the Teams tab and
+     `CalcStatRows.tsx` in the Calc tab~~ - done, see Done below.
   8. Add team export in Showdown's own text format (the reverse of
      `services/parser.ts::parseShowdownText` - a new
      `formatShowdownText`-style function) - reference screenshot shows
@@ -339,6 +327,73 @@ in a `Why:` line only when it's not obvious from the task itself.
       mechanics the log doesn't currently show.
 
 ## Done
+
+- **Teams/Calc: editable Author field + Pokepaste/Showdown-standard per-stat
+  coloring** (2026-07-08): items 6-7 of the reprioritized third review pass,
+  done together. Two pieces:
+  1. **Author field** (item 6): `Team` gained an optional `author?: string`
+     (`types/pokemon.ts`) - no `useTeams.ts` changes needed since
+     `updateTeam`'s existing `Partial<Team>` signature already covers a new
+     field generically. `ImportTeamModal.tsx` gained an "Author (optional)"
+     text input under Team Name, included on creation
+     (`author: author.trim() || undefined`) and reset alongside the other
+     fields on close/success. `TeamCard.tsx` shows it in the expanded view,
+     above the Pokemon grid: an editable input (same onBlur-commits/
+     Enter-blurs pattern as the team-name field) while `isEditingTeam`,
+     otherwise a plain "by {author}" line - hidden entirely when no author
+     is set, so teams without one (e.g. imported from a plain Showdown
+     paste) show no empty chrome. Auto-fill from a Pokepaste link import
+     is still a follow-up, gated on the not-yet-built Pokepaste-link-import
+     item elsewhere in this file.
+  2. **Per-stat coloring** (item 7): new `STAT_LABEL_COLORS`/
+     `getStatLabelColor()` in `config/pokemonTheme.ts`, keyed by the short
+     display label ('HP'/'Atk'/'Def'/'SpA'/'SpD'/'Spe') rather than either
+     tab's own differing stat-key vocabulary (`EVSpread`'s `attack`/
+     `specialAttack` vs. `@smogon/calc`'s `atk`/`spa`) - one shared map
+     without reconciling those two enums. Applied to `EVStatCell.tsx`'s
+     label span (Teams tab EVs) unconditionally, and to `CalcStatRows.tsx`'s
+     label span as the fallback case only - nature boost/lower
+     (red/blue, already-existing functional signal) still takes precedence
+     over the static per-stat color there, so a boosted/lowered stat's
+     highlight isn't lost.
+
+  Live-verified both on a disposable test team ("ZZTestAuthorTeam", a
+  single Pikachu, author "Ash Ketchum" - created via the import modal,
+  screenshotted, then deleted, never touching the user's real teams): the
+  Author input rendered pre-filled correctly in edit mode and as "by Ash
+  Ketchum" in read-only view. Per-stat colors confirmed on the Calc tab
+  (Metagross loaded into Pokemon 1/2) showing HP red/ATK orange/DEF
+  yellow/SPA blue/SPD green/SPE pink on both panels simultaneously -
+  screenshotting the Teams tab's own EVStatCell got cut off by viewport
+  height before reaching the EVs grid, so that half relied on shared-code
+  review (same `getStatLabelColor` import/call) rather than a second
+  direct screenshot, given the Calc-tab screenshot already proves the
+  underlying color function renders correctly.
+
+  **New `run-desktop` gotcha found and written into SKILL.md**: `click
+  <sel>`'s `element.click()` does not reliably focus the element for
+  subsequent `type` commands - typing after `click #someInput` can land
+  nowhere, silently. The reliable way to fill a React-controlled input via
+  the driver is a native-setter + dispatched-event `eval`, not
+  `click` + `type`.
+
+- **Battle Logger: player roster cells restyled to match the opponent's
+  select/input footprint** (2026-07-08): item 5 of the reprioritized third
+  review pass. `PlayerFieldPanel.tsx`'s `StaticCell` (the read-only ability/
+  item/move text in each player roster row) now carries the same padding/
+  border/rounding/background box as `OpponentRowFields.tsx`'s
+  `cellSelectClass` select/input cells, just in a dimmer, non-interactive
+  shade (`bg-gray-900/60 border-gray-800` vs. the opponent's
+  `bg-gray-900 border-gray-700`) - signals "not editable" while occupying
+  the same per-cell footprint instead of collapsing to a shorter plain-text
+  height. Only the per-cell box was equalized, not the whole column height -
+  the opponent side's `OpponentExtras` (ability chip, item-consumed
+  checkbox, overflow moves) still adds height the player side structurally
+  never has, so the 500px vs. 608px column-height gap measured in an
+  earlier pass is still open if fuller parity is wanted later. Live-verified
+  on a disposable test battle (team "blaze" + an added Metagross opponent,
+  cleaned up after): screenshotted both roster columns side by side and
+  confirmed matching boxed cells.
 
 - **Battle Logger: ability audit pass - switch-in table verified, Legendary
   weather/terrain setters added, and a new hit-triggered reactive-ability

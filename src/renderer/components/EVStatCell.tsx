@@ -8,6 +8,7 @@
  */
 
 import { useHoldRepeat } from '../hooks/useHoldRepeat';
+import { getStatLabelColor } from '../config/pokemonTheme';
 
 interface EVStatCellProps {
   label: string;
@@ -45,7 +46,7 @@ export default function EVStatCell({
   if (!isEditing) {
     return (
       <div className="flex flex-col items-center">
-        <span className="text-[10px] font-bold text-gray-400 uppercase">{label}</span>
+        <span className={`text-[10px] font-bold uppercase ${getStatLabelColor(label)}`}>{label}</span>
         <span className={`${valueClassName(exceedsMax, false)} px-1.5 py-0.5`}>{value}</span>
       </div>
     );
@@ -58,7 +59,7 @@ export default function EVStatCell({
         onClick={onActivate}
         className="flex flex-col items-center gap-0.5 rounded px-1 py-0.5 hover:bg-gray-700/60 transition-colors cursor-pointer"
       >
-        <span className="text-[10px] font-bold text-gray-400 uppercase">{label}</span>
+        <span className={`text-[10px] font-bold uppercase ${getStatLabelColor(label)}`}>{label}</span>
         <span className={`${valueClassName(exceedsMax, false)} px-1.5 py-0.5`}>{value}</span>
       </button>
     );

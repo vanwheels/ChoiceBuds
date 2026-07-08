@@ -129,3 +129,25 @@ export const MOVE_FLAG_THEMES: Record<string, TypeTheme> = {
 export function getMoveFlagTheme(flag: string): TypeTheme {
   return MOVE_FLAG_THEMES[flag] || DEFAULT_TYPE_THEME;
 }
+
+/**
+ * Pokepaste/Showdown-standard per-stat text color convention (HP red, Atk
+ * orange, Def yellow, SpA blue, SpD green, Spe pink), keyed by the short
+ * label ('HP'/'Atk'/'Def'/'SpA'/'SpD'/'Spe') both Teams' StatsColumn/
+ * EVStatCell and Calc's CalcStatRows already use - the two tabs key their
+ * actual stat objects differently (EVSpread's `attack`/`specialAttack` vs.
+ * @smogon/calc's `atk`/`spa`), so keying by the shared display label avoids
+ * reconciling those two enums into one.
+ */
+export const STAT_LABEL_COLORS: Record<string, string> = {
+  HP: 'text-red-400',
+  Atk: 'text-orange-400',
+  Def: 'text-yellow-400',
+  SpA: 'text-blue-400',
+  SpD: 'text-green-400',
+  Spe: 'text-pink-400',
+};
+
+export function getStatLabelColor(label: string): string {
+  return STAT_LABEL_COLORS[label] || 'text-gray-400';
+}

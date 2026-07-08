@@ -28,6 +28,7 @@ export default function ImportTeamModal({
 }: ImportTeamModalProps) {
   const [pastedText, setPastedText] = useState('');
   const [teamName, setTeamName] = useState('');
+  const [author, setAuthor] = useState('');
   const [teamFormat, setTeamFormat] = useState<'Reg M-A' | 'Reg M-B'>('Reg M-A');
   const [isImporting, setIsImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,6 +94,7 @@ export default function ImportTeamModal({
         pokemon: enrichedPokemon,
         createdAt: Date.now(),
         updatedAt: Date.now(),
+        author: author.trim() || undefined,
       };
 
       setImportProgress('Saving team...');
@@ -104,6 +106,7 @@ export default function ImportTeamModal({
         // Reset form and close modal
         setPastedText('');
         setTeamName('');
+        setAuthor('');
         setTeamFormat('Reg M-A');
         setImportProgress('');
         onClose();
@@ -126,6 +129,7 @@ export default function ImportTeamModal({
     if (!isImporting) {
       setPastedText('');
       setTeamName('');
+      setAuthor('');
       setError(null);
       setImportProgress('');
       onClose();
@@ -163,6 +167,22 @@ export default function ImportTeamModal({
               onChange={(e) => setTeamName(e.target.value)}
               disabled={isImporting}
               placeholder="Enter team name..."
+              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            />
+          </div>
+
+          {/* Author (optional) - Pokepaste pages have one; a plain Showdown export doesn't */}
+          <div>
+            <label htmlFor="teamAuthor" className="block text-sm font-medium text-gray-300 mb-2">
+              Author <span className="text-gray-500 font-normal">(optional)</span>
+            </label>
+            <input
+              id="teamAuthor"
+              type="text"
+              value={author}
+              onChange={(e) => setAuthor(e.target.value)}
+              disabled={isImporting}
+              placeholder="Who built this team?"
               className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
             />
           </div>

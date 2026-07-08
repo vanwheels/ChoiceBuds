@@ -19,9 +19,22 @@ interface PlayerFieldPanelProps {
   resolveSprite: (remoteUrl: string) => string;
 }
 
-/** Plain, read-only text cell - the player's own set is fixed at battle start, so there's nothing to edit here (unlike the opponent's equivalent cells). */
+/**
+ * Read-only text cell - the player's own set is fixed at battle start, so there's nothing to
+ * edit here (unlike the opponent's equivalent select/input cells in OpponentRowFields.tsx). Boxed
+ * with the same padding/border/rounding as those form controls (a dimmer, non-interactive shade of
+ * the same look) so both sides' rows occupy the same per-cell footprint instead of the player's
+ * plain unboxed text collapsing to a smaller height.
+ */
 function StaticCell({ value }: { value?: string }) {
-  return <span className="block text-[10px] text-gray-400 truncate" title={value}>{value || '—'}</span>;
+  return (
+    <span
+      className="block w-full px-1 py-0 leading-4 text-[10px] bg-gray-900/60 border border-gray-800 rounded text-gray-400 truncate"
+      title={value}
+    >
+      {value || '—'}
+    </span>
+  );
 }
 
 export default function PlayerFieldPanel({ battle, battleLogActions, resolveSprite }: PlayerFieldPanelProps) {

@@ -80,6 +80,7 @@ export interface Team {
   createdAt: number; // Unix timestamp
   updatedAt: number; // Unix timestamp
   notes?: string;
+  author?: string; // Pokepaste pages have one; plain Showdown export text doesn't, so this is manually editable
 }
 
 /**

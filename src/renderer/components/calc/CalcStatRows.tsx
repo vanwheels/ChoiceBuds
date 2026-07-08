@@ -8,6 +8,7 @@
 
 import type { StatsTable } from '@smogon/calc/dist/data/interface';
 import type { NatureStatEffect } from '../../hooks/useDamageCalc';
+import { getStatLabelColor } from '../../config/pokemonTheme';
 
 /** Confirmed in-game: max 32 Stat Points per stat, 66 total across all six. */
 const MAX_SP_TOTAL = 66;
@@ -51,7 +52,7 @@ export default function CalcStatRows({ baseStats, boostedStats, sps, boosts, nat
         <div key={key} className="flex items-center gap-2">
           <span
             className={`w-8 text-[10px] uppercase shrink-0 ${
-              isBoosted ? 'text-red-400 font-bold' : isLowered ? 'text-blue-400 font-bold' : 'text-gray-500'
+              isBoosted ? 'text-red-400 font-bold' : isLowered ? 'text-blue-400 font-bold' : getStatLabelColor(label)
             }`}
             title={isBoosted ? 'Boosted by nature (+10%)' : isLowered ? 'Lowered by nature (-10%)' : undefined}
           >
