@@ -1,7 +1,7 @@
 /**
  * SideConditionsRow.tsx - One Side's Screens/Tailwind/Hazards
  * Shared by PlayerFieldPanel and OpponentFieldPanel (parameterized by
- * `side`), same reuse pattern as OpponentInfoTags inside OpponentFieldPanel.
+ * `side`), same reuse pattern as OpponentRowFields inside OpponentFieldPanel.
  * Turn-tracked conditions show a countdown and toggle on/off; stackable
  * hazards (Spikes/Toxic Spikes) cycle 0..max..0 on click since there's no
  * room here for separate +/- controls.

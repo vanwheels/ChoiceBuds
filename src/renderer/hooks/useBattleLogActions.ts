@@ -464,7 +464,7 @@ export function useBattleLogActions(
     // Mentioning the ability in the note (when its effect was auto-applied
     // above) matters, not just flavor - hasAppliedAbilityEffectSinceSwitchIn
     // scans notes for the ability's name, and without it here the Battlefield/
-    // OpponentInfoTags switch-in chip would think the effect still needs a
+    // OpponentExtras switch-in chip would think the effect still needs a
     // manual confirm and show a redundant "Drought!"-style chip for an
     // effect that's already been applied.
     const note = megaEffect ? `Mega Evolved (${megaAbility})` : 'Mega Evolved';

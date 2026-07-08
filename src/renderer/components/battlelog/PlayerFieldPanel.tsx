@@ -7,6 +7,7 @@
  * isActive here just drives the highlighted-border visual, read-only.
  */
 
+import type { ReactNode } from 'react';
 import type { Battle } from '../../types/pokemon';
 import type { UseBattleLogActionsReturn } from '../../hooks/useBattleLogActions';
 import TeamRosterColumn, { type RosterRowData } from './TeamRosterColumn';
@@ -16,6 +17,11 @@ interface PlayerFieldPanelProps {
   battle: Battle;
   battleLogActions: UseBattleLogActionsReturn;
   resolveSprite: (remoteUrl: string) => string;
+}
+
+/** Plain, read-only text cell - the player's own set is fixed at battle start, so there's nothing to edit here (unlike the opponent's equivalent cells). */
+function StaticCell({ value }: { value?: string }) {
+  return <span className="block text-[10px] text-gray-400 truncate" title={value}>{value || '—'}</span>;
 }
 
 export default function PlayerFieldPanel({ battle, battleLogActions, resolveSprite }: PlayerFieldPanelProps) {
@@ -29,6 +35,9 @@ export default function PlayerFieldPanel({ battle, battleLogActions, resolveSpri
     isBrought: battle.broughtIds.includes(p.id),
     isActive: battle.playerActiveIds.includes(p.id),
     isFainted: battle.playerFaintedIds.includes(p.id),
+    ability: <StaticCell value={p.ability} />,
+    itemDisplay: <StaticCell value={p.item} />,
+    moves: [0, 1, 2, 3].map(i => <StaticCell key={i} value={p.moves[i]} />) as [ReactNode, ReactNode, ReactNode, ReactNode],
   }));
 
   return (

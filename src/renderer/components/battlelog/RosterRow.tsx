@@ -46,7 +46,7 @@ export default function RosterRow({ row, side, activeColorClass, resolveSprite, 
     <div
       draggable={isDraggable}
       onDragStart={handleDragStart}
-      className={`relative p-1.5 rounded-lg border-2 transition-colors ${isDraggable ? 'cursor-grab' : ''} ${
+      className={`relative p-1 rounded-lg border-2 transition-colors ${isDraggable ? 'cursor-grab' : ''} ${
         row.isFainted
           ? 'border-gray-800 bg-gray-900/40 opacity-40'
           : isBenched
@@ -67,12 +67,30 @@ export default function RosterRow({ row, side, activeColorClass, resolveSprite, 
           <img
             src={spriteUrl}
             alt={row.species}
-            className="w-9 h-9 object-contain [image-rendering:pixelated] shrink-0"
+            className="w-7 h-7 object-contain [image-rendering:pixelated] shrink-0"
           />
           <span className="text-xs text-gray-100 truncate">{row.displayName}{row.isMega ? ' ⚡' : ''}</span>
         </button>
 
         {row.isFainted && <span title="Fainted" className="text-sm shrink-0 opacity-70">{'💀'}</span>}
+      </div>
+
+      {/* Ability | Move 1 + Move 2, then Item | Move 3 + Move 4 - same compact
+          grid for both sides, matching the Platinum Kaizo calc's fieldset
+          layout (see TODO). Each cell just renders whatever the caller gave
+          it - plain text for the player side, editable controls for the
+          opponent (OpponentRowFields.tsx). */}
+      <div className="grid grid-cols-2 gap-0.5 mt-1">
+        <div className="min-w-0">{row.ability}</div>
+        <div className="grid grid-cols-2 gap-0.5 min-w-0">
+          <div className="min-w-0">{row.moves[0]}</div>
+          <div className="min-w-0">{row.moves[1]}</div>
+        </div>
+        <div className="min-w-0">{row.itemDisplay}</div>
+        <div className="grid grid-cols-2 gap-0.5 min-w-0">
+          <div className="min-w-0">{row.moves[2]}</div>
+          <div className="min-w-0">{row.moves[3]}</div>
+        </div>
       </div>
 
       {row.extra}

@@ -219,7 +219,7 @@ export function itemMatchesTag(itemName: string, tag: string): boolean {
  * hold items in this game's pool that are also one-time-use (Focus Sash,
  * Mental Herb, White Herb). Powers the Battle Logger's "consumed"
  * checkbox on the opponent item field - see components/battlelog/
- * OpponentInfoTags.tsx.
+ * OpponentRowFields.tsx.
  */
 const CONSUMABLE_HOLD_ITEMS = ['Focus Sash', 'Mental Herb', 'White Herb'];
 export const CONSUMABLE_ITEMS = [...VGC_BERRIES, ...CONSUMABLE_HOLD_ITEMS] as const;

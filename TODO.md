@@ -61,13 +61,10 @@ in a `Why:` line only when it's not obvious from the task itself.
      done, see Done below.
   2. ~~Battle Logger: side labels + invalid cross-side drag indicator~~ -
      done, see Done below.
-  3. Battle Logger: battlefield roster columns don't fit all 6 Pokemon
-     vertically at the minimum window size without scrolling. Proposed
-     per-Pokemon layout to compact it: Sprite+Name row / `Ability | Move 1
-     + Move 2` row / `Item | Move 3 + Move 4` row - the player-side
-     roster column should be changed to match this same layout (not just
-     a visually-similar one), so both sides end up structurally
-     identical.
+  3. ~~Battle Logger: compact symmetric roster layout~~ - done, see Done
+     below. Note: this alone does **not** eliminate the Battle Log page's
+     scrollbar - see the Done entry for why (the Battlefield component
+     itself, not the rosters, turned out to be the tallest column).
   4. ~~Battle Logger: log a turn-log entry when a Pokemon is marked
      fainted~~ - done, see Done below.
   5. Calc page: fit the minimum window size without scrolling - drop the
@@ -114,8 +111,59 @@ in a `Why:` line only when it's not obvious from the task itself.
      (same dense-toggle-chip pattern as the old `CalcSideConditions.tsx`)
      and unify both into one shared component so the app doesn't end up
      with two different-looking field-condition widgets.
+  9. **New, discovered while doing item 3**: the Battle Log page still
+     needs to scroll at the 1280x720 minimum window size even after the
+     roster compacting - `Battlefield.tsx` itself (428.5px) + turn
+     controls (24px) + turn log (332px, within its existing 192-384px
+     range) total 808.5px, taller than either (now-compacted) roster
+     column. Fitting the whole page would need a separate pass at
+     `Battlefield.tsx`'s own sizing (slot spacing, weather/side-condition
+     bar padding, etc.) - not scoped or touched during item 3.
 
 ## Done
+
+- **Battle Logger: compact symmetric roster layout (Sprite+Name /
+  Ability|Moves / Item|Moves)** (2026-07-07): Stage 3. Both
+  `PlayerFieldPanel.tsx`/`OpponentFieldPanel.tsx` now render the same
+  3-row-per-Pokemon grid via `RosterRow.tsx`: sprite+name, then
+  `Ability | Move 1 + Move 2`, then `Item | Move 3 + Move 4`.
+  `TeamRosterColumn.tsx`'s `RosterRowData` widened to carry `ability`/
+  `itemDisplay`/`moves` as `ReactNode` cells (not raw strings) - the
+  player side passes plain read-only text (its set is fixed at battle
+  start), the opponent side passes live editable controls. The old
+  `OpponentInfoTags.tsx` (one big block appended below the row) couldn't
+  express that - its pieces needed to land in different specific grid
+  cells - so it's replaced by 4 small focused components in the new
+  `OpponentRowFields.tsx` (`OpponentAbilityCell`, `OpponentItemCell`,
+  `OpponentMoveCell`, `OpponentExtras`), each a real component (not inline
+  hook calls in the row-building `.map()`) for the same Rules-of-Hooks
+  reason `RosterRow.tsx`/`BattlefieldSlot.tsx` were already split out.
+  Opponent moves now fill the 4 grid cells sequentially as revealed - the
+  next empty cell doubles as the "add a move" input (replacing the old
+  separate always-visible input row), with defensive overflow handling in
+  `OpponentExtras` for the data model's uncapped 5th+ move edge case.
+  Live-verified: ability select commits, item input commits on blur, and
+  the sequential move-fill (chip-with-× appears, input auto-advances to
+  the next slot) all work correctly on a disposable test battle.
+
+  Also tightened row spacing (smaller sprite, `p-1` card padding, `gap-1`
+  grid gaps, `py-0`/`leading-4` on the opponent's select/input/chip cells)
+  to shrink each row's footprint - the player roster column dropped from
+  606px to 500px, the opponent's from ~700px+ (rough estimate for the old
+  bulky block layout) to 608px, both now roughly matching each other.
+
+  **However, this alone doesn't eliminate the Battle Log page's
+  scrollbar** at the 1280x720 minimum window size - measured directly
+  (`main.scrollHeight` 991 vs `clientHeight` 661, a 330px overflow both
+  before and after this pass). The actual tallest column turned out to be
+  the *Battlefield* component (428.5px) plus turn controls (24px) plus
+  the turn log (332px, within its existing 192-384px range) = 808.5px,
+  taller than either roster column even after compacting. The original
+  ask was specifically about the rosters not fitting, which is now fixed
+  and confirmed via direct height measurement - but the broader "page
+  never needs to scroll" goal needs a separate pass at Battlefield.tsx's
+  own sizing (not scoped or touched here), since that's now the actual
+  bottleneck, not the rosters.
 
 - **Battle Logger: log a turn-log entry when a Pokemon faints**
   (2026-07-07): Stage 2 (part 3, completing Stage 2).

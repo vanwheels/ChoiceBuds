@@ -3,7 +3,12 @@
  * Purely presentational - PlayerFieldPanel.tsx/OpponentFieldPanel.tsx each
  * map their own data/mutations into RosterRowData and pass callbacks in,
  * matching the "thin wrapper over a shared component" pattern used
- * elsewhere (e.g. OpponentInfoTags inside OpponentFieldPanel already).
+ * elsewhere. Both sides render the same compact per-row layout (sprite+name,
+ * then Ability | Move 1+2, then Item | Move 3+4) - the player side's cells
+ * are plain read-only text (its set is fixed at battle start), the
+ * opponent's are live editable controls (OpponentRowFields.tsx) - either
+ * way RosterRow.tsx just drops whatever ReactNode it's given into each grid
+ * cell, so this component and its layout stay identical for both sides.
  *
  * A row's main body click is the one meaningful action for its side,
  * decided by the caller via onRowClick: for the player side that's
@@ -28,12 +33,15 @@ export interface RosterRowData {
   species: string;
   displayName: string;
   spriteUrl: string;
-  item?: string; // needed to resolve the Mega sprite - see RosterRow.tsx
+  item?: string; // raw value, needed to resolve the Mega sprite - see RosterRow.tsx
   isMega?: boolean;
   isBrought?: boolean; // undefined = the brought/benched concept doesn't apply (opponent side)
   isActive: boolean;
   isFainted: boolean;
-  extra?: ReactNode; // e.g. OpponentInfoTags
+  ability: ReactNode; // Ability cell content - plain text (player) or an editable control (opponent)
+  itemDisplay: ReactNode; // Item cell content - plain text (player) or an editable control (opponent)
+  moves: [ReactNode, ReactNode, ReactNode, ReactNode]; // Move 1-4 cell content
+  extra?: ReactNode; // anything below the grid - e.g. the Consumed checkbox/ability chip (OpponentRowFields.tsx)
 }
 
 interface TeamRosterColumnProps {
@@ -55,7 +63,7 @@ export default function TeamRosterColumn({
   return (
     <div className="flex flex-col gap-2 w-full lg:w-56 shrink-0">
       <h3 className={`text-xs font-bold uppercase tracking-wide ${titleColorClass}`}>{title}</h3>
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-1">
         {rows.map(row => (
           <RosterRow
             key={row.id}

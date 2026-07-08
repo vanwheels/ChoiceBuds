@@ -3,7 +3,7 @@
  * A small curated list of abilities with an unambiguous, field-wide effect
  * on switch-in - deliberately not exhaustive. The Battle Logger surfaces a
  * one-tap "apply" chip for these (see Battlefield.tsx/BattlefieldSlot.tsx
- * and OpponentInfoTags.tsx) rather than ever auto-applying, matching the
+ * and OpponentRowFields.tsx's OpponentExtras) rather than ever auto-applying, matching the
  * "manual log, not a simulator" philosophy used for the Protect-fail chip.
  *
  * Deliberately excludes Download: its target stat (Atk or SpA) depends on
