@@ -103,6 +103,28 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
 
         {/* Far-Right Controls Cluster */}
         <div className="flex flex-row items-center gap-2 shrink-0 ml-4">
+          {/* Author - team-level metadata, not per-Pokemon. Pokepaste pages carry one; a plain
+              Showdown export doesn't, so this stays manually editable either way. Hidden entirely
+              when not editing and no author is set, so teams without one show no empty chrome. */}
+          {isEditingTeam ? (
+            <input
+              type="text"
+              value={localAuthor}
+              onChange={(e) => setLocalAuthor(e.target.value)}
+              onBlur={async () => {
+                if (localAuthor !== (team.author || '')) {
+                  await updateTeam(team.id, { author: localAuthor.trim() || undefined });
+                }
+              }}
+              onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+              placeholder="Author"
+              title="Author"
+              className="w-24 px-1.5 py-0.5 text-[10px] bg-zinc-800 border border-zinc-700 rounded text-zinc-100 placeholder-zinc-600 outline-none focus:border-blue-500"
+            />
+          ) : team.author ? (
+            <span className="text-[10px] text-zinc-500 whitespace-nowrap" title={`by ${team.author}`}>by {team.author}</span>
+          ) : null}
+
           {/* A. Regulation Indicator Badge */}
           <div className="mr-2">
             <RegulationBadge team={team} onChange={(format) => updateTeam(team.id, { format })} />
@@ -159,31 +181,6 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
       {/* EXPANDED VIEW CONTAINER - RENDERS THE INDIVIDUAL EXPANDED POKEMON CARDS */}
       {isExpanded && (
         <div className="p-6 border-t border-zinc-800/60 bg-zinc-900/10 rounded-b-xl">
-          {/* Author - team-level metadata, not per-Pokemon. Pokepaste pages carry one; a plain
-              Showdown export doesn't, so this stays manually editable either way. Hidden entirely
-              when not editing and no author is set, so teams without one don't show empty chrome. */}
-          {isEditingTeam ? (
-            <div className="flex items-center gap-2 mb-4">
-              <label htmlFor={`author-${team.id}`} className="text-xs text-zinc-500 uppercase tracking-wide shrink-0">Author</label>
-              <input
-                id={`author-${team.id}`}
-                type="text"
-                value={localAuthor}
-                onChange={(e) => setLocalAuthor(e.target.value)}
-                onBlur={async () => {
-                  if (localAuthor !== (team.author || '')) {
-                    await updateTeam(team.id, { author: localAuthor.trim() || undefined });
-                  }
-                }}
-                onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
-                placeholder="Who built this team?"
-                className="flex-1 max-w-xs px-2 py-1 text-sm bg-zinc-800 border border-zinc-700 rounded text-zinc-100 placeholder-zinc-600 outline-none focus:border-blue-500"
-              />
-            </div>
-          ) : team.author ? (
-            <p className="text-xs text-zinc-500 mb-4">by {team.author}</p>
-          ) : null}
-
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 w-full">
             {team.pokemon && team.pokemon.map((p, idx) => (
               <PokemonCard

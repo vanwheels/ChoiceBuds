@@ -234,3 +234,65 @@ export function isConsumableItem(itemName: string | undefined): boolean {
  * Type for VGC items
  */
 export type VGCItem = typeof VGC_ITEMS[number];
+
+/**
+ * All 25 mainline natures - unrestricted in every VGC/Champions regulation,
+ * so unlike items/species there's no legality filtering here. Powers the
+ * Teams tab's Nature selector (StatsColumn.tsx); the Calc tab instead reads
+ * these from @smogon/calc's own `gen.natures.get()` since it already has a
+ * generation object on hand.
+ */
+export const NATURES = [
+  'Hardy', 'Lonely', 'Brave', 'Adamant', 'Naughty',
+  'Bold', 'Docile', 'Relaxed', 'Impish', 'Lax',
+  'Timid', 'Hasty', 'Serious', 'Jolly', 'Naive',
+  'Modest', 'Mild', 'Quiet', 'Bashful', 'Rash',
+  'Calm', 'Gentle', 'Sassy', 'Careful', 'Quirky',
+] as const;
+
+/** The 5 stats a nature can actually affect - HP is never boosted/lowered by nature in any generation. */
+export type NatureStat = 'Atk' | 'Def' | 'SpA' | 'SpD' | 'Spe';
+
+export interface NatureEffect {
+  plus: NatureStat;
+  minus: NatureStat;
+}
+
+/**
+ * Standard +10%/-10% nature stat effects. The 5 diagonal "neutral" natures
+ * (Hardy/Docile/Serious/Bashful/Quirky) map to `null` - same stat would
+ * cancel itself out, so the games treat them as no-ops rather than a
+ * same-stat +/-.
+ */
+export const NATURE_EFFECTS: Record<string, NatureEffect | null> = {
+  Hardy: null,
+  Lonely: { plus: 'Atk', minus: 'Def' },
+  Brave: { plus: 'Atk', minus: 'Spe' },
+  Adamant: { plus: 'Atk', minus: 'SpA' },
+  Naughty: { plus: 'Atk', minus: 'SpD' },
+  Bold: { plus: 'Def', minus: 'Atk' },
+  Docile: null,
+  Relaxed: { plus: 'Def', minus: 'Spe' },
+  Impish: { plus: 'Def', minus: 'SpA' },
+  Lax: { plus: 'Def', minus: 'SpD' },
+  Timid: { plus: 'Spe', minus: 'Atk' },
+  Hasty: { plus: 'Spe', minus: 'Def' },
+  Serious: null,
+  Jolly: { plus: 'Spe', minus: 'SpA' },
+  Naive: { plus: 'Spe', minus: 'SpD' },
+  Modest: { plus: 'SpA', minus: 'Atk' },
+  Mild: { plus: 'SpA', minus: 'Def' },
+  Quiet: { plus: 'SpA', minus: 'Spe' },
+  Bashful: null,
+  Rash: { plus: 'SpA', minus: 'SpD' },
+  Calm: { plus: 'SpD', minus: 'Atk' },
+  Gentle: { plus: 'SpD', minus: 'Def' },
+  Sassy: { plus: 'SpD', minus: 'Spe' },
+  Careful: { plus: 'SpD', minus: 'SpA' },
+  Quirky: null,
+};
+
+export function getNatureEffect(nature: string | undefined): NatureEffect | null {
+  if (!nature) return null;
+  return NATURE_EFFECTS[nature] ?? null;
+}

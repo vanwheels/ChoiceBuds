@@ -201,7 +201,7 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
       <EditOverlays pokemon={pokemon} isEditing={isEditing} gameDataState={gameDataState} rulesetId={rulesetId} onUpdatePokemon={updateShowdownData} />
 
       {/* EVs Grid Block */}
-      <StatsColumn evs={showdownData.evs} isEditing={isEditing} onUpdatePokemon={updateShowdownData} />
+      <StatsColumn evs={showdownData.evs} nature={showdownData.nature} isEditing={isEditing} onUpdatePokemon={updateShowdownData} />
 
       {/* Footer: Gender and Shiny Indicators - each in its own item-sprite-style box, side by side */}
       <div className="flex flex-row items-center justify-center gap-3 pt-2 mt-1 border-t border-zinc-800/60 w-full">

@@ -328,6 +328,75 @@ in a `Why:` line only when it's not obvious from the task itself.
 
 ## Done
 
+- **Teams tab: colored nature +/- stat denotation, EVs box renamed to SP**
+  (2026-07-08): second same-day follow-up round after the user reviewed the
+  Nature-selector/Author-relocation pass live. Two pieces:
+  1. **Nature +/- denotation**: new `NatureEffect`/`NATURE_EFFECTS`/
+     `getNatureEffect()` in `config/vgcData.ts` - the standard 25-nature
+     +10%/-10% chart (5 diagonal "neutral" natures map to `null`, since a
+     same-stat +/- would cancel out; HP is never affected in any
+     generation). `StatsColumn.tsx` renders "(+Atk, -SpA)"-style text next
+     to the nature name/selector whenever the chosen nature has an effect,
+     reusing the same `getStatLabelColor()` per-stat colors from the item
+     6-7 pass above (so "+Atk" renders in the same orange as the ATK row,
+     "-SpA" in the same blue as SPA) rather than inventing a second color
+     scheme. The header block became a 2-row layout (SP label + total badge
+     on row 1, nature + its +/- denotation on row 2) since cramming both
+     onto one row left no space for the parenthetical in the ~260px-wide
+     card.
+  2. **"EVs" renamed to "SP"**: per the user - "Stat Points" is Pokemon
+     Champions' actual in-game term (already used correctly elsewhere in
+     this app, e.g. `CalcStatRows.tsx`'s own "SP" column and CLAUDE.md's
+     "Champions' 0-32 SP scale") - only the *displayed* label in
+     `StatsColumn.tsx` changed; internal names (`EVSpread`, `evs` prop,
+     `localEVs`/`totalEVs` variables) were deliberately left alone as a
+     larger, unrequested rename with no user-facing benefit.
+
+  Live-verified on a disposable test team ("ZZTestSPTeam", a Pikachu with
+  Adamant nature - created via import, screenshotted in both read-only and
+  edit-mode view, then deleted): confirmed "SP" label, and "Adamant (+Atk,
+  -SpA)" rendering with +Atk in the same orange as the ATK stat row and
+  -SpA in the same blue as the SPA row, in both view states.
+
+- **Teams tab: relocated Author to the compact header, added an editable
+  Nature selector to the EVs box** (2026-07-08): same-day follow-up after
+  the user reviewed items 6-7 below live (an annotated screenshot of their
+  real "blaze" team) and flagged two things. Two pieces:
+  1. **Author moved next to the Regulation badge**: `TeamCard.tsx`'s Author
+     UI moved out of the expanded-view block above the Pokemon grid (see
+     the Done entry below) into the always-visible compact header row,
+     immediately before `RegulationBadge` - a small "by {author}" span in
+     read-only view, a small text input (same onBlur-commits/Enter-blurs
+     pattern as the team-name field) while `isEditingTeam`. Because this
+     row renders regardless of expand state, Author is now visible/editable
+     without expanding a team at all. Still hidden entirely when unset.
+  2. **Nature selector added to the EVs box** (a genuine pre-existing gap,
+     not a regression from items 6-7 - `nature` has been on
+     `ShowdownPokemon`/parsed via `parser.ts` since the original import
+     flow, and `useActiveEditor.ts` already had an unused `updateNature`,
+     but no Teams-tab UI ever rendered or edited it anywhere). New
+     `NATURES` (all 25, unrestricted in every VGC/Champions regulation so
+     no legality filtering needed) in `config/vgcData.ts`.
+     `StatsColumn.tsx` gained a `nature` prop rendered directly beside the
+     "EVs" label - a `<select>` while editing (committing through the same
+     generic `onUpdatePokemon({ nature })` already used for EV writes, no
+     new plumbing needed), a plain "· {Nature}" suffix otherwise, hidden
+     when unset. `PokemonCard.tsx` threads `showdownData.nature` through.
+     Deliberately did *not* add nature's boosted/lowered stat color-coding
+     that the Calc tab's own nature UI has (`CalcPokemonPanel.tsx`, from an
+     earlier session) - that reads `@smogon/calc`'s `gen.natures.get()`,
+     a heavier dependency not worth pulling into the Teams tab for what the
+     user scoped as just "fit it in the EVs box", not stat-effect coloring.
+
+  Live-verified on a disposable test team ("ZZTestNatureTeam", a single
+  Pikachu with Adamant nature, author "Ash Ketchum" - created via the
+  import modal, screenshotted, then deleted): the Nature dropdown correctly
+  pre-filled "Adamant" (parsed from the Showdown text) right next to "EVs",
+  and the Author input/text rendered correctly beside the Reg M-A badge in
+  both edit and read-only states. Also incidentally confirmed against the
+  user's real "blaze" team (read-only, never mutated) that it now shows
+  "by vanny" next to its Reg M-B badge in the same relocated spot.
+
 - **Teams/Calc: editable Author field + Pokepaste/Showdown-standard per-stat
   coloring** (2026-07-08): items 6-7 of the reprioritized third review pass,
   done together. Two pieces:
@@ -337,14 +406,14 @@ in a `Why:` line only when it's not obvious from the task itself.
      field generically. `ImportTeamModal.tsx` gained an "Author (optional)"
      text input under Team Name, included on creation
      (`author: author.trim() || undefined`) and reset alongside the other
-     fields on close/success. `TeamCard.tsx` shows it in the expanded view,
-     above the Pokemon grid: an editable input (same onBlur-commits/
-     Enter-blurs pattern as the team-name field) while `isEditingTeam`,
-     otherwise a plain "by {author}" line - hidden entirely when no author
-     is set, so teams without one (e.g. imported from a plain Showdown
-     paste) show no empty chrome. Auto-fill from a Pokepaste link import
-     is still a follow-up, gated on the not-yet-built Pokepaste-link-import
-     item elsewhere in this file.
+     fields on close/success. `TeamCard.tsx` originally showed it in the
+     expanded view above the Pokemon grid - **relocated in a same-day
+     follow-up pass to sit next to the Regulation badge in the always-
+     visible compact header instead, see the newer Done entry below.**
+     Hidden entirely when no author is set, so teams without one (e.g.
+     imported from a plain Showdown paste) show no empty chrome. Auto-fill
+     from a Pokepaste link import is still a follow-up, gated on the
+     not-yet-built Pokepaste-link-import item elsewhere in this file.
   2. **Per-stat coloring** (item 7): new `STAT_LABEL_COLORS`/
      `getStatLabelColor()` in `config/pokemonTheme.ts`, keyed by the short
      display label ('HP'/'Atk'/'Def'/'SpA'/'SpD'/'Spe') rather than either

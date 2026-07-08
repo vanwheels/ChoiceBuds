@@ -8,10 +8,13 @@
 import { useState } from 'react';
 import type { EVSpread, ShowdownPokemon } from '../types/pokemon';
 import { useDismissable } from '../hooks/useDismissable';
+import { NATURES, getNatureEffect } from '../config/vgcData';
+import { getStatLabelColor } from '../config/pokemonTheme';
 import EVStatCell from './EVStatCell';
 
 interface StatsColumnProps {
   evs: EVSpread;
+  nature?: string;
   isEditing?: boolean;
   onUpdatePokemon: (updates: Partial<ShowdownPokemon>) => void;
 }
@@ -25,12 +28,13 @@ const STATS: Array<{ label: string; key: keyof EVSpread }> = [
   { label: 'Spe', key: 'speed' },
 ];
 
-export default function StatsColumn({ evs, isEditing = false, onUpdatePokemon }: StatsColumnProps) {
+export default function StatsColumn({ evs, nature, isEditing = false, onUpdatePokemon }: StatsColumnProps) {
   const [localEVs, setLocalEVs] = useState(evs);
   const [activeStat, setActiveStat] = useState<keyof EVSpread | null>(null);
   const ref = useDismissable<HTMLDivElement>(() => setActiveStat(null));
 
   const totalEVs = Object.values(localEVs).reduce((sum, val) => sum + val, 0);
+  const natureEffect = getNatureEffect(nature);
 
   // Functional updates so hold-to-repeat always checks the true latest
   // state on every tick, rather than the totalEVs/localEVs closured from
@@ -73,16 +77,42 @@ export default function StatsColumn({ evs, isEditing = false, onUpdatePokemon }:
 
   return (
     <div ref={ref} className="bg-gray-800 rounded px-2 py-1.5 border border-gray-600">
-      <div className="flex justify-between items-center mb-1">
-        <p className="text-xs text-gray-400 uppercase tracking-wide">EVs</p>
-        {isEditing && (
-          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-            totalEVs > 66
-              ? 'bg-red-600 text-white border border-red-400'
-              : totalEVs === 66
-                ? 'bg-emerald-500 text-white'
-                : 'bg-gray-700 text-gray-400'
-          }`}>{totalEVs > 66 ? '⚠ ' : ''}{totalEVs}/66</span>
+      <div className="mb-1">
+        <div className="flex justify-between items-center">
+          <p className="text-xs text-gray-400 uppercase tracking-wide shrink-0">SP</p>
+          {isEditing && (
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+              totalEVs > 66
+                ? 'bg-red-600 text-white border border-red-400'
+                : totalEVs === 66
+                  ? 'bg-emerald-500 text-white'
+                  : 'bg-gray-700 text-gray-400'
+            }`}>{totalEVs > 66 ? '⚠ ' : ''}{totalEVs}/66</span>
+          )}
+        </div>
+        {(isEditing || nature) && (
+          <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
+            {isEditing ? (
+              <select
+                value={nature || ''}
+                onChange={(e) => onUpdatePokemon({ nature: e.target.value || undefined })}
+                title="Nature"
+                className="min-w-0 text-[10px] bg-gray-900 border border-gray-600 rounded px-1 py-0 text-gray-200 outline-none focus:border-blue-500"
+              >
+                <option value="">Nature</option>
+                {NATURES.map(n => <option key={n} value={n}>{n}</option>)}
+              </select>
+            ) : (
+              <span className="text-[10px] text-gray-500 truncate">{nature}</span>
+            )}
+            {natureEffect && (
+              <span className="text-[10px] whitespace-nowrap shrink-0">
+                (<span className={getStatLabelColor(natureEffect.plus)}>+{natureEffect.plus}</span>
+                {', '}
+                <span className={getStatLabelColor(natureEffect.minus)}>-{natureEffect.minus}</span>)
+              </span>
+            )}
+          </div>
         )}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginTop: '0.5rem' }}>
