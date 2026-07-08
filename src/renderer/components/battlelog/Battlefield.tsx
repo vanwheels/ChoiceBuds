@@ -117,12 +117,15 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
       return void logWithTargets(allyIds.length === 1 ? [{ side, pokemonId: allyIds[0] }] : []);
     }
 
-    // single-foe, an ambiguous single-ally count, or unknown target data - wait for a click on the field
+    // An ambiguous single-ally count, or unknown target data - wait for a click on the field.
+    // 'single-foe' ("selected-pokemon" etc.) also lands here rather than
+    // auto-targeting the opponent: real doubles lets a single-target move
+    // hit any adjacent Pokemon, ally included (Parting Shot on a teammate,
+    // an attack redirected onto your own side, etc.), so both sides get
+    // highlighted as candidates, not opponents only.
     const candidates: SlotRef[] = category === 'single-ally'
       ? allyIds.map(id => ({ side, pokemonId: id }))
-      : category === 'unknown'
-        ? [...oppActive.map(id => ({ side: oppSide, pokemonId: id })), ...sameSideActive.map(id => ({ side, pokemonId: id }))]
-        : oppActive.map(id => ({ side: oppSide, pokemonId: id }));
+      : [...oppActive.map(id => ({ side: oppSide, pokemonId: id })), ...allyIds.map(id => ({ side, pokemonId: id }))];
     setPendingTarget({ side, pokemonId, move, moveType: moveData?.type, isDamaging, candidates });
   };
 

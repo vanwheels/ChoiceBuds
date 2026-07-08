@@ -51,9 +51,11 @@ in a `Why:` line only when it's not obvious from the task itself.
   base-stat math not taken on yet).
 - Everything else from the original 9-item roadmap discussion not yet
   built: general UI polish (#1), cross-device sync via file-sync-folder
-  (#2), further Calc UI cleanup (#3), Settings page (#4), Limitless usage
-  data once the API key is approved (#7), Statistics page (#9, depends on
-  the Battle Logger producing real win/loss data).
+  (#2), further Calc UI cleanup (#3), Settings page (#4, not started),
+  Limitless usage data once the API key is approved (#7), Statistics page
+  (#9) - this one is no longer actually blocked, the Battle Logger has
+  been producing real win/loss data for a while now, just hasn't been
+  scoped/built yet.
 
 - **2026-07-07 manual-testing/UI-polish batch** (not yet built - captured
   from a review pass, user still adding more items):
@@ -90,7 +92,127 @@ in a `Why:` line only when it's not obvious from the task itself.
      `Battlefield.tsx`'s own sizing (slot spacing, weather/side-condition
      bar padding, etc.) - not scoped or touched during item 3.
 
+- **2026-07-07 second review pass** (items 5-7 done, see Done below; 1-4/8-9
+  not yet built - captured from another manual-testing round, reference
+  screenshots of the real calc.pokemonshowdown.com Champions mode provided
+  for items 1-3):
+  1. Calc page: tighten overall spacing so more fits without scrolling at
+     1920x1080, closer to how the real Showdown calc packs its panels -
+     builds on the Stage 4 "doesn't eliminate scrolling" caveat above,
+     this time with a concrete visual reference to match rather than
+     guessing at a target density.
+  2. Calc page: show each stat's final computed total next to the
+     Boost column (`CalcStatRows.tsx`), matching Showdown's own stat
+     table - e.g. base 92 Sp.Atk + 32 SPs + Modest nature reads as a
+     single "158" total column, not just Base/SP/Boost separately.
+  3. Calc page (`CalcSideConditions.tsx`): trim the field-effect toggle
+     list down to exactly what the real Showdown calc offers (we may have
+     extras it doesn't need), drop the "+1 to all stats" button entirely,
+     and switch the two sides' layout to left-aligned/right-aligned
+     columns like the reference screenshot instead of the current
+     symmetric stacked-button styling from Stage 4. Since this and item 4
+     both touch a field-condition widget in the same session, worth
+     finally doing the still-open Stage 4 follow-up here too: unify
+     `CalcSideConditions.tsx` and the Battle Logger's
+     `SideConditionsRow.tsx` into one shared component instead of two
+     different-looking implementations of the same idea.
+  4. Battle Logger: opponent roster boxes are still visually bigger than
+     the player's despite the Stage 3 compacting pass - still wants them
+     even. New layout idea to get there: move Weather/Terrain/field
+     effects (currently `FieldWeatherBar`) to a horizontal row *above*
+     the Battlefield box instead of a corner, and change each side's
+     active conditions (`SideConditionsRow.tsx`) from wrapped-horizontal
+     to vertically stacked - frees up the horizontal space that's
+     currently forcing the opponent panel wider.
+  5. ~~Battle Logger bug: clicking Undo on a Pokemon-sent-in action removes
+     the turn-log entry but leaves the Pokemon still occupying its
+     Battlefield slot~~ - done, see Done below.
+  6. ~~Battle Logger bug: logging Parting Shot applies its stat-drop effect
+     to the target but doesn't prompt the mandatory follow-up switch~~ -
+     done, see Done below. Root cause was different from what the item
+     description assumed - see the Done entry.
+  7. ~~Battle Logger: moves can currently only be logged against the
+     opponent's side - need an "ally" target option too~~ - done, see Done
+     below.
+  8. Teams page (`TeamCard.tsx`): the sprite row only renders as many
+     sprites as the team actually has, so the team name's starting
+     x-position drifts per team based on roster size - want it to always
+     reserve space for 6 slots (padding in empty ones) so every team's
+     name lines up in the same column regardless of how many Pokemon are
+     filled in.
+  9. Teams page (`TeamCard.tsx`): swap the Edit and Delete button
+     positions in the header controls cluster (Delete currently comes
+     before Edit).
+
 ## Done
+
+- **Battle Logger: undo/sendIn field-state fix, Mega+switch-out-move fix,
+  ally move targeting** (2026-07-07): items 5-7 of the second review pass.
+
+  1. **Undo fix**: `useBattleLogActions.ts::undoLastAction` popped only the
+     turn-log entry, never reversing whatever field-state mutation the
+     popped action caused - concretely, undoing a `'sendIn'` action left
+     the Pokemon still occupying its Battlefield slot with no log entry to
+     explain why. Now inspects the popped action's `phase` and, for
+     `'sendIn'` specifically, also clears that slot back to `null` in the
+     same `updateBattle` call. Deliberately scoped to `'sendIn'` only -
+     `'switch'`/`'mega'` aren't reversed the same way, since the app
+     doesn't retain enough history to know what to restore (e.g.
+     `swapActive` never logs which Pokemon it replaced). Live-verified on
+     a disposable test battle: sent a Pokemon into an empty slot, reloaded
+     the app (fresh mount, not just in-memory state), clicked Undo Last,
+     confirmed both the turn-log entry disappeared and the slot returned
+     to empty (bench picker showed the Pokemon as available again).
+
+  2. **Parting Shot fix**: root cause turned out to be different from what
+     the item description assumed. Read a real reproduction directly out
+     of the user's actual in-progress battle (`battles.json`) rather than
+     guessing: the opponent had Mega Evolved *and then* used Parting Shot
+     in the same turn. `utils/battleLookup.ts::canSwitchOutThisTurn` had
+     an unconditional `actions.some(a => a.phase === 'switch' || a.phase
+     === 'mega')` check that blocked switching whenever a `'mega'` action
+     existed for that Pokemon this turn, regardless of what move followed
+     it - so a Mega'd Pokemon could never switch out via a switch-out move,
+     even though Mega Evolving is compatible with any move including
+     Parting Shot/U-turn/etc. Fixed by only treating a bare Mega (no move
+     logged yet) as blocking; once a move is logged, the existing
+     `isSwitchOutMove(...)` check is what decides it, same as the non-Mega
+     case. Live-verified by reconstructing the exact scenario (Mega action
+     + Parting Shot move action for the same pokemonId) in a disposable
+     test battle: the Switch button was disabled before the fix and
+     enabled after, with the correct title text.
+
+  3. **Ally targeting**: turned out the click-to-log flow already let you
+     target an ally manually (`Battlefield.tsx::handleSlotClick` finalizes
+     `pendingTarget` against whatever slot is clicked, regardless of
+     side) - verified live by logging Parting Shot onto an ally and
+     confirming it applied correctly. The actual gap was discoverability:
+     `handleMovePicked`'s candidate-highlighting only lit up opponent
+     slots for a `'single-foe'`-category move (PokeAPI's
+     `selected-pokemon`/`random-opponent`/etc.), even though real doubles
+     lets a single-target move hit any adjacent Pokemon, ally included.
+     Widened the fallback candidate list to include ally slots alongside
+     opponent slots for this case (previously only the `'unknown'`
+     category did that) - `'single-ally'` keeps its own dedicated branch
+     since a single ally is usually unambiguous. Live-verified: picking
+     Parting Shot now rings both the opponent and the ally in yellow as
+     valid targets, not just the opponent.
+
+  All three verified against disposable test battles crafted directly in
+  `battles.json` (bypassing fragile multi-step UI setup for state that
+  isn't the actual thing under test - see the run-desktop skill's
+  DOM-ambiguity gotcha below) and cleaned up afterward; the user's real
+  in-progress "metagross team" battle was never touched. **New gotcha for
+  `run-desktop`-driven testing on this page**: `click-text`/naive
+  `querySelector` frequently mismatch on this page because the same
+  Pokemon name/sprite `alt` text appears in multiple places at once (the
+  roster sidebar, the Battlefield slot, the opponent tag panel) and the
+  sidebar sits earlier in the DOM than the Battlefield - a plain
+  `click-text` or `document.querySelector('img[alt=...]')` silently hits
+  the sidebar (toggling brought/roster state) instead of the intended
+  Battlefield slot. Scope queries to a Battlefield-specific class (the
+  slot button's `rounded-lg p-1` combo, or the open popover's
+  `div.absolute.z-20`) instead of matching by text/alt alone.
 
 - **Calc page: Kaizo-inspired redesign - nature colors, speed tier, team
   dropdown, field-panel restyle, header cleanup** (2026-07-07): Stage 4,
@@ -839,6 +961,17 @@ in a `Why:` line only when it's not obvious from the task itself.
   several high-severity advisories fixed only in newer majors. Bumping is a
   real (if likely modest) migration, not a one-line version bump - worth its
   own dedicated pass rather than doing it blind.
+- **Dev tooling has also drifted behind current majors** (checked
+  2026-07-07 via `npm outdated`): Vite 5.4→8.1, TypeScript 5.9→6.0, ESLint
+  9.39→10.6. Lower urgency than the Electron security-advisory situation,
+  but same category of "batch these into one dedicated bump pass" rather
+  than picking them off individually.
+- **`CalcPage`'s lazy chunk just crossed Vite's 500kB build-warning
+  threshold** (503kB as of 2026-07-07, was 499kB at the 2026-07-06 cleanup
+  pass). Still fine functionally (lazy-loaded, only fetched when the Calc
+  tab opens), but worth a look once the Calc compacting pass (second
+  review pass items 1-3 above) is done, since that pass is already
+  touching the same code.
 - Two pre-existing `react-hooks/exhaustive-deps` warnings in `useDatabase.ts`
   (lines 54, 260, missing `initializeCacheWithSWR` dependency) surfaced by
   restoring ESLint - not fixed as part of the cleanup pass since the intent

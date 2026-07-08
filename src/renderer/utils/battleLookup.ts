@@ -110,9 +110,14 @@ export function canActThisTurn(battle: Battle, pokemonId: string): boolean {
 
 /**
  * Whether this Pokemon can still switch out this turn. False once they've
- * switched in (not sent in - see canActThisTurn) or Mega Evolved this turn
- * (an incoming switch, or a committed Mega, IS the slot's action). If
- * they've used a move, only true when that move is a switch-out move
+ * switched in (not sent in - see canActThisTurn) - an incoming switch IS
+ * the slot's action. Mega Evolving alone (no move logged yet) also blocks
+ * it, since a real Mega declaration commits to attacking, not switching -
+ * but once a move IS logged, whether it was preceded by a Mega doesn't
+ * matter: the switch-out-move check below is what decides it either way,
+ * so a Pokemon that Mega Evolved and then used a switch-out move (e.g.
+ * Parting Shot) still gets its switch, same as a non-Mega Pokemon would.
+ * If they've used a move, only true when that move is a switch-out move
  * (U-turn/Parting Shot/etc. - see config/switchOutMoves.ts) and it didn't
  * fail - the switch is a continuation of that same action, not a second
  * one.
@@ -121,9 +126,9 @@ export function canSwitchOutThisTurn(battle: Battle, pokemonId: string): boolean
   const lastTurn = battle.turns[battle.turns.length - 1];
   if (!lastTurn) return true;
   const actions = lastTurn.actions.filter(a => a.pokemonId === pokemonId);
-  if (actions.some(a => a.phase === 'switch' || a.phase === 'mega')) return false;
+  if (actions.some(a => a.phase === 'switch')) return false;
   const moveAction = actions.find(a => a.phase === 'move');
-  if (!moveAction) return true;
+  if (!moveAction) return !actions.some(a => a.phase === 'mega');
   return isSwitchOutMove(moveAction.move) && !moveAction.failed;
 }
 

@@ -589,12 +589,33 @@ export function useBattleLogActions(
     return updateBattle(battle.id, { turns });
   }, [updateBattle]);
 
-  /** Cheap safety net for mis-taps during live logging - pops the last action off the last non-empty turn. */
+  /**
+   * Cheap safety net for mis-taps during live logging - pops the last
+   * action off the last non-empty turn. A 'sendIn' action also mutated the
+   * active-slot tuple when it was logged (see switchIn above), so popping
+   * only the log entry would leave the Pokemon stuck occupying the slot
+   * with no record of how it got there - undo also clears that slot back
+   * to empty in the same call. Other phases ('switch'/'mega'/'move') don't
+   * get the same field-state reversal here since the app doesn't retain
+   * enough history to know what to restore (e.g. swapActive doesn't log
+   * which Pokemon it replaced).
+   */
   const undoLastAction = useCallback(async (battle: Battle): Promise<boolean> => {
     const turns = [...battle.turns];
     for (let i = turns.length - 1; i >= 0; i--) {
       if (turns[i].actions.length > 0) {
+        const lastAction = turns[i].actions[turns[i].actions.length - 1];
         turns[i] = { ...turns[i], actions: turns[i].actions.slice(0, -1) };
+
+        if (lastAction.phase === 'sendIn') {
+          const activeIds = lastAction.side === 'player' ? battle.playerActiveIds : battle.opponentActiveIds;
+          const nextActiveIds = activeIds.map(id => id === lastAction.pokemonId ? null : id);
+          return updateBattle(battle.id, {
+            turns,
+            ...(lastAction.side === 'player' ? { playerActiveIds: nextActiveIds } : { opponentActiveIds: nextActiveIds }),
+          });
+        }
+
         return updateBattle(battle.id, { turns });
       }
     }
