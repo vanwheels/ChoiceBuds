@@ -5,6 +5,15 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **First real installer published: `v0.1.1`** (2026-07-09): once the
+  packaging bug below was fixed and verified, cut a proper patch release
+  with actual installer assets attached (`ChoiceBuds Setup 0.1.1.exe`,
+  `ChoiceBuds 0.1.1.exe`) - `v0.1.0` had only GitHub's auto-generated
+  source zip, no real installer. Rebuilt clean from the exact pushed commit
+  (not reused from an earlier local build) and smoke-tested once more
+  right before publishing. macOS build still not included - needs the
+  user's Mac, tracked as a followup, not blocking Windows-only
+  friend-testing.
 - **Fixed a real packaging bug: the built Windows installer never actually
   launched** (2026-07-09, found while building the first real installer for
   friend-testing): `main.ts`'s production `loadFile` call
