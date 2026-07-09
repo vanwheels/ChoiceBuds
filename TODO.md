@@ -48,93 +48,22 @@ focused on what's actually next.
 
 - Everything else from the original 9-item roadmap discussion not yet
   built, reordered by priority: Statistics page (#9) done, Settings page
-  (#4) shell + default-regulation setting done - see COMPLETED.md; further
-  Calc UI cleanup (#3) - overlaps with Calc work already in flight
-  elsewhere in this file; general UI polish (#1) - vague/ongoing, no
-  concrete scope; cross-device sync (#2) - see its own entry below, no
-  longer blocked on the Settings page not existing, design fully scoped;
-  Limitless usage data (#7) - blocked externally on API key approval,
-  can't start regardless of priority.
+  (#4) shell + default-regulation setting done, cross-device sync (#2) code
+  done - see COMPLETED.md; further Calc UI cleanup (#3) - overlaps with
+  Calc work already in flight elsewhere in this file; general UI polish
+  (#1) - vague/ongoing, no concrete scope; Limitless usage data (#7) -
+  blocked externally on API key approval, can't start regardless of
+  priority.
 
-- **Cross-device data sync (manual Push/Pull via a self-run sync backend +
-  pairing identifier)**: revisits the 2026-07-06 roadmap decision
-  (file-sync-folder over a real backend, specifically to keep the app free
-  to run indefinitely - see the `roadmap_decisions` memory note) - not a
-  build yet, design fully converged 2026-07-09 after discussion. The
-  original folder-sync idea (point at a Dropbox/iCloud/Syncthing folder)
-  was superseded mid-discussion by an internet-based transport instead,
-  once it came up that ChoiceBuds is meant for eventual free public
-  release to the competitive Pokemon community, not just the user's own
-  two devices (see the `public_distribution_goals` memory note) - a
-  folder-sync-client requirement is a reasonable ask of one technical
-  developer, not of a general VGC-player audience.
-  - **Local data is unchanged** - `teams.json`/`battles.json` still live in
-    the normal `userData` dir, written on every mutation exactly as today.
-    Only these two ever sync - `pokeapi-cache.json`/`game-data-cache.json`/
-    the sprite cache stay local always (pure rebuildable caches, syncing
-    them adds nothing).
-  - **New Settings page section** with explicit "Push"/"Pull" buttons -
-    deliberately manual and one-directional-at-a-time rather than
-    continuous background sync, since there's no backend arbitrating real
-    conflicts.
-  - **Single bundled payload** (`{teams, battles, savedAt}`) rather than
-    syncing two separate files/keys - one atomic operation, one timestamp
-    to reason about. Also surfaced a real pre-existing gap worth fixing
-    regardless of sync: `main.ts`'s current write handlers use a raw
-    `fs.writeFile` (truncate-then-write, not atomic) for every local JSON
-    file - should move to temp-file-then-rename.
-  - **Transport: a small, self-run serverless backend (e.g. one Cloudflare
-    Worker) with `PUT`/`GET` endpoints for a blob, keyed by a pairing
-    identifier** - not a folder, not a third-party account. Cloudflare's
-    free tier (100k requests/day) is enormously oversized for "occasional
-    manual push/pull clicks," so this stays free even at real community-
-    scale adoption, without a traditional paid backend or asking users to
-    run/maintain a sync client themselves.
-  - **No signup/login required**: first-time setup generates a
-    human-readable sync identifier in `username#XXXX` form - a
-    user-chosen username plus an auto-assigned 4-digit discriminator for
-    uniqueness (same shape as pre-2023 Discord tags), rather than a fully
-    random code or a globally-unique-username requirement. Entering that
-    same identifier on a second device is the entire pairing flow.
-    Threat model: the identifier functions like a shared secret (same
-    category as a Discord invite link) - acceptable since the data itself
-    (team comps, battle logs) isn't sensitive.
-  - **Lightweight staleness tracking, deliberately not full version
-    history** (see "explicitly out of scope" below): two new local-only
-    timestamps (`lastPushedAt`/`lastPulledAt`) compared against the synced
-    blob's own `savedAt` and the local databases' existing `lastModified`
-    fields. Warns before a Pull would overwrite newer unpulled local
-    edits, and before a Push would overwrite a newer unpulled remote
-    change (something pushed from another device this device hasn't
-    pulled yet). A passive status line surfaces "up to date" / "unpulled
-    changes available" without needing to click anything first.
-  - **Designed to allow real accounts later, not built now**: explicitly
-    framed by the user as speculative - only worth it if the project
-    genuinely gains community traction and/or a companion webpage
-    happens, neither of which is a current goal. The pairing-identifier
-    backend is still worth designing as "an opaque identifier owns a data
-    blob" specifically so a real login (most likely Discord OAuth, given
-    the target community already lives there, and it means ChoiceBuds
-    never handles passwords itself) could sit in front of the *same*
-    blob storage later as an additive second identity path, not a
-    rewrite of the sync system.
-  - **Explicitly out of scope for now**: concurrent editing on two devices
-    at once (no real conflict resolution - documented as a known
-    limitation) and full snapshot/version history/rollback-to-an-older-
-    version. Both were discussed and deliberately deferred - revisit if
-    real usage shows a need.
-  - **Not yet covered, needs deciding during implementation**: first-time
-    setup / what happens if you enter an identifier that already has data
-    under it from another device (should probably force/suggest a Pull
-    before allowing a Push, so you can't blind-clobber it); an
-    unreachable Worker (network error, outage) needs a clear error state;
-    abuse/rate-limiting on the Worker itself (a size cap per blob, maybe a
-    TTL for long-unused identifiers to bound storage growth, basic
-    request throttling) - not designed yet, matters more once this is
-    public than it does for just the user's own two devices.
-  - No longer blocked on the Settings page - it exists now (see
-    COMPLETED.md), so this can be picked up whenever it's next in
-    priority.
+- **Cross-device sync - deploy the Worker**: all code is built and
+  live-verified locally (see COMPLETED.md), but the Worker itself isn't
+  deployed yet - `worker/README.md` has the full `wrangler login` /
+  `wrangler kv:namespace create` / `wrangler deploy` walkthrough. Until
+  that's done and the real `*.workers.dev` URL is pasted into
+  `src/renderer/services/syncApi.ts`'s `SYNC_WORKER_URL` (currently a
+  placeholder), Push/Pull will fail with a "couldn't reach the sync
+  server" error - this is a you-run-it step, not something buildable
+  further from here.
 
 - **Season-level breakdowns (Statistics page + Battle Logger)**: a season
   is a sub-division of a Regulation, not something either system tracks

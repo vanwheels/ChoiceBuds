@@ -5,6 +5,79 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Cross-device sync - full implementation** (2026-07-09): manual Push/Pull
+  of a bundled `{teams, battles, savedAt}` blob against a small self-run
+  Cloudflare Worker, keyed by a `username#XXXX` pairing identifier - see
+  TODO.md's still-open "deploy the Worker" entry for the one remaining
+  manual step (the code is done, but nothing's deployed yet).
+  - **New `worker/`** (sibling to `src/`, own `package.json`/`tsconfig.json`,
+    excluded from the root build): `worker/src/index.ts` implements
+    `PUT`/`GET /sync/:identifier` against Workers KV, with CORS (incl. an
+    `OPTIONS` preflight handler), a 512KB body-size cap, and a 3s
+    per-identifier write throttle. The throttle is keyed off KV's own
+    metadata (`{receivedAt}` set server-side on each `put`), not the
+    client-supplied `savedAt` - an early version compared against the
+    client's own timestamp, which a client could simply lie about to bypass
+    the throttle entirely; caught via live `curl` testing against
+    `wrangler dev`, not just code review. `worker/wrangler.toml` and
+    `worker/README.md` (full `wrangler login`/`kv:namespace create`/
+    `deploy` walkthrough) round it out. Storage backend is KV over R2 for
+    now - deliberately not the scale-first choice, since the client only
+    ever talks to the Worker's own HTTP API (never KV/R2 directly), so
+    swapping later is a small, contained, zero-client-impact change.
+  - **`src/main/main.ts`**: pre-existing gap fixed alongside this (surfaced
+    during design, unrelated to sync itself but matters more now that Pull
+    can also overwrite these files) - every `file:write-*` IPC handler used
+    a raw truncate-then-write `fs.writeFile`; replaced with one
+    `atomicWriteFile()` helper (temp file + rename) across all 5 handlers.
+  - **`src/renderer/services/syncApi.ts`** (new): `pushSyncData`/
+    `pullSyncData`, mirroring `pokeapi.ts`/`pokepaste.ts`'s plain-fetch
+    convention but deliberately adding an `AbortController` 10s timeout -
+    this Worker is infrastructure the user runs themselves, so a lapsed
+    deployment is a real possibility unlike a flaky third-party API.
+  - **`src/renderer/hooks/useSync.ts`** (new): identifier creation
+    (`username` + a `crypto.getRandomValues`-generated 4-digit
+    discriminator)/pairing, `push()`/`pull()`, and a status line derived
+    from one local disk read plus one remote peek fetch (not a poll loop -
+    only run on mount/after an action, matching the "manual, not
+    continuous" design). `AppSettings` gained `syncIdentifier`/
+    `lastPushedAt`/`lastPulledAt`; `useSettings.ts` gained a generic
+    `updateSettings(partial)` alongside the existing `setDefaultRegulation`
+    (left untouched) since the sync fields update together. Two real bugs
+    caught via live `run-desktop` testing, not code review: (1) a
+    stale-closure bug where `refreshStatus()` read pre-update
+    `lastPushedAt`/`lastPulledAt` from its own closure right after the
+    `updateSettings()` call that changed them, showing "Never synced" even
+    after a successful first Push - fixed by having `push()`/`pull()` pass
+    the fresh values into `refreshStatus()` explicitly instead of relying
+    solely on closed-over state; (2) `push()`'s "remote is newer, pull
+    first" guard compared the remote's `savedAt` against `lastPulledAt`
+    alone, which meant a device that had only ever pushed (never pulled)
+    would permanently block itself from pushing again after its own first
+    push - fixed by comparing against `Math.max(lastPushedAt, lastPulledAt)`
+    instead, since a device's own prior push already counts as having
+    "seen" that data.
+  - **`src/renderer/components/SyncSection.tsx`** (new): identifier setup
+    (create new vs. pair existing), Push/Pull buttons, status line, and an
+    inline warning banner (not a modal) with a "do it anyway" override when
+    a Push/Pull is blocked - resolves the design's open "existing data
+    under an identifier" question by auto-checking on identifier setup/every
+    status refresh rather than only at click-time. Extracted as its own
+    component from `SettingsPage.tsx` (which now also takes
+    `teamsState`/`battlesState` props, threaded from `App.tsx`) since it's
+    a meaningfully separate concern from the Default Regulation setting
+    next to it.
+  - **Live-verified end-to-end** against a local `wrangler dev` instance
+    (temporarily pointed `syncApi.ts` at `http://localhost:8787`, reverted
+    before finishing): created an identifier, Push round-tripped the real
+    local teams/battles data correctly (confirmed via direct `curl` against
+    the Worker), and Pull correctly overwrote local storage with a
+    distinguishable injected fake payload. Real user data
+    (`teams.json`/`battles.json`/`settings.json`) was backed up before any
+    Pull testing and restored immediately after, verified byte-for-byte
+    against the original file sizes - Pull is destructive by design (full
+    overwrite, not merge), so this was tested against disposable state, not
+    carelessly against the user's real teams/battle logs.
 - **Settings page (shell + default-regulation setting)** (2026-07-09): new
   persisted-preferences pattern, first one in the app - `settings.json` in
   `userData`, following the exact same convention as `teams.json`

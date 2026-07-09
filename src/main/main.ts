@@ -85,6 +85,19 @@ function getSpriteCacheFilename(remoteUrl: string): string {
 }
 
 /**
+ * Write to a temp file then rename over the target, so a crash/power-loss
+ * mid-write can never leave one of these JSON files truncated to zero bytes
+ * - a plain fs.writeFile truncates the destination before writing, which is
+ * the window this closes. rename() is atomic on the same volume, which the
+ * temp file always is since it's written alongside its target.
+ */
+async function atomicWriteFile(filePath: string, content: string): Promise<void> {
+  const tempPath = `${filePath}.tmp`;
+  await fs.writeFile(tempPath, content, 'utf-8');
+  await fs.rename(tempPath, filePath);
+}
+
+/**
  * Creates the main application window with strict dimension constraints
  * Enforces minWidth: 1280 and minHeight: 720 for layout container integrity
  */
@@ -152,7 +165,7 @@ function registerIPCHandlers(): void {
   ipcMain.handle('file:write-teams-database', async (_event, data) => {
     try {
       const filePath = getTeamsDatabasePath();
-      await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
+      await atomicWriteFile(filePath, JSON.stringify(data, null, 2));
       return true;
     } catch (err) {
       console.error('Error writing teams database:', err);
@@ -184,7 +197,7 @@ function registerIPCHandlers(): void {
   ipcMain.handle('file:write-pokeapi-cache', async (_event, data) => {
     try {
       const filePath = getPokeAPICachePath();
-      await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
+      await atomicWriteFile(filePath, JSON.stringify(data, null, 2));
       return true;
     } catch (err) {
       console.error('Error writing PokeAPI cache:', err);
@@ -222,7 +235,7 @@ function registerIPCHandlers(): void {
   ipcMain.handle('file:write-battles-database', async (_event, data) => {
     try {
       const filePath = getBattlesDatabasePath();
-      await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
+      await atomicWriteFile(filePath, JSON.stringify(data, null, 2));
       return true;
     } catch (err) {
       console.error('Error writing battles database:', err);
@@ -253,7 +266,7 @@ function registerIPCHandlers(): void {
   ipcMain.handle('file:write-settings', async (_event, data) => {
     try {
       const filePath = getSettingsPath();
-      await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
+      await atomicWriteFile(filePath, JSON.stringify(data, null, 2));
       return true;
     } catch (err) {
       console.error('Error writing settings:', err);
@@ -284,7 +297,7 @@ function registerIPCHandlers(): void {
   ipcMain.handle('file:write-game-data-cache', async (_event, data) => {
     try {
       const filePath = getGameDataCachePath();
-      await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
+      await atomicWriteFile(filePath, JSON.stringify(data, null, 2));
       return true;
     } catch (err) {
       console.error('Error writing game data cache:', err);

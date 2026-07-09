@@ -1,0 +1,10 @@
+name = "choicebuds-sync"
+main = "src/index.ts"
+compatibility_date = "2026-01-01"
+
+# Created via `wrangler kv:namespace create SYNC_KV` - paste the returned
+# `id` below before running `wrangler deploy`. See README.md for the full
+# deployment walkthrough.
+[[kv_namespaces]]
+binding = "SYNC_KV"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"

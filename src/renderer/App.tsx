@@ -173,7 +173,7 @@ export default function App() {
           </Suspense>
         ) : (
           <Suspense fallback={<div className="text-gray-400 text-sm">Loading settings...</div>}>
-            <SettingsPage settingsState={settingsState} />
+            <SettingsPage settingsState={settingsState} teamsState={teamsState} battlesState={battlesState} />
           </Suspense>
         )}
       </main>

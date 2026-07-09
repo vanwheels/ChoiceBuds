@@ -99,7 +99,21 @@ export interface TeamsDatabase {
 export interface AppSettings {
   version: number;
   defaultRegulation: 'Reg M-A' | 'Reg M-B';
+  syncIdentifier: string | null; // "username#XXXX" pairing identifier, once set up
+  lastPushedAt: number | null; // Unix timestamp of this device's last successful Push
+  lastPulledAt: number | null; // Unix timestamp of this device's last successful Pull
   lastModified: number; // Unix timestamp
+}
+
+/**
+ * Bundled payload synced as a single blob via the cross-device sync Worker -
+ * pokeapi-cache.json/game-data-cache.json/the sprite cache are pure
+ * rebuildable caches and deliberately never included.
+ */
+export interface SyncPayload {
+  teams: Team[];
+  battles: Battle[];
+  savedAt: number; // Unix timestamp this payload was pushed
 }
 
 export type BattleSide = 'player' | 'opponent';

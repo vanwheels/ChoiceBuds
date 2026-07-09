@@ -9,6 +9,9 @@ import type { AppSettings } from '../types/pokemon';
 const DEFAULT_SETTINGS: AppSettings = {
   version: 1,
   defaultRegulation: 'Reg M-A',
+  syncIdentifier: null,
+  lastPushedAt: null,
+  lastPulledAt: null,
   lastModified: Date.now(),
 };
 
@@ -17,6 +20,7 @@ export interface UseSettingsReturn {
   isLoading: boolean;
   error: string | null;
   setDefaultRegulation: (format: 'Reg M-A' | 'Reg M-B') => Promise<boolean>;
+  updateSettings: (partial: Partial<Omit<AppSettings, 'version' | 'lastModified'>>) => Promise<boolean>;
 }
 
 /**
@@ -44,7 +48,10 @@ export function useSettings(): UseSettingsReturn {
 
     try {
       const database = await window.electron.readSettings();
-      setSettings(database ?? DEFAULT_SETTINGS);
+      // Spread over DEFAULT_SETTINGS so a settings.json written before a
+      // field existed (e.g. sync fields, added after defaultRegulation)
+      // still loads with a valid value instead of undefined.
+      setSettings(database ? { ...DEFAULT_SETTINGS, ...database } : DEFAULT_SETTINGS);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load settings';
       setError(errorMessage);
@@ -94,10 +101,34 @@ export function useSettings(): UseSettingsReturn {
     return success;
   }, [settings]);
 
+  /**
+   * Generic multi-field update, used by the sync feature to persist
+   * syncIdentifier/lastPushedAt/lastPulledAt together in one write
+   */
+  const updateSettings = useCallback(async (
+    partial: Partial<Omit<AppSettings, 'version' | 'lastModified'>>
+  ): Promise<boolean> => {
+    const updated: AppSettings = {
+      ...settings,
+      ...partial,
+      lastModified: Date.now(),
+    };
+
+    const success = await persistSettingsToDisk(updated);
+
+    if (success) {
+      setSettings(updated);
+      setError(null);
+    }
+
+    return success;
+  }, [settings]);
+
   return {
     settings,
     isLoading,
     error,
     setDefaultRegulation,
+    updateSettings,
   };
 }

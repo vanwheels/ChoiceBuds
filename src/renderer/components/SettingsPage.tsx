@@ -5,15 +5,22 @@
  */
 
 import type { UseSettingsReturn } from '../hooks/useSettings';
+import type { UseTeamsReturn } from '../hooks/useTeams';
+import type { UseBattlesReturn } from '../hooks/useBattles';
 import { ALL_REGULATION_IDS, getRegulationLabel, toRegulationId } from '../utils/pokemonRules';
+import { useSync } from '../hooks/useSync';
+import SyncSection from './SyncSection';
 
 interface SettingsPageProps {
   settingsState: UseSettingsReturn;
+  teamsState: UseTeamsReturn;
+  battlesState: UseBattlesReturn;
 }
 
-export default function SettingsPage({ settingsState }: SettingsPageProps) {
+export default function SettingsPage({ settingsState, teamsState, battlesState }: SettingsPageProps) {
   const { settings, setDefaultRegulation } = settingsState;
   const currentId = toRegulationId(settings.defaultRegulation);
+  const syncState = useSync(settingsState, teamsState, battlesState);
 
   return (
     <div className="flex flex-col gap-4">
@@ -40,6 +47,8 @@ export default function SettingsPage({ settingsState }: SettingsPageProps) {
           ))}
         </div>
       </div>
+
+      <SyncSection syncState={syncState} />
     </div>
   );
 }
