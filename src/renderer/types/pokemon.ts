@@ -93,6 +93,15 @@ export interface TeamsDatabase {
   lastModified: number; // Unix timestamp
 }
 
+/**
+ * Persisted user preferences, stored as settings.json in userData directory
+ */
+export interface AppSettings {
+  version: number;
+  defaultRegulation: 'Reg M-A' | 'Reg M-B';
+  lastModified: number; // Unix timestamp
+}
+
 export type BattleSide = 'player' | 'opponent';
 
 /**

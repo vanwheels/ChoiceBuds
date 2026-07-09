@@ -93,6 +93,23 @@ const electronAPI = {
   },
 
   /**
+   * Reads the app settings from userData directory
+   * @returns Promise resolving to AppSettings or null if file doesn't exist
+   */
+  readSettings: async (): Promise<any> => {
+    return ipcRenderer.invoke('file:read-settings');
+  },
+
+  /**
+   * Writes the app settings to userData directory
+   * @param data - AppSettings object to persist
+   * @returns Promise resolving to success boolean
+   */
+  writeSettings: async (data: any): Promise<boolean> => {
+    return ipcRenderer.invoke('file:write-settings', data);
+  },
+
+  /**
    * Checks whether a sprite is already cached locally, without fetching it
    * @param remoteUrl - the original remote sprite URL
    * @returns Promise resolving to a local data: URL, or null if not cached

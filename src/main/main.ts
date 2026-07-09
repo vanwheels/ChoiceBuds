@@ -58,6 +58,13 @@ function getBattlesDatabasePath(): string {
 }
 
 /**
+ * Get the full path to the app settings file
+ */
+function getSettingsPath(): string {
+  return path.join(getUserDataPath(), 'settings.json');
+}
+
+/**
  * Get (and ensure exists) the local sprite cache directory
  */
 async function getSpriteCacheDir(): Promise<string> {
@@ -219,6 +226,37 @@ function registerIPCHandlers(): void {
       return true;
     } catch (err) {
       console.error('Error writing battles database:', err);
+      return false;
+    }
+  });
+
+  /**
+   * Read app settings from userData directory
+   */
+  ipcMain.handle('file:read-settings', async () => {
+    try {
+      const filePath = getSettingsPath();
+      const fileContent = await fs.readFile(filePath, 'utf-8');
+      return JSON.parse(fileContent);
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+        return null;
+      }
+      console.error('Error reading settings:', err);
+      throw err;
+    }
+  });
+
+  /**
+   * Write app settings to userData directory
+   */
+  ipcMain.handle('file:write-settings', async (_event, data) => {
+    try {
+      const filePath = getSettingsPath();
+      await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
+      return true;
+    } catch (err) {
+      console.error('Error writing settings:', err);
       return false;
     }
   });

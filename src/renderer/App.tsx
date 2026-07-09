@@ -13,6 +13,7 @@ import { useSpeciesRoster } from './hooks/useSpeciesRoster';
 import { useSpriteCache } from './hooks/useSpriteCache';
 import { useInitialSync } from './hooks/useInitialSync';
 import { useBattles } from './hooks/useBattles';
+import { useSettings } from './hooks/useSettings';
 import TeamsPage from './components/TeamsPage';
 import LoadingScreen from './components/LoadingScreen';
 
@@ -22,8 +23,9 @@ import LoadingScreen from './components/LoadingScreen';
 const CalcPage = lazy(() => import('./components/calc/CalcPage'));
 const BattleLogPage = lazy(() => import('./components/battlelog/BattleLogPage'));
 const StatisticsPage = lazy(() => import('./components/statistics/StatisticsPage'));
+const SettingsPage = lazy(() => import('./components/SettingsPage'));
 
-type ActiveTab = 'teams' | 'calc' | 'battles' | 'statistics';
+type ActiveTab = 'teams' | 'calc' | 'battles' | 'statistics' | 'settings';
 
 /**
  * Main application shell component
@@ -49,6 +51,7 @@ export default function App() {
   const speciesRosterState = useSpeciesRoster();
   const spriteCacheState = useSpriteCache();
   const battlesState = useBattles();
+  const settingsState = useSettings();
   const { isDone: isInitialSyncDone, progress: initialSyncProgress } = useInitialSync(gameDataState, speciesRosterState, spriteCacheState);
 
   if (!isInitialSyncDone) {
@@ -111,7 +114,12 @@ export default function App() {
 
           <ul className="mt-auto pt-2">
             <li>
-              <button className="w-full text-left px-4 py-2 rounded-lg text-gray-400 hover:bg-gray-700 transition-colors">
+              <button
+                onClick={() => setActiveTab('settings')}
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
+                  activeTab === 'settings' ? 'bg-blue-600 hover:bg-blue-700' : 'text-gray-400 hover:bg-gray-700'
+                }`}
+              >
                 Settings
               </button>
             </li>
@@ -143,6 +151,7 @@ export default function App() {
             gameDataState={gameDataState}
             speciesRosterState={speciesRosterState}
             spriteCacheState={spriteCacheState}
+            settingsState={settingsState}
           />
         ) : activeTab === 'calc' ? (
           <Suspense fallback={<div className="text-gray-400 text-sm">Loading calculator...</div>}>
@@ -158,9 +167,13 @@ export default function App() {
               gameDataState={gameDataState}
             />
           </Suspense>
-        ) : (
+        ) : activeTab === 'statistics' ? (
           <Suspense fallback={<div className="text-gray-400 text-sm">Loading statistics...</div>}>
             <StatisticsPage battlesState={battlesState} spriteCacheState={spriteCacheState} />
+          </Suspense>
+        ) : (
+          <Suspense fallback={<div className="text-gray-400 text-sm">Loading settings...</div>}>
+            <SettingsPage settingsState={settingsState} />
           </Suspense>
         )}
       </main>

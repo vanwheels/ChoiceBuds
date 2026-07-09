@@ -5,6 +5,32 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Settings page (shell + default-regulation setting)** (2026-07-09): new
+  persisted-preferences pattern, first one in the app - `settings.json` in
+  `userData`, following the exact same convention as `teams.json`
+  (`getSettingsPath()` + `file:read-settings`/`file:write-settings` IPC
+  handlers in `main.ts`, `readSettings`/`writeSettings` on the preload
+  bridge, new `useSettings.ts` hook mirroring `useTeams.ts`'s
+  load-on-mount/persist-on-write shape). New `AppSettings` type in
+  `types/pokemon.ts`. New `SettingsPage.tsx`, wired into the previously
+  disabled placeholder "Settings" nav button in `App.tsx`. First real
+  setting: a default regulation (Reg M-A/Reg M-B) used to pre-select the
+  Format field when importing a new team - replaces the independently
+  hardcoded `'Reg M-A'` in `ImportTeamModal.tsx`'s initial state and
+  post-import reset with `settingsState.settings.defaultRegulation`,
+  threaded down from `App.tsx` through `TeamsPage.tsx`.
+  `RegulationBadge.tsx`'s `team.format || 'Reg M-A'` fallback (for an
+  already-imported team with malformed data) was deliberately left alone -
+  a different concern from "default for new imports". Unblocks
+  cross-device sync's Push/Pull UI and the season "Check for Updates" tool
+  (both still separately not built - see TODO.md), which were waiting on
+  this page existing as a home. Live-verified via run-desktop: toggling
+  the regulation buttons in Settings persists (survived a fresh
+  `launch`), and opening Teams -> Import after picking Reg M-B showed the
+  modal's Format field pre-selecting Reg M-B instead of the old hardcoded
+  Reg M-A. No console errors; `npm run type-check`/`npm run lint` clean
+  (the only lint output is the two pre-existing `useDatabase.ts`
+  exhaustive-deps warnings already noted in TODO.md's backlog).
 - **Per-target crit/miss + relocate Miss/Crit/Inflict-Status chips onto the
   Battlefield** (2026-07-09): items 2-3 of the status-condition/move-outcome
   follow-up batch. `BattleAction.crit`/`missed` (single booleans covering

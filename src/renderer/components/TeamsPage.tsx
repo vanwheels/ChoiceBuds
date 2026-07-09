@@ -11,6 +11,7 @@ import type { UseActiveEditorReturn } from '../hooks/useActiveEditor';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
+import type { UseSettingsReturn } from '../hooks/useSettings';
 import ImportTeamModal from './ImportTeamModal';
 import TeamCard from './TeamCard';
 
@@ -22,6 +23,7 @@ interface TeamsPageProps {
   gameDataState: UseGameDataReturn;
   speciesRosterState: UseSpeciesRosterReturn;
   spriteCacheState: UseSpriteCacheReturn;
+  settingsState: UseSettingsReturn;
 }
 
 type FormatFilter = 'All' | 'Reg M-A' | 'Reg M-B';
@@ -36,6 +38,7 @@ export default function TeamsPage({
   gameDataState,
   speciesRosterState,
   spriteCacheState,
+  settingsState,
 }: TeamsPageProps) {
   const [activeFilter, setActiveFilter] = useState<FormatFilter>('All');
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -133,6 +136,7 @@ export default function TeamsPage({
           onImport={teamsState.addTeam}
           databaseState={databaseState}
           existingTeamNames={teamsState.teams.map(team => team.name)}
+          defaultRegulation={settingsState.settings.defaultRegulation}
         />
       )}
     </div>
