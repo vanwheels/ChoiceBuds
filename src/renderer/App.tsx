@@ -14,6 +14,8 @@ import { useSpriteCache } from './hooks/useSpriteCache';
 import { useInitialSync } from './hooks/useInitialSync';
 import { useBattles } from './hooks/useBattles';
 import { useSettings } from './hooks/useSettings';
+import { useUpdateCheck } from './hooks/useUpdateCheck';
+import { CURRENT_APP_VERSION } from './utils/appVersion';
 import TeamsPage from './components/TeamsPage';
 import LoadingScreen from './components/LoadingScreen';
 
@@ -52,6 +54,7 @@ export default function App() {
   const spriteCacheState = useSpriteCache();
   const battlesState = useBattles();
   const settingsState = useSettings();
+  const updateCheckState = useUpdateCheck();
   const { isDone: isInitialSyncDone, progress: initialSyncProgress } = useInitialSync(gameDataState, speciesRosterState, spriteCacheState);
 
   if (!isInitialSyncDone) {
@@ -138,6 +141,9 @@ export default function App() {
             <span>Teams Loaded:</span>
             <span className="text-blue-400">{teamsState.teams.length}</span>
           </div>
+          <div className="flex items-center justify-between mt-1">
+            <span>Ver {CURRENT_APP_VERSION}</span>
+          </div>
         </div>
       </aside>
 
@@ -173,7 +179,7 @@ export default function App() {
           </Suspense>
         ) : (
           <Suspense fallback={<div className="text-gray-400 text-sm">Loading settings...</div>}>
-            <SettingsPage settingsState={settingsState} teamsState={teamsState} battlesState={battlesState} />
+            <SettingsPage settingsState={settingsState} teamsState={teamsState} battlesState={battlesState} updateCheckState={updateCheckState} />
           </Suspense>
         )}
       </main>

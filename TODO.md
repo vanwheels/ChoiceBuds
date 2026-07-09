@@ -289,6 +289,44 @@ See [COMPLETED.md](COMPLETED.md) for the full log of finished work.
   own dedicated pass rather than doing it blind. Top of this list since
   it's the only item here with a security dimension, even for a
   locally-run desktop app.
+- **In-app auto-update (electron-updater + electron-builder GitHub publish)**:
+  scoped 2026-07-09, but deliberately **blocked on the user getting an Apple
+  Developer account** (planned "eventually, not for a bit") - can't start
+  regardless of priority, same category as the Limitless item above. Today's
+  update checker (see COMPLETED.md) only links out to the GitHub Release
+  page for a manual download/reinstall; this would replace that with an
+  actual in-app download-and-install, meaningfully lower friction for the
+  project's public-distribution goal.
+  - **Mechanism**: `electron-updater` (the standard companion to
+    `electron-builder`, already used here for packaging) with its built-in
+    GitHub provider - reads `latest.yml`/`latest-mac.yml` metadata files
+    that `electron-builder --publish always` auto-generates and uploads as
+    GitHub Release assets alongside the installers themselves. No custom
+    update server needed.
+  - **Why it's blocked**: macOS auto-update (Squirrel.Mac, which
+    `electron-updater` uses under the hood) requires the app be
+    code-signed, which requires an Apple Developer Program membership
+    ($99/yr) plus notarization - without it, unsigned/unnotarized macOS
+    builds can't auto-update at all and are also heavily restricted by
+    Gatekeeper regardless. Windows is more lenient (auto-update can work
+    unsigned), so this is specifically the macOS side gating the whole
+    feature, given both the Windows machine and the MacBook are both in
+    active use for this project.
+  - **Secondary, not a hard blocker**: a paid Windows code-signing cert
+    (~$100-400+/yr, separate from the Apple cost) isn't required for
+    Windows auto-update to function, but removes the "Windows protected
+    your PC" SmartScreen warning unsigned installers trigger - worth
+    deciding on separately once the macOS side is unblocked, not bundled
+    into the same purchase decision.
+  - **Also needed, not yet designed**: signing/notarizing/publishing by
+    hand for every release isn't realistic once this is real - almost
+    certainly wants a GitHub Actions workflow (build-on-tag-push, secrets
+    for the signing certs) rather than a manual `electron-builder --publish`
+    run each time. Also needs reconciling with the just-shipped GitHub-
+    Releases-API update checker (`useUpdateCheck.ts`/`UpdateCheckSection.tsx`)
+    - `electron-updater` has its own update-status/prompt flow, which likely
+    supersedes (or needs merging with) today's "check + link out" UI rather
+    than the two running side by side unreconciled.
 - Two pre-existing `react-hooks/exhaustive-deps` warnings in `useDatabase.ts`
   (lines 54, 260, missing `initializeCacheWithSWR` dependency) surfaced by
   restoring ESLint - not fixed as part of the cleanup pass since the intent

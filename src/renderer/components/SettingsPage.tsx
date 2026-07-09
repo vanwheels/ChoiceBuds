@@ -7,17 +7,20 @@
 import type { UseSettingsReturn } from '../hooks/useSettings';
 import type { UseTeamsReturn } from '../hooks/useTeams';
 import type { UseBattlesReturn } from '../hooks/useBattles';
+import type { UseUpdateCheckReturn } from '../hooks/useUpdateCheck';
 import { ALL_REGULATION_IDS, getRegulationLabel, toRegulationId } from '../utils/pokemonRules';
 import { useSync } from '../hooks/useSync';
 import SyncSection from './SyncSection';
+import UpdateCheckSection from './UpdateCheckSection';
 
 interface SettingsPageProps {
   settingsState: UseSettingsReturn;
   teamsState: UseTeamsReturn;
   battlesState: UseBattlesReturn;
+  updateCheckState: UseUpdateCheckReturn;
 }
 
-export default function SettingsPage({ settingsState, teamsState, battlesState }: SettingsPageProps) {
+export default function SettingsPage({ settingsState, teamsState, battlesState, updateCheckState }: SettingsPageProps) {
   const { settings, setDefaultRegulation } = settingsState;
   const currentId = toRegulationId(settings.defaultRegulation);
   const syncState = useSync(settingsState, teamsState, battlesState);
@@ -49,6 +52,8 @@ export default function SettingsPage({ settingsState, teamsState, battlesState }
       </div>
 
       <SyncSection syncState={syncState} />
+
+      <UpdateCheckSection updateCheckState={updateCheckState} />
     </div>
   );
 }

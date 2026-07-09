@@ -3,7 +3,7 @@
  * Initializes the application window with enforced minimum dimensions
  */
 
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs/promises';
@@ -210,6 +210,14 @@ function registerIPCHandlers(): void {
    */
   ipcMain.handle('file:get-userdata-path', async () => {
     return getUserDataPath();
+  });
+
+  /**
+   * Open a URL in the user's default system browser (e.g. a GitHub Release
+   * link from the update checker) - never navigates the app's own window.
+   */
+  ipcMain.handle('shell:open-external', async (_event, url: string) => {
+    await shell.openExternal(url);
   });
 
   /**

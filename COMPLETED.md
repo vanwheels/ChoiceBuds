@@ -5,6 +5,35 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **App version display + GitHub-release update checker** (2026-07-09):
+  static "Ver X.Y.Z" line added to the sidebar footer under "Teams Loaded"
+  (`utils/appVersion.ts` reads `package.json`'s `version` directly - no
+  network involved, correct even offline). Separately, a new automatic
+  once-per-launch check against this repo's GitHub Releases
+  (`services/github.ts`, `useUpdateCheck.ts`) surfaces its result - not
+  itself - on the Settings page (`UpdateCheckSection.tsx`): checking /
+  up-to-date / update-available (with a "View Release" button) /
+  no-releases-published-yet (today's real, neutral-not-broken state,
+  confirmed live - `vanwheels/ChoiceBuds` has zero Releases or tags as of
+  this build) / couldn't-check (network failure). This is the app's first
+  fully-automatic (non-user-triggered) external call - documented as a
+  **Third exception** in `CLAUDE.md` alongside the existing Pokepaste one,
+  distinct from every prior external fetch (all either on-demand/cached or
+  explicitly user-initiated). Also added `shell.openExternal` as a new IPC
+  handler (`main.ts`/`preload.ts`) - the app's first mechanism for opening
+  a link in the system browser, since none existed before. Live-verified:
+  sidebar version and the real "no releases yet" Settings state confirmed
+  as-is; the "update available" path (plus the "View Release" button
+  actually opening the system browser to the correct release page) was
+  verified by temporarily pointing the check at a real public repo with
+  releases (`facebook/react`), then reverted. The error/network-failure
+  state wasn't force-tested live (the check fires immediately on mount,
+  faster than a stubbed `fetch` could be injected after launch) - accepted
+  on code review instead, since it's a single `try`/`await`/`catch` with no
+  async-race complexity, unlike the two real bugs the sync feature's
+  status logic had. Not persisted anywhere; recomputed fresh every launch.
+  Going forward, shipping a new version means: bump `package.json`'s
+  `version` and publish a matching GitHub Release with that tag.
 - **Cross-device sync - identifier availability check** (2026-07-09,
   follow-up): the user asked whether `username#XXXX` collisions were
   actually prevented - they weren't. `createIdentifier()` generated the

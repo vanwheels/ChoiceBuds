@@ -110,6 +110,14 @@ const electronAPI = {
   },
 
   /**
+   * Opens a URL in the user's default system browser
+   * @param url - the URL to open externally
+   */
+  openExternal: async (url: string): Promise<void> => {
+    return ipcRenderer.invoke('shell:open-external', url);
+  },
+
+  /**
    * Checks whether a sprite is already cached locally, without fetching it
    * @param remoteUrl - the original remote sprite URL
    * @returns Promise resolving to a local data: URL, or null if not cached
