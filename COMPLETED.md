@@ -5,6 +5,27 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Cross-device sync - identifier availability check** (2026-07-09,
+  follow-up): the user asked whether `username#XXXX` collisions were
+  actually prevented - they weren't. `createIdentifier()` generated the
+  4-digit discriminator client-side with no server round-trip at all, and
+  the Worker has no "taken identifiers" registry, only per-identifier KV
+  blobs - so two different people generating the same username+digits by
+  chance would silently share/overwrite each other's data with zero
+  warning. Fixed in `useSync.ts`: `createIdentifier()` now does a `GET` for
+  each candidate `username#XXXX` before finalizing it (usernames are
+  intentionally *not* unique - only the full combined string needs to be
+  free) and re-rolls just the discriminator up to `MAX_DISCRIMINATOR_ATTEMPTS`
+  (5) times on a collision, surfacing a clear error if it somehow can't
+  find a free one (astronomically unlikely) or if the availability check
+  itself can't reach the Worker. Verified two ways: the retry/give-up
+  branches were proven against the real local `wrangler dev` Worker via a
+  disposable script with a controlled (non-random) discriminator sequence
+  - 3 pre-seeded "taken" identifiers followed by a free one correctly
+  succeeded on attempt 4, and 5 straight collisions correctly gave up -
+  since forcing a genuine 1-in-10,000 random collision through the real UI
+  isn't practical; separately, the normal (non-colliding) create path was
+  re-verified end-to-end through the actual UI to confirm no regression.
 - **Cross-device sync - full implementation** (2026-07-09): manual Push/Pull
   of a bundled `{teams, battles, savedAt}` blob against a small self-run
   Cloudflare Worker, keyed by a `username#XXXX` pairing identifier - see

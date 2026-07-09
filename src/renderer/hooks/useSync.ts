@@ -47,6 +47,9 @@ function generateDiscriminator(): string {
   return String(array[0] % 10000).padStart(4, '0');
 }
 
+/** Only the discriminator is retried on collision - usernames are shared by design (many people can be "ethan"). */
+const MAX_DISCRIMINATOR_ATTEMPTS = 5;
+
 export function useSync(
   settingsState: UseSettingsReturn,
   teamsState: UseTeamsReturn,
@@ -120,7 +123,30 @@ export function useSync(
       return { ok: false as const, message: 'Username must be 2-32 letters, numbers, or underscores' };
     }
 
-    const identifier = `${sanitized}#${generateDiscriminator()}`;
+    // Usernames aren't unique on their own (many people can be "ethan") -
+    // only the full username#XXXX combination needs to be free. The Worker
+    // has no separate "taken identifiers" registry, so "does this exact
+    // identifier already have data pushed to it" (a plain GET) is the only
+    // available signal - re-roll just the discriminator on a collision.
+    let identifier: string | null = null;
+    for (let attempt = 0; attempt < MAX_DISCRIMINATOR_ATTEMPTS; attempt++) {
+      const candidate = `${sanitized}#${generateDiscriminator()}`;
+      try {
+        const existing = await pullSyncData(candidate);
+        if (!existing) {
+          identifier = candidate;
+          break;
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Could not verify identifier availability';
+        return { ok: false as const, message };
+      }
+    }
+
+    if (!identifier) {
+      return { ok: false as const, message: 'Could not find a free identifier for that username - try a different username' };
+    }
+
     const success = await updateSettings({ syncIdentifier: identifier, lastPushedAt: null, lastPulledAt: null });
     if (!success) {
       return { ok: false as const, message: 'Failed to save sync identifier' };
