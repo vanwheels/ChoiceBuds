@@ -66,14 +66,48 @@ focused on what's actually next.
 - **Season-level breakdowns (Statistics page + Battle Logger)**: a season
   is a sub-division of a Regulation, not something either system tracks
   today - `Team['format']`/`Battle['format']` only distinguish `'Reg M-A'`
-  vs `'Reg M-B'` as a whole, with no season field anywhere. Reg M-A ran 2
-  total seasons; Reg M-B has 3 scheduled, and season 2 of Reg M-B started
-  2026-07-08. Eventually want win rate/data splittable by season (e.g. a
-  team's Reg M-B season 1 record distinguishable from its season 2
-  record), for both the Statistics page's breakdowns and the Battle
-  Logger's own per-battle data. Needs a new season field/schema addition
-  before any of this can be built (nothing to derive it from today) - not
-  scoped in detail yet, just captured as a known future want.
+  vs `'Reg M-B'` as a whole, with no season field anywhere. Eventually want
+  win rate/data splittable by season (e.g. a team's Reg M-B season 1 record
+  distinguishable from its season 2 record), for both the Statistics
+  page's breakdowns and the Battle Logger's own per-battle data. Needs a
+  new season field/schema addition before any of this can be built
+  (nothing to derive it from today) - not scoped in detail yet, just
+  captured as a known future want.
+  - **Researched 2026-07-08** (Bulbapedia + Serebii, one-off manual check
+    per CLAUDE.md's external-source policy - not a live fetch): confirmed
+    season date ranges exist and are trackable. Serebii was more current
+    than Bulbapedia's dedicated season-list page, which hadn't been
+    updated with the newest season yet at check time - worth checking both
+    when this gets built, not just one.
+    | Season | Regulation | Start | End |
+    |---|---|---|---|
+    | M-1 | Reg M-A | 2026-04-08 | 2026-05-13 |
+    | M-2 | Reg M-A | 2026-05-13 | 2026-06-17 |
+    | M-3 | Reg M-B | 2026-06-17 | 2026-07-08 |
+    | M-4 | Reg M-B | 2026-07-08 | 2026-08-05 |
+    | M-5 (expected, unconfirmed) | Reg M-B | ~2026-08-05 | 2026-09-02 (Reg M-B's own published end date) |
+
+    M-5's exact dates aren't published by either source yet - the above is
+    inferred from the pattern, not sourced, and needs re-confirming before
+    use. When this is eventually built, these dates should be hand-authored
+    into a static config (matching the `config/` pattern used elsewhere,
+    e.g. `vgcData.ts`) - not fetched live at runtime, and will go stale as
+    new seasons launch. Sources checked: Bulbapedia's "Ranked Battles
+    Seasons in Pokémon Champions" and "Regulation Set M-B" pages, Serebii's
+    `rankedbattle/regulationm-a.shtml` and `regulationm-b.shtml` pages -
+    full URLs in the `reg_mb_season_timeline` memory note.
+  - **New, related idea - a "Check for Updates" tool**: doesn't exist
+    anywhere today (checked - no prior mention in this file, COMPLETED.md,
+    or memory). Given the no-live-scrape constraint above, this can't be an
+    automated puller - the agreed shape is a manual-refresh-reminder
+    utility, most likely living on the not-yet-built Settings page: surface
+    what season/regulation data is currently hardcoded, when it was last
+    manually checked, and a prompt to re-check Bulbapedia/Serebii and
+    update the config by hand. Same pattern could generalize to the other
+    hand-authored Champions balance-patch config
+    (`championsMoveOverrides.ts`/`championsAbilityOverrides.ts`/etc.) if
+    useful later, but season/regulation data is the concrete driver for
+    now. Not scoped beyond this - no persistence design, no UI mockup yet.
 
 - **2026-07-07 manual-testing/UI-polish batch**: items 1-2, 4, 6-7 done, no
   remaining notes (see COMPLETED.md). Item 3 done - its "Battlefield.tsx
