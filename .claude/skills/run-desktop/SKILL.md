@@ -154,3 +154,27 @@ crash or a missed click.
   bubbles: true }))` silently does nothing.
   `el.dispatchEvent(new FocusEvent('focusout', { bubbles: true }))` is what
   actually reaches the handler.
+- **`ELECTRON_RUN_AS_NODE` also breaks directly-launched packaged builds,
+  not just `npm run dev`.** Same root cause as the Prerequisites section
+  above, but a distinct failure mode worth knowing separately: launching a
+  built `release/win-unpacked/ChoiceBuds.exe` (or the portable/installed
+  `.exe`) directly from a shell with `ELECTRON_RUN_AS_NODE=1` set makes it
+  boot as plain Node and exit silently - `exit code 0`, zero stdout/stderr,
+  no window, no crash dialog, nothing in Windows Event Viewer. It looks
+  exactly like the app itself is broken. `unset ELECTRON_RUN_AS_NODE`
+  immediately before every direct `.exe` launch too (shell state doesn't
+  persist between separate tool calls, so this needs repeating each time,
+  not just once per session) before concluding a packaged build is
+  actually broken.
+- **Packaged/production builds exercise a code path dev mode never does.**
+  `main.ts`'s `NODE_ENV === 'development'` branch (`loadURL('http://
+  localhost:5173')`) is all that ever runs under `npm run dev` - the
+  `else` branch (`loadFile(...)`, used by every real installed/packaged
+  build) is never touched by any amount of dev-mode testing through this
+  skill. A bug live only in that branch (e.g. a wrong relative path to the
+  built `index.html`) can hide indefinitely no matter how much dev-mode
+  verification passes. Actually launch a fresh packaged build
+  (`npm run dist:win`/`dist:mac`, then run the resulting `.exe`/`.app`
+  directly, not just check the build command exited 0) before trusting any
+  change that touches `main.ts`'s production load path, packaging config,
+  or `electron-builder`'s `files`/`directories` settings.
