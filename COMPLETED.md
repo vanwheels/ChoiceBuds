@@ -5,6 +5,54 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Cross-device sync - Worker deployed to production** (2026-07-09): the
+  last remaining manual step from the full implementation below is done -
+  the Worker is live at `https://choicebuds-sync.vanwheelstheman.workers.dev`,
+  and `src/renderer/services/syncApi.ts`'s `SYNC_WORKER_URL` now points at
+  it (no longer a placeholder). Walked through interactively:
+  `wrangler login` (OAuth device flow), `wrangler kv namespace create
+  SYNC_KV` (also caught and fixed stale `kv:namespace` colon-syntax in
+  `worker/README.md` - current `wrangler` uses `kv namespace` with a
+  space), pasting the returned namespace id into `wrangler.toml`, then
+  `wrangler deploy`. One real snag along the way: registering a
+  `workers.dev` subdomain through Cloudflare's dashboard onboarding wizard
+  didn't just register a subdomain - it also created a separate, unrelated
+  Worker (`choicebuds`, distinct from our real `choicebuds-sync`) wired up
+  as a Git-connected "Workers Build" pointed at the *whole repo root*,
+  which then failed to build (its Vite-plugin auto-detection needs Vite 6+,
+  this repo is on 5.4). Diagnosed via the Cloudflare API
+  (`GET /accounts/:id/workers/scripts` showed both Workers) and deleted the
+  stray one (`DELETE /accounts/:id/workers/scripts/choicebuds`) - unrelated
+  to and no impact on the real sync Worker. Live-verified end-to-end
+  against the actual production deployment (not just local `wrangler dev`
+  this time): created a real identifier through the app, Pushed, and
+  confirmed via direct `curl` against the live `*.workers.dev` URL that
+  the real local teams/battles data landed correctly; test data and the
+  test identifier were then cleaned up (`wrangler kv key delete`, and the
+  app's own "Forget" button - incidentally verifying that control works
+  too) so nothing test-related was left in production or in the local
+  `settings.json`.
+  - **Also this session**: published the project's first-ever GitHub
+    Release (`v0.1.0`, full changelog covering every feature built to
+    date plus a Credits section) via `gh` - required installing the
+    GitHub CLI first (no admin rights available, so via the portable zip
+    release rather than the MSI installer) and authenticating via device
+    login. Discovered and fixed a real blocker for the update-checker
+    feature while publishing: the repo was **private**, which silently
+    breaks `services/github.ts`'s unauthenticated fetch (returns 404
+    against a private repo, indistinguishable from "no releases yet") -
+    embedding a real token in the shipped app to work around this was
+    correctly ruled out as a security risk (leaks the token to every
+    install), so the repo was made public instead, after first scanning
+    all tracked files and full git history for secrets/credentials (none
+    found). Confirmed working via the same unauthenticated API call the
+    app itself makes. New workflow convention written into `CLAUDE.md`
+    (Workflow conventions section) and memory: commits/pushes stay the
+    user's own job via GitHub Desktop, but GitHub Releases going forward
+    are Claude's to draft and publish via `gh` once the user confirms the
+    content - the reverse split, and specifically written into `CLAUDE.md`
+    itself (not just memory) so it stays consistent when working from the
+    user's Mac.
 - **App version display + GitHub-release update checker** (2026-07-09):
   static "Ver X.Y.Z" line added to the sidebar footer under "Teams Loaded"
   (`utils/appVersion.ts` reads `package.json`'s `version` directly - no

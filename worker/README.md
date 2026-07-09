@@ -13,7 +13,7 @@ Cloudflare account, so these steps are for you to run yourself.
 1. `cd worker && npm install`
 2. `npx wrangler login` - opens a browser to authorize the CLI against your
    Cloudflare account (free tier is enough).
-3. `npx wrangler kv:namespace create SYNC_KV` - creates the KV namespace and
+3. `npx wrangler kv namespace create SYNC_KV` - creates the KV namespace and
    prints an `id`. Paste that `id` into `wrangler.toml`'s
    `[[kv_namespaces]]` block, replacing `REPLACE_WITH_YOUR_KV_NAMESPACE_ID`.
 4. `npx wrangler deploy` - deploys the Worker and prints its URL, something

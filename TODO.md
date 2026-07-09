@@ -55,16 +55,6 @@ focused on what's actually next.
   blocked externally on API key approval, can't start regardless of
   priority.
 
-- **Cross-device sync - deploy the Worker**: all code is built and
-  live-verified locally (see COMPLETED.md), but the Worker itself isn't
-  deployed yet - `worker/README.md` has the full `wrangler login` /
-  `wrangler kv:namespace create` / `wrangler deploy` walkthrough. Until
-  that's done and the real `*.workers.dev` URL is pasted into
-  `src/renderer/services/syncApi.ts`'s `SYNC_WORKER_URL` (currently a
-  placeholder), Push/Pull will fail with a "couldn't reach the sync
-  server" error - this is a you-run-it step, not something buildable
-  further from here.
-
 - **Season-level breakdowns (Statistics page + Battle Logger)**: a season
   is a sub-division of a Regulation, not something either system tracks
   today - `Team['format']`/`Battle['format']` only distinguish `'Reg M-A'`

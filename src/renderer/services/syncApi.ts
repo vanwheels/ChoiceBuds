@@ -12,8 +12,7 @@
 
 import type { SyncPayload } from '../types/pokemon';
 
-/** Placeholder until the user deploys their own Worker - see worker/README.md */
-const SYNC_WORKER_URL = 'https://choicebuds-sync.YOUR-SUBDOMAIN.workers.dev';
+const SYNC_WORKER_URL = 'https://choicebuds-sync.vanwheelstheman.workers.dev';
 
 const REQUEST_TIMEOUT_MS = 10_000;
 
