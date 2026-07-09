@@ -115,16 +115,24 @@ export function hasUnappliedHitReactiveEffect(battle: Battle, pokemonId: string,
 }
 
 /**
- * Whether a status-inflicting move's snapshotted effect (see
- * BattleAction.statusAilment, set at log time from the move's PokeAPI meta)
- * has already been applied to every one of its targets - drives TurnLog's
- * "Inflict {Status}?" chip. True (hide the chip) for actions with no
- * statusAilment/target at all, same "nothing to apply" convention as the
- * other hasApplied helpers above.
+ * The most recent phase:'move' action in the CURRENT (last) turn that
+ * targeted this pokemonId, if any - drives the Miss/Crit/"Inflict
+ * {Status}?" chips shown on the target's own BattlefieldSlot. Turn-scoped
+ * (not "since last X" like the ability-effect helpers above) so a chip
+ * doesn't linger for turns after the hit it refers to - matches the
+ * switchedInIds current-turn-only pattern already used in Battlefield.tsx.
+ * If a Pokemon was hit by two different moves in the same turn, only the
+ * most recent one's chips show - a deliberate simplification so a target
+ * shows at most one set of pending chips at a time.
  */
-export function hasAppliedStatusEffect(battle: Battle, action: BattleAction): boolean {
-  if (!action.statusAilment || !action.target || action.target.length === 0) return true;
-  return action.target.every(t => battle.statusConditions[t.pokemonId] === action.statusAilment);
+export function mostRecentTargetingActionThisTurn(battle: Battle, pokemonId: string): BattleAction | null {
+  const lastTurn = battle.turns[battle.turns.length - 1];
+  if (!lastTurn) return null;
+  for (let i = lastTurn.actions.length - 1; i >= 0; i--) {
+    const action = lastTurn.actions[i];
+    if (action.phase === 'move' && action.target?.some(t => t.pokemonId === pokemonId)) return action;
+  }
+  return null;
 }
 
 /**

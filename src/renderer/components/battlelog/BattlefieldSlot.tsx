@@ -27,11 +27,11 @@ import { getSwitchInEffect } from '../../config/onSwitchInAbilities';
 import { getReactiveLowerEffect } from '../../config/reactiveAbilities';
 import { getHitReactiveEffect } from '../../config/hitReactiveAbilities';
 import { STAT_ORDER, STAT_LABELS } from '../../config/statStages';
-import { STATUS_ABBREVIATIONS, STATUS_COLORS } from '../../config/statusConditions';
+import { STATUS_ABBREVIATIONS, STATUS_COLORS, STATUS_LABELS } from '../../config/statusConditions';
 import { POKEMON_DRAG_TYPE, pokemonDragTypeForSide, type PokemonDragPayload } from '../../utils/dragTypes';
 import {
   hasAppliedAbilityEffectSinceSwitchIn, hasUnappliedReactiveLowerEffect, hasUnappliedHitReactiveEffect,
-  canActThisTurn, canSwitchOutThisTurn,
+  mostRecentTargetingActionThisTurn, canActThisTurn, canSwitchOutThisTurn,
 } from '../../utils/battleLookup';
 import { useDismissable } from '../../hooks/useDismissable';
 import MoveLogPopover from './MoveLogPopover';
@@ -240,6 +240,14 @@ export default function BattlefieldSlot({
   const hitReactiveEffect = getHitReactiveEffect(knownAbility);
   const showHitReactiveChip = !!hitReactiveEffect && !!knownAbility && hasUnappliedHitReactiveEffect(battle, mon.id, knownAbility, hitReactiveEffect.trigger);
 
+  // "What just happened to me this turn" - drives the Miss/Crit/Inflict-
+  // Status chips below, all scoped to the same single most-recent hit.
+  const targetingAction = mostRecentTargetingActionThisTurn(battle, mon.id);
+  const targetOutcome = targetingAction?.outcomes?.find(o => o.pokemonId === mon.id)?.result ?? null;
+  const showMissChip = !!targetingAction;
+  const showCritChip = !!targetingAction?.moveCategory && targetingAction.moveCategory !== 'status';
+  const showStatusInflictChip = !!targetingAction?.statusAilment && battle.statusConditions[mon.id] !== targetingAction.statusAilment;
+
   const canAct = canActThisTurn(battle, mon.id);
   const canSwitchOut = canSwitchOutThisTurn(battle, mon.id);
   const hasReplacement = benchOptions.length > 0;
@@ -324,6 +332,46 @@ export default function BattlefieldSlot({
           className="text-[9px] px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-200 hover:bg-purple-800 cursor-pointer"
         >
           {knownAbility}!
+        </button>
+      )}
+      {showMissChip && (
+        <button
+          type="button"
+          onClick={e => {
+            e.stopPropagation();
+            battleLogActions.setActionTargetOutcome(battle, battle.turns.length, targetingAction!.id, mon.id, targetOutcome === 'miss' ? null : 'miss');
+          }}
+          title="Toggle whether this hit missed"
+          className={`text-[9px] px-1.5 py-0.5 rounded cursor-pointer ${
+            targetOutcome === 'miss' ? 'bg-gray-600 text-gray-200' : 'bg-gray-800 text-gray-400 hover:text-gray-200 hover:bg-gray-700'
+          }`}
+        >
+          Miss
+        </button>
+      )}
+      {showCritChip && (
+        <button
+          type="button"
+          onClick={e => {
+            e.stopPropagation();
+            battleLogActions.setActionTargetOutcome(battle, battle.turns.length, targetingAction!.id, mon.id, targetOutcome === 'crit' ? null : 'crit');
+          }}
+          title="Toggle whether this hit was a critical hit"
+          className={`text-[9px] px-1.5 py-0.5 rounded cursor-pointer ${
+            targetOutcome === 'crit' ? 'bg-yellow-900/70 text-yellow-300' : 'bg-gray-800 text-gray-400 hover:text-yellow-300 hover:bg-yellow-900/40'
+          }`}
+        >
+          Crit
+        </button>
+      )}
+      {showStatusInflictChip && (
+        <button
+          type="button"
+          onClick={e => { e.stopPropagation(); battleLogActions.setStatusCondition(battle, side, mon.id, targetingAction!.statusAilment!); }}
+          title="Apply this move's status effect"
+          className="text-[9px] px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-200 hover:bg-purple-800 cursor-pointer"
+        >
+          Inflict {STATUS_LABELS[targetingAction!.statusAilment!]}?
         </button>
       )}
 

@@ -5,6 +5,37 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Per-target crit/miss + relocate Miss/Crit/Inflict-Status chips onto the
+  Battlefield** (2026-07-09): items 2-3 of the status-condition/move-outcome
+  follow-up batch. `BattleAction.crit`/`missed` (single booleans covering
+  the whole action) are replaced with a per-target `outcomes: {pokemonId,
+  result: 'crit' | 'miss'}[]` array, mirroring the existing per-target
+  `effectiveness` field - a spread move (Rock Slide, Earthquake) can now
+  crit one target and miss another independently, and a single target is
+  mutually exclusive by construction (one `result` per target entry, not
+  two independent flags). New `setActionTargetOutcome` mutation in
+  `useBattleLogActions.ts` replaces the generalized `setActionFlag` (reverted
+  back to single-purpose `setActionFailed`, since crit/missed no longer
+  share its shape). New `mostRecentTargetingActionThisTurn` helper in
+  `utils/battleLookup.ts` (turn-scoped, mirroring `Battlefield.tsx`'s
+  existing `switchedInIds` current-turn-only pattern) finds "what just
+  happened to me this turn" per Pokemon, driving new Miss/Crit/"Inflict
+  {Status}?" chips rendered directly on the target's own `BattlefieldSlot`
+  (same chip shape as the existing switch-in/reactive-ability chips) -
+  replacing the old chips that lived inline in `TurnLog.tsx`'s per-action
+  text. `TurnLog.tsx` keeps a read-only per-target crit/miss label next to
+  its existing per-target effectiveness label instead, which is actually a
+  correctness improvement over the old flat suffix (a spread move's
+  differing per-target outcomes can now be represented in the historical
+  log). Live-verified via run-desktop: two independent targets of the same
+  Earthquake use got independent Miss/Crit chips, toggling one didn't
+  affect the other, toggling Crit-then-Miss on the same target replaced
+  rather than stacked, and all three chips correctly disappeared after
+  "Next Turn" (turn-scoped). The relocated Inflict-Status chip specifically
+  wasn't live-clicked this pass (no guaranteed-status move was available on
+  the test team/opponent) - same caveat as when it first shipped, still
+  worth a spot-check next time a team with Thunder Wave/Toxic/etc. logs a
+  real battle.
 - **Battlefield targeting bug: attacking moves could target their own user**
   (2026-07-09): found while reviewing the status-condition/move-outcome work
   right after it shipped. `Battlefield.tsx`'s `handleSlotClick` called

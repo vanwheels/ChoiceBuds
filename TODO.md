@@ -30,7 +30,8 @@ focused on what's actually next.
   the turn-action-economy/persistent-slots/move-autofill/auto-field-
   effects pass, the type-effectiveness/opponent-pickers/screen-
   duration/mega-ability/auto-scroll/faint-relocation/stat-changing-moves
-  pass, and status-condition tracking + move-outcome chips are all done
+  pass, status-condition tracking + move-outcome chips, the self-targeting
+  fix, and the per-target crit/miss + chip-placement follow-up are all done
   (see COMPLETED.md). Still open: Bo3 "set" grouping across games, post-battle
   damage-calc review (step through a logged battle's turns against the
   Calc), and the stat-inference idea (needs Limitless/championsbattledata-
@@ -44,24 +45,6 @@ focused on what's actually next.
   (deliberately excluded from the switch-in effects table - its target
   stat depends on comparing the opposing side's average Def/SpDef, needs
   base-stat math not taken on yet).
-
-- **2026-07-09 status-condition/move-outcome follow-up** (found while
-  reviewing the status-condition/move-outcome chips work above right after
-  it shipped). Item 1 done - see COMPLETED.md. Items 2-3 still open:
-  2. **Miss/Crit/Inflict-Status chip placement**: currently rendered inline
-     in `TurnLog.tsx`'s per-action turn-by-turn text. User feedback: these
-     read clearer as an overlay near the affected Pokemon's own
-     `BattlefieldSlot` instead (matching where the switch-in/reactive
-     ability chips already live), not buried in the log.
-  3. **Crit/Miss need to be per-target, not per-action, and mutually
-     exclusive**: `BattleAction.crit`/`missed` are currently single booleans
-     covering the whole action, but a spread move (Rock Slide, Earthquake)
-     can crit one target and miss another independently - needs
-     restructuring to a per-target shape (mirroring the existing
-     `effectiveness: {pokemonId, multiplier}[]` field), and a single target
-     can't be both crit and missed at once (a miss never crits) - the two
-     toggles need to be mutually exclusive per target rather than
-     independent checkboxes.
 
 - Everything else from the original 9-item roadmap discussion not yet
   built, reordered by priority: Statistics page (#9) done - see

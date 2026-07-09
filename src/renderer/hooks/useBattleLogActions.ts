@@ -106,7 +106,8 @@ export interface UseBattleLogActionsReturn {
   setFainted: (battle: Battle, side: BattleSide, pokemonId: string, fainted: boolean) => Promise<boolean>;
   setStatusCondition: (battle: Battle, side: BattleSide, pokemonId: string, status: StatusCondition | null) => Promise<boolean>;
   logAction: (battle: Battle, action: Omit<BattleAction, 'id'>) => Promise<boolean>;
-  setActionFlag: (battle: Battle, turnNumber: number, actionId: string, field: 'failed' | 'crit' | 'missed', value: boolean) => Promise<boolean>;
+  setActionFailed: (battle: Battle, turnNumber: number, actionId: string, failed: boolean) => Promise<boolean>;
+  setActionTargetOutcome: (battle: Battle, turnNumber: number, actionId: string, pokemonId: string, result: 'crit' | 'miss' | null) => Promise<boolean>;
   advanceTurn: (battle: Battle) => Promise<boolean>;
   undoLastAction: (battle: Battle) => Promise<boolean>;
   setResult: (battle: Battle, result: Battle['result']) => Promise<boolean>;
@@ -634,21 +635,43 @@ export function useBattleLogActions(
     return updateBattle(battle.id, { statStages, turns });
   }, [updateBattle]);
 
-  /**
-   * Powers TurnLog's "Failed?"/"Crit"/"Miss" chips - one shared toggle for
-   * the 3 boolean outcome flags an already-logged move action can carry,
-   * rather than 3 near-identical functions differing only in field name.
-   */
-  const setActionFlag = useCallback(async (
+  /** Powers TurnLog's "Failed?" chip on a repeat Protect-family use. */
+  const setActionFailed = useCallback(async (
     battle: Battle,
     turnNumber: number,
     actionId: string,
-    field: 'failed' | 'crit' | 'missed',
-    value: boolean
+    failed: boolean
   ): Promise<boolean> => {
     const turns = battle.turns.map(turn => turn.number !== turnNumber ? turn : {
       ...turn,
-      actions: turn.actions.map(action => action.id !== actionId ? action : { ...action, [field]: value }),
+      actions: turn.actions.map(action => action.id !== actionId ? action : { ...action, failed }),
+    });
+    return updateBattle(battle.id, { turns });
+  }, [updateBattle]);
+
+  /**
+   * Powers the Crit/Miss chips now shown on a target's own BattlefieldSlot
+   * (see utils/battleLookup.ts's mostRecentTargetingActionThisTurn) -
+   * sets/replaces/clears one target's outcome within an already-logged
+   * move action's `outcomes` array. `result: null` clears it back to a
+   * plain hit (toggle-off); a non-null result always replaces any existing
+   * entry for that pokemonId, so crit/miss stay mutually exclusive by
+   * construction.
+   */
+  const setActionTargetOutcome = useCallback(async (
+    battle: Battle,
+    turnNumber: number,
+    actionId: string,
+    pokemonId: string,
+    result: 'crit' | 'miss' | null
+  ): Promise<boolean> => {
+    const turns = battle.turns.map(turn => turn.number !== turnNumber ? turn : {
+      ...turn,
+      actions: turn.actions.map(action => {
+        if (action.id !== actionId) return action;
+        const outcomes = (action.outcomes ?? []).filter(o => o.pokemonId !== pokemonId);
+        return { ...action, outcomes: result ? [...outcomes, { pokemonId, result }] : outcomes };
+      }),
     });
     return updateBattle(battle.id, { turns });
   }, [updateBattle]);
@@ -804,7 +827,8 @@ export function useBattleLogActions(
     setFainted,
     setStatusCondition,
     logAction,
-    setActionFlag,
+    setActionFailed,
+    setActionTargetOutcome,
     advanceTurn,
     undoLastAction,
     setResult,

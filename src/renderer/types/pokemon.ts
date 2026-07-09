@@ -158,17 +158,18 @@ export interface BattleAction {
   target?: { side: BattleSide; pokemonId: string }[];
   phase?: 'sendIn' | 'switch' | 'mega' | 'move';
   failed?: boolean;
-  // Manually-confirmed outcomes of a landed move - unlike `failed` (which
-  // covers Protect-family/switch-out moves specifically) these apply to any
-  // damaging move. Not computed/inferred - the user is watching the real
-  // battle and taps these when they observe a crit or a miss.
-  crit?: boolean;
-  missed?: boolean;
   note?: string;
   // Type-effectiveness multiplier per target, computed at log time from the
   // move's type and each target's types (see config/typeEffectiveness.ts) -
   // only present for damaging moves, absent for status moves/self/field.
   effectiveness?: { pokemonId: string; multiplier: number }[];
+  // Per-target hit outcome (crit/miss) for a landed move - a spread move
+  // (Rock Slide, Earthquake) can crit one target and miss another
+  // independently. Manually confirmed, not computed - the user is watching
+  // the real battle and taps these when they observe it. Mutually
+  // exclusive by construction (one result per target entry) - a miss can't
+  // also crit. No entry for a given target = a plain, unremarkable hit.
+  outcomes?: { pokemonId: string; result: 'crit' | 'miss' }[];
   // The move's type/damage-class, snapshotted at log time (same pattern as
   // effectiveness above) - lets utils/battleLookup.ts's hit-reactive-ability
   // check (config/hitReactiveAbilities.ts) work from the stored action alone

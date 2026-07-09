@@ -7,9 +7,8 @@
  */
 
 import type { Battle, BattleAction } from '../../types/pokemon';
-import { battlePokemonDisplayName, isRepeatProtectUse, hasAppliedStatusEffect } from '../../utils/battleLookup';
+import { battlePokemonDisplayName, isRepeatProtectUse } from '../../utils/battleLookup';
 import { isSwitchOutMove } from '../../config/switchOutMoves';
-import { STATUS_LABELS } from '../../config/statusConditions';
 import type { UseBattleLogActionsReturn } from '../../hooks/useBattleLogActions';
 
 interface TurnLogProps {
@@ -31,6 +30,13 @@ function effectivenessLabel(multiplier: number | undefined): { text: string; cla
   return { text: 'Not Very Effective', className: 'text-orange-400' };
 }
 
+/** Per-target crit/miss label - the interactive toggle chips for these now live on the target's own BattlefieldSlot (see BattlefieldSlot.tsx), this is just the read-only historical record. */
+function outcomeLabel(result: 'crit' | 'miss' | undefined): { text: string; className: string } | null {
+  if (result === 'crit') return { text: 'crit!', className: 'text-yellow-400' };
+  if (result === 'miss') return { text: 'missed', className: 'text-gray-400' };
+  return null;
+}
+
 export default function TurnLog({ battle, battleLogActions }: TurnLogProps) {
   return (
     <div className="flex flex-col gap-3">
@@ -44,8 +50,6 @@ export default function TurnLog({ battle, battleLogActions }: TurnLogProps) {
               {sortByPhase(turn.actions).map(action => {
                 const showFailChip = isRepeatProtectUse(battle, turn.number, action)
                   || (action.phase === 'move' && isSwitchOutMove(action.move));
-                const showOutcomeChips = action.phase === 'move' && !!action.move;
-                const showStatusChip = !!action.statusAilment && !hasAppliedStatusEffect(battle, action);
                 return (
                   <li key={action.id} className="text-sm flex items-center gap-1.5 flex-wrap">
                     <span className={action.side === 'player' ? 'text-blue-400' : 'text-red-400'}>
@@ -56,12 +60,14 @@ export default function TurnLog({ battle, battleLogActions }: TurnLogProps) {
                       <span className="text-gray-400">
                         {' '}on{' '}
                         {action.target.map((t, i) => {
-                          const label = effectivenessLabel(action.effectiveness?.find(e => e.pokemonId === t.pokemonId)?.multiplier);
+                          const effLabel = effectivenessLabel(action.effectiveness?.find(e => e.pokemonId === t.pokemonId)?.multiplier);
+                          const outLabel = outcomeLabel(action.outcomes?.find(o => o.pokemonId === t.pokemonId)?.result);
                           return (
                             <span key={`${t.side}-${t.pokemonId}`}>
                               {i > 0 && ' and '}
                               {battlePokemonDisplayName(battle, t.side, t.pokemonId)}
-                              {label && <span className={`text-xs ${label.className}`}> ({label.text})</span>}
+                              {effLabel && <span className={`text-xs ${effLabel.className}`}> ({effLabel.text})</span>}
+                              {outLabel && <span className={`text-xs ${outLabel.className}`}> ({outLabel.text})</span>}
                             </span>
                           );
                         })}
@@ -69,46 +75,13 @@ export default function TurnLog({ battle, battleLogActions }: TurnLogProps) {
                     )}
                     {action.note && <span className="text-gray-500 italic"> ({action.note})</span>}
                     {action.failed && <span className="text-red-400 text-xs italic">- failed</span>}
-                    {action.crit && <span className="text-yellow-400 text-xs italic">- crit!</span>}
-                    {action.missed && <span className="text-gray-400 text-xs italic">- missed</span>}
                     {showFailChip && !action.failed && (
                       <button
                         type="button"
-                        onClick={() => battleLogActions.setActionFlag(battle, turn.number, action.id, 'failed', true)}
+                        onClick={() => battleLogActions.setActionFailed(battle, turn.number, action.id, true)}
                         className="text-[10px] px-1.5 py-0.5 rounded bg-gray-800 text-gray-400 hover:text-red-300 hover:bg-red-900/40 cursor-pointer"
                       >
                         Failed?
-                      </button>
-                    )}
-                    {showOutcomeChips && action.target && action.target.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => battleLogActions.setActionFlag(battle, turn.number, action.id, 'missed', !action.missed)}
-                        className={`text-[10px] px-1.5 py-0.5 rounded cursor-pointer ${
-                          action.missed ? 'bg-gray-600 text-gray-200' : 'bg-gray-800 text-gray-400 hover:text-gray-200 hover:bg-gray-700'
-                        }`}
-                      >
-                        Miss
-                      </button>
-                    )}
-                    {showOutcomeChips && action.moveCategory && action.moveCategory !== 'status' && (
-                      <button
-                        type="button"
-                        onClick={() => battleLogActions.setActionFlag(battle, turn.number, action.id, 'crit', !action.crit)}
-                        className={`text-[10px] px-1.5 py-0.5 rounded cursor-pointer ${
-                          action.crit ? 'bg-yellow-900/70 text-yellow-300' : 'bg-gray-800 text-gray-400 hover:text-yellow-300 hover:bg-yellow-900/40'
-                        }`}
-                      >
-                        Crit
-                      </button>
-                    )}
-                    {showStatusChip && (
-                      <button
-                        type="button"
-                        onClick={() => action.target?.forEach(t => battleLogActions.setStatusCondition(battle, t.side, t.pokemonId, action.statusAilment!))}
-                        className="text-[10px] px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-200 hover:bg-purple-800 cursor-pointer"
-                      >
-                        Inflict {STATUS_LABELS[action.statusAilment!]}?
                       </button>
                     )}
                   </li>
