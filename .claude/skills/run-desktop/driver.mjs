@@ -22,7 +22,14 @@ fs.mkdirSync(SHOT_DIR, { recursive: true });
 let app = null;
 let page = null;
 
-const electronBin = path.join(APP_DIR, 'node_modules/electron/dist/electron.exe');
+// The electron npm package's own dist/ binary name is platform-specific
+// (electron.exe on Windows, Electron.app/Contents/MacOS/Electron on macOS,
+// electron on Linux) - it's recorded in node_modules/electron/path.txt by
+// its postinstall. Hardcoding "electron.exe" only works on Windows; read
+// path.txt the same way the electron package's own index.js does so this
+// resolves correctly on every platform.
+const electronPathFile = path.join(APP_DIR, 'node_modules/electron/path.txt');
+const electronBin = path.join(APP_DIR, 'node_modules/electron/dist', fs.readFileSync(electronPathFile, 'utf-8'));
 
 const COMMANDS = {
   async launch() {

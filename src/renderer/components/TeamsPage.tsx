@@ -132,6 +132,7 @@ export default function TeamsPage({
           onClose={() => setIsImportModalOpen(false)}
           onImport={teamsState.addTeam}
           databaseState={databaseState}
+          existingTeamNames={teamsState.teams.map(team => team.name)}
         />
       )}
     </div>
