@@ -28,17 +28,10 @@ focused on what's actually next.
   the layout/drag-to-field/stat-stage-tracking follow-up, the mega/
   reactive-ability/more-switch-in-abilities/field-effects-relocation pass,
   the turn-action-economy/persistent-slots/move-autofill/auto-field-
-  effects pass, and the type-effectiveness/opponent-pickers/screen-
+  effects pass, the type-effectiveness/opponent-pickers/screen-
   duration/mega-ability/auto-scroll/faint-relocation/stat-changing-moves
-  pass are all done (see COMPLETED.md). **Next up**: status-condition
-  tracking + move-outcome chips (full paralysis, didn't wake up, flinch,
-  hit-by-a-status-move, crit/miss) - explicitly scoped as its own
-  follow-up plan since it needs a new status-condition data model
-  (nothing tracks paralysis/sleep/etc. yet) plus fetching PokeAPI's move
-  `meta` data (flinch_chance/ailment_chance) that nothing reads today.
-  Crit/miss specifically flagged by the user as "something to keep an eye
-  on" rather than a concrete ask yet - folds into this same follow-up.
-  Also still open: Bo3 "set" grouping across games, post-battle
+  pass, and status-condition tracking + move-outcome chips are all done
+  (see COMPLETED.md). Still open: Bo3 "set" grouping across games, post-battle
   damage-calc review (step through a logged battle's turns against the
   Calc), and the stat-inference idea (needs Limitless/championsbattledata-
   sourced per-species data first). Also noted but not built: synthesizing

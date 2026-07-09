@@ -158,6 +158,12 @@ export interface BattleAction {
   target?: { side: BattleSide; pokemonId: string }[];
   phase?: 'sendIn' | 'switch' | 'mega' | 'move';
   failed?: boolean;
+  // Manually-confirmed outcomes of a landed move - unlike `failed` (which
+  // covers Protect-family/switch-out moves specifically) these apply to any
+  // damaging move. Not computed/inferred - the user is watching the real
+  // battle and taps these when they observe a crit or a miss.
+  crit?: boolean;
+  missed?: boolean;
   note?: string;
   // Type-effectiveness multiplier per target, computed at log time from the
   // move's type and each target's types (see config/typeEffectiveness.ts) -
@@ -169,6 +175,12 @@ export interface BattleAction {
   // without re-fetching move data. Absent for non-damaging/self/field moves.
   moveType?: string;
   moveCategory?: 'physical' | 'special' | 'status';
+  // The status this move guaranteed-inflicts on hit (PokeAPI's
+  // meta.ailment_chance === 100 - see config/statusConditions.ts's
+  // mapAilmentToStatus), snapshotted at log time same as moveType/
+  // moveCategory above. Drives TurnLog's "Inflict {Status}?" chip - absent
+  // for moves with no guaranteed/tracked status effect.
+  statusAilment?: StatusCondition;
 }
 
 /**
@@ -237,6 +249,17 @@ export type StatKey = 'atk' | 'def' | 'spa' | 'spd' | 'spe';
 export type StatStages = Partial<Record<StatKey, number>>;
 
 /**
+ * A Pokemon's current major status condition. Deliberately scoped to the 6
+ * real major statuses only (one slot per Pokemon, matching the real game
+ * rule that only one major status can be active at a time) - volatile
+ * conditions (confusion, infatuation, trap, etc.) are excluded, since a
+ * Pokemon can hold one of those *simultaneously* with a major status, which
+ * this single-slot model can't express. Not modeled yet; revisit as its own
+ * follow-up if it turns out to matter for logging.
+ */
+export type StatusCondition = 'burn' | 'freeze' | 'paralysis' | 'poison' | 'badly-poisoned' | 'sleep';
+
+/**
  * One manually-logged Pokemon Champions VGC battle (doubles). See
  * useBattleLogActions.ts for the higher-level mutations that build/update
  * these records.
@@ -259,6 +282,10 @@ export interface Battle {
   opponentActiveIds: (string | null)[]; // ids from opponentRoster, same fixed-slot shape as playerActiveIds
   megaEvolvedIds: string[]; // ids (either roster) that have Mega Evolved this battle
   statStages: Record<string, StatStages>; // keyed by pokemonId, either roster - cleared when that id leaves the field (bench/faint)
+  // Keyed by pokemonId, either roster - same shape as statStages, but unlike
+  // stat stages a major status persists through switching/fainting in the
+  // real game, so this is never cleared by setFainted/switchOut/swapActive.
+  statusConditions: Record<string, StatusCondition>;
   turns: Turn[];
   fieldState: FieldState;
   result: 'win' | 'loss' | 'in-progress';
@@ -338,6 +365,13 @@ export interface MoveData {
   description: string; // Effect description
   flags: string[]; // Move flags (sound/bullet/punch/etc.) - see config/moveFlags.ts
   target: string; // Raw PokeAPI target slug (e.g. "selected-pokemon", "all-opponents") - see config/moveTargeting.ts
+  // PokeAPI's secondary-effect metadata (its own /move/{id} `meta` object) -
+  // ailment/flinch/crit-rate data. `ailment` is PokeAPI's raw ailment slug
+  // (e.g. "paralysis", "none") - see config/statusConditions.ts's
+  // mapAilmentToStatus for how this gets narrowed to our own StatusCondition
+  // type. Added after `target` - see useGameData.ts's getCachedMove for how
+  // a pre-existing cache entry missing this field is treated as a miss.
+  meta?: { ailment: string; ailmentChance: number; flinchChance: number; critRate: number };
   cachedAt: number; // Unix timestamp
   expiresAt: number; // Unix timestamp
 }

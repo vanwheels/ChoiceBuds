@@ -9,7 +9,7 @@
 import { useCallback } from 'react';
 import type {
   Battle, BattleAction, BattleSide, FieldState, Team, SpeciesRosterEntry,
-  WeatherType, TerrainType, SideConditions, StatKey, StatStages,
+  WeatherType, TerrainType, SideConditions, StatKey, StatStages, StatusCondition,
 } from '../types/pokemon';
 import type { TurnTrackedCondition, BooleanHazard, StackableHazard } from '../config/fieldConditions';
 import { findBattlePokemon, canActThisTurn, canSwitchOutThisTurn, requiredActiveCount, compactActiveIds } from '../utils/battleLookup';
@@ -22,6 +22,7 @@ import { getMegaApiSlug } from '../config/megaEvolution';
 import { getMegaAbility } from '../config/megaAbilities';
 import { fetchPokemonData } from '../services/pokeapi';
 import { STAT_LABELS } from '../config/statStages';
+import { STATUS_LABELS } from '../config/statusConditions';
 import {
   WEATHER_LABELS, TERRAIN_LABELS, STACKABLE_HAZARD_MAX,
   SIDE_CONDITION_EXTENDED_FIELD,
@@ -103,8 +104,9 @@ export interface UseBattleLogActionsReturn {
   applyReactiveLowerEffect: (battle: Battle, pokemonId: string, ability: string) => Promise<boolean>;
   applyHitReactiveEffect: (battle: Battle, pokemonId: string, ability: string) => Promise<boolean>;
   setFainted: (battle: Battle, side: BattleSide, pokemonId: string, fainted: boolean) => Promise<boolean>;
+  setStatusCondition: (battle: Battle, side: BattleSide, pokemonId: string, status: StatusCondition | null) => Promise<boolean>;
   logAction: (battle: Battle, action: Omit<BattleAction, 'id'>) => Promise<boolean>;
-  setActionFailed: (battle: Battle, turnNumber: number, actionId: string, failed: boolean) => Promise<boolean>;
+  setActionFlag: (battle: Battle, turnNumber: number, actionId: string, field: 'failed' | 'crit' | 'missed', value: boolean) => Promise<boolean>;
   advanceTurn: (battle: Battle) => Promise<boolean>;
   undoLastAction: (battle: Battle) => Promise<boolean>;
   setResult: (battle: Battle, result: Battle['result']) => Promise<boolean>;
@@ -158,6 +160,7 @@ export function useBattleLogActions(
       opponentActiveIds: [null, null],
       megaEvolvedIds: [],
       statStages: {},
+      statusConditions: {},
       turns: [{ number: 1, actions: [] }],
       fieldState: { playerSide: {}, opponentSide: {} },
       result: 'in-progress',
@@ -279,6 +282,31 @@ export function useBattleLogActions(
 
     const opponentRoster = battle.opponentRoster.map(o => o.id === pokemonId ? { ...o, fainted } : o);
     return updateBattle(battle.id, { opponentRoster, statStages, opponentActiveIds: nextActiveIds, turns });
+  }, [updateBattle]);
+
+  /**
+   * Manual set/clear for a major status condition (see types/pokemon.ts's
+   * StatusCondition doc comment for why it's scoped to 6 statuses). Unlike
+   * setFainted, both directions log a note - curing a status (Lum Berry,
+   * Rest, Refresh) is a real, common VGC event worth a turn-log entry, not
+   * just a misclick correction the way un-fainting is. `status: null` clears
+   * it entirely (removes the id from the record, matching clearStatStages'
+   * shape) rather than storing an explicit "none" value.
+   */
+  const setStatusCondition = useCallback(async (
+    battle: Battle,
+    side: BattleSide,
+    pokemonId: string,
+    status: StatusCondition | null
+  ): Promise<boolean> => {
+    const current = battle.statusConditions[pokemonId] ?? null;
+    if (current === status) return false;
+
+    const statusConditions = status
+      ? { ...battle.statusConditions, [pokemonId]: status }
+      : Object.fromEntries(Object.entries(battle.statusConditions).filter(([id]) => id !== pokemonId));
+    const note = status ? `${STATUS_LABELS[status]}` : `Cured of ${STATUS_LABELS[current!]}`;
+    return updateBattle(battle.id, { statusConditions, turns: appendAction(battle.turns, { side, pokemonId, note }) });
   }, [updateBattle]);
 
   /**
@@ -606,16 +634,21 @@ export function useBattleLogActions(
     return updateBattle(battle.id, { statStages, turns });
   }, [updateBattle]);
 
-  /** Powers the TurnLog's "Failed?" chip on a repeat Protect-family use. */
-  const setActionFailed = useCallback(async (
+  /**
+   * Powers TurnLog's "Failed?"/"Crit"/"Miss" chips - one shared toggle for
+   * the 3 boolean outcome flags an already-logged move action can carry,
+   * rather than 3 near-identical functions differing only in field name.
+   */
+  const setActionFlag = useCallback(async (
     battle: Battle,
     turnNumber: number,
     actionId: string,
-    failed: boolean
+    field: 'failed' | 'crit' | 'missed',
+    value: boolean
   ): Promise<boolean> => {
     const turns = battle.turns.map(turn => turn.number !== turnNumber ? turn : {
       ...turn,
-      actions: turn.actions.map(action => action.id !== actionId ? action : { ...action, failed }),
+      actions: turn.actions.map(action => action.id !== actionId ? action : { ...action, [field]: value }),
     });
     return updateBattle(battle.id, { turns });
   }, [updateBattle]);
@@ -769,8 +802,9 @@ export function useBattleLogActions(
     applyReactiveLowerEffect,
     applyHitReactiveEffect,
     setFainted,
+    setStatusCondition,
     logAction,
-    setActionFailed,
+    setActionFlag,
     advanceTurn,
     undoLastAction,
     setResult,

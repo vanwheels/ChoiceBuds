@@ -115,6 +115,19 @@ export function hasUnappliedHitReactiveEffect(battle: Battle, pokemonId: string,
 }
 
 /**
+ * Whether a status-inflicting move's snapshotted effect (see
+ * BattleAction.statusAilment, set at log time from the move's PokeAPI meta)
+ * has already been applied to every one of its targets - drives TurnLog's
+ * "Inflict {Status}?" chip. True (hide the chip) for actions with no
+ * statusAilment/target at all, same "nothing to apply" convention as the
+ * other hasApplied helpers above.
+ */
+export function hasAppliedStatusEffect(battle: Battle, action: BattleAction): boolean {
+  if (!action.statusAilment || !action.target || action.target.length === 0) return true;
+  return action.target.every(t => battle.statusConditions[t.pokemonId] === action.statusAilment);
+}
+
+/**
  * Each active slot gets exactly one action per turn - a move OR a switch,
  * never both, never twice (a freshly-switched-in Pokemon can't also move
  * or switch again the same turn). Mega Evolving is folded into "acted"

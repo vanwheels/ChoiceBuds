@@ -8,6 +8,7 @@
  */
 
 import { useState } from 'react';
+import type { StatusCondition } from '../../types/pokemon';
 import { useDismissable } from '../../hooks/useDismissable';
 import { useMoveNameList } from '../../hooks/useMoveNameList';
 
@@ -15,11 +16,55 @@ interface MoveLogPopoverProps {
   actorLabel: string;
   moves: string[];
   allowFreeform: boolean;
+  currentStatus: StatusCondition | null;
   onPickMove: (move: string) => void;
+  onLogNoAction: (note: string) => void;
   onClose: () => void;
 }
 
-export default function MoveLogPopover({ actorLabel, moves, allowFreeform, onPickMove, onClose }: MoveLogPopoverProps) {
+/**
+ * A Pokemon that's fully paralyzed/still asleep/flinched doesn't get to
+ * attack - its turn is used up with no move happening at all, not a
+ * modifier on one. Reuses the same "consumes the turn" logAction call a
+ * real move would (see Battlefield.tsx's onLogNoAction wiring), just with
+ * no move/target/type data attached. Full Paralysis/Didn't Wake Up only
+ * make sense while the matching status is actually active; Flinch has no
+ * persistent flag to gate on (it depends on turn order/an earlier hit this
+ * same turn, which isn't modeled), so it's always offered.
+ */
+function NoActionButtons({ currentStatus, onLogNoAction }: { currentStatus: StatusCondition | null; onLogNoAction: (note: string) => void }) {
+  return (
+    <div className="flex flex-col gap-1 pb-1 mb-1 border-b border-gray-700">
+      {currentStatus === 'paralysis' && (
+        <button
+          type="button"
+          onClick={() => onLogNoAction('Full Paralysis')}
+          className="text-left px-2 py-1 text-xs rounded bg-gray-900 hover:bg-yellow-900/60 text-yellow-300 cursor-pointer transition-colors"
+        >
+          Full Paralysis
+        </button>
+      )}
+      {currentStatus === 'sleep' && (
+        <button
+          type="button"
+          onClick={() => onLogNoAction("Didn't Wake Up")}
+          className="text-left px-2 py-1 text-xs rounded bg-gray-900 hover:bg-gray-700 text-gray-300 cursor-pointer transition-colors"
+        >
+          Didn&apos;t Wake Up
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={() => onLogNoAction('Flinched')}
+        className="text-left px-2 py-1 text-xs rounded bg-gray-900 hover:bg-purple-900/60 text-purple-300 cursor-pointer transition-colors"
+      >
+        Flinched
+      </button>
+    </div>
+  );
+}
+
+export default function MoveLogPopover({ actorLabel, moves, allowFreeform, currentStatus, onPickMove, onLogNoAction, onClose }: MoveLogPopoverProps) {
   const [freeform, setFreeform] = useState('');
   const ref = useDismissable<HTMLDivElement>(onClose);
   const allMoveNames = useMoveNameList();
@@ -47,6 +92,7 @@ export default function MoveLogPopover({ actorLabel, moves, allowFreeform, onPic
   return (
     <div ref={ref} className="absolute z-20 top-full mt-1 left-1/2 -translate-x-1/2 w-48 p-2 rounded-lg bg-gray-800 border-2 border-blue-500 shadow-lg flex flex-col gap-1">
       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide truncate">{actorLabel}</span>
+      <NoActionButtons currentStatus={currentStatus} onLogNoAction={onLogNoAction} />
       {moves.length === 0 ? (
         <p className="text-[11px] text-gray-500 italic">No moves known yet</p>
       ) : (

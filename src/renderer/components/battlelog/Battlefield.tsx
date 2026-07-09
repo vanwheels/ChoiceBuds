@@ -33,10 +33,11 @@
  */
 
 import { useState } from 'react';
-import type { Battle, BattleSide, BroughtPokemonSnapshot, OpponentPokemonEntry } from '../../types/pokemon';
+import type { Battle, BattleSide, BroughtPokemonSnapshot, OpponentPokemonEntry, StatusCondition } from '../../types/pokemon';
 import type { UseBattleLogActionsReturn } from '../../hooks/useBattleLogActions';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
 import { getTargetCategory } from '../../config/moveTargeting';
+import { mapAilmentToStatus } from '../../config/statusConditions';
 import { canActThisTurn, compactActiveIds, computeMoveEffectiveness } from '../../utils/battleLookup';
 import BattlefieldSlot from './BattlefieldSlot';
 import SideConditionsRow from './SideConditionsRow';
@@ -56,10 +57,12 @@ type SlotPosition = { side: BattleSide; index: number };
 export default function Battlefield({ battle, battleLogActions, gameDataState, resolveSprite }: BattlefieldProps) {
   const [armed, setArmed] = useState<SlotRef | null>(null);
   const [pendingTarget, setPendingTarget] = useState<{
-    side: BattleSide; pokemonId: string; move: string; moveType?: string; isDamaging: boolean; candidates: SlotRef[];
+    side: BattleSide; pokemonId: string; move: string; moveType?: string; moveCategory?: 'physical' | 'special' | 'status';
+    statusAilment?: StatusCondition; isDamaging: boolean; candidates: SlotRef[];
   } | null>(null);
   const [benchSlot, setBenchSlot] = useState<SlotPosition | null>(null);
   const [statsFor, setStatsFor] = useState<SlotRef | null>(null);
+  const [statusFor, setStatusFor] = useState<SlotRef | null>(null);
 
   // Slot-aligned, not compacted - index 0/1 must stay pinned to the
   // persisted left/right position even when one side is empty (`null`),
@@ -90,6 +93,9 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
       target: [clicked],
       phase: 'move',
       effectiveness,
+      moveType: pendingTarget.moveType,
+      moveCategory: pendingTarget.moveCategory,
+      statusAilment: pendingTarget.statusAilment,
     });
     setPendingTarget(null);
   };
@@ -99,6 +105,7 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
     const moveData = gameDataState.getCachedMove(move) ?? await gameDataState.getMoveData(move);
     const category = getTargetCategory(moveData?.target, move);
     const isDamaging = !!moveData && moveData.category !== 'status';
+    const statusAilment = moveData?.meta ? mapAilmentToStatus(move, moveData.meta.ailment, moveData.meta.ailmentChance, moveData.category) ?? undefined : undefined;
 
     const oppSide: BattleSide = side === 'player' ? 'opponent' : 'player';
     const sameSideActive = compactActiveIds(side === 'player' ? battle.playerActiveIds : battle.opponentActiveIds);
@@ -111,6 +118,7 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
         side, pokemonId, move, target, phase: 'move', effectiveness,
         moveType: moveData?.type,
         moveCategory: moveData?.category,
+        statusAilment,
       });
     };
 
@@ -138,13 +146,14 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
     const candidates: SlotRef[] = category === 'single-ally'
       ? allyIds.map(id => ({ side, pokemonId: id }))
       : [...oppActive.map(id => ({ side: oppSide, pokemonId: id })), ...allyIds.map(id => ({ side, pokemonId: id }))];
-    setPendingTarget({ side, pokemonId, move, moveType: moveData?.type, isDamaging, candidates });
+    setPendingTarget({ side, pokemonId, move, moveType: moveData?.type, moveCategory: moveData?.category, statusAilment, isDamaging, candidates });
   };
 
   const openBenchPicker = (side: BattleSide, slotIndex: number) => {
     setArmed(null);
     setPendingTarget(null);
     setStatsFor(null);
+    setStatusFor(null);
     setBenchSlot(prev => prev && prev.side === side && prev.index === slotIndex ? null : { side, index: slotIndex });
   };
 
@@ -160,7 +169,14 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
     if (!canActThisTurn(battle, pokemonId)) return;
     setBenchSlot(null);
     setStatsFor(null);
+    setStatusFor(null);
     setArmed(prev => prev && prev.side === side && prev.pokemonId === pokemonId ? null : { side, pokemonId });
+  };
+
+  /** Full Paralysis/Didn't Wake Up/Flinched - a turn where no move happened at all, so this bypasses handleMovePicked's move-data/targeting resolution entirely and consumes the turn the same way a real move would (canActThisTurn keys off phase:'move' either way). */
+  const handleLogNoAction = (side: BattleSide, pokemonId: string, note: string) => {
+    setArmed(null);
+    void battleLogActions.logAction(battle, { side, pokemonId, phase: 'move', note });
   };
 
   const renderSlot = (side: BattleSide, slotIndex: number, mon: ActiveMon | undefined, arrowAbove: boolean) => (
@@ -177,6 +193,7 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
       isCandidate={!!mon && (pendingTarget?.candidates.some(c => c.side === side && c.pokemonId === mon.id) ?? false)}
       isBenchOpen={benchSlot?.side === side && benchSlot.index === slotIndex}
       isStatsOpen={!!mon && statsFor?.side === side && statsFor.pokemonId === mon.id}
+      isStatusOpen={!!mon && statusFor?.side === side && statusFor.pokemonId === mon.id}
       benchOptions={side === 'player' ? playerBench : opponentBench}
       onSlotClick={() => handleSlotClick(side, slotIndex, mon?.id)}
       onOpenBench={() => openBenchPicker(side, slotIndex)}
@@ -186,6 +203,7 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
         else battleLogActions.switchIn(battle, side, id, slotIndex);
       }}
       onPickMove={move => mon && handleMovePicked(side, mon.id, move)}
+      onLogNoAction={note => mon && handleLogNoAction(side, mon.id, note)}
       onCloseMovePopover={() => setArmed(null)}
       onPickBench={id => {
         if (mon) battleLogActions.swapActive(battle, side, mon.id, id);
@@ -195,6 +213,12 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
       onCloseBench={() => setBenchSlot(null)}
       onOpenStats={() => mon && setStatsFor(prev => prev && prev.side === side && prev.pokemonId === mon.id ? null : { side, pokemonId: mon.id })}
       onCloseStats={() => setStatsFor(null)}
+      onOpenStatus={() => {
+        if (!mon) return;
+        setBenchSlot(null);
+        setStatusFor(prev => prev && prev.side === side && prev.pokemonId === mon.id ? null : { side, pokemonId: mon.id });
+      }}
+      onCloseStatus={() => setStatusFor(null)}
     />
   );
 

@@ -97,17 +97,18 @@ export function useGameData(): UseGameDataReturn {
   // tweak to the override tables takes effect immediately - see
   // config/championsMoveOverrides.ts.
   //
-  // `target` was added to MoveData after `flags` - an entry cached before
-  // that (still valid for 30 days) has no `target` at all despite the type
-  // now claiming it's required. Treating that as a cache miss (rather than
-  // silently falling back to a wrong/unknown target category in the
-  // Battle Logger's click-to-log flow) forces one live re-fetch, which
-  // then self-heals the cache entry going forward - same self-healing
-  // philosophy as the overrides above, just for a field PokeAPI itself
-  // supplies instead of a hand-authored correction table.
+  // `target` was added to MoveData after `flags`, and `meta` after `target` -
+  // an entry cached before either addition (still valid for 30 days) is
+  // missing that field despite the type now claiming it's required. Treating
+  // that as a cache miss (rather than silently falling back to a wrong/
+  // unknown target category, or no status/flinch/crit data for the Battle
+  // Logger's status-infliction chip) forces one live re-fetch, which then
+  // self-heals the cache entry going forward - same self-healing philosophy
+  // as the overrides above, just for fields PokeAPI itself supplies instead
+  // of a hand-authored correction table.
   const getCachedMove = useCallback((moveName: string): MoveData | null => {
     const move = readCacheEntry(cache?.moves, normalizeNameForAPI(moveName));
-    if (!move || !move.target) return null;
+    if (!move || !move.target || !move.meta) return null;
     return applyMoveFlags(applyChampionsMoveOverride(move));
   }, [cache]);
 

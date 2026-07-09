@@ -38,6 +38,13 @@ interface PokeAPIFlavorTextEntry {
   text?: string;
 }
 
+interface PokeAPIMoveMeta {
+  ailment?: { name?: string };
+  ailment_chance?: number;
+  flinch_chance?: number;
+  crit_rate?: number;
+}
+
 interface PokeAPIMoveResponse {
   type?: { name?: string };
   damage_class?: { name?: string };
@@ -46,6 +53,7 @@ interface PokeAPIMoveResponse {
   accuracy: number | null;
   effect_entries?: PokeAPIEffectEntry[];
   target?: { name?: string };
+  meta?: PokeAPIMoveMeta;
 }
 
 interface PokeAPIItemResponse {
@@ -105,6 +113,12 @@ export async function fetchMoveData(normalizedName: string): Promise<MoveData | 
     description: extractEffectDescription(data.effect_entries, 'No description available'),
     flags: [], // populated at the read boundary in useGameData.ts - see config/moveFlags.ts
     target: data.target?.name?.toLowerCase() || 'selected-pokemon',
+    meta: {
+      ailment: data.meta?.ailment?.name?.toLowerCase() || 'none',
+      ailmentChance: data.meta?.ailment_chance ?? 0,
+      flinchChance: data.meta?.flinch_chance ?? 0,
+      critRate: data.meta?.crit_rate ?? 0,
+    },
     cachedAt: now,
     expiresAt: now + CACHE_EXPIRATION_MS,
   };

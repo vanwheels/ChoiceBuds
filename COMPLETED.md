@@ -5,6 +5,72 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Battle Logger: status-condition tracking + move-outcome chips**
+  (2026-07-09): the "Next up" item from the Battle Logger's beyond-MVP
+  roadmap. `Battle` gained `statusConditions: Record<string, StatusCondition>`
+  (unified across both rosters, mirroring the existing `statStages` shape) -
+  scoped to the 6 real major statuses only (burn/freeze/paralysis/poison/
+  badly-poisoned/sleep); volatile conditions (confusion, etc.) are
+  deliberately excluded since a Pokemon can hold one of those *and* a major
+  status simultaneously, which a single-slot model can't express. Manual
+  set/clear via a new "Status" button on `BattlefieldSlot.tsx` opening
+  `StatusConditionPopover.tsx` (modeled on `StatStagePopover.tsx`), plus a
+  persistent colored abbreviation badge (PAR/BRN/PSN/TOX/SLP/FRZ). PokeAPI's
+  move `meta` field (ailment/ailment_chance/flinch_chance/crit_rate) is now
+  fetched and cached (`MoveData.meta`, threaded through
+  `services/pokeapiService.ts` and self-healed in `useGameData.ts`'s
+  `getCachedMove` the same way `target` was) - nothing read it before this.
+  Verified live against the real API that `ailment_chance` is confusingly 0
+  for a pure status move whose entire point IS the ailment (Thunder Wave,
+  Toxic, Spore all report 0 - the field is only meaningful for a
+  *secondary* effect on a damaging move, e.g. Nuzzle=100 guaranteed,
+  Body Slam=30 probabilistic), so `config/statusConditions.ts`'s
+  `mapAilmentToStatus` treats "guaranteed" as `damage_class === 'status' OR
+  ailment_chance === 100`, not ailment_chance alone. A snapshotted
+  `BattleAction.statusAilment` (same pattern as the existing moveType/
+  moveCategory snapshot) drives an "Inflict {Status}?" chip in `TurnLog.tsx`
+  (same shape as the existing "Failed?" chip), gated by a new
+  `hasAppliedStatusEffect` helper in `utils/battleLookup.ts`. Full
+  Paralysis/Didn't Wake Up/Flinched (a turn where the Pokemon didn't get to
+  act at all, not a modifier on a completed move) reuse the existing generic
+  `logAction` mutation directly via new conditional buttons in
+  `MoveLogPopover.tsx` - no new hook code needed for those three. Crit/Miss
+  are new sibling boolean fields to the existing `BattleAction.failed`;
+  rather than duplicating `setActionFailed` twice more, it was generalized
+  into `setActionFlag(battle, turnNumber, actionId, field, value)`. Live-
+  verified end-to-end via the run-desktop skill against a disposable battle:
+  status set/clear + badge persistence across a reload, Full Paralysis
+  correctly consuming the turn (`canActThisTurn` returns false afterward),
+  and Crit/Miss chip toggling persisting to disk. Also fixed a UI bug caught
+  during that verification pass: opening the new Status popover didn't close
+  an already-open bench-picker popover (the reverse direction was already
+  wired) - `Battlefield.tsx`'s `onOpenStatus` now closes `benchSlot` too.
+  The Inflict-Status chip's rendering/gating logic was checked directly
+  against real PokeAPI responses for the mapping correctness, but not
+  live-clicked through the UI (the disposable team's moveset had no
+  guaranteed-status move) - worth a follow-up spot-check next time a team
+  with Thunder Wave/Toxic/etc. is used to log a real battle.
+- **First macOS testing pass — Aegislash import 404, blank Team Name block,
+  dev-tooling fixes** (2026-07-08): running the app on macOS for the first
+  time (closing out the "needs an actual Mac... can't be built or verified
+  from Windows" caveat noted in the packaging pass below) surfaced four
+  issues, all fixed in the same commit. `normalizeSpeciesForAPI` had no
+  special case for bare "aegislash" (PokeAPI only exposes
+  `aegislash-blade`/`aegislash-shield`, but Showdown/pokepast.es always
+  export the plain default-forme name), so any real team containing
+  Aegislash 404'd and aborted the whole import - now maps to
+  `aegislash-shield`. `ImportTeamModal.tsx` required a non-empty Team Name
+  before the Import button would even enable, with no way around it - blank
+  now defaults to the next unused "Team N" at save time
+  (`nextGenericTeamName`). Two more fixes specific to getting reliable
+  macOS dev/testing set up: `vite.config.ts` was watching the whole repo
+  root including `.claude/`, so the run-desktop skill's own screenshot
+  writes were mistaken for source changes and triggered full page reloads
+  mid-session, silently wiping in-progress renderer state - now ignored;
+  `.claude/skills/run-desktop/driver.mjs` also hardcoded the Windows-only
+  `node_modules/electron/dist/electron.exe` path - it now reads `path.txt`
+  the same way the `electron` package's own `index.js` does, so it resolves
+  the right binary on any platform.
 - **Statistics page** (2026-07-08): original 9-item roadmap discussion's
   item #9. No longer blocked - the Battle Logger had been producing real
   `Battle` records (`result: 'win' | 'loss' | 'in-progress'`) for a while,

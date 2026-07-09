@@ -18,7 +18,7 @@
 
 import { useState } from 'react';
 import type { MouseEvent, DragEvent } from 'react';
-import type { Battle, BattleSide, BroughtPokemonSnapshot, OpponentPokemonEntry } from '../../types/pokemon';
+import type { Battle, BattleSide, BroughtPokemonSnapshot, OpponentPokemonEntry, StatusCondition } from '../../types/pokemon';
 import type { UseBattleLogActionsReturn } from '../../hooks/useBattleLogActions';
 import { getPixelSpriteUrl } from '../../utils/spriteUrl';
 import { getMegaApiSlug, getMegaFormsForSpecies } from '../../config/megaEvolution';
@@ -27,6 +27,7 @@ import { getSwitchInEffect } from '../../config/onSwitchInAbilities';
 import { getReactiveLowerEffect } from '../../config/reactiveAbilities';
 import { getHitReactiveEffect } from '../../config/hitReactiveAbilities';
 import { STAT_ORDER, STAT_LABELS } from '../../config/statStages';
+import { STATUS_ABBREVIATIONS, STATUS_COLORS } from '../../config/statusConditions';
 import { POKEMON_DRAG_TYPE, pokemonDragTypeForSide, type PokemonDragPayload } from '../../utils/dragTypes';
 import {
   hasAppliedAbilityEffectSinceSwitchIn, hasUnappliedReactiveLowerEffect, hasUnappliedHitReactiveEffect,
@@ -35,6 +36,7 @@ import {
 import { useDismissable } from '../../hooks/useDismissable';
 import MoveLogPopover from './MoveLogPopover';
 import StatStagePopover from './StatStagePopover';
+import StatusConditionPopover from './StatusConditionPopover';
 
 type ActiveMon = BroughtPokemonSnapshot | OpponentPokemonEntry;
 
@@ -168,22 +170,27 @@ interface BattlefieldSlotProps {
   isCandidate: boolean;
   isBenchOpen: boolean;
   isStatsOpen: boolean;
+  isStatusOpen: boolean;
   benchOptions: ActiveMon[];
   onSlotClick: () => void;
   onOpenBench: () => void;
   onDrop?: (pokemonId: string) => void;
   onPickMove: (move: string) => void;
+  onLogNoAction: (note: string) => void;
   onCloseMovePopover: () => void;
   onPickBench: (pokemonId: string) => void;
   onCloseBench: () => void;
   onOpenStats: () => void;
   onCloseStats: () => void;
+  onOpenStatus: () => void;
+  onCloseStatus: () => void;
 }
 
 export default function BattlefieldSlot({
   battle, battleLogActions, resolveSprite, side, mon, arrowAbove, switchedIn,
-  isArmed, isCandidate, isBenchOpen, isStatsOpen, benchOptions,
-  onSlotClick, onOpenBench, onDrop, onPickMove, onCloseMovePopover, onPickBench, onCloseBench, onOpenStats, onCloseStats,
+  isArmed, isCandidate, isBenchOpen, isStatsOpen, isStatusOpen, benchOptions,
+  onSlotClick, onOpenBench, onDrop, onPickMove, onLogNoAction, onCloseMovePopover, onPickBench, onCloseBench,
+  onOpenStats, onCloseStats, onOpenStatus, onCloseStatus,
 }: BattlefieldSlotProps) {
   const [showMegaPicker, setShowMegaPicker] = useState(false);
 
@@ -222,6 +229,7 @@ export default function BattlefieldSlot({
   const gender = isPlayer ? (mon.gender || 'M') : 'M';
   const stages = battle.statStages[mon.id] ?? {};
   const statSummary = formatStatSummary(stages);
+  const currentStatus: StatusCondition | null = battle.statusConditions[mon.id] ?? null;
   const arrow = <span className="text-[10px] leading-none text-yellow-400">{arrowAbove ? '▼' : '▲'}</span>;
 
   const knownAbility = mon.ability;
@@ -282,6 +290,11 @@ export default function BattlefieldSlot({
       <span className={isPlayer ? 'text-xs text-blue-300' : 'text-xs text-red-300'}>{displayName}{isMega ? ' ⚡' : ''}</span>
       {!arrowAbove && switchedIn && arrow}
       {statSummary && <span className="text-[9px] text-gray-400">{statSummary}</span>}
+      {currentStatus && (
+        <span className={`text-[9px] font-bold px-1 rounded ${STATUS_COLORS[currentStatus]}`}>
+          {STATUS_ABBREVIATIONS[currentStatus]}
+        </span>
+      )}
 
       {showAbilityChip && (
         <button
@@ -345,6 +358,14 @@ export default function BattlefieldSlot({
         </button>
         <button
           type="button"
+          onClick={e => { e.stopPropagation(); onOpenStatus(); }}
+          title="Set status condition"
+          className="text-[9px] px-1 rounded bg-gray-900 text-gray-500 hover:text-yellow-300 cursor-pointer"
+        >
+          Status
+        </button>
+        <button
+          type="button"
           onClick={e => { e.stopPropagation(); battleLogActions.setFainted(battle, side, mon.id, true); }}
           title="Mark fainted"
           className="text-[9px] px-1 rounded bg-gray-900 text-gray-500 hover:text-red-400 cursor-pointer"
@@ -365,7 +386,9 @@ export default function BattlefieldSlot({
           actorLabel={displayName}
           moves={mon.moves}
           allowFreeform={!isPlayer}
+          currentStatus={currentStatus}
           onPickMove={onPickMove}
+          onLogNoAction={onLogNoAction}
           onClose={onCloseMovePopover}
         />
       )}
@@ -375,6 +398,14 @@ export default function BattlefieldSlot({
           stages={stages}
           onAdjust={(stat, delta) => battleLogActions.adjustStatStage(battle, mon.id, stat, delta)}
           onClose={onCloseStats}
+        />
+      )}
+
+      {isStatusOpen && (
+        <StatusConditionPopover
+          current={currentStatus}
+          onPick={status => battleLogActions.setStatusCondition(battle, side, mon.id, status)}
+          onClose={onCloseStatus}
         />
       )}
     </div>
