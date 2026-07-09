@@ -53,7 +53,7 @@ VGC-legal species have two gender concerns that must stay in sync across two fil
 
 When adding a new gender-divergent or gender-locked/genderless species, update both files.
 
-## Style rules (from `.clinerules`)
+## Style rules
 
 - Strict decoupled architecture — no monolithic files.
 - `src/renderer/components/*` should stay small and single-purpose; extract sub-components when a file starts mixing unrelated concerns rather than growing one file. This used to be a hard 250-line cap — that number was tuned for a previous pay-per-token AI workflow's cost pressure, not for its own sake. Treat it as a smell test now (does this file still do one thing?), not a line-count gate — a cohesive file a bit over 250 lines doesn't need to be split just to hit a number, but a file dragging in unrelated responsibilities should still be split regardless of length.

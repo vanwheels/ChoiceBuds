@@ -127,7 +127,10 @@ function createWindow(): void {
   if (process.env.NODE_ENV === 'development') {
     mainWindow.loadURL('http://localhost:5173');
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+    // __dirname here is dist-electron/ (where this compiled main.js lives) -
+    // the renderer build output is a sibling of dist-electron/'s own parent
+    // (dist/renderer/index.html), not a sibling of dist-electron/ itself.
+    mainWindow.loadFile(path.join(__dirname, '../dist/renderer/index.html'));
   }
 
   // Clean up reference on close

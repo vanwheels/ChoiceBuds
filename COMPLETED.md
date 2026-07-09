@@ -5,6 +5,38 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Fixed a real packaging bug: the built Windows installer never actually
+  launched** (2026-07-09, found while building the first real installer for
+  friend-testing): `main.ts`'s production `loadFile` call
+  (`path.join(__dirname, '../renderer/index.html')`) was wrong and had been
+  since the original `electron-builder` setup - it assumes `index.html`
+  sits at a `renderer/` folder sibling to `dist-electron/` (where the
+  compiled `main.js` actually runs from), but `vite.config.ts`'s
+  `build.outDir` puts it at `dist/renderer/index.html` instead - a
+  `dist/`-nested sibling, not a top-level one. This was never caught before
+  because dev mode always takes the `NODE_ENV === 'development'` branch
+  (`loadURL('http://localhost:5173')`) instead - every test this whole
+  project has run through `npm run dev`, so the production `loadFile`
+  branch had literally never been exercised until this build. The
+  2026-07-06 packaging pass's "verified working end-to-end" claim only
+  meant the build commands completed and produced `.exe` files, not that
+  anyone had actually launched one - confirmed by testing the untouched old
+  `release/ChoiceBuds 0.1.0.exe` build and finding it exhibited the exact
+  same silent-immediate-exit bug. Root-caused via `npx asar list` on the
+  packaged `app.asar` to see the real internal layout
+  (`dist-electron/main.js` alongside a separate `dist/renderer/index.html`,
+  not `renderer/index.html`), after first chasing a red herring - the
+  earliest test attempts appeared to crash/exit silently with zero output,
+  which turned out to be `ELECTRON_RUN_AS_NODE` leaking from the shell
+  environment into the launched process (documented gotcha - shell state
+  doesn't persist between separate tool calls, so it has to be `unset`
+  immediately before every direct launch, not just before `npm run dev`).
+  Once that env var was actually cleared, the real error surfaced
+  (`ERR_FILE_NOT_FOUND` in stderr) instead of a silent exit. Fixed to
+  `path.join(__dirname, '../dist/renderer/index.html')`. Live-verified via
+  screenshot after rebuilding: the packaged, installed-from-scratch app
+  window renders correctly, showing the real Teams page with both actual
+  saved teams and their sprites/badges intact.
 - **Cross-device sync - Worker deployed to production** (2026-07-09): the
   last remaining manual step from the full implementation below is done -
   the Worker is live at `https://choicebuds-sync.vanwheelstheman.workers.dev`,

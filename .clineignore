@@ -1,7 +1,0 @@
-node_modules/
-dist/
-out/
-.git/
-.vscode/
-*.log
-*.package-lock.json
