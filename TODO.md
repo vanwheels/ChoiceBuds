@@ -45,6 +45,24 @@ focused on what's actually next.
   stat depends on comparing the opposing side's average Def/SpDef, needs
   base-stat math not taken on yet).
 
+- **2026-07-09 status-condition/move-outcome follow-up** (found while
+  reviewing the status-condition/move-outcome chips work above right after
+  it shipped). Item 1 done - see COMPLETED.md. Items 2-3 still open:
+  2. **Miss/Crit/Inflict-Status chip placement**: currently rendered inline
+     in `TurnLog.tsx`'s per-action turn-by-turn text. User feedback: these
+     read clearer as an overlay near the affected Pokemon's own
+     `BattlefieldSlot` instead (matching where the switch-in/reactive
+     ability chips already live), not buried in the log.
+  3. **Crit/Miss need to be per-target, not per-action, and mutually
+     exclusive**: `BattleAction.crit`/`missed` are currently single booleans
+     covering the whole action, but a spread move (Rock Slide, Earthquake)
+     can crit one target and miss another independently - needs
+     restructuring to a per-target shape (mirroring the existing
+     `effectiveness: {pokemonId, multiplier}[]` field), and a single target
+     can't be both crit and missed at once (a miss never crits) - the two
+     toggles need to be mutually exclusive per target rather than
+     independent checkboxes.
+
 - Everything else from the original 9-item roadmap discussion not yet
   built, reordered by priority: Statistics page (#9) done - see
   COMPLETED.md; Settings page (#4, not started) - foundational, other

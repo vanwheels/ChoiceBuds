@@ -83,6 +83,11 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
 
   const finalizeTarget = async (clicked: SlotRef) => {
     if (!pendingTarget) return;
+    // Only a highlighted candidate is a legal target - without this check,
+    // any occupied slot click (including the move's own user, who is
+    // deliberately excluded from candidates above) would finalize the log,
+    // letting an attacking move be recorded as targeting itself.
+    if (!pendingTarget.candidates.some(c => c.side === clicked.side && c.pokemonId === clicked.pokemonId)) return;
     const effectiveness = pendingTarget.isDamaging && pendingTarget.moveType
       ? computeMoveEffectiveness(battle, pendingTarget.moveType, [clicked])
       : undefined;

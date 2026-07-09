@@ -5,6 +5,19 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Battlefield targeting bug: attacking moves could target their own user**
+  (2026-07-09): found while reviewing the status-condition/move-outcome work
+  right after it shipped. `Battlefield.tsx`'s `handleSlotClick` called
+  `finalizeTarget` for *any* clicked occupied slot while a target was
+  pending, without checking it was actually one of `pendingTarget.candidates`
+  - the move's own user is deliberately excluded from `candidates`
+  (`allyIds = sameSideActive.filter(id => id !== pokemonId)`), but nothing
+  stopped clicking that slot anyway, since the `isCandidate` highlight was
+  only visual, not enforced. `finalizeTarget` now no-ops on a non-candidate
+  click instead (the "Choose a target..." banner stays up so the user can
+  still pick a valid one) - live-verified via run-desktop that clicking the
+  actor's own slot no longer logs a self-target and the pending state
+  correctly survives the rejected click.
 - **Battle Logger: status-condition tracking + move-outcome chips**
   (2026-07-09): the "Next up" item from the Battle Logger's beyond-MVP
   roadmap. `Battle` gained `statusConditions: Record<string, StatusCondition>`
