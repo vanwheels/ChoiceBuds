@@ -10,6 +10,7 @@
  */
 
 import { useState } from 'react';
+import type { DragEvent } from 'react';
 import type { ImportedPokemonInfo, ShowdownPokemon, Team, SpeciesRosterEntry } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
@@ -25,6 +26,7 @@ import { toRegulationId } from '../utils/pokemonRules';
 import { getMegaApiSlug } from '../config/megaEvolution';
 import { useMegaSprite } from '../hooks/useMegaSprite';
 import { getPixelSpriteUrl } from '../utils/spriteUrl';
+import { TEAM_ROSTER_DRAG_TYPE, type TeamRosterDragPayload } from '../utils/teamRosterDragTypes';
 
 interface PokemonCardProps {
   pokemon: ImportedPokemonInfo;
@@ -47,6 +49,7 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
   const [localNickname, setLocalNickname] = useState(showdownData.nickname || '');
   const [isSwapPickerOpen, setIsSwapPickerOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const spriteUrl = getPixelSpriteUrl(pokedexNumber, showdownData.species, localGender || 'M', isLocalShiny);
   const rulesetId = toRegulationId(team.format);
 
@@ -120,6 +123,39 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
     await rosterActions.removeSlot(team, pokemonIndex);
   };
 
+  // Roster reorder via drag-and-drop - same MIME-type-payload pattern as the
+  // Battle Logger roster drag (utils/dragTypes.ts) and Calc team tray drag
+  // (utils/calcDragTypes.ts). teamId travels in the payload (not the type
+  // string itself) since a mismatched-team drop is checked on `drop`, not
+  // shown live during `dragover` - unlike those two, dragging between two
+  // different teams' cards has no valid outcome to preview either way.
+  const handleDragStart = (e: DragEvent<HTMLDivElement>) => {
+    const payload: TeamRosterDragPayload = { teamId: team.id, fromIndex: pokemonIndex };
+    e.dataTransfer.setData(TEAM_ROSTER_DRAG_TYPE, JSON.stringify(payload));
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+    if (!e.dataTransfer.types.includes(TEAM_ROSTER_DRAG_TYPE)) return;
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const raw = e.dataTransfer.getData(TEAM_ROSTER_DRAG_TYPE);
+    if (!raw) return;
+    try {
+      const payload: TeamRosterDragPayload = JSON.parse(raw);
+      if (payload.teamId === team.id && payload.fromIndex !== pokemonIndex) {
+        rosterActions.reorderSlot(team, payload.fromIndex, pokemonIndex);
+      }
+    } catch {
+      // malformed/foreign drag payload - ignore
+    }
+  };
+
   const isGenderClickable = (): boolean => {
     const species = showdownData.species;
     const speciesLower = species.toLowerCase();
@@ -142,7 +178,17 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
   }
 
   return (
-    <div data-pokemon-card className="relative bg-gray-700 border border-gray-600 rounded-lg p-3 flex flex-col gap-3 max-w-[280px]">
+    <div
+      data-pokemon-card
+      draggable={isEditing}
+      onDragStart={isEditing ? handleDragStart : undefined}
+      onDragOver={isEditing ? handleDragOver : undefined}
+      onDragLeave={isEditing ? () => setIsDragOver(false) : undefined}
+      onDrop={isEditing ? handleDrop : undefined}
+      className={`relative bg-gray-700 border rounded-lg p-3 flex flex-col gap-3 max-w-[280px] transition-colors ${
+        isEditing ? 'cursor-grab' : ''
+      } ${isDragOver ? 'border-blue-500 ring-2 ring-blue-400' : 'border-gray-600'}`}
+    >
       {/* Left-Shifting Slot Deletion */}
       {isEditing && (
         <button

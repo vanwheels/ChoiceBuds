@@ -5,6 +5,25 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Teams page: drag-to-reorder a Pokemon within a team** (2026-07-13):
+  `TeamCard.tsx`'s roster grid (`PokemonCard.tsx` instances) previously had
+  no way to reorder an existing Pokemon - only swap one slot's species
+  entirely (`swapSlot`), add, or remove. Added `reorderSlot(team, fromIndex,
+  toIndex)` to `useRosterActions.ts` (a plain array splice-out/splice-in),
+  a new `utils/teamRosterDragTypes.ts` MIME-type/payload pair matching the
+  existing per-feature drag-type convention (`utils/dragTypes.ts` for
+  Battle Logger, `utils/calcDragTypes.ts` for Calc's team tray), and wired
+  `draggable`/`onDragStart`/`onDragOver`/`onDragLeave`/`onDrop` onto
+  `PokemonCard.tsx`'s outer container (only while `isEditing`), with a blue
+  ring highlight while a valid drag is over a card. The payload carries
+  `teamId` so a stray drag between two different teams' cards (both open in
+  edit mode at once) is silently ignored on drop rather than reordering the
+  wrong team. Verified live: imported a disposable 3-Pokemon team, dragged
+  index 0 onto index 2 via a simulated `DataTransfer`-based drag sequence
+  (Playwright can't do real OS-level drag gestures), confirmed the
+  resulting order both on screen and in `teams.json` on disk
+  (`[Pikachu, Charizard, Bulbasaur]` -> `[Charizard, Bulbasaur, Pikachu]`,
+  matching splice semantics), then deleted the disposable team.
 - **Battle Logger opponent-vs-player roster row height gap - fixed**
   (2026-07-13): root-caused via live pixel measurement (Playwright driver) -
   `OpponentRowFields.tsx`'s `<select>`/`<input>` cells (ability/item/add-move)

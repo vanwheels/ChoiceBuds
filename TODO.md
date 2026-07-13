@@ -194,18 +194,8 @@ focused on what's actually next.
      Writing to an external third-party service is new territory for this
      project's external-integration rules, not something to bolt on
      silently.
-  10. Teams page (`TeamCard.tsx`): while in edit mode, let a Pokemon card
-      be reordered within the team via click-and-drag instead of the
-      roster order being fixed to import/add order. `useRosterActions.ts`
-      has no reorder mutation today - only `swapSlot` (replaces one
-      index's species entirely, not a move), `addSlot`, and `removeSlot`
-      - so this needs a new `reorderSlot(team, fromIndex, toIndex)`-style
-      mutation that repositions an existing `ImportedPokemonInfo` within
-      `team.pokemon`, plus wiring HTML5 drag-and-drop onto
-      `PokemonCard.tsx` (matching the drag pattern already used for
-      Battle Logger roster cards - see `utils/dragTypes.ts` - and the
-      Calc team tray - see `utils/calcDragTypes.ts` - rather than
-      inventing a third convention).
+  10. Teams page (`TeamCard.tsx`) Pokemon-card drag-to-reorder is done
+      (2026-07-13), see COMPLETED.md.
   11. Teams page (`TeamsPage.tsx`): let teams be reordered in the list via
       click-and-drag (same drag convention as the Pokemon-card-reorder
       item above). `useTeams.ts` has no reorder mutation today either -

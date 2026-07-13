@@ -24,6 +24,7 @@ export interface UseRosterActionsReturn {
   swapSlot: (team: Team, index: number, species: string) => Promise<boolean>;
   addSlot: (team: Team, species: string) => Promise<boolean>;
   removeSlot: (team: Team, index: number) => Promise<boolean>;
+  reorderSlot: (team: Team, fromIndex: number, toIndex: number) => Promise<boolean>;
 }
 
 export function useRosterActions(
@@ -77,5 +78,13 @@ export function useRosterActions(
     return updateTeam(team.id, { pokemon: updatedPokemon });
   }, [updateTeam]);
 
-  return { swapSlot, addSlot, removeSlot };
+  const reorderSlot = useCallback(async (team: Team, fromIndex: number, toIndex: number): Promise<boolean> => {
+    if (fromIndex === toIndex) return false;
+    const updatedPokemon = [...team.pokemon];
+    const [moved] = updatedPokemon.splice(fromIndex, 1);
+    updatedPokemon.splice(toIndex, 0, moved);
+    return updateTeam(team.id, { pokemon: updatedPokemon });
+  }, [updateTeam]);
+
+  return { swapSlot, addSlot, removeSlot, reorderSlot };
 }
