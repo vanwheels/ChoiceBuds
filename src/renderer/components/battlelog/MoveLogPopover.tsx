@@ -8,15 +8,18 @@
  */
 
 import { useState } from 'react';
-import type { StatusCondition } from '../../types/pokemon';
+import type { StatusCondition, WeatherType } from '../../types/pokemon';
 import { useDismissable } from '../../hooks/useDismissable';
 import { useMoveNameList } from '../../hooks/useMoveNameList';
+import { getMoveWeatherNote } from '../../config/moveWeatherEffects';
+import { getWeatherTheme } from '../../config/fieldConditions';
 
 interface MoveLogPopoverProps {
   actorLabel: string;
   moves: string[];
   allowFreeform: boolean;
   currentStatus: StatusCondition | null;
+  weather: WeatherType | null;
   onPickMove: (move: string) => void;
   onLogNoAction: (note: string) => void;
   onClose: () => void;
@@ -64,7 +67,7 @@ function NoActionButtons({ currentStatus, onLogNoAction }: { currentStatus: Stat
   );
 }
 
-export default function MoveLogPopover({ actorLabel, moves, allowFreeform, currentStatus, onPickMove, onLogNoAction, onClose }: MoveLogPopoverProps) {
+export default function MoveLogPopover({ actorLabel, moves, allowFreeform, currentStatus, weather, onPickMove, onLogNoAction, onClose }: MoveLogPopoverProps) {
   const [freeform, setFreeform] = useState('');
   const ref = useDismissable<HTMLDivElement>(onClose);
   const allMoveNames = useMoveNameList();
@@ -96,16 +99,27 @@ export default function MoveLogPopover({ actorLabel, moves, allowFreeform, curre
       {moves.length === 0 ? (
         <p className="text-[11px] text-gray-500 italic">No moves known yet</p>
       ) : (
-        moves.map(move => (
-          <button
-            key={move}
-            type="button"
-            onClick={() => onPickMove(move)}
-            className="text-left px-2 py-1 text-xs rounded bg-gray-900 hover:bg-blue-900/60 text-gray-200 cursor-pointer transition-colors"
-          >
-            {move}
-          </button>
-        ))
+        moves.map(move => {
+          const weatherNote = getMoveWeatherNote(move, weather);
+          return (
+            <button
+              key={move}
+              type="button"
+              onClick={() => onPickMove(move)}
+              className="flex items-center justify-between gap-1 text-left px-2 py-1 text-xs rounded bg-gray-900 hover:bg-blue-900/60 text-gray-200 cursor-pointer transition-colors"
+            >
+              <span className="truncate">{move}</span>
+              {weatherNote && weather && (
+                <span
+                  title={weatherNote}
+                  className={`shrink-0 px-1 py-0.5 text-[9px] font-semibold rounded-sm ${getWeatherTheme(weather).bg} ${getWeatherTheme(weather).text}`}
+                >
+                  !
+                </span>
+              )}
+            </button>
+          );
+        })
       )}
       {allowFreeform && (
         <>

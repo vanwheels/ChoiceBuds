@@ -234,30 +234,9 @@ focused on what's actually next.
         to blank. Needs a naming scheme for saved sets too, since more
         than one could exist per species (e.g. two different Dracovish
         sets) - nickname, a user-entered label, or both.
-  13. **New**: Battle Logger - moves whose *non-stat* effect changes with
-      weather (accuracy, power, healing amount, charge-turn skipping),
-      distinct from `config/moveStatEffects.ts`'s stat-stage table above.
-      Raised when the user recalled "several moves change with weather"
-      for item 3, but research there turned up no second stat-stage
-      example - the user's own guess, confirmed when asked, is that
-      they're actually thinking of this different category instead:
-      Thunder/Hurricane (70% accuracy normally, always-hits in Rain, 50%
-      in Sun), Solar Beam/Solar Blade (need a charge turn normally, fire
-      immediately in Sun; half power in Rain/Sand/Snow), Weather Ball
-      (type and power both change per active weather), Synthesis/
-      Moonlight/Morning Sun (heal 50% normally, 67% in Sun, 25% in Rain/
-      Sand/Snow), Blizzard (never misses in Snow). None of this is
-      currently modeled anywhere in the Battle Logger - unlike the Calc
-      tab, the log doesn't track computed damage/accuracy/heal numbers at
-      all today, so this needs its own scoping pass before implementation:
-      most likely an informational note/chip shown when logging one of
-      these moves while the relevant weather is active (same "manual log,
-      not a simulator" pattern as the switch-in ability chips), not an
-      attempt to actually compute or auto-apply anything. Worth checking
-      for overlap with the already-planned status-condition/move-outcome-
-      chips follow-up (see "Battle Logger - beyond the core MVP" above)
-      before scoping in detail, since both are about surfacing move
-      mechanics the log doesn't currently show.
+  13. Battle Logger weather move-effects notes (Thunder/Hurricane/Solar
+      Beam/Solar Blade/Weather Ball/Synthesis-family/Blizzard) are done
+      (2026-07-13), see COMPLETED.md.
 
 ## Done
 

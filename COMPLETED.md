@@ -5,6 +5,38 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Battle Logger: weather move-effects notes** (2026-07-13): distinct
+  from `config/moveStatEffects.ts`'s stat-stage table - moves whose
+  *non-stat* effect (accuracy, power, healing amount, charge-turn skipping)
+  changes with the field's active weather. Scoped first to check overlap
+  with the already-built status-condition/move-outcome chips (Miss/Crit/
+  Inflict-Status, on `BattlefieldSlot.tsx`) - no overlap found, since those
+  are per-target outcome toggles set *after* a hit resolves, while this is
+  purely informational and shown *before* logging, with nothing to apply
+  (the log doesn't track computed damage/accuracy/heal numbers at all).
+  Researched each of the 7 moves' own dedicated Bulbapedia page
+  individually rather than a shared summary page (per this project's
+  research-technique convention), confirming exact percentages beyond what
+  was originally recalled: Thunder/Hurricane 70% base accuracy (always hits
+  in Rain, 50% in Sun); Solar Beam (120 BP)/Solar Blade (125 BP) skip their
+  charge turn in Sun, halved power in Rain/Sandstorm/Snow; Weather Ball
+  doubles 50->100 power in any of the 4 weather types, changing type to
+  Water/Fire/Rock/Ice respectively; Synthesis/Moonlight/Morning Sun heal
+  50% normally, ~67% (2732/4096) in Sun, 25% in Rain/Sandstorm/Snow;
+  Blizzard 70% base accuracy, always hits in Snow. New
+  `config/moveWeatherEffects.ts` (`getMoveWeatherNote(move, weather)`,
+  plain move-slug -> weather -> note-string lookup, no fake structured
+  power/accuracy fields since nothing consumes them numerically) wired into
+  `MoveLogPopover.tsx` - each move button shows a small colored badge
+  (reusing `getWeatherTheme` from `config/fieldConditions.ts` for the same
+  color language as `FieldWeatherBar.tsx`) with the note as its tooltip,
+  only when the current move has one for the currently-active weather.
+  `weather` threaded down from `BattlefieldSlot.tsx` (already has `battle`
+  in scope) as a new `MoveLogPopover` prop. Verified live with a disposable
+  4-Pokemon team (a Venusaur running Solar Beam/Synthesis/Weather Ball/Giga
+  Drain): under Sun, the first three each showed their correct badge text
+  and tooltip while Giga Drain (unaffected) showed none; clearing weather
+  removed all three badges. Cleaned up the test battle and team afterward.
 - **Teams page: drag-to-reorder teams in the list** (2026-07-13): the
   open design question from when this was scoped (`TeamsPage.tsx` renders
   `filteredTeams`, a subset of the real `teams` array when a format filter

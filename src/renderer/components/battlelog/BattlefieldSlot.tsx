@@ -435,6 +435,7 @@ export default function BattlefieldSlot({
           moves={mon.moves}
           allowFreeform={!isPlayer}
           currentStatus={currentStatus}
+          weather={battle.fieldState.weather?.type ?? null}
           onPickMove={onPickMove}
           onLogNoAction={onLogNoAction}
           onClose={onCloseMovePopover}
