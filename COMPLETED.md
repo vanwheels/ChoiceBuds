@@ -5,6 +5,65 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Battle Logger opponent-vs-player roster row height gap - fixed**
+  (2026-07-13): root-caused via live pixel measurement (Playwright driver) -
+  `OpponentRowFields.tsx`'s `<select>`/`<input>` cells (ability/item/add-move)
+  were missing `block` in their Tailwind classes, so each sat as an
+  inline-level element with the default baseline-alignment gap below it (a
+  classic "extra space under inline replaced elements" issue) - 6px per
+  control × 2 rows (ability, item) = the exact 12px-per-Pokemon gap measured
+  (94px vs the player's 82px row height). The player's `PlayerFieldPanel.tsx`
+  `StaticCell` never had this problem since it already used `block`. Fix was
+  adding `block` to `cellSelectClass` (shared by the ability `<select>` and
+  item `<input>`) and switching the "+move" input to reuse that same
+  constant instead of its own near-duplicate className string. Verified live
+  with a disposable battle + a real opponent Pokemon (Incineroar) with an
+  item and move filled in - row heights matched exactly (82px = 82px)
+  before and after adding real data.
+- **Dead build output (`dist/main/main.js`/`preload.js`) - fixed**
+  (2026-07-13): rather than the originally-proposed fix (scoping
+  `tsconfig.json`'s `include` away from `src/main/**/*`), added
+  `"noEmit": true` to `compilerOptions` instead - that fix would have also
+  silently dropped type-checking on `main.ts`/`preload.ts` entirely, since
+  `vite-plugin-electron` compiles them via esbuild/rollup with no type
+  checking of its own, making the root `tsc` pass the *only* thing
+  type-checking the main process. `noEmit` keeps `tsc` checking all of
+  `src/**` (including main/preload) while stopping it from emitting
+  anything at all, since Vite already owns real build output for both
+  processes. Verified: a clean `npm run build` no longer produces
+  `dist/main/`, and `npm run type-check` still passes.
+- **`useDatabase.ts` `react-hooks/exhaustive-deps` warnings - fixed**
+  (2026-07-13): the two warnings (missing `initializeCacheWithSWR`
+  dependency on the mount `useEffect`, and on `refreshCache`) existed
+  because `initializeCacheWithSWR`/`performBackgroundRevalidation`/
+  `cleanExpiredEntriesInternal` were plain functions redefined every
+  render, so satisfying the rule honestly (not just suppressing it) meant
+  wrapping all three in `useCallback` (bottom-up, since each calls the
+  next) so they get stable identities - preserving the original
+  run-once-on-mount behavior instead of re-running the effect every
+  render. Verified: `npm run lint` and `npm run type-check` both pass
+  clean, and a live launch showed the cache still loads correctly (React
+  StrictMode's expected dev-only double-invoke of the mount effect was the
+  only "duplicate" log observed, pre-existing and unrelated to this fix).
+- **`CalcSideConditions.tsx`/`SideConditionsRow.tsx` unification - investigated
+  and declined** (2026-07-13): re-read both components to scope the
+  long-open TODO item asking to unify them into one shared component.
+  They don't actually share much beyond "a button that turns blue when
+  active" - `SideConditionsRow` (Battle Logger) is turn-tracked (reads
+  `Battle.fieldState` expiry via `getSideConditionRemaining`, has a Light
+  Clay screen-extension sub-toggle, cycles stackable hazards 0..max,
+  dispatches through named `battleLogActions` methods) while
+  `CalcSideConditions` (Calc) is a flat boolean toggle set with no turn
+  concept at all, includes calc-only fields (Helping Hand/Protect/Leech
+  Seed/Salt Cure/ability-gated aura toggles), and patches state via a
+  generic `onChange`. Visual layout also differs on purpose (compact
+  horizontal chips vs a full-width vertical column matching the real
+  Showdown calc's Field panel). Forcing them into one component would mean
+  branching on layout/data-shape/update-mechanism via props - the kind of
+  premature abstraction this project's own style rules warn against, since
+  it wouldn't remove real duplication, just relocate it into config surface.
+  User confirmed dropping full unification when asked; both components stay
+  separate as-is.
 - **First real installer published: `v0.1.1`** (2026-07-09): once the
   packaging bug below was fixed and verified, cut a proper patch release
   with actual installer assets attached (`ChoiceBuds Setup 0.1.1.exe`,

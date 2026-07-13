@@ -37,7 +37,7 @@ function formatAbilityName(slug: string): string {
   return slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
 
-const cellSelectClass = 'w-full px-1 py-0 leading-4 text-[10px] bg-gray-900 border border-gray-700 rounded text-gray-200 outline-none focus:border-blue-500';
+const cellSelectClass = 'block w-full px-1 py-0 leading-4 text-[10px] bg-gray-900 border border-gray-700 rounded text-gray-200 outline-none focus:border-blue-500';
 
 export function OpponentAbilityCell({ battle, opponent, battleLogActions, gameDataState }: RowFieldProps & { gameDataState: UseGameDataReturn }) {
   const [legalAbilities, setLegalAbilities] = useState<string[]>([]);
@@ -126,7 +126,7 @@ export function OpponentMoveCell({ battle, opponent, battleLogActions, index }: 
       onKeyDown={e => { if (e.key === 'Enter') submit(); }}
       onBlur={submit}
       placeholder="+ move"
-      className="w-full px-1 py-0 leading-4 text-[10px] bg-gray-900 border border-gray-700 rounded text-gray-200 outline-none focus:border-blue-500"
+      className={cellSelectClass}
     />
   );
 }

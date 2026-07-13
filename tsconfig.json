@@ -18,7 +18,7 @@
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
     "types": ["node"],
-    "outDir": "./dist",
+    "noEmit": true,
     "rootDir": "./src",
     "baseUrl": ".",
     "paths": {

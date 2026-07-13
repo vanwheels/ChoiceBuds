@@ -155,23 +155,15 @@ focused on what's actually next.
      minimum), but not the dedicated 1920x1080-targeted pass this item
      originally asked for - still open if further tightening is wanted.
   3. Calc page (`CalcSideConditions.tsx`) field-effect toggle trim is done.
-     Still open: the follow-up to unify `CalcSideConditions.tsx` and the
-     Battle Logger's `SideConditionsRow.tsx` into one shared component
-     instead of two different-looking implementations of the same idea -
-     not done, both still exist separately.
+     The `CalcSideConditions.tsx`/`SideConditionsRow.tsx` unification
+     follow-up was investigated 2026-07-13 and dropped - see COMPLETED.md.
   4. Battle Logger: opponent roster boxes were reported visually bigger
      than the player's - the specific layout idea (move `FieldWeatherBar`
      to its own row, stack `SideConditionsRow.tsx` vertically) is done,
-     see COMPLETED.md. But verifying it found the real premise was wrong:
-     both roster columns are pinned to an identical fixed width regardless
-     of `Battlefield.tsx`'s own content (confirmed via direct
-     measurement), so width was never the actual gap. The real remaining
-     gap is *height* (500px vs 608px column height, from the opponent
-     side's live form controls needing more room per Pokemon than the
-     player's static text) - same gap acknowledged again in the third
-     review pass's item 5 below. A real fix would be a height-focused pass
-     at `OpponentRowFields.tsx` - not scoped or attempted in either pass
-     so far.
+     see COMPLETED.md. The remaining per-row *height* gap (500px vs 608px
+     column height) - same gap acknowledged again in the third review
+     pass's item 5 below - is now fixed too, see COMPLETED.md
+     (2026-07-13).
 
 - **2026-07-07 third review pass** (originally captured in the order the
   user raised them during a manual-testing/reference-screenshot session;
@@ -192,9 +184,8 @@ focused on what's actually next.
      weather branches.
   5. Battle Logger: the player roster column was reported visually smaller
      than the opponent's - done (per-cell footprint equalized to match),
-     see COMPLETED.md. Still open: only the per-cell footprint was
-     equalized, not the whole column height - see the second review pass's
-     item 4 above for the fuller discussion of this same gap.
+     see COMPLETED.md. The whole-column height gap is also now fixed - see
+     the second review pass's item 4 above and COMPLETED.md (2026-07-13).
   8. Team export to Showdown text format is done, see COMPLETED.md.
      Stretch goal still open, explicitly flagged by the user as uncertain:
      exporting *to* Pokepaste (creating a new paste via their write API,
@@ -340,11 +331,6 @@ See [COMPLETED.md](COMPLETED.md) for the full log of finished work.
     - `electron-updater` has its own update-status/prompt flow, which likely
     supersedes (or needs merging with) today's "check + link out" UI rather
     than the two running side by side unreconciled.
-- Two pre-existing `react-hooks/exhaustive-deps` warnings in `useDatabase.ts`
-  (lines 54, 260, missing `initializeCacheWithSWR` dependency) surfaced by
-  restoring ESLint - not fixed as part of the cleanup pass since the intent
-  behind the missing dependency wasn't investigated; worth a look. Cheap to
-  investigate once picked up.
 - **Dev tooling has also drifted behind current majors** (checked
   2026-07-07 via `npm outdated`): Vite 5.4→8.1, TypeScript 5.9→6.0, ESLint
   9.39→10.6. Lower urgency than the Electron security-advisory situation,
@@ -367,18 +353,3 @@ See [COMPLETED.md](COMPLETED.md) for the full log of finished work.
   edge case (needs Unseen Fist + a contact move + the target having used
   Protect that turn). Lowest priority: narrowest, rarest edge case in this
   list.
-- **Dead build output: `dist/main/main.js`/`dist/main/preload.js`** (noticed
-  2026-07-09 while debugging the packaging bug via `npx asar list`): the
-  root `tsconfig.json`'s own plain `tsc` step (part of `npm run build`'s
-  `tsc && vite build`) compiles all of `src/**/*` per its `include`, which
-  incidentally also compiles `src/main/main.ts`/`preload.ts` again into
-  `dist/main/`, entirely separately from `vite-plugin-electron`'s own
-  purpose-built compile of the same two files into `dist-electron/` (the
-  ones actually used). The `dist/main/*` output is dead weight, bundled
-  into every `electron-builder` package for no reason (harmless
-  functionally - nothing loads it - just wasted space). Fix is scoping the
-  root `tsconfig.json`'s `include` to `src/renderer/**/*` only, or
-  excluding `src/main/**/*`, so the plain `tsc` type-check pass doesn't
-  also emit output for files that already have their own dedicated build
-  step. Cosmetic/bundle-size only, no functional impact - hence low
-  priority.

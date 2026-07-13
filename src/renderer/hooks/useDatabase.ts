@@ -47,11 +47,64 @@ export function useDatabase(): UseDatabaseReturn {
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * Initialize cache on mount with SWR pattern
+   * Internal: Clean expired entries from cache
    */
-  useEffect(() => {
-    initializeCacheWithSWR();
+  const cleanExpiredEntriesInternal = useCallback(async (currentCache: PokeAPICache): Promise<boolean> => {
+    try {
+      const now = Date.now();
+      const cleanedEntries: Record<string, PokeAPICacheEntry> = {};
+      let removedCount = 0;
+
+      // Filter out expired entries
+      for (const [species, entry] of Object.entries(currentCache.entries)) {
+        if (entry.expiresAt > now) {
+          cleanedEntries[species] = entry;
+        } else {
+          removedCount++;
+        }
+      }
+
+      const updatedCache: PokeAPICache = {
+        ...currentCache,
+        entries: cleanedEntries,
+        lastCleaned: now,
+      };
+
+      const success = await window.electron.writePokeAPICache(updatedCache);
+
+      if (success) {
+        setCache(updatedCache);
+        console.log(`[useDatabase] Cleaned ${removedCount} expired cache entries`);
+      }
+
+      return success;
+    } catch (err) {
+      console.error('Error cleaning cache:', err);
+      return false;
+    }
   }, []);
+
+  /**
+   * Internal: Perform background revalidation checks
+   * Quietly validates cache health and performs maintenance if needed
+   */
+  const performBackgroundRevalidation = useCallback(async (currentCache: PokeAPICache): Promise<void> => {
+    try {
+      const now = Date.now();
+      const timeSinceLastClean = now - currentCache.lastCleaned;
+
+      // Check if cache cleaning is due
+      if (timeSinceLastClean > CACHE_CLEAN_INTERVAL_MS) {
+        console.log('[useDatabase] Background revalidation: Cleaning expired entries');
+        await cleanExpiredEntriesInternal(currentCache);
+      } else {
+        console.log('[useDatabase] Background revalidation: Cache is healthy');
+      }
+    } catch (err) {
+      console.error('[useDatabase] Background revalidation failed:', err);
+      // Don't set error state - this is a background operation
+    }
+  }, [cleanExpiredEntriesInternal]);
 
   /**
    * Internal: Initialize cache using Stale-While-Revalidate pattern
@@ -59,7 +112,7 @@ export function useDatabase(): UseDatabaseReturn {
    * 2. Mark as initialized so app operates offline immediately
    * 3. Run background validation to check for updates (revalidate)
    */
-  const initializeCacheWithSWR = async (): Promise<void> => {
+  const initializeCacheWithSWR = useCallback(async (): Promise<void> => {
     try {
       // Step 1: Instantly serve stale cache from disk
       const cachedData = await window.electron.readPokeAPICache();
@@ -92,67 +145,14 @@ export function useDatabase(): UseDatabaseReturn {
       console.error('Error initializing cache:', err);
       setIsInitialized(true); // Still mark as initialized to allow app to function
     }
-  };
+  }, [performBackgroundRevalidation]);
 
   /**
-   * Internal: Perform background revalidation checks
-   * Quietly validates cache health and performs maintenance if needed
+   * Initialize cache on mount with SWR pattern
    */
-  const performBackgroundRevalidation = async (currentCache: PokeAPICache): Promise<void> => {
-    try {
-      const now = Date.now();
-      const timeSinceLastClean = now - currentCache.lastCleaned;
-      
-      // Check if cache cleaning is due
-      if (timeSinceLastClean > CACHE_CLEAN_INTERVAL_MS) {
-        console.log('[useDatabase] Background revalidation: Cleaning expired entries');
-        await cleanExpiredEntriesInternal(currentCache);
-      } else {
-        console.log('[useDatabase] Background revalidation: Cache is healthy');
-      }
-    } catch (err) {
-      console.error('[useDatabase] Background revalidation failed:', err);
-      // Don't set error state - this is a background operation
-    }
-  };
-
-  /**
-   * Internal: Clean expired entries from cache
-   */
-  const cleanExpiredEntriesInternal = async (currentCache: PokeAPICache): Promise<boolean> => {
-    try {
-      const now = Date.now();
-      const cleanedEntries: Record<string, PokeAPICacheEntry> = {};
-      let removedCount = 0;
-      
-      // Filter out expired entries
-      for (const [species, entry] of Object.entries(currentCache.entries)) {
-        if (entry.expiresAt > now) {
-          cleanedEntries[species] = entry;
-        } else {
-          removedCount++;
-        }
-      }
-      
-      const updatedCache: PokeAPICache = {
-        ...currentCache,
-        entries: cleanedEntries,
-        lastCleaned: now,
-      };
-      
-      const success = await window.electron.writePokeAPICache(updatedCache);
-      
-      if (success) {
-        setCache(updatedCache);
-        console.log(`[useDatabase] Cleaned ${removedCount} expired cache entries`);
-      }
-      
-      return success;
-    } catch (err) {
-      console.error('Error cleaning cache:', err);
-      return false;
-    }
-  };
+  useEffect(() => {
+    initializeCacheWithSWR();
+  }, [initializeCacheWithSWR]);
 
   /**
    * Get a cached entry for a specific species
@@ -223,7 +223,7 @@ export function useDatabase(): UseDatabaseReturn {
   const cleanExpiredEntries = useCallback(async (): Promise<boolean> => {
     if (!cache) return false;
     return cleanExpiredEntriesInternal(cache);
-  }, [cache]);
+  }, [cache, cleanExpiredEntriesInternal]);
 
   /**
    * Clear entire cache (useful for debugging or user-initiated reset)
@@ -257,7 +257,7 @@ export function useDatabase(): UseDatabaseReturn {
    */
   const refreshCache = useCallback(async (): Promise<void> => {
     await initializeCacheWithSWR();
-  }, []);
+  }, [initializeCacheWithSWR]);
 
   return {
     cache,
