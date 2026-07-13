@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { DragEvent } from 'react';
 import { Team, SpeciesRosterEntry } from '../types/pokemon';
 import type { UseTeamsReturn } from '../hooks/useTeams';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
@@ -8,6 +9,7 @@ import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
 import { useRosterActions } from '../hooks/useRosterActions';
 import { toRegulationId } from '../utils/pokemonRules';
 import { getPixelSpriteUrl } from '../utils/spriteUrl';
+import { TEAMS_LIST_DRAG_TYPE, type TeamsListDragPayload } from '../utils/teamsListDragTypes';
 import PokemonCard from './PokemonCard';
 import SpeciesPickerCard from './SpeciesPickerCard';
 import TeamValidationButton from './TeamValidationButton';
@@ -32,7 +34,8 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
   const [localAuthor, setLocalAuthor] = useState(team.author || '');
   const [isAddPickerOpen, setIsAddPickerOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
-  const { updateTeam } = teamsState;
+  const [isDragOver, setIsDragOver] = useState(false);
+  const { updateTeam, reorderTeam } = teamsState;
   const rosterActions = useRosterActions(
     updateTeam,
     databaseState.getCachedEntry,
@@ -45,13 +48,57 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
     await rosterActions.addSlot(team, species.name);
   };
 
+  // Teams-list reorder via drag-and-drop, always available (not gated
+  // behind this card's own roster-edit mode, since list position and
+  // roster editing are unrelated toggles) - same MIME-type-payload pattern
+  // as the Pokemon-within-a-team reorder (utils/teamRosterDragTypes.ts).
+  // reorderTeam itself resolves the drop against the full unfiltered teams
+  // array, so this works the same whether TeamsPage.tsx is showing "All"
+  // or a filtered subset.
+  const handleDragStart = (e: DragEvent<HTMLDivElement>) => {
+    const payload: TeamsListDragPayload = { draggedTeamId: team.id };
+    e.dataTransfer.setData(TEAMS_LIST_DRAG_TYPE, JSON.stringify(payload));
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+    if (!e.dataTransfer.types.includes(TEAMS_LIST_DRAG_TYPE)) return;
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const raw = e.dataTransfer.getData(TEAMS_LIST_DRAG_TYPE);
+    if (!raw) return;
+    try {
+      const payload: TeamsListDragPayload = JSON.parse(raw);
+      if (payload.draggedTeamId !== team.id) {
+        reorderTeam(payload.draggedTeamId, team.id);
+      }
+    } catch {
+      // malformed/foreign drag payload - ignore
+    }
+  };
+
   return (
     <div className="w-auto mx-6 bg-zinc-900/40 border border-zinc-800/80 rounded-xl mb-4 transition-all">
 
       {/* MINIMIZED VIEW CONTAINER ROW - Enhanced Header with Controls */}
       {/* rounded-t-xl replaces the parent's old overflow-hidden clip (removed so
           tooltips/popovers from expanded cards below are never cut off) */}
-      <div className="w-full flex flex-row items-center h-16 px-6 bg-zinc-950/40 rounded-t-xl transition-colors" style={{ paddingLeft: '1.25rem', paddingRight: '1.25rem' }}>
+      <div
+        draggable
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragLeave={() => setIsDragOver(false)}
+        onDrop={handleDrop}
+        className={`w-full flex flex-row items-center h-16 px-6 bg-zinc-950/40 rounded-t-xl transition-colors cursor-grab ${
+          isDragOver ? 'ring-2 ring-inset ring-blue-500' : ''
+        }`}
+        style={{ paddingLeft: '1.25rem', paddingRight: '1.25rem' }}
+      >
         {/* Horizontal Mini Sprites Row - always reserves 6 slots (padding
             empty ones) so the team name's starting x-position stays fixed
             regardless of roster size, instead of drifting per team. */}

@@ -196,20 +196,8 @@ focused on what's actually next.
      silently.
   10. Teams page (`TeamCard.tsx`) Pokemon-card drag-to-reorder is done
       (2026-07-13), see COMPLETED.md.
-  11. Teams page (`TeamsPage.tsx`): let teams be reordered in the list via
-      click-and-drag (same drag convention as the Pokemon-card-reorder
-      item above). `useTeams.ts` has no reorder mutation today either -
-      `teams` order is whatever `teams.json` happens to have (append-on-
-      add via `addTeam`). Open design question worth settling before
-      implementing: the page renders `filteredTeams`
-      (`teams.filter(t => t.format === activeFilter)`, or the full list
-      under "All") - dragging within a filtered view (e.g. only Reg M-B
-      teams showing) needs a decision on how that maps back onto the
-      underlying full-`teams` array order, since hidden (filtered-out)
-      teams' relative positions still need to make sense afterward.
-      Ranked below the Pokemon-card reorder above since it has this extra
-      unresolved design question on top of the same missing-mutation
-      work.
+  11. Teams page (`TeamsPage.tsx`) drag-to-reorder the teams list is done
+      (2026-07-13), see COMPLETED.md.
   12. Calc page: bulk-import Pokemon via pasted Showdown text (reference
       screenshot: a standard single-Pokemon Showdown export block), able
       to import more than one at once, and save each as an individually

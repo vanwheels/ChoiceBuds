@@ -5,6 +5,28 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Teams page: drag-to-reorder teams in the list** (2026-07-13): the
+  open design question from when this was scoped (`TeamsPage.tsx` renders
+  `filteredTeams`, a subset of the real `teams` array when a format filter
+  is active - dragging within a filtered view needed a rule for how that
+  maps back onto the full unfiltered storage order) was resolved with the
+  user: operate on team IDs against the always-authoritative full `teams`
+  array, not positional indices into whatever filtered view is showing. A
+  dropped team always lands immediately before the target team's real
+  position - hidden (filtered-out) teams keep their exact relative order
+  untouched, since only the dragged team's position actually changes. Added
+  `reorderTeam(draggedTeamId, targetTeamId)` to `useTeams.ts` (splice by ID
+  lookup against the full array, same insert-before-target semantics as
+  `useRosterActions.ts::reorderSlot`), a new `utils/teamsListDragTypes.ts`
+  MIME-type/payload pair, and wired the drag onto `TeamCard.tsx`'s
+  collapsed header bar - always draggable, not gated behind that team's own
+  roster-edit mode, since list position and roster editing are unrelated
+  toggles. Verified live with 4 disposable teams (2 Reg M-A, 2 Reg M-B
+  interleaved as `[A, B, C, D]`): filtered to Reg M-B (showing `[B, D]`),
+  dragged D onto B, confirmed both the filtered view and the full `All`
+  view updated to `[A, D, B, C]` exactly as designed, checked
+  `teams.json` on disk to confirm persistence, then deleted all 4 test
+  teams.
 - **Teams page: drag-to-reorder a Pokemon within a team** (2026-07-13):
   `TeamCard.tsx`'s roster grid (`PokemonCard.tsx` instances) previously had
   no way to reorder an existing Pokemon - only swap one slot's species

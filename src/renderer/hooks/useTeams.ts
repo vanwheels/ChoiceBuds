@@ -17,6 +17,7 @@ export interface UseTeamsReturn {
   addTeam: (team: Team) => Promise<boolean>;
   updateTeam: (teamId: string, updates: Partial<Team>) => Promise<boolean>;
   deleteTeam: (teamId: string) => Promise<boolean>;
+  reorderTeam: (draggedTeamId: string, targetTeamId: string) => Promise<boolean>;
   
   // UI state management
   toggleCardExpansion: (teamId: string) => void;
@@ -166,6 +167,34 @@ export function useTeams(): UseTeamsReturn {
   }, [teams]);
 
   /**
+   * Reorder teams by dragging one onto another - operates on the full
+   * (unfiltered) `teams` array by ID, not by position in whatever filtered
+   * view TeamsPage.tsx happens to be showing, so hidden teams keep their
+   * exact relative order. The dragged team always lands immediately before
+   * the target team's current position, same insert-before-target
+   * semantics as useRosterActions.ts::reorderSlot.
+   */
+  const reorderTeam = useCallback(async (draggedTeamId: string, targetTeamId: string): Promise<boolean> => {
+    if (draggedTeamId === targetTeamId) return false;
+    const dragged = teams.find(t => t.id === draggedTeamId);
+    if (!dragged) return false;
+
+    const withoutDragged = teams.filter(t => t.id !== draggedTeamId);
+    const targetIndex = withoutDragged.findIndex(t => t.id === targetTeamId);
+    if (targetIndex === -1) return false;
+
+    const updatedTeams = [...withoutDragged];
+    updatedTeams.splice(targetIndex, 0, dragged);
+
+    const success = await persistTeamsToDisk(updatedTeams);
+    if (success) {
+      setTeams(updatedTeams);
+      setError(null);
+    }
+    return success;
+  }, [teams]);
+
+  /**
    * Toggle expansion state for a specific team card
    */
   const toggleCardExpansion = useCallback((teamId: string): void => {
@@ -227,6 +256,7 @@ export function useTeams(): UseTeamsReturn {
     addTeam,
     updateTeam,
     deleteTeam,
+    reorderTeam,
     toggleCardExpansion,
     expandCard,
     collapseCard,
