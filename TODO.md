@@ -198,42 +198,8 @@ focused on what's actually next.
       (2026-07-13), see COMPLETED.md.
   11. Teams page (`TeamsPage.tsx`) drag-to-reorder the teams list is done
       (2026-07-13), see COMPLETED.md.
-  12. Calc page: bulk-import Pokemon via pasted Showdown text (reference
-      screenshot: a standard single-Pokemon Showdown export block), able
-      to import more than one at once, and save each as an individually
-      reusable set - then when searching for a species anywhere on the
-      Calc page, offer a choice between starting from a blank set or
-      loading a saved one for that species if any exist. A genuinely new
-      concept, not just wiring - "saved individual Pokemon" doesn't exist
-      anywhere in the app today (Teams are the only persisted grouping,
-      always a 6-slot roster, never a flat library of standalone sets).
-      Ranked last: the user explicitly chose "add to TODO for later" over
-      "implement now" when asked, and it's the largest net-new subsystem
-      of this whole batch (own persistence layer, new UI, a naming
-      scheme). Real scope, and what's already reusable:
-      - Persistence: needs a new store alongside `teams.json`/
-        `battles.json` (own IPC handlers in `main.ts`, preload bridge
-        methods, a new `useSavedPokemon.ts` hook mirroring `useTeams.ts`)
-        - a flat list, not nested under a team.
-      - Parsing/import: `services/parser.ts::parseShowdownText` already
-        splits pasted text into multiple Pokemon blocks and handles a
-        single block equally well - the bulk-multi-import part is mostly
-        already there, just needs a Calc-page entry point (a modal/panel,
-        not the existing Teams-only `ImportTeamModal.tsx`) and running
-        each block through `enrichPokemonWithAPI` like team import does.
-      - Calc-state mapping: `utils/calcTeamImport.ts::teamPokemonToCalcUpdates`
-        already converts `ImportedPokemonInfo` -> `Partial<CalcPokemonState>`
-        (built for "Load from Team" tray) - directly reusable for loading
-        a saved individual Pokemon into a Calc panel too, no new mapper
-        needed there.
-      - Net-new UI: the species search itself
-        (`CalcAutocomplete.tsx`, used generically for species/item/
-        ability/move) needs species-specific behavior added on top - once
-        a species is picked, if saved sets exist for it, prompt/offer
-        "blank" vs. each saved set by name rather than always defaulting
-        to blank. Needs a naming scheme for saved sets too, since more
-        than one could exist per species (e.g. two different Dracovish
-        sets) - nickname, a user-entered label, or both.
+  12. Calc page bulk-import + saved individual Pokemon sets is done
+      (2026-07-13), see COMPLETED.md.
   13. Battle Logger weather move-effects notes (Thunder/Hurricane/Solar
       Beam/Solar Blade/Weather Ball/Synthesis-family/Blizzard) are done
       (2026-07-13), see COMPLETED.md.

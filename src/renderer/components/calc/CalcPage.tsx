@@ -11,23 +11,30 @@
  * Teams-only session never has to parse/load the calc engine.
  */
 
+import { useState } from 'react';
 import { useDamageCalc, ALL_REGULATION_IDS } from '../../hooks/useDamageCalc';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseTeamsReturn } from '../../hooks/useTeams';
+import type { UseDatabaseReturn } from '../../hooks/useDatabase';
+import type { UseSavedPokemonReturn } from '../../hooks/useSavedPokemon';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import { getRegulationLabel } from '../../utils/pokemonRules';
 import CalcPokemonPanel from './CalcPokemonPanel';
 import CalcMoveGrid from './CalcMoveGrid';
 import CalcFieldPanel from './CalcFieldPanel';
 import CalcResultPanel from './CalcResultPanel';
+import CalcSavedSetsModal from './CalcSavedSetsModal';
 
 interface CalcPageProps {
   gameDataState: UseGameDataReturn;
   teamsState: UseTeamsReturn;
+  databaseState: UseDatabaseReturn;
+  savedPokemonState: UseSavedPokemonReturn;
   spriteCacheState: UseSpriteCacheReturn;
 }
 
-export default function CalcPage({ gameDataState, teamsState, spriteCacheState }: CalcPageProps) {
+export default function CalcPage({ gameDataState, teamsState, databaseState, savedPokemonState, spriteCacheState }: CalcPageProps) {
+  const [isSavedSetsOpen, setIsSavedSetsOpen] = useState(false);
   const calcState = useDamageCalc(gameDataState);
   const {
     regulationId, setRegulationId,
@@ -43,6 +50,12 @@ export default function CalcPage({ gameDataState, teamsState, spriteCacheState }
   return (
     <div className="flex flex-col gap-2">
       <div className="flex justify-end gap-2">
+        <button
+          onClick={() => setIsSavedSetsOpen(true)}
+          className="px-3 py-1 text-xs font-bold uppercase tracking-wide rounded transition-colors cursor-pointer bg-gray-800 text-gray-400 hover:bg-gray-700"
+        >
+          Saved Sets
+        </button>
         {ALL_REGULATION_IDS.map(id => (
           <button
             key={id}
@@ -92,6 +105,7 @@ export default function CalcPage({ gameDataState, teamsState, spriteCacheState }
           boostedStats={pokemon1BoostedStats}
           natureEffect={pokemon1NatureEffect}
           teams={teamsState.teams}
+          savedPokemonState={savedPokemonState}
           resolveSprite={spriteCacheState.resolveSprite}
           onChange={setPokemon1}
         />
@@ -117,12 +131,22 @@ export default function CalcPage({ gameDataState, teamsState, spriteCacheState }
           boostedStats={pokemon2BoostedStats}
           natureEffect={pokemon2NatureEffect}
           teams={teamsState.teams}
+          savedPokemonState={savedPokemonState}
           resolveSprite={spriteCacheState.resolveSprite}
           onChange={setPokemon2}
         />
       </div>
 
       <p className="text-center text-[10px] text-gray-600">Powered by @smogon/calc</p>
+
+      {isSavedSetsOpen && (
+        <CalcSavedSetsModal
+          onClose={() => setIsSavedSetsOpen(false)}
+          databaseState={databaseState}
+          savedPokemonState={savedPokemonState}
+          resolveSprite={spriteCacheState.resolveSprite}
+        />
+      )}
     </div>
   );
 }

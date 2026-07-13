@@ -93,6 +93,23 @@ const electronAPI = {
   },
 
   /**
+   * Reads the saved-Pokemon-sets database from userData directory
+   * @returns Promise resolving to SavedPokemonDatabase or null if file doesn't exist
+   */
+  readSavedPokemonDatabase: async (): Promise<any> => {
+    return ipcRenderer.invoke('file:read-saved-pokemon');
+  },
+
+  /**
+   * Writes the saved-Pokemon-sets database to userData directory
+   * @param data - SavedPokemonDatabase object to persist
+   * @returns Promise resolving to success boolean
+   */
+  writeSavedPokemonDatabase: async (data: any): Promise<boolean> => {
+    return ipcRenderer.invoke('file:write-saved-pokemon', data);
+  },
+
+  /**
    * Reads the app settings from userData directory
    * @returns Promise resolving to AppSettings or null if file doesn't exist
    */

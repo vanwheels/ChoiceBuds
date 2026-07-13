@@ -15,16 +15,19 @@
  * searchable). Moves live in CalcMoveGrid, not here.
  */
 
+import { useState } from 'react';
 import type { DragEvent } from 'react';
 import type { CalcPokemonState, NatureStatEffect } from '../../hooks/useDamageCalc';
 import { STATUS_OPTIONS } from '../../hooks/useDamageCalc';
 import type { FormeFamily } from '../../utils/calcFormes';
 import { formeDisplayLabel } from '../../utils/calcFormes';
 import type { NatureName, StatsTable } from '@smogon/calc/dist/data/interface';
-import type { Team } from '../../types/pokemon';
+import type { Team, SavedPokemonEntry } from '../../types/pokemon';
+import type { UseSavedPokemonReturn } from '../../hooks/useSavedPokemon';
 import { CALC_TEAM_POKEMON_DRAG_TYPE, type CalcTeamPokemonDragPayload } from '../../utils/calcDragTypes';
 import { teamPokemonToCalcUpdates } from '../../utils/calcTeamImport';
 import CalcAutocomplete from './CalcAutocomplete';
+import CalcSavedSetPicker from './CalcSavedSetPicker';
 import CalcStatRows from './CalcStatRows';
 import CalcTeamTray from './CalcTeamTray';
 
@@ -40,6 +43,7 @@ interface CalcPokemonPanelProps {
   boostedStats: StatsTable | null;
   natureEffect: NatureStatEffect;
   teams: Team[];
+  savedPokemonState: UseSavedPokemonReturn;
   resolveSprite: (remoteUrl: string) => string;
   onChange: (updates: Partial<CalcPokemonState>) => void;
 }
@@ -71,8 +75,24 @@ function FormeToggle({ group, current, onSelect }: { group: string[]; current: s
 
 export default function CalcPokemonPanel({
   title, state, speciesOptions, itemOptions, abilityOptions, natureOptions, formes, baseStats, boostedStats, natureEffect,
-  teams, resolveSprite, onChange,
+  teams, savedPokemonState, resolveSprite, onChange,
 }: CalcPokemonPanelProps) {
+  const [savedSetPickerSpecies, setSavedSetPickerSpecies] = useState<string | null>(null);
+
+  // Only fires on a real dropdown-list click (see CalcAutocomplete.tsx's
+  // onSelect), never while typing - species is already applied via onChange
+  // immediately either way, this just decides whether to also offer a
+  // saved-set choice for what was just picked.
+  const handleSpeciesSelect = (species: string) => {
+    const sets = savedPokemonState.getSavedSetsForSpecies(species);
+    if (sets.length > 0) setSavedSetPickerSpecies(species);
+  };
+
+  const handlePickSavedSet = (entry: SavedPokemonEntry) => {
+    onChange(teamPokemonToCalcUpdates(entry.pokemon));
+    setSavedSetPickerSpecies(null);
+  };
+
   const cycleGender = () => {
     const currentIndex = GENDER_CYCLE.indexOf(state.gender);
     const next = GENDER_CYCLE[(currentIndex + 1) % GENDER_CYCLE.length];
@@ -109,14 +129,24 @@ export default function CalcPokemonPanel({
       <CalcTeamTray teams={teams} resolveSprite={resolveSprite} onLoadPokemon={(p) => onChange(teamPokemonToCalcUpdates(p))} />
 
       <div className="flex gap-2 items-end">
-        <div className="flex-1">
+        <div className="flex-1 relative">
           <CalcAutocomplete
             label="Species (Forme)"
             value={state.species}
             options={speciesOptions}
             placeholder="Search species..."
             onChange={(species) => onChange({ species })}
+            onSelect={handleSpeciesSelect}
           />
+          {savedSetPickerSpecies && (
+            <CalcSavedSetPicker
+              species={savedSetPickerSpecies}
+              sets={savedPokemonState.getSavedSetsForSpecies(savedSetPickerSpecies)}
+              resolveSprite={resolveSprite}
+              onPick={handlePickSavedSet}
+              onClose={() => setSavedSetPickerSpecies(null)}
+            />
+          )}
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-[10px] text-gray-400 uppercase tracking-wide">Lv</label>

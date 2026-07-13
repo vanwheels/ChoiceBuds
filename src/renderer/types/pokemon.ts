@@ -94,6 +94,29 @@ export interface TeamsDatabase {
 }
 
 /**
+ * One individually-saved Pokémon set on the Calc page - a flat library, not
+ * nested under a Team (which is always a fixed 6-slot roster). `label`
+ * defaults to nickname||species at save time, deduped on collision, but is
+ * user-renamable since more than one set can exist per species.
+ */
+export interface SavedPokemonEntry {
+  id: string; // UUID
+  label: string;
+  pokemon: ImportedPokemonInfo;
+  savedAt: number; // Unix timestamp
+  updatedAt: number; // Unix timestamp
+}
+
+/**
+ * Database schema state for saved-Pokemon-set storage (savedPokemon.json)
+ */
+export interface SavedPokemonDatabase {
+  version: number;
+  savedPokemon: SavedPokemonEntry[];
+  lastModified: number; // Unix timestamp
+}
+
+/**
  * Persisted user preferences, stored as settings.json in userData directory
  */
 export interface AppSettings {

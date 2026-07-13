@@ -7,6 +7,7 @@
 import { lazy, Suspense, useState } from 'react';
 import { useTeams } from './hooks/useTeams';
 import { useDatabase } from './hooks/useDatabase';
+import { useSavedPokemon } from './hooks/useSavedPokemon';
 import { useActiveEditor } from './hooks/useActiveEditor';
 import { useGameData } from './hooks/useGameData';
 import { useSpeciesRoster } from './hooks/useSpeciesRoster';
@@ -48,6 +49,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('teams');
   const teamsState = useTeams();
   const databaseState = useDatabase();
+  const savedPokemonState = useSavedPokemon();
   const editorState = useActiveEditor();
   const gameDataState = useGameData();
   const speciesRosterState = useSpeciesRoster();
@@ -161,7 +163,7 @@ export default function App() {
           />
         ) : activeTab === 'calc' ? (
           <Suspense fallback={<div className="text-gray-400 text-sm">Loading calculator...</div>}>
-            <CalcPage gameDataState={gameDataState} teamsState={teamsState} spriteCacheState={spriteCacheState} />
+            <CalcPage gameDataState={gameDataState} teamsState={teamsState} databaseState={databaseState} savedPokemonState={savedPokemonState} spriteCacheState={spriteCacheState} />
           </Suspense>
         ) : activeTab === 'battles' ? (
           <Suspense fallback={<div className="text-gray-400 text-sm">Loading battle log...</div>}>

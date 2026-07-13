@@ -18,9 +18,11 @@ interface CalcAutocompleteProps {
   options: string[];
   placeholder?: string;
   onChange: (value: string) => void;
+  /** Fires only on a real click-from-dropdown-list pick, not on every keystroke like onChange does - lets a caller distinguish "the user just selected X" from "the user is still typing". */
+  onSelect?: (value: string) => void;
 }
 
-export default function CalcAutocomplete({ label, value, options, placeholder, onChange }: CalcAutocompleteProps) {
+export default function CalcAutocomplete({ label, value, options, placeholder, onChange, onSelect }: CalcAutocompleteProps) {
   const [query, setQuery] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
   const ref = useDismissable<HTMLDivElement>(() => {
@@ -36,6 +38,7 @@ export default function CalcAutocomplete({ label, value, options, placeholder, o
 
   const handleSelect = (option: string) => {
     onChange(option);
+    onSelect?.(option);
     setQuery(option);
     setIsOpen(false);
   };

@@ -58,6 +58,13 @@ function getBattlesDatabasePath(): string {
 }
 
 /**
+ * Get the full path to the saved-Pokemon-sets database file
+ */
+function getSavedPokemonPath(): string {
+  return path.join(getUserDataPath(), 'savedPokemon.json');
+}
+
+/**
  * Get the full path to the app settings file
  */
 function getSettingsPath(): string {
@@ -250,6 +257,37 @@ function registerIPCHandlers(): void {
       return true;
     } catch (err) {
       console.error('Error writing battles database:', err);
+      return false;
+    }
+  });
+
+  /**
+   * Read saved-Pokemon-sets database from userData directory
+   */
+  ipcMain.handle('file:read-saved-pokemon', async () => {
+    try {
+      const filePath = getSavedPokemonPath();
+      const fileContent = await fs.readFile(filePath, 'utf-8');
+      return JSON.parse(fileContent);
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+        return null;
+      }
+      console.error('Error reading saved-Pokemon database:', err);
+      throw err;
+    }
+  });
+
+  /**
+   * Write saved-Pokemon-sets database to userData directory
+   */
+  ipcMain.handle('file:write-saved-pokemon', async (_event, data) => {
+    try {
+      const filePath = getSavedPokemonPath();
+      await atomicWriteFile(filePath, JSON.stringify(data, null, 2));
+      return true;
+    } catch (err) {
+      console.error('Error writing saved-Pokemon database:', err);
       return false;
     }
   });

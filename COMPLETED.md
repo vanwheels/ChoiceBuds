@@ -5,6 +5,67 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Calc page: bulk-import + saved individual Pokemon sets** (2026-07-13):
+  the last item from the 2026-07-07 review batch, previously deferred as
+  the largest net-new subsystem in that batch (own persistence layer, new
+  UI, a naming scheme). Planned via EnterPlanMode given the size - two
+  decisions confirmed with the user first: (1) auto-label each imported set
+  from `nickname || species`, deduped with a numeric suffix on collision
+  (same "smallest unused N" pattern `ImportTeamModal.tsx::nextGenericTeamName`
+  already uses for teams) rather than prompting for a name per Pokemon; (2)
+  a dedicated management view rather than inline delete buttons in the load
+  picker, combined into one modal alongside the paste-to-import box.
+  - **New persistence layer** mirroring `teams.json` exactly: `SavedPokemonEntry`/
+    `SavedPokemonDatabase` types (`types/pokemon.ts`), `savedPokemon.json`
+    IPC read/write handlers copied verbatim from the teams handlers
+    (`main.ts`), matching `any`-typed preload bridge methods
+    (`readSavedPokemonDatabase`/`writeSavedPokemonDatabase`), and a new
+    `useSavedPokemon.ts` hook mirroring `useTeams.ts`'s load/persist/CRUD
+    shape, plus `getSavedSetsForSpecies`.
+  - **New `CalcSavedSetsModal.tsx`**: combined paste-to-import (reuses
+    `parseShowdownText` + the same per-block `enrichPokemonWithAPI` loop
+    `ImportTeamModal.tsx` already uses, no team name/author/format/pokepaste
+    fields since those are team-specific) + a management list (rename
+    inline, delete, empty-state message matching `PastBattlesList`'s
+    convention).
+  - **New `CalcSavedSetPicker.tsx`**: the species-search load popover
+    ("Blank" + each saved set by label/sprite), opened from
+    `CalcPokemonPanel.tsx` only when a real dropdown-list click (not
+    typing) lands on a species with 1+ saved sets - required adding an
+    optional `onSelect` prop to `CalcAutocomplete.tsx` (fires only from
+    `handleSelect`, additive/non-breaking for every other Autocomplete
+    usage). Loading a saved set reuses the exact same
+    `teamPokemonToCalcUpdates` mapper the existing "Load from Team" tray
+    already uses - no new Calc-state mapping logic needed.
+  - **Real bug found and fixed during live verification**: the first
+    version's `addSavedPokemon` (single-item add, called once per parsed
+    Pokemon in the import loop) lost every entry but the last one, even
+    with sequential `await`s between calls - each call read `savedPokemon`
+    from the same stale render closure (`CalcSavedSetsModal`'s own
+    `handleImport` doesn't get a fresh `savedPokemonState` reference
+    between iterations of a single continuous async function, regardless
+    of awaits), so each call's persist independently overwrote the previous
+    one's. Fixed by replacing it with `addSavedPokemonBatch` - enrich all
+    parsed Pokemon first, then persist the whole batch in one state
+    update/disk write (also deduping labels against each other within the
+    same batch, e.g. two pasted Dracovish import as "Dracovish"/
+    "Dracovish (2)" correctly). This exact stale-closure pattern likely
+    also affects `useTeams.ts`/`useBattles.ts`'s existing mutators when
+    called rapidly in succession (observed informally this same session
+    with rapid team/battle deletes) - not fixed there since single
+    user-driven clicks (with a render in between) don't hit it in
+    practice, only a tight programmatic loop does; worth keeping in mind
+    if a future feature ever needs to batch-mutate teams/battles the same
+    way.
+  - Verified live end-to-end: imported 3 Pokemon (two Dracovish with
+    different movesets + one Incineroar) via a disposable paste, confirmed
+    correct dedup labels; clicking a species from the dropdown (not typing)
+    opened the picker only when saved sets existed; picking a saved set
+    correctly populated item/ability/nature/moves; typing a species by hand
+    never opened the picker; renamed and deleted entries in the management
+    modal and confirmed both persisted to `savedPokemon.json` and survived
+    a fresh app relaunch; cleaned up all test data afterward. Full
+    production build (`npm run build`) also verified clean.
 - **Battle Logger: weather move-effects notes** (2026-07-13): distinct
   from `config/moveStatEffects.ts`'s stat-stage table - moves whose
   *non-stat* effect (accuracy, power, healing amount, charge-turn skipping)
