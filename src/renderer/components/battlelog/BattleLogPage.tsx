@@ -10,6 +10,7 @@ import type { UseTeamsReturn } from '../../hooks/useTeams';
 import type { UseSpeciesRosterReturn } from '../../hooks/useSpeciesRoster';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
+import type { CalcReviewPayload } from '../../utils/battleCalcReview';
 import { useBattleLogActions } from '../../hooks/useBattleLogActions';
 import StartBattleFlow from './StartBattleFlow';
 import PastBattlesList from './PastBattlesList';
@@ -21,9 +22,10 @@ interface BattleLogPageProps {
   speciesRosterState: UseSpeciesRosterReturn;
   spriteCacheState: UseSpriteCacheReturn;
   gameDataState: UseGameDataReturn;
+  onReviewInCalc: (payload: CalcReviewPayload) => void;
 }
 
-export default function BattleLogPage({ battlesState, teamsState, speciesRosterState, spriteCacheState, gameDataState }: BattleLogPageProps) {
+export default function BattleLogPage({ battlesState, teamsState, speciesRosterState, spriteCacheState, gameDataState, onReviewInCalc }: BattleLogPageProps) {
   const [openBattleId, setOpenBattleId] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState(false);
   const battleLogActions = useBattleLogActions(battlesState.addBattle, battlesState.updateBattle);
@@ -39,6 +41,7 @@ export default function BattleLogPage({ battlesState, teamsState, speciesRosterS
         resolveSprite={spriteCacheState.resolveSprite}
         gameDataState={gameDataState}
         onClose={() => setOpenBattleId(null)}
+        onReviewInCalc={onReviewInCalc}
       />
     );
   }

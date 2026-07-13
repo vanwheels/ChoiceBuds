@@ -10,10 +10,12 @@ import type { Battle, BattleAction } from '../../types/pokemon';
 import { battlePokemonDisplayName, isRepeatProtectUse } from '../../utils/battleLookup';
 import { isSwitchOutMove } from '../../config/switchOutMoves';
 import type { UseBattleLogActionsReturn } from '../../hooks/useBattleLogActions';
+import { buildCalcReviewPayload, type CalcReviewPayload } from '../../utils/battleCalcReview';
 
 interface TurnLogProps {
   battle: Battle;
   battleLogActions: UseBattleLogActionsReturn;
+  onReviewInCalc: (payload: CalcReviewPayload) => void;
 }
 
 const PHASE_ORDER: Record<NonNullable<BattleAction['phase']>, number> = { sendIn: 0, switch: 0, mega: 1, move: 2 };
@@ -37,7 +39,7 @@ function outcomeLabel(result: 'crit' | 'miss' | undefined): { text: string; clas
   return null;
 }
 
-export default function TurnLog({ battle, battleLogActions }: TurnLogProps) {
+export default function TurnLog({ battle, battleLogActions, onReviewInCalc }: TurnLogProps) {
   return (
     <div className="flex flex-col gap-3">
       {battle.turns.map(turn => (
@@ -82,6 +84,16 @@ export default function TurnLog({ battle, battleLogActions }: TurnLogProps) {
                         className="text-[10px] px-1.5 py-0.5 rounded bg-gray-800 text-gray-400 hover:text-red-300 hover:bg-red-900/40 cursor-pointer"
                       >
                         Failed?
+                      </button>
+                    )}
+                    {!action.failed && (action.moveCategory === 'physical' || action.moveCategory === 'special') && action.target && action.target.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => onReviewInCalc(buildCalcReviewPayload(battle, turn.number, action, action.target![0].pokemonId))}
+                        title="Open this matchup in the Calc tab, reconstructed as it was on this turn"
+                        className="text-[10px] px-1.5 py-0.5 rounded bg-gray-800 text-gray-400 hover:text-blue-300 hover:bg-blue-900/40 cursor-pointer"
+                      >
+                        Show Calc
                       </button>
                     )}
                   </li>

@@ -55,9 +55,9 @@ focused on what's actually next.
   duration/mega-ability/auto-scroll/faint-relocation/stat-changing-moves
   pass, status-condition tracking + move-outcome chips, the self-targeting
   fix, and the per-target crit/miss + chip-placement follow-up are all done
-  (see COMPLETED.md). Still open: Bo3 "set" grouping across games, post-battle
-  damage-calc review (step through a logged battle's turns against the
-  Calc), and the stat-inference idea (needs Limitless/championsbattledata-
+  (see COMPLETED.md). Post-battle damage-calc review is also done
+  (2026-07-13, see COMPLETED.md). Still open: Bo3 "set" grouping across
+  games, and the stat-inference idea (needs Limitless/championsbattledata-
   sourced per-species data first). Also noted but not built: synthesizing
   turn-log entries when a field condition changes (the countdown display
   already shows remaining turns implicitly, so this is a nice-to-have);

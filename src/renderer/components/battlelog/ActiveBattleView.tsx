@@ -13,6 +13,7 @@ import { useState, useEffect, useRef } from 'react';
 import type { Battle, SpeciesRosterEntry } from '../../types/pokemon';
 import type { UseBattleLogActionsReturn } from '../../hooks/useBattleLogActions';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
+import type { CalcReviewPayload } from '../../utils/battleCalcReview';
 import PlayerFieldPanel from './PlayerFieldPanel';
 import OpponentFieldPanel from './OpponentFieldPanel';
 import Battlefield from './Battlefield';
@@ -25,9 +26,10 @@ interface ActiveBattleViewProps {
   resolveSprite: (remoteUrl: string) => string;
   gameDataState: UseGameDataReturn;
   onClose: () => void;
+  onReviewInCalc: (payload: CalcReviewPayload) => void;
 }
 
-export default function ActiveBattleView({ battle, battleLogActions, roster, resolveSprite, gameDataState, onClose }: ActiveBattleViewProps) {
+export default function ActiveBattleView({ battle, battleLogActions, roster, resolveSprite, gameDataState, onClose, onReviewInCalc }: ActiveBattleViewProps) {
   const [notes, setNotes] = useState(battle.notes || '');
   const turnLogRef = useRef<HTMLDivElement>(null);
 
@@ -90,7 +92,7 @@ export default function ActiveBattleView({ battle, battleLogActions, roster, res
           </div>
 
           <div ref={turnLogRef} className="flex-1 min-h-[12rem] max-h-[24rem] bg-gray-900/40 rounded-lg p-3 overflow-y-auto">
-            <TurnLog battle={battle} battleLogActions={battleLogActions} />
+            <TurnLog battle={battle} battleLogActions={battleLogActions} onReviewInCalc={onReviewInCalc} />
           </div>
         </div>
 

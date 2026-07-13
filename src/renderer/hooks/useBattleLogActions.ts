@@ -144,6 +144,9 @@ export function useBattleLogActions(
       pokedexNumber: p.pokedexNumber,
       types: p.types,
       spriteUrl: p.spriteUrl,
+      nature: p.showdownData.nature,
+      evs: p.showdownData.evs,
+      level: p.showdownData.level,
     }));
 
     const now = Date.now();
@@ -218,9 +221,17 @@ export function useBattleLogActions(
     ability?: string,
     item?: string
   ): Promise<boolean> => {
-    const opponentRoster = battle.opponentRoster.map(o =>
-      o.id === opponentId ? { ...o, ability, item } : o
-    );
+    const currentTurn = battle.turns.length;
+    const opponentRoster = battle.opponentRoster.map(o => {
+      if (o.id !== opponentId) return o;
+      return {
+        ...o,
+        ability,
+        item,
+        abilityRevealedOnTurn: ability ? (ability !== o.ability ? currentTurn : o.abilityRevealedOnTurn) : undefined,
+        itemRevealedOnTurn: item ? (item !== o.item ? currentTurn : o.itemRevealedOnTurn) : undefined,
+      };
+    });
     return updateBattle(battle.id, { opponentRoster });
   }, [updateBattle]);
 
@@ -483,13 +494,17 @@ export function useBattleLogActions(
     const playerRoster = side === 'player' && megaAbility
       ? battle.playerRoster.map(p => p.id === pokemonId ? { ...p, ability: megaAbility } : p)
       : battle.playerRoster;
+    const currentTurn = battle.turns.length;
     const opponentRoster = side === 'opponent'
       ? battle.opponentRoster.map(o => o.id === pokemonId
-          ? { ...o, ...(revealedItem ? { item: revealedItem } : {}), ...(megaAbility ? { ability: megaAbility } : {}) }
+          ? {
+              ...o,
+              ...(revealedItem ? { item: revealedItem, itemRevealedOnTurn: currentTurn } : {}),
+              ...(megaAbility ? { ability: megaAbility, abilityRevealedOnTurn: currentTurn } : {}),
+            }
           : o)
       : battle.opponentRoster;
 
-    const currentTurn = battle.turns.length;
     const megaEffect = getSwitchInEffect(megaAbility);
     const fieldState = megaEffect?.kind === 'weather'
       ? { ...battle.fieldState, weather: { type: megaEffect.weather, setOnTurn: currentTurn, wasMegaEvolved: true } }

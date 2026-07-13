@@ -160,6 +160,14 @@ export interface BroughtPokemonSnapshot {
   pokedexNumber: number;
   types: string[];
   spriteUrl: string;
+  // Snapshotted at battle start alongside the rest of this Pokemon's set -
+  // needed for the post-battle damage-calc review (utils/battleCalcReview.ts)
+  // since neither was ever in Battle before. Optional since battles logged
+  // before this field existed won't have it - no migration, just a graceful
+  // blank in the calc review for those.
+  nature?: string;
+  evs?: EVSpread;
+  level?: number;
 }
 
 /**
@@ -177,6 +185,12 @@ export interface OpponentPokemonEntry {
   ability?: string;
   item?: string;
   itemConsumed?: boolean; // true once a one-time consumable item (berry, Focus Sash, etc.) has triggered - see config/vgcData.ts::isConsumableItem
+  // Which turn `ability`/`item` most recently changed to their current value
+  // (see useBattleLogActions.ts::updateOpponentMoveTags/setMegaEvolved) -
+  // without this, the post-battle damage-calc review (utils/battleCalcReview.ts)
+  // reviewing an early turn would leak info only actually learned later.
+  abilityRevealedOnTurn?: number;
+  itemRevealedOnTurn?: number;
   fainted: boolean;
   addedAt: number; // Unix timestamp
 }

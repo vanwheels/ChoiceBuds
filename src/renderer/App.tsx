@@ -8,6 +8,7 @@ import { lazy, Suspense, useState } from 'react';
 import { useTeams } from './hooks/useTeams';
 import { useDatabase } from './hooks/useDatabase';
 import { useSavedPokemon } from './hooks/useSavedPokemon';
+import type { CalcReviewPayload } from './utils/battleCalcReview';
 import { useActiveEditor } from './hooks/useActiveEditor';
 import { useGameData } from './hooks/useGameData';
 import { useSpeciesRoster } from './hooks/useSpeciesRoster';
@@ -50,6 +51,14 @@ export default function App() {
   const teamsState = useTeams();
   const databaseState = useDatabase();
   const savedPokemonState = useSavedPokemon();
+  // Hand-off for Battle Log's "Show Calc" button (TurnLog.tsx) - set once,
+  // consumed once by CalcPage.tsx's own effect, then cleared, so switching
+  // away and back to the Calc tab doesn't re-apply stale data.
+  const [pendingCalcReview, setPendingCalcReview] = useState<CalcReviewPayload | null>(null);
+  const handleReviewInCalc = (payload: CalcReviewPayload) => {
+    setPendingCalcReview(payload);
+    setActiveTab('calc');
+  };
   const editorState = useActiveEditor();
   const gameDataState = useGameData();
   const speciesRosterState = useSpeciesRoster();
@@ -163,7 +172,15 @@ export default function App() {
           />
         ) : activeTab === 'calc' ? (
           <Suspense fallback={<div className="text-gray-400 text-sm">Loading calculator...</div>}>
-            <CalcPage gameDataState={gameDataState} teamsState={teamsState} databaseState={databaseState} savedPokemonState={savedPokemonState} spriteCacheState={spriteCacheState} />
+            <CalcPage
+              gameDataState={gameDataState}
+              teamsState={teamsState}
+              databaseState={databaseState}
+              savedPokemonState={savedPokemonState}
+              spriteCacheState={spriteCacheState}
+              pendingCalcReview={pendingCalcReview}
+              onConsumePendingCalcReview={() => setPendingCalcReview(null)}
+            />
           </Suspense>
         ) : activeTab === 'battles' ? (
           <Suspense fallback={<div className="text-gray-400 text-sm">Loading battle log...</div>}>
@@ -173,6 +190,7 @@ export default function App() {
               speciesRosterState={speciesRosterState}
               spriteCacheState={spriteCacheState}
               gameDataState={gameDataState}
+              onReviewInCalc={handleReviewInCalc}
             />
           </Suspense>
         ) : activeTab === 'statistics' ? (

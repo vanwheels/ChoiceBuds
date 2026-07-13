@@ -5,6 +5,82 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Battle Logger: post-battle damage-calc review** (2026-07-13): the
+  Battle Logger roadmap's last vague item ("step through a logged battle's
+  turns against the Calc") needed real scoping - planned via EnterPlanMode
+  given the size. Research surfaced a hard, unfixable ceiling and two real
+  design forks, both resolved with the user before implementation:
+  - **Hard ceiling**: HP is never tracked anywhere in the Battle Logger, so
+    every result is inherently "X-Y% of max HP," never "would this have
+    KO'd them" - not fixable without a much bigger HP-tracking feature.
+  - **Opponent-info time-leak** (user chose: fix it): `OpponentPokemonEntry.ability`/
+    `.item` only ever stored the current known value with no record of
+    which turn they were revealed - reviewing an early turn could leak
+    info only actually learned much later. Fixed by adding
+    `abilityRevealedOnTurn`/`itemRevealedOnTurn` to the type, stamped in
+    `updateOpponentMoveTags` (only when the field's value actually
+    changes) and `setMegaEvolved` (which patches ability/item directly,
+    bypassing the former).
+  - **Stat stage/status history** (user chose: attempt automatic replay
+    over defaulting to neutral): `statStages`/`statusConditions` are
+    "current value only" too, but every single mutator
+    (`logAction`'s auto stat-effects, `adjustStatStage`,
+    `applyAbilityEffect`, `applyReactiveLowerEffect`,
+    `applyHitReactiveEffect`, `setStatusCondition`) already appends a
+    discrete, consistently-formatted note action to the turn log at the
+    same time it changes state (`"{STAT_LABELS[stat]} {sign}{delta}"`,
+    optionally suffixed `" ({source})"`; status notes are an exact
+    `STATUS_LABELS` match or `"Cured of {label}"`) - verified true without
+    exception at every call site, which is what made a note-parsing
+    replay honest rather than a guess.
+  - New `utils/battleCalcReview.ts`: `reconstructStageAtTurn` replays
+    stat-note deltas for a Pokemon from its most recent send-in/switch-in
+    (phase-tagged actions) through the reviewed turn, clamped -6..6 -
+    stages reset to 0 on switch since every field-entry is uniformly
+    logged. `reconstructStatusAtTurn` replays status notes with no reset
+    window (status persists through switches, matching the real game
+    rule already documented on `statusConditions`). Field conditions
+    (weather/terrain/screens) needed no replay - already turn-stamped via
+    existing `setOnTurn` fields, checked against their existing
+    duration/expiry constants; hazards with no per-turn timestamp at all
+    (Stealth Rock, Spikes) fall back to the current end-of-battle value
+    regardless of reviewed turn, a documented narrow gap. Also maps
+    Battle's lowercase enums to `@smogon/calc`'s Showdown-style vocabulary
+    (`WeatherType`->`Weather`, `StatusCondition`->`StatusName`, etc.) and
+    only the `SideConditions`/`CalcSideConditions` fields both models
+    share (spikes, reflect/lightScreen/auroraVeil/tailwind, stealthRock).
+  - `BroughtPokemonSnapshot` gained `nature`/`evs`/`level` (never tracked
+    in `Battle` before at all - only derivable from the live `Team`,
+    which can drift/be deleted after the fact), snapshotted in
+    `startBattle` alongside the rest of the set. Optional/graceful for
+    battles logged before this shipped.
+  - UI: `TurnLog.tsx` (already renders every turn's actions in one
+    continuous list, so no separate turn-scrubber screen was needed) gets
+    a "Show Calc" button on any damaging, unfailed action with a target -
+    nothing computed until clicked. Clicking it hands a
+    `CalcReviewPayload` up through `ActiveBattleView`/`BattleLogPage` to
+    `App.tsx`, which stores it as `pendingCalcReview` and switches to the
+    Calc tab; `CalcPage.tsx` consumes it exactly once via the same
+    `setPokemon1`/`setPokemon2`/`setField` merge-update setters
+    `teamPokemonToCalcUpdates` ("Load from Team") already uses - no new
+    Calc-state application logic needed.
+  - **Real regression caught and fixed during the build**: initially
+    imported `defaultSideConditions` (a real value, not just a type) from
+    `useDamageCalc.ts` into the new util - a production build afterward
+    showed `useDamageCalc` had split into its own 486kB chunk shared with
+    `BattleLogPage`, meaning a Battle-Log-only session would now load
+    `@smogon/calc` too, exactly what `CalcPage.tsx`'s `React.lazy()`
+    boundary exists to prevent. Fixed by inlining the (trivial, 15-field)
+    default object locally instead of importing it - confirmed via a
+    rebuild that the chunk split reverted to normal.
+  - Verified live end-to-end with a disposable team/battle (Charizard
+    Dragon Dance -> Flare Blitz vs. Garchomp): confirmed reviewing the
+    turn right after Dragon Dance showed the correct Atk+1/Spe+1 boosts
+    and the pasted EVs/nature; confirmed Garchomp's ability/item showed
+    blank when reviewed before being revealed and correctly populated
+    when reviewed after; confirmed switching Charizard out and back in
+    reset its boosts to 0 in a later review. Full production build
+    verified clean (and re-verified after the chunk-isolation fix above).
 - **Calc page: bulk-import + saved individual Pokemon sets** (2026-07-13):
   the last item from the 2026-07-07 review batch, previously deferred as
   the largest net-new subsystem in that batch (own persistence layer, new
