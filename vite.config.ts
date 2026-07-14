@@ -44,6 +44,14 @@ export default defineConfig({
   build: {
     outDir: 'dist/renderer',
     emptyOutDir: true,
+    // CalcPage's own lazy chunk (~507kB) sits just over Vite's 500kB default
+    // warning threshold - almost entirely @smogon/calc's bundled move/species/
+    // ability data tables, which have no subpath exports to tree-shake by
+    // generation (confirmed by reading its package.json/dist layout directly).
+    // Already behind React.lazy() so it's only fetched when the Calc tab
+    // opens - raising the threshold acknowledges an expected, harmless size
+    // rather than silencing a real regression warning.
+    chunkSizeWarningLimit: 550,
   },
   server: {
     port: 5173,

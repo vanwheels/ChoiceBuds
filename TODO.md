@@ -277,20 +277,25 @@ See [COMPLETED.md](COMPLETED.md) for the full log of finished work.
   than reworking 8 files' worth of stable, working hook/effect patterns as
   a side effect of a routine dependency bump (user's explicit call). Worth
   a dedicated pass later to actually address them for real.
-- **`CalcPage`'s lazy chunk just crossed Vite's 500kB build-warning
-  threshold** (503kB as of 2026-07-07, was 499kB at the 2026-07-06 cleanup
-  pass). Still fine functionally (lazy-loaded, only fetched when the Calc
-  tab opens), but worth a look once the Calc compacting pass (second
-  review pass items 1-3 above) is done, since that pass is already
-  touching the same code. Purely a build-warning threshold, no functional
-  impact.
+- ~~`CalcPage`'s lazy chunk just crossed Vite's 500kB build-warning
+  threshold~~ **Done 2026-07-14** - investigated a real code-split first
+  (checked whether `@smogon/calc` exposes any subpath/generation-specific
+  export to tree-shake by; it doesn't - no `exports` map, all data bundled
+  monolithically with no way to import just Gen 9 tables), concluded the
+  507kB is inherent to the dependency and already appropriately
+  lazy-loaded, so raised `vite.config.ts`'s `chunkSizeWarningLimit` to 550
+  instead of chasing an impractical split (see COMPLETED.md).
 - No app icon set yet for packaging - electron-builder is using the default
   Electron icon. Add `.ico`/`.icns` assets whenever branding is ready -
   cosmetic/branding only, no functional impact.
-- **Unseen Fist-through-Protect deep interaction** - our override only
-  corrects the tooltip description (25% not 100%); if `@smogon/calc` has its
-  own internal logic for this specific interaction, the live calculator may
-  still assume the old mainline value. Not chased further - low-frequency
-  edge case (needs Unseen Fist + a contact move + the target having used
-  Protect that turn). Lowest priority: narrowest, rarest edge case in this
-  list.
+- ~~Unseen Fist-through-Protect deep interaction~~ **Investigated and
+  closed 2026-07-14** - read `@smogon/calc`'s compiled source directly
+  rather than guessing: "Unseen Fist" appears exactly once in the whole
+  package (the static ability-name list used for the autocomplete picker)
+  and is never checked via `hasAbility()` anywhere in its damage
+  mechanics, unlike abilities the library actually models (e.g. Parental
+  Bond, checked in ~5 places). The library simply doesn't implement this
+  ability's Protect-bypass behavior at all - so there's no hidden internal
+  logic assuming the old 100% value to conflict with our tooltip
+  correction. The feared "deep interaction" bug doesn't exist; no code
+  change was needed. See COMPLETED.md.

@@ -5,6 +5,29 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Small polish batch: CalcPage chunk-size warning + Unseen Fist
+  investigation** (2026-07-14): two lowest-priority backlog items, tackled
+  quickly since neither needed a large change.
+  - **`CalcPage` chunk size**: checked `@smogon/calc`'s own package
+    structure for a real code-split opportunity first (no `exports` map,
+    all species/move/ability/item data bundled monolithically with no
+    subpath to import just one generation's tables) - concluded the 507kB
+    chunk is inherent to the dependency, not a symptom of avoidable bloat,
+    and it's already correctly behind `React.lazy()`. Raised
+    `vite.config.ts`'s `build.chunkSizeWarningLimit` to 550 (with a
+    comment explaining why) instead of chasing an impractical split.
+  - **Unseen Fist-through-Protect**: read `@smogon/calc`'s compiled source
+    directly instead of guessing - "Unseen Fist" appears exactly once in
+    the package (the static ability-name list for the picker) and is never
+    referenced via `hasAbility()` in any of its generation-specific damage
+    mechanics files, unlike abilities it does model (Parental Bond has ~5
+    `hasAbility('Parental Bond')` checks in `mechanics/gen789.js`). The
+    library has no special-case logic for this ability's Protect-bypass
+    mechanic at all - confirming the previously-feared "deep interaction"
+    bug doesn't exist. No code change needed; the existing tooltip-text
+    correction in `config/championsAbilityOverrides.ts` was already
+    complete and sufficient.
+
 - **Teams/Battle Log list-row redesign** (2026-07-14): the first concrete
   scoping of the long-vague "general UI polish" backlog item. Both pages'
   rows were thin flat bars stretching full-width on wide screens, leaving
