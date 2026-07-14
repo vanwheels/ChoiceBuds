@@ -331,6 +331,15 @@ export interface Battle {
   teamId: string; // links back to the source Team (may later be edited/deleted)
   teamName: string; // snapshot - display never breaks if the team is renamed/deleted
   format: Team['format'];
+  // Bo3 set grouping (see utils/battleSets.ts) - every battle belongs to a
+  // set of at least 1 (itself), so a standalone/casual battle with no
+  // opponentName renders with no Bo3 framing at all, same as before this
+  // existed. Always defined (useBattleLogActions.ts::startBattle assigns a
+  // fresh one, or adopts an existing incomplete set's id when the typed
+  // opponentName matches - useBattles.ts::normalizeBattle backfills `id`
+  // itself for battles logged before this field existed).
+  setId: string;
+  opponentName?: string; // free-text opponent identity, only ever set if the user typed one when starting the battle
   playerRoster: BroughtPokemonSnapshot[]; // all of the team brought to Team Preview, up to 6
   broughtIds: string[]; // 0-4 ids from playerRoster - which of the 6 were actually brought to this battle
   // Fixed 2-element tuple - index IS the left/right field position, `null` = empty.

@@ -13,6 +13,7 @@ import type {
 } from '../types/pokemon';
 import type { TurnTrackedCondition, BooleanHazard, StackableHazard } from '../config/fieldConditions';
 import { findBattlePokemon, canActThisTurn, canSwitchOutThisTurn, requiredActiveCount, compactActiveIds } from '../utils/battleLookup';
+import { groupBattlesBySet, getSetOutcome } from '../utils/battleSets';
 import { getSwitchInEffect } from '../config/onSwitchInAbilities';
 import { getReactiveLowerEffect } from '../config/reactiveAbilities';
 import { getHitReactiveEffect } from '../config/hitReactiveAbilities';
@@ -88,7 +89,7 @@ function applyMoveFieldEffect(
 }
 
 export interface UseBattleLogActionsReturn {
-  startBattle: (team: Team) => Promise<string | null>;
+  startBattle: (team: Team, opponentName?: string) => Promise<string | null>;
   toggleBrought: (battle: Battle, pokemonId: string) => Promise<boolean>;
   addOpponentPokemon: (battle: Battle, species: SpeciesRosterEntry) => Promise<boolean>;
   updateOpponentMoveTags: (battle: Battle, opponentId: string, ability?: string, item?: string) => Promise<boolean>;
@@ -123,15 +124,40 @@ export interface UseBattleLogActionsReturn {
 
 export function useBattleLogActions(
   addBattle: (battle: Battle) => Promise<boolean>,
-  updateBattle: (battleId: string, updates: Partial<Battle>) => Promise<boolean>
+  updateBattle: (battleId: string, updates: Partial<Battle>) => Promise<boolean>,
+  battles: Battle[]
 ): UseBattleLogActionsReturn {
   /**
    * Snapshots the whole team (up to 6) at battle start - matches real VGC
    * Team Preview, where you see all 6 before choosing which 4 to bring.
    * broughtIds starts empty; toggleBrought fills it in live from the
    * roster column instead of a separate upfront picker screen.
+   *
+   * Bo3 set linking (see utils/battleSets.ts): a blank opponentName always
+   * gets a fresh setId (a standalone "set of 1", identical to this app's
+   * behavior before set grouping existed). A non-blank name joins the most
+   * recently-updated existing set against that name (case-insensitive) if
+   * one is still open - not decided (fewer than 2 wins either side), not
+   * already mid-game (no in-progress member), and not already full (fewer
+   * than 3 games) - otherwise it starts a fresh set of its own.
    */
-  const startBattle = useCallback(async (team: Team): Promise<string | null> => {
+  const startBattle = useCallback(async (team: Team, opponentName?: string): Promise<string | null> => {
+    const trimmedName = opponentName?.trim();
+    let setId: string = crypto.randomUUID();
+
+    if (trimmedName) {
+      const matchingSets = groupBattlesBySet(
+        battles.filter(b => b.opponentName?.trim().toLowerCase() === trimmedName.toLowerCase())
+      );
+      const openSet = matchingSets
+        .filter(group => {
+          const outcome = getSetOutcome(group.battles);
+          return !outcome.decided && group.battles.length < 3 && !group.battles.some(b => b.result === 'in-progress');
+        })
+        .sort((a, b) => Math.max(...b.battles.map(x => x.updatedAt)) - Math.max(...a.battles.map(x => x.updatedAt)))[0];
+      if (openSet) setId = openSet.setId;
+    }
+
     const playerRoster = team.pokemon.map(p => ({
       id: crypto.randomUUID(),
       species: p.showdownData.species,
@@ -156,6 +182,8 @@ export function useBattleLogActions(
       teamId: team.id,
       teamName: team.name,
       format: team.format,
+      setId,
+      opponentName: trimmedName || undefined,
       playerRoster,
       broughtIds: [],
       playerActiveIds: [null, null],
@@ -174,7 +202,7 @@ export function useBattleLogActions(
 
     const success = await addBattle(battle);
     return success ? battle.id : null;
-  }, [addBattle]);
+  }, [addBattle, battles]);
 
   /** Capped at MAX_BROUGHT (4) - toggling off also drops the mon from active/fainted if it was there. */
   const toggleBrought = useCallback(async (battle: Battle, pokemonId: string): Promise<boolean> => {

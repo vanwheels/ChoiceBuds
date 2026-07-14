@@ -13,6 +13,8 @@ import {
   getOverallRecord,
   getRecordByFormat,
   getRecordByTeam,
+  getRecordByOpponent,
+  getSetRecord,
   getRecentForm,
   getMostUsedPokemon,
   getMostFacedOpponents,
@@ -32,8 +34,10 @@ export default function StatisticsPage({ battlesState, spriteCacheState }: Stati
   const { battles } = battlesState;
 
   const overallRecord = useMemo(() => getOverallRecord(battles), [battles]);
+  const setRecord = useMemo(() => getSetRecord(battles), [battles]);
   const recordByFormat = useMemo(() => getRecordByFormat(battles), [battles]);
   const recordByTeam = useMemo(() => getRecordByTeam(battles), [battles]);
+  const recordByOpponent = useMemo(() => getRecordByOpponent(battles), [battles]);
   const recentForm = useMemo(() => getRecentForm(battles), [battles]);
   const mostUsedPokemon = useMemo(() => getMostUsedPokemon(battles), [battles]);
   const mostFacedOpponents = useMemo(() => getMostFacedOpponents(battles), [battles]);
@@ -52,11 +56,13 @@ export default function StatisticsPage({ battlesState, spriteCacheState }: Stati
       <h1 className="text-xl font-bold text-gray-100">Statistics</h1>
 
       <OverallRecordCard record={overallRecord} />
+      {setRecord.total > 0 && <OverallRecordCard record={setRecord} unitLabel="set" />}
       <RecentFormStrip form={recentForm} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <BreakdownPanel title="By Format" records={recordByFormat} emptyMessage="No completed battles yet." />
         <BreakdownPanel title="By Team" records={recordByTeam} emptyMessage="No completed battles yet." />
+        <BreakdownPanel title="By Opponent" records={recordByOpponent} emptyMessage="No named opponents logged yet." />
         <PokemonUsagePanel stats={mostUsedPokemon} resolveSprite={spriteCacheState.resolveSprite} />
         <OpponentFacedPanel stats={mostFacedOpponents} resolveSprite={spriteCacheState.resolveSprite} />
       </div>

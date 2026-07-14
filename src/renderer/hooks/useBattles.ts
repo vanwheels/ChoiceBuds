@@ -47,6 +47,9 @@ function toActiveSlots(ids: (string | null)[] | undefined): (string | null)[] {
  *   opportunity at the read boundary the way there was at add-time
  * - a logged action's `target` was a single object before spread-move
  *   support - coerce it into a one-element array
+ * - setId: added for Bo3 set grouping - a pre-existing battle becomes its
+ *   own singleton set (its own id), since every battle must always belong
+ *   to a set of at least 1 (see types/pokemon.ts's Battle.setId doc)
  */
 function normalizeBattle(b: Battle & LegacyBattleShape): Battle {
   const playerRoster = b.playerRoster ?? b.broughtFour ?? [];
@@ -55,6 +58,7 @@ function normalizeBattle(b: Battle & LegacyBattleShape): Battle {
     ...b,
     playerRoster,
     broughtIds,
+    setId: b.setId ?? b.id,
     playerActiveIds: toActiveSlots(b.playerActiveIds),
     opponentActiveIds: toActiveSlots(b.opponentActiveIds),
     opponentRoster: (b.opponentRoster ?? []).map(o => ({ ...o, types: o.types ?? [] })),

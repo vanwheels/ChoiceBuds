@@ -5,6 +5,76 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Battle Logger: Bo3 set grouping across games** (2026-07-13): the
+  Battle Logger roadmap's last long-standing, never-detailed item - planned
+  via EnterPlanMode given the size. There was no persistent opponent
+  identity anywhere in the app before this (only ephemeral per-battle
+  `opponentRoster` Pokemon sightings), which `COMPLETED.md` itself had
+  already flagged as a known gap when Statistics were first built. Two
+  decisions confirmed with the user first: link games via an optional
+  "Opponent Name" field with auto-continue (rather than fully-manual
+  after-the-fact grouping), and include the Statistics page additions in
+  the same pass rather than deferring them.
+  - **Data model**: `Battle` gains `setId: string` (**always** defined,
+    never optional - every battle belongs to a set of at least 1, so a
+    casual battle with no opponent name renders with zero Bo3 framing,
+    identical to before this existed) and `opponentName?: string`.
+    `useBattles.ts`'s existing legacy-backfill-at-read-boundary pattern
+    (`normalizeBattle`) gets one more line: `setId: b.setId ?? b.id`, so a
+    pre-existing battle becomes its own singleton set.
+  - **New `utils/battleSets.ts`**: `groupBattlesBySet` (groups by `setId`,
+    preserving `PastBattlesList`'s existing newest-first ordering at the
+    group level, each group's own battles sorted oldest-first for a
+    natural Game 1/2/3 reading order) and `getSetOutcome` (a set is
+    decided once either side reaches 2 wins - Bo3's own win condition).
+    Shared by the list display, the linking logic, and the stats below -
+    one source of truth for "what does a decided set look like."
+  - **Set linking**: `useBattleLogActions.ts::startBattle` gained a third
+    hook param (`battles: Battle[]`, already available at its one call
+    site) so it can check for an open set to continue. A blank opponent
+    name always gets a fresh `setId` (unchanged behavior). A non-blank
+    name (case-insensitive) joins the most recently-updated existing set
+    against that name if one is still open - not decided, not already
+    mid-game (no in-progress member), not already full (3 games) -
+    otherwise it starts a fresh set. `StartBattleFlow.tsx` gained the
+    "Opponent Name" input itself, with a `<datalist>` of prior names (same
+    convention `OpponentItemCell.tsx` already uses for item suggestions)
+    to reduce typo risk breaking the match.
+  - **`PastBattlesList.tsx`**: the existing per-row markup was extracted
+    into an in-file `BattleRow`, then grouped via `groupBattlesBySet` - a
+    group of 1 renders exactly as before (zero visual change for anyone
+    not using the opponent-name field); a group of 2-3 renders as a
+    bordered cluster with a "vs {name} - Set W-L" header (plus "(in
+    progress)" while undecided) and Game 1/2/3 badges on the nested rows.
+  - **Statistics**: two new purely-additive `battleStats.ts` functions -
+    `getRecordByOpponent` (same pattern as the existing `getRecordByTeam`,
+    grouped by name instead) rendered via the *existing* `BreakdownPanel`
+    component, and `getSetRecord` (sets won/lost, counting only *decided*
+    sets) rendered via the existing `OverallRecordCard`, which gained one
+    small optional `unitLabel` prop (defaults to `'battle'`, so the
+    original usage is untouched) so the new card can say "sets" instead.
+  - **A real display bug caught and fixed during live verification**: the
+    set header's `opponentName` was initially read from the group's
+    *unsorted* (newest-first) array rather than the oldest-first sorted
+    one, so typing the name with different casing across games (e.g.
+    "TestOpp" then "TESTOPP") made the header flip to whichever casing was
+    most recently typed instead of staying stable on Game 1's casing.
+    Fixed by reading it from the same sorted array used for `battles`.
+  - Verified live end-to-end with disposable battles against a real team:
+    confirmed case-insensitive auto-continue linking (typed "TestOpp" /
+    "testopp" / "TESTOPP" across 3 games, all correctly joined one set);
+    confirmed the set correctly showed "1-1 (in progress)" after 2 games
+    and "2-1" (decided) after the 3rd; confirmed a 4th game with the same
+    name correctly did *not* auto-join the now-decided set and instead
+    started its own standalone set; confirmed a battle with no opponent
+    name rendered with no grouping chrome at all; confirmed the
+    Statistics page's new Sets record (1-0, only counting the one decided
+    set) and By-Opponent breakdown (2-2 game-level, correctly including
+    the standalone 4th game) both matched the disposable data exactly.
+    Full production build verified clean, including that `battleSets.ts`
+    factored into its own small shared chunk rather than bloating
+    `CalcPage`'s isolated chunk (the same regression class caught during
+    the damage-calc-review work above).
 - **Battle Logger: post-battle damage-calc review** (2026-07-13): the
   Battle Logger roadmap's last vague item ("step through a logged battle's
   turns against the Calc") needed real scoping - planned via EnterPlanMode

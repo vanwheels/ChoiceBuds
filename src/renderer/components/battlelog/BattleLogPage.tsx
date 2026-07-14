@@ -28,7 +28,7 @@ interface BattleLogPageProps {
 export default function BattleLogPage({ battlesState, teamsState, speciesRosterState, spriteCacheState, gameDataState, onReviewInCalc }: BattleLogPageProps) {
   const [openBattleId, setOpenBattleId] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState(false);
-  const battleLogActions = useBattleLogActions(battlesState.addBattle, battlesState.updateBattle);
+  const battleLogActions = useBattleLogActions(battlesState.addBattle, battlesState.updateBattle, battlesState.battles);
 
   const openBattle = openBattleId ? battlesState.getBattleById(openBattleId) : undefined;
 
@@ -50,6 +50,7 @@ export default function BattleLogPage({ battlesState, teamsState, speciesRosterS
     return (
       <StartBattleFlow
         teamsState={teamsState}
+        battlesState={battlesState}
         battleLogActions={battleLogActions}
         onBattleStarted={battleId => { setIsStarting(false); setOpenBattleId(battleId); }}
         onCancel={() => setIsStarting(false)}
