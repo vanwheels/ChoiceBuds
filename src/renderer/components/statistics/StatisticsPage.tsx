@@ -14,6 +14,7 @@ import {
   getRecordByFormat,
   getRecordByTeam,
   getRecordByOpponent,
+  getRecordBySeason,
   getSetRecord,
   getRecentForm,
   getMostUsedPokemon,
@@ -38,6 +39,7 @@ export default function StatisticsPage({ battlesState, spriteCacheState }: Stati
   const recordByFormat = useMemo(() => getRecordByFormat(battles), [battles]);
   const recordByTeam = useMemo(() => getRecordByTeam(battles), [battles]);
   const recordByOpponent = useMemo(() => getRecordByOpponent(battles), [battles]);
+  const recordBySeason = useMemo(() => getRecordBySeason(battles), [battles]);
   const recentForm = useMemo(() => getRecentForm(battles), [battles]);
   const mostUsedPokemon = useMemo(() => getMostUsedPokemon(battles), [battles]);
   const mostFacedOpponents = useMemo(() => getMostFacedOpponents(battles), [battles]);
@@ -63,6 +65,7 @@ export default function StatisticsPage({ battlesState, spriteCacheState }: Stati
         <BreakdownPanel title="By Format" records={recordByFormat} emptyMessage="No completed battles yet." />
         <BreakdownPanel title="By Team" records={recordByTeam} emptyMessage="No completed battles yet." />
         <BreakdownPanel title="By Opponent" records={recordByOpponent} emptyMessage="No named opponents logged yet." />
+        <BreakdownPanel title="By Season" records={recordBySeason} emptyMessage="No battles logged during a known season yet." />
         <PokemonUsagePanel stats={mostUsedPokemon} resolveSprite={spriteCacheState.resolveSprite} />
         <OpponentFacedPanel stats={mostFacedOpponents} resolveSprite={spriteCacheState.resolveSprite} />
       </div>

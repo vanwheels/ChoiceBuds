@@ -78,16 +78,14 @@ focused on what's actually next.
   blocked externally on API key approval, can't start regardless of
   priority.
 
-- **Season-level breakdowns (Statistics page + Battle Logger)**: a season
-  is a sub-division of a Regulation, not something either system tracks
-  today - `Team['format']`/`Battle['format']` only distinguish `'Reg M-A'`
-  vs `'Reg M-B'` as a whole, with no season field anywhere. Eventually want
-  win rate/data splittable by season (e.g. a team's Reg M-B season 1 record
-  distinguishable from its season 2 record), for both the Statistics
-  page's breakdowns and the Battle Logger's own per-battle data. Needs a
-  new season field/schema addition before any of this can be built
-  (nothing to derive it from today) - not scoped in detail yet, just
-  captured as a known future want.
+- **Season-level breakdowns (Statistics page)**: a "By Season" breakdown
+  panel is done (2026-07-13, see COMPLETED.md) - derives each battle's
+  season from its existing `date` timestamp against a new static
+  `config/seasons.ts` table, no schema change/migration needed. Still open,
+  not yet scoped: a page-wide season filter (deliberately deferred as
+  bigger scope - today you can only eyeball the By Season panel alongside
+  By Team/By Format, not cross-filter one against the other); and the
+  related "Check for Updates" reminder tool below.
   - **Researched 2026-07-08** (Bulbapedia + Serebii, one-off manual check
     per CLAUDE.md's external-source policy - not a live fetch): confirmed
     season date ranges exist and are trackable. Serebii was more current
@@ -104,13 +102,13 @@ focused on what's actually next.
 
     M-5's exact dates aren't published by either source yet - the above is
     inferred from the pattern, not sourced, and needs re-confirming before
-    use. When this is eventually built, these dates should be hand-authored
-    into a static config (matching the `config/` pattern used elsewhere,
-    e.g. `vgcData.ts`) - not fetched live at runtime, and will go stale as
-    new seasons launch. Sources checked: Bulbapedia's "Ranked Battles
-    Seasons in Pokémon Champions" and "Regulation Set M-B" pages, Serebii's
-    `rankedbattle/regulationm-a.shtml` and `regulationm-b.shtml` pages -
-    full URLs in the `reg_mb_season_timeline` memory note.
+    ~2026-08-05. This table is now hand-authored into `config/seasons.ts`
+    (not fetched live at runtime, per usual) - will need a manual update
+    (plus adding M-6+) once real M-5 dates are announced. Sources checked:
+    Bulbapedia's "Ranked Battles Seasons in Pokémon Champions" and
+    "Regulation Set M-B" pages, Serebii's `rankedbattle/regulationm-a.shtml`
+    and `regulationm-b.shtml` pages - full URLs in the
+    `reg_mb_season_timeline` memory note.
   - **New, related idea - a "Check for Updates" tool**: doesn't exist
     anywhere today (checked - no prior mention in this file, COMPLETED.md,
     or memory). Given the no-live-scrape constraint above, this can't be an

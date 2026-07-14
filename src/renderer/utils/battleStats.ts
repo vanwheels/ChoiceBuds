@@ -8,6 +8,7 @@
 
 import type { Battle } from '../types/pokemon';
 import { groupBattlesBySet, getSetOutcome } from './battleSets';
+import { SEASONS, getSeasonForDate } from '../config/seasons';
 
 export interface WinLossRecord {
   wins: number;
@@ -61,6 +62,27 @@ export function getRecordByFormat(battles: Battle[]): LabeledRecord[] {
   return Array.from(byFormat.entries())
     .map(([label, { wins, losses }]) => ({ label, ...toRecord(wins, losses) }))
     .sort((a, b) => b.total - a.total);
+}
+
+/** Per-season record, derived from Battle.date - see config/seasons.ts. Ordered chronologically (season order), not by-total like the sibling breakdowns, since this one reads as a timeline. Battles predating/postdating every known season are skipped. */
+export function getRecordBySeason(battles: Battle[]): LabeledRecord[] {
+  const completed = completedBattles(battles);
+  const bySeason = new Map<string, { wins: number; losses: number }>();
+
+  for (const battle of completed) {
+    const season = getSeasonForDate(battle.date);
+    if (!season) continue;
+    const entry = bySeason.get(season.label) ?? { wins: 0, losses: 0 };
+    if (battle.result === 'win') entry.wins++; else entry.losses++;
+    bySeason.set(season.label, entry);
+  }
+
+  return SEASONS
+    .filter(s => bySeason.has(s.label))
+    .map(s => {
+      const { wins, losses } = bySeason.get(s.label)!;
+      return { label: s.label, ...toRecord(wins, losses) };
+    });
 }
 
 export function getRecordByTeam(battles: Battle[]): LabeledRecord[] {

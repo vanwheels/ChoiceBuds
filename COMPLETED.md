@@ -5,6 +5,47 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Statistics page: "By Season" breakdown** (2026-07-13): splits win/loss
+  data by ranked-ladder season (M-1..M-5), a sub-division of Regulation that
+  the app had never tracked - `Team['format']`/`Battle['format']` only ever
+  distinguished Reg M-A vs Reg M-B as a whole. Three decisions confirmed
+  with the user first: derive a battle's season purely from its existing
+  `date` timestamp (no new schema field, no migration, applies retroactively
+  to every already-logged battle) rather than storing it explicitly like
+  `format`; ship just a read-only breakdown panel this pass, not a page-wide
+  season filter (deferred - bigger scope, touches every stat function's call
+  site); and leave the related "Check for Updates" season-data reminder
+  tool out of scope (still just an idea, no design yet - see TODO.md).
+  - **New `config/seasons.ts`**: `SeasonDef` + a hand-authored `SEASONS`
+    table (M-1 through M-5) and `getSeasonForDate(timestamp)`, following the
+    same static-config convention as `utils/pokemonRules.ts`. Dates for
+    M-1..M-4 are the ones already researched and sourced from Bulbapedia +
+    Serebii on 2026-07-08 (see TODO.md's season-level-breakdowns entry for
+    the full citation trail); M-5's dates aren't published yet, so that row
+    is explicitly flagged inline as inferred/unconfirmed and due for a
+    manual re-check before ~2026-08-05.
+  - **`utils/battleStats.ts`**: new `getRecordBySeason(battles)`, same
+    `LabeledRecord[]` shape as the sibling `getRecordByFormat`/
+    `getRecordByOpponent`, but ordered chronologically (season order) rather
+    than by-total, since a season timeline reads better in order-played than
+    ranked by volume. Battles whose `date` falls outside every known season
+    range are silently skipped, same pattern `getRecordByOpponent` already
+    uses for battles with no `opponentName`.
+  - **`StatisticsPage.tsx`**: one more `<BreakdownPanel title="By Season">`
+    added to the existing By Format/By Team/By Opponent grid - no changes
+    needed to `BreakdownPanel.tsx` itself, it was already a generic
+    `LabeledRecord[]` renderer.
+  - **Verified live** via `.claude/skills/run-desktop`: since there's no UI
+    to backdate a battle, 3 disposable battles were appended directly to
+    `battles.json` (bypassing the full turn-based logging UI, which this
+    change doesn't touch) with `date` timestamps placed in M-1, M-3, and
+    M-4, then the app was relaunched fresh against the edited file. The By
+    Season panel rendered exactly as expected: `M-1 1-0 (100%)`, `M-3 0-1
+    (0%)`, `M-4 2-1 (67%)` - the M-4 row correctly folded in the two real
+    pre-existing battles alongside the synthetic one, in chronological
+    order. All 3 disposable battles were removed from `battles.json`
+    afterward, confirmed back down to the user's real 2 logged battles.
+
 - **Battle Logger: Bo3 set grouping across games** (2026-07-13): the
   Battle Logger roadmap's last long-standing, never-detailed item - planned
   via EnterPlanMode given the size. There was no persistent opponent
