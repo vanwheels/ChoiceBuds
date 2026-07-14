@@ -24,9 +24,9 @@ async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Respon
     return await fetch(url, { ...init, signal: controller.signal });
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') {
-      throw new Error('Sync server took too long to respond - check your connection and try again');
+      throw new Error('Sync server took too long to respond - check your connection and try again', { cause: err });
     }
-    throw new Error('Could not reach the sync server - check your connection and try again');
+    throw new Error('Could not reach the sync server - check your connection and try again', { cause: err });
   } finally {
     clearTimeout(timeoutId);
   }

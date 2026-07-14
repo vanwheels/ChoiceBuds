@@ -250,16 +250,29 @@ See [COMPLETED.md](COMPLETED.md) for the full log of finished work.
     - `electron-updater` has its own update-status/prompt flow, which likely
     supersedes (or needs merging with) today's "check + link out" UI rather
     than the two running side by side unreconciled.
-- **Dev tooling has also drifted behind current majors** (re-checked
-  2026-07-13 via `npm outdated`, since Electron's own bump is now done):
-  Vite 5.4→8.1, ESLint 9.39→10.7. TypeScript has drifted further than
-  previously noted here - it's now at 7.0.2, not 6.0 (jumped a second major
-  since the 2026-07-07 check). Lower urgency than the Electron
-  security-advisory situation, but same category of "batch these into one
-  dedicated bump pass" rather than picking them off individually. Also
-  fixes the pre-existing esbuild/vite moderate+high `npm audit` advisories
-  (noted during the Electron bump, see COMPLETED.md) - those need Vite's
-  own major bump to resolve, not anything Electron-side.
+- ~~Dev tooling has also drifted behind current majors~~ **Done 2026-07-14**
+  - bumped Vite `^5.0.0`→`^8.1.4`, `@vitejs/plugin-react` `^4.7.0`→`^5.2.0`,
+  ESLint `^9.39.4`→`^10.7.0` (+`@eslint/js`, `typescript-eslint`, `globals`,
+  `eslint-plugin-react-hooks` `^5.2.0`→`^7.1.1`), TypeScript `^5.3.0`→
+  `^6.0.3` (see COMPLETED.md). **TypeScript 7.0.2 (the actual current
+  `latest`) is explicitly not used** - typescript-eslint doesn't support it
+  yet (confirmed peer-range rejection + real runtime crash reports); revisit
+  once typescript-eslint ships real 7.x support. Also cleared the
+  pre-existing esbuild/vite `npm audit` advisories noted during the Electron
+  bump. Two new stricter `eslint-plugin-react-hooks` rules
+  (`set-state-in-effect`, `immutability`) were disabled rather than
+  fixed - see the next item.
+- **Follow-up from the dev-tooling bump**: `eslint-plugin-react-hooks`
+  7.1.1's "recommended" preset added `set-state-in-effect` (flags the
+  standard "reset local state when a prop changes" effect pattern used in
+  `EditOverlays.tsx`, `OpponentRowFields.tsx`, `CalcAutocomplete.tsx`,
+  `useSync.ts`) and `immutability` (flags `useTeams.ts`/`useSettings.ts`/
+  `useSavedPokemon.ts`'s load-on-mount `useEffect` calling a `const`
+  function declared later in the same file - a hoisting-order style
+  objection, not a real bug). Both disabled in `eslint.config.js` rather
+  than reworking 8 files' worth of stable, working hook/effect patterns as
+  a side effect of a routine dependency bump (user's explicit call). Worth
+  a dedicated pass later to actually address them for real.
 - **`CalcPage`'s lazy chunk just crossed Vite's 500kB build-warning
   threshold** (503kB as of 2026-07-07, was 499kB at the 2026-07-06 cleanup
   pass). Still fine functionally (lazy-loaded, only fetched when the Calc

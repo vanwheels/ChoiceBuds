@@ -5,6 +5,90 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Dev tooling bumped: Vite `^5.0.0`→`^8.1.4`, ESLint `^9.39.4`→`^10.7.0`,
+  TypeScript `^5.3.0`→`^6.0.3`** (2026-07-14): the dev-tooling half of the
+  backlog's version-drift item, done as a dedicated follow-up pass to the
+  Electron bump above. Three parallel research passes (official migration
+  guides plus direct `npm view <pkg> peerDependencies` checks, not guesses)
+  resolved every open compatibility question before touching a single file.
+  - **TypeScript capped at 6.0.3, not 7.0.2** (the actual current `latest`
+    tag) - confirmed hard blocker: TypeScript 7.0 is Microsoft's native
+    Go-rewrite GA with no stable programmatic API yet (lands in 7.1), and
+    `typescript-eslint`'s peer range (`>=4.8.4 <6.1.0`) excludes 7.0.2
+    entirely - forcing it past that check produces real runtime crashes
+    inside `@typescript-eslint/typescript-estree`
+    ([typescript-eslint#12518](https://github.com/typescript-eslint/typescript-eslint/issues/12518)/
+    [#12521](https://github.com/typescript-eslint/typescript-eslint/issues/12521),
+    filed right after 7.0's GA), not just a stale range. 6.0.3 is the newest
+    release still inside typescript-eslint's supported window.
+  - **`@vitejs/plugin-react` bumped to `5.2.0`, deliberately not `6.x`** -
+    6.x narrows its Vite peer to `^8.0.0` only and pulls in React Compiler
+    tooling (`babel-plugin-react-compiler`, `@rolldown/plugin-babel`) this
+    project doesn't use; 5.2.0's broader peer range (`^4.2.0` through
+    `^8.0.0`) covers Vite 8 without the extra footprint.
+  - **`vite-plugin-electron` needed no version bump or config change** -
+    read its actual shipped source rather than trusting docs alone: it
+    already detects Vite's installed major and internally rewrites
+    `build.rollupOptions` to `build.rolldownOptions` for Vite 8's
+    Rolldown-based bundler, so `vite.config.ts`'s existing
+    `rollupOptions.external` settings for the main/preload sub-builds
+    needed zero edits.
+  - **`eslint-plugin-react-hooks` forced to `7.1.1`, not optional** -
+    verified directly via `npm view eslint-plugin-react-hooks@<version>
+    peerDependencies` across 5.2.0/6.0.0/6.1.0/7.0.0/7.1.1: **7.1.1 is the
+    first version whose peer range includes `eslint ^10.0.0`** at all, so
+    bumping ESLint to 10 made this jump mandatory. Its flat-config export
+    shape changed too - migrated `eslint.config.js` from spreading
+    `reactHooks.configs.recommended.rules` inline to a dedicated
+    `{ ...reactHooks.configs.flat.recommended, files: [...] }` block
+    (deliberately the stable `recommended` export, not `recommended-latest`,
+    which the plugin's own README documents as "bleeding edge experimental
+    compiler rules" - not something to opt into silently in a routine bump).
+  - **Two required, narrow code edits surfaced by the bump itself** (not
+    zero, unlike the Electron pass): `tsconfig.json` dropped the
+    now-deprecated `baseUrl: "."` (kept `paths: {"@/*": ["./src/*"]}` as-is,
+    which resolves identically without it - TS 6.0 does require the `./`
+    prefix on the paths value once `baseUrl` is gone, a one-line fix caught
+    by a live compiler error); and TS 6.0's new `TS2882` diagnostic started
+    rejecting the existing side-effect `import './index.css'` in
+    `main.tsx` until `"vite/client"` was added to `tsconfig.json`'s `types`
+    array (it was always relying on Vite's ambient `*.css` module
+    declaration, just never explicitly declared).
+  - **Two new stricter `eslint-plugin-react-hooks` 7.x rules
+    (`set-state-in-effect`, `immutability`) were surfaced and deliberately
+    disabled, not fixed** - they flagged 8 spots across long-standing,
+    working code (the standard "reset local state on prop change" effect
+    pattern, and every load-on-mount hook's `useEffect` calling a `const`
+    declared later in the same file - a hoisting-order style objection, not
+    a real bug). User's explicit call: disable both with a documented
+    rationale in `eslint.config.js` rather than reworking 8 files' effect/
+    hook patterns as unplanned scope inside a routine dependency bump - see
+    TODO.md for the real follow-up.
+  - ESLint 10's own new `preserve-caught-error` recommended rule caught 3
+    real (if minor) spots where a caught error was re-thrown without
+    preserving the original as `.cause` (`pokeapi.ts`, `syncApi.ts`) - fixed
+    properly rather than suppressed, small low-risk diffs. Adding
+    `{ cause: error }` to `new Error(...)` needed `"ES2022.Error"` added to
+    `tsconfig.json`'s `lib` array (the existing `ES2020` lib predates that
+    constructor overload in TypeScript's own type definitions - runtime
+    support is unaffected, Electron 43's bundled Chromium/V8 has long
+    supported `Error` cause).
+  - This bump also cleared the pre-existing esbuild/Vite moderate+high
+    `npm audit` advisories noted during the Electron-bump pass (`npm audit`
+    now reports 0 vulnerabilities) - those needed Vite's own major version,
+    not anything Electron-side, to resolve.
+  - **Verified**: `type-check`/`lint`/`build` all clean (build is the real
+    test of the Rolldown+Oxc bundler swap underneath Vite 8, not just a
+    config-flag change) - chunk sizes stayed sane and the
+    `CalcPage`-isolation/`battleSets`-shared-chunk discipline documented in
+    CLAUDE.md held under the new bundler (a small new `jsx-runtime` chunk
+    appeared, just Rolldown's own chunking heuristic, not a regression).
+    Full dev-mode pass via `.claude/skills/run-desktop` across Teams/Calc/
+    Battle Log/Statistics/Settings with console-error monitoring - none
+    found, Tailwind styling intact throughout. No packaged-build
+    verification needed this time (unlike the Electron pass) - none of
+    this touches `main.ts`'s production runtime path.
+
 - **Electron bumped `^28.0.0` → `^43.0.0`** (2026-07-13): the only backlog
   item with a security dimension (several high-severity advisories fixed
   only in newer majors), a 15-major-version jump. Before touching anything,

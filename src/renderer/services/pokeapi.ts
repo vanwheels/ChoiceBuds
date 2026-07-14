@@ -84,7 +84,7 @@ export async function fetchPokemonData(speciesName: string, gender?: 'M' | 'F' |
     if (error instanceof Error) {
       throw error;
     }
-    throw new Error(`Failed to fetch Pokémon data: ${String(error)}`);
+    throw new Error(`Failed to fetch Pokémon data: ${String(error)}`, { cause: error });
   }
 }
 
