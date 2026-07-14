@@ -23,7 +23,7 @@ interface CalcMoveGridProps {
 
 export default function CalcMoveGrid({ title, moves, results, moveOptions, selectedIndex, onChangeMove, onSelect }: CalcMoveGridProps) {
   return (
-    <div className="flex-1 min-w-[280px] bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-1.5">
+    <div className="flex-1 min-w-[280px] bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-1">
       <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wide">{title}</h3>
       {moves.map((slot, index) => {
         const result = results[index];
@@ -33,7 +33,7 @@ export default function CalcMoveGrid({ title, moves, results, moveOptions, selec
           <div
             key={index}
             onClick={() => slot.name && onSelect(index)}
-            className={`flex items-center gap-2 px-2 py-1 rounded border transition-colors ${
+            className={`flex items-center gap-2 px-2 py-0.5 rounded border transition-colors ${
               isSelected ? 'border-blue-500 bg-blue-950/40' : 'border-zinc-800 hover:border-zinc-700'
             } ${slot.name ? 'cursor-pointer' : ''}`}
           >
@@ -51,7 +51,7 @@ export default function CalcMoveGrid({ title, moves, results, moveOptions, selec
                 onChange={(e) => { e.stopPropagation(); onChangeMove(index, { hits: Number(e.target.value) }); }}
                 onClick={(e) => e.stopPropagation()}
                 title="Number of hits"
-                className="px-1 py-1 text-xs bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500 cursor-pointer"
+                className="px-1 py-0.5 text-xs bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500 cursor-pointer"
               >
                 {Array.from({ length: maxHits - minHits + 1 }, (_, i) => minHits + i).map(n => (
                   <option key={n} value={n}>×{n}</option>
@@ -61,7 +61,7 @@ export default function CalcMoveGrid({ title, moves, results, moveOptions, selec
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onChangeMove(index, { isCrit: !slot.isCrit }); }}
-              className={`px-2 py-1 text-[10px] font-bold rounded transition-colors cursor-pointer shrink-0 ${
+              className={`px-2 py-0.5 text-[10px] font-bold rounded transition-colors cursor-pointer shrink-0 ${
                 slot.isCrit ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
               }`}
             >

@@ -52,7 +52,7 @@ export default function CalcAutocomplete({ label, value, options, placeholder, o
         placeholder={placeholder}
         onChange={(e) => { setQuery(e.target.value); setIsOpen(true); }}
         onFocus={() => setIsOpen(true)}
-        className="px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500"
+        className="px-2 py-0.5 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500"
       />
       {isOpen && filtered.length > 0 && (
         <div className="absolute z-50 top-full left-0 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-zinc-700 bg-slate-900 shadow-xl">

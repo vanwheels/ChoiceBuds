@@ -159,7 +159,7 @@ export default function CalcPokemonPanel({
               const parsed = Number(e.target.value);
               if (!Number.isNaN(parsed)) onChange({ level: Math.max(1, Math.min(100, parsed)) });
             }}
-            className="w-14 px-1 py-1 text-sm text-center bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500"
+            className="w-14 px-1 py-0.5 text-sm text-center bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500"
           />
         </div>
         <div
@@ -203,7 +203,7 @@ export default function CalcPokemonPanel({
           <select
             value={state.nature}
             onChange={(e) => onChange({ nature: e.target.value as NatureName })}
-            className="px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500"
+            className="px-2 py-0.5 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500"
           >
             {natureOptions.map(n => <option key={n} value={n}>{n}</option>)}
           </select>
@@ -213,7 +213,7 @@ export default function CalcPokemonPanel({
           <select
             value={state.status}
             onChange={(e) => onChange({ status: e.target.value as CalcPokemonState['status'] })}
-            className="px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500"
+            className="px-2 py-0.5 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500"
           >
             <option value="">Healthy</option>
             {STATUS_OPTIONS.map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}

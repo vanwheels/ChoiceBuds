@@ -144,14 +144,17 @@ focused on what's actually next.
   reference screenshots of the real calc.pokemonshowdown.com Champions mode
   provided for items 1-3; items 2, 5-10 done with no remaining notes - see
   COMPLETED.md):
-  1. Calc page: tighten overall spacing so more fits without scrolling at
-     1920x1080, closer to how the real Showdown calc packs its panels -
-     builds on the earlier "doesn't eliminate scrolling" caveat above.
-     **Partially done** as a side effect of a later redesign pass (see
-     COMPLETED.md - padding/gaps tightened across every Calc panel,
-     measured 924px vs the old 1102px scrollHeight at the 1280x720
-     minimum), but not the dedicated 1920x1080-targeted pass this item
-     originally asked for - still open if further tightening is wanted.
+  1. Calc page: tighten overall spacing so more fits without scrolling -
+     a further tightening pass done 2026-07-14 (see COMPLETED.md), on top
+     of the earlier partial pass (924px scrollHeight at the 1280x720
+     minimum, down from 1102px). Now at 864px - real, safe progress, but
+     the minimum window size still scrolls a bit (~209px short of fully
+     eliminating it). Stopped there deliberately per the user's own call
+     rather than pushing into riskier territory (shrinking padding to the
+     point of hurting legibility/click comfort, or reversing the
+     `CalcSideConditions.tsx` one-row-per-condition layout decision) -
+     revisit if further tightening is wanted later. At 1920x1080 the page
+     already fits with room to spare, unaffected by this note.
   3. Calc page (`CalcSideConditions.tsx`) field-effect toggle trim is done.
      The `CalcSideConditions.tsx`/`SideConditionsRow.tsx` unification
      follow-up was investigated 2026-07-13 and dropped - see COMPLETED.md.

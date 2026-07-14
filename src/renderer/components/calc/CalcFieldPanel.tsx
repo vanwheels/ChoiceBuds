@@ -54,7 +54,7 @@ export default function CalcFieldPanel({
             key={type}
             type="button"
             onClick={() => onChangeField({ gameType: type })}
-            className={`flex-1 px-2 py-1 text-xs font-bold rounded transition-colors cursor-pointer ${
+            className={`flex-1 px-2 py-0.5 text-xs font-bold rounded transition-colors cursor-pointer ${
               field.gameType === type ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
             }`}
           >
@@ -69,7 +69,7 @@ export default function CalcFieldPanel({
           <select
             value={field.weather}
             onChange={(e) => onChangeField({ weather: e.target.value as CalcFieldState['weather'] })}
-            className="px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500"
+            className="px-2 py-0.5 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500"
           >
             <option value="">None</option>
             {WEATHER_OPTIONS.map(w => <option key={w} value={w}>{w}</option>)}
@@ -80,7 +80,7 @@ export default function CalcFieldPanel({
           <select
             value={field.terrain}
             onChange={(e) => onChangeField({ terrain: e.target.value as CalcFieldState['terrain'] })}
-            className="px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500"
+            className="px-2 py-0.5 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500"
           >
             <option value="">None</option>
             {TERRAIN_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}

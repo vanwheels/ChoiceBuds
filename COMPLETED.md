@@ -5,6 +5,36 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Calc page: further spacing tightening pass** (2026-07-14): a follow-up
+  to the earlier partial tightening (924px scrollHeight at the 1280x720
+  minimum window, down from 1102px). Measured the exact overflowing
+  container first (`<main class="flex-1 overflow-y-auto">`, 924px content
+  vs 655px viewport at 1280x720) rather than guessing which panel needed
+  trimming. Shaved vertical padding (`py-1`→`py-0.5`) and gaps (`gap-1`→
+  `gap-0.5`) across every repeated control: `CalcSideConditions.tsx`'s
+  10-row side-condition toggle list and Spikes buttons (the single tallest
+  contributor, ~58px alone), `CalcMoveGrid.tsx`'s 4 move rows (row padding,
+  the inline hit-count select, and Crit button), `CalcAutocomplete.tsx`'s
+  shared input (used ~14 times across the page - species/item/ability
+  fields and all 8 move-name fields), and the remaining `py-1` selects in
+  `CalcFieldPanel.tsx`/`CalcPokemonPanel.tsx`/`CalcTeamTray.tsx` for
+  consistency. Result: 924px → 864px (measured via the same `run-desktop`
+  eval-based scrollHeight check both before and after).
+  - **Deliberately stopped there, not fully eliminating the scroll** - the
+    remaining ~209px gap would need either reversing
+    `CalcSideConditions.tsx`'s documented one-row-per-condition design
+    decision (made specifically to match a reference calc's legible field
+    panel, not an arbitrary choice) or shrinking padding further to a point
+    risking click comfort/legibility. Presented both options plus "stop
+    here" to the user; they chose to stop and bank the safe improvement
+    rather than trade those off - matches the user's own established
+    preference for confirming design trade-offs rather than having Claude
+    decide unilaterally on anything touching visual/UX taste.
+  - Verified via `type-check`/`lint`/`build` (all clean, no chunk-size
+    regression) and visual screenshots at both 1280x720 and 1920x1080 -
+    nothing reads as cramped or illegible at the new spacing, buttons/
+    inputs stay comfortably clickable.
+
 - **Dev tooling bumped: Vite `^5.0.0`→`^8.1.4`, ESLint `^9.39.4`→`^10.7.0`,
   TypeScript `^5.3.0`→`^6.0.3`** (2026-07-14): the dev-tooling half of the
   backlog's version-drift item, done as a dedicated follow-up pass to the

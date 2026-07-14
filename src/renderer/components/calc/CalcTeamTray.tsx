@@ -34,12 +34,12 @@ export default function CalcTeamTray({ teams, resolveSprite, onLoadPokemon }: Ca
   };
 
   return (
-    <div className="flex flex-col gap-1.5 pb-3 border-b border-zinc-800">
+    <div className="flex flex-col gap-1.5 pb-2 border-b border-zinc-800">
       <label className="text-[10px] text-gray-400 uppercase tracking-wide">Load from Team</label>
       <select
         value={selectedTeamId}
         onChange={(e) => setSelectedTeamId(e.target.value)}
-        className="px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500"
+        className="px-2 py-0.5 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500"
       >
         <option value="">Select a team...</option>
         {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}

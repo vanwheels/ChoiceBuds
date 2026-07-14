@@ -63,7 +63,7 @@ function ToggleButton({ active, label, align, onClick }: { active: boolean; labe
     <button
       type="button"
       onClick={onClick}
-      className={`w-full px-2 py-1 text-xs font-bold rounded transition-colors cursor-pointer ${align === 'right' ? 'text-right' : 'text-left'} ${
+      className={`w-full px-2 py-0.5 text-xs font-bold rounded transition-colors cursor-pointer ${align === 'right' ? 'text-right' : 'text-left'} ${
         active ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
       }`}
     >
@@ -91,7 +91,7 @@ export default function CalcSideConditions({ title, side, align, ownAbility, onC
               key={count}
               type="button"
               onClick={() => onChange({ spikes: count })}
-              className={`flex-1 px-1 py-1 text-xs font-bold rounded transition-colors cursor-pointer ${
+              className={`flex-1 px-1 py-0.5 text-xs font-bold rounded transition-colors cursor-pointer ${
                 side.spikes === count ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
               }`}
             >
@@ -101,7 +101,7 @@ export default function CalcSideConditions({ title, side, align, ownAbility, onC
         </div>
       </div>
 
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-0.5">
         {ALWAYS_TOGGLES.map(([key, label]) => (
           <ToggleButton
             key={key}
