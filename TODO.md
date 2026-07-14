@@ -74,9 +74,10 @@ focused on what's actually next.
   (#4) shell + default-regulation setting done, cross-device sync (#2) code
   done - see COMPLETED.md; further Calc UI cleanup (#3) - overlaps with
   Calc work already in flight elsewhere in this file; general UI polish
-  (#1) - vague/ongoing, no concrete scope; Limitless usage data (#7) -
-  blocked externally on API key approval, can't start regardless of
-  priority.
+  (#1) - the Teams/Battle Log list-row redesign (2026-07-14, see
+  COMPLETED.md) is the first concrete scoping of this - still open beyond
+  that: nothing else scoped yet; Limitless usage data (#7) - blocked
+  externally on API key approval, can't start regardless of priority.
 
 - **Season-level breakdowns (Statistics page)**: a "By Season" breakdown
   panel is done (2026-07-13, see COMPLETED.md) - derives each battle's

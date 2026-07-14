@@ -9,6 +9,7 @@
 import { useState } from 'react';
 import type { Team } from '../types/pokemon';
 import { ALL_REGULATION_IDS, getRegulationLabel, toRegulationId } from '../utils/pokemonRules';
+import { getRegulationTheme } from '../config/pokemonTheme';
 import { useDismissable } from '../hooks/useDismissable';
 
 interface RegulationBadgeProps {
@@ -26,7 +27,7 @@ export default function RegulationBadge({ team, onChange }: RegulationBadgeProps
       <button
         onClick={() => setIsOpen(!isOpen)}
         title="Change Regulation"
-        className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-blue-600 text-white hover:bg-blue-500 transition-colors cursor-pointer"
+        className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded text-white transition-colors cursor-pointer ${getRegulationTheme(currentId).badgeBg}`}
       >
         {team.format || 'Reg M-A'}
       </button>

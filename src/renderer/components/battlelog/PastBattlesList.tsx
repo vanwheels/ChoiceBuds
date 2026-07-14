@@ -23,12 +23,19 @@ const RESULT_STYLES: Record<Battle['result'], string> = {
   'in-progress': 'bg-yellow-600 text-white',
 };
 
+const RESULT_ACCENT_BORDER: Record<Battle['result'], string> = {
+  win: 'border-l-green-500',
+  loss: 'border-l-red-500',
+  'in-progress': 'border-l-yellow-500',
+};
+
 const RESULT_LABELS: Record<Battle['result'], string> = {
   win: 'Win',
   loss: 'Loss',
   'in-progress': 'In Progress',
 };
 
+/** Shows the team name unless `gameLabel` is set - a Bo3 set always uses one team for all 3 games, so grouped rows show the team name once in the set header instead (see the group render below). */
 function BattleRow({ battle, gameLabel, onOpen, onDelete }: {
   battle: Battle;
   gameLabel?: string;
@@ -39,13 +46,12 @@ function BattleRow({ battle, gameLabel, onOpen, onDelete }: {
 
   return (
     <div
-      className="flex items-center justify-between px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 hover:border-blue-500 transition-colors cursor-pointer"
+      className={`flex items-center justify-between px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 border-l-4 ${RESULT_ACCENT_BORDER[battle.result]} hover:border-blue-500 transition-colors cursor-pointer`}
       onClick={() => onOpen(battle.id)}
     >
       <div>
         <div className="font-semibold text-gray-100">
-          {gameLabel && <span className="text-gray-400 font-normal">{gameLabel} - </span>}
-          {battle.teamName}
+          {gameLabel || battle.teamName}
         </div>
         <div className="text-xs text-gray-400">
           {battle.format} - {new Date(battle.date).toLocaleDateString()} - {turnCount} turn{turnCount === 1 ? '' : 's'}
@@ -77,25 +83,34 @@ export default function PastBattlesList({ battles, onOpen, onDelete }: PastBattl
   return (
     <div className="flex flex-col gap-2">
       <h2 className="text-sm font-bold text-gray-300 uppercase tracking-wide">Past Battles</h2>
-      {groups.map(group => {
-        if (group.battles.length === 1) {
-          return <BattleRow key={group.setId} battle={group.battles[0]} onOpen={onOpen} onDelete={onDelete} />;
-        }
+      <div className="grid items-start gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))' }}>
+        {groups.map(group => {
+          if (group.battles.length === 1) {
+            return <BattleRow key={group.setId} battle={group.battles[0]} onOpen={onOpen} onDelete={onDelete} />;
+          }
 
-        const outcome = getSetOutcome(group.battles);
-        return (
-          <div key={group.setId} className="flex flex-col gap-1.5 p-2 rounded-lg border border-zinc-700 bg-zinc-900/40">
-            <span className="px-2 text-xs font-bold text-gray-300">
-              vs {group.opponentName} - Set {outcome.wins}-{outcome.losses}{!outcome.decided ? ' (in progress)' : ''}
-            </span>
-            <div className="flex flex-col gap-1.5">
-              {group.battles.map((battle, i) => (
-                <BattleRow key={battle.id} battle={battle} gameLabel={`Game ${i + 1}`} onOpen={onOpen} onDelete={onDelete} />
-              ))}
+          const outcome = getSetOutcome(group.battles);
+          // Bo3 sets always use one team for all 3 games (real VGC match rules) - shown
+          // once here from Game 1, rather than repeated on every BattleRow below.
+          const teamName = group.battles[0].teamName;
+          return (
+            <div
+              key={group.setId}
+              className="flex flex-col gap-1.5 p-2 rounded-lg border border-zinc-700 bg-zinc-900/40"
+              style={{ gridColumn: '1 / -1' }}
+            >
+              <span className="px-2 text-xs font-bold text-gray-300">
+                {teamName} vs {group.opponentName} - Set {outcome.wins}-{outcome.losses}{!outcome.decided ? ' (in progress)' : ''}
+              </span>
+              <div className="grid gap-1.5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))' }}>
+                {group.battles.map((battle, i) => (
+                  <BattleRow key={battle.id} battle={battle} gameLabel={`Game ${i + 1}`} onOpen={onOpen} onDelete={onDelete} />
+                ))}
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -5,6 +5,56 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Teams/Battle Log list-row redesign** (2026-07-14): the first concrete
+  scoping of the long-vague "general UI polish" backlog item. Both pages'
+  rows were thin flat bars stretching full-width on wide screens, leaving
+  large empty space and minimal visual hierarchy compared to the
+  Statistics page's card grid.
+  - **Design process**: built 3 static HTML mockups (Artifact, using the
+    app's real dark palette/data - not lorem/placeholder content) as a
+    visual comparison rather than guessing the user's taste: "Compact +
+    Accent" (today's row height, width-capped, colored left accent
+    stripe), "Dashboard Cards" (bigger card grid closer to Statistics'
+    visual weight), and "Rich Compact Row" (enriched single-column list
+    with type-composition pips). User picked "Compact + Accent."
+  - **New `config/pokemonTheme.ts` addition**: `REGULATION_THEMES`/
+    `getRegulationTheme()`, keyed by `RegulationId` - blue accent for Reg
+    M-A, purple for Reg M-B. `RegulationBadge.tsx` now uses this too (it
+    previously rendered the same blue regardless of regulation - the new
+    accent stripe would have clashed with an unchanged blue badge on a
+    purple-accented M-B card).
+  - **`TeamCard.tsx`**: added a `border-l-4` regulation-colored accent
+    stripe. **`TeamsPage.tsx`**: initially tried a responsive
+    `auto-fill` grid (matching the mockup) to stop cards stretching
+    full-width, but live-testing at 1280x720 surfaced a real bug the
+    mockup didn't - `TeamCard`'s actual minimized row carries far more
+    fixed-width content than the simplified mockup did (6 sprites +
+    author + regulation badge + Validate/Export/Edit/Delete/Expand
+    buttons, measured ~628px minimum), so a 420-680px grid column either
+    overflowed (clipped buttons, horizontal scrollbar) or truncated team
+    names. Settled on keeping Teams single-column but capping its width
+    (`max-w-4xl`) instead of a multi-column grid - honest to how much
+    horizontal space that row's content actually needs, while still
+    matching the "don't stretch into empty space" goal.
+  - **`PastBattlesList.tsx`**: same accent-stripe treatment, keyed by
+    battle result (green/red/amber) instead of regulation, plus the
+    `auto-fill` grid wrap *did* work cleanly here (this row's content is
+    much lighter than a team's) - singleton rows wrap into columns, Bo3
+    set clusters span the full row width.
+  - **Bo3 team-name fix** (caught by the user, not by testing): a Bo3 set
+    always uses one team for all 3 games in real VGC play, so showing the
+    team name on every `Game N` row inside a grouped set was redundant.
+    Now shown once in the set's own header line (`{teamName} vs
+    {opponentName} - Set {W-L}`, taken from Game 1's `teamName` since a
+    set is defined by using one team throughout) - each game row inside
+    the group now shows only "Game N".
+  - **Verified live** via `.claude/skills/run-desktop` at both 1280x720 and
+    1920x1080, using a disposable 2-game Bo3 test set (real teams/battles
+    untouched, cleaned up afterward) - confirmed the accent colors, the
+    grid/width-cap behavior on both pages, and the corrected Bo3 header
+    text, with zero layout overflow at either size (`scrollWidth -
+    clientWidth === 0`, checked directly rather than eyeballing).
+
 - **Calc page: further spacing tightening pass** (2026-07-14): a follow-up
   to the earlier partial tightening (924px scrollHeight at the 1280x720
   minimum window, down from 1102px). Measured the exact overflowing

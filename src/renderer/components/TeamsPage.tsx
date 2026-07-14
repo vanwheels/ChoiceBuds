@@ -108,9 +108,9 @@ export default function TeamsPage({
             <p className="text-sm mt-2">Click "Add New Team" to import your first team</p>
           </div>
         ) : (
-          <div 
-            className="flex flex-col gap-4 w-full"
-            style={{ paddingLeft: '4rem', paddingRight: '4rem' }}
+          <div
+            className="flex flex-col gap-3 w-full max-w-4xl"
+            style={{ paddingLeft: '2rem', paddingRight: '2rem' }}
           >
             {filteredTeams.map(team => (
               <TeamCard

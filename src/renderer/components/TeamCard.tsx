@@ -8,6 +8,7 @@ import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
 import { useRosterActions } from '../hooks/useRosterActions';
 import { toRegulationId } from '../utils/pokemonRules';
+import { getRegulationTheme } from '../config/pokemonTheme';
 import { getPixelSpriteUrl } from '../utils/spriteUrl';
 import { TEAMS_LIST_DRAG_TYPE, type TeamsListDragPayload } from '../utils/teamsListDragTypes';
 import PokemonCard from './PokemonCard';
@@ -82,8 +83,10 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
     }
   };
 
+  const regulationTheme = getRegulationTheme(toRegulationId(team.format));
+
   return (
-    <div className="w-auto mx-6 bg-zinc-900/40 border border-zinc-800/80 rounded-xl mb-4 transition-all">
+    <div className={`bg-zinc-900/40 border border-zinc-800/80 border-l-4 ${regulationTheme.accentBorder} rounded-xl transition-all`}>
 
       {/* MINIMIZED VIEW CONTAINER ROW - Enhanced Header with Controls */}
       {/* rounded-t-xl replaces the parent's old overflow-hidden clip (removed so
