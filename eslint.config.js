@@ -12,18 +12,35 @@ export default tseslint.config(
     files: ['src/renderer/**/*.{ts,tsx}'],
     rules: {
       ...reactHooks.configs.flat.recommended.rules,
-      // Both new in eslint-plugin-react-hooks 7.x's "recommended" preset
-      // (2026-07-14 dep bump) and both fire broadly against long-standing,
-      // working patterns rather than real bugs: set-state-in-effect flags
-      // the standard "reset local state when a prop changes" effect used
-      // throughout the app's overlay/row components, and immutability
-      // flags every load-on-mount hook's useEffect(() => { loadXFromDisk() },
-      // []) calling a const declared later in the same file (a hoisting-order
-      // objection, not a runtime bug - the effect only runs post-mount).
-      // Disabled here rather than silently reworking those hooks as a side
-      // effect of a routine dependency bump - see TODO.md for the follow-up.
+    },
+  },
+  {
+    // Every data-loading hook shares one idiom: a `load*FromDisk`/
+    // `initializeCacheWithSWR` async function that synchronously sets
+    // isLoading/error at its own top (before its first await), called both
+    // from a mount useEffect AND reused later by a manually-triggered
+    // `refresh*()` (not itself called from an effect, so not flagged there).
+    // A real fix needs splitting each into an effect-safe silent variant and
+    // a refresh variant that resets loading state - a bigger, riskier change
+    // to the core data-loading pattern of nearly every hook in the app than
+    // fits a routine lint-rule cleanup pass (2026-07-14 investigation found
+    // 13 files affected in total, not the ~4 originally scoped - see
+    // TODO.md). The 7 simpler "reset derived state when a dependency
+    // changes" cases were fixed for real (render-time reset instead of an
+    // effect); these 5 load-on-mount hooks, plus useSync.ts's refreshStatus
+    // (same shape - synchronously sets status in an early-return branch
+    // before any await), are deliberately left disabled pending that bigger
+    // dedicated pass.
+    files: [
+      'src/renderer/hooks/useTeams.ts',
+      'src/renderer/hooks/useSettings.ts',
+      'src/renderer/hooks/useSavedPokemon.ts',
+      'src/renderer/hooks/useBattles.ts',
+      'src/renderer/hooks/useDatabase.ts',
+      'src/renderer/hooks/useSync.ts',
+    ],
+    rules: {
       'react-hooks/set-state-in-effect': 'off',
-      'react-hooks/immutability': 'off',
     },
   },
   {

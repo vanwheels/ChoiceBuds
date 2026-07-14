@@ -5,6 +5,75 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **react-hooks lint-rules follow-up: `set-state-in-effect` +
+  `immutability` fixed for real in 11 of 13 affected files** (2026-07-14):
+  the dev-tooling bump's deferred item, revisited as its own pass.
+  Re-enabling both rules to check fixes-in-progress revealed the true scope
+  was **13 files**, not the ~4 originally catalogued - reordering the
+  `immutability` hoisting fix in one file unlocked `set-state-in-effect`
+  detection inside the same now-visible function bodies, surfacing hooks
+  nobody had flagged before (`useBattles.ts`, `useDamageCalc.ts`,
+  `useDatabase.ts`, `useInitialSync.ts`, `useMegaSprite.ts`). Found and
+  reported this scope blowup to the user immediately rather than either
+  quietly doing a much bigger refactor than agreed or quietly re-disabling
+  without saying why; user chose to fix the tractable subset for real and
+  leave the riskier subset disabled.
+  - **`immutability` (hoisting order)** - `useTeams.ts`, `useSettings.ts`,
+    `useSavedPokemon.ts`, `useBattles.ts`: pure reordering, moving each
+    `load*FromDisk` function above the `useEffect` that calls it. Zero
+    behavior risk - the effect only runs post-mount, by which point the
+    `const` is already assigned either way; this only satisfies the
+    linter's static reference-order check.
+  - **`set-state-in-effect` (7 "reset on dependency change" cases)** -
+    applied React's own documented pattern (
+    https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+    ): track the previous trigger value in its own `useState`, and when it
+    changes, reset the derived state synchronously during render instead of
+    inside a `useEffect`. Fixed in `EditOverlays.tsx` (item + ability reset
+    before their async metadata fetch), `OpponentRowFields.tsx` (item field
+    sync with `opponent.item`), `CalcAutocomplete.tsx` (query sync with
+    `value` - also let `useEffect` be dropped from the import entirely),
+    `useDamageCalc.ts` (both Pokémon's learned-moves-slugs reset),
+    `useMegaSprite.ts` and `usePokemonTypeFilter.ts` (identical
+    cache-lookup-then-fetch shape in both - re-derive from cache
+    synchronously on a key change, only use the effect for the genuinely
+    async not-yet-cached path). `useInitialSync.ts` got a cleaner fix than
+    the others - its "already synced on a previous launch" branch is a pure
+    function of already-available render-time values, so `isDone` is now
+    `alreadySynced || heavySyncDone` computed directly (no effect/setState
+    needed for that path at all, and it now flips true one render earlier
+    than before instead of waiting on a post-paint effect).
+  - **Deliberately left disabled**: `useTeams.ts`/`useSettings.ts`/
+    `useSavedPokemon.ts`/`useBattles.ts`/`useDatabase.ts`'s load-on-mount
+    functions (each sets `isLoading`/`error` synchronously at its own top,
+    and is also reused by a manually-triggered `refresh*()` that needs that
+    reset - splitting into an effect-safe silent variant plus a refresh
+    variant is a bigger, riskier change to the core data-loading pattern of
+    nearly every hook in the app than fits this pass) and `useSync.ts`'s
+    `refreshStatus` call (same shape). Added a targeted `eslint.config.js`
+    override scoped to just those 6 files with a comment explaining why,
+    rather than a blanket disable.
+  - **Verified live** via `.claude/skills/run-desktop`: a disposable team
+    (1 Pokémon) exercised `EditOverlays.tsx`'s item-change reset (search +
+    select "Choice Scarf", confirmed the tooltip/description loaded
+    correctly with zero console errors) and `usePokemonTypeFilter.ts` (the
+    species picker's `#fire` tag search resolved to Charizard/etc. with no
+    errors, screenshot caught the exact "Loading type..." transitional
+    state). The Calc page exercised `useDamageCalc.ts` (species selection)
+    and `CalcAutocomplete.tsx` (move search) with no errors. A disposable
+    battle (using a real team, since the 1-Pokémon test team didn't
+    qualify for battles) exercised `OpponentRowFields.tsx`'s item field.
+    All disposable teams/battles cleaned up afterward - confirmed
+    `teams.json`/`battles.json` back to exactly the user's real 3 teams/2
+    battles (accidentally created 9 stray in-progress test battles during
+    UI-selector debugging retries, all identified by today's date and
+    `in-progress` result and removed).
+  - Also hit a transient, unrelated tooling outage mid-session (Anthropic's
+    own safety-classifier service was intermittently unavailable, blocking
+    `npm run build`/`lint` specifically while reads/greps kept working) -
+    not a code issue, resolved itself; flagged to the user rather than
+    silently retried in a loop.
+
 - **Small polish batch: CalcPage chunk-size warning + Unseen Fist
   investigation** (2026-07-14): two lowest-priority backlog items, tackled
   quickly since neither needed a large change.

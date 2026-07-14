@@ -41,22 +41,15 @@ export function useTeams(): UseTeamsReturn {
   const [expandedCardIds, setExpandedCardIds] = useState<Set<string>>(new Set());
 
   /**
-   * Load teams from disk on mount
-   */
-  useEffect(() => {
-    loadTeamsFromDisk();
-  }, []);
-
-  /**
    * Internal: Load teams database from disk via preload bridge
    */
   const loadTeamsFromDisk = async (): Promise<void> => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const database = await window.electron.readTeamsDatabase();
-      
+
       if (database) {
         setTeams(database.teams);
       } else {
@@ -71,6 +64,13 @@ export function useTeams(): UseTeamsReturn {
       setIsLoading(false);
     }
   };
+
+  /**
+   * Load teams from disk on mount
+   */
+  useEffect(() => {
+    loadTeamsFromDisk();
+  }, []);
 
   /**
    * Internal: Persist current teams state to disk

@@ -47,16 +47,17 @@ async function fetchMegaSprite(apiSlug: string): Promise<MegaSpriteResult | null
 export function useMegaSprite(apiSlug: string | null): MegaSpriteResult | null {
   const [result, setResult] = useState<MegaSpriteResult | null>(apiSlug ? cache.get(apiSlug) ?? null : null);
 
+  // Re-derives synchronously from cache the moment apiSlug changes - set
+  // during render rather than in an effect, see
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const [resolvedForSlug, setResolvedForSlug] = useState(apiSlug);
+  if (apiSlug !== resolvedForSlug) {
+    setResolvedForSlug(apiSlug);
+    setResult(apiSlug ? cache.get(apiSlug) ?? null : null);
+  }
+
   useEffect(() => {
-    if (!apiSlug) {
-      setResult(null);
-      return;
-    }
-    const cached = cache.get(apiSlug);
-    if (cached !== undefined) {
-      setResult(cached);
-      return;
-    }
+    if (!apiSlug || cache.has(apiSlug)) return;
     let cancelled = false;
     fetchMegaSprite(apiSlug).then(r => { if (!cancelled) setResult(r); });
     return () => { cancelled = true; };

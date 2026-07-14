@@ -93,10 +93,6 @@ export function useBattles(): UseBattlesReturn {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadBattlesFromDisk();
-  }, []);
-
   const loadBattlesFromDisk = async (): Promise<void> => {
     setIsLoading(true);
     setError(null);
@@ -117,6 +113,10 @@ export function useBattles(): UseBattlesReturn {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadBattlesFromDisk();
+  }, []);
 
   const persistBattlesToDisk = async (updatedBattles: Battle[]): Promise<boolean> => {
     try {

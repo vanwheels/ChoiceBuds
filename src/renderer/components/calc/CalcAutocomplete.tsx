@@ -7,7 +7,7 @@
  * be chosen, matching the real Showdown calculator's unrestricted pickers.
  */
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useDismissable } from '../../hooks/useDismissable';
 
 const MAX_RESULTS = 50;
@@ -30,7 +30,14 @@ export default function CalcAutocomplete({ label, value, options, placeholder, o
     setIsOpen(false);
   });
 
-  useEffect(() => setQuery(value), [value]);
+  // Keeps `query` synced with `value` when it changes from outside (e.g. a
+  // saved-set load) - set during render rather than in an effect, matching
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const [syncedValue, setSyncedValue] = useState(value);
+  if (value !== syncedValue) {
+    setSyncedValue(value);
+    setQuery(value);
+  }
 
   const filtered = isOpen
     ? options.filter(o => o.toLowerCase().includes(query.toLowerCase())).slice(0, MAX_RESULTS)

@@ -266,17 +266,29 @@ See [COMPLETED.md](COMPLETED.md) for the full log of finished work.
   bump. Two new stricter `eslint-plugin-react-hooks` rules
   (`set-state-in-effect`, `immutability`) were disabled rather than
   fixed - see the next item.
-- **Follow-up from the dev-tooling bump**: `eslint-plugin-react-hooks`
-  7.1.1's "recommended" preset added `set-state-in-effect` (flags the
-  standard "reset local state when a prop changes" effect pattern used in
-  `EditOverlays.tsx`, `OpponentRowFields.tsx`, `CalcAutocomplete.tsx`,
-  `useSync.ts`) and `immutability` (flags `useTeams.ts`/`useSettings.ts`/
-  `useSavedPokemon.ts`'s load-on-mount `useEffect` calling a `const`
-  function declared later in the same file - a hoisting-order style
-  objection, not a real bug). Both disabled in `eslint.config.js` rather
-  than reworking 8 files' worth of stable, working hook/effect patterns as
-  a side effect of a routine dependency bump (user's explicit call). Worth
-  a dedicated pass later to actually address them for real.
+- ~~Follow-up from the dev-tooling bump~~ **Mostly done 2026-07-14** (see
+  COMPLETED.md) - re-enabling both disabled rules to actually fix them
+  properly revealed the real scope was **13 files**, not the ~4 originally
+  scoped (re-ordering the `immutability` hoisting fixes unlocked
+  `set-state-in-effect` detection inside the same functions, surfacing
+  hooks nobody had flagged yet: `useBattles.ts`, `useDamageCalc.ts`,
+  `useDatabase.ts`, `useInitialSync.ts`, `useMegaSprite.ts`). Fixed for
+  real: the `immutability` hoisting order in all 4 load-on-mount hooks
+  (`useTeams.ts`/`useSettings.ts`/`useSavedPokemon.ts`/`useBattles.ts`), and
+  the 7 "reset derived state when a dependency changes" `set-state-in-effect`
+  cases (`EditOverlays.tsx` x2, `OpponentRowFields.tsx`, `CalcAutocomplete.tsx`,
+  `useDamageCalc.ts` x2, `useMegaSprite.ts`, `usePokemonTypeFilter.ts`,
+  `useInitialSync.ts` - the last one restructured to derive `isDone`
+  directly instead of needing an effect for that branch at all). Still
+  deliberately disabled (per explicit user call, not silently dropped):
+  `set-state-in-effect` on `useTeams.ts`/`useSettings.ts`/
+  `useSavedPokemon.ts`/`useBattles.ts`/`useDatabase.ts`'s shared
+  load-on-mount-and-reused-by-refresh idiom, plus `useSync.ts`'s
+  `refreshStatus` (same shape) - a real fix needs splitting each into an
+  effect-safe silent variant and a refresh variant, a bigger, riskier
+  change to the core data-loading pattern of nearly every hook in the app
+  than fits a routine cleanup pass. Revisit as its own dedicated task if
+  wanted.
 - ~~`CalcPage`'s lazy chunk just crossed Vite's 500kB build-warning
   threshold~~ **Done 2026-07-14** - investigated a real code-split first
   (checked whether `@smogon/calc` exposes any subpath/generation-specific

@@ -73,8 +73,13 @@ export function OpponentItemCell({ battle, opponent, battleLogActions }: RowFiel
 
   // Local draft (so typing doesn't commit on every keystroke), but the underlying value can also
   // change from elsewhere (the Mega button auto-revealing it) - without this the input would keep
-  // showing a stale value after mount.
-  useEffect(() => { setItem(opponent.item || ''); }, [opponent.item]);
+  // showing a stale value after mount. Set during render rather than in an effect - see
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const [syncedItem, setSyncedItem] = useState(opponent.item);
+  if (opponent.item !== syncedItem) {
+    setSyncedItem(opponent.item);
+    setItem(opponent.item || '');
+  }
 
   return (
     <input

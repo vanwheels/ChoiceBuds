@@ -44,10 +44,6 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadSavedPokemonFromDisk();
-  }, []);
-
   const loadSavedPokemonFromDisk = async (): Promise<void> => {
     setIsLoading(true);
     setError(null);
@@ -68,6 +64,10 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadSavedPokemonFromDisk();
+  }, []);
 
   const persistSavedPokemonToDisk = async (updated: SavedPokemonEntry[]): Promise<boolean> => {
     try {

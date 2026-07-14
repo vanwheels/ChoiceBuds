@@ -33,13 +33,6 @@ export function useSettings(): UseSettingsReturn {
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * Load settings from disk on mount
-   */
-  useEffect(() => {
-    loadSettingsFromDisk();
-  }, []);
-
-  /**
    * Internal: Load settings from disk via preload bridge
    */
   const loadSettingsFromDisk = async (): Promise<void> => {
@@ -60,6 +53,13 @@ export function useSettings(): UseSettingsReturn {
       setIsLoading(false);
     }
   };
+
+  /**
+   * Load settings from disk on mount
+   */
+  useEffect(() => {
+    loadSettingsFromDisk();
+  }, []);
 
   /**
    * Internal: Persist updated settings to disk

@@ -64,7 +64,6 @@ export function useInitialSync(
   speciesRosterState: UseSpeciesRosterReturn,
   spriteCacheState: UseSpriteCacheReturn
 ): UseInitialSyncReturn {
-  const [isDone, setIsDone] = useState(false);
   const [progress, setProgress] = useState<SyncProgress>({ label: 'Starting up...', current: 0, total: 1 });
   const hasStarted = useRef(false);
 
@@ -72,14 +71,17 @@ export function useInitialSync(
   const { roster, isLoading: isRosterLoading } = speciesRosterState;
   const { downloadSprite } = spriteCacheState;
 
+  // "Already synced on a previous launch" is a pure function of props/state
+  // already available at render time - no effect/setState needed for that
+  // path at all, only the genuine one-time heavy-sync path below needs one.
+  const alreadySynced = isInitialized && !isRosterLoading && roster.length > 0 && hasCompletedInitialBulkSync;
+  const [heavySyncDone, setHeavySyncDone] = useState(false);
+  const isDone = alreadySynced || heavySyncDone;
+
   useEffect(() => {
     if (hasStarted.current) return;
     if (!isInitialized || isRosterLoading || roster.length === 0) return;
-
-    if (hasCompletedInitialBulkSync) {
-      setIsDone(true);
-      return;
-    }
+    if (hasCompletedInitialBulkSync) return;
 
     hasStarted.current = true;
 
@@ -116,7 +118,7 @@ export function useInitialSync(
       );
 
       markInitialBulkSyncCompleted();
-      setIsDone(true);
+      setHeavySyncDone(true);
     })();
   }, [isInitialized, isRosterLoading, roster, hasCompletedInitialBulkSync, markInitialBulkSyncCompleted, getEnrichedSpeciesOptions, getItemData, downloadSprite]);
 

@@ -121,26 +121,36 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
     return () => { cancelled = true; };
   }, [pokemon.showdownData.species, pokemon.showdownData.gender, getEnrichedSpeciesOptions]);
 
-  // Resolve full metadata (sprite/description) for whatever item is currently equipped
-  useEffect(() => {
-    let cancelled = false;
+  // Resets sprite-failed flags and clears stale item data the moment
+  // selectedItem changes - set during render rather than in an effect, see
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const [resolvedForItem, setResolvedForItem] = useState(selectedItem);
+  if (selectedItem !== resolvedForItem) {
+    setResolvedForItem(selectedItem);
     setItemSpriteFailed(false);
     setItemFallbackSpriteFailed(false);
-    if (!selectedItem) {
-      setItemData(null);
-      return;
-    }
+    if (!selectedItem) setItemData(null);
+  }
+
+  // Resolve full metadata (sprite/description) for whatever item is currently equipped
+  useEffect(() => {
+    if (!selectedItem) return;
+    let cancelled = false;
     getItemData(selectedItem).then(data => { if (!cancelled) setItemData(data); });
     return () => { cancelled = true; };
   }, [selectedItem, getItemData]);
 
+  // Clears stale ability data the moment selectedAbility changes - same render-time pattern as above
+  const [resolvedForAbility, setResolvedForAbility] = useState(selectedAbility);
+  if (selectedAbility !== resolvedForAbility) {
+    setResolvedForAbility(selectedAbility);
+    if (!selectedAbility) setAbilityData(null);
+  }
+
   // Resolve full metadata (effect description) for whatever ability is currently equipped
   useEffect(() => {
+    if (!selectedAbility) return;
     let cancelled = false;
-    if (!selectedAbility) {
-      setAbilityData(null);
-      return;
-    }
     getAbilityData(selectedAbility).then(data => { if (!cancelled) setAbilityData(data); });
     return () => { cancelled = true; };
   }, [selectedAbility, getAbilityData]);

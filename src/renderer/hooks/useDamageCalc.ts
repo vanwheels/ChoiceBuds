@@ -444,18 +444,35 @@ export function useDamageCalc(gameDataState: UseGameDataReturn): UseDamageCalcRe
 
   const { getEnrichedSpeciesOptions } = gameDataState;
 
+  // Clears the stale learned-moves set the moment a species empties out (not
+  // on every species/gender change - a change to a different species just
+  // re-fetches below, matching the original effect's own guard) - set during
+  // render rather than in an effect, see
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const [resolvedForSpecies1, setResolvedForSpecies1] = useState(pokemon1.species);
+  if (pokemon1.species !== resolvedForSpecies1) {
+    setResolvedForSpecies1(pokemon1.species);
+    if (!pokemon1.species) setPokemon1LearnedSlugs(null);
+  }
+
   useEffect(() => {
+    if (!pokemon1.species) return;
     let cancelled = false;
-    if (!pokemon1.species) { setPokemon1LearnedSlugs(null); return; }
     getEnrichedSpeciesOptions(pokemon1.species, pokemon1.gender || undefined)
       .then(({ moves }) => { if (!cancelled) setPokemon1LearnedSlugs(new Set(moves.map(m => normalizeMoveSlug(m.name)))); })
       .catch(() => { if (!cancelled) setPokemon1LearnedSlugs(null); });
     return () => { cancelled = true; };
   }, [pokemon1.species, pokemon1.gender, getEnrichedSpeciesOptions]);
 
+  const [resolvedForSpecies2, setResolvedForSpecies2] = useState(pokemon2.species);
+  if (pokemon2.species !== resolvedForSpecies2) {
+    setResolvedForSpecies2(pokemon2.species);
+    if (!pokemon2.species) setPokemon2LearnedSlugs(null);
+  }
+
   useEffect(() => {
+    if (!pokemon2.species) return;
     let cancelled = false;
-    if (!pokemon2.species) { setPokemon2LearnedSlugs(null); return; }
     getEnrichedSpeciesOptions(pokemon2.species, pokemon2.gender || undefined)
       .then(({ moves }) => { if (!cancelled) setPokemon2LearnedSlugs(new Set(moves.map(m => normalizeMoveSlug(m.name)))); })
       .catch(() => { if (!cancelled) setPokemon2LearnedSlugs(null); });
