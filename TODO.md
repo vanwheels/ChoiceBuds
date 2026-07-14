@@ -208,12 +208,10 @@ See [COMPLETED.md](COMPLETED.md) for the full log of finished work.
 
 ## Backlog / ideas (not yet scoped, reordered highest-to-lowest priority)
 
-- **Electron is well behind current** (`^28.0.0`; latest is 43+) - carries
-  several high-severity advisories fixed only in newer majors. Bumping is a
-  real (if likely modest) migration, not a one-line version bump - worth its
-  own dedicated pass rather than doing it blind. Top of this list since
-  it's the only item here with a security dimension, even for a
-  locally-run desktop app.
+- ~~Electron is well behind current~~ **Done 2026-07-13** - bumped
+  `^28.0.0` → `^43.0.0` (see COMPLETED.md). Dev tooling (Vite/TypeScript/
+  ESLint) is still behind and intentionally deferred as a separate pass -
+  see below.
 - **In-app auto-update (electron-updater + electron-builder GitHub publish)**:
   scoped 2026-07-09, but deliberately **blocked on the user getting an Apple
   Developer account** (planned "eventually, not for a bit") - can't start
@@ -252,11 +250,16 @@ See [COMPLETED.md](COMPLETED.md) for the full log of finished work.
     - `electron-updater` has its own update-status/prompt flow, which likely
     supersedes (or needs merging with) today's "check + link out" UI rather
     than the two running side by side unreconciled.
-- **Dev tooling has also drifted behind current majors** (checked
-  2026-07-07 via `npm outdated`): Vite 5.4→8.1, TypeScript 5.9→6.0, ESLint
-  9.39→10.6. Lower urgency than the Electron security-advisory situation,
-  but same category of "batch these into one dedicated bump pass" rather
-  than picking them off individually.
+- **Dev tooling has also drifted behind current majors** (re-checked
+  2026-07-13 via `npm outdated`, since Electron's own bump is now done):
+  Vite 5.4→8.1, ESLint 9.39→10.7. TypeScript has drifted further than
+  previously noted here - it's now at 7.0.2, not 6.0 (jumped a second major
+  since the 2026-07-07 check). Lower urgency than the Electron
+  security-advisory situation, but same category of "batch these into one
+  dedicated bump pass" rather than picking them off individually. Also
+  fixes the pre-existing esbuild/vite moderate+high `npm audit` advisories
+  (noted during the Electron bump, see COMPLETED.md) - those need Vite's
+  own major bump to resolve, not anything Electron-side.
 - **`CalcPage`'s lazy chunk just crossed Vite's 500kB build-warning
   threshold** (503kB as of 2026-07-07, was 499kB at the 2026-07-06 cleanup
   pass). Still fine functionally (lazy-loaded, only fetched when the Calc

@@ -5,6 +5,49 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Electron bumped `^28.0.0` → `^43.0.0`** (2026-07-13): the only backlog
+  item with a security dimension (several high-severity advisories fixed
+  only in newer majors), a 15-major-version jump. Before touching anything,
+  fetched Electron's own cumulative breaking-changes doc (v28 through v43)
+  and checked it against this app's actual API surface
+  (`app`/`BrowserWindow`/`ipcMain`/`shell`, a narrow hand-wrapped
+  `contextBridge` API in `preload.ts`, `navigator.clipboard` for the
+  team-export copy button) - none of the removed/deprecated APIs across
+  that whole span (`remote`, `BrowserView`, `File.path`, renderer
+  `clipboard`, raw `ipcRenderer` exposure over contextBridge, custom
+  protocol handlers, traffic-light window APIs) are used anywhere in this
+  codebase, so **zero application code changes were needed** - this really
+  was just a dependency-version bump plus verification, confirmed by
+  research rather than assumed.
+  - Electron 43 bundles Node 24.17.0 - bumped `@types/node` `^20.10.0` →
+    `^24.0.0` alongside it (the closest available `@types/node` release;
+    those don't track Electron's exact bundled patch version) purely for
+    type accuracy against the real runtime, distinct from the separately-
+    deferred Vite/TypeScript/ESLint dev-tooling bump below.
+  - `npm audit` surfaced 2 pre-existing moderate/high esbuild/Vite
+    advisories after the install - unrelated to Electron, would need Vite's
+    own major bump to fix (that's the deferred dev-tooling pass, not
+    touched here).
+  - **Verified three ways**, not just a clean build: (1) `type-check`/
+    `lint`/`build` all clean, chunk sizes unchanged; (2) full dev-mode pass
+    via `.claude/skills/run-desktop` across Teams/Calc/Battle Log with
+    console-error monitoring - none found; (3) per the packaged-build-
+    verification gotcha (dev mode never exercises `main.ts`'s production
+    `loadFile` branch), actually ran `npm run dist:win` - `electron-builder`
+    26.15.3 packaged Electron 43.1.0 without issue, confirming it's
+    forward-compatible - then launched the real built `.exe` directly and
+    confirmed via its window title (`ChoiceBuds - VGC Team Importer`) and
+    `Responding: True` that the production load path works, the opposite
+    of the known silent-`ELECTRON_RUN_AS_NODE`-failure signature (exit code
+    0, no window, nothing in the event log). A first attempt to also grab a
+    visual screenshot of that packaged window via a raw Win32
+    `GetWindowRect`/`CopyFromScreen` PowerShell script captured the wrong
+    window entirely (unrelated content elsewhere on screen) - deleted
+    immediately without further use; the process/title/responsiveness
+    check above was sufficient on its own, so the visual screenshot wasn't
+    pursued further. All test build artifacts (`release/`) cleaned up
+    afterward.
+
 - **Statistics page: "By Season" breakdown** (2026-07-13): splits win/loss
   data by ranked-ladder season (M-1..M-5), a sub-division of Regulation that
   the app had never tracked - `Team['format']`/`Battle['format']` only ever
