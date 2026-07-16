@@ -251,9 +251,14 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
         </div>
       </div>
 
-      {/* EXPANDED VIEW CONTAINER - RENDERS THE INDIVIDUAL EXPANDED POKEMON CARDS */}
+      {/* EXPANDED VIEW CONTAINER - RENDERS THE INDIVIDUAL EXPANDED POKEMON CARDS
+          @container: the grid below snaps its column count off THIS element's own
+          width (a CSS container query), not the browser viewport - viewport-based
+          breakpoints were the original bug, since raw viewport width crossing 1280px
+          doesn't mean the sidebar-reduced content area actually has room for 6 real
+          280px columns. */}
       {isExpanded && (
-        <div className="p-6 border-t border-zinc-800/60 bg-zinc-900/10 rounded-b-xl">
+        <div className="@container p-6 border-t border-zinc-800/60 bg-zinc-900/10 rounded-b-xl">
           {/* Strategy Notes - team-level free text (Team.notes), same "local state + save
               on blur" pattern as the name/author fields above. Hidden entirely when not
               editing and no notes are set, same as the author field's empty-chrome rule. */}
@@ -278,16 +283,13 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
             </div>
           )}
 
-          {/* Fluid auto-fill instead of fixed breakpoint column counts (previously
-              grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6) - the old
-              xl:grid-cols-6 forced exactly 6 equal-width tracks the instant raw
-              viewport width crossed 1280px, without accounting for the sidebar/
-              padding eating into the actual content area, squishing every card
-              (and truncating nature/EV text) well below its comfortable 280px
-              width on any window from ~1280px up to even 1920px+. auto-fill lets
-              the browser fit as many real ~280px-wide tracks as the container
-              actually has room for, at any window size. */}
-          <div className="grid gap-4 w-full" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 280px))' }}>
+          {/* Two clean states, not a continuous reflow: 3 columns (2x3 for a full
+              6-mon roster) until the container itself is wide enough for 6 real
+              ~280px columns (6*280px + 5*1rem gaps = 1760px), then snaps to 6 (1x6).
+              @[1760px]: is a container-query variant (keyed off the @container
+              ancestor above), not a viewport media query - unlike the old
+              xl:grid-cols-6 this can't misfire from raw viewport width alone. */}
+          <div className="grid grid-cols-3 @[1760px]:grid-cols-6 gap-4 w-full">
             {team.pokemon && team.pokemon.map((p, idx) => (
               <PokemonCard
                 key={`${idx}-${p.importedAt}`}

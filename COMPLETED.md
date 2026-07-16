@@ -42,6 +42,24 @@ local ("see below"/"see above").
     1600x900, 2200x1200): the 6-Pokemon roster now sits in one full row at
     2200px width, 4 columns at 1600px, all still fully legible with no
     truncation at any size.
+  - **Third follow-up same day**: the auto-fill grid fixed truncation but
+    produced a continuous reflow (any column count from 2-6 depending on
+    exact pixel width) - the user clarified what they actually remembered
+    was two clean discrete states, "either a 1x6 or a 2x3," not a
+    continuously-resizing count. Switched from CSS Grid `auto-fill` to a
+    CSS container query (Tailwind v4's native `@container`/`@[Xpx]:`
+    support, confirmed by inspecting the actual generated CSS output in
+    `dist/` rather than trusting the class name alone): the card-grid's
+    ancestor wrapper gets `@container`, and the grid itself is
+    `grid-cols-3 @[1760px]:grid-cols-6` (1760px = 6*280px cards +
+    5*1rem gaps, the exact width 6 real columns need) - two clean states,
+    but keyed off the container's own rendered width rather than the raw
+    viewport, so it can never misfire the way the original
+    viewport-media-query `xl:grid-cols-6` did. Verified across a sweep of
+    window sizes with the same disposable-team reproduction: clean 2x3 at
+    1280-1700px, still 2x3 at 1950px (container hadn't yet crossed 1760px
+    once the sidebar/multiple nested padding layers were subtracted -
+    correct, conservative behavior), clean 1x6 at 2400px.
 
 - **Teams page: strategy notes UI + shareable team image export** (2026-07-15)
   - inspired by a look at community VGC tools (VGC Helper, Pikalytics'
