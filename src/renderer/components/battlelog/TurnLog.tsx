@@ -9,6 +9,7 @@
 import type { Battle, BattleAction } from '../../types/pokemon';
 import { battlePokemonDisplayName, isRepeatProtectUse } from '../../utils/battleLookup';
 import { isSwitchOutMove } from '../../config/switchOutMoves';
+import { FIELD_EVENT_ID } from '../../config/fieldConditions';
 import type { UseBattleLogActionsReturn } from '../../hooks/useBattleLogActions';
 import { buildCalcReviewPayload, type CalcReviewPayload } from '../../utils/battleCalcReview';
 
@@ -54,9 +55,13 @@ export default function TurnLog({ battle, battleLogActions, onReviewInCalc }: Tu
                   || (action.phase === 'move' && isSwitchOutMove(action.move));
                 return (
                   <li key={action.id} className="text-sm flex items-center gap-1.5 flex-wrap">
-                    <span className={action.side === 'player' ? 'text-blue-400' : 'text-red-400'}>
-                      {battlePokemonDisplayName(battle, action.side, action.pokemonId)}
-                    </span>
+                    {action.pokemonId === FIELD_EVENT_ID ? (
+                      <span className="text-gray-400 font-semibold">Field</span>
+                    ) : (
+                      <span className={action.side === 'player' ? 'text-blue-400' : 'text-red-400'}>
+                        {battlePokemonDisplayName(battle, action.side, action.pokemonId)}
+                      </span>
+                    )}
                     {action.move && <span className="text-gray-200"> used {action.move}</span>}
                     {action.target && action.target.length > 0 && (
                       <span className="text-gray-400">

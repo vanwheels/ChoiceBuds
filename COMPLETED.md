@@ -5,6 +5,37 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Battle Logger: synthesized turn-log entries for field-condition changes**
+  (2026-07-15) - the previously-open "nice-to-have" noted under Battle
+  Logger's TODO entry: weather/terrain/Trick Room toggles
+  (`FieldWeatherBar.tsx`) and side-condition toggles (screens/Tailwind/
+  hazards, `SideConditionsRow.tsx`) mutated `fieldState` silently with no
+  turn-log record - only the live countdown display showed anything
+  changed. `useBattleLogActions.ts`'s `setWeather`/`setTerrain`/
+  `setTrickRoom`/`toggleTurnCondition`/`toggleBooleanHazard`/
+  `setStackableHazard` now each append a note like "Sun set"/"Sun ended"/
+  "Reflect (Player) set"/"Spikes (Opponent): 2 layers" via the existing
+  `appendAction` primitive. The "via Mega" confidence toggle and
+  `toggleScreenExtended` (Light Clay confidence toggle) deliberately stay
+  unlogged - they refine duration certainty, not an actual state change,
+  same reasoning as skipping a log entry for those. Since none of these
+  toggles are tied to one specific Pokemon (weather/terrain/Trick Room are
+  fully field-wide; even side conditions belong to a whole side, not one
+  mon), and `BattleAction.pokemonId`/`TurnLog.tsx` rendering assumed a real
+  roster id everywhere, added a sentinel `FIELD_EVENT_ID` constant
+  (`config/fieldConditions.ts`) instead of loosening the type - confirmed
+  via `battleLookup.ts`/`battleCalcReview.ts`/`BattlefieldSlot.tsx` that
+  every other consumer filters by an actual queried pokemonId, so a
+  sentinel that never matches a real id is inert everywhere except
+  `TurnLog.tsx`'s one explicit check, which renders a neutral gray "Field"
+  label instead of a Pokemon name for these entries. Live-verified via the
+  `run-desktop` skill (disposable battles, cleaned up... except the 8
+  disposable test battles from this verification pass, which the user
+  asked to leave in place for now rather than have Claude bulk-delete via
+  script - `battles.json` has no test-battle IDs recorded anywhere else, so
+  they're safe to remove by hand later, see current battle log for
+  entries with no opponent name from 2026-07-15).
+
 - **Teams page: fixed squished/truncated Pokemon-card grid on wide windows**
   (2026-07-15) - reported live while a dev instance was up: an expanded
   team's Pokemon cards were rendering with truncated nature names ("S...

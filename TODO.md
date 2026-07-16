@@ -58,10 +58,9 @@ focused on what's actually next.
   (see COMPLETED.md). Post-battle damage-calc review and Bo3 "set" grouping
   across games are also done (both 2026-07-13, see COMPLETED.md). Still
   open: the stat-inference idea (needs Limitless/championsbattledata-
-  sourced per-species data first). Also noted but not built: synthesizing
-  turn-log entries when a field condition changes (the countdown display
-  already shows remaining turns implicitly, so this is a nice-to-have);
-  generic lightweight outcome tags beyond Protect-fail (Missed/No
+  sourced per-species data first). Synthesizing turn-log entries when a
+  field condition changes is done (2026-07-15, see COMPLETED.md). Also
+  noted but not built: generic lightweight outcome tags beyond Protect-fail (Missed/No
   Effect/Blocked by Ability) - considered during Stage 2 design but
   dropped as unrequested scope, could revisit if the Protect-fail chip
   pattern proves useful enough to generalize; Download's ability effect

@@ -19,6 +19,17 @@ export type TurnTrackedCondition = 'tailwind' | 'reflect' | 'lightScreen' | 'aur
 export type BooleanHazard = 'stealthRock' | 'stickyWeb';
 export type StackableHazard = 'spikes' | 'toxicSpikes';
 
+/**
+ * Sentinel BattleAction.pokemonId for a synthesized field-condition-change
+ * log entry (weather/terrain/Trick Room/screens/hazards toggled directly
+ * from FieldWeatherBar/SideConditionsRow, not tied to any one Pokemon).
+ * Never matches a real roster id, so every existing pokemonId-keyed lookup
+ * (battleLookup.ts, battleCalcReview.ts, etc.) naturally ignores these
+ * entries with no special-casing needed - only TurnLog.tsx checks for it
+ * explicitly, to render a neutral "Field" label instead of a Pokemon name.
+ */
+export const FIELD_EVENT_ID = '__field__';
+
 export const TURN_TRACKED_CONDITIONS: TurnTrackedCondition[] = [
   'tailwind', 'reflect', 'lightScreen', 'auroraVeil', 'safeguard', 'mist',
 ];

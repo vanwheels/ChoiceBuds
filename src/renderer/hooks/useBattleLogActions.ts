@@ -26,7 +26,7 @@ import { STAT_LABELS } from '../config/statStages';
 import { STATUS_LABELS } from '../config/statusConditions';
 import {
   WEATHER_LABELS, TERRAIN_LABELS, STACKABLE_HAZARD_MAX,
-  SIDE_CONDITION_EXTENDED_FIELD,
+  SIDE_CONDITION_EXTENDED_FIELD, SIDE_CONDITION_LABELS, HAZARD_LABELS, FIELD_EVENT_ID,
 } from '../config/fieldConditions';
 
 export const MAX_OPPONENT_ROSTER_SIZE = 6;
@@ -45,6 +45,11 @@ function appendAction(turns: Battle['turns'], action: Omit<BattleAction, 'id'>):
 /** Which roster a pokemonId belongs to - used wherever an action needs `side` but the caller only has an id. */
 function sideOf(battle: Battle, pokemonId: string): BattleSide {
   return battle.playerRoster.some(p => p.id === pokemonId) ? 'player' : 'opponent';
+}
+
+/** Human label for a side, used in synthesized field-event notes (see FIELD_EVENT_ID) since those have no individual Pokemon to attribute the side-coloring to. */
+function sideLabel(side: BattleSide): string {
+  return side === 'player' ? 'Player' : 'Opponent';
 }
 
 /** Removes a pokemonId's entry entirely - stat stages always reset to 0 when a Pokemon leaves the field. */
@@ -765,15 +770,23 @@ export function useBattleLogActions(
     return updateBattle(battle.id, { notes });
   }, [updateBattle]);
 
+  /** Logs a neutral (non-Pokemon-attributed) field-event note - see FIELD_EVENT_ID. */
+  function appendFieldEvent(turns: Battle['turns'], note: string): Battle['turns'] {
+    return appendAction(turns, { side: 'player', pokemonId: FIELD_EVENT_ID, note });
+  }
+
   const setWeather = useCallback(async (
     battle: Battle,
     type: WeatherType | null,
     wasMegaEvolved?: boolean
   ): Promise<boolean> => {
     const currentTurn = battle.turns.length;
-    return updateBattle(battle.id, {
-      fieldState: { ...battle.fieldState, weather: type ? { type, setOnTurn: currentTurn, wasMegaEvolved } : undefined },
-    });
+    const prevType = battle.fieldState.weather?.type ?? null;
+    const fieldState = { ...battle.fieldState, weather: type ? { type, setOnTurn: currentTurn, wasMegaEvolved } : undefined };
+    // Same type in and out only happens via the "via Mega" confidence toggle - not a real weather change, so no log entry.
+    if (type === prevType) return updateBattle(battle.id, { fieldState });
+    const note = type ? `${WEATHER_LABELS[type]} set` : `${WEATHER_LABELS[prevType!]} ended`;
+    return updateBattle(battle.id, { fieldState, turns: appendFieldEvent(battle.turns, note) });
   }, [updateBattle]);
 
   const setTerrain = useCallback(async (
@@ -782,22 +795,24 @@ export function useBattleLogActions(
     wasMegaEvolved?: boolean
   ): Promise<boolean> => {
     const currentTurn = battle.turns.length;
-    return updateBattle(battle.id, {
-      fieldState: { ...battle.fieldState, terrain: type ? { type, setOnTurn: currentTurn, wasMegaEvolved } : undefined },
-    });
+    const prevType = battle.fieldState.terrain?.type ?? null;
+    const fieldState = { ...battle.fieldState, terrain: type ? { type, setOnTurn: currentTurn, wasMegaEvolved } : undefined };
+    if (type === prevType) return updateBattle(battle.id, { fieldState });
+    const note = type ? `${TERRAIN_LABELS[type]} set` : `${TERRAIN_LABELS[prevType!]} ended`;
+    return updateBattle(battle.id, { fieldState, turns: appendFieldEvent(battle.turns, note) });
   }, [updateBattle]);
 
   /** Trick Room is always move-set (never ability-triggered) - fixed 5-turn duration, no mega confidence needed. */
   const setTrickRoom = useCallback(async (battle: Battle, active: boolean): Promise<boolean> => {
     const currentTurn = battle.turns.length;
-    return updateBattle(battle.id, {
-      fieldState: { ...battle.fieldState, trickRoom: active ? { setOnTurn: currentTurn } : undefined },
-    });
+    const fieldState = { ...battle.fieldState, trickRoom: active ? { setOnTurn: currentTurn } : undefined };
+    const turns = appendFieldEvent(battle.turns, active ? 'Trick Room set' : 'Trick Room ended');
+    return updateBattle(battle.id, { fieldState, turns });
   }, [updateBattle]);
 
-  const updateSideConditions = useCallback((battle: Battle, side: BattleSide, next: SideConditions) => {
+  const updateSideConditions = useCallback((battle: Battle, side: BattleSide, next: SideConditions, turns?: Battle['turns']) => {
     const key = side === 'player' ? 'playerSide' : 'opponentSide';
-    return updateBattle(battle.id, { fieldState: { ...battle.fieldState, [key]: next } });
+    return updateBattle(battle.id, { fieldState: { ...battle.fieldState, [key]: next }, ...(turns ? { turns } : {}) });
   }, [updateBattle]);
 
   const sideConditionsFor = (battle: Battle, side: BattleSide): SideConditions =>
@@ -810,14 +825,13 @@ export function useBattleLogActions(
   ): Promise<boolean> => {
     const currentTurn = battle.turns.length;
     const conditions = sideConditionsFor(battle, side);
-    const next: SideConditions = {
-      ...conditions,
-      [key]: conditions[key] != null ? undefined : currentTurn,
-    };
-    return updateSideConditions(battle, side, next);
+    const isActive = conditions[key] != null;
+    const next: SideConditions = { ...conditions, [key]: isActive ? undefined : currentTurn };
+    const note = `${SIDE_CONDITION_LABELS[key]} (${sideLabel(side)}) ${isActive ? 'ended' : 'set'}`;
+    return updateSideConditions(battle, side, next, appendFieldEvent(battle.turns, note));
   }, [updateSideConditions]);
 
-  /** Toggles whether an active Reflect/Light Screen/Aurora Veil was set by a Pokemon holding Light Clay (8-turn duration instead of 5) - see config/fieldConditions.ts. No-op for conditions with no extending item. */
+  /** Toggles whether an active Reflect/Light Screen/Aurora Veil was set by a Pokemon holding Light Clay (8-turn duration instead of 5) - see config/fieldConditions.ts. No-op for conditions with no extending item. Not logged - a confidence refinement, not a real state change, same reasoning as weather's "via Mega" toggle. */
   const toggleScreenExtended = useCallback(async (
     battle: Battle,
     side: BattleSide,
@@ -836,8 +850,10 @@ export function useBattleLogActions(
     key: BooleanHazard
   ): Promise<boolean> => {
     const conditions = sideConditionsFor(battle, side);
-    const next: SideConditions = { ...conditions, [key]: conditions[key] ? undefined : true };
-    return updateSideConditions(battle, side, next);
+    const isActive = !!conditions[key];
+    const next: SideConditions = { ...conditions, [key]: isActive ? undefined : true };
+    const note = `${HAZARD_LABELS[key]} (${sideLabel(side)}) ${isActive ? 'cleared' : 'set'}`;
+    return updateSideConditions(battle, side, next, appendFieldEvent(battle.turns, note));
   }, [updateSideConditions]);
 
   const setStackableHazard = useCallback(async (
@@ -847,8 +863,13 @@ export function useBattleLogActions(
     layers: number
   ): Promise<boolean> => {
     const conditions = sideConditionsFor(battle, side);
+    const prevLayers = conditions[key] ?? 0;
+    if (layers === prevLayers) return updateSideConditions(battle, side, conditions);
     const next: SideConditions = { ...conditions, [key]: layers > 0 ? layers : undefined };
-    return updateSideConditions(battle, side, next);
+    const note = layers > 0
+      ? `${HAZARD_LABELS[key]} (${sideLabel(side)}): ${layers} layer${layers > 1 ? 's' : ''}`
+      : `${HAZARD_LABELS[key]} (${sideLabel(side)}) cleared`;
+    return updateSideConditions(battle, side, next, appendFieldEvent(battle.turns, note));
   }, [updateSideConditions]);
 
   return {
