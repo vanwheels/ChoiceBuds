@@ -5,6 +5,43 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Battle Logger: inline Miss/Crit/No Effect/Blocked confirmation prompt**
+  (2026-07-16) - part 1 of a 3-part redesign the user raised (see TODO.md
+  for parts 2-3, not yet started). The user felt the per-slot outcome chips
+  (previous entry below) were easy to lose track of, sitting on the
+  target's own BattlefieldSlot rather than near the move that was just
+  logged, and wanted a prompt that pops up right when the move is used -
+  explicitly asking it also account for moves that hit more than one
+  target. New `MoveOutcomePrompt.tsx` renders in `Battlefield.tsx`'s banner
+  area (same slot as the existing "Choose a target..." banner), one row
+  per target, each with its own Miss/Crit/No Effect/Blocked toggles -
+  `BattleAction.outcomes` was already keyed per-pokemonId, so multi-target
+  support needed no data-model change, just new UI. Required
+  `useBattleLogActions.ts::logAction` to start returning the newly-created
+  action's id (previously just `Promise<boolean>`) so the prompt can be
+  shown immediately without waiting for a re-render to read the id back out
+  of `battle.turns` - `appendAction` now accepts an optional pre-generated
+  `id`, defaulting to a fresh `crypto.randomUUID()` for every other
+  existing caller (verified all 3 `logAction` call sites in
+  `Battlefield.tsx` already discarded its return value, so the type change
+  was safe). `pendingOutcomes` state is cleared whenever focus moves
+  elsewhere (arming a new move, opening the bench picker) so a stale
+  prompt for an earlier move can't linger, plus a render-time guard
+  (`lastTurn?.actions.some(a => a.id === pendingOutcomes.actionId)`) so it
+  auto-hides once the turn advances or the action gets undone. The old
+  per-slot chips (`showMissChip`/`showCritChip`/`showNoEffectChip`/
+  `showBlockedAbilityChip` in `BattlefieldSlot.tsx`) were deleted entirely.
+  Live-verified via `run-desktop`: logged Rock Slide (a spread move) from
+  2BourbonRock against 2 active opponents (Snorlax + Gengar), confirmed
+  the prompt shows both targets as separate rows, and confirmed setting
+  "No Effect" on Snorlax and "Blocked" on Gengar in the same action applied
+  independently (turn log read "used Rock Slide on Snorlax (no effect) and
+  Gengar (blocked (ability))"). Also hit real UI-automation flakiness
+  during verification unrelated to this change (the pre-existing switch-in
+  popover flow occasionally raced React's re-render when driven by rapid
+  scripted clicks) - worked around with retry-with-delay loops in the test
+  script itself, not a product bug.
+
 - **Battle Logger: generic No Effect/Blocked (Ability) outcome chips**
   (2026-07-16) - generalized the existing per-target Miss/Crit toggle chips
   (`BattlefieldSlot.tsx`) to two more outcomes: "No Effect" and "Blocked"

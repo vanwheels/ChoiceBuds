@@ -7,6 +7,38 @@ focused on what's actually next.
 
 ## In progress / up next
 
+- **Battle Logger: Miss/Crit/No Effect/Blocked outcome UX redesign** (raised
+  2026-07-16, 3-part plan, tackling in order):
+  1. **Done (2026-07-16)** - moved the outcome-confirmation chips from
+     persistent per-slot buttons on the target's own BattlefieldSlot (easy
+     to lose track of - see COMPLETED.md's "generic No Effect/Blocked
+     (Ability) outcome chips" entry from earlier the same day) into a new
+     inline `MoveOutcomePrompt` shown immediately after logging any move
+     with at least one target, supporting multi-target/spread moves
+     (Rock Slide, Earthquake, etc.) with one independently-toggleable row
+     per target. See COMPLETED.md for the implementation trail.
+  2. **Not started** - auto-compute No Effect/Blocked where possible
+     (type-chart no-effect already auto-computes via the existing
+     `effectiveness` field; ability-based blocking - Levitate/Bulletproof/
+     Soundproof/etc. - needs a new researched, comprehensive ability-
+     immunity config table, following the `onSwitchInAbilities.ts`
+     convention). Per the user's request, the same inline prompt should
+     also surface a question about the target's ability when the move
+     type/flags make an ability-block plausible but the target's ability
+     isn't yet confirmed/revealed - exact UX still needs designing (e.g.
+     picking from the species' full legal-ability list via
+     `gameDataState.getEnrichedSpeciesOptions`, same source
+     `OpponentRowFields.tsx`'s ability dropdown already uses). The manual
+     chips stay as a fallback regardless, since an opponent's ability is
+     often unrevealed early in a battle.
+  3. **Not started** - multi-hit move logging (Population Bomb, Triple
+     Axel, Bullet Seed, etc.) - log how many hits actually connected.
+     Nothing exists for this in the Battle Logger yet (the Calc page's
+     damage calculator handles multi-hit separately, unrelated). Needs a
+     new static lookup table (hit-count range per move, same convention as
+     `config/protectMoves.ts`) plus a new field to record hits-landed per
+     use and a small UI to enter it.
+
 - **Top priority for next macOS session: build + verify + publish the Mac
   installer** (raised 2026-07-09): Windows now has a real, verified,
   working installer attached to `v0.1.1` (see COMPLETED.md) - macOS is the

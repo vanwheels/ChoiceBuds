@@ -240,14 +240,12 @@ export default function BattlefieldSlot({
   const hitReactiveEffect = getHitReactiveEffect(knownAbility);
   const showHitReactiveChip = !!hitReactiveEffect && !!knownAbility && hasUnappliedHitReactiveEffect(battle, mon.id, knownAbility, hitReactiveEffect.trigger);
 
-  // "What just happened to me this turn" - drives the Miss/Crit/Inflict-
-  // Status chips below, all scoped to the same single most-recent hit.
+  // "What just happened to me this turn" - drives the Inflict-Status chip
+  // below (Miss/Crit/No Effect/Blocked moved to the inline MoveOutcomePrompt
+  // shown right after logging - see Battlefield.tsx's pendingOutcomes -
+  // since a per-slot chip that lingers for the rest of the turn was easy to
+  // lose track of, and didn't naturally extend to multi-target moves).
   const targetingAction = mostRecentTargetingActionThisTurn(battle, mon.id);
-  const targetOutcome = targetingAction?.outcomes?.find(o => o.pokemonId === mon.id)?.result ?? null;
-  const showMissChip = !!targetingAction;
-  const showCritChip = !!targetingAction?.moveCategory && targetingAction.moveCategory !== 'status';
-  const showNoEffectChip = !!targetingAction;
-  const showBlockedAbilityChip = !!targetingAction;
   const showStatusInflictChip = !!targetingAction?.statusAilment && battle.statusConditions[mon.id] !== targetingAction.statusAilment;
 
   const canAct = canActThisTurn(battle, mon.id);
@@ -334,66 +332,6 @@ export default function BattlefieldSlot({
           className="text-[9px] px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-200 hover:bg-purple-800 cursor-pointer"
         >
           {knownAbility}!
-        </button>
-      )}
-      {showMissChip && (
-        <button
-          type="button"
-          onClick={e => {
-            e.stopPropagation();
-            battleLogActions.setActionTargetOutcome(battle, battle.turns.length, targetingAction!.id, mon.id, targetOutcome === 'miss' ? null : 'miss');
-          }}
-          title="Toggle whether this hit missed"
-          className={`text-[9px] px-1.5 py-0.5 rounded cursor-pointer ${
-            targetOutcome === 'miss' ? 'bg-gray-600 text-gray-200' : 'bg-gray-800 text-gray-400 hover:text-gray-200 hover:bg-gray-700'
-          }`}
-        >
-          Miss
-        </button>
-      )}
-      {showCritChip && (
-        <button
-          type="button"
-          onClick={e => {
-            e.stopPropagation();
-            battleLogActions.setActionTargetOutcome(battle, battle.turns.length, targetingAction!.id, mon.id, targetOutcome === 'crit' ? null : 'crit');
-          }}
-          title="Toggle whether this hit was a critical hit"
-          className={`text-[9px] px-1.5 py-0.5 rounded cursor-pointer ${
-            targetOutcome === 'crit' ? 'bg-yellow-900/70 text-yellow-300' : 'bg-gray-800 text-gray-400 hover:text-yellow-300 hover:bg-yellow-900/40'
-          }`}
-        >
-          Crit
-        </button>
-      )}
-      {showNoEffectChip && (
-        <button
-          type="button"
-          onClick={e => {
-            e.stopPropagation();
-            battleLogActions.setActionTargetOutcome(battle, battle.turns.length, targetingAction!.id, mon.id, targetOutcome === 'no-effect' ? null : 'no-effect');
-          }}
-          title="Toggle whether this had no effect (immunity not already reflected by type effectiveness)"
-          className={`text-[9px] px-1.5 py-0.5 rounded cursor-pointer ${
-            targetOutcome === 'no-effect' ? 'bg-gray-600 text-gray-200' : 'bg-gray-800 text-gray-400 hover:text-gray-200 hover:bg-gray-700'
-          }`}
-        >
-          No Effect
-        </button>
-      )}
-      {showBlockedAbilityChip && (
-        <button
-          type="button"
-          onClick={e => {
-            e.stopPropagation();
-            battleLogActions.setActionTargetOutcome(battle, battle.turns.length, targetingAction!.id, mon.id, targetOutcome === 'blocked-ability' ? null : 'blocked-ability');
-          }}
-          title="Toggle whether an ability (Levitate, Bulletproof, Soundproof, etc.) blocked this move"
-          className={`text-[9px] px-1.5 py-0.5 rounded cursor-pointer ${
-            targetOutcome === 'blocked-ability' ? 'bg-purple-900/70 text-purple-300' : 'bg-gray-800 text-gray-400 hover:text-purple-300 hover:bg-purple-900/40'
-          }`}
-        >
-          Blocked
         </button>
       )}
       {showStatusInflictChip && (

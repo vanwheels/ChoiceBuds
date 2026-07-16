@@ -34,11 +34,19 @@ export const MAX_BROUGHT = 4;
 
 const clampStage = (n: number): number => Math.max(-6, Math.min(6, n));
 
-/** Pure append - shared by logAction and any mutation that needs to bundle a log entry into its own single updateBattle call (avoids racing two sequential updateBattle calls off the same stale closure). */
-function appendAction(turns: Battle['turns'], action: Omit<BattleAction, 'id'>): Battle['turns'] {
+/**
+ * Pure append - shared by logAction and any mutation that needs to bundle a
+ * log entry into its own single updateBattle call (avoids racing two
+ * sequential updateBattle calls off the same stale closure). Accepts an
+ * optional pre-generated `id` for callers (logAction) that need to know the
+ * new action's id back immediately, without waiting for a re-render to read
+ * it back out of `battle.turns`; every other caller omits it and gets a
+ * fresh one same as before.
+ */
+function appendAction(turns: Battle['turns'], action: Omit<BattleAction, 'id'> & { id?: string }): Battle['turns'] {
   const next = [...turns];
   const lastTurn = next[next.length - 1];
-  next[next.length - 1] = { ...lastTurn, actions: [...lastTurn.actions, { ...action, id: crypto.randomUUID() }] };
+  next[next.length - 1] = { ...lastTurn, actions: [...lastTurn.actions, { ...action, id: action.id ?? crypto.randomUUID() }] };
   return next;
 }
 
@@ -111,7 +119,7 @@ export interface UseBattleLogActionsReturn {
   applyHitReactiveEffect: (battle: Battle, pokemonId: string, ability: string) => Promise<boolean>;
   setFainted: (battle: Battle, side: BattleSide, pokemonId: string, fainted: boolean) => Promise<boolean>;
   setStatusCondition: (battle: Battle, side: BattleSide, pokemonId: string, status: StatusCondition | null) => Promise<boolean>;
-  logAction: (battle: Battle, action: Omit<BattleAction, 'id'>) => Promise<boolean>;
+  logAction: (battle: Battle, action: Omit<BattleAction, 'id'>) => Promise<string | null>;
   setActionFailed: (battle: Battle, turnNumber: number, actionId: string, failed: boolean) => Promise<boolean>;
   setActionTargetOutcome: (battle: Battle, turnNumber: number, actionId: string, pokemonId: string, result: 'crit' | 'miss' | 'no-effect' | 'blocked-ability' | null) => Promise<boolean>;
   advanceTurn: (battle: Battle) => Promise<boolean>;
@@ -372,9 +380,17 @@ export function useBattleLogActions(
    * future move that both sets weather and has a weather-conditional
    * stat effect in the same log call would still resolve correctly.
    * Both are skipped when the action is marked failed.
+   *
+   * Returns the new action's id (or null on failure) rather than a plain
+   * boolean - the click-to-log flow (Battlefield.tsx) needs it immediately,
+   * synchronously with this call resolving, to show the inline Miss/Crit/
+   * No Effect/Blocked confirmation prompt against the exact action just
+   * logged, without waiting for a re-render to read it back out of
+   * `battle.turns`.
    */
-  const logAction = useCallback(async (battle: Battle, action: Omit<BattleAction, 'id'>): Promise<boolean> => {
-    if (battle.turns.length === 0) return false;
+  const logAction = useCallback(async (battle: Battle, action: Omit<BattleAction, 'id'>): Promise<string | null> => {
+    if (battle.turns.length === 0) return null;
+    const actionId = crypto.randomUUID();
     const trimmedMove = action.move?.trim();
     const opponentRoster = action.side === 'opponent' && trimmedMove
       ? battle.opponentRoster.map(o => {
@@ -383,7 +399,7 @@ export function useBattleLogActions(
         })
       : battle.opponentRoster;
 
-    let turns = appendAction(battle.turns, action);
+    let turns = appendAction(battle.turns, { ...action, id: actionId });
     let fieldState = battle.fieldState;
     let statStages = battle.statStages;
 
@@ -405,7 +421,8 @@ export function useBattleLogActions(
       }
     }
 
-    return updateBattle(battle.id, { turns, opponentRoster, fieldState, statStages });
+    const success = await updateBattle(battle.id, { turns, opponentRoster, fieldState, statStages });
+    return success ? actionId : null;
   }, [updateBattle]);
 
   /**

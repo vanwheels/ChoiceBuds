@@ -42,6 +42,7 @@ import { canActThisTurn, compactActiveIds, computeMoveEffectiveness } from '../.
 import BattlefieldSlot from './BattlefieldSlot';
 import SideConditionsRow from './SideConditionsRow';
 import FieldWeatherBar from './FieldWeatherBar';
+import MoveOutcomePrompt from './MoveOutcomePrompt';
 
 interface BattlefieldProps {
   battle: Battle;
@@ -63,6 +64,14 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
   const [benchSlot, setBenchSlot] = useState<SlotPosition | null>(null);
   const [statsFor, setStatsFor] = useState<SlotRef | null>(null);
   const [statusFor, setStatusFor] = useState<SlotRef | null>(null);
+  // Drives the inline Miss/Crit/No Effect/Blocked confirmation prompt (see
+  // MoveOutcomePrompt.tsx) - set right after logAction resolves for any move
+  // with at least one target. Cleared whenever the user moves on to arming/
+  // picking a different action, so a stale prompt for an earlier move can't
+  // linger once attention has moved elsewhere.
+  const [pendingOutcomes, setPendingOutcomes] = useState<{
+    actionId: string; move: string; moveCategory?: 'physical' | 'special' | 'status'; targets: SlotRef[];
+  } | null>(null);
 
   // Slot-aligned, not compacted - index 0/1 must stay pinned to the
   // persisted left/right position even when one side is empty (`null`),
@@ -91,7 +100,7 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
     const effectiveness = pendingTarget.isDamaging && pendingTarget.moveType
       ? computeMoveEffectiveness(battle, pendingTarget.moveType, [clicked])
       : undefined;
-    await battleLogActions.logAction(battle, {
+    const actionId = await battleLogActions.logAction(battle, {
       side: pendingTarget.side,
       pokemonId: pendingTarget.pokemonId,
       move: pendingTarget.move,
@@ -102,11 +111,15 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
       moveCategory: pendingTarget.moveCategory,
       statusAilment: pendingTarget.statusAilment,
     });
+    if (actionId) {
+      setPendingOutcomes({ actionId, move: pendingTarget.move, moveCategory: pendingTarget.moveCategory, targets: [clicked] });
+    }
     setPendingTarget(null);
   };
 
   const handleMovePicked = async (side: BattleSide, pokemonId: string, move: string) => {
     setArmed(null);
+    setPendingOutcomes(null);
     const moveData = gameDataState.getCachedMove(move) ?? await gameDataState.getMoveData(move);
     const category = getTargetCategory(moveData?.target, move);
     const isDamaging = !!moveData && moveData.category !== 'status';
@@ -117,14 +130,17 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
     const oppActive = compactActiveIds(oppSide === 'player' ? battle.playerActiveIds : battle.opponentActiveIds);
     const allyIds = sameSideActive.filter(id => id !== pokemonId);
 
-    const logWithTargets = (target: SlotRef[]) => {
+    const logWithTargets = async (target: SlotRef[]) => {
       const effectiveness = isDamaging && moveData ? computeMoveEffectiveness(battle, moveData.type, target) : undefined;
-      return battleLogActions.logAction(battle, {
+      const actionId = await battleLogActions.logAction(battle, {
         side, pokemonId, move, target, phase: 'move', effectiveness,
         moveType: moveData?.type,
         moveCategory: moveData?.category,
         statusAilment,
       });
+      if (actionId && target.length > 0) {
+        setPendingOutcomes({ actionId, move, moveCategory: moveData?.category, targets: target });
+      }
     };
 
     if (category === 'self') return void logWithTargets([{ side, pokemonId }]);
@@ -157,6 +173,7 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
   const openBenchPicker = (side: BattleSide, slotIndex: number) => {
     setArmed(null);
     setPendingTarget(null);
+    setPendingOutcomes(null);
     setStatsFor(null);
     setStatusFor(null);
     setBenchSlot(prev => prev && prev.side === side && prev.index === slotIndex ? null : { side, index: slotIndex });
@@ -175,12 +192,14 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
     setBenchSlot(null);
     setStatsFor(null);
     setStatusFor(null);
+    setPendingOutcomes(null);
     setArmed(prev => prev && prev.side === side && prev.pokemonId === pokemonId ? null : { side, pokemonId });
   };
 
   /** Full Paralysis/Didn't Wake Up/Flinched - a turn where no move happened at all, so this bypasses handleMovePicked's move-data/targeting resolution entirely and consumes the turn the same way a real move would (canActThisTurn keys off phase:'move' either way). */
   const handleLogNoAction = (side: BattleSide, pokemonId: string, note: string) => {
     setArmed(null);
+    setPendingOutcomes(null);
     void battleLogActions.logAction(battle, { side, pokemonId, phase: 'move', note });
   };
 
@@ -234,6 +253,18 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
           Choose a target for {pendingTarget.move}...
           <button type="button" onClick={() => setPendingTarget(null)} className="text-yellow-400 hover:text-yellow-200 cursor-pointer">Cancel</button>
         </div>
+      )}
+
+      {pendingOutcomes && lastTurn?.actions.some(a => a.id === pendingOutcomes.actionId) && (
+        <MoveOutcomePrompt
+          battle={battle}
+          battleLogActions={battleLogActions}
+          move={pendingOutcomes.move}
+          moveCategory={pendingOutcomes.moveCategory}
+          actionId={pendingOutcomes.actionId}
+          targets={pendingOutcomes.targets}
+          onClose={() => setPendingOutcomes(null)}
+        />
       )}
 
       <FieldWeatherBar battle={battle} battleLogActions={battleLogActions} />
