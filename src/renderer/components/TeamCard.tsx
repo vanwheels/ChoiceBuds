@@ -278,7 +278,16 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 w-full">
+          {/* Fluid auto-fill instead of fixed breakpoint column counts (previously
+              grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6) - the old
+              xl:grid-cols-6 forced exactly 6 equal-width tracks the instant raw
+              viewport width crossed 1280px, without accounting for the sidebar/
+              padding eating into the actual content area, squishing every card
+              (and truncating nature/EV text) well below its comfortable 280px
+              width on any window from ~1280px up to even 1920px+. auto-fill lets
+              the browser fit as many real ~280px-wide tracks as the container
+              actually has room for, at any window size. */}
+          <div className="grid gap-4 w-full" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 280px))' }}>
             {team.pokemon && team.pokemon.map((p, idx) => (
               <PokemonCard
                 key={`${idx}-${p.importedAt}`}

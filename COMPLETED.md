@@ -5,6 +5,29 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Teams page: fixed squished/truncated Pokemon-card grid on wide windows**
+  (2026-07-15) - reported live while a dev instance was up: an expanded
+  team's Pokemon cards were rendering with truncated nature names ("S...
+  (+SpD, -Spe)" instead of "Sassy (+SpD, -Spe)") and EV numbers overflowing
+  their boxes. Root cause: `TeamCard.tsx`'s grid used
+  `xl:grid-cols-6`, forcing exactly 6 equal-width tracks the instant raw
+  viewport width crossed Tailwind's 1280px `xl` breakpoint, without
+  accounting for the sidebar/padding eating into the real content area -
+  squished every ~280px-designed card down to ~135px on both the app's own
+  1280x720 minimum window size context (content area, not raw viewport) and
+  even a full 1920x1080 window. Confirmed via `git log` this predated
+  today's work entirely - nothing in this session had touched that file's
+  grid classes before the fix. Reproduced with a disposable Electron launch
+  + a real 6-Pokemon import at both 1280x720 and 1920x1080 before touching
+  any code, to nail the exact cause rather than guess. Fixed by replacing
+  the fixed breakpoint column classes with a fluid
+  `repeat(auto-fill, minmax(240px, 280px))` grid (inline `style`, matching
+  `StatsColumn.tsx`'s existing precedent for CSS grid Tailwind can't express
+  as a utility class) - the browser now fits as many real ~280px cards as
+  actually have room, at any window size, instead of forcing a fixed count.
+  Re-verified the same reproduction at both sizes post-fix: no more
+  truncation or overflow at either.
+
 - **Teams page: strategy notes UI + shareable team image export** (2026-07-15)
   - inspired by a look at community VGC tools (VGC Helper, Pikalytics'
     team builder) the user asked about; concluded a public team-library/
