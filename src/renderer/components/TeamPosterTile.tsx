@@ -70,7 +70,9 @@ export default function TeamPosterTile({ pokemon, gameDataState, spriteCacheStat
         <span className="text-[11px] text-zinc-500 italic truncate w-full text-center">{showdownData.ability}</span>
       )}
 
-      <div className="grid grid-cols-2 gap-1 w-full min-w-0">
+      {/* One move per row (not the old 2x2 grid) - a move chip's full width is now the whole
+          tile instead of half of it, which fits nearly every move name without truncating. */}
+      <div className="flex flex-col gap-1 w-full min-w-0">
         {showdownData.moves.map((move, idx) => {
           const theme = getTypeTheme(gameDataState.getCachedMove(move)?.type ?? '');
           return (
