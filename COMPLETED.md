@@ -5,6 +5,46 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Battle Logger: multi-hit move logging (part 3 of the Miss/Crit/No
+  Effect/Blocked redesign)** (2026-07-16): logs how many hits actually
+  connected for Bullet Seed/Population Bomb/Triple Axel/etc.
+  `scripts/generateMultiHitMoves.ts` (new, mirrors the existing
+  `generateMoveFlags.ts` pattern) extracts every Gen 9 multi-hit move's hit
+  range straight from `@smogon/calc`'s bundled Showdown movedex - the same
+  data source already trusted for move flags - into
+  `config/multiHitMoves.generated.ts` (31 moves). The thin wrapper
+  `config/multiHitMoves.ts::getMultiHitRange` normalizes a `multihit`
+  fixed-count-with-`multiaccuracy` move (Triple Kick/Axel, Population Bomb -
+  each hit rolls its own accuracy) down to `{min: 1, max}` rather than
+  treating the max as a guaranteed count, since any hit after the first can
+  independently miss; every other multi-hit move gets its real min (a
+  single accuracy check covers the whole flurry). Beat Up is deliberately
+  excluded - its hit count is dynamic (one per uninflicted/unfainted/
+  non-status teammate), not a static range. `types/pokemon.ts`'s
+  `BattleAction` gained `hitsLanded?: {pokemonId, hits}[]`, same per-target
+  shape as `outcomes`; `useBattleLogActions.ts::setActionHitsLanded` sets/
+  clears it, and `setActionTargetOutcome` now also strips a target's
+  `hitsLanded` entry whenever its outcome is set to miss/no-effect/blocked
+  (0 hits landed either way, so the two fields can't disagree).
+  `MoveOutcomePrompt.tsx` shows a "Hits: N" button row per target
+  (`hitRange.min`-`hitRange.max`) whenever the logged move is multi-hit and
+  that target isn't already tagged miss/no-effect/blocked; `TurnLog.tsx`
+  renders the confirmed count read-only as "(xN hits)". Live-verified via
+  `run-desktop` end-to-end with a disposable team/battle (Cacturne w/
+  Bullet Seed, Rillaboom w/ Population Bomb vs. a Venusaur opponent):
+  Bullet Seed's picker rendered exactly buttons 2/3/4/5, Population Bomb's
+  rendered exactly 1-10, and picking 7 for Population Bomb persisted and
+  rendered as "Rillaboom used Population Bomb on Venusaur (x7 hits)" in
+  the turn log; the disposable battle and team were deleted afterward,
+  confirmed via `teams.json`/`battles.json` back to only the real data.
+  (One process note from the live-testing pass, not a product bug: firing
+  two `RosterRow` "bring" clicks as fast sequential driver commands can
+  still race off a stale `battle` closure the same way `revealBlockingAbility`'s
+  header comment already describes for a different action - waiting for
+  each click's DOM confirmation before the next avoided it. Not a code
+  defect to fix, just a note for scripting future live tests through this
+  same click-to-log flow.)
+
 - **Battle Logger: ability-based blocking (part 2 of the Miss/Crit/No
   Effect/Blocked redesign)** (2026-07-16, resumed from a prior session's
   scoping/research pause - see COMPLETED.md's earlier "Record scoping

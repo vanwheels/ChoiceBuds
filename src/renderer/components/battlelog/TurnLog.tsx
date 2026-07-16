@@ -71,12 +71,14 @@ export default function TurnLog({ battle, battleLogActions, onReviewInCalc }: Tu
                         {action.target.map((t, i) => {
                           const effLabel = effectivenessLabel(action.effectiveness?.find(e => e.pokemonId === t.pokemonId)?.multiplier);
                           const outLabel = outcomeLabel(action.outcomes?.find(o => o.pokemonId === t.pokemonId)?.result);
+                          const hits = action.hitsLanded?.find(h => h.pokemonId === t.pokemonId)?.hits;
                           return (
                             <span key={`${t.side}-${t.pokemonId}`}>
                               {i > 0 && ' and '}
                               {battlePokemonDisplayName(battle, t.side, t.pokemonId)}
                               {effLabel && <span className={`text-xs ${effLabel.className}`}> ({effLabel.text})</span>}
                               {outLabel && <span className={`text-xs ${outLabel.className}`}> ({outLabel.text})</span>}
+                              {hits != null && <span className="text-xs text-gray-500"> (x{hits} hits)</span>}
                             </span>
                           );
                         })}

@@ -235,6 +235,16 @@ export interface BattleAction {
   // Bulletproof, or any no-effect result on a status move, which gets no
   // `effectiveness` entry at all since that field is damaging-move-only).
   outcomes?: { pokemonId: string; result: 'crit' | 'miss' | 'no-effect' | 'blocked-ability' }[];
+  // How many times a multi-hit move (Bullet Seed, Population Bomb, Triple
+  // Axel, etc. - see config/multiHitMoves.ts) actually connected against a
+  // given target, manually confirmed same as `outcomes` above. No entry =
+  // not recorded (either the move isn't multi-hit, or the user hasn't
+  // logged a count yet) - never inferred from the move's own hit range,
+  // since the real count is random per use. Not meaningful alongside a
+  // 'miss'/'no-effect'/'blocked-ability' outcome for the same target (0
+  // hits landed either way) - see setActionTargetOutcome's clearing of
+  // this on those results.
+  hitsLanded?: { pokemonId: string; hits: number }[];
   // The move's type/damage-class, snapshotted at log time (same pattern as
   // effectiveness above) - lets utils/battleLookup.ts's hit-reactive-ability
   // check (config/hitReactiveAbilities.ts) work from the stored action alone

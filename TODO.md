@@ -24,13 +24,8 @@ focused on what's actually next.
      COMPLETED.md for the implementation trail, the deliberately-excluded
      ability categories, and a pre-existing (not introduced by this change)
      stat-drop/auto-apply-ordering gap surfaced while live-testing it.
-  3. **Not started** - multi-hit move logging (Population Bomb, Triple
-     Axel, Bullet Seed, etc.) - log how many hits actually connected.
-     Nothing exists for this in the Battle Logger yet (the Calc page's
-     damage calculator handles multi-hit separately, unrelated). Needs a
-     new static lookup table (hit-count range per move, same convention as
-     `config/protectMoves.ts`) plus a new field to record hits-landed per
-     use and a small UI to enter it.
+  3. **Done (2026-07-16)** - multi-hit move logging (Population Bomb,
+     Triple Axel, Bullet Seed, etc.). See COMPLETED.md.
 
 - **Top priority for next macOS session: build + verify + publish the Mac
   installer** (raised 2026-07-09): Windows now has a real, verified,

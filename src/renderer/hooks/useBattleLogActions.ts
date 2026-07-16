@@ -123,6 +123,7 @@ export interface UseBattleLogActionsReturn {
   setActionFailed: (battle: Battle, turnNumber: number, actionId: string, failed: boolean) => Promise<boolean>;
   setActionTargetOutcome: (battle: Battle, turnNumber: number, actionId: string, pokemonId: string, result: 'crit' | 'miss' | 'no-effect' | 'blocked-ability' | null) => Promise<boolean>;
   revealBlockingAbility: (battle: Battle, opponentId: string, ability: string, turnNumber: number, actionId: string) => Promise<boolean>;
+  setActionHitsLanded: (battle: Battle, turnNumber: number, actionId: string, pokemonId: string, hits: number | null) => Promise<boolean>;
   advanceTurn: (battle: Battle) => Promise<boolean>;
   undoLastAction: (battle: Battle) => Promise<boolean>;
   setResult: (battle: Battle, result: Battle['result']) => Promise<boolean>;
@@ -731,12 +732,45 @@ export function useBattleLogActions(
     pokemonId: string,
     result: 'crit' | 'miss' | 'no-effect' | 'blocked-ability' | null
   ): Promise<boolean> => {
+    // A miss/no-effect/blocked result means 0 hits landed regardless of what
+    // was previously logged for a multi-hit move's hit count - drop any
+    // stale hitsLanded entry for this target so the two fields can't
+    // disagree (e.g. "3 hits" left over after retroactively marking Miss).
+    const clearsHits = result === 'miss' || result === 'no-effect' || result === 'blocked-ability';
     const turns = battle.turns.map(turn => turn.number !== turnNumber ? turn : {
       ...turn,
       actions: turn.actions.map(action => {
         if (action.id !== actionId) return action;
         const outcomes = (action.outcomes ?? []).filter(o => o.pokemonId !== pokemonId);
-        return { ...action, outcomes: result ? [...outcomes, { pokemonId, result }] : outcomes };
+        return {
+          ...action,
+          outcomes: result ? [...outcomes, { pokemonId, result }] : outcomes,
+          hitsLanded: clearsHits ? (action.hitsLanded ?? []).filter(h => h.pokemonId !== pokemonId) : action.hitsLanded,
+        };
+      }),
+    });
+    return updateBattle(battle.id, { turns });
+  }, [updateBattle]);
+
+  /**
+   * Powers MoveOutcomePrompt.tsx's "Hits: N" picker for multi-hit moves
+   * (config/multiHitMoves.ts) - same set/replace/clear-on-null shape as
+   * setActionTargetOutcome above, just a numeric count instead of an
+   * outcome enum.
+   */
+  const setActionHitsLanded = useCallback(async (
+    battle: Battle,
+    turnNumber: number,
+    actionId: string,
+    pokemonId: string,
+    hits: number | null
+  ): Promise<boolean> => {
+    const turns = battle.turns.map(turn => turn.number !== turnNumber ? turn : {
+      ...turn,
+      actions: turn.actions.map(action => {
+        if (action.id !== actionId) return action;
+        const hitsLanded = (action.hitsLanded ?? []).filter(h => h.pokemonId !== pokemonId);
+        return { ...action, hitsLanded: hits != null ? [...hitsLanded, { pokemonId, hits }] : hitsLanded };
       }),
     });
     return updateBattle(battle.id, { turns });
@@ -943,6 +977,7 @@ export function useBattleLogActions(
     logAction,
     setActionFailed,
     setActionTargetOutcome,
+    setActionHitsLanded,
     revealBlockingAbility,
     advanceTurn,
     undoLastAction,

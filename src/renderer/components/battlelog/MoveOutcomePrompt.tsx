@@ -25,6 +25,14 @@
  * function's own header comment). Player targets never need this picker -
  * their own team's ability is already known from the roster snapshot,
  * never unrevealed.
+ *
+ * For a multi-hit move (config/multiHitMoves.ts), each target row also gets
+ * a "Hits: N" picker spanning the move's real min-max hit range, since the
+ * actual count is random (or, for `multiaccuracy` moves, independently
+ * rolled per hit) and can't be inferred from the move name alone. Hidden
+ * once that target's outcome is Miss/No Effect/Blocked - those already mean
+ * 0 hits landed, so a hit count would be redundant (and setActionTargetOutcome
+ * clears any stale one on those results).
  */
 
 import { useEffect, useState } from 'react';
@@ -33,6 +41,7 @@ import type { UseBattleLogActionsReturn } from '../../hooks/useBattleLogActions'
 import type { UseGameDataReturn } from '../../hooks/useGameData';
 import { battlePokemonDisplayName } from '../../utils/battleLookup';
 import { abilitiesThatCouldBlock } from '../../config/moveBlockingAbilities';
+import { getMultiHitRange } from '../../config/multiHitMoves';
 import { formatAbilityName } from './OpponentRowFields';
 
 type OutcomeResult = 'crit' | 'miss' | 'no-effect' | 'blocked-ability';
@@ -96,6 +105,7 @@ const OUTCOME_BUTTONS: { key: OutcomeResult; label: string; activeClass: string 
 export default function MoveOutcomePrompt({ battle, battleLogActions, gameDataState, move, moveCategory, actionId, targets, onClose }: MoveOutcomePromptProps) {
   const action = battle.turns.flatMap(t => t.actions).find(a => a.id === actionId);
   const turnNumber = battle.turns.length;
+  const hitRange = getMultiHitRange(move);
 
   const revealAndBlock = (opponent: OpponentPokemonEntry, ability: string) => {
     battleLogActions.revealBlockingAbility(battle, opponent.id, ability, turnNumber, actionId);
@@ -108,6 +118,8 @@ export default function MoveOutcomePrompt({ battle, battleLogActions, gameDataSt
         {targets.map(t => {
           const outcome = action?.outcomes?.find(o => o.pokemonId === t.pokemonId)?.result ?? null;
           const opponent = t.side === 'opponent' ? battle.opponentRoster.find(o => o.id === t.pokemonId) : undefined;
+          const hits = action?.hitsLanded?.find(h => h.pokemonId === t.pokemonId)?.hits ?? null;
+          const showHitPicker = hitRange && outcome !== 'miss' && outcome !== 'no-effect' && outcome !== 'blocked-ability';
           return (
             <div key={`${t.side}-${t.pokemonId}`} className="flex items-center gap-1.5">
               <span className={`text-[11px] w-24 truncate ${t.side === 'player' ? 'text-blue-300' : 'text-red-300'}`}>
@@ -125,6 +137,23 @@ export default function MoveOutcomePrompt({ battle, battleLogActions, gameDataSt
                   {b.label}
                 </button>
               ))}
+              {showHitPicker && (
+                <div className="flex items-center gap-0.5">
+                  <span className="text-[9px] text-gray-500">Hits:</span>
+                  {Array.from({ length: hitRange.max - hitRange.min + 1 }, (_, i) => hitRange.min + i).map(n => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => battleLogActions.setActionHitsLanded(battle, turnNumber, actionId, t.pokemonId, hits === n ? null : n)}
+                      className={`text-[9px] w-4 h-4 rounded cursor-pointer transition-colors ${
+                        hits === n ? 'bg-blue-900/70 text-blue-300' : 'bg-gray-800 text-gray-400 hover:text-gray-200 hover:bg-gray-700'
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              )}
               {opponent && !opponent.ability && (
                 <UnrevealedAbilityPicker
                   opponent={opponent}
