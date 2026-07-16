@@ -18,6 +18,10 @@ interface TeamPosterTileProps {
   pokemon: ImportedPokemonInfo;
   gameDataState: UseGameDataReturn;
   spriteCacheState: UseSpriteCacheReturn;
+  /** Open Team Sheet shows the Stat Alignment line (Nature + EV spread) below the
+   * moves, matching what a real VGC Open Team Sheet reveals; Closed hides it, since
+   * a Closed Team Sheet reveals species/item/ability/moves but never Stat Alignment. */
+  showStatAlignment: boolean;
 }
 
 const EV_STAT_LABELS: Array<{ key: keyof ImportedPokemonInfo['showdownData']['evs']; label: string }> = [
@@ -36,7 +40,7 @@ function formatEVs(evs: ImportedPokemonInfo['showdownData']['evs']): string {
     .join(' / ');
 }
 
-export default function TeamPosterTile({ pokemon, gameDataState, spriteCacheState }: TeamPosterTileProps) {
+export default function TeamPosterTile({ pokemon, gameDataState, spriteCacheState, showStatAlignment }: TeamPosterTileProps) {
   const { showdownData, pokedexNumber } = pokemon;
   const spriteUrl = getPixelSpriteUrl(pokedexNumber, showdownData.species, showdownData.gender || 'M', showdownData.shiny);
   const itemData = showdownData.item ? gameDataState.getCachedItem(showdownData.item) : null;
@@ -77,7 +81,7 @@ export default function TeamPosterTile({ pokemon, gameDataState, spriteCacheStat
         })}
       </div>
 
-      {(showdownData.nature || evLine) && (
+      {showStatAlignment && (showdownData.nature || evLine) && (
         <p className="text-[10px] text-zinc-500 text-center w-full">
           {showdownData.nature ? `${showdownData.nature} - ` : ''}{evLine}
         </p>

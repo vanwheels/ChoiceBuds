@@ -259,30 +259,6 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
           280px columns. */}
       {isExpanded && (
         <div className="@container p-6 border-t border-zinc-800/60 bg-zinc-900/10 rounded-b-xl">
-          {/* Strategy Notes - team-level free text (Team.notes), same "local state + save
-              on blur" pattern as the name/author fields above. Hidden entirely when not
-              editing and no notes are set, same as the author field's empty-chrome rule. */}
-          {(isEditingTeam || team.notes) && (
-            <div className="mb-4">
-              {isEditingTeam ? (
-                <textarea
-                  value={localNotes}
-                  onChange={(e) => setLocalNotes(e.target.value)}
-                  onBlur={async () => {
-                    if (localNotes !== (team.notes || '')) {
-                      await updateTeam(team.id, { notes: localNotes.trim() || undefined });
-                    }
-                  }}
-                  placeholder="Strategy notes, game plan, matchup tips..."
-                  rows={3}
-                  className="w-full px-3 py-2 text-sm bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-600 outline-none focus:border-blue-500 resize-y"
-                />
-              ) : (
-                <p className="text-sm text-zinc-400 whitespace-pre-wrap border-l-2 border-zinc-700 pl-3">{team.notes}</p>
-              )}
-            </div>
-          )}
-
           {/* Two clean states, not a continuous reflow: 3 columns (2x3 for a full
               6-mon roster) until the container itself is wide enough for 6 real
               ~280px columns (6*280px + 5*1rem gaps = 1760px), then snaps to 6 (1x6).
@@ -325,6 +301,32 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
               )
             )}
           </div>
+
+          {/* Strategy Notes - team-level free text (Team.notes), same "local state + save
+              on blur" pattern as the name/author fields above. Hidden entirely when not
+              editing and no notes are set, same as the author field's empty-chrome rule.
+              Placed after the roster grid (not before) so the team's visual composition
+              is always the first thing seen when expanding a card. */}
+          {(isEditingTeam || team.notes) && (
+            <div className="mt-4">
+              {isEditingTeam ? (
+                <textarea
+                  value={localNotes}
+                  onChange={(e) => setLocalNotes(e.target.value)}
+                  onBlur={async () => {
+                    if (localNotes !== (team.notes || '')) {
+                      await updateTeam(team.id, { notes: localNotes.trim() || undefined });
+                    }
+                  }}
+                  placeholder="Strategy notes, game plan, matchup tips..."
+                  rows={3}
+                  className="w-full px-3 py-2 text-sm bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-600 outline-none focus:border-blue-500 resize-y"
+                />
+              ) : (
+                <p className="text-sm text-zinc-400 whitespace-pre-wrap border-l-2 border-zinc-700 pl-3">{team.notes}</p>
+              )}
+            </div>
+          )}
         </div>
       )}
 

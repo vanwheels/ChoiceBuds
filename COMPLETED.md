@@ -5,6 +5,54 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Teams page polish batch** (2026-07-16, 5 items raised together from a
+  manual-testing session):
+  1. Team notes (`TeamCard.tsx` expanded view) moved from above the roster
+     grid to below it, so the team's visual composition is always the first
+     thing seen on expand.
+  2. `TeamExportImageModal.tsx`: notes are no longer always baked into the
+     exported poster (a long note was stretching the fixed-width grid) -
+     now an opt-in "Include notes" checkbox (default off), and when
+     included, rendered below the roster grid instead of above it, same
+     rationale as item 1.
+  3. `TeamExportImageModal.tsx`/`TeamPosterTile.tsx`: added an Open/Closed
+     Team Sheet toggle (default Open, matching prior always-shown
+     behavior). Closed hides each Pokemon's Stat Alignment line (Nature +
+     EV/Stat-Point spread) - confirmed with the user this matches real VGC
+     Team Sheets, which never publish Stat Alignment even under Open Team
+     Sheet rules (that only covers species/item/ability/moves/Tera). Both
+     toggle controls live outside the `posterRef` node so they never get
+     rasterized into the exported PNG itself.
+  4. Fixed freshly-added Pokemon (via the `+ Add Pokémon` picker or
+     swapping a roster slot's species) getting default ability/moves stored
+     as raw PokeAPI slugs ("rock-head", "iron-head") instead of display
+     text ("Rock Head", "Iron Head"), which failed legality validation
+     downstream. Root cause: `useRosterActions.ts::buildSlot` wrote
+     `getEnrichedSpeciesOptions`'s move/ability `.name` fields directly into
+     `showdownData` without the `toReadableName()` conversion every other
+     path into that field already applies (pasted Showdown text is already
+     Title Case; `EditOverlays.tsx`'s manual ability/move picker already
+     calls `toReadableName` - only this auto-population path was missed).
+  5. Auto-detect + correct a specific Showdown-export shape: some export
+     tools name a Mega-Evolved set after its Mega form (e.g.
+     "Aerodactyl-Mega") rather than the base species holding the Mega Stone
+     - not a real standalone species, since Mega Evolution only happens
+     in-battle, so a set imported that way failed team validation. New
+     `config/megaEvolution.ts::normalizeMegaSpeciesOnImport` strips a
+     trailing "-Mega"/"-Mega-X"/"-Mega-Y" species suffix back to the base
+     species, but only when the held item is confirmed to be that exact
+     species' own Mega Stone (reusing the existing `MEGA_STONE_TO_SPECIES`
+     table) - a "-Mega" suffix with no matching stone held is left
+     untouched for team validation to flag, not silently guessed at. Wired
+     into `services/parser.ts::parseFirstLine`, run before gender-fallback
+     resolution so that logic sees the corrected base species too.
+     Verified with an ad-hoc parser script (not kept - out of scope for the
+     project's checked-in test): confirmed the exact Aerodactyl-Mega/
+     Aerodactylite case from the user's report normalizes correctly, a
+     Charizardite X case is unaffected (no "-Mega" suffix in that export
+     style to begin with), and a mismatched-stone case ("Gengar-Mega" held
+     Choice Scarf) is correctly left alone.
+
 - **Battle Logger: inline Miss/Crit/No Effect/Blocked confirmation prompt**
   (2026-07-16) - part 1 of a 3-part redesign the user raised (see TODO.md
   for parts 2-3, not yet started). The user felt the per-slot outcome chips

@@ -39,6 +39,14 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isWorking, setIsWorking] = useState(false);
+  // Open Team Sheet mirrors what real VGC Open Team Sheets reveal (species/item/
+  // ability/moves/Tera, never Nature+EVs); Closed hides Stat Alignment too, for a
+  // teammate-facing or pre-tournament-safe share. Defaults to Open since that
+  // matches this modal's pre-existing behavior (nothing was ever hidden before).
+  const [sheetMode, setSheetMode] = useState<'open' | 'closed'>('open');
+  // Notes default off: free-form text of arbitrary length was breaking the poster's
+  // fixed-width grid layout, so it's opt-in per export rather than always-on.
+  const [showNotes, setShowNotes] = useState(false);
   const regulationTheme = getRegulationTheme(toRegulationId(team.format));
 
   const handleCopy = async () => {
@@ -90,6 +98,46 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
           </button>
         </div>
 
+        {/* Poster controls - deliberately OUTSIDE posterRef so they never get rasterized
+            into the exported image itself. */}
+        <div className="px-6 pt-4 flex items-center gap-6 border-b border-gray-700 pb-4">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-gray-400">Team Sheet:</span>
+            <div className="flex rounded-lg overflow-hidden border border-gray-600">
+              <button
+                onClick={() => setSheetMode('open')}
+                title="Shows species, item, ability, moves, and Stat Alignment (Nature + EVs)"
+                className={`px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
+                  sheetMode === 'open' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                Open
+              </button>
+              <button
+                onClick={() => setSheetMode('closed')}
+                title="Hides Stat Alignment (Nature + EVs) - matches a Closed Team Sheet"
+                className={`px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
+                  sheetMode === 'closed' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                Closed
+              </button>
+            </div>
+          </div>
+
+          {team.notes && (
+            <label className="flex items-center gap-2 text-xs font-semibold text-gray-400 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showNotes}
+                onChange={(e) => setShowNotes(e.target.checked)}
+                className="cursor-pointer"
+              />
+              Include notes
+            </label>
+          )}
+        </div>
+
         <div className="flex-1 overflow-y-auto p-6 flex justify-center">
           <div ref={posterRef} className="flex flex-col gap-4 p-6 bg-zinc-900 rounded-lg" style={{ backgroundColor: '#18181b' }}>
             <div className="flex items-center gap-3">
@@ -100,15 +148,24 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
               {team.author && <span className="text-xs text-zinc-500">by {team.author}</span>}
             </div>
 
-            {team.notes && (
-              <p className="text-xs text-zinc-400 whitespace-pre-wrap border-l-2 border-zinc-700 pl-3 max-w-2xl">{team.notes}</p>
-            )}
-
             <div className="grid grid-cols-3 gap-3">
               {team.pokemon.map((pokemon, idx) => (
-                <TeamPosterTile key={idx} pokemon={pokemon} gameDataState={gameDataState} spriteCacheState={spriteCacheState} />
+                <TeamPosterTile
+                  key={idx}
+                  pokemon={pokemon}
+                  gameDataState={gameDataState}
+                  spriteCacheState={spriteCacheState}
+                  showStatAlignment={sheetMode === 'open'}
+                />
               ))}
             </div>
+
+            {/* Notes moved below the roster grid (same rationale as TeamCard.tsx's expanded
+                view) and only rendered when opted in, so a long note can't stretch the
+                fixed-width poster grid above it or dominate the exported image. */}
+            {showNotes && team.notes && (
+              <p className="text-xs text-zinc-400 whitespace-pre-wrap border-l-2 border-zinc-700 pl-3 max-w-2xl">{team.notes}</p>
+            )}
 
             <p className="text-[10px] text-zinc-600 text-right">Exported from ChoiceBuds</p>
           </div>

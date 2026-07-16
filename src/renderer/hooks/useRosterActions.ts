@@ -10,6 +10,7 @@ import type { EVSpread, ImportedPokemonInfo, ShowdownPokemon, Team, PokeAPICache
 import type { UseGameDataReturn } from './useGameData';
 import { enrichPokemonWithAPI } from '../services/pokeapi';
 import { getFallbackGender } from '../config/pokemonRules';
+import { toReadableName } from '../utils/displayName';
 
 const ZERO_EVS: EVSpread = {
   hp: 0,
@@ -37,6 +38,13 @@ export function useRosterActions(
    * Smart Slot Initialization: ability defaults to the species' first legal
    * option, moves to its first 4 legal moves, EVs to zero, item to empty -
    * all sourced from the real per-species learnset, never a fallback list.
+   *
+   * getEnrichedSpeciesOptions' move/ability `.name` is the raw lowercase-hyphenated
+   * PokeAPI slug (e.g. "iron-head"), not display text - every other path into
+   * showdownData.ability/moves (pasted Showdown text, ImportTeamModal) already carries
+   * proper display casing ("Iron Head"), so it has to be converted here too or a
+   * freshly-added Pokemon's defaults fail legality checks that compare against the
+   * Title Case move/ability lists.
    */
   const buildSlot = useCallback(async (species: string): Promise<ImportedPokemonInfo> => {
     const gender = getFallbackGender(species);
@@ -46,13 +54,13 @@ export function useRosterActions(
       species,
       gender,
       item: undefined,
-      ability: abilities[0]?.name,
+      ability: abilities[0] ? toReadableName(abilities[0].name) : undefined,
       level: 50,
       shiny: false,
       gigantamax: false,
       happiness: 255,
       evs: { ...ZERO_EVS },
-      moves: moves.slice(0, 4).map(move => move.name),
+      moves: moves.slice(0, 4).map(move => toReadableName(move.name)),
     };
 
     return enrichPokemonWithAPI(showdownData, getCachedEntry, setCacheEntry);

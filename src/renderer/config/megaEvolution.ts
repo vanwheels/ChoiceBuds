@@ -123,3 +123,32 @@ export function getMegaFormsForSpecies(species: string): { item: string; suffix:
     .filter(([, entry]) => entry.species === normalized)
     .map(([item, entry]) => ({ item, suffix: entry.suffix }));
 }
+
+const MEGA_SPECIES_SUFFIX_PATTERN = /-Mega(-[XY])?$/i;
+
+/**
+ * Showdown exports sometimes list a Mega-Evolved Pokemon's species as its Mega
+ * form (e.g. "Aerodactyl-Mega") rather than the base species holding its Mega
+ * Stone - Mega Evolution isn't a held/set-in-stone form the way a regional
+ * variant is, it only happens in-battle, so a set built that way fails legality
+ * validation (there's no such standalone species). Detects that specific shape
+ * - species name ends in "-Mega"/"-Mega-X"/"-Mega-Y" AND the held item is that
+ * exact base species' own Mega Stone - and returns the corrected base species
+ * name; returns the species unchanged for every other case (including a "-Mega"
+ * suffix with no matching stone held, which is left for team validation to flag
+ * rather than silently guessed at here).
+ */
+export function normalizeMegaSpeciesOnImport(species: string, item: string | undefined): string {
+  if (!item) return species;
+  const match = species.match(MEGA_SPECIES_SUFFIX_PATTERN);
+  if (!match) return species;
+
+  const base = species.slice(0, match.index).trim();
+  if (!base) return species;
+  const suffix = match[1] ? `mega-${match[1].slice(1).toLowerCase()}` : 'mega';
+
+  const entry = MEGA_STONE_TO_SPECIES[item.trim().toLowerCase()];
+  if (!entry || entry.species !== base.toLowerCase() || entry.suffix !== suffix) return species;
+
+  return base;
+}

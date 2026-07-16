@@ -5,6 +5,7 @@
 
 import type { ShowdownPokemon, ParseResult, EVSpread } from '../types/pokemon';
 import { getFallbackGender } from '../config/pokemonRules';
+import { normalizeMegaSpeciesOnImport } from '../config/megaEvolution';
 
 /**
  * Default EV spread (all zeros)
@@ -142,6 +143,14 @@ function parseFirstLine(line: string, pokemon: ShowdownPokemon): void {
   } else {
     pokemon.species = remaining.trim();
   }
+
+  // Showdown exports sometimes name a Mega-Evolved set after its Mega form
+  // (e.g. "Aerodactyl-Mega") instead of the base species holding the Mega
+  // Stone - not a real standalone species, since Mega Evolution only happens
+  // in-battle. Correct it here (before gender fallback, so that logic runs
+  // against the real base species) whenever the held item confirms it's
+  // actually that species' own stone.
+  pokemon.species = normalizeMegaSpeciesOnImport(pokemon.species, pokemon.item);
 
   // Apply gender fallback logic if no explicit gender was provided
   if (!explicitGender && pokemon.species) {

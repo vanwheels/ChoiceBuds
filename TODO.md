@@ -284,6 +284,56 @@ See [COMPLETED.md](COMPLETED.md) for the full log of finished work.
 
 ## Backlog / ideas (not yet scoped, reordered highest-to-lowest priority)
 
+- **VGC Team Sheet PDF auto-fill** (raised 2026-07-16): auto-populate the
+  official Play! Pokémon VGC team list PDF
+  (`pokemon.com/.../play-pokemon-vg-team-list.pdf`) from a saved team, plus
+  player-profile fields (Player Name, Division, etc.) stored once in
+  Settings and reused across every generated sheet. Not started - deliberately
+  scoped as research-only this pass so it doesn't compete with the Teams-page
+  polish batch above.
+  - **Researched 2026-07-16** (WebFetch couldn't parse the PDF's binary
+    stream directly, so it was saved and read locally instead, both as text
+    and rendered page images, plus a byte-level grep for form-field
+    structures):
+    - **Two pages, same 6 Pokémon on both**: page 1 ("For Tournament
+      Staff") adds Player ID, Date of Birth, Support ID on top of what page
+      2 ("For Opponents") has - Player Name, Age Division
+      (Juniors/Seniors/Masters checkboxes), Trainer Name in Game, Battle
+      Team Number/Name, Switch Profile Name.
+    - **Per-Pokemon fields**: Species (free text, "must be listed exactly
+      as they appear in the Battle Team" - so gender-divergent forms like
+      "Indeedee-F" go in this one field), Stat Alignment (single text
+      line), Ability, Held Item, Move 1-4. Page 1 additionally has a
+      compact per-stat numeric side-table (HP/Atk/Def/SpA/SpD/Spe) next to
+      those rows for staff to write in the actual point values.
+    - **Not on the sheet at all**: Nature (superseded by Stat Alignment
+      under the current ruleset - EVs/IVs are gone, replaced by 66 Stat
+      Points distributed across 6 stats, max 32/stat, matching what this
+      app already calls "EVs"), Tera Type, Level, Gender, Shiny. Worth
+      double-checking against a real filled example before building -
+      Tera Type's total absence in particular is surprising for a modern
+      VGC sheet and would be a real gap in the feature if confirmed, not
+      just an oversight in this pass's research.
+    - **6 slots per page** (2-col x 3-row grid) - this is team
+      registration size (the full Battle Team), not a separate
+      battle-selection count; the 4-of-6 in-game selection happens
+      digitally, not on paper.
+    - **Fillability - the hard part**: byte-level inspection found zero
+      `/AcroForm`, `/Widget`, `/FT`, `/Annots`, or `/XFA` markers - this is
+      a fully static/flat PDF (vector-drawn Calibri text, no form fields at
+      all), not an AcroForm. Auto-fill therefore can't use a "set named
+      field value" approach at all - it needs either (a) overlaying text at
+      fixed x/y coordinates on top of the existing static page (e.g. via
+      `pdf-lib`'s `drawText`, coordinates measured once per page since page
+      1 and page 2 have slightly different row layouts - brittle to any
+      future redesign of the official form), or (b) fully redrawing an
+      equivalent layout from scratch as a new PDF. Needs a decision between
+      those two before implementation starts; (a) is less work but silently
+      breaks if Play! Pokémon revises the official form's layout, (b) is
+      more work but self-contained and immune to that.
+
+
+
 - ~~Electron is well behind current~~ **Done 2026-07-13** - bumped
   `^28.0.0` → `^43.0.0` (see COMPLETED.md). Dev tooling (Vite/TypeScript/
   ESLint) is still behind and intentionally deferred as a separate pass -
