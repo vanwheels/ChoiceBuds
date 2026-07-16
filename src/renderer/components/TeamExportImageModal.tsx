@@ -139,13 +139,15 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 flex justify-center">
-          {/* Fixed width (not just max-w) so every child - title row, roster grid, notes,
-              footer - stretches to the exact same width via flex's default cross-axis
-              stretch, rather than the box's own width drifting to whichever child happens
-              to be widest (the roster grid used to implicitly set it, which broke down
-              once notes needed to fit the same box too). Sized for 6 poster tiles in one
-              row (matching a real Team Sheet, not a cramped 2-row grid). */}
-          <div ref={posterRef} className="flex flex-col gap-4 p-6 bg-zinc-900 rounded-lg w-[960px]" style={{ backgroundColor: '#18181b' }}>
+          {/* w-full (not a fixed px width, and not left to hug its widest child either) so
+              every child - title row, roster grid, notes, footer - stretches to the exact
+              same width via flex's default cross-axis stretch, bounded strictly by this
+              modal's own max-w-6xl/padding. A prior fixed-960px version could still overflow
+              at the app's enforced 1280x720 minimum window size depending on OS chrome/DPI;
+              w-full can't overflow its parent by construction, and uses whatever width is
+              actually available - which also makes the poster tiles as big as the window
+              allows, reducing move-name truncation instead of being capped arbitrarily. */}
+          <div ref={posterRef} className="flex flex-col gap-4 p-6 bg-zinc-900 rounded-lg w-full" style={{ backgroundColor: '#18181b' }}>
             <div className="flex items-center gap-3">
               <h3 className="text-lg font-bold text-zinc-100">{team.name}</h3>
               <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded text-white ${regulationTheme.badgeBg}`}>

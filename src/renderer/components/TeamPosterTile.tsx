@@ -58,11 +58,11 @@ export default function TeamPosterTile({ pokemon, gameDataState, spriteCacheStat
       </p>
 
       {showdownData.item && (
-        <div className="flex items-center gap-1.5 w-full justify-center">
+        <div className="flex items-center gap-1.5 w-full min-w-0 justify-center">
           {itemData?.spriteUrl && (
-            <img src={spriteCacheState.resolveSprite(itemData.spriteUrl)} alt={showdownData.item} className="w-5 h-5 object-contain [image-rendering:pixelated]" />
+            <img src={spriteCacheState.resolveSprite(itemData.spriteUrl)} alt={showdownData.item} className="w-5 h-5 object-contain [image-rendering:pixelated] shrink-0" />
           )}
-          <span className="text-[11px] text-zinc-400 truncate">{showdownData.item}</span>
+          <span className="text-[11px] text-zinc-400 truncate min-w-0">{showdownData.item}</span>
         </div>
       )}
 
@@ -70,11 +70,11 @@ export default function TeamPosterTile({ pokemon, gameDataState, spriteCacheStat
         <span className="text-[11px] text-zinc-500 italic truncate w-full text-center">{showdownData.ability}</span>
       )}
 
-      <div className="grid grid-cols-2 gap-1 w-full">
+      <div className="grid grid-cols-2 gap-1 w-full min-w-0">
         {showdownData.moves.map((move, idx) => {
           const theme = getTypeTheme(gameDataState.getCachedMove(move)?.type ?? '');
           return (
-            <div key={idx} className={`text-[10px] font-bold text-center rounded px-1 py-1 truncate ${theme.bg} ${theme.text}`}>
+            <div key={idx} className={`text-[10px] font-bold text-center rounded px-1 py-1 truncate min-w-0 ${theme.bg} ${theme.text}`}>
               {move}
             </div>
           );
