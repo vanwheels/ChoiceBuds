@@ -6,15 +6,17 @@
  * math; see each battleStats.ts function for specifics.
  */
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { UseBattlesReturn } from '../../hooks/useBattles';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
+import { getSeasonForDate } from '../../config/seasons';
 import {
   getOverallRecord,
   getRecordByFormat,
   getRecordByTeam,
   getRecordByOpponent,
   getRecordBySeason,
+  getSeasonsWithBattles,
   getSetRecord,
   getRecentForm,
   getMostUsedPokemon,
@@ -31,20 +33,34 @@ interface StatisticsPageProps {
   spriteCacheState: UseSpriteCacheReturn;
 }
 
+const ALL_SEASONS = 'All';
+
 export default function StatisticsPage({ battlesState, spriteCacheState }: StatisticsPageProps) {
   const { battles } = battlesState;
+  const [seasonFilter, setSeasonFilter] = useState<string>(ALL_SEASONS);
 
-  const overallRecord = useMemo(() => getOverallRecord(battles), [battles]);
-  const setRecord = useMemo(() => getSetRecord(battles), [battles]);
-  const recordByFormat = useMemo(() => getRecordByFormat(battles), [battles]);
-  const recordByTeam = useMemo(() => getRecordByTeam(battles), [battles]);
-  const recordByOpponent = useMemo(() => getRecordByOpponent(battles), [battles]);
+  const availableSeasons = useMemo(() => getSeasonsWithBattles(battles), [battles]);
+  const filterOptions = useMemo(
+    () => [{ id: ALL_SEASONS, label: ALL_SEASONS }, ...availableSeasons.map(s => ({ id: s.id, label: s.label }))],
+    [availableSeasons]
+  );
+
+  const filteredBattles = useMemo(
+    () => seasonFilter === ALL_SEASONS ? battles : battles.filter(b => getSeasonForDate(b.date)?.id === seasonFilter),
+    [battles, seasonFilter]
+  );
+
+  const overallRecord = useMemo(() => getOverallRecord(filteredBattles), [filteredBattles]);
+  const setRecord = useMemo(() => getSetRecord(filteredBattles), [filteredBattles]);
+  const recordByFormat = useMemo(() => getRecordByFormat(filteredBattles), [filteredBattles]);
+  const recordByTeam = useMemo(() => getRecordByTeam(filteredBattles), [filteredBattles]);
+  const recordByOpponent = useMemo(() => getRecordByOpponent(filteredBattles), [filteredBattles]);
   const recordBySeason = useMemo(() => getRecordBySeason(battles), [battles]);
-  const recentForm = useMemo(() => getRecentForm(battles), [battles]);
-  const mostUsedPokemon = useMemo(() => getMostUsedPokemon(battles), [battles]);
-  const mostFacedOpponents = useMemo(() => getMostFacedOpponents(battles), [battles]);
+  const recentForm = useMemo(() => getRecentForm(filteredBattles), [filteredBattles]);
+  const mostUsedPokemon = useMemo(() => getMostUsedPokemon(filteredBattles), [filteredBattles]);
+  const mostFacedOpponents = useMemo(() => getMostFacedOpponents(filteredBattles), [filteredBattles]);
 
-  if (overallRecord.total === 0) {
+  if (battles.length === 0) {
     return (
       <div className="flex flex-col gap-4">
         <h1 className="text-xl font-bold text-gray-100">Statistics</h1>
@@ -57,6 +73,24 @@ export default function StatisticsPage({ battlesState, spriteCacheState }: Stati
     <div className="flex flex-col gap-4">
       <h1 className="text-xl font-bold text-gray-100">Statistics</h1>
 
+      {availableSeasons.length > 1 && (
+        <div className="flex gap-2 flex-wrap">
+          {filterOptions.map(option => (
+            <button
+              key={option.id}
+              onClick={() => setSeasonFilter(option.id)}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                seasonFilter === option.id
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       <OverallRecordCard record={overallRecord} />
       {setRecord.total > 0 && <OverallRecordCard record={setRecord} unitLabel="set" />}
       <RecentFormStrip form={recentForm} />
@@ -65,7 +99,9 @@ export default function StatisticsPage({ battlesState, spriteCacheState }: Stati
         <BreakdownPanel title="By Format" records={recordByFormat} emptyMessage="No completed battles yet." />
         <BreakdownPanel title="By Team" records={recordByTeam} emptyMessage="No completed battles yet." />
         <BreakdownPanel title="By Opponent" records={recordByOpponent} emptyMessage="No named opponents logged yet." />
-        <BreakdownPanel title="By Season" records={recordBySeason} emptyMessage="No battles logged during a known season yet." />
+        {seasonFilter === ALL_SEASONS && (
+          <BreakdownPanel title="By Season" records={recordBySeason} emptyMessage="No battles logged during a known season yet." />
+        )}
         <PokemonUsagePanel stats={mostUsedPokemon} resolveSprite={spriteCacheState.resolveSprite} />
         <OpponentFacedPanel stats={mostFacedOpponents} resolveSprite={spriteCacheState.resolveSprite} />
       </div>

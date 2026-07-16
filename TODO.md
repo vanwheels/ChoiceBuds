@@ -82,11 +82,10 @@ focused on what's actually next.
 - **Season-level breakdowns (Statistics page)**: a "By Season" breakdown
   panel is done (2026-07-13, see COMPLETED.md) - derives each battle's
   season from its existing `date` timestamp against a new static
-  `config/seasons.ts` table, no schema change/migration needed. Still open,
-  not yet scoped: a page-wide season filter (deliberately deferred as
-  bigger scope - today you can only eyeball the By Season panel alongside
-  By Team/By Format, not cross-filter one against the other). The related
-  "Check for Updates" reminder tool below is done, see COMPLETED.md.
+  `config/seasons.ts` table, no schema change/migration needed. The
+  page-wide season filter is also done (2026-07-15, see COMPLETED.md). The
+  related "Check for Updates" reminder tool below is done too, see
+  COMPLETED.md. Nothing left open on this thread.
   - **Researched 2026-07-08** (Bulbapedia + Serebii, one-off manual check
     per CLAUDE.md's external-source policy - not a live fetch): confirmed
     season date ranges exist and are trackable. Serebii was more current

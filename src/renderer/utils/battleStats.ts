@@ -8,7 +8,7 @@
 
 import type { Battle } from '../types/pokemon';
 import { groupBattlesBySet, getSetOutcome } from './battleSets';
-import { SEASONS, getSeasonForDate } from '../config/seasons';
+import { SEASONS, getSeasonForDate, type SeasonDef } from '../config/seasons';
 
 export interface WinLossRecord {
   wins: number;
@@ -83,6 +83,12 @@ export function getRecordBySeason(battles: Battle[]): LabeledRecord[] {
       const { wins, losses } = bySeason.get(s.label)!;
       return { label: s.label, ...toRecord(wins, losses) };
     });
+}
+
+/** Season rows (in their existing chronological SEASONS order) that have at least one battle logged - completed or in-progress - used to populate the Statistics page's season filter without listing seasons the user has no data for yet. */
+export function getSeasonsWithBattles(battles: Battle[]): SeasonDef[] {
+  const ids = new Set(battles.map(b => getSeasonForDate(b.date)?.id).filter((id): id is string => id != null));
+  return SEASONS.filter(s => ids.has(s.id));
 }
 
 export function getRecordByTeam(battles: Battle[]): LabeledRecord[] {

@@ -5,6 +5,31 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Statistics page: page-wide season filter** (2026-07-15) - the
+  deliberately-deferred half of the season-level-breakdowns work (the "By
+  Season" panel itself shipped 2026-07-13). Adds an "All / M-N / M-N..."
+  filter-pill row (same visual pattern as `TeamsPage.tsx`'s format filter)
+  above the stat cards - selecting a season narrows every panel (overall
+  record, By Format, By Team, By Opponent, Recent Form, Most-Used Pokemon,
+  Most-Faced Opponents) to that season's battles, derived via the existing
+  `getSeasonForDate(battle.date)`. The filter row itself only lists seasons
+  that actually have a logged battle (new `getSeasonsWithBattles()` in
+  `battleStats.ts`), so it doesn't advertise future/empty seasons, and is
+  hidden entirely when fewer than 2 seasons have data (a single-season
+  filter row would be redundant with "All"). The "By Season" breakdown
+  panel itself is hidden while a specific season is selected, since
+  showing a single-row breakdown of the season you already filtered to
+  added nothing. The page's empty-state check also moved from
+  `overallRecord.total === 0` (only completed battles) to
+  `battles.length === 0` (any battle at all), so a season with only
+  in-progress battles now correctly shows "0 battles" stat cards for that
+  filter instead of misleadingly falling back to the page's top-level "Log
+  some battles" empty state. Verified live with a disposable Electron
+  launch against a fresh `--user-data-dir` seeded with synthetic battles
+  spanning M-3/M-4 (never touched real user data) - filtering to M-3
+  correctly narrowed 3-2/5-battle "All" totals down to 1-1/2-battle
+  totals, and back.
+
 - **Settings page: "Season Data" manual-refresh reminder** (2026-07-15) -
   the "Check for Updates" idea from the season-level-breakdowns entry below,
   built as its own Settings section (`SeasonDataCheckSection.tsx` +
