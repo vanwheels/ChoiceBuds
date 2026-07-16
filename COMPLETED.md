@@ -5,6 +5,47 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Teams page: strategy notes UI + shareable team image export** (2026-07-15)
+  - inspired by a look at community VGC tools (VGC Helper, Pikalytics'
+    team builder) the user asked about; concluded a public team-library/
+    browse-other-people's-teams pattern doesn't fit ChoiceBuds' local-first
+    design, but two ideas did and were explicitly requested: a team-image
+    export (something the user already planned on adding eventually) and
+    a strategy-notes UI (`Team.notes` already existed in `types/pokemon.ts`
+    but had zero UI consumers anywhere in the codebase - confirmed via grep
+    before starting).
+  - **Notes UI**: added a `<textarea>` to `TeamCard.tsx`'s expanded view,
+    same "local state + `updateTeam` on blur" pattern already used for the
+    name/author fields, hidden entirely when empty and not editing (matches
+    the author field's existing empty-chrome rule). Verified live: typed
+    notes, reloaded the whole page, confirmed the text survived the reload
+    (i.e. actually persisted to `teams.json`, not just React state).
+  - **Team image export**: new `TeamExportImageModal.tsx` (sibling to the
+    existing `ExportTeamModal.tsx` text exporter) + `TeamPosterTile.tsx`
+    (one Pokemon's sprite/item/ability/4 type-colored moves/nature+EVs
+    tile, a read-only mirror of `PokemonCard.tsx`'s own layout). Renders a
+    visible "poster" preview (team name/regulation badge/notes/6 tiles/a
+    small "Exported from ChoiceBuds" watermark) and rasterizes that exact
+    DOM node to a PNG via the new `html-to-image` dependency, on either a
+    Download or Copy-to-Clipboard button (both offered, per explicit
+    request - clipboard for pasting straight into Discord, download for a
+    saved file, no native save dialog/main-process plumbing needed for
+    either). A real risk investigated before writing any code: item icons
+    (`ItemData.spriteUrl`, unlike Pokemon sprites) were never routed
+    through the local sprite cache anywhere in the codebase - raw
+    cross-origin `<img>` sources risk a tainted/blocked canvas during
+    rasterization on hosts that don't send CORS headers (e.g. the Fairy
+    Feather Serebii fallback). Fixed by routing item icons through the
+    same `spriteCacheState.resolveSprite()` already used for Pokemon
+    sprites elsewhere (a generic per-URL cache, not Pokemon-specific,
+    confirmed by reading its implementation first) before the poster ever
+    renders them. Verified live end-to-end: imported a real team through
+    the actual import flow (real PokeAPI enrichment, not hand-faked
+    fixtures), opened the export modal, confirmed the rendered poster
+    matched the in-app card data, and clicked Copy to Clipboard -
+    succeeded with no console errors and the button's "Copied!"
+    confirmation state firing correctly.
+
 - **Statistics page: page-wide season filter** (2026-07-15) - the
   deliberately-deferred half of the season-level-breakdowns work (the "By
   Season" panel itself shipped 2026-07-13). Adds an "All / M-N / M-N..."

@@ -75,8 +75,9 @@ focused on what's actually next.
   done - see COMPLETED.md; further Calc UI cleanup (#3) - overlaps with
   Calc work already in flight elsewhere in this file; general UI polish
   (#1) - the Teams/Battle Log list-row redesign (2026-07-14, see
-  COMPLETED.md) is the first concrete scoping of this - still open beyond
-  that: nothing else scoped yet; Limitless usage data (#7) - blocked
+  COMPLETED.md) is the first concrete scoping of this; the team-notes UI and
+  team image export (2026-07-15, see COMPLETED.md) are the second - still
+  open beyond that: nothing else scoped yet; Limitless usage data (#7) - blocked
   externally on API key approval, can't start regardless of priority.
 
 - **Season-level breakdowns (Statistics page)**: a "By Season" breakdown

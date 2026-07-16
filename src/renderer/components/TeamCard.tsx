@@ -16,6 +16,7 @@ import SpeciesPickerCard from './SpeciesPickerCard';
 import TeamValidationButton from './TeamValidationButton';
 import RegulationBadge from './RegulationBadge';
 import ExportTeamModal from './ExportTeamModal';
+import TeamExportImageModal from './TeamExportImageModal';
 
 interface TeamCardProps {
   team: Team;
@@ -33,8 +34,10 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
   const [isEditingTeam, setIsEditingTeam] = useState(false);
   const [localTeamName, setLocalTeamName] = useState(team.name);
   const [localAuthor, setLocalAuthor] = useState(team.author || '');
+  const [localNotes, setLocalNotes] = useState(team.notes || '');
   const [isAddPickerOpen, setIsAddPickerOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const [isImageExportOpen, setIsImageExportOpen] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const { updateTeam, reorderTeam } = teamsState;
   const rosterActions = useRosterActions(
@@ -194,6 +197,15 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
             ⇩
           </button>
 
+          {/* A4. Export Team Image Button - opens a shareable poster-image modal (TeamExportImageModal.tsx) */}
+          <button
+            onClick={() => setIsImageExportOpen(true)}
+            title="Export Team Image"
+            className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-blue-400 hover:bg-zinc-800 text-sm transition-all cursor-pointer"
+          >
+            ▦
+          </button>
+
           {/* B. Edit Button */}
           <button
             onClick={() => {
@@ -242,6 +254,30 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
       {/* EXPANDED VIEW CONTAINER - RENDERS THE INDIVIDUAL EXPANDED POKEMON CARDS */}
       {isExpanded && (
         <div className="p-6 border-t border-zinc-800/60 bg-zinc-900/10 rounded-b-xl">
+          {/* Strategy Notes - team-level free text (Team.notes), same "local state + save
+              on blur" pattern as the name/author fields above. Hidden entirely when not
+              editing and no notes are set, same as the author field's empty-chrome rule. */}
+          {(isEditingTeam || team.notes) && (
+            <div className="mb-4">
+              {isEditingTeam ? (
+                <textarea
+                  value={localNotes}
+                  onChange={(e) => setLocalNotes(e.target.value)}
+                  onBlur={async () => {
+                    if (localNotes !== (team.notes || '')) {
+                      await updateTeam(team.id, { notes: localNotes.trim() || undefined });
+                    }
+                  }}
+                  placeholder="Strategy notes, game plan, matchup tips..."
+                  rows={3}
+                  className="w-full px-3 py-2 text-sm bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-600 outline-none focus:border-blue-500 resize-y"
+                />
+              ) : (
+                <p className="text-sm text-zinc-400 whitespace-pre-wrap border-l-2 border-zinc-700 pl-3">{team.notes}</p>
+              )}
+            </div>
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 w-full">
             {team.pokemon && team.pokemon.map((p, idx) => (
               <PokemonCard
@@ -286,6 +322,15 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
           pokemonList={team.pokemon.map(p => p.showdownData)}
           title="Export Team"
           onClose={() => setIsExportOpen(false)}
+        />
+      )}
+
+      {isImageExportOpen && (
+        <TeamExportImageModal
+          team={team}
+          gameDataState={gameDataState}
+          spriteCacheState={spriteCacheState}
+          onClose={() => setIsImageExportOpen(false)}
         />
       )}
     </div>
