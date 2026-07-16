@@ -290,9 +290,22 @@ See [COMPLETED.md](COMPLETED.md) for the full log of finished work.
   507kB is inherent to the dependency and already appropriately
   lazy-loaded, so raised `vite.config.ts`'s `chunkSizeWarningLimit` to 550
   instead of chasing an impractical split (see COMPLETED.md).
-- No app icon set yet for packaging - electron-builder is using the default
-  Electron icon. Add `.ico`/`.icns` assets whenever branding is ready -
-  cosmetic/branding only, no functional impact.
+- ~~No app icon set yet for packaging~~ **Done 2026-07-15** - user supplied
+  `build/icon.png` (1024x1024, transparent, well-centered mascot art);
+  electron-builder auto-generates the platform `.ico`/`.icns` from it via
+  the default `directories.buildResources` (`build/`) convention, no
+  `package.json` changes needed. **Not yet verified**: a real
+  `npm run dist:win` packaging build to confirm the icon actually renders
+  correctly on a built installer/exe - three attempts all failed at an
+  unrelated environmental step (`EPERM` renaming the freshly-extracted
+  Electron binary folder), reproducing identically with Defender disabled
+  and even fully elevated, and Windows Search indexing confirmed not
+  scoped to the D:\ drive at all - so the cause is still unidentified
+  (likely some other background process/tool watching the project
+  folder, or a genuine electron-builder extraction race). Revisit
+  whenever the next real Windows release build happens (see the Mac
+  installer entry above) - possibly worth trying from a different machine
+  or after a reboot.
 - ~~`game-data-cache.json` concurrent-write race~~ **Fixed 2026-07-15** -
   see COMPLETED.md.
 - ~~Unseen Fist-through-Protect deep interaction~~ **Investigated and
