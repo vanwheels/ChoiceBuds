@@ -88,7 +88,7 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         <div className="px-6 py-4 border-b border-gray-700 flex items-center justify-between">
           <h2 className="text-xl font-bold text-gray-100">Export Team Image</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-200 transition-colors">
@@ -139,7 +139,13 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 flex justify-center">
-          <div ref={posterRef} className="flex flex-col gap-4 p-6 bg-zinc-900 rounded-lg" style={{ backgroundColor: '#18181b' }}>
+          {/* Fixed width (not just max-w) so every child - title row, roster grid, notes,
+              footer - stretches to the exact same width via flex's default cross-axis
+              stretch, rather than the box's own width drifting to whichever child happens
+              to be widest (the roster grid used to implicitly set it, which broke down
+              once notes needed to fit the same box too). Sized for 6 poster tiles in one
+              row (matching a real Team Sheet, not a cramped 2-row grid). */}
+          <div ref={posterRef} className="flex flex-col gap-4 p-6 bg-zinc-900 rounded-lg w-[960px]" style={{ backgroundColor: '#18181b' }}>
             <div className="flex items-center gap-3">
               <h3 className="text-lg font-bold text-zinc-100">{team.name}</h3>
               <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded text-white ${regulationTheme.badgeBg}`}>
@@ -148,7 +154,7 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
               {team.author && <span className="text-xs text-zinc-500">by {team.author}</span>}
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-6 gap-3">
               {team.pokemon.map((pokemon, idx) => (
                 <TeamPosterTile
                   key={idx}
@@ -164,7 +170,7 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
                 view) and only rendered when opted in, so a long note can't stretch the
                 fixed-width poster grid above it or dominate the exported image. */}
             {showNotes && team.notes && (
-              <p className="text-xs text-zinc-400 whitespace-pre-wrap border-l-2 border-zinc-700 pl-3 max-w-2xl">{team.notes}</p>
+              <p className="text-xs text-zinc-400 whitespace-pre-wrap border-l-2 border-zinc-700 pl-3 w-full">{team.notes}</p>
             )}
 
             <p className="text-[10px] text-zinc-600 text-right">Exported from ChoiceBuds</p>

@@ -47,7 +47,7 @@ export default function TeamPosterTile({ pokemon, gameDataState, spriteCacheStat
   const evLine = formatEVs(showdownData.evs);
 
   return (
-    <div className="flex flex-col items-center gap-2 bg-zinc-800 rounded-lg border border-zinc-700 p-3 w-[180px]">
+    <div className="flex flex-col items-center gap-2 bg-zinc-800 rounded-lg border border-zinc-700 p-3 w-full min-w-0">
       <img
         src={spriteCacheState.resolveSprite(spriteUrl)}
         alt={showdownData.species}
