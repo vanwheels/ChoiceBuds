@@ -9,7 +9,7 @@
  * way Pikalytics/VGC Helper's team-image export does.
  */
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toBlob } from 'html-to-image';
 import type { Team } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
@@ -26,6 +26,34 @@ interface TeamExportImageModalProps {
 }
 
 const COPY_CONFIRMATION_MS = 2000;
+// Matches Tailwind's text-xs line-height (0.75rem font / 1rem line-height = 16px at the
+// default 16px root font size) - the notes paragraph below is styled text-xs specifically
+// so this stays accurate for the line-clamp math.
+const NOTES_LINE_HEIGHT_PX = 16;
+
+/**
+ * How many lines of notes text currently fit in `containerRef`'s own box, recomputed via
+ * ResizeObserver whenever that box's height changes (window resize, toggling the roster
+ * grid's height via Open/Closed, etc.) - this is what makes the clamp "adjustable as the
+ * window expands" rather than a fixed line count. containerRef is a flex-1 child of the
+ * poster's flex-col layout, so its height is always exactly "whatever's left" after the
+ * title row/roster grid/footer take their own space.
+ */
+function useLinesThatFit(containerRef: React.RefObject<HTMLDivElement | null>): number {
+  const [maxLines, setMaxLines] = useState(1);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const recompute = () => setMaxLines(Math.max(1, Math.floor(el.clientHeight / NOTES_LINE_HEIGHT_PX)));
+    recompute();
+    const observer = new ResizeObserver(recompute);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [containerRef]);
+
+  return maxLines;
+}
 
 async function renderPosterBlob(node: HTMLElement): Promise<Blob> {
   // pixelRatio 2 for a crisp export - the on-screen preview stays 1x.
@@ -36,6 +64,8 @@ async function renderPosterBlob(node: HTMLElement): Promise<Blob> {
 
 export default function TeamExportImageModal({ team, gameDataState, spriteCacheState, onClose }: TeamExportImageModalProps) {
   const posterRef = useRef<HTMLDivElement>(null);
+  const notesContainerRef = useRef<HTMLDivElement>(null);
+  const notesMaxLines = useLinesThatFit(notesContainerRef);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isWorking, setIsWorking] = useState(false);
@@ -160,17 +190,26 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 flex justify-center">
-          {/* w-full (not a fixed px width, and not left to hug its widest child either) so
-              every child - title row, roster grid, notes, footer - stretches to the exact
-              same width via flex's default cross-axis stretch, bounded strictly by this
-              modal's own max-w-6xl/padding. A prior fixed-960px version could still overflow
-              at the app's enforced 1280x720 minimum window size depending on OS chrome/DPI;
-              w-full can't overflow its parent by construction, and uses whatever width is
-              actually available - which also makes the poster tiles as big as the window
-              allows, reducing move-name truncation instead of being capped arbitrarily. */}
-          <div ref={posterRef} className="flex flex-col gap-4 p-6 bg-zinc-900 rounded-lg w-full" style={{ backgroundColor: '#18181b' }}>
-            <div className="flex items-center gap-3">
+        {/* items-start (not the flex row default of align-items:stretch) so the poster box
+            below sizes to its own content by default - only opted into full-height stretch
+            (via self-stretch on the box itself, see below) when notes are actually shown and
+            need a bounded "leftover space" to clamp against. Leaving stretch as the default
+            here previously caused the box's own background/border to render at the wrapper's
+            height while its content (e.g. many-line notes) visually overflowed past it,
+            uncontained by any background - the "notes spill out" bug. */}
+        <div className="flex-1 overflow-y-auto p-6 flex justify-center items-start">
+          {/* w-full (not a fixed px width) so every child stretches to the same width, bounded
+              strictly by this modal's own max-w-6xl/padding - can't overflow by construction,
+              and uses whatever width is actually available (bigger tiles, less truncation).
+              self-stretch only while notes are shown: that's what gives the notes area below a
+              bounded, measurable height to clamp its line count against instead of growing
+              unbounded; without notes, the box just sizes to its own content as before. */}
+          <div
+            ref={posterRef}
+            className={`flex flex-col gap-4 p-6 bg-zinc-900 rounded-lg w-full ${showNotes && team.notes ? 'self-stretch' : ''}`}
+            style={{ backgroundColor: '#18181b' }}
+          >
+            <div className="flex items-center gap-3 shrink-0">
               <h3 className="text-lg font-bold text-zinc-100">{team.name}</h3>
               <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded text-white ${regulationTheme.badgeBg}`}>
                 {team.format}
@@ -178,7 +217,7 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
               {team.author && <span className="text-xs text-zinc-500">by {team.author}</span>}
             </div>
 
-            <div className="grid grid-cols-6 gap-3">
+            <div className="grid grid-cols-6 gap-3 shrink-0">
               {team.pokemon.map((pokemon, idx) => (
                 <TeamPosterTile
                   key={idx}
@@ -191,13 +230,30 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
             </div>
 
             {/* Notes moved below the roster grid (same rationale as TeamCard.tsx's expanded
-                view) and only rendered when opted in, so a long note can't stretch the
-                fixed-width poster grid above it or dominate the exported image. */}
+                view) and only rendered when opted in, so it can't dominate the exported image.
+                flex-1 min-h-0 makes this div take exactly whatever space is left in the
+                (now-bounded) poster box after the title row/grid/footer above and below it;
+                the -webkit-line-clamp on the <p> (native ellipsis included, no manual "..."
+                needed) then clips the notes text to exactly as many lines as that leftover
+                space fits, recalculated live via useLinesThatFit's ResizeObserver as the
+                window/modal is resized. */}
             {showNotes && team.notes && (
-              <p className="text-xs text-zinc-400 whitespace-pre-wrap border-l-2 border-zinc-700 pl-3 w-full">{team.notes}</p>
+              <div ref={notesContainerRef} className="flex-1 min-h-0 overflow-hidden">
+                <p
+                  className="text-xs text-zinc-400 whitespace-pre-wrap border-l-2 border-zinc-700 pl-3 w-full"
+                  style={{
+                    display: '-webkit-box',
+                    WebkitBoxOrient: 'vertical',
+                    WebkitLineClamp: notesMaxLines,
+                    overflow: 'hidden',
+                  }}
+                >
+                  {team.notes}
+                </p>
+              </div>
             )}
 
-            <p className="text-[10px] text-zinc-600 text-right">Exported from ChoiceBuds</p>
+            <p className="text-[10px] text-zinc-600 text-right shrink-0">Exported from ChoiceBuds</p>
           </div>
         </div>
       </div>
