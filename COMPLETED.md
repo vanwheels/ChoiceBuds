@@ -27,6 +27,21 @@ local ("see below"/"see above").
   actually have room, at any window size, instead of forcing a fixed count.
   Re-verified the same reproduction at both sizes post-fix: no more
   truncation or overflow at either.
+  - **Follow-up same day**: after the above fix, the user reported the grid
+    now wrapped into multiple short rows (e.g. 2x3) instead of the "nice
+    1x6 row that sized properly when expanding the window" they remembered
+    - the auto-fill grid alone wasn't enough. Root cause of *that*:
+    `TeamsPage.tsx`'s outer teams-list container had its own unrelated
+    `max-w-4xl` (896px) cap, capping the whole column regardless of window
+    size - so the auto-fill grid never had more than ~830px to work with
+    even at a 2200px-wide window, capping it at 2-3 columns no matter how
+    far the window was expanded. Removed that cap entirely (each
+    `PokemonCard` already self-caps at its own 280px max-width, so nothing
+    else was relying on the outer container's cap for sizing). Re-verified
+    with the same disposable-team reproduction at three sizes (1280x720,
+    1600x900, 2200x1200): the 6-Pokemon roster now sits in one full row at
+    2200px width, 4 columns at 1600px, all still fully legible with no
+    truncation at any size.
 
 - **Teams page: strategy notes UI + shareable team image export** (2026-07-15)
   - inspired by a look at community VGC tools (VGC Helper, Pikalytics'

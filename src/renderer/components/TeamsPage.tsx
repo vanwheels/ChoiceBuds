@@ -109,9 +109,15 @@ export default function TeamsPage({
           </div>
         ) : (
           <div
-            className="flex flex-col gap-3 w-full max-w-4xl"
+            className="flex flex-col gap-3 w-full"
             style={{ paddingLeft: '2rem', paddingRight: '2rem' }}
           >
+            {/* No max-width cap - each TeamCard's Pokemon grid (auto-fill,
+                minmax(240px, 280px)) needs the full available window width to
+                actually fit up to 6 comfortable columns in one row on wide
+                windows; a fixed max-w-4xl here previously capped this column
+                at 896px regardless of window size, so the grid below could
+                never grow past ~2-3 columns even on a much wider monitor. */}
             {filteredTeams.map(team => (
               <TeamCard
                 key={team.id}
