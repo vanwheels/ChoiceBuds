@@ -12,6 +12,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   syncIdentifier: null,
   lastPushedAt: null,
   lastPulledAt: null,
+  lastSeasonDataCheckedAt: null,
   lastModified: Date.now(),
 };
 

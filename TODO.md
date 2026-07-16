@@ -85,8 +85,8 @@ focused on what's actually next.
   `config/seasons.ts` table, no schema change/migration needed. Still open,
   not yet scoped: a page-wide season filter (deliberately deferred as
   bigger scope - today you can only eyeball the By Season panel alongside
-  By Team/By Format, not cross-filter one against the other); and the
-  related "Check for Updates" reminder tool below.
+  By Team/By Format, not cross-filter one against the other). The related
+  "Check for Updates" reminder tool below is done, see COMPLETED.md.
   - **Researched 2026-07-08** (Bulbapedia + Serebii, one-off manual check
     per CLAUDE.md's external-source policy - not a live fetch): confirmed
     season date ranges exist and are trackable. Serebii was more current
@@ -110,19 +110,12 @@ focused on what's actually next.
     "Regulation Set M-B" pages, Serebii's `rankedbattle/regulationm-a.shtml`
     and `regulationm-b.shtml` pages - full URLs in the
     `reg_mb_season_timeline` memory note.
-  - **New, related idea - a "Check for Updates" tool**: doesn't exist
-    anywhere today (checked - no prior mention in this file, COMPLETED.md,
-    or memory). Given the no-live-scrape constraint above, this can't be an
-    automated puller - the agreed shape is a manual-refresh-reminder
-    utility, most likely living on the Settings page (exists now, see
-    COMPLETED.md): surface
-    what season/regulation data is currently hardcoded, when it was last
-    manually checked, and a prompt to re-check Bulbapedia/Serebii and
-    update the config by hand. Same pattern could generalize to the other
-    hand-authored Champions balance-patch config
+  - **"Check for Updates" reminder tool - done (2026-07-15)**, see
+    COMPLETED.md. Same pattern could generalize to the other hand-authored
+    Champions balance-patch config
     (`championsMoveOverrides.ts`/`championsAbilityOverrides.ts`/etc.) if
-    useful later, but season/regulation data is the concrete driver for
-    now. Not scoped beyond this - no persistence design, no UI mockup yet.
+    useful later - not built, season/regulation data was the concrete
+    driver for the first pass.
 
 - **2026-07-07 manual-testing/UI-polish batch**: items 1-2, 4, 6-7 done, no
   remaining notes (see COMPLETED.md). Item 3 done - its "Battlefield.tsx

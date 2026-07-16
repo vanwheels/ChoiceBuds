@@ -34,3 +34,13 @@ export const SEASONS: SeasonDef[] = [
 export function getSeasonForDate(timestamp: number): SeasonDef | undefined {
   return SEASONS.find(s => timestamp >= s.start && timestamp < s.end);
 }
+
+/**
+ * The most recently-added row - used by the Settings page's manual-refresh
+ * reminder to warn once this table needs extending (its end date is
+ * imminent/passed), since this table can never auto-extend itself per the
+ * no-live-scrape policy.
+ */
+export function getLatestSeason(): SeasonDef {
+  return SEASONS[SEASONS.length - 1];
+}

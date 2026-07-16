@@ -10,8 +10,10 @@ import type { UseBattlesReturn } from '../hooks/useBattles';
 import type { UseUpdateCheckReturn } from '../hooks/useUpdateCheck';
 import { ALL_REGULATION_IDS, getRegulationLabel, toRegulationId } from '../utils/pokemonRules';
 import { useSync } from '../hooks/useSync';
+import { useSeasonDataCheck } from '../hooks/useSeasonDataCheck';
 import SyncSection from './SyncSection';
 import UpdateCheckSection from './UpdateCheckSection';
+import SeasonDataCheckSection from './SeasonDataCheckSection';
 
 interface SettingsPageProps {
   settingsState: UseSettingsReturn;
@@ -21,9 +23,10 @@ interface SettingsPageProps {
 }
 
 export default function SettingsPage({ settingsState, teamsState, battlesState, updateCheckState }: SettingsPageProps) {
-  const { settings, setDefaultRegulation } = settingsState;
+  const { settings, setDefaultRegulation, updateSettings } = settingsState;
   const currentId = toRegulationId(settings.defaultRegulation);
   const syncState = useSync(settingsState, teamsState, battlesState);
+  const seasonDataCheckState = useSeasonDataCheck(settings, updateSettings);
 
   return (
     <div className="flex flex-col gap-4">
@@ -52,6 +55,8 @@ export default function SettingsPage({ settingsState, teamsState, battlesState, 
       </div>
 
       <SyncSection syncState={syncState} />
+
+      <SeasonDataCheckSection seasonDataCheckState={seasonDataCheckState} />
 
       <UpdateCheckSection updateCheckState={updateCheckState} />
     </div>

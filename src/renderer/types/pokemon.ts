@@ -125,6 +125,7 @@ export interface AppSettings {
   syncIdentifier: string | null; // "username#XXXX" pairing identifier, once set up
   lastPushedAt: number | null; // Unix timestamp of this device's last successful Push
   lastPulledAt: number | null; // Unix timestamp of this device's last successful Pull
+  lastSeasonDataCheckedAt: number | null; // Unix timestamp config/seasons.ts was last manually verified against Bulbapedia/Serebii
   lastModified: number; // Unix timestamp
 }
 

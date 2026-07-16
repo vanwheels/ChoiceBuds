@@ -5,6 +5,29 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Settings page: "Season Data" manual-refresh reminder** (2026-07-15) -
+  the "Check for Updates" idea from the season-level-breakdowns entry below,
+  built as its own Settings section (`SeasonDataCheckSection.tsx` +
+  `useSeasonDataCheck.ts`). Since `config/seasons.ts` can't self-update (no
+  live-scrape policy), this only nudges a human: shows the latest tracked
+  season/regulation and its end date, flags a warning once that end date is
+  within 2 weeks (or already passed), and a "Mark as Checked" button that
+  timestamps `AppSettings.lastSeasonDataCheckedAt` (new field, follows the
+  existing `lastPushedAt`/`lastPulledAt` pattern - no new IPC/main.ts
+  plumbing needed, flows through the existing generic `updateSettings()` +
+  `file:read/write-settings` channels). Added `getLatestSeason()` to
+  `seasons.ts`. One real bug caught during live verification and fixed
+  before landing: `config/seasons.ts` stores dates as UTC midnight
+  (`Date.parse('YYYY-MM-DD')`), and this is the first place in the codebase
+  to ever format a `season.start`/`end` value for display (the existing "By
+  Season" stats panel only ever shows `season.label`) - a plain
+  `toLocaleDateString()` rendered the date a day early in a negative-UTC-
+  offset timezone; fixed by passing `{ timeZone: 'UTC' }`. Also hit the
+  newer `react-hooks/purity` lint rule (calling `Date.now()` inside a
+  `useMemo` during render is flagged) - worked around with a `useState`
+  lazy initializer, which is the sanctioned escape hatch since it only runs
+  once on mount.
+
 - **`game-data-cache.json` concurrent-write race fixed** (2026-07-15): found
   during a fresh-Windows-install smoke test - the first-launch bulk VGC-item
   sync (`useGameData.ts`) fires dozens of near-simultaneous `setCache`
