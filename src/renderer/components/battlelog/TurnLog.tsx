@@ -33,10 +33,12 @@ function effectivenessLabel(multiplier: number | undefined): { text: string; cla
   return { text: 'Not Very Effective', className: 'text-orange-400' };
 }
 
-/** Per-target crit/miss label - the interactive toggle chips for these now live on the target's own BattlefieldSlot (see BattlefieldSlot.tsx), this is just the read-only historical record. */
-function outcomeLabel(result: 'crit' | 'miss' | undefined): { text: string; className: string } | null {
+/** Per-target outcome label - the interactive toggle chips for these now live on the target's own BattlefieldSlot (see BattlefieldSlot.tsx), this is just the read-only historical record. */
+function outcomeLabel(result: 'crit' | 'miss' | 'no-effect' | 'blocked-ability' | undefined): { text: string; className: string } | null {
   if (result === 'crit') return { text: 'crit!', className: 'text-yellow-400' };
   if (result === 'miss') return { text: 'missed', className: 'text-gray-400' };
+  if (result === 'no-effect') return { text: 'no effect', className: 'text-gray-400' };
+  if (result === 'blocked-ability') return { text: 'blocked (ability)', className: 'text-purple-400' };
   return null;
 }
 

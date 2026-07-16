@@ -224,13 +224,17 @@ export interface BattleAction {
   // move's type and each target's types (see config/typeEffectiveness.ts) -
   // only present for damaging moves, absent for status moves/self/field.
   effectiveness?: { pokemonId: string; multiplier: number }[];
-  // Per-target hit outcome (crit/miss) for a landed move - a spread move
-  // (Rock Slide, Earthquake) can crit one target and miss another
-  // independently. Manually confirmed, not computed - the user is watching
-  // the real battle and taps these when they observe it. Mutually
-  // exclusive by construction (one result per target entry) - a miss can't
-  // also crit. No entry for a given target = a plain, unremarkable hit.
-  outcomes?: { pokemonId: string; result: 'crit' | 'miss' }[];
+  // Per-target hit outcome for a landed move - a spread move (Rock Slide,
+  // Earthquake) can crit one target and miss another independently.
+  // Manually confirmed, not computed - the user is watching the real
+  // battle and taps these when they observe it. Mutually exclusive by
+  // construction (one result per target entry) - a miss can't also crit.
+  // No entry for a given target = a plain, unremarkable hit. `no-effect`/
+  // `blocked-ability` cover cases the auto-computed `effectiveness`
+  // multiplier above can't (ability-based immunity like Levitate/
+  // Bulletproof, or any no-effect result on a status move, which gets no
+  // `effectiveness` entry at all since that field is damaging-move-only).
+  outcomes?: { pokemonId: string; result: 'crit' | 'miss' | 'no-effect' | 'blocked-ability' }[];
   // The move's type/damage-class, snapshotted at log time (same pattern as
   // effectiveness above) - lets utils/battleLookup.ts's hit-reactive-ability
   // check (config/hitReactiveAbilities.ts) work from the stored action alone

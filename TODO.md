@@ -59,11 +59,10 @@ focused on what's actually next.
   across games are also done (both 2026-07-13, see COMPLETED.md). Still
   open: the stat-inference idea (needs Limitless/championsbattledata-
   sourced per-species data first). Synthesizing turn-log entries when a
-  field condition changes is done (2026-07-15, see COMPLETED.md). Also
-  noted but not built: generic lightweight outcome tags beyond Protect-fail (Missed/No
-  Effect/Blocked by Ability) - considered during Stage 2 design but
-  dropped as unrequested scope, could revisit if the Protect-fail chip
-  pattern proves useful enough to generalize; Download's ability effect
+  field condition changes is done (2026-07-15, see COMPLETED.md). Generic
+  lightweight per-target outcome tags (No Effect/Blocked (Ability), added
+  alongside the existing Miss/Crit chips) are done (2026-07-16, see
+  COMPLETED.md). Download's ability effect
   (deliberately excluded from the switch-in effects table - its target
   stat depends on comparing the opposing side's average Def/SpDef, needs
   base-stat math not taken on yet).

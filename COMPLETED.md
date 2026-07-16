@@ -5,6 +5,31 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Battle Logger: generic No Effect/Blocked (Ability) outcome chips**
+  (2026-07-16) - generalized the existing per-target Miss/Crit toggle chips
+  (`BattlefieldSlot.tsx`) to two more outcomes: "No Effect" and "Blocked"
+  (ability-blocked, e.g. Levitate/Bulletproof/Soundproof - no ability
+  lookup table needed, just a plain manual toggle same as Miss/Crit).
+  Widened `BattleAction.outcomes`' `result` union
+  (`'crit' | 'miss' | 'no-effect' | 'blocked-ability'`, `types/pokemon.ts`)
+  and `setActionTargetOutcome`'s param type
+  (`useBattleLogActions.ts`) rather than adding a new field - all four
+  outcomes share the same per-target, mutually-exclusive-by-construction
+  shape the existing crit/miss array already had. `TurnLog.tsx`'s
+  `outcomeLabel` gained the two new cases ("no effect"/"blocked
+  (ability)"). Considered adding an ability-immunity lookup table
+  (Levitate → blocks Ground, Bulletproof → blocks bullet-flag moves, etc.)
+  to auto-detect the "Blocked" case, but scoped that out - research found
+  zero existing ability-immunity code anywhere in the codebase to build on,
+  and the TODO's own framing ("generic lightweight outcome tags") called
+  for a manual tap same as the other three, not a new auto-detection
+  subsystem. Live-verified via `run-desktop`: logged a real move
+  (Throat Chop) targeting an opponent Snorlax, confirmed all 4 chips
+  render, confirmed "No Effect" and "Blocked" are mutually exclusive with
+  each other and with Miss/Crit (clicking one replaces any other), and
+  confirmed the turn log renders "used Throat Chop on Snorlax (no effect)"
+  / "(blocked (ability))" correctly.
+
 - **Battle Logger: synthesized turn-log entries for field-condition changes**
   (2026-07-15) - the previously-open "nice-to-have" noted under Battle
   Logger's TODO entry: weather/terrain/Trick Room toggles

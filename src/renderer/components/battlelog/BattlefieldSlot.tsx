@@ -246,6 +246,8 @@ export default function BattlefieldSlot({
   const targetOutcome = targetingAction?.outcomes?.find(o => o.pokemonId === mon.id)?.result ?? null;
   const showMissChip = !!targetingAction;
   const showCritChip = !!targetingAction?.moveCategory && targetingAction.moveCategory !== 'status';
+  const showNoEffectChip = !!targetingAction;
+  const showBlockedAbilityChip = !!targetingAction;
   const showStatusInflictChip = !!targetingAction?.statusAilment && battle.statusConditions[mon.id] !== targetingAction.statusAilment;
 
   const canAct = canActThisTurn(battle, mon.id);
@@ -362,6 +364,36 @@ export default function BattlefieldSlot({
           }`}
         >
           Crit
+        </button>
+      )}
+      {showNoEffectChip && (
+        <button
+          type="button"
+          onClick={e => {
+            e.stopPropagation();
+            battleLogActions.setActionTargetOutcome(battle, battle.turns.length, targetingAction!.id, mon.id, targetOutcome === 'no-effect' ? null : 'no-effect');
+          }}
+          title="Toggle whether this had no effect (immunity not already reflected by type effectiveness)"
+          className={`text-[9px] px-1.5 py-0.5 rounded cursor-pointer ${
+            targetOutcome === 'no-effect' ? 'bg-gray-600 text-gray-200' : 'bg-gray-800 text-gray-400 hover:text-gray-200 hover:bg-gray-700'
+          }`}
+        >
+          No Effect
+        </button>
+      )}
+      {showBlockedAbilityChip && (
+        <button
+          type="button"
+          onClick={e => {
+            e.stopPropagation();
+            battleLogActions.setActionTargetOutcome(battle, battle.turns.length, targetingAction!.id, mon.id, targetOutcome === 'blocked-ability' ? null : 'blocked-ability');
+          }}
+          title="Toggle whether an ability (Levitate, Bulletproof, Soundproof, etc.) blocked this move"
+          className={`text-[9px] px-1.5 py-0.5 rounded cursor-pointer ${
+            targetOutcome === 'blocked-ability' ? 'bg-purple-900/70 text-purple-300' : 'bg-gray-800 text-gray-400 hover:text-purple-300 hover:bg-purple-900/40'
+          }`}
+        >
+          Blocked
         </button>
       )}
       {showStatusInflictChip && (

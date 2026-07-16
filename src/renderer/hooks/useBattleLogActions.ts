@@ -113,7 +113,7 @@ export interface UseBattleLogActionsReturn {
   setStatusCondition: (battle: Battle, side: BattleSide, pokemonId: string, status: StatusCondition | null) => Promise<boolean>;
   logAction: (battle: Battle, action: Omit<BattleAction, 'id'>) => Promise<boolean>;
   setActionFailed: (battle: Battle, turnNumber: number, actionId: string, failed: boolean) => Promise<boolean>;
-  setActionTargetOutcome: (battle: Battle, turnNumber: number, actionId: string, pokemonId: string, result: 'crit' | 'miss' | null) => Promise<boolean>;
+  setActionTargetOutcome: (battle: Battle, turnNumber: number, actionId: string, pokemonId: string, result: 'crit' | 'miss' | 'no-effect' | 'blocked-ability' | null) => Promise<boolean>;
   advanceTurn: (battle: Battle) => Promise<boolean>;
   undoLastAction: (battle: Battle) => Promise<boolean>;
   setResult: (battle: Battle, result: Battle['result']) => Promise<boolean>;
@@ -698,20 +698,20 @@ export function useBattleLogActions(
   }, [updateBattle]);
 
   /**
-   * Powers the Crit/Miss chips now shown on a target's own BattlefieldSlot
-   * (see utils/battleLookup.ts's mostRecentTargetingActionThisTurn) -
-   * sets/replaces/clears one target's outcome within an already-logged
-   * move action's `outcomes` array. `result: null` clears it back to a
-   * plain hit (toggle-off); a non-null result always replaces any existing
-   * entry for that pokemonId, so crit/miss stay mutually exclusive by
-   * construction.
+   * Powers the Crit/Miss/No Effect/Blocked (Ability) chips shown on a
+   * target's own BattlefieldSlot (see utils/battleLookup.ts's
+   * mostRecentTargetingActionThisTurn) - sets/replaces/clears one target's
+   * outcome within an already-logged move action's `outcomes` array.
+   * `result: null` clears it back to a plain hit (toggle-off); a non-null
+   * result always replaces any existing entry for that pokemonId, so all
+   * four outcomes stay mutually exclusive by construction.
    */
   const setActionTargetOutcome = useCallback(async (
     battle: Battle,
     turnNumber: number,
     actionId: string,
     pokemonId: string,
-    result: 'crit' | 'miss' | null
+    result: 'crit' | 'miss' | 'no-effect' | 'blocked-ability' | null
   ): Promise<boolean> => {
     const turns = battle.turns.map(turn => turn.number !== turnNumber ? turn : {
       ...turn,
