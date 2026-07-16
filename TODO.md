@@ -300,6 +300,8 @@ See [COMPLETED.md](COMPLETED.md) for the full log of finished work.
 - No app icon set yet for packaging - electron-builder is using the default
   Electron icon. Add `.ico`/`.icns` assets whenever branding is ready -
   cosmetic/branding only, no functional impact.
+- ~~`game-data-cache.json` concurrent-write race~~ **Fixed 2026-07-15** -
+  see COMPLETED.md.
 - ~~Unseen Fist-through-Protect deep interaction~~ **Investigated and
   closed 2026-07-14** - read `@smogon/calc`'s compiled source directly
   rather than guessing: "Unseen Fist" appears exactly once in the whole

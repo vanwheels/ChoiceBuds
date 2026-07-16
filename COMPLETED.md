@@ -5,6 +5,23 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **`game-data-cache.json` concurrent-write race fixed** (2026-07-15): found
+  during a fresh-Windows-install smoke test - the first-launch bulk VGC-item
+  sync (`useGameData.ts`) fires dozens of near-simultaneous `setCache`
+  calls, each triggering its own `writeGameDataCache` IPC call, and
+  `main.ts`'s `atomicWriteFile` wrote every call to the same shared
+  `<file>.tmp` path with no locking - concurrent writes raced, and whichever
+  `rename` lost found its temp file already consumed, throwing `ENOENT`
+  (self-healing in practice, but spammed the console every first launch).
+  Fixed by adding a `Map<filePath, Promise>` write queue in `main.ts` -
+  `atomicWriteFile` now chains each write for a given path onto the
+  previous one for that same path (writes to different files stay
+  independent/concurrent), so two writers can never race on the same `.tmp`
+  file. Verified with a disposable Electron launch against a fresh
+  `--user-data-dir` (forces the same first-launch bulk-sync burst): 0 write
+  errors afterward, vs. dozens before the fix, with the cache file written
+  correctly both times.
+
 - **react-hooks lint-rules follow-up: `set-state-in-effect` +
   `immutability` fixed for real in 11 of 13 affected files** (2026-07-14):
   the dev-tooling bump's deferred item, revisited as its own pass.
