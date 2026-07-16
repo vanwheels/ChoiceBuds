@@ -5,6 +5,73 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Battle Logger: ability-based blocking (part 2 of the Miss/Crit/No
+  Effect/Blocked redesign)** (2026-07-16, resumed from a prior session's
+  scoping/research pause - see COMPLETED.md's earlier "Record scoping
+  analysis for ability-based blocking" entry below for the architectural
+  findings this built on): `config/moveBlockingAbilities.ts` (new file)
+  holds the researched move-blocking-ability table (type-immunity,
+  status-category, and explicit move-list rules), Bulbapedia-primary/
+  Serebii-cross-checked per this project's source-verification convention.
+  `MoveOutcomePrompt.tsx`'s per-target row now shows an unrevealed-ability
+  picker (`UnrevealedAbilityPicker`, reusing `OpponentRowFields.tsx`'s
+  `getEnrichedSpeciesOptions` species-legal-ability lookup and its
+  now-exported `formatAbilityName`) whenever the move being logged could
+  plausibly be blocked by one of the target's legal abilities but the real
+  one isn't known yet; picking one reveals the ability and sets the outcome
+  to Blocked atomically via a new combined action,
+  `useBattleLogActions.ts::revealBlockingAbility` (bundles the
+  `opponentRoster` and `turns` patches into one `updateBattle` call - an
+  earlier version fired `updateOpponentMoveTags`+`setActionTargetOutcome`
+  as two sequential calls, which raced off the same stale `battle` closure
+  and silently dropped the ability reveal; caught via live testing, not
+  code review, and fixed by following `appendAction`'s own established
+  "bundle into one `updateBattle` call" pattern - see that function's
+  header comment in `useBattleLogActions.ts`). Live-verified end-to-end via
+  `run-desktop`: a disposable battle with Gholdengo (whose only legal
+  ability is Good as Gold) as the opponent, Incineroar's Parting Shot
+  logged against it, confirmed the picker offered exactly "Good As Gold"
+  and that picking it persisted both the ability reveal
+  (`abilityRevealedOnTurn` set) and the Blocked outcome together; the test
+  battle was deleted afterward. Sap Sipper/Storm Drain/Lightning Rod/Motor
+  Drive (the 4 pure stat-stage-boost absorb abilities) were added as new
+  rows directly to the *existing* `config/hitReactiveAbilities.ts` table
+  instead of a new mechanism - they already fit that file's
+  `trigger`/`changes` shape (same pattern as Justified/Stamina), and their
+  existing per-slot "apply this ability's hit-triggered stat change" chip
+  on `BattlefieldSlot.tsx` needed no changes at all to pick them up. Volt
+  Absorb/Water Absorb/Flash Fire/Dry Skin (heal HP or buff move power,
+  which this app's stat-stages-only model can't express) fall back to a
+  plain Blocked tag via the new table, as scoped.
+
+  **Deliberately excluded this pass** (documented in
+  `moveBlockingAbilities.ts`'s own header, not silently dropped): Wonder
+  Guard (effectiveness-based block, a genuinely different rule shape, and
+  Shedinja is essentially unplayed in real VGC doubles); status-condition-
+  immunity abilities (Limber/Insomnia/Immunity/Water Veil/Water
+  Bubble/Magma Armor/Purifying Salt/Comatose) - would need reconciling with
+  the separate, already-existing "Inflict {Status}?" chip mechanism, not
+  done this pass; Aroma Veil/Sweet Veil/Oblivious/Own Tempo (mental-move/
+  confusion immunity - untracked data, same reasoning already in
+  `hitReactiveAbilities.ts`); Clear Body/White Smoke/etc. (stat-drop
+  immunity - needs the auto-apply-before-prompt logic in `logAction` itself
+  to check ability first, a deeper change); Dazzling/Queenly Majesty/Armor
+  Tail (needs a new `priority` field on `MoveData`); Shield Dust/Battle
+  Armor/Shell Armor (don't block the move at all, no gap to fill);
+  Telepathy (ally-fire avoidance, a different targeting relationship than
+  every other entry here).
+
+  **Known pre-existing, unrelated-to-this-change gap surfaced during live
+  testing**: `logAction` auto-applies a move's deterministic stat-drop
+  effect (`config/moveStatEffects.ts`) *before* any outcome is confirmed,
+  so a status move that both auto-drops a stat (e.g. Parting Shot's
+  Atk/SpA -1) and gets Blocked via this new picker still leaves the stale
+  auto-applied stat drop in place - the same underlying ordering issue
+  already called out for the Clear-Body family above, just visible through
+  a different door. Not fixed here (pre-existing, out of this pass's
+  scope), but worth knowing before relying on stat stages being accurate
+  after a Blocked status move.
+
 - **Teams page polish batch** (2026-07-16, 5 items raised together from a
   manual-testing session):
   1. Team notes (`TeamCard.tsx` expanded view) moved from above the roster

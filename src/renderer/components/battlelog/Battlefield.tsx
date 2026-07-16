@@ -259,6 +259,7 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
         <MoveOutcomePrompt
           battle={battle}
           battleLogActions={battleLogActions}
+          gameDataState={gameDataState}
           move={pendingOutcomes.move}
           moveCategory={pendingOutcomes.moveCategory}
           actionId={pendingOutcomes.actionId}

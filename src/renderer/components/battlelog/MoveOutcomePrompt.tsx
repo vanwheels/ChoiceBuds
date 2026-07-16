@@ -10,22 +10,80 @@
  * toggles, since a spread move can crit one target and miss another
  * independently - `outcomes` is already keyed per-pokemonId on the action,
  * so this is just surfacing the existing data model, not changing it.
+ *
+ * Also surfaces an unrevealed-ability picker per opponent target, when the
+ * move being logged could plausibly be blocked by one of that species'
+ * legal abilities (config/moveBlockingAbilities.ts) but the real ability
+ * isn't known yet - the same species-legal-ability list
+ * OpponentRowFields.tsx's OpponentAbilityCell already fetches for its own
+ * ability dropdown. Picking one reveals the ability AND sets this target's
+ * outcome to Blocked in a single atomic action (useBattleLogActions.ts's
+ * revealBlockingAbility) - since seeing the block *is* how the ability got
+ * revealed in the first place, there's no real scenario where a user would
+ * want one without the other, and firing two separate updateBattle calls
+ * back-to-back off the same stale `battle` closure would race (see that
+ * function's own header comment). Player targets never need this picker -
+ * their own team's ability is already known from the roster snapshot,
+ * never unrevealed.
  */
 
-import type { Battle, BattleSide } from '../../types/pokemon';
+import { useEffect, useState } from 'react';
+import type { Battle, BattleSide, OpponentPokemonEntry } from '../../types/pokemon';
 import type { UseBattleLogActionsReturn } from '../../hooks/useBattleLogActions';
+import type { UseGameDataReturn } from '../../hooks/useGameData';
 import { battlePokemonDisplayName } from '../../utils/battleLookup';
+import { abilitiesThatCouldBlock } from '../../config/moveBlockingAbilities';
+import { formatAbilityName } from './OpponentRowFields';
 
 type OutcomeResult = 'crit' | 'miss' | 'no-effect' | 'blocked-ability';
 
 interface MoveOutcomePromptProps {
   battle: Battle;
   battleLogActions: UseBattleLogActionsReturn;
+  gameDataState: UseGameDataReturn;
   move: string;
   moveCategory?: 'physical' | 'special' | 'status';
   actionId: string;
   targets: { side: BattleSide; pokemonId: string }[];
   onClose: () => void;
+}
+
+/** Own component so its ability-fetching effect follows Rules of Hooks inside the targets.map() below. */
+function UnrevealedAbilityPicker({
+  opponent, move, moveType, moveCategory, gameDataState, onPick,
+}: {
+  opponent: OpponentPokemonEntry;
+  move: string;
+  moveType?: string;
+  moveCategory?: 'physical' | 'special' | 'status';
+  gameDataState: UseGameDataReturn;
+  onPick: (ability: string) => void;
+}) {
+  const [candidates, setCandidates] = useState<string[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    gameDataState.getEnrichedSpeciesOptions(opponent.species).then(({ abilities }) => {
+      if (cancelled) return;
+      const legal = abilities.map(a => formatAbilityName(a.name));
+      setCandidates(abilitiesThatCouldBlock(legal, move, moveType, moveCategory));
+    });
+    return () => { cancelled = true; };
+  }, [opponent.species, move, moveType, moveCategory, gameDataState]);
+
+  if (candidates.length === 0) return null;
+
+  return (
+    <select
+      value=""
+      onChange={e => { if (e.target.value) onPick(e.target.value); }}
+      title="Which ability blocked it?"
+      className="text-[9px] px-1 py-0.5 rounded bg-gray-800 text-gray-400 border border-gray-700 outline-none cursor-pointer hover:text-gray-200"
+    >
+      <option value="">blocked by...?</option>
+      {candidates.map(a => <option key={a} value={a}>{a}</option>)}
+    </select>
+  );
 }
 
 const OUTCOME_BUTTONS: { key: OutcomeResult; label: string; activeClass: string }[] = [
@@ -35,9 +93,13 @@ const OUTCOME_BUTTONS: { key: OutcomeResult; label: string; activeClass: string 
   { key: 'blocked-ability', label: 'Blocked', activeClass: 'bg-purple-900/70 text-purple-300' },
 ];
 
-export default function MoveOutcomePrompt({ battle, battleLogActions, move, moveCategory, actionId, targets, onClose }: MoveOutcomePromptProps) {
+export default function MoveOutcomePrompt({ battle, battleLogActions, gameDataState, move, moveCategory, actionId, targets, onClose }: MoveOutcomePromptProps) {
   const action = battle.turns.flatMap(t => t.actions).find(a => a.id === actionId);
   const turnNumber = battle.turns.length;
+
+  const revealAndBlock = (opponent: OpponentPokemonEntry, ability: string) => {
+    battleLogActions.revealBlockingAbility(battle, opponent.id, ability, turnNumber, actionId);
+  };
 
   return (
     <div className="flex flex-col gap-1.5 px-3 py-2 rounded bg-yellow-500/10 border border-yellow-600 self-center">
@@ -45,6 +107,7 @@ export default function MoveOutcomePrompt({ battle, battleLogActions, move, move
       <div className="flex flex-col gap-1">
         {targets.map(t => {
           const outcome = action?.outcomes?.find(o => o.pokemonId === t.pokemonId)?.result ?? null;
+          const opponent = t.side === 'opponent' ? battle.opponentRoster.find(o => o.id === t.pokemonId) : undefined;
           return (
             <div key={`${t.side}-${t.pokemonId}`} className="flex items-center gap-1.5">
               <span className={`text-[11px] w-24 truncate ${t.side === 'player' ? 'text-blue-300' : 'text-red-300'}`}>
@@ -62,6 +125,16 @@ export default function MoveOutcomePrompt({ battle, battleLogActions, move, move
                   {b.label}
                 </button>
               ))}
+              {opponent && !opponent.ability && (
+                <UnrevealedAbilityPicker
+                  opponent={opponent}
+                  move={move}
+                  moveType={action?.moveType}
+                  moveCategory={moveCategory}
+                  gameDataState={gameDataState}
+                  onPick={ability => revealAndBlock(opponent, ability)}
+                />
+              )}
             </div>
           );
         })}

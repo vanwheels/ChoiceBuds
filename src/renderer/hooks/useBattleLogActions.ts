@@ -122,6 +122,7 @@ export interface UseBattleLogActionsReturn {
   logAction: (battle: Battle, action: Omit<BattleAction, 'id'>) => Promise<string | null>;
   setActionFailed: (battle: Battle, turnNumber: number, actionId: string, failed: boolean) => Promise<boolean>;
   setActionTargetOutcome: (battle: Battle, turnNumber: number, actionId: string, pokemonId: string, result: 'crit' | 'miss' | 'no-effect' | 'blocked-ability' | null) => Promise<boolean>;
+  revealBlockingAbility: (battle: Battle, opponentId: string, ability: string, turnNumber: number, actionId: string) => Promise<boolean>;
   advanceTurn: (battle: Battle) => Promise<boolean>;
   undoLastAction: (battle: Battle) => Promise<boolean>;
   setResult: (battle: Battle, result: Battle['result']) => Promise<boolean>;
@@ -741,6 +742,38 @@ export function useBattleLogActions(
     return updateBattle(battle.id, { turns });
   }, [updateBattle]);
 
+  /**
+   * Reveals an opponent's ability and tags this target's move outcome as
+   * Blocked together, in one updateBattle call - MoveOutcomePrompt.tsx's
+   * unrevealed-ability picker needs both to land atomically. opponentRoster
+   * and turns are disjoint fields, but firing updateOpponentMoveTags and
+   * setActionTargetOutcome as two sequential calls here would race off the
+   * same stale `battle` closure (same reasoning as appendAction's own
+   * comment above, for the same "bundle into one updateBattle call" fix).
+   */
+  const revealBlockingAbility = useCallback(async (
+    battle: Battle,
+    opponentId: string,
+    ability: string,
+    turnNumber: number,
+    actionId: string
+  ): Promise<boolean> => {
+    const currentTurn = battle.turns.length;
+    const opponentRoster = battle.opponentRoster.map(o => {
+      if (o.id !== opponentId) return o;
+      return { ...o, ability, abilityRevealedOnTurn: ability !== o.ability ? currentTurn : o.abilityRevealedOnTurn };
+    });
+    const turns = battle.turns.map(turn => turn.number !== turnNumber ? turn : {
+      ...turn,
+      actions: turn.actions.map(action => {
+        if (action.id !== actionId) return action;
+        const outcomes = (action.outcomes ?? []).filter(o => o.pokemonId !== opponentId);
+        return { ...action, outcomes: [...outcomes, { pokemonId: opponentId, result: 'blocked-ability' as const }] };
+      }),
+    });
+    return updateBattle(battle.id, { opponentRoster, turns });
+  }, [updateBattle]);
+
   const advanceTurn = useCallback(async (battle: Battle): Promise<boolean> => {
     const turns = [...battle.turns, { number: battle.turns.length + 1, actions: [] }];
     return updateBattle(battle.id, { turns });
@@ -910,6 +943,7 @@ export function useBattleLogActions(
     logAction,
     setActionFailed,
     setActionTargetOutcome,
+    revealBlockingAbility,
     advanceTurn,
     undoLastAction,
     setResult,

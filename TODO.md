@@ -17,69 +17,13 @@ focused on what's actually next.
      with at least one target, supporting multi-target/spread moves
      (Rock Slide, Earthquake, etc.) with one independently-toggleable row
      per target. See COMPLETED.md for the implementation trail.
-  2. **Scoped, not yet built** (paused 2026-07-16 due to a session-limit
-     warning, right before implementation - resume from here). Decisions
-     already made with the user, don't re-ask:
-     - When a target's ability isn't revealed but could plausibly block
-       the move: show a dropdown to pick the real ability (same
-       species-legal-ability list `OpponentRowFields.tsx`'s
-       `OpponentAbilityCell` already uses via
-       `gameDataState.getEnrichedSpeciesOptions` - picking one both reveals
-       the ability via `updateOpponentMoveTags` AND sets the outcome, in
-       one action).
-     - Absorb-type abilities (Flash Fire/Volt Absorb/Water Absorb/Sap
-       Sipper/Storm Drain/Lightning Rod/Motor Drive) should route through
-       the existing per-stat-stage-change mechanism
-       (`config/hitReactiveAbilities.ts`'s `HitReactiveEffect.changes:
-       {stat, stages}[]`) rather than the generic "Blocked" outcome,
-       *wherever that mechanism actually fits*.
-     - Build a comprehensive, researched ability table now (not a narrow
-       Levitate/Bulletproof-only pass) - full research pass requested.
-
-     **Real architectural findings from investigating before the pause -
-     don't redo this analysis, just act on it:**
-     - `hitReactiveAbilities.ts`'s `HitReactiveEffect.changes` only supports
-       `{stat: StatKey, stages: number}[]` - no HP-heal, no move-power-buff
-       concept exists anywhere in the app (this app tracks no numeric/%
-       HP at all, only a boolean fainted flag - already stated in that
-       file's own header). So of the 7 absorb abilities: **Sap Sipper,
-       Storm Drain, Lightning Rod, Motor Drive** are pure single-stat-stage
-       boosts and fit the existing mechanism cleanly (same pattern as
-       Justified/Stamina/etc. already in that file). **Volt Absorb, Water
-       Absorb, Flash Fire, Dry Skin** heal HP or buff move power (not a
-       stat stage) and structurally *cannot* fit the existing mechanism at
-       all - for these 4, falling back to plain "Blocked" is the correct
-       call, not a shortcut.
-     - Stat-drop-immunity abilities (Clear Body/White Smoke/Full Metal
-       Body/Hyper Cutter/Big Pecks/Keen Eye/Illuminate/Mind's Eye) are
-       architecturally different from the rest of this feature:
-       `logAction` already *auto-applies* known deterministic stat drops
-       (`config/moveStatEffects.ts`) before the confirmation prompt ever
-       shows, so "Blocked" for these isn't just a new prompt toggle - it
-       needs the auto-apply logic itself to check the target's ability
-       first. Recommendation: scope this category OUT of the first pass
-       (documented exclusion, not silently dropped) rather than force it
-       into the same change as the rest.
-     - Own Tempo (confusion) and the Aroma Veil/Oblivious/Sweet Veil
-       "mental move" family (Taunt/Encore/Torment/Disable/Heal Block/
-       Attract) have **nothing to block from this app's data model at
-       all** - confusion isn't a tracked `StatusCondition` (only burn/
-       freeze/paralysis/poison/badly-poisoned/sleep are), and none of
-       Taunt/Encore/Torment/Disable/Heal Block/Attract are tracked as
-       persistent state anywhere. Recommendation: exclude these entirely
-       (documented, not silently), same reasoning as Anger Point/Anger
-       Shell already excluded in `hitReactiveAbilities.ts` for the same
-       kind of untracked-data reason.
-     - Priority-blocking abilities (Dazzling/Queenly Majesty/Armor Tail)
-       need a `priority` field on `MoveData` that doesn't exist yet
-       (PokeAPI does return it, just never fetched/stored) - a modest but
-       real addition, not free.
-     - A comprehensive-ability-list research agent was dispatched
-       (Bulbapedia primary source, Serebii cross-check per this project's
-       source-verification convention) but **never returned before the
-       pause** - it may complete independently in the background
-       regardless of this session ending; check for its result at the
-       start of the next session before re-researching from scratch.
+  2. **Done (2026-07-16)** - ability-based blocking: a researched
+     move-blocking-ability table (`config/moveBlockingAbilities.ts`) plus an
+     unrevealed-ability picker in `MoveOutcomePrompt.tsx` that reveals the
+     ability and sets the outcome to Blocked in one atomic action. See
+     COMPLETED.md for the implementation trail, the deliberately-excluded
+     ability categories, and a pre-existing (not introduced by this change)
+     stat-drop/auto-apply-ordering gap surfaced while live-testing it.
   3. **Not started** - multi-hit move logging (Population Bomb, Triple
      Axel, Bullet Seed, etc.) - log how many hits actually connected.
      Nothing exists for this in the Battle Logger yet (the Calc page's

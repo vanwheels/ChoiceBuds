@@ -50,6 +50,16 @@ const HIT_REACTIVE_ABILITIES: Record<string, HitReactiveEffect> = {
   'weak-armor': { trigger: { kind: 'category', category: 'physical' }, changes: [{ stat: 'def', stages: -1 }, { stat: 'spe', stages: 2 }] },
   'water-compaction': { trigger: { kind: 'move-type', types: ['water'] }, changes: [{ stat: 'def', stages: 2 }] },
   'steam-engine': { trigger: { kind: 'move-type', types: ['fire', 'water'] }, changes: [{ stat: 'spe', stages: 6 }] },
+  // Type-immunity abilities whose effect IS a stat boost (not a heal/power-buff) - these also fully
+  // block the triggering move (see config/moveBlockingAbilities.ts), but the boost itself fits this
+  // same trigger/changes shape as Justified/Stamina above, so it's tracked here rather than inventing
+  // a second mechanism. Volt Absorb/Water Absorb/Flash Fire/Dry Skin are the other 4 absorb-family
+  // abilities - excluded here because they heal HP or buff move power, neither of which this app's
+  // stat-stages-only model can express; they fall back to a plain Blocked outcome instead.
+  'sap-sipper': { trigger: { kind: 'move-type', types: ['grass'] }, changes: [{ stat: 'atk', stages: 1 }] },
+  'storm-drain': { trigger: { kind: 'move-type', types: ['water'] }, changes: [{ stat: 'spa', stages: 1 }] },
+  'lightning-rod': { trigger: { kind: 'move-type', types: ['electric'] }, changes: [{ stat: 'spa', stages: 1 }] },
+  'motor-drive': { trigger: { kind: 'move-type', types: ['electric'] }, changes: [{ stat: 'spe', stages: 1 }] },
 };
 
 export function getHitReactiveEffect(ability: string | undefined): HitReactiveEffect | null {

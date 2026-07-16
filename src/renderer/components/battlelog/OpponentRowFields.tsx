@@ -33,7 +33,7 @@ interface RowFieldProps {
 }
 
 /** "sand-stream" -> "Sand Stream" - AbilityData.name is a normalized lowercase-hyphenated slug. */
-function formatAbilityName(slug: string): string {
+export function formatAbilityName(slug: string): string {
   return slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
 
