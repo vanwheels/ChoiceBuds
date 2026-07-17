@@ -69,6 +69,16 @@ export async function generateTeamSheetPdf(team: Team, playerProfile: PlayerProf
     page.drawText(text, { x: pos.x, y: pos.y, size: pos.size, font });
   };
 
+  /** Stat numbers only - `pos.x` there is a column-wide CENTER anchor (see
+   * generateTeamSheetLayout.ts), not a left edge like every other field, so
+   * the actual draw x has to shift left by half this specific string's own
+   * rendered width to land centered. */
+  const drawCentered = (page: typeof page0, text: string, pos: TeamSheetFieldPos) => {
+    if (!text) return;
+    const width = font.widthOfTextAtSize(text, pos.size);
+    page.drawText(text, { x: pos.x - width / 2, y: pos.y, size: pos.size, font });
+  };
+
   const battleTeamNumberName = [team.battleTeamNumber, team.battleTeamName].filter(Boolean).join(' - ');
 
   const drawSharedHeader = (page: typeof page0, layout: TeamSheetPageLayout) => {
@@ -103,12 +113,12 @@ export async function generateTeamSheetPdf(team: Team, playerProfile: PlayerProf
       const stats = computeRealStats(pokemon);
       if (!stats) return;
       const pos = slots[i].stats;
-      draw(page, String(stats.hp), pos.hp);
-      draw(page, String(stats.atk), pos.atk);
-      draw(page, String(stats.def), pos.def);
-      draw(page, String(stats.spa), pos.spa);
-      draw(page, String(stats.spd), pos.spd);
-      draw(page, String(stats.spe), pos.spe);
+      drawCentered(page, String(stats.hp), pos.hp);
+      drawCentered(page, String(stats.atk), pos.atk);
+      drawCentered(page, String(stats.def), pos.def);
+      drawCentered(page, String(stats.spa), pos.spa);
+      drawCentered(page, String(stats.spd), pos.spd);
+      drawCentered(page, String(stats.spe), pos.spe);
     });
   };
 

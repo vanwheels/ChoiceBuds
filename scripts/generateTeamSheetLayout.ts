@@ -42,8 +42,17 @@ import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 
 const GAP_X = 4;
 const CHECKBOX_OFFSET_X = -10;
-const PER_MON_FIELD_SIZE = 7;
-const HEADER_FIELD_SIZE = 8;
+const PER_MON_FIELD_SIZE = 9;
+const HEADER_FIELD_SIZE = 10;
+// Right edge of column A's own per-Pokémon box (PDF points) - visually
+// calibrated against a zoomed render of the blank template (no vector
+// rect/line data available to read this precisely; text-layer extraction
+// alone doesn't expose cell borders). Column B's box is the exact same
+// template mirrored, so its right edge is this same value shifted by
+// whatever column B's "Pokémon" label is offset from column A's - computed
+// below, not hardcoded, so a template replacement that reflows the two
+// columns wouldn't silently go stale here.
+const STAT_BOX_RIGHT_EDGE_A = 308;
 
 interface TextItem { x: number; y: number; w: number; str: string }
 interface Pos { x: number; y: number; size: number }
@@ -117,15 +126,48 @@ function findStatColumnRows(items: TextItem[], str: string, column: 'A' | 'B'): 
   return matches.sort((a, b) => b.y - a.y);
 }
 
+/**
+ * Stat numbers are centered in the remaining box space after the label,
+ * not left-aligned right after it like every other field - a 2-3 digit
+ * number flush against "Sp. Atk"/"Sp. Def" (the widest labels) reads as
+ * lopsided in a box wide enough to comfortably fit both. One shared x per
+ * column (not per row) so the 6 numbers in a column stay vertically
+ * aligned regardless of each row's own label width - only the label
+ * itself varies row to row. `x` here is a CENTER, unlike every other
+ * TeamSheetFieldPos in this file (which is left-edge, where drawText
+ * starts) - services/teamSheetPdf.ts's drawCentered() is the one place
+ * that reads it that way, offsetting by the actual rendered number's own
+ * width at draw time (font.widthOfTextAtSize) rather than baking in a
+ * fixed width up front, since "162" and "8" aren't the same width.
+ */
+function statColumnAnchorX(colItems: Record<string, TextItem[]>, boxRightEdge: number): number {
+  const maxLabelEnd = Math.max(...STAT_FIELD_LABELS.map(([key]) => {
+    const item = colItems[key][0];
+    return item.x + item.w;
+  }));
+  const left = maxLabelEnd + GAP_X;
+  const right = boxRightEdge - 3;
+  return Number(((left + right) / 2).toFixed(1));
+}
+
 function buildStatsTables(items: TextItem[]) {
   const colA = Object.fromEntries(STAT_FIELD_LABELS.map(([key, label]) => [key, findStatColumnRows(items, label, 'A')]));
   const colB = Object.fromEntries(STAT_FIELD_LABELS.map(([key, label]) => [key, findStatColumnRows(items, label, 'B')]));
+
+  // Column B is column A's exact layout shifted right by the same delta as
+  // the "Pokémon" label's own colA->colB offset (both columns are
+  // identically laid out, just mirrored across the page).
+  const pokemonLabels = findAll(items, 'Pokémon');
+  const colShiftX = pokemonLabels.filter(i => i.x >= 300)[0].x - pokemonLabels.filter(i => i.x < 200)[0].x;
+  const anchorA = statColumnAnchorX(colA, STAT_BOX_RIGHT_EDGE_A);
+  const anchorB = statColumnAnchorX(colB, STAT_BOX_RIGHT_EDGE_A + colShiftX);
+
   const tables = [];
   for (let row = 0; row < 3; row++) {
-    tables.push(Object.fromEntries(STAT_FIELD_LABELS.map(([key]) => [key, value(colA[key][row], PER_MON_FIELD_SIZE)])));
+    tables.push(Object.fromEntries(STAT_FIELD_LABELS.map(([key]) => [key, { x: anchorA, y: Number(colA[key][row].y.toFixed(1)), size: PER_MON_FIELD_SIZE }])));
   }
   for (let row = 0; row < 3; row++) {
-    tables.push(Object.fromEntries(STAT_FIELD_LABELS.map(([key]) => [key, value(colB[key][row], PER_MON_FIELD_SIZE)])));
+    tables.push(Object.fromEntries(STAT_FIELD_LABELS.map(([key]) => [key, { x: anchorB, y: Number(colB[key][row].y.toFixed(1)), size: PER_MON_FIELD_SIZE }])));
   }
   return tables;
 }

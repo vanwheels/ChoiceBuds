@@ -113,6 +113,32 @@ local ("see below"/"see above").
   first repro attempt used an unrealistic bare "Basculegion"+gender pairing
   for both and got identical stats for both - a test-data mistake, not a
   real bug, caught by rerunning with the actual stored-string convention).
+  **Third follow-up, polish requested after reviewing real output**: font
+  sizes bumped across the board (`PER_MON_FIELD_SIZE` 7->9,
+  `HEADER_FIELD_SIZE` 8->10 in `scripts/generateTeamSheetLayout.ts`) for
+  legibility, and the stat-table numbers now draw centered in their box
+  instead of left-aligned immediately after the label - every other field
+  reads naturally left-aligned right after its label (matches
+  "handwriting on a line"), but a 2-3 digit number flush against "Sp.
+  Atk"/"Sp. Def" (the widest stat labels) looked lopsided in a box with
+  plenty of room after it. New `TeamSheetFieldPos.x` semantics for stats
+  only (a column-wide center anchor, one shared x per column so the 6
+  numbers stay vertically aligned regardless of each row's own label
+  width - not per-row, which would stagger slightly) plus
+  `teamSheetPdf.ts::drawCentered()`, which offsets by the specific
+  number's own rendered width (`font.widthOfTextAtSize`) at draw time
+  since "8" and "162" aren't the same width. The box's own right edge
+  isn't exposed anywhere in the PDF's text layer (checked - no vector
+  rect/line ops either, `getOperatorList()` only returned per-page clip
+  regions, not per-cell borders), so it's a visually-calibrated constant
+  (`STAT_BOX_RIGHT_EDGE_A`, colB derived from it via the same colA->colB
+  shift as the "Pokémon" label, not hardcoded separately) - verified
+  correct afterward by extracting the actual filled PDF's own text
+  positions rather than trusting a screenshot (a compressed, tiny-text
+  screenshot crop briefly looked like the number was overlapping the "HP"
+  label; exact text-layer coordinates showed a clean 24pt gap on one side
+  and 13pt from the box edge on the other - the screenshot read was a
+  misperception, not a real bug).
 
 - **Battle Logger: multi-hit move logging (part 3 of the Miss/Crit/No
   Effect/Blocked redesign)** (2026-07-16): logs how many hits actually

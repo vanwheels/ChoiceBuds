@@ -49,139 +49,139 @@ export const TEAM_SHEET_LAYOUT: { page0: TeamSheetStaffPageLayout; page1: TeamSh
     "playerName": {
       "x": 142.4,
       "y": 706.4,
-      "size": 8
+      "size": 10
     },
     "ageDivision": {
       "juniors": {
         "x": 430.3,
         "y": 706.4,
-        "size": 8
+        "size": 10
       },
       "seniors": {
         "x": 482.4,
         "y": 706.4,
-        "size": 8
+        "size": 10
       },
       "masters": {
         "x": 533.5,
         "y": 706.4,
-        "size": 8
+        "size": 10
       }
     },
     "trainerNameInGame": {
       "x": 142.5,
       "y": 684.3,
-      "size": 8
+      "size": 10
     },
     "battleTeamNumberName": {
       "x": 142.6,
       "y": 664.4,
-      "size": 8
+      "size": 10
     },
     "switchProfileName": {
       "x": 142.5,
       "y": 639.9,
-      "size": 8
+      "size": 10
     },
     "playerId": {
       "x": 434.7,
       "y": 684.3,
-      "size": 8
+      "size": 10
     },
     "dateOfBirth": {
       "month": {
         "x": 434.7,
         "y": 664.4,
-        "size": 8
+        "size": 10
       },
       "day": {
         "x": 488.3,
         "y": 664.4,
-        "size": 8
+        "size": 10
       },
       "year": {
         "x": 544.1,
         "y": 664.4,
-        "size": 8
+        "size": 10
       }
     },
     "supportId": {
       "x": 434.6,
       "y": 639.9,
-      "size": 8
+      "size": 10
     },
     "pokemonSlots": [
       {
         "species": {
           "x": 86.1,
           "y": 610.7,
-          "size": 7
+          "size": 9
         },
         "statAlignment": {
           "x": 86.7,
           "y": 584.6,
-          "size": 7
+          "size": 9
         },
         "ability": {
           "x": 86.1,
           "y": 559.8,
-          "size": 7
+          "size": 9
         },
         "heldItem": {
           "x": 86.1,
           "y": 536.6,
-          "size": 7
+          "size": 9
         },
         "move1": {
           "x": 86.1,
           "y": 513.4,
-          "size": 7
+          "size": 9
         },
         "move2": {
           "x": 86.1,
           "y": 490.3,
-          "size": 7
+          "size": 9
         },
         "move3": {
           "x": 86.1,
           "y": 467.1,
-          "size": 7
+          "size": 9
         },
         "move4": {
           "x": 86.1,
           "y": 443.9,
-          "size": 7
+          "size": 9
         },
         "stats": {
           "hp": {
-            "x": 259.4,
+            "x": 287.3,
             "y": 570.2,
-            "size": 7
+            "size": 9
           },
           "atk": {
-            "x": 260.8,
+            "x": 287.3,
             "y": 547.1,
-            "size": 7
+            "size": 9
           },
           "def": {
-            "x": 261.1,
+            "x": 287.3,
             "y": 523.9,
-            "size": 7
+            "size": 9
           },
           "spa": {
-            "x": 269.3,
+            "x": 287.3,
             "y": 500.7,
-            "size": 7
+            "size": 9
           },
           "spd": {
-            "x": 269.6,
+            "x": 287.3,
             "y": 477.6,
-            "size": 7
+            "size": 9
           },
           "spe": {
-            "x": 267.2,
+            "x": 287.3,
             "y": 454.4,
-            "size": 7
+            "size": 9
           }
         }
       },
@@ -189,73 +189,73 @@ export const TEAM_SHEET_LAYOUT: { page0: TeamSheetStaffPageLayout; page1: TeamSh
         "species": {
           "x": 86.1,
           "y": 409.3,
-          "size": 7
+          "size": 9
         },
         "statAlignment": {
           "x": 86.7,
           "y": 383.2,
-          "size": 7
+          "size": 9
         },
         "ability": {
           "x": 86.1,
           "y": 358.4,
-          "size": 7
+          "size": 9
         },
         "heldItem": {
           "x": 86.1,
           "y": 335.2,
-          "size": 7
+          "size": 9
         },
         "move1": {
           "x": 86.1,
           "y": 312.1,
-          "size": 7
+          "size": 9
         },
         "move2": {
           "x": 86.1,
           "y": 288.9,
-          "size": 7
+          "size": 9
         },
         "move3": {
           "x": 86.1,
           "y": 265.7,
-          "size": 7
+          "size": 9
         },
         "move4": {
           "x": 86.1,
           "y": 242.6,
-          "size": 7
+          "size": 9
         },
         "stats": {
           "hp": {
-            "x": 259.4,
+            "x": 287.3,
             "y": 368.8,
-            "size": 7
+            "size": 9
           },
           "atk": {
-            "x": 260.8,
+            "x": 287.3,
             "y": 345.6,
-            "size": 7
+            "size": 9
           },
           "def": {
-            "x": 261.1,
+            "x": 287.3,
             "y": 322.5,
-            "size": 7
+            "size": 9
           },
           "spa": {
-            "x": 269.3,
+            "x": 287.3,
             "y": 299.3,
-            "size": 7
+            "size": 9
           },
           "spd": {
-            "x": 269.6,
+            "x": 287.3,
             "y": 276.2,
-            "size": 7
+            "size": 9
           },
           "spe": {
-            "x": 267.2,
+            "x": 287.3,
             "y": 253,
-            "size": 7
+            "size": 9
           }
         }
       },
@@ -263,73 +263,73 @@ export const TEAM_SHEET_LAYOUT: { page0: TeamSheetStaffPageLayout; page1: TeamSh
         "species": {
           "x": 86.1,
           "y": 207.9,
-          "size": 7
+          "size": 9
         },
         "statAlignment": {
           "x": 86.7,
           "y": 181.8,
-          "size": 7
+          "size": 9
         },
         "ability": {
           "x": 86.1,
           "y": 157,
-          "size": 7
+          "size": 9
         },
         "heldItem": {
           "x": 86.1,
           "y": 133.8,
-          "size": 7
+          "size": 9
         },
         "move1": {
           "x": 86.1,
           "y": 110.7,
-          "size": 7
+          "size": 9
         },
         "move2": {
           "x": 86.1,
           "y": 87.5,
-          "size": 7
+          "size": 9
         },
         "move3": {
           "x": 86.1,
           "y": 65.9,
-          "size": 7
+          "size": 9
         },
         "move4": {
           "x": 86.1,
           "y": 44.2,
-          "size": 7
+          "size": 9
         },
         "stats": {
           "hp": {
-            "x": 259.4,
+            "x": 287.3,
             "y": 167.4,
-            "size": 7
+            "size": 9
           },
           "atk": {
-            "x": 260.8,
+            "x": 287.3,
             "y": 144.3,
-            "size": 7
+            "size": 9
           },
           "def": {
-            "x": 261.1,
+            "x": 287.3,
             "y": 121.1,
-            "size": 7
+            "size": 9
           },
           "spa": {
-            "x": 269.3,
+            "x": 287.3,
             "y": 97.9,
-            "size": 7
+            "size": 9
           },
           "spd": {
-            "x": 269.6,
+            "x": 287.3,
             "y": 74.8,
-            "size": 7
+            "size": 9
           },
           "spe": {
-            "x": 267.2,
+            "x": 287.3,
             "y": 54.6,
-            "size": 7
+            "size": 9
           }
         }
       },
@@ -337,73 +337,73 @@ export const TEAM_SHEET_LAYOUT: { page0: TeamSheetStaffPageLayout; page1: TeamSh
         "species": {
           "x": 378.2,
           "y": 610.7,
-          "size": 7
+          "size": 9
         },
         "statAlignment": {
           "x": 378.8,
           "y": 584.6,
-          "size": 7
+          "size": 9
         },
         "ability": {
           "x": 378.2,
           "y": 559.8,
-          "size": 7
+          "size": 9
         },
         "heldItem": {
           "x": 378.2,
           "y": 536.6,
-          "size": 7
+          "size": 9
         },
         "move1": {
           "x": 378.2,
           "y": 513.4,
-          "size": 7
+          "size": 9
         },
         "move2": {
           "x": 378.2,
           "y": 490.3,
-          "size": 7
+          "size": 9
         },
         "move3": {
           "x": 378.2,
           "y": 467.1,
-          "size": 7
+          "size": 9
         },
         "move4": {
           "x": 378.2,
           "y": 443.9,
-          "size": 7
+          "size": 9
         },
         "stats": {
           "hp": {
-            "x": 551.5,
+            "x": 579.4,
             "y": 570.2,
-            "size": 7
+            "size": 9
           },
           "atk": {
-            "x": 552.9,
+            "x": 579.4,
             "y": 547.1,
-            "size": 7
+            "size": 9
           },
           "def": {
-            "x": 553.2,
+            "x": 579.4,
             "y": 523.9,
-            "size": 7
+            "size": 9
           },
           "spa": {
-            "x": 561.4,
+            "x": 579.4,
             "y": 500.7,
-            "size": 7
+            "size": 9
           },
           "spd": {
-            "x": 561.7,
+            "x": 579.4,
             "y": 477.6,
-            "size": 7
+            "size": 9
           },
           "spe": {
-            "x": 559.4,
+            "x": 579.4,
             "y": 454.4,
-            "size": 7
+            "size": 9
           }
         }
       },
@@ -411,73 +411,73 @@ export const TEAM_SHEET_LAYOUT: { page0: TeamSheetStaffPageLayout; page1: TeamSh
         "species": {
           "x": 378.2,
           "y": 409.3,
-          "size": 7
+          "size": 9
         },
         "statAlignment": {
           "x": 378.8,
           "y": 383.2,
-          "size": 7
+          "size": 9
         },
         "ability": {
           "x": 378.2,
           "y": 358.4,
-          "size": 7
+          "size": 9
         },
         "heldItem": {
           "x": 378.2,
           "y": 335.2,
-          "size": 7
+          "size": 9
         },
         "move1": {
           "x": 378.2,
           "y": 312.1,
-          "size": 7
+          "size": 9
         },
         "move2": {
           "x": 378.2,
           "y": 288.9,
-          "size": 7
+          "size": 9
         },
         "move3": {
           "x": 378.2,
           "y": 265.7,
-          "size": 7
+          "size": 9
         },
         "move4": {
           "x": 378.2,
           "y": 242.6,
-          "size": 7
+          "size": 9
         },
         "stats": {
           "hp": {
-            "x": 551.5,
+            "x": 579.4,
             "y": 368.8,
-            "size": 7
+            "size": 9
           },
           "atk": {
-            "x": 552.9,
+            "x": 579.4,
             "y": 345.6,
-            "size": 7
+            "size": 9
           },
           "def": {
-            "x": 553.2,
+            "x": 579.4,
             "y": 322.5,
-            "size": 7
+            "size": 9
           },
           "spa": {
-            "x": 561.4,
+            "x": 579.4,
             "y": 299.3,
-            "size": 7
+            "size": 9
           },
           "spd": {
-            "x": 561.7,
+            "x": 579.4,
             "y": 276.2,
-            "size": 7
+            "size": 9
           },
           "spe": {
-            "x": 559.4,
+            "x": 579.4,
             "y": 253,
-            "size": 7
+            "size": 9
           }
         }
       },
@@ -485,73 +485,73 @@ export const TEAM_SHEET_LAYOUT: { page0: TeamSheetStaffPageLayout; page1: TeamSh
         "species": {
           "x": 378.2,
           "y": 207.9,
-          "size": 7
+          "size": 9
         },
         "statAlignment": {
           "x": 378.8,
           "y": 181.8,
-          "size": 7
+          "size": 9
         },
         "ability": {
           "x": 378.2,
           "y": 157,
-          "size": 7
+          "size": 9
         },
         "heldItem": {
           "x": 378.2,
           "y": 133.8,
-          "size": 7
+          "size": 9
         },
         "move1": {
           "x": 378.2,
           "y": 110.7,
-          "size": 7
+          "size": 9
         },
         "move2": {
           "x": 378.2,
           "y": 87.5,
-          "size": 7
+          "size": 9
         },
         "move3": {
           "x": 378.2,
           "y": 65.9,
-          "size": 7
+          "size": 9
         },
         "move4": {
           "x": 378.2,
           "y": 44.2,
-          "size": 7
+          "size": 9
         },
         "stats": {
           "hp": {
-            "x": 551.5,
+            "x": 579.4,
             "y": 167.4,
-            "size": 7
+            "size": 9
           },
           "atk": {
-            "x": 552.9,
+            "x": 579.4,
             "y": 144.3,
-            "size": 7
+            "size": 9
           },
           "def": {
-            "x": 553.2,
+            "x": 579.4,
             "y": 121.1,
-            "size": 7
+            "size": 9
           },
           "spa": {
-            "x": 561.4,
+            "x": 579.4,
             "y": 97.9,
-            "size": 7
+            "size": 9
           },
           "spd": {
-            "x": 561.7,
+            "x": 579.4,
             "y": 74.8,
-            "size": 7
+            "size": 9
           },
           "spe": {
-            "x": 559.4,
+            "x": 579.4,
             "y": 54.6,
-            "size": 7
+            "size": 9
           }
         }
       }
@@ -561,291 +561,291 @@ export const TEAM_SHEET_LAYOUT: { page0: TeamSheetStaffPageLayout; page1: TeamSh
     "playerName": {
       "x": 142.4,
       "y": 708.2,
-      "size": 8
+      "size": 10
     },
     "ageDivision": {
       "juniors": {
         "x": 430.3,
         "y": 708.2,
-        "size": 8
+        "size": 10
       },
       "seniors": {
         "x": 482.4,
         "y": 708.2,
-        "size": 8
+        "size": 10
       },
       "masters": {
         "x": 533.5,
         "y": 708.2,
-        "size": 8
+        "size": 10
       }
     },
     "trainerNameInGame": {
       "x": 142.5,
       "y": 686.1,
-      "size": 8
+      "size": 10
     },
     "battleTeamNumberName": {
       "x": 142.6,
       "y": 664.8,
-      "size": 8
+      "size": 10
     },
     "switchProfileName": {
       "x": 142.5,
       "y": 641.7,
-      "size": 8
+      "size": 10
     },
     "pokemonSlots": [
       {
         "species": {
           "x": 86.1,
           "y": 612.9,
-          "size": 7
+          "size": 9
         },
         "statAlignment": {
           "x": 86.7,
           "y": 586.9,
-          "size": 7
+          "size": 9
         },
         "ability": {
           "x": 86.1,
           "y": 562.1,
-          "size": 7
+          "size": 9
         },
         "heldItem": {
           "x": 86.1,
           "y": 538.9,
-          "size": 7
+          "size": 9
         },
         "move1": {
           "x": 86.1,
           "y": 515.7,
-          "size": 7
+          "size": 9
         },
         "move2": {
           "x": 86.1,
           "y": 492.6,
-          "size": 7
+          "size": 9
         },
         "move3": {
           "x": 86.1,
           "y": 469.4,
-          "size": 7
+          "size": 9
         },
         "move4": {
           "x": 86.1,
           "y": 446.2,
-          "size": 7
+          "size": 9
         }
       },
       {
         "species": {
           "x": 86.1,
           "y": 411.6,
-          "size": 7
+          "size": 9
         },
         "statAlignment": {
           "x": 86.7,
           "y": 385.5,
-          "size": 7
+          "size": 9
         },
         "ability": {
           "x": 86.1,
           "y": 360.6,
-          "size": 7
+          "size": 9
         },
         "heldItem": {
           "x": 86.1,
           "y": 337.5,
-          "size": 7
+          "size": 9
         },
         "move1": {
           "x": 86.1,
           "y": 314.3,
-          "size": 7
+          "size": 9
         },
         "move2": {
           "x": 86.1,
           "y": 291.2,
-          "size": 7
+          "size": 9
         },
         "move3": {
           "x": 86.1,
           "y": 268,
-          "size": 7
+          "size": 9
         },
         "move4": {
           "x": 86.1,
           "y": 244.8,
-          "size": 7
+          "size": 9
         }
       },
       {
         "species": {
           "x": 86.1,
           "y": 210.1,
-          "size": 7
+          "size": 9
         },
         "statAlignment": {
           "x": 86.7,
           "y": 184.1,
-          "size": 7
+          "size": 9
         },
         "ability": {
           "x": 86.1,
           "y": 159.3,
-          "size": 7
+          "size": 9
         },
         "heldItem": {
           "x": 86.1,
           "y": 136.1,
-          "size": 7
+          "size": 9
         },
         "move1": {
           "x": 86.1,
           "y": 112.9,
-          "size": 7
+          "size": 9
         },
         "move2": {
           "x": 86.1,
           "y": 89.8,
-          "size": 7
+          "size": 9
         },
         "move3": {
           "x": 86.1,
           "y": 66.6,
-          "size": 7
+          "size": 9
         },
         "move4": {
           "x": 86.1,
           "y": 43.4,
-          "size": 7
+          "size": 9
         }
       },
       {
         "species": {
           "x": 378.2,
           "y": 612.9,
-          "size": 7
+          "size": 9
         },
         "statAlignment": {
           "x": 378.8,
           "y": 586.9,
-          "size": 7
+          "size": 9
         },
         "ability": {
           "x": 378.2,
           "y": 562.1,
-          "size": 7
+          "size": 9
         },
         "heldItem": {
           "x": 378.2,
           "y": 538.9,
-          "size": 7
+          "size": 9
         },
         "move1": {
           "x": 378.2,
           "y": 515.7,
-          "size": 7
+          "size": 9
         },
         "move2": {
           "x": 378.2,
           "y": 492.6,
-          "size": 7
+          "size": 9
         },
         "move3": {
           "x": 378.2,
           "y": 469.4,
-          "size": 7
+          "size": 9
         },
         "move4": {
           "x": 378.2,
           "y": 446.2,
-          "size": 7
+          "size": 9
         }
       },
       {
         "species": {
           "x": 378.2,
           "y": 411.6,
-          "size": 7
+          "size": 9
         },
         "statAlignment": {
           "x": 378.8,
           "y": 385.5,
-          "size": 7
+          "size": 9
         },
         "ability": {
           "x": 378.2,
           "y": 360.6,
-          "size": 7
+          "size": 9
         },
         "heldItem": {
           "x": 378.2,
           "y": 337.5,
-          "size": 7
+          "size": 9
         },
         "move1": {
           "x": 378.2,
           "y": 314.3,
-          "size": 7
+          "size": 9
         },
         "move2": {
           "x": 378.2,
           "y": 291.2,
-          "size": 7
+          "size": 9
         },
         "move3": {
           "x": 378.2,
           "y": 268,
-          "size": 7
+          "size": 9
         },
         "move4": {
           "x": 378.2,
           "y": 244.8,
-          "size": 7
+          "size": 9
         }
       },
       {
         "species": {
           "x": 378.2,
           "y": 210.1,
-          "size": 7
+          "size": 9
         },
         "statAlignment": {
           "x": 378.8,
           "y": 184.1,
-          "size": 7
+          "size": 9
         },
         "ability": {
           "x": 378.2,
           "y": 159.3,
-          "size": 7
+          "size": 9
         },
         "heldItem": {
           "x": 378.2,
           "y": 136.1,
-          "size": 7
+          "size": 9
         },
         "move1": {
           "x": 378.2,
           "y": 112.9,
-          "size": 7
+          "size": 9
         },
         "move2": {
           "x": 378.2,
           "y": 89.8,
-          "size": 7
+          "size": 9
         },
         "move3": {
           "x": 378.2,
           "y": 66.6,
-          "size": 7
+          "size": 9
         },
         "move4": {
           "x": 378.2,
           "y": 43.4,
-          "size": 7
+          "size": 9
         }
       }
     ]
