@@ -17,7 +17,7 @@ import { MAX_OPPONENT_ROSTER_SIZE } from '../../hooks/useBattleLogActions';
 import { toRegulationId } from '../../utils/pokemonRules';
 import { VGC_ITEMS } from '../../config/vgcData';
 import SpeciesPickerCard from '../SpeciesPickerCard';
-import { OpponentAbilityCell, OpponentItemCell, OpponentMoveCell, OpponentExtras } from './OpponentRowFields';
+import { OpponentAbilityCell, OpponentItemCell, OpponentMoveCell, OpponentExtras, OpponentLikelySetsTrigger } from './OpponentRowFields';
 import TeamRosterColumn, { type RosterRowData } from './TeamRosterColumn';
 
 interface OpponentFieldPanelProps {
@@ -51,7 +51,12 @@ export default function OpponentFieldPanel({ battle, battleLogActions, roster, r
     moves: [0, 1, 2, 3].map(i => (
       <OpponentMoveCell key={i} index={i} battle={battle} opponent={o} battleLogActions={battleLogActions} />
     )) as [ReactNode, ReactNode, ReactNode, ReactNode],
-    extra: <OpponentExtras battle={battle} opponent={o} battleLogActions={battleLogActions} />,
+    extra: (
+      <>
+        <OpponentLikelySetsTrigger opponent={o} gameDataState={gameDataState} />
+        <OpponentExtras battle={battle} opponent={o} battleLogActions={battleLogActions} />
+      </>
+    ),
   }));
 
   return (

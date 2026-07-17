@@ -19,12 +19,13 @@
  */
 
 import { useState, useEffect } from 'react';
-import type { Battle, OpponentPokemonEntry } from '../../types/pokemon';
+import type { Battle, OpponentPokemonEntry, ChampionsUsageEntry } from '../../types/pokemon';
 import type { UseBattleLogActionsReturn } from '../../hooks/useBattleLogActions';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
 import { getSwitchInEffect } from '../../config/onSwitchInAbilities';
 import { hasAppliedAbilityEffectSinceSwitchIn } from '../../utils/battleLookup';
 import { isConsumableItem } from '../../config/vgcData';
+import LikelySetsPopover from './LikelySetsPopover';
 
 interface RowFieldProps {
   battle: Battle;
@@ -187,6 +188,45 @@ export function OpponentExtras({ battle, opponent, battleLogActions }: RowFieldP
           {committedAbility}!
         </button>
       )}
+    </div>
+  );
+}
+
+/**
+ * Ranked-usage "likely set" suggestion trigger (see LikelySetsPopover.tsx) -
+ * fetches on mount/species-change, same effect-on-mount pattern as
+ * OpponentAbilityCell above. Renders nothing while the fetch is in flight,
+ * on a species with no Champions usage page, or once every suggestible
+ * category is already confirmed (v1: just Ability) - a guess that adds
+ * nothing never earns screen space.
+ */
+export function OpponentLikelySetsTrigger({ opponent, gameDataState }: { opponent: OpponentPokemonEntry; gameDataState: UseGameDataReturn }) {
+  const [usage, setUsage] = useState<ChampionsUsageEntry | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    gameDataState.getChampionsUsage(opponent.species).then(result => {
+      if (!cancelled) setUsage(result);
+    });
+    return () => { cancelled = true; };
+  }, [opponent.species, gameDataState]);
+
+  // v1 only has an Ability section - once it's confirmed (or there's nothing
+  // to suggest in the first place) a guess adds nothing, so hide entirely.
+  if (!usage || usage.abilities.length === 0 || opponent.ability) return null;
+
+  return (
+    <div className="relative inline-block mt-1">
+      <button
+        type="button"
+        onClick={() => setIsOpen(o => !o)}
+        title="Likely set (ranked usage, unconfirmed)"
+        className="text-[9px] px-1.5 py-0.5 rounded border border-dashed border-amber-700 text-amber-400 hover:bg-amber-900/30 cursor-pointer"
+      >
+        📊 Likely Set
+      </button>
+      {isOpen && <LikelySetsPopover usage={usage} hideAbility={false} onClose={() => setIsOpen(false)} />}
     </div>
   );
 }

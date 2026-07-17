@@ -1,6 +1,6 @@
 /**
  * Generic read/merge/fetch-orchestration utilities for GameDataCache sections
- * (moves, items, abilities, learnsets). Centralizes expiration checks and the
+ * (moves, items, abilities, learnsets, usage). Centralizes expiration checks and the
  * functional setState pattern needed so concurrent fetches never stomp each
  * other's cache writes.
  */
@@ -25,7 +25,7 @@ export function readCacheEntry<T extends Expirable>(
   return entry;
 }
 
-type CacheSection = 'moves' | 'items' | 'abilities' | 'learnsets';
+type CacheSection = 'moves' | 'items' | 'abilities' | 'learnsets' | 'usage';
 
 /**
  * Returns a new cache with a single entry merged into one section.
@@ -57,6 +57,7 @@ export function createEmptyGameDataCache(): GameDataCache {
     items: {},
     abilities: {},
     learnsets: {},
+    usage: {},
     lastCleaned: Date.now(),
     initialBulkSyncCompletedAt: null,
   };

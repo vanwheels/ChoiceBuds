@@ -5,6 +5,60 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Battle Logger stat-inference, Phase 1: "Likely Set" suggestion panel**
+  (2026-07-16): a long-open TODO idea (surface what a species' opponent is
+  *typically* running, from real ranked-ladder data, while logging a live
+  match) finally had a legitimate data source - `championsbattledata.com`
+  exposes a public, unauthenticated, CORS-enabled JSON API
+  (`/api/battle/Doubles/:name`) built from real Pokémon Champions ranked
+  play. Verified live before building anything: species-name normalization
+  must go through the site's own `/api/index` `pokemonPages[].battleName`
+  lookup table (not a hand-rolled slug transform - a different convention
+  from PokeAPI's), Champions' roster is materially smaller than mainline SV
+  (no page at all for Iron Hands, every Paradox, Ogerpon, Indeedee,
+  Oinkologne, etc. - an expected 404, not an error), and there is currently
+  no queryable per-season archive (a same-day dated snapshot the site
+  exposes as a static asset was confirmed byte-identical to the live data,
+  so the `season` query param is never passed). New CLAUDE.md "Fourth
+  exception" + README Credits entry authorize this source.
+  New `services/championsBattleData.ts` (index lookup + fetch/group-by-
+  category), new `ChampionsUsageEntry`/`ChampionsUsageRankedEntry`/
+  `ChampionsUsageNatureEntry`/`ChampionsUsageStatSpreadEntry` types
+  (`types/pokemon.ts`) - `stat_points` rows are already on this app's
+  native 0-32 Stat Point scale (`utils/championsStats.ts`), no EV-scale
+  conversion needed. New `usage` section on `GameDataCache`
+  (`utils/cacheManager.ts`'s existing generic `readCacheEntry`/
+  `withCacheEntry`/`runCachedFetch` needed only a one-line `CacheSection`
+  union extension), 5-day TTL (shorter than PokeAPI sections' 30 days -
+  ranked usage shifts week to week). `useGameData.ts` gained
+  `getChampionsUsage`/`getCachedChampionsUsage`, mirroring
+  `getSpeciesLearnset` exactly - extending the existing hook rather than a
+  second one, since a second hook reading/writing the same
+  `game-data-cache.json` would race with this one's own write-through.
+  Phase 1 deliberately ships only the Ability category (the smallest
+  end-to-end vertical slice) via new `OpponentLikelySetsTrigger`
+  (`OpponentRowFields.tsx`) + `LikelySetsPopover.tsx`, wired into
+  `OpponentFieldPanel.tsx`'s row `extra` slot alongside the existing
+  `OpponentExtras`. Deliberately kept visually and structurally separate
+  from `OpponentPokemonEntry`'s real `ability`/`item`/`moves` fields (which
+  mean "actually observed this battle," with reveal-turn tracking the
+  post-battle damage-calc review depends on) - dashed amber-accented
+  popover explicitly labeled "Likely Set (unconfirmed)", never auto-filled
+  into the real fields, and hidden entirely once the real ability is
+  confirmed (nothing left to suggest). Live-verified end-to-end via
+  `run-desktop` against a disposable test battle: added Kingambit as an
+  opponent, confirmed the popover showed the exact live data verified
+  earlier in the session (Defiant 94.4% / Supreme Overlord 5.5% / Pressure
+  0.1%, "Season M-3"), then confirmed the trigger disappeared once the real
+  ability dropdown was set. Test battles cleaned up afterward via the app's
+  own IPC bridge (exact-ID delete, not a blind first-match UI click) after
+  a scare mid-verification: the user's real `battles.json` turned out to
+  already hold ~60 orphaned "In Progress, 0-1 turn" battles from past
+  testing sessions that were never cleaned up - flagged to the user as a
+  separate, not-yet-actioned cleanup opportunity, not touched beyond this
+  session's own 3 test battles. Still open (see `TODO.md`): Phase 2
+  (Item/Moves/Nature/Stat Points sections) and Phase 3 (polish).
+
 - **VGC Team Sheet PDF auto-fill** (2026-07-16): fills the official Play!
   Pokémon Video Game Team List PDF (bundled as `public/vg-team-list-template.pdf`,
   fetched fresh via `WebFetch` since the byte-level research pass that scoped

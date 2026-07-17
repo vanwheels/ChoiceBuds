@@ -77,8 +77,15 @@ focused on what's actually next.
   fix, and the per-target crit/miss + chip-placement follow-up are all done
   (see COMPLETED.md). Post-battle damage-calc review and Bo3 "set" grouping
   across games are also done (both 2026-07-13, see COMPLETED.md). Still
-  open: the stat-inference idea (needs Limitless/championsbattledata-
-  sourced per-species data first). Synthesizing turn-log entries when a
+  open: the stat-inference idea. Data source unblocked and Phase 1 (of a
+  3-phase plan) shipped 2026-07-16 - see COMPLETED.md for the full
+  implementation trail. Still open: Phase 2 (Item/Moves/Nature/Stat Points
+  sections in the same popover, beyond Phase 1's Ability-only slice) and
+  Phase 3 (polish - loading-state treatment, wider empirical species
+  coverage, TTL tuning). Explicitly out of scope for now: Calc-page
+  integration (a planned fast-follow reusing the same data layer), the
+  `teammate` usage category, and adding `nature`/`evs` fields to
+  `OpponentPokemonEntry`. Synthesizing turn-log entries when a
   field condition changes is done (2026-07-15, see COMPLETED.md). Generic
   lightweight per-target outcome tags (No Effect/Blocked (Ability), added
   alongside the existing Miss/Crit chips) are done (2026-07-16, see

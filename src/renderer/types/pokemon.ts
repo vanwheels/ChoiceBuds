@@ -537,7 +537,57 @@ export interface SpeciesRosterEntry {
 }
 
 /**
- * Game data cache for moves, items, abilities, and species learnsets
+ * One ranked entry within a Pokemon Champions usage category (move/held
+ * item/ability all share this shape) - see services/championsBattleData.ts
+ */
+export interface ChampionsUsageRankedEntry {
+  name: string; // already Title Case as returned by the API - no formatting needed
+  percentage: number; // 0-100
+}
+
+/** A ranked nature entry - the API calls this category "stat_alignment" */
+export interface ChampionsUsageNatureEntry extends ChampionsUsageRankedEntry {
+  statUp?: string; // e.g. "Attack"
+  statDown?: string; // e.g. "Sp. Atk"
+}
+
+/**
+ * One ranked Stat Point spread - already on this app's native 0-32-per-stat
+ * scale (utils/championsStats.ts), matching @smogon/calc's StatsTable key
+ * convention so a future Calc-page fast-follow can feed it straight into
+ * spsToEvs() with no remapping.
+ */
+export interface ChampionsUsageStatSpreadEntry {
+  percentage: number;
+  points: { hp: number; atk: number; def: number; spa: number; spd: number; spe: number };
+}
+
+/**
+ * One species' parsed Pokemon Champions ranked-ladder usage snapshot
+ * (championsbattledata.com's /api/battle/Doubles/:name - see
+ * services/championsBattleData.ts), grouped by category and sorted by rank
+ * ascending. Powers the Battle Logger's "likely sets" suggestion panel - a
+ * separate, clearly-unconfirmed display. Never written into
+ * OpponentPokemonEntry's real ability/item/moves fields - see that type's
+ * own doc comment for why those must stay "actually observed". The
+ * source API's `teammate` category isn't parsed/surfaced here - out of
+ * scope for the current suggestion panel.
+ */
+export interface ChampionsUsageEntry {
+  species: string; // this app's own species string, gender-suffix stripped
+  season: string; // API's own season string (e.g. "Season M-3") - display-only, never matched against config/seasons.ts
+  moves: ChampionsUsageRankedEntry[];
+  items: ChampionsUsageRankedEntry[];
+  abilities: ChampionsUsageRankedEntry[];
+  natures: ChampionsUsageNatureEntry[];
+  statSpreads: ChampionsUsageStatSpreadEntry[];
+  cachedAt: number; // Unix timestamp
+  expiresAt: number; // Unix timestamp
+}
+
+/**
+ * Game data cache for moves, items, abilities, species learnsets, and
+ * Pokemon Champions ranked-usage suggestions
  * Reduces redundant API calls by caching game metadata
  */
 export interface GameDataCache {
@@ -546,6 +596,7 @@ export interface GameDataCache {
   items: Record<string, ItemData>; // Key: lowercase item name
   abilities: Record<string, AbilityData>; // Key: lowercase ability name
   learnsets: Record<string, SpeciesLearnsetEntry>; // Key: normalized species slug
+  usage: Record<string, ChampionsUsageEntry>; // Key: species, lowercased, gender-suffix stripped
   lastCleaned: number; // Unix timestamp
   // Set once the one-time bulk first-launch sync (useInitialSync) has completed -
   // null means it still needs to run.

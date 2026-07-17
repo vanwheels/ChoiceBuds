@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { GameDataCache, MoveData, ItemData, AbilityData, SpeciesLearnsetEntry } from '../types/pokemon';
+import type { GameDataCache, MoveData, ItemData, AbilityData, SpeciesLearnsetEntry, ChampionsUsageEntry } from '../types/pokemon';
 import { VGC_ITEMS } from '../config/vgcData';
 import { normalizeSpeciesForAPI } from '../services/pokeapi';
 import {
@@ -16,6 +16,7 @@ import {
   fetchSpeciesLearnset,
   CACHE_EXPIRATION_MS,
 } from '../services/pokeapiService';
+import { fetchChampionsUsage, normalizeUsageCacheKey } from '../services/championsBattleData';
 import { readCacheEntry, runCachedFetch, withCacheEntry, createEmptyGameDataCache } from '../utils/cacheManager';
 import { applyChampionsMoveOverride } from '../config/championsMoveOverrides';
 import { applyMoveFlags } from '../config/moveFlags';
@@ -45,6 +46,11 @@ export interface UseGameDataReturn {
   // Species learnset operations (validates real legal movepool/abilities per species)
   getSpeciesLearnset: (species: string, gender?: Gender) => Promise<SpeciesLearnsetEntry | null>;
   getEnrichedSpeciesOptions: (species: string, gender?: Gender) => Promise<{ moves: MoveData[]; abilities: AbilityData[] }>;
+
+  // Pokemon Champions ranked-usage suggestions (championsbattledata.com) -
+  // null means the species has no Champions usage page, not an error
+  getChampionsUsage: (species: string) => Promise<ChampionsUsageEntry | null>;
+  getCachedChampionsUsage: (species: string) => ChampionsUsageEntry | null;
 
   clearCache: () => Promise<boolean>;
 
@@ -231,6 +237,16 @@ export function useGameData(): UseGameDataReturn {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isInitialized]);
 
+  const getCachedChampionsUsage = useCallback((species: string): ChampionsUsageEntry | null =>
+    readCacheEntry(cache?.usage, normalizeUsageCacheKey(species)), [cache]);
+
+  const getChampionsUsage = useCallback(async (species: string): Promise<ChampionsUsageEntry | null> => {
+    const cached = getCachedChampionsUsage(species);
+    if (cached) return cached;
+    return runCachedFetch(setCache, setIsLoading, setError, 'usage', normalizeUsageCacheKey(species),
+      () => fetchChampionsUsage(species), `Failed to fetch usage data for "${species}"`);
+  }, [getCachedChampionsUsage]);
+
   const clearCache = useCallback(async (): Promise<boolean> => {
     setCache(createEmptyGameDataCache());
     setError(null);
@@ -256,6 +272,8 @@ export function useGameData(): UseGameDataReturn {
     getCachedAbility,
     getSpeciesLearnset,
     getEnrichedSpeciesOptions,
+    getChampionsUsage,
+    getCachedChampionsUsage,
     clearCache,
     hasCompletedInitialBulkSync,
     markInitialBulkSyncCompleted,
