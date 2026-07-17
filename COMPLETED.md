@@ -164,8 +164,8 @@ local ("see below"/"see above").
   logged Sucker Punch as a real move and set a real item, confirmed the
   Item section disappeared entirely and Moves' suggestion list dropped just
   the now-confirmed Sucker Punch row while Kowtow Cleave/Iron Head/Protect
-  stayed. Still open (see `TODO.md`): Phase 3 (polish - loading-state
-  treatment, wider empirical species coverage, TTL tuning).
+  stayed. Phase 3 (polish - loading-state treatment, wider empirical species
+  coverage, TTL tuning) is 2/3 done, see above and `TODO.md`.
 
 - **Battle Logger stat-inference, Phase 1: "Likely Set" suggestion panel**
   (2026-07-16): a long-open TODO idea (surface what a species' opponent is
