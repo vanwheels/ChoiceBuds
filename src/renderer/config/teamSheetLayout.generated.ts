@@ -53,17 +53,17 @@ export const TEAM_SHEET_LAYOUT: { page0: TeamSheetStaffPageLayout; page1: TeamSh
     },
     "ageDivision": {
       "juniors": {
-        "x": 430.3,
+        "x": 470,
         "y": 706.4,
         "size": 10
       },
       "seniors": {
-        "x": 482.4,
+        "x": 523.2,
         "y": 706.4,
         "size": 10
       },
       "masters": {
-        "x": 533.5,
+        "x": 577.1,
         "y": 706.4,
         "size": 10
       }
@@ -565,17 +565,17 @@ export const TEAM_SHEET_LAYOUT: { page0: TeamSheetStaffPageLayout; page1: TeamSh
     },
     "ageDivision": {
       "juniors": {
-        "x": 430.3,
+        "x": 470,
         "y": 708.2,
         "size": 10
       },
       "seniors": {
-        "x": 482.4,
+        "x": 523.2,
         "y": 708.2,
         "size": 10
       },
       "masters": {
-        "x": 533.5,
+        "x": 577.1,
         "y": 708.2,
         "size": 10
       }

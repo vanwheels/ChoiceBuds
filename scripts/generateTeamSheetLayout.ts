@@ -16,11 +16,17 @@
  * rendered width + a small gap", at the label's own y. Verified against the
  * real template (both pages are 612x792pt / US Letter) via pdfjs-dist's
  * getTextContent(), which returns exact per-glyph x/y/width in PDF points -
- * far more precise than eyeballing a rendered image. Age Division is the one
- * exception (a checkbox square drawn to the left of "Juniors"/"Seniors"/
- * "Masters", not part of the text layer at all, so its mark position is an
- * estimate - CHECKBOX_OFFSET_X below - and is the one coordinate that most
- * needs visual verification after generating a real sample PDF.
+ * far more precise than eyeballing a rendered image. Age Division's
+ * checkboxes are the one exception needing a visual check rather than pure
+ * text-layer math (the box itself isn't part of the text layer) - but they
+ * follow the exact same "after the label" convention as everything else on
+ * this form, confirmed by rendering the template to a canvas via
+ * pdfjs-dist's own page.render() and cropping in on that row: each
+ * checkbox sits in the gap AFTER its own label, before the next one starts
+ * (Juniors['s box] Seniors['s box] Masters['s box]) - not before, as an
+ * earlier pass here had assumed (which put a "Masters" mark inside what's
+ * actually Seniors' box, since -10 from Masters' own x lands in the gap
+ * between Seniors and Masters).
  *
  * Per-Pokémon slot order: each page has a 2-column x 3-row grid of 6
  * identical "Pokémon" boxes. Slots are numbered column-major (left column
@@ -41,7 +47,6 @@ import { dirname, join } from 'path';
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 
 const GAP_X = 4;
-const CHECKBOX_OFFSET_X = -10;
 const PER_MON_FIELD_SIZE = 9;
 const HEADER_FIELD_SIZE = 10;
 // Right edge of column A's own per-Pokémon box (PDF points) - visually
@@ -212,10 +217,9 @@ function buildHeaderShared(items: TextItem[]) {
   const juniors = findOne(items, 'Juniors');
   const seniors = findOne(items, 'Seniors');
   const masters = findOne(items, 'Masters');
-  const checkbox = (item: TextItem) => ({ x: Number((item.x + CHECKBOX_OFFSET_X).toFixed(1)), y: Number(item.y.toFixed(1)), size: HEADER_FIELD_SIZE });
   return {
     playerName: value(findOne(items, 'Player Name:'), HEADER_FIELD_SIZE),
-    ageDivision: { juniors: checkbox(juniors), seniors: checkbox(seniors), masters: checkbox(masters) },
+    ageDivision: { juniors: value(juniors, HEADER_FIELD_SIZE), seniors: value(seniors, HEADER_FIELD_SIZE), masters: value(masters, HEADER_FIELD_SIZE) },
     trainerNameInGame: value(findOne(items, 'Trainer Name in Game:'), HEADER_FIELD_SIZE),
     battleTeamNumberName: value(findOne(items, 'Battle Team Number / Name:'), HEADER_FIELD_SIZE),
     switchProfileName: value(findOne(items, 'Switch Profile Name:'), HEADER_FIELD_SIZE),

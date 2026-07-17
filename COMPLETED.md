@@ -168,8 +168,31 @@ local ("see below"/"see above").
   the same root cause and the same fix location. Verified by computing
   `Aegislash-Shield`'s `rawStats` directly and confirming the PDF's printed
   numbers matched exactly (151/70/176/63/177/80).
-
-- **Battle Logger: multi-hit move logging (part 3 of the Miss/Crit/No
+  **Fifth follow-up, two more bugs caught after the previous round shipped**:
+  (1) Aegislash's species now reads "Aegislash (Shield)" on the sheet, not
+  just "Aegislash" - the previous round fixed the stat *math* but gave no
+  visible indication of which of Aegislash's two very different stat
+  spreads the printed numbers came from. (2) The Age Division checkbox mark
+  was landing in the wrong box - reproduced and finally properly diagnosed
+  this time by rendering the actual template to a `<canvas>` via
+  `pdfjs-dist`'s own `page.render()` (dynamically imported straight from
+  its `node_modules` path in the running dev app) and cropping in on just
+  that row, since every other approach tried and abandoned this session
+  (Electron blocks top-frame navigation to `data:`/`blob:` URLs for a PDF
+  `<embed>`, its internal viewer isn't reachable via DOM queries for
+  scrolling/zooming and reloading its `src` with a new `#zoom=` fragment
+  produced a blank page, and CSS `transform: scale()` cropping via negative
+  offsets never lined up) - only the canvas render, being fully
+  script-controlled with no viewer-UI intermediary, gave a reliable close-up.
+  That crop showed the real bug directly: each checkbox sits in the gap
+  *after* its own label (before the next one starts), not before it as the
+  very first pass here had assumed and then never re-verified once other
+  things started looking visually plausible - so a "Masters" mark at
+  `masters.x - 10` was landing in the gap between Seniors and Masters,
+  which is actually Seniors' own box. Fixed by dropping the special
+  `CHECKBOX_OFFSET_X` entirely and reusing the same `value()` helper (label
+  end + small gap) every other field on this form already uses - checkboxes
+  turned out to follow the exact same convention, not a special case.
   Effect/Blocked redesign)** (2026-07-16): logs how many hits actually
   connected for Bullet Seed/Population Bomb/Triple Axel/etc.
   `scripts/generateMultiHitMoves.ts` (new, mirrors the existing

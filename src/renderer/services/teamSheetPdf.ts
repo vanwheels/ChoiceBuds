@@ -100,7 +100,14 @@ export async function generateTeamSheetPdf(team: Team, playerProfile: PlayerProf
     team.pokemon.slice(0, 6).forEach((pokemon, i) => {
       const slot = slots[i];
       const { showdownData } = pokemon;
-      draw(page, formatSpeciesWithGenderSuffix(showdownData.species, showdownData.gender), slot.species);
+      // Aegislash's stat side-table is computed from Shield (see
+      // computeRealStats/resolveCalcSpecies) since that's its default/
+      // roster form - "(Shield)" makes that explicit next to the species
+      // itself rather than leaving readers to guess which of its two very
+      // different stat spreads the numbers came from.
+      const speciesText = formatSpeciesWithGenderSuffix(showdownData.species, showdownData.gender)
+        + (showdownData.species.toLowerCase() === 'aegislash' ? ' (Shield)' : '');
+      draw(page, speciesText, slot.species);
       draw(page, showdownData.nature ?? '', slot.statAlignment);
       draw(page, showdownData.ability ?? '', slot.ability);
       draw(page, showdownData.item ?? '', slot.heldItem);
