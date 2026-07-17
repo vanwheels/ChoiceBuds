@@ -260,22 +260,38 @@ See [COMPLETED.md](COMPLETED.md) for the full log of finished work.
     protected your PC" SmartScreen warning - separate purchase decision,
     not bundled into this pass.
   - ~~Signing/notarizing/publishing by hand for every release still isn't
-    automated~~ **Workflow written 2026-07-16, not yet end-to-end
-    verified**: `.github/workflows/release.yml` builds on
-    `windows-latest`/`macos-latest` on any `v*.*.*` tag push and runs
-    `electron-builder --publish always`, which attaches installers (plus
-    `latest.yml`/`.blockmap` for the Windows NSIS target) to a **draft**
-    GitHub Release rather than publishing it live - matches this project's
-    existing "always confirm before publishing a Release" rule, since a
-    human still has to review and flip it to non-draft by hand (`gh release
-    edit --draft=false` or the UI). No signing secrets are configured yet
-    (no Windows cert, no Apple Developer account), so output is unsigned,
-    same as today's manual builds. **Not yet tested against a real tag
-    push** - v0.2.1 is already tagged and published, so there was nothing
-    safe to push without either touching that live release or creating a
-    throwaway test tag; verify the next time a version is actually cut
-    (bump `package.json`, tag `vX.Y.Z`, push the tag, confirm the workflow
-    run succeeds and the draft release looks right before publishing).
+    automated~~ **Done 2026-07-16, verified live**:
+    `.github/workflows/release.yml` builds on `windows-latest`/
+    `macos-latest` on any `v*.*.*` tag push and runs `electron-builder
+    --publish always`, which attaches installers (plus `latest.yml`/
+    `.blockmap` for the Windows NSIS target) to a **draft** GitHub Release
+    rather than publishing it live - matches this project's existing
+    "always confirm before publishing a Release" rule, since a human still
+    has to review and flip it to non-draft by hand (`gh release edit
+    --draft=false` or the UI). No signing secrets are configured yet (no
+    Windows cert, no Apple Developer account), so output is unsigned, same
+    as today's manual builds. **Verified with a throwaway `v0.2.1-test1`
+    tag push** (both jobs succeeded, ~2min build time each; tag deleted
+    afterward, no lingering artifacts) - and it surfaced a real gotcha
+    worth knowing: electron-builder resolves the release to attach to by
+    `package.json`'s `version` field, *not* the pushed git tag, so the test
+    correctly targeted the already-published `v0.2.1` release rather than
+    creating a new one under the test tag. electron-builder's own safety
+    check (`existing type not compatible with publishing type`) refused to
+    touch that live non-draft release and skipped every upload rather than
+    corrupting it - confirms the automation is safe to leave wired up
+    permanently, but also means **the release process's step order
+    changed**: the version tag must be pushed *before* `gh release create`/
+    `gh release edit` ever touches that version, otherwise the workflow's
+    own build finds a same-tag release already in the wrong state and
+    no-ops. See the updated `CLAUDE.md` "GitHub Releases" bullet for the
+    corrected sequencing (tag push -> workflow builds a draft -> `gh
+    release edit` fills in title/notes -> `gh release edit --draft=false`
+    once confirmed). Not yet exercised on an actual *fresh* version
+    (nothing has been released since this landed) - the throwaway-tag test
+    proved the safety behavior but not the "creates a brand-new draft from
+    scratch" path; that'll get real coverage the next time a version is
+    genuinely cut.
 - ~~Dev tooling has also drifted behind current majors~~ **Done 2026-07-14**
   - bumped Vite `^5.0.0`→`^8.1.4`, `@vitejs/plugin-react` `^4.7.0`→`^5.2.0`,
   ESLint `^9.39.4`→`^10.7.0` (+`@eslint/js`, `typescript-eslint`, `globals`,
