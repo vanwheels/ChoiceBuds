@@ -81,6 +81,14 @@ export interface Team {
   updatedAt: number; // Unix timestamp
   notes?: string;
   author?: string; // Pokepaste pages have one; plain Showdown export text doesn't, so this is manually editable
+  // Tournament-specific, unlike PlayerProfile below (which is stable across
+  // events) - a "Battle Team" is the in-game Switch roster this saved Team
+  // represents, registered fresh (and often renumbered) per event. Both feed
+  // the single "Battle Team Number / Name:" blank on the official VGC team
+  // sheet (see services/teamSheetPdf.ts) - kept as two fields since the form
+  // itself distinguishes them, joined at generation time.
+  battleTeamNumber?: string;
+  battleTeamName?: string;
 }
 
 /**
@@ -117,6 +125,24 @@ export interface SavedPokemonDatabase {
 }
 
 /**
+ * Player identity fields for the VGC Team Sheet PDF export
+ * (services/teamSheetPdf.ts) - stable across tournaments (unlike a Team's
+ * own battleTeamNumber/battleTeamName above), so entered once in Settings
+ * and reused for every generated sheet. All optional/blank-by-default;
+ * an empty field just draws nothing on the generated PDF rather than
+ * blocking generation.
+ */
+export interface PlayerProfile {
+  playerName: string;
+  ageDivision: 'Juniors' | 'Seniors' | 'Masters' | '';
+  trainerNameInGame: string;
+  playerId: string;
+  dateOfBirth: string; // ISO "YYYY-MM-DD" from a native <input type="date">, split into the form's own MM/DD/YYYY 3-blank layout at draw time, see teamSheetPdf.ts
+  supportId: string;
+  switchProfileName: string;
+}
+
+/**
  * Persisted user preferences, stored as settings.json in userData directory
  */
 export interface AppSettings {
@@ -126,6 +152,7 @@ export interface AppSettings {
   lastPushedAt: number | null; // Unix timestamp of this device's last successful Push
   lastPulledAt: number | null; // Unix timestamp of this device's last successful Pull
   lastSeasonDataCheckedAt: number | null; // Unix timestamp config/seasons.ts was last manually verified against Bulbapedia/Serebii
+  playerProfile: PlayerProfile;
   lastModified: number; // Unix timestamp
 }
 

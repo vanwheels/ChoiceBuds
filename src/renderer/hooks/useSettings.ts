@@ -4,7 +4,17 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import type { AppSettings } from '../types/pokemon';
+import type { AppSettings, PlayerProfile } from '../types/pokemon';
+
+const DEFAULT_PLAYER_PROFILE: PlayerProfile = {
+  playerName: '',
+  ageDivision: '',
+  trainerNameInGame: '',
+  playerId: '',
+  dateOfBirth: '',
+  supportId: '',
+  switchProfileName: '',
+};
 
 const DEFAULT_SETTINGS: AppSettings = {
   version: 1,
@@ -13,6 +23,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   lastPushedAt: null,
   lastPulledAt: null,
   lastSeasonDataCheckedAt: null,
+  playerProfile: DEFAULT_PLAYER_PROFILE,
   lastModified: Date.now(),
 };
 

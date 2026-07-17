@@ -58,6 +58,7 @@
     "eslint": "^10.7.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.7.0",
+    "pdfjs-dist": "^6.1.200",
     "playwright-core": "^1.61.1",
     "tailwindcss": "^4.3.2",
     "typescript": "^6.0.3",
@@ -68,6 +69,7 @@
   "dependencies": {
     "@smogon/calc": "^0.11.0",
     "html-to-image": "^1.11.13",
+    "pdf-lib": "^1.17.1",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   }

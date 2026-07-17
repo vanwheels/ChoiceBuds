@@ -14,6 +14,7 @@ import { useSeasonDataCheck } from '../hooks/useSeasonDataCheck';
 import SyncSection from './SyncSection';
 import UpdateCheckSection from './UpdateCheckSection';
 import SeasonDataCheckSection from './SeasonDataCheckSection';
+import PlayerProfileSection from './PlayerProfileSection';
 
 interface SettingsPageProps {
   settingsState: UseSettingsReturn;
@@ -53,6 +54,8 @@ export default function SettingsPage({ settingsState, teamsState, battlesState, 
           ))}
         </div>
       </div>
+
+      <PlayerProfileSection settingsState={settingsState} />
 
       <SyncSection syncState={syncState} />
 

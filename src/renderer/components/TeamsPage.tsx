@@ -128,6 +128,7 @@ export default function TeamsPage({
                 gameDataState={gameDataState}
                 speciesRosterState={speciesRosterState}
                 spriteCacheState={spriteCacheState}
+                settingsState={settingsState}
               />
             ))}
           </div>

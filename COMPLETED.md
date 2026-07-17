@@ -5,6 +5,77 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **VGC Team Sheet PDF auto-fill** (2026-07-16): fills the official Play!
+  Pokémon Video Game Team List PDF (bundled as `public/vg-team-list-template.pdf`,
+  fetched fresh via `WebFetch` since the byte-level research pass that scoped
+  this - see `TODO.md`'s backlog history - hadn't kept a local copy) with a
+  saved team's 6 Pokémon plus a one-time Settings-page player profile.
+  Coordinate-overlay approach (chosen over redrawing the form from scratch)
+  since byte-level inspection confirmed the template has no AcroForm fields
+  (`/Widget`/`/FT`/`/Annots`) to fill by name. Coordinates aren't
+  hand-measured - `scripts/generateTeamSheetLayout.ts` (new, `pdfjs-dist`
+  devDependency) reads the template's own text layer and derives every value
+  position as "the matching label's own end-x + a small gap, same y
+  baseline", since the form's layout is a label immediately followed by
+  blank space on every field; output is `config/teamSheetLayout.generated.ts`
+  (regenerate if the template PDF is ever replaced). The one non-measured
+  coordinate (Age Division's 3 checkboxes, drawn squares with no text-layer
+  presence) is an offset estimate, verified correct via a live render.
+  `services/teamSheetPdf.ts::generateTeamSheetPdf` (`pdf-lib`) loads the
+  template, embeds Helvetica, and `drawText()`s both pages - deliberately
+  skipping the per-stat numeric side-table on page 1 ("For Tournament
+  Staff"), which is staff's handwritten field at check-in, not player data.
+  New `PlayerProfile` (`types/pokemon.ts`) holds identity fields stable
+  across tournaments (Player Name, Age Division, Trainer Name in Game,
+  Player ID, Date of Birth, Support ID, Switch Profile Name) in
+  `AppSettings.playerProfile`, edited via new `PlayerProfileSection.tsx` on
+  the Settings page; `Team` gained `battleTeamNumber`/`battleTeamName`
+  (tournament-specific, not stable identity, so edited per-export instead)
+  joined into the form's single "Battle Team Number / Name:" blank at
+  generation time. New `TeamSheetPdfModal.tsx` (Teams page, per-team export
+  button, sibling to the existing Showdown-text and poster-image exports)
+  triggers generation and reuses `TeamExportImageModal.tsx`'s existing
+  Blob + `<a download>` pattern - no IPC/main-process changes needed.
+  `TeamPosterTile.tsx`'s local `formatEVs()` was extracted to
+  `utils/statAlignment.ts::formatStatAlignment()` so both the poster export
+  and the PDF export share one "Stat Alignment" formatter. `pdf-lib` was
+  initially a static import reachable from `TeamCard.tsx`'s always-loaded
+  bundle, pushing the main chunk to 758kB and tripping the build's 550kB
+  warning (see the `chunkSizeWarningLimit` entry below) - fixed by dynamic-
+  importing `generateTeamSheetPdf` inside the modal's download handler, which
+  splits `pdf-lib` into its own on-demand chunk and dropped the main bundle
+  back to 333kB with no warning. Verified two ways: a live `run-desktop`
+  render (via a dynamically-imported service call + an in-page `<embed
+  type="application/pdf">`, since Electron blocks top-frame navigation to
+  `data:` URLs) visually confirmed every field's alignment including the Age
+  Division checkbox mark and the split Date of Birth boxes, and a follow-up
+  automated pass re-extracted the filled PDF's own text layer to confirm
+  every one of 28 test values landed on both pages at the exact expected
+  baseline with none missing - no manual data mutation was needed for either
+  check (all-literal test data through a dynamically-imported module, no
+  real team/settings touched). README.md's Credits section gained an entry
+  for the bundled template per the project's external-asset-source rule.
+  **Follow-up bug, caught by the user immediately after shipping**:
+  `PlayerProfileSection.tsx`'s fields originally committed on every
+  keystroke (`onChange` -> `updateSettings()`, an async IPC + disk write
+  whose result feeds straight back into the input's `value` prop) - fine
+  for plain text inputs, but this fights `<input type="date">`'s internal
+  per-segment typing buffer and can visibly scramble it mid-entry (typing a
+  full 8-digit date could land as a garbled, unrelated date). Fixed by
+  switching every field to the same local-draft/commit-on-blur pattern
+  `TeamCard.tsx` already uses for its name/author/notes fields, instead of
+  committing per keystroke. Verified via `run-desktop` with proper
+  `element.focus()` (its default `click` helper uses `element.click()`,
+  which doesn't actually focus this widget - `document.activeElement`
+  stayed on `<body>` - so an earlier same-session repro attempt using
+  `click` produced a real-looking but methodologically-unreliable result);
+  with real focus, typing a full date now lands exactly right. Regrettably
+  live-tested directly against the user's real settings.json before the
+  fix (there's no disposable-Settings equivalent of a disposable battle/team
+  to test against) - corrupted their real Date of Birth value with no way to
+  recover the original, since `SyncPayload` doesn't carry `AppSettings`; the
+  user re-entered it by hand after confirming the fix.
+
 - **Battle Logger: multi-hit move logging (part 3 of the Miss/Crit/No
   Effect/Blocked redesign)** (2026-07-16): logs how many hits actually
   connected for Bullet Seed/Population Bomb/Triple Axel/etc.

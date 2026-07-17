@@ -6,6 +6,7 @@ import type { UseDatabaseReturn } from '../hooks/useDatabase';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
+import type { UseSettingsReturn } from '../hooks/useSettings';
 import { useRosterActions } from '../hooks/useRosterActions';
 import { toRegulationId } from '../utils/pokemonRules';
 import { getRegulationTheme } from '../config/pokemonTheme';
@@ -17,6 +18,7 @@ import TeamValidationButton from './TeamValidationButton';
 import RegulationBadge from './RegulationBadge';
 import ExportTeamModal from './ExportTeamModal';
 import TeamExportImageModal from './TeamExportImageModal';
+import TeamSheetPdfModal from './TeamSheetPdfModal';
 
 interface TeamCardProps {
   team: Team;
@@ -27,9 +29,10 @@ interface TeamCardProps {
   gameDataState: UseGameDataReturn;
   speciesRosterState: UseSpeciesRosterReturn;
   spriteCacheState: UseSpriteCacheReturn;
+  settingsState: UseSettingsReturn;
 }
 
-export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseState, gameDataState, speciesRosterState, spriteCacheState }: TeamCardProps) {
+export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseState, gameDataState, speciesRosterState, spriteCacheState, settingsState }: TeamCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditingTeam, setIsEditingTeam] = useState(false);
   const [localTeamName, setLocalTeamName] = useState(team.name);
@@ -38,6 +41,7 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
   const [isAddPickerOpen, setIsAddPickerOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isImageExportOpen, setIsImageExportOpen] = useState(false);
+  const [isPdfExportOpen, setIsPdfExportOpen] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const { updateTeam, reorderTeam } = teamsState;
   const rosterActions = useRosterActions(
@@ -206,6 +210,15 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
             ▦
           </button>
 
+          {/* A5. Export Team Sheet PDF Button - opens TeamSheetPdfModal.tsx */}
+          <button
+            onClick={() => setIsPdfExportOpen(true)}
+            title="Export Team Sheet PDF"
+            className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-blue-400 hover:bg-zinc-800 text-sm transition-all cursor-pointer"
+          >
+            🗎
+          </button>
+
           {/* B. Edit Button */}
           <button
             onClick={() => {
@@ -344,6 +357,15 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
           gameDataState={gameDataState}
           spriteCacheState={spriteCacheState}
           onClose={() => setIsImageExportOpen(false)}
+        />
+      )}
+
+      {isPdfExportOpen && (
+        <TeamSheetPdfModal
+          team={team}
+          teamsState={teamsState}
+          settingsState={settingsState}
+          onClose={() => setIsPdfExportOpen(false)}
         />
       )}
     </div>

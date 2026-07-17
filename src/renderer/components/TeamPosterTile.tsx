@@ -13,6 +13,7 @@ import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
 import { getPixelSpriteUrl } from '../utils/spriteUrl';
 import { getTypeTheme } from '../config/pokemonTheme';
+import { formatStatAlignment } from '../utils/statAlignment';
 
 interface TeamPosterTileProps {
   pokemon: ImportedPokemonInfo;
@@ -24,27 +25,11 @@ interface TeamPosterTileProps {
   showStatAlignment: boolean;
 }
 
-const EV_STAT_LABELS: Array<{ key: keyof ImportedPokemonInfo['showdownData']['evs']; label: string }> = [
-  { key: 'hp', label: 'HP' },
-  { key: 'attack', label: 'Atk' },
-  { key: 'defense', label: 'Def' },
-  { key: 'specialAttack', label: 'SpA' },
-  { key: 'specialDefense', label: 'SpD' },
-  { key: 'speed', label: 'Spe' },
-];
-
-function formatEVs(evs: ImportedPokemonInfo['showdownData']['evs']): string {
-  return EV_STAT_LABELS
-    .filter(({ key }) => evs[key] > 0)
-    .map(({ key, label }) => `${evs[key]} ${label}`)
-    .join(' / ');
-}
-
 export default function TeamPosterTile({ pokemon, gameDataState, spriteCacheState, showStatAlignment }: TeamPosterTileProps) {
   const { showdownData, pokedexNumber } = pokemon;
   const spriteUrl = getPixelSpriteUrl(pokedexNumber, showdownData.species, showdownData.gender || 'M', showdownData.shiny);
   const itemData = showdownData.item ? gameDataState.getCachedItem(showdownData.item) : null;
-  const evLine = formatEVs(showdownData.evs);
+  const statAlignment = formatStatAlignment(showdownData.nature, showdownData.evs);
 
   return (
     <div className="flex flex-col items-center gap-2 bg-zinc-800 rounded-lg border border-zinc-700 p-3 w-full min-w-0">
@@ -83,9 +68,9 @@ export default function TeamPosterTile({ pokemon, gameDataState, spriteCacheStat
         })}
       </div>
 
-      {showStatAlignment && (showdownData.nature || evLine) && (
+      {showStatAlignment && statAlignment && (
         <p className="text-[10px] text-zinc-500 text-center w-full">
-          {showdownData.nature ? `${showdownData.nature} - ` : ''}{evLine}
+          {statAlignment}
         </p>
       )}
     </div>
