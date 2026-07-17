@@ -231,44 +231,38 @@ See [COMPLETED.md](COMPLETED.md) for the full log of finished work.
   `^28.0.0` → `^43.0.0` (see COMPLETED.md). Dev tooling (Vite/TypeScript/
   ESLint) is still behind and intentionally deferred as a separate pass -
   see below.
-- **In-app auto-update (electron-updater + electron-builder GitHub publish)**:
-  scoped 2026-07-09, but deliberately **blocked on the user getting an Apple
-  Developer account** (planned "eventually, not for a bit") - can't start
-  regardless of priority, same category as the Limitless item above. Today's
-  update checker (see COMPLETED.md) only links out to the GitHub Release
-  page for a manual download/reinstall; this would replace that with an
-  actual in-app download-and-install, meaningfully lower friction for the
-  project's public-distribution goal.
-  - **Mechanism**: `electron-updater` (the standard companion to
-    `electron-builder`, already used here for packaging) with its built-in
-    GitHub provider - reads `latest.yml`/`latest-mac.yml` metadata files
-    that `electron-builder --publish always` auto-generates and uploads as
-    GitHub Release assets alongside the installers themselves. No custom
-    update server needed.
-  - **Why it's blocked**: macOS auto-update (Squirrel.Mac, which
-    `electron-updater` uses under the hood) requires the app be
-    code-signed, which requires an Apple Developer Program membership
-    ($99/yr) plus notarization - without it, unsigned/unnotarized macOS
-    builds can't auto-update at all and are also heavily restricted by
-    Gatekeeper regardless. Windows is more lenient (auto-update can work
-    unsigned), so this is specifically the macOS side gating the whole
-    feature, given both the Windows machine and the MacBook are both in
-    active use for this project.
-  - **Secondary, not a hard blocker**: a paid Windows code-signing cert
-    (~$100-400+/yr, separate from the Apple cost) isn't required for
-    Windows auto-update to function, but removes the "Windows protected
-    your PC" SmartScreen warning unsigned installers trigger - worth
-    deciding on separately once the macOS side is unblocked, not bundled
-    into the same purchase decision.
-  - **Also needed, not yet designed**: signing/notarizing/publishing by
-    hand for every release isn't realistic once this is real - almost
-    certainly wants a GitHub Actions workflow (build-on-tag-push, secrets
-    for the signing certs) rather than a manual `electron-builder --publish`
-    run each time. Also needs reconciling with the just-shipped GitHub-
-    Releases-API update checker (`useUpdateCheck.ts`/`UpdateCheckSection.tsx`)
-    - `electron-updater` has its own update-status/prompt flow, which likely
-    supersedes (or needs merging with) today's "check + link out" UI rather
-    than the two running side by side unreconciled.
+- ~~In-app auto-update~~ **Windows done 2026-07-16, shipping in v0.2.1** -
+  `electron-updater` wired into `main.ts` (packaged + `win32` only, gated
+  explicitly rather than relying solely on electron-updater's own
+  `app.isPackaged` guard), with `build.publish` (GitHub provider) added to
+  `package.json` so `latest.yml`/`.blockmap` get generated on build - these
+  now need uploading as release assets alongside the installers on every
+  release going forward, not just the `.exe` files. Layered on top of (not
+  replacing) the existing GitHub-Releases-API check
+  (`useUpdateCheck.ts`/`UpdateCheckSection.tsx`) per explicit user call: the
+  old "Update available: X, View Release" link-out stays as the fallback
+  for every case electron-updater can't cover (dev mode, the portable exe,
+  macOS before it's signed), while a real download-progress ->
+  "Restart & Update" flow appears only for a packaged Windows NSIS install.
+  **Still open:**
+  - **macOS is still blocked** on the user getting a paid Apple Developer
+    account ($99/yr) + notarization - Squirrel.Mac (what `electron-updater`
+    uses under the hood on macOS) requires code signing to auto-update at
+    all, and Gatekeeper heavily restricts unsigned builds regardless. Once
+    unblocked, `registerAutoUpdater()`'s `process.platform !== 'win32'`
+    guard in `main.ts` is the one line to revisit.
+  - **Bootstrapping gap**: no release before v0.2.1 has this code, so
+    nothing can auto-update *into* v0.2.1 - the first real end-to-end test
+    of the full download-and-restart-install flow can only happen on the
+    release *after* this one, once a v0.2.1 install can check against it.
+  - A paid Windows code-signing cert (~$100-400+/yr) still isn't required
+    for Windows auto-update to function, but would remove the "Windows
+    protected your PC" SmartScreen warning - separate purchase decision,
+    not bundled into this pass.
+  - Signing/notarizing/publishing by hand for every release still isn't
+    automated - a GitHub Actions workflow (build-on-tag-push, secrets for
+    signing certs) would replace today's manual `npm run dist:win` +
+    `gh release create` flow, but wasn't built this pass.
 - ~~Dev tooling has also drifted behind current majors~~ **Done 2026-07-14**
   - bumped Vite `^5.0.0`→`^8.1.4`, `@vitejs/plugin-react` `^4.7.0`→`^5.2.0`,
   ESLint `^9.39.4`→`^10.7.0` (+`@eslint/js`, `typescript-eslint`, `globals`,

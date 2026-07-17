@@ -4,7 +4,7 @@
  * Provides file I/O channel for reading/writing team configuration to userData
  */
 
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 
 /**
  * Exposed API surface for renderer process
@@ -150,6 +150,25 @@ const electronAPI = {
    */
   downloadSprite: async (remoteUrl: string): Promise<string | null> => {
     return ipcRenderer.invoke('sprite:download', remoteUrl);
+  },
+
+  /**
+   * Subscribes to auto-updater status pushed from the main process
+   * (Windows packaged builds only - see main.ts's registerAutoUpdater).
+   * Returns an unsubscribe function.
+   */
+  onUpdateStatus: (callback: (status: any) => void): (() => void) => {
+    const listener = (_event: IpcRendererEvent, status: any) => callback(status);
+    ipcRenderer.on('update:status', listener);
+    return () => ipcRenderer.removeListener('update:status', listener);
+  },
+
+  /**
+   * Quits and installs a downloaded update (only valid once status reports
+   * 'ready-to-install').
+   */
+  installUpdate: async (): Promise<void> => {
+    return ipcRenderer.invoke('update:install');
   },
 };
 

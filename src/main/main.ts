@@ -4,6 +4,7 @@
  */
 
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { autoUpdater } from 'electron-updater';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs/promises';
@@ -157,6 +158,59 @@ function createWindow(): void {
   // Clean up reference on close
   mainWindow.on('closed', () => {
     mainWindow = null;
+  });
+}
+
+/**
+ * Real in-app auto-update, Windows-only for now - macOS's equivalent
+ * (Squirrel.Mac) requires the app be code-signed and notarized, which needs
+ * a paid Apple Developer account this project doesn't have yet. Only wired
+ * up for a packaged NSIS install (the portable .exe has no fixed install
+ * directory for electron-updater to update in place, and dev mode has no
+ * published feed to check against - electron-updater itself already
+ * no-ops when `app.isPackaged` is false, but the platform check is ours).
+ * Renderer's `useUpdateCheck.ts` GitHub-Releases-API check remains the
+ * fallback status source for every case this doesn't cover.
+ */
+function registerAutoUpdater(): void {
+  if (!app.isPackaged || process.platform !== 'win32') return;
+
+  autoUpdater.autoDownload = true;
+
+  const sendStatus = (payload: { state: 'downloading' | 'ready-to-install'; version?: string; percent?: number }): void => {
+    mainWindow?.webContents.send('update:status', payload);
+  };
+
+  autoUpdater.on('update-available', (info) => {
+    console.log(`[autoUpdater] update available: ${info.version}, downloading`);
+    sendStatus({ state: 'downloading', version: info.version });
+  });
+
+  autoUpdater.on('download-progress', (progress) => {
+    sendStatus({ state: 'downloading', percent: Math.round(progress.percent) });
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    console.log(`[autoUpdater] update downloaded: ${info.version}, ready to install`);
+    sendStatus({ state: 'ready-to-install', version: info.version });
+  });
+
+  autoUpdater.on('update-not-available', () => {
+    console.log('[autoUpdater] no update available, already on latest');
+  });
+
+  autoUpdater.on('error', (err) => {
+    // Swallowed deliberately - the renderer's GitHub-API-based check still
+    // covers this case with its own "View Release" link-out fallback.
+    console.error('[autoUpdater] error:', err);
+  });
+
+  autoUpdater.checkForUpdates().catch((err) => {
+    console.error('[autoUpdater] checkForUpdates failed:', err);
+  });
+
+  ipcMain.handle('update:install', () => {
+    autoUpdater.quitAndInstall();
   });
 }
 
@@ -430,8 +484,10 @@ function registerIPCHandlers(): void {
 app.whenReady().then(() => {
   // Register IPC handlers before creating window
   registerIPCHandlers();
-  
+
   createWindow();
+
+  registerAutoUpdater();
 
   // macOS: Re-create window when dock icon is clicked and no windows are open
   app.on('activate', () => {

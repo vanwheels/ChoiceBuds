@@ -15,7 +15,7 @@ interface UpdateCheckSectionProps {
 const GITHUB_URL_PREFIX = 'https://github.com/';
 
 export default function UpdateCheckSection({ updateCheckState }: UpdateCheckSectionProps) {
-  const { status, currentVersion, latestVersion, releaseUrl } = updateCheckState;
+  const { status, currentVersion, latestVersion, releaseUrl, downloadPercent, installUpdate } = updateCheckState;
 
   const handleViewRelease = () => {
     if (releaseUrl && releaseUrl.startsWith(GITHUB_URL_PREFIX)) {
@@ -49,6 +49,23 @@ export default function UpdateCheckSection({ updateCheckState }: UpdateCheckSect
               className="px-2 py-1 text-[11px] font-bold rounded bg-blue-600 text-white hover:bg-blue-500 transition-colors cursor-pointer"
             >
               View Release
+            </button>
+          </div>
+        )}
+        {status === 'downloading' && (
+          <p className="text-xs text-yellow-400">
+            Downloading update{latestVersion ? ` ${latestVersion}` : ''}
+            {typeof downloadPercent === 'number' ? `... ${downloadPercent}%` : '...'}
+          </p>
+        )}
+        {status === 'ready-to-install' && (
+          <div className="flex items-center gap-2">
+            <p className="text-xs text-green-400">Update {latestVersion} ready to install.</p>
+            <button
+              onClick={installUpdate}
+              className="px-2 py-1 text-[11px] font-bold rounded bg-blue-600 text-white hover:bg-blue-500 transition-colors cursor-pointer"
+            >
+              Restart & Update
             </button>
           </div>
         )}

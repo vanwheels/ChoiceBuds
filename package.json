@@ -1,6 +1,6 @@
 {
   "name": "choicebuds",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "VGC Team Importer - Import and manage Pokémon Showdown teams",
   "type": "module",
   "main": "dist-electron/main.js",
@@ -32,11 +32,22 @@
     "directories": {
       "output": "release"
     },
+    "publish": {
+      "provider": "github",
+      "owner": "vanwheels",
+      "repo": "ChoiceBuds"
+    },
     "win": {
       "target": [
         "nsis",
         "portable"
       ]
+    },
+    "nsis": {
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}.${ext}"
     },
     "mac": {
       "target": [
@@ -68,6 +79,7 @@
   },
   "dependencies": {
     "@smogon/calc": "^0.11.0",
+    "electron-updater": "^6.8.9",
     "html-to-image": "^1.11.13",
     "pdf-lib": "^1.17.1",
     "react": "^19.2.7",
