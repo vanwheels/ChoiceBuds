@@ -259,10 +259,23 @@ See [COMPLETED.md](COMPLETED.md) for the full log of finished work.
     for Windows auto-update to function, but would remove the "Windows
     protected your PC" SmartScreen warning - separate purchase decision,
     not bundled into this pass.
-  - Signing/notarizing/publishing by hand for every release still isn't
-    automated - a GitHub Actions workflow (build-on-tag-push, secrets for
-    signing certs) would replace today's manual `npm run dist:win` +
-    `gh release create` flow, but wasn't built this pass.
+  - ~~Signing/notarizing/publishing by hand for every release still isn't
+    automated~~ **Workflow written 2026-07-16, not yet end-to-end
+    verified**: `.github/workflows/release.yml` builds on
+    `windows-latest`/`macos-latest` on any `v*.*.*` tag push and runs
+    `electron-builder --publish always`, which attaches installers (plus
+    `latest.yml`/`.blockmap` for the Windows NSIS target) to a **draft**
+    GitHub Release rather than publishing it live - matches this project's
+    existing "always confirm before publishing a Release" rule, since a
+    human still has to review and flip it to non-draft by hand (`gh release
+    edit --draft=false` or the UI). No signing secrets are configured yet
+    (no Windows cert, no Apple Developer account), so output is unsigned,
+    same as today's manual builds. **Not yet tested against a real tag
+    push** - v0.2.1 is already tagged and published, so there was nothing
+    safe to push without either touching that live release or creating a
+    throwaway test tag; verify the next time a version is actually cut
+    (bump `package.json`, tag `vX.Y.Z`, push the tag, confirm the workflow
+    run succeeds and the draft release looks right before publishing).
 - ~~Dev tooling has also drifted behind current majors~~ **Done 2026-07-14**
   - bumped Vite `^5.0.0`→`^8.1.4`, `@vitejs/plugin-react` `^4.7.0`→`^5.2.0`,
   ESLint `^9.39.4`→`^10.7.0` (+`@eslint/js`, `typescript-eslint`, `globals`,
