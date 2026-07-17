@@ -7,6 +7,20 @@ focused on what's actually next.
 
 ## In progress / up next
 
+- **Newly discovered bug: Palafin can't be added as a Battle Logger opponent
+  at all** (found 2026-07-16 during the stat-inference Phase 3 species-
+  coverage audit, unrelated to that feature itself - not yet fixed). The
+  opponent species picker (`SpeciesPickerCard.tsx`) filters its roster
+  through `validateSpeciesLegality`, which only accepts a species string
+  that exactly equals one of `utils/pokemonRules.ts`'s legal slugs (e.g.
+  `'palafin'`) - but `useSpeciesRoster.ts` (PokeAPI's own per-forme naming)
+  apparently produces a differently-suffixed string for Palafin specifically
+  (unconfirmed exactly which - `"No legal species found"` when searching
+  "Palafin" in the picker live, unlike every other checked species), so it
+  silently never appears as a selectable option. Needs its own investigation
+  (log the actual roster entry name PokeAPI returns for Palafin, compare
+  against the legality slug) rather than a guess.
+
 - **Battle Logger: Miss/Crit/No Effect/Blocked outcome UX redesign** (raised
   2026-07-16, 3-part plan, tackling in order):
   1. **Done (2026-07-16)** - moved the outcome-confirmation chips from
@@ -81,11 +95,11 @@ focused on what's actually next.
   3-phase plan) shipped 2026-07-16 - see COMPLETED.md for the full
   implementation trail. Phase 2 (Item/Moves/Nature/Stat Points sections in
   the same popover, beyond Phase 1's Ability-only slice) also shipped
-  2026-07-16, see COMPLETED.md. Phase 3's loading-state treatment (of its
-  3 polish items) is also done, see COMPLETED.md - by explicit user choice,
-  tackled one item at a time rather than all three together. Still open:
-  wider empirical species coverage, TTL tuning. Explicitly out of scope for
-  now: Calc-page
+  2026-07-16, see COMPLETED.md. Phase 3's loading-state treatment and wider
+  empirical species coverage (2 of its 3 polish items) are also done, see
+  COMPLETED.md - by explicit user choice, tackled one item at a time rather
+  than all three together. Still open: TTL tuning. Explicitly out of scope
+  for now: Calc-page
   integration (a planned fast-follow reusing the same data layer), the
   `teammate` usage category, and adding `nature`/`evs` fields to
   `OpponentPokemonEntry`. Synthesizing turn-log entries when a

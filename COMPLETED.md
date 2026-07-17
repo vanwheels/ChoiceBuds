@@ -5,6 +5,80 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Battle Logger stat-inference, Phase 3 (partial): wider empirical species
+  coverage** (2026-07-16): the second of Phase 3's three polish items - TTL
+  tuning is still open, deferred by explicit user choice to tackle one item
+  at a time. `services/championsBattleData.ts`'s own doc comment previously
+  cited species like Iron Hands, every Paradox, Ogerpon, Tapus, Ursaluna,
+  Mr. Mime, Indeedee, and Oinkologne as examples of an expected "no
+  Champions page" gap - a genuinely misleading picture, since none of those
+  are even reachable through the opponent species picker in the first place
+  (`SpeciesPickerCard.tsx` filters through `validateSpeciesLegality`, so
+  only `utils/pokemonRules.ts`'s Reg M-A/M-B legal roster is ever
+  selectable). The real coverage question is how much of that ~227-species
+  *legal* roster actually has Champions data - checked empirically with a
+  one-off script (not part of the app) fetching the live `/api/index` and
+  cross-referencing every legal slug. Found 21 misses from the *existing*
+  matching logic (a plain name/slug equality check), none of them a genuine
+  absence - all 21 were resolvable once the right lookup was tried, so 3
+  fixes went into `resolveChampionsBattleName`:
+  1. **Regional-form prefix rewrite** (15 species: Alolan Raichu/Ninetales,
+     Galarian Slowbro/Slowking/Stunfisk, Hisuian Arcanine/Typhlosion/
+     Samurott/Zoroark/Goodra/Avalugg/Decidueye, all 3 Paldean Tauros
+     breeds) - Champions' own site uses a PREFIX convention ("Alolan
+     Ninetales", slug "alolan-ninetales"), the opposite of this app's
+     PokeAPI-inherited SUFFIX convention ("Ninetales-Alola"), so a plain
+     match can never find them. `rewriteRegionalFormSlug` retries with the
+     prefix form after a direct match fails. Tauros's 3 breeds needed a
+     special case even among regional forms (site puts the region as a
+     prefix AND appends "-breed": "paldean-tauros-combat-breed") - verified
+     live that all 3 breeds' own `battleName` collapses to one shared
+     "Paldean Tauros Aqua Breed" dataset regardless of which breed is
+     queried (a real site-side data-modeling choice, not a bug).
+  2. **Canonical-form overrides** (Vivillon, Florges, Furfrou, Palafin,
+     Aegislash) - species this app only ever stores as one specific
+     form/state, but whose Champions page for that exact bare name doesn't
+     exist: the site only pages one "canonical" specific forme (Vivillon
+     Fancy Pattern, Florges Red Flower, Furfrou Natural Form, Palafin Zero
+     Form, Aegislash Shield Forme), with every other cosmetic-pattern/trim/
+     battle-only-state forme's own page just pointing its `battleName` back
+     to that same canonical one. `CANONICAL_FORM_SLUG_OVERRIDES` maps each
+     directly. Aegislash needed 3 keys, not 1 - live-testing (not just the
+     research script) caught that the opponent species picker
+     (`useSpeciesRoster`, PokeAPI's own per-forme naming) actually stores it
+     as "Aegislash-Shield" (confirmed via `battles.json`), not bare
+     "Aegislash" as an initial pass assumed purely from
+     `utils/championsStats.ts::resolveCalcSpecies`'s documented quirk for a
+     *different* code path (Showdown-parsed team data) - a good reminder
+     that the research script's static analysis alone would have shipped a
+     fix that silently didn't work for the picker's actual real-world
+     value. The picker also separately offers "Aegislash-Blade" as its own
+     selectable row, so that got its own key too.
+  3. **Meowstic's "-Male" suffix strip** - Champions has no distinct
+     male-form page for Meowstic (its bare/default page already *is* the
+     male form, only "Meowstic Female" gets a page of its own), unlike
+     Basculegion, which does have its own distinct "Basculegion Male" page.
+     Deliberately the last fallback tried and gated on every earlier
+     attempt failing, so it can't mis-fire on Basculegion-Male's own
+     already-correct direct match.
+  Final verified coverage: 227/227 (100%) of the real, reachable Reg M-B
+  roster resolves correctly - the earlier "expect frequent misses" framing
+  in the file's doc comment was replaced with this accurate picture.
+  Live-verified via `run-desktop` against a disposable test battle: added
+  Ninetales-Alola, Aegislash-Shield, Vivillon, Florges, and Furfrou as
+  opponents, confirmed all 5 Likely Set triggers appeared (none did before
+  the fix - only Ninetales-Alola showed after the regional-form rewrite
+  alone, since Aegislash-Shield's picker-specific key hadn't been added
+  yet), and confirmed Aegislash-Shield's popover showed real, sensible data
+  (Stance Change 100% ability, Leftovers/Spell Tag/Life Orb items, King's
+  Shield/Shadow Sneak/Iron Head/Poltergeist moves, Adamant/Brave natures,
+  real Stat Point spreads). Test battles cleaned up afterward. Surfaced one
+  unrelated bug along the way, not fixed in this pass since it's a
+  different subsystem (the roster/legality pipeline, not this feature) -
+  see TODO.md: Palafin can't be added as an opponent at all right now (the
+  species picker's legality filter silently rejects whatever string
+  `useSpeciesRoster` actually produces for it).
+
 - **Battle Logger stat-inference, Phase 3 (partial): loading-state
   treatment** (2026-07-16): the first of Phase 3's three polish items -
   wider empirical species coverage and TTL tuning are still open, deferred
