@@ -5,6 +5,56 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Battle Logger stat-inference, Phase 2: Item/Moves/Nature/Stat Points
+  sections** (2026-07-16): extends Phase 1's Ability-only "Likely Set"
+  popover (see below) with the remaining four categories the data layer
+  already fetched and cached but never surfaced -
+  `services/championsBattleData.ts`/`GameDataCache.usage` needed no changes
+  at all, this was purely a UI wiring pass over existing data.
+  `LikelySetsPopover.tsx` gained Item/Moves/Nature/Stat Points sections
+  mirroring the existing Ability section's layout (name + percentage row,
+  top-3 for Ability/Item/Moves, top-2 for Nature/Stat Points since those
+  lists get long fast); Nature rows format as `"Adamant (+Attack/-Sp.
+  Atk)"` from the API's own `statUp`/`statDown` fields, Stat Points rows as
+  `"32 HP / 32 Atk / 2 SpD"` (a new `formatStatSpread` local to the popover
+  - reuses the same abbreviated-label convention as `StatsColumn.tsx`, but
+  couldn't reuse `utils/statAlignment.ts::formatStatAlignment` directly
+  since that operates on `EVSpread`'s full-word keys `attack`/`defense`/etc.
+  while `ChampionsUsageStatSpreadEntry.points` uses `@smogon/calc`-style
+  abbreviated keys `atk`/`def`/etc.). Widened the popover `w-48` → `w-56` to
+  fit the extra content.
+  `OpponentRowFields.tsx`'s `OpponentLikelySetsTrigger` visibility logic
+  changed from Phase 1's single `opponent.ability` check (the whole trigger
+  hid once ability was confirmed, since v1 had nothing else to suggest) to
+  checking all five categories independently: Ability/Item hide their own
+  section once `opponent.ability`/`opponent.item` holds any value (matching
+  the existing "confirmed = any value, not a value match" convention every
+  other real-field check in this file already uses); Moves filters out
+  individual suggestions already present in `opponent.moves`
+  (case-insensitively - moves are a freeform, dedup-on-add growable list,
+  not a single confirmed slot, so the section itself never hides, just
+  shrinks) rather than hiding the whole section on any one move being
+  logged; Nature and Stat Points never hide on their own since
+  `OpponentPokemonEntry` has no real field for either to compare against -
+  explicitly out of scope per the existing TODO.md note ruling out adding
+  `nature`/`evs` fields to that type. The trigger button itself now shows
+  whenever *any* of the five categories still has something unconfirmed to
+  suggest, rather than disappearing the moment ability alone is confirmed.
+  Live-verified end-to-end via `run-desktop` against disposable test
+  battles (cleaned up after, same exact-ID-delete-via-UI approach as Phase
+  1 - this session's own 7 test battles only, "No battles logged yet."
+  confirmed empty again afterward): added Kingambit as an opponent, opened
+  the popover and confirmed all five sections rendered with real live data
+  (Defiant 94.4%/Item Black Glasses 37.3%/Sucker Punch 99.2%/Adamant
+  (+Attack/-Sp. Atk) 85.6%/32 HP-32 Atk-2 SpD 15.6%, "Season M-3"); set the
+  real ability to Defiant and confirmed only the Ability section vanished
+  from the popover while Item/Moves/Nature/Stat Points stayed; separately
+  logged Sucker Punch as a real move and set a real item, confirmed the
+  Item section disappeared entirely and Moves' suggestion list dropped just
+  the now-confirmed Sucker Punch row while Kowtow Cleave/Iron Head/Protect
+  stayed. Still open (see `TODO.md`): Phase 3 (polish - loading-state
+  treatment, wider empirical species coverage, TTL tuning).
+
 - **Battle Logger stat-inference, Phase 1: "Likely Set" suggestion panel**
   (2026-07-16): a long-open TODO idea (surface what a species' opponent is
   *typically* running, from real ranked-ladder data, while logging a live
@@ -56,8 +106,9 @@ local ("see below"/"see above").
   already hold ~60 orphaned "In Progress, 0-1 turn" battles from past
   testing sessions that were never cleaned up - flagged to the user as a
   separate, not-yet-actioned cleanup opportunity, not touched beyond this
-  session's own 3 test battles. Still open (see `TODO.md`): Phase 2
-  (Item/Moves/Nature/Stat Points sections) and Phase 3 (polish).
+  session's own 3 test battles. Phase 2 (Item/Moves/Nature/Stat Points
+  sections) is done, see above. Still open (see `TODO.md`): Phase 3
+  (polish).
 
 - **VGC Team Sheet PDF auto-fill** (2026-07-16): fills the official Play!
   Pokémon Video Game Team List PDF (bundled as `public/vg-team-list-template.pdf`,

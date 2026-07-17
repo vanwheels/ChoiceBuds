@@ -79,10 +79,11 @@ focused on what's actually next.
   across games are also done (both 2026-07-13, see COMPLETED.md). Still
   open: the stat-inference idea. Data source unblocked and Phase 1 (of a
   3-phase plan) shipped 2026-07-16 - see COMPLETED.md for the full
-  implementation trail. Still open: Phase 2 (Item/Moves/Nature/Stat Points
-  sections in the same popover, beyond Phase 1's Ability-only slice) and
-  Phase 3 (polish - loading-state treatment, wider empirical species
-  coverage, TTL tuning). Explicitly out of scope for now: Calc-page
+  implementation trail. Phase 2 (Item/Moves/Nature/Stat Points sections in
+  the same popover, beyond Phase 1's Ability-only slice) also shipped
+  2026-07-16, see COMPLETED.md. Still open: Phase 3 (polish - loading-state
+  treatment, wider empirical species coverage, TTL tuning). Explicitly out
+  of scope for now: Calc-page
   integration (a planned fast-follow reusing the same data layer), the
   `teammate` usage category, and adding `nature`/`evs` fields to
   `OpponentPokemonEntry`. Synthesizing turn-log entries when a

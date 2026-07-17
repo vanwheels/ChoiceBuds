@@ -197,8 +197,14 @@ export function OpponentExtras({ battle, opponent, battleLogActions }: RowFieldP
  * fetches on mount/species-change, same effect-on-mount pattern as
  * OpponentAbilityCell above. Renders nothing while the fetch is in flight,
  * on a species with no Champions usage page, or once every suggestible
- * category is already confirmed (v1: just Ability) - a guess that adds
- * nothing never earns screen space.
+ * category is already confirmed or empty - a guess that adds nothing never
+ * earns screen space. Ability/Item hide once their real field is confirmed
+ * (any value, not a match check - same as OpponentExtras' other confirmed-
+ * state checks); Moves only hides suggestions already present in
+ * opponent.moves rather than the whole section, since moves is a growable
+ * list, not a single confirmed value; Nature/Stat Points never hide on their
+ * own since OpponentPokemonEntry has no real field for either to compare
+ * against (explicitly out of scope per TODO.md).
  */
 export function OpponentLikelySetsTrigger({ opponent, gameDataState }: { opponent: OpponentPokemonEntry; gameDataState: UseGameDataReturn }) {
   const [usage, setUsage] = useState<ChampionsUsageEntry | null>(null);
@@ -212,9 +218,20 @@ export function OpponentLikelySetsTrigger({ opponent, gameDataState }: { opponen
     return () => { cancelled = true; };
   }, [opponent.species, gameDataState]);
 
-  // v1 only has an Ability section - once it's confirmed (or there's nothing
-  // to suggest in the first place) a guess adds nothing, so hide entirely.
-  if (!usage || usage.abilities.length === 0 || opponent.ability) return null;
+  if (!usage) return null;
+
+  const hideAbility = !!opponent.ability;
+  const hideItem = !!opponent.item;
+  const confirmedMovesLower = opponent.moves.map(m => m.toLowerCase());
+  const hasMoveSuggestion = usage.moves.some(m => !confirmedMovesLower.includes(m.name.toLowerCase()));
+
+  const hasAnySuggestion = (!hideAbility && usage.abilities.length > 0)
+    || (!hideItem && usage.items.length > 0)
+    || hasMoveSuggestion
+    || usage.natures.length > 0
+    || usage.statSpreads.length > 0;
+
+  if (!hasAnySuggestion) return null;
 
   return (
     <div className="relative inline-block mt-1">
@@ -226,7 +243,15 @@ export function OpponentLikelySetsTrigger({ opponent, gameDataState }: { opponen
       >
         📊 Likely Set
       </button>
-      {isOpen && <LikelySetsPopover usage={usage} hideAbility={false} onClose={() => setIsOpen(false)} />}
+      {isOpen && (
+        <LikelySetsPopover
+          usage={usage}
+          hideAbility={hideAbility}
+          hideItem={hideItem}
+          confirmedMoves={opponent.moves}
+          onClose={() => setIsOpen(false)}
+        />
+      )}
     </div>
   );
 }
