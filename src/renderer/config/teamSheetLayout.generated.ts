@@ -9,6 +9,14 @@
  * than an exact measurement.
  */
 export interface TeamSheetFieldPos { x: number; y: number; size: number }
+export interface TeamSheetStatsTable {
+  hp: TeamSheetFieldPos;
+  atk: TeamSheetFieldPos;
+  def: TeamSheetFieldPos;
+  spa: TeamSheetFieldPos;
+  spd: TeamSheetFieldPos;
+  spe: TeamSheetFieldPos;
+}
 export interface TeamSheetPokemonSlot {
   species: TeamSheetFieldPos;
   statAlignment: TeamSheetFieldPos;
@@ -19,6 +27,9 @@ export interface TeamSheetPokemonSlot {
   move3: TeamSheetFieldPos;
   move4: TeamSheetFieldPos;
 }
+export interface TeamSheetStaffPokemonSlot extends TeamSheetPokemonSlot {
+  stats: TeamSheetStatsTable;
+}
 export interface TeamSheetPageLayout {
   playerName: TeamSheetFieldPos;
   ageDivision: { juniors: TeamSheetFieldPos; seniors: TeamSheetFieldPos; masters: TeamSheetFieldPos };
@@ -27,10 +38,11 @@ export interface TeamSheetPageLayout {
   switchProfileName: TeamSheetFieldPos;
   pokemonSlots: TeamSheetPokemonSlot[];
 }
-export interface TeamSheetStaffPageLayout extends TeamSheetPageLayout {
+export interface TeamSheetStaffPageLayout extends Omit<TeamSheetPageLayout, 'pokemonSlots'> {
   playerId: TeamSheetFieldPos;
   dateOfBirth: { month: TeamSheetFieldPos; day: TeamSheetFieldPos; year: TeamSheetFieldPos };
   supportId: TeamSheetFieldPos;
+  pokemonSlots: TeamSheetStaffPokemonSlot[];
 }
 export const TEAM_SHEET_LAYOUT: { page0: TeamSheetStaffPageLayout; page1: TeamSheetPageLayout } = {
   "page0": {
@@ -139,6 +151,38 @@ export const TEAM_SHEET_LAYOUT: { page0: TeamSheetStaffPageLayout; page1: TeamSh
           "x": 86.1,
           "y": 443.9,
           "size": 7
+        },
+        "stats": {
+          "hp": {
+            "x": 259.4,
+            "y": 570.2,
+            "size": 7
+          },
+          "atk": {
+            "x": 260.8,
+            "y": 547.1,
+            "size": 7
+          },
+          "def": {
+            "x": 261.1,
+            "y": 523.9,
+            "size": 7
+          },
+          "spa": {
+            "x": 269.3,
+            "y": 500.7,
+            "size": 7
+          },
+          "spd": {
+            "x": 269.6,
+            "y": 477.6,
+            "size": 7
+          },
+          "spe": {
+            "x": 267.2,
+            "y": 454.4,
+            "size": 7
+          }
         }
       },
       {
@@ -181,6 +225,38 @@ export const TEAM_SHEET_LAYOUT: { page0: TeamSheetStaffPageLayout; page1: TeamSh
           "x": 86.1,
           "y": 242.6,
           "size": 7
+        },
+        "stats": {
+          "hp": {
+            "x": 259.4,
+            "y": 368.8,
+            "size": 7
+          },
+          "atk": {
+            "x": 260.8,
+            "y": 345.6,
+            "size": 7
+          },
+          "def": {
+            "x": 261.1,
+            "y": 322.5,
+            "size": 7
+          },
+          "spa": {
+            "x": 269.3,
+            "y": 299.3,
+            "size": 7
+          },
+          "spd": {
+            "x": 269.6,
+            "y": 276.2,
+            "size": 7
+          },
+          "spe": {
+            "x": 267.2,
+            "y": 253,
+            "size": 7
+          }
         }
       },
       {
@@ -223,6 +299,38 @@ export const TEAM_SHEET_LAYOUT: { page0: TeamSheetStaffPageLayout; page1: TeamSh
           "x": 86.1,
           "y": 44.2,
           "size": 7
+        },
+        "stats": {
+          "hp": {
+            "x": 259.4,
+            "y": 167.4,
+            "size": 7
+          },
+          "atk": {
+            "x": 260.8,
+            "y": 144.3,
+            "size": 7
+          },
+          "def": {
+            "x": 261.1,
+            "y": 121.1,
+            "size": 7
+          },
+          "spa": {
+            "x": 269.3,
+            "y": 97.9,
+            "size": 7
+          },
+          "spd": {
+            "x": 269.6,
+            "y": 74.8,
+            "size": 7
+          },
+          "spe": {
+            "x": 267.2,
+            "y": 54.6,
+            "size": 7
+          }
         }
       },
       {
@@ -265,6 +373,38 @@ export const TEAM_SHEET_LAYOUT: { page0: TeamSheetStaffPageLayout; page1: TeamSh
           "x": 378.2,
           "y": 443.9,
           "size": 7
+        },
+        "stats": {
+          "hp": {
+            "x": 551.5,
+            "y": 570.2,
+            "size": 7
+          },
+          "atk": {
+            "x": 552.9,
+            "y": 547.1,
+            "size": 7
+          },
+          "def": {
+            "x": 553.2,
+            "y": 523.9,
+            "size": 7
+          },
+          "spa": {
+            "x": 561.4,
+            "y": 500.7,
+            "size": 7
+          },
+          "spd": {
+            "x": 561.7,
+            "y": 477.6,
+            "size": 7
+          },
+          "spe": {
+            "x": 559.4,
+            "y": 454.4,
+            "size": 7
+          }
         }
       },
       {
@@ -307,6 +447,38 @@ export const TEAM_SHEET_LAYOUT: { page0: TeamSheetStaffPageLayout; page1: TeamSh
           "x": 378.2,
           "y": 242.6,
           "size": 7
+        },
+        "stats": {
+          "hp": {
+            "x": 551.5,
+            "y": 368.8,
+            "size": 7
+          },
+          "atk": {
+            "x": 552.9,
+            "y": 345.6,
+            "size": 7
+          },
+          "def": {
+            "x": 553.2,
+            "y": 322.5,
+            "size": 7
+          },
+          "spa": {
+            "x": 561.4,
+            "y": 299.3,
+            "size": 7
+          },
+          "spd": {
+            "x": 561.7,
+            "y": 276.2,
+            "size": 7
+          },
+          "spe": {
+            "x": 559.4,
+            "y": 253,
+            "size": 7
+          }
         }
       },
       {
@@ -349,6 +521,38 @@ export const TEAM_SHEET_LAYOUT: { page0: TeamSheetStaffPageLayout; page1: TeamSh
           "x": 378.2,
           "y": 44.2,
           "size": 7
+        },
+        "stats": {
+          "hp": {
+            "x": 551.5,
+            "y": 167.4,
+            "size": 7
+          },
+          "atk": {
+            "x": 552.9,
+            "y": 144.3,
+            "size": 7
+          },
+          "def": {
+            "x": 553.2,
+            "y": 121.1,
+            "size": 7
+          },
+          "spa": {
+            "x": 561.4,
+            "y": 97.9,
+            "size": 7
+          },
+          "spd": {
+            "x": 561.7,
+            "y": 74.8,
+            "size": 7
+          },
+          "spe": {
+            "x": 559.4,
+            "y": 54.6,
+            "size": 7
+          }
         }
       }
     ]

@@ -26,6 +26,14 @@
  * identical "Pokémon" boxes. Slots are numbered column-major (left column
  * top-to-bottom = slots 0-2, right column top-to-bottom = slots 3-5),
  * matching the standard reading order for this specific official form.
+ *
+ * Page 0 ("For Tournament Staff") additionally has a per-Pokémon numeric
+ * stat side-table (HP/Atk/Def/Sp. Atk/Sp. Def/Speed) - not present on page 1.
+ * Originally left unfilled (assumed staff's handwritten field), but real
+ * VGC team sheets are filled with the Pokémon's own computed stats -
+ * services/teamSheetPdf.ts computes these via @smogon/calc the same way
+ * useDamageCalc.ts does (level 50, max IVs, Nature, Stat Points*4 as EVs),
+ * this script just locates where to draw them.
  */
 import { readFile, writeFile } from 'fs/promises';
 import { fileURLToPath } from 'url';
@@ -93,6 +101,35 @@ function buildPokemonSlots(items: TextItem[]) {
   return slots;
 }
 
+const STAT_FIELD_LABELS: [key: string, label: string][] = [
+  ['hp', 'HP'],
+  ['atk', 'Atk'],
+  ['def', 'Def'],
+  ['spa', 'Sp. Atk'],
+  ['spd', 'Sp. Def'],
+  ['spe', 'Speed'],
+];
+
+/** The per-Pokémon stat side-table sits further right than the Ability/Held Item/Move columns it lines up with - colA's numbers at 200<=x<300, colB's at x>=500, distinct from both per-mon field column ranges above. */
+function findStatColumnRows(items: TextItem[], str: string, column: 'A' | 'B'): TextItem[] {
+  const matches = items.filter(i => i.str === str && (column === 'A' ? (i.x >= 200 && i.x < 300) : i.x >= 500));
+  if (matches.length !== 3) throw new Error(`Expected 3 rows for stat "${str}" col ${column}, found ${matches.length}`);
+  return matches.sort((a, b) => b.y - a.y);
+}
+
+function buildStatsTables(items: TextItem[]) {
+  const colA = Object.fromEntries(STAT_FIELD_LABELS.map(([key, label]) => [key, findStatColumnRows(items, label, 'A')]));
+  const colB = Object.fromEntries(STAT_FIELD_LABELS.map(([key, label]) => [key, findStatColumnRows(items, label, 'B')]));
+  const tables = [];
+  for (let row = 0; row < 3; row++) {
+    tables.push(Object.fromEntries(STAT_FIELD_LABELS.map(([key]) => [key, value(colA[key][row], PER_MON_FIELD_SIZE)])));
+  }
+  for (let row = 0; row < 3; row++) {
+    tables.push(Object.fromEntries(STAT_FIELD_LABELS.map(([key]) => [key, value(colB[key][row], PER_MON_FIELD_SIZE)])));
+  }
+  return tables;
+}
+
 function buildHeaderStaffOnly(items: TextItem[]) {
   const playerId = findOne(items, 'Player ID:');
   const dob = findOne(items, 'Date of Birth:');
@@ -134,11 +171,13 @@ if (doc.numPages !== 2) throw new Error(`Expected 2-page template, found ${doc.n
 const page0Items = await getPageItems(doc, 1);
 const page1Items = await getPageItems(doc, 2);
 
+const page0StatsTables = buildStatsTables(page0Items);
+
 const layout = {
   page0: { // "1 of 2: For Tournament Staff"
     ...buildHeaderShared(page0Items),
     ...buildHeaderStaffOnly(page0Items),
-    pokemonSlots: buildPokemonSlots(page0Items),
+    pokemonSlots: buildPokemonSlots(page0Items).map((slot, i) => ({ ...slot, stats: page0StatsTables[i] })),
   },
   page1: { // "2 of 2: For Opponents"
     ...buildHeaderShared(page1Items),
@@ -157,6 +196,14 @@ const output = `/**
  * than an exact measurement.
  */
 export interface TeamSheetFieldPos { x: number; y: number; size: number }
+export interface TeamSheetStatsTable {
+  hp: TeamSheetFieldPos;
+  atk: TeamSheetFieldPos;
+  def: TeamSheetFieldPos;
+  spa: TeamSheetFieldPos;
+  spd: TeamSheetFieldPos;
+  spe: TeamSheetFieldPos;
+}
 export interface TeamSheetPokemonSlot {
   species: TeamSheetFieldPos;
   statAlignment: TeamSheetFieldPos;
@@ -167,6 +214,9 @@ export interface TeamSheetPokemonSlot {
   move3: TeamSheetFieldPos;
   move4: TeamSheetFieldPos;
 }
+export interface TeamSheetStaffPokemonSlot extends TeamSheetPokemonSlot {
+  stats: TeamSheetStatsTable;
+}
 export interface TeamSheetPageLayout {
   playerName: TeamSheetFieldPos;
   ageDivision: { juniors: TeamSheetFieldPos; seniors: TeamSheetFieldPos; masters: TeamSheetFieldPos };
@@ -175,10 +225,11 @@ export interface TeamSheetPageLayout {
   switchProfileName: TeamSheetFieldPos;
   pokemonSlots: TeamSheetPokemonSlot[];
 }
-export interface TeamSheetStaffPageLayout extends TeamSheetPageLayout {
+export interface TeamSheetStaffPageLayout extends Omit<TeamSheetPageLayout, 'pokemonSlots'> {
   playerId: TeamSheetFieldPos;
   dateOfBirth: { month: TeamSheetFieldPos; day: TeamSheetFieldPos; year: TeamSheetFieldPos };
   supportId: TeamSheetFieldPos;
+  pokemonSlots: TeamSheetStaffPokemonSlot[];
 }
 export const TEAM_SHEET_LAYOUT: { page0: TeamSheetStaffPageLayout; page1: TeamSheetPageLayout } = ${JSON.stringify(layout, null, 2)};
 `;

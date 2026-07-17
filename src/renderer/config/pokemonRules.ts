@@ -185,6 +185,34 @@ export function getGenderedFormGender(species: string): 'M' | 'F' | undefined {
 }
 
 /**
+ * Base species covered by GENDERED_FORM_VARIANTS above - male is this app's
+ * unmarked-default storage convention (bare "Basculegion" means male, only
+ * the female form gets an explicit "-F" baked into showdownData.species -
+ * see GENDERED_FORM_VARIANTS). That's fine for in-app display (a separate
+ * gender toggle/icon shows the actual gender everywhere else), but the VGC
+ * Team Sheet PDF (services/teamSheetPdf.ts) needs the species column to read
+ * exactly as it appears in-game, which always shows the gender for these
+ * species - so formatSpeciesWithGenderSuffix below makes the male suffix
+ * explicit too, only for this export.
+ */
+const GENDER_DIVERGENT_BASE_SPECIES = Object.keys(GENDERED_FORM_VARIANTS)
+  .map(name => name.split('-')[0].toLowerCase());
+
+/**
+ * Appends an explicit "-M"/"-F" for the four gender-divergent species
+ * (Basculegion/Indeedee/Meowstic/Oinkologne) when not already present in
+ * `species` - see GENDER_DIVERGENT_BASE_SPECIES above for why this only
+ * matters for these four. A no-op for every other species, and a no-op if
+ * `species` already ends in "-M"/"-F" (e.g. "Indeedee-F" from parsing).
+ */
+export function formatSpeciesWithGenderSuffix(species: string, gender: 'M' | 'F' | 'N' | '' | undefined): string {
+  const base = species.split('-')[0];
+  if (!GENDER_DIVERGENT_BASE_SPECIES.includes(base.toLowerCase())) return species;
+  if (/-[mf]$/i.test(species)) return species;
+  return `${species}-${gender === 'F' ? 'F' : 'M'}`;
+}
+
+/**
  * Determines the fallback gender for a species when no explicit gender is provided
  * 
  * Priority order:

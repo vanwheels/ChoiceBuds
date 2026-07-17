@@ -8,13 +8,52 @@
  * TeamExportImageModal.tsx already uses for its poster PNG.
  */
 import { PDFDocument, StandardFonts } from 'pdf-lib';
-import type { Team, PlayerProfile } from '../types/pokemon';
-import { TEAM_SHEET_LAYOUT, type TeamSheetFieldPos, type TeamSheetPageLayout, type TeamSheetPokemonSlot } from '../config/teamSheetLayout';
-import { formatStatAlignment } from '../utils/statAlignment';
+import { Generations, Pokemon } from '@smogon/calc';
+import type { NatureName, StatsTable } from '@smogon/calc/dist/data/interface';
+import type { Team, PlayerProfile, ImportedPokemonInfo } from '../types/pokemon';
+import { TEAM_SHEET_LAYOUT, type TeamSheetFieldPos, type TeamSheetPageLayout, type TeamSheetPokemonSlot, type TeamSheetStaffPokemonSlot } from '../config/teamSheetLayout';
+import { formatSpeciesWithGenderSuffix } from '../config/pokemonRules';
+import { MAX_IVS, spsToEvs } from '../utils/championsStats';
+
+const GEN_NUM = 9;
 
 function splitDateOfBirth(iso: string): { month: string; day: string; year: string } {
   const [year, month, day] = iso.split('-');
   return { month: month ?? '', day: day ?? '', year: year ?? '' };
+}
+
+/**
+ * Real computed stats (base + Nature + Stat Points, level 50, max IVs) for
+ * the PDF's per-Pokémon numeric side-table (page 0 only) - real VGC team
+ * sheets are filled with these, not left blank for staff. Same @smogon/calc
+ * math useDamageCalc.ts uses for the Calc page's own stat rows, via the same
+ * SP->EV conversion (utils/championsStats.ts) - `rawStats` is base+nature+
+ * EVs with no in-battle stage boost, matching what a team sheet (not a live
+ * battle state) should show. `species` is passed through unmodified (not
+ * the gender-suffixed display form below) since @smogon/calc resolves
+ * gender-divergent formes via its own `gender` option, same as
+ * utils/calcTeamImport.ts's already-working Calc-page pattern. Returns null
+ * (drawn as blank) if @smogon/calc doesn't recognize the species/nature.
+ */
+function computeRealStats(pokemon: ImportedPokemonInfo): StatsTable | null {
+  const { showdownData } = pokemon;
+  try {
+    const gen = Generations.get(GEN_NUM);
+    const sps: StatsTable = {
+      hp: showdownData.evs.hp, atk: showdownData.evs.attack, def: showdownData.evs.defense,
+      spa: showdownData.evs.specialAttack, spd: showdownData.evs.specialDefense, spe: showdownData.evs.speed,
+    };
+    const calcPokemon = new Pokemon(gen, showdownData.species, {
+      level: showdownData.level || 50,
+      gender: showdownData.gender === 'M' || showdownData.gender === 'F' || showdownData.gender === 'N' ? showdownData.gender : undefined,
+      nature: (showdownData.nature || 'Hardy') as NatureName,
+      evs: spsToEvs(sps),
+      ivs: MAX_IVS,
+    });
+    return calcPokemon.rawStats;
+  } catch {
+    return null;
+  }
 }
 
 export async function generateTeamSheetPdf(team: Team, playerProfile: PlayerProfile): Promise<Uint8Array> {
@@ -48,14 +87,28 @@ export async function generateTeamSheetPdf(team: Team, playerProfile: PlayerProf
     team.pokemon.slice(0, 6).forEach((pokemon, i) => {
       const slot = slots[i];
       const { showdownData } = pokemon;
-      draw(page, showdownData.species, slot.species);
-      draw(page, formatStatAlignment(showdownData.nature, showdownData.evs), slot.statAlignment);
+      draw(page, formatSpeciesWithGenderSuffix(showdownData.species, showdownData.gender), slot.species);
+      draw(page, showdownData.nature ?? '', slot.statAlignment);
       draw(page, showdownData.ability ?? '', slot.ability);
       draw(page, showdownData.item ?? '', slot.heldItem);
       draw(page, showdownData.moves[0] ?? '', slot.move1);
       draw(page, showdownData.moves[1] ?? '', slot.move2);
       draw(page, showdownData.moves[2] ?? '', slot.move3);
       draw(page, showdownData.moves[3] ?? '', slot.move4);
+    });
+  };
+
+  const drawStatsTables = (page: typeof page0, slots: TeamSheetStaffPokemonSlot[]) => {
+    team.pokemon.slice(0, 6).forEach((pokemon, i) => {
+      const stats = computeRealStats(pokemon);
+      if (!stats) return;
+      const pos = slots[i].stats;
+      draw(page, String(stats.hp), pos.hp);
+      draw(page, String(stats.atk), pos.atk);
+      draw(page, String(stats.def), pos.def);
+      draw(page, String(stats.spa), pos.spa);
+      draw(page, String(stats.spd), pos.spd);
+      draw(page, String(stats.spe), pos.spe);
     });
   };
 
@@ -70,6 +123,7 @@ export async function generateTeamSheetPdf(team: Team, playerProfile: PlayerProf
     draw(page0, dob.year, TEAM_SHEET_LAYOUT.page0.dateOfBirth.year);
   }
   drawPokemonSlots(page0, TEAM_SHEET_LAYOUT.page0.pokemonSlots);
+  drawStatsTables(page0, TEAM_SHEET_LAYOUT.page0.pokemonSlots);
 
   // Page 1: "2 of 2 - For Opponents" - shared header only, no player-identity fields
   drawSharedHeader(page1, TEAM_SHEET_LAYOUT.page1);

@@ -26,7 +26,10 @@ export default function TeamSheetPdfModal({ team, teamsState, settingsState, onC
   const { updateTeam } = teamsState;
   const { playerProfile } = settingsState.settings;
   const [battleTeamNumber, setBattleTeamNumber] = useState(team.battleTeamNumber ?? '');
-  const [battleTeamName, setBattleTeamName] = useState(team.battleTeamName ?? '');
+  // Defaults to the team's own builder name (still fully editable/overridable
+  // below) rather than starting blank - most players register a Battle Team
+  // under the same name they already gave it in the builder.
+  const [battleTeamName, setBattleTeamName] = useState(team.battleTeamName ?? team.name);
   const [isWorking, setIsWorking] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

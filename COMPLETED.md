@@ -75,6 +75,44 @@ local ("see below"/"see above").
   to test against) - corrupted their real Date of Birth value with no way to
   recover the original, since `SyncPayload` doesn't carry `AppSettings`; the
   user re-entered it by hand after confirming the fix.
+  **Second follow-up, content accuracy issues caught by the user reviewing
+  real output**: (1) Species for the four gender-divergent species
+  (Basculegion/Indeedee/Meowstic/Oinkologne) now always gets an explicit
+  "-M"/"-F" suffix on the PDF - this app's own storage convention leaves the
+  *male* form bare ("Basculegion", not "Basculegion-M" - only the female
+  form gets a baked-in suffix, see `GENDERED_FORM_VARIANTS` in
+  `config/pokemonRules.ts`), which reads fine everywhere else in the app
+  (a separate gender icon/toggle already shows it) but fails the sheet's
+  own "must be listed exactly as they appear in the Battle Team" rule.
+  New `config/pokemonRules.ts::formatSpeciesWithGenderSuffix()` fixes this
+  for the PDF only - general form suffixes (Rotom-Wash, Sinistcha's forms,
+  etc.) were already passed through untouched and didn't need a fix, verified
+  by checking `showdownData.species` is never rewritten anywhere in the
+  import/enrichment pipeline. (2) Stat Alignment now holds only the Nature
+  name (e.g. "Adamant"), not the old EV-breakdown string - that was
+  `formatStatAlignment()`'s poster-export format bleeding into a field
+  that's supposed to be nature-only on the real form. (3) The per-Pokémon
+  numeric stat side-table on page 1 - originally deliberately left blank
+  (assumed staff's handwritten field) - is now filled with each Pokémon's
+  real computed stats (level 50, max IVs, Nature, Stat Points*4 as EVs),
+  reusing `@smogon/calc`'s own math via a newly-shared
+  `utils/championsStats.ts` (extracted from `useDamageCalc.ts`'s
+  previously-local `spsToEvs`/`MAX_IVS`, now imported by both, avoiding a
+  second, potentially-drifting copy of the SP->EV conversion).
+  `scripts/generateTeamSheetLayout.ts` was extended to also locate the
+  stat-table's own label positions (previously deliberately excluded).
+  (4) `TeamSheetPdfModal.tsx`'s Battle Team Name field now defaults to the
+  team's own builder name (`team.name`) instead of blank, still fully
+  editable/overridable before generating. Verified live via `run-desktop`
+  with synthetic data only (no real teams/settings touched this time): a
+  hand-calculation of the real stat formula for a maxed-Atk/HP Adamant
+  Metagross matched the PDF's own printed numbers exactly (HP 171/Atk 188/
+  Def 151/etc.), and a Basculegion-M vs. Basculegion-F comparison confirmed
+  the two formes' genuinely different base stats both resolve correctly
+  once the species string matches this app's real storage convention (the
+  first repro attempt used an unrealistic bare "Basculegion"+gender pairing
+  for both and got identical stats for both - a test-data mistake, not a
+  real bug, caught by rerunning with the actual stored-string convention).
 
 - **Battle Logger: multi-hit move logging (part 3 of the Miss/Crit/No
   Effect/Blocked redesign)** (2026-07-16): logs how many hits actually
