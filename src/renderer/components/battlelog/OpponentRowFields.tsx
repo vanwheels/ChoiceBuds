@@ -192,6 +192,9 @@ export function OpponentExtras({ battle, opponent, battleLogActions }: RowFieldP
   );
 }
 
+/** How long a Champions usage check may run before its skeleton appears - see OpponentLikelySetsTrigger. */
+const USAGE_CHECK_SKELETON_DELAY_MS = 150;
+
 /**
  * Ranked-usage "likely set" suggestion trigger (see LikelySetsPopover.tsx) -
  * fetches on mount/species-change, same effect-on-mount pattern as
@@ -205,18 +208,60 @@ export function OpponentExtras({ battle, opponent, battleLogActions }: RowFieldP
  * list, not a single confirmed value; Nature/Stat Points never hide on their
  * own since OpponentPokemonEntry has no real field for either to compare
  * against (explicitly out of scope per TODO.md).
+ *
+ * Phase 3 loading-state treatment: `getChampionsUsage` resolves near-
+ * instantly for the common cases (a cache hit, or the one-time /api/index
+ * fetch already warmed by an earlier species this session) - showing a
+ * skeleton for those would just be flicker, especially since most species
+ * have no Champions page at all (a silent, permanent "nothing" is correct
+ * for them). A skeleton only earns its keep for a genuinely slow first
+ * fetch (a cold-session /api/index round trip), so it's gated behind a
+ * short delay timer: if the fetch settles before the delay fires, the
+ * skeleton never renders at all, identical to the pre-Phase-3 behavior.
  */
 export function OpponentLikelySetsTrigger({ opponent, gameDataState }: { opponent: OpponentPokemonEntry; gameDataState: UseGameDataReturn }) {
   const [usage, setUsage] = useState<ChampionsUsageEntry | null>(null);
+  const [status, setStatus] = useState<'pending' | 'checking' | 'done'>('pending');
   const [isOpen, setIsOpen] = useState(false);
+
+  // Reset during render (not in the effect below) when the species changes -
+  // `gameDataState` is a fresh object every render, so an effect keyed on it
+  // re-fires far more often than the species actually changes; resetting
+  // synchronously in the effect body would flicker the trigger back to
+  // "pending" on every unrelated parent re-render. See OpponentItemCell
+  // above for the same render-time-adjustment reasoning.
+  const [checkedSpecies, setCheckedSpecies] = useState(opponent.species);
+  if (opponent.species !== checkedSpecies) {
+    setCheckedSpecies(opponent.species);
+    setStatus('pending');
+    setUsage(null);
+  }
 
   useEffect(() => {
     let cancelled = false;
+    const skeletonTimer = setTimeout(() => {
+      if (!cancelled) setStatus('checking');
+    }, USAGE_CHECK_SKELETON_DELAY_MS);
+
     gameDataState.getChampionsUsage(opponent.species).then(result => {
-      if (!cancelled) setUsage(result);
+      if (cancelled) return;
+      clearTimeout(skeletonTimer);
+      setUsage(result);
+      setStatus('done');
     });
-    return () => { cancelled = true; };
+
+    return () => { cancelled = true; clearTimeout(skeletonTimer); };
   }, [opponent.species, gameDataState]);
+
+  if (status === 'pending') return null;
+
+  if (status === 'checking') {
+    return (
+      <span className="inline-block mt-1 text-[9px] px-1.5 py-0.5 rounded border border-dashed border-gray-700 text-gray-600 animate-pulse select-none">
+        📊 Likely Set
+      </span>
+    );
+  }
 
   if (!usage) return null;
 

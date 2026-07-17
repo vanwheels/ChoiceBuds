@@ -5,6 +5,44 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Battle Logger stat-inference, Phase 3 (partial): loading-state
+  treatment** (2026-07-16): the first of Phase 3's three polish items -
+  wider empirical species coverage and TTL tuning are still open, deferred
+  by explicit user choice to tackle one at a time rather than all at once.
+  `OpponentLikelySetsTrigger` (`OpponentRowFields.tsx`) previously rendered
+  nothing at all while its `getChampionsUsage` fetch was in flight, then
+  popped straight to the real amber trigger (or stayed invisible) once it
+  resolved - fine for the common case (a cache hit, or the site's `/api/
+  index` already warmed by an earlier species this session, both resolving
+  in a handful of milliseconds) but silent for a genuinely slow first fetch
+  too. Added a three-state `'pending' | 'checking' | 'done'` status: a
+  `USAGE_CHECK_SKELETON_DELAY_MS` (150ms) timer only flips to `'checking'`
+  (rendering a muted gray/dashed/`animate-pulse` skeleton, same text and
+  footprint as the real button so there's no layout jump when it resolves)
+  if the fetch is still pending once the delay elapses - a fetch that
+  settles before 150ms never shows anything extra at all, identical to
+  pre-Phase-3 behavior, so the common fast path stays exactly as quiet as
+  the "a guess that adds nothing never earns screen space" design principle
+  wants. Needed one real fix along the way: an initial attempt reset
+  `status` to `'pending'` synchronously at the top of the fetch effect,
+  which `react-hooks/set-state-in-effect` correctly flagged - `gameDataState`
+  is a fresh object every render (not memoized), so that effect actually
+  re-fires on nearly every parent re-render, not just on an actual species
+  change, and would have flickered the trigger back to invisible
+  constantly. Fixed with the same render-time-derived-state pattern
+  `OpponentItemCell` above it already uses for an analogous problem: a
+  `checkedSpecies` state compared during render, only resetting `status`/
+  `usage` when the species has actually changed.
+  Live-verified via `run-desktop` with an async polling `eval` (snapshots
+  every ~15ms) against two real opponents in a disposable test battle:
+  Kingambit (already cached from Phase 1/2 testing) went straight to the
+  real button with no skeleton frame ever observed, confirming the fast
+  path stays flicker-free; a not-yet-cached Incineroar showed no element
+  for ~100ms, then the gray pulsing skeleton from ~110ms-386ms, then
+  cleanly swapped to the real amber button once the live fetch resolved
+  around 419ms - exactly the intended sequence. Test battles cleaned up
+  afterward (back to "No battles logged yet.").
+
 - **Battle Logger stat-inference, Phase 2: Item/Moves/Nature/Stat Points
   sections** (2026-07-16): extends Phase 1's Ability-only "Likely Set"
   popover (see below) with the remaining four categories the data layer
