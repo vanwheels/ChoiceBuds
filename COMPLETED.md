@@ -139,6 +139,35 @@ local ("see below"/"see above").
   label; exact text-layer coordinates showed a clean 24pt gap on one side
   and 13pt from the box edge on the other - the screenshot read was a
   misperception, not a real bug).
+  **Fourth follow-up**: (1) stat numbers were still vertically top-heavy in
+  their cell - they'd been drawn at the label's own baseline, which sits
+  near the cell's top edge, not centered in the full cell height below it.
+  Fixed by deriving each cell's real height directly from the label grid's
+  own row-to-row spacing (HP's cell bottom is exactly where Atk's label
+  sits, so that gap - not a second guessed constant - is the cell height)
+  and shifting the value's baseline down by half of it plus a small
+  baseline/cap-height nudge. (2) Aegislash's stats were wrong (or
+  presumably blank/failing) because `@smogon/calc` has no bare "Aegislash"
+  species entry at all - only `Aegislash-Blade` (its dex's "base" record)
+  and `Aegislash-Shield`, two very different stat spreads (confirmed
+  directly: Def 176 vs. 86, Atk 70 vs. 160 for the same EVs) - and this
+  app's own storage convention is always bare "Aegislash" (Shield is its
+  default/roster appearance; Blade is a temporary in-battle Stance Change
+  state, same category as a Mega Evolution reverting after battle). The
+  exact same quirk was already independently documented twice elsewhere
+  (`services/pokeapi.ts`'s `normalizeSpeciesForAPI`, a code comment in
+  `utils/pokemonRules.ts`'s legality list) but never applied to
+  `@smogon/calc` species lookups specifically. New
+  `utils/championsStats.ts::resolveCalcSpecies()` fixes it at the one
+  shared choke point both `teamSheetPdf.ts` and `useDamageCalc.ts`
+  construct a `@smogon/calc` `Pokemon` from - the Calc page's own species
+  picker only ever stores real dex entries so it was never directly
+  affected, but loading a team's Aegislash via its "Load from Team" tray
+  (`calcTeamImport.ts`, which copies a team's stored species as-is) hit the
+  identical bug, unreported but real - fixed at the same time since it's
+  the same root cause and the same fix location. Verified by computing
+  `Aegislash-Shield`'s `rawStats` directly and confirming the PDF's printed
+  numbers matched exactly (151/70/176/63/177/80).
 
 - **Battle Logger: multi-hit move logging (part 3 of the Miss/Crit/No
   Effect/Blocked redesign)** (2026-07-16): logs how many hits actually

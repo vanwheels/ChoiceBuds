@@ -13,7 +13,7 @@ import type { NatureName, StatsTable } from '@smogon/calc/dist/data/interface';
 import type { Team, PlayerProfile, ImportedPokemonInfo } from '../types/pokemon';
 import { TEAM_SHEET_LAYOUT, type TeamSheetFieldPos, type TeamSheetPageLayout, type TeamSheetPokemonSlot, type TeamSheetStaffPokemonSlot } from '../config/teamSheetLayout';
 import { formatSpeciesWithGenderSuffix } from '../config/pokemonRules';
-import { MAX_IVS, spsToEvs } from '../utils/championsStats';
+import { MAX_IVS, spsToEvs, resolveCalcSpecies } from '../utils/championsStats';
 
 const GEN_NUM = 9;
 
@@ -32,8 +32,11 @@ function splitDateOfBirth(iso: string): { month: string; day: string; year: stri
  * battle state) should show. `species` is passed through unmodified (not
  * the gender-suffixed display form below) since @smogon/calc resolves
  * gender-divergent formes via its own `gender` option, same as
- * utils/calcTeamImport.ts's already-working Calc-page pattern. Returns null
- * (drawn as blank) if @smogon/calc doesn't recognize the species/nature.
+ * utils/calcTeamImport.ts's already-working Calc-page pattern - the one
+ * exception is Aegislash, resolved via resolveCalcSpecies() since
+ * @smogon/calc has no bare "Aegislash" entry at all (see that function's
+ * own doc comment). Returns null (drawn as blank) if @smogon/calc doesn't
+ * recognize the species/nature.
  */
 function computeRealStats(pokemon: ImportedPokemonInfo): StatsTable | null {
   const { showdownData } = pokemon;
@@ -43,7 +46,7 @@ function computeRealStats(pokemon: ImportedPokemonInfo): StatsTable | null {
       hp: showdownData.evs.hp, atk: showdownData.evs.attack, def: showdownData.evs.defense,
       spa: showdownData.evs.specialAttack, spd: showdownData.evs.specialDefense, spe: showdownData.evs.speed,
     };
-    const calcPokemon = new Pokemon(gen, showdownData.species, {
+    const calcPokemon = new Pokemon(gen, resolveCalcSpecies(showdownData.species), {
       level: showdownData.level || 50,
       gender: showdownData.gender === 'M' || showdownData.gender === 'F' || showdownData.gender === 'N' ? showdownData.gender : undefined,
       nature: (showdownData.nature || 'Hardy') as NatureName,

@@ -150,6 +150,20 @@ function statColumnAnchorX(colItems: Record<string, TextItem[]>, boxRightEdge: n
   return Number(((left + right) / 2).toFixed(1));
 }
 
+/**
+ * A stat cell's number was originally drawn at its label's own baseline y -
+ * fine horizontally (labels sit at the cell's left edge) but wrong
+ * vertically, since the label itself sits near the TOP of a cell tall
+ * enough for a full text line below it, not centered in it. Box borders
+ * aren't in the PDF's text layer (see STAT_BOX_RIGHT_EDGE_A above), but the
+ * label grid's own row-to-row spacing tracks the cell height directly (HP's
+ * cell bottom is exactly where Atk's label sits), so that spacing is reused
+ * here rather than a second independently-calibrated constant. Shifts the
+ * baseline down by half a cell height, with a small extra nudge since a
+ * baseline sits below a glyph's visual (cap-height) center, not at it.
+ */
+const STAT_VALUE_Y_NUDGE = 2;
+
 function buildStatsTables(items: TextItem[]) {
   const colA = Object.fromEntries(STAT_FIELD_LABELS.map(([key, label]) => [key, findStatColumnRows(items, label, 'A')]));
   const colB = Object.fromEntries(STAT_FIELD_LABELS.map(([key, label]) => [key, findStatColumnRows(items, label, 'B')]));
@@ -162,12 +176,16 @@ function buildStatsTables(items: TextItem[]) {
   const anchorA = statColumnAnchorX(colA, STAT_BOX_RIGHT_EDGE_A);
   const anchorB = statColumnAnchorX(colB, STAT_BOX_RIGHT_EDGE_A + colShiftX);
 
+  const statKeys = STAT_FIELD_LABELS.map(([key]) => key);
+  const cellHeight = colA[statKeys[0]][0].y - colA[statKeys[1]][0].y; // HP row's y minus Atk row's y
+  const valueY = (labelY: number) => Number((labelY - cellHeight / 2 - STAT_VALUE_Y_NUDGE).toFixed(1));
+
   const tables = [];
   for (let row = 0; row < 3; row++) {
-    tables.push(Object.fromEntries(STAT_FIELD_LABELS.map(([key]) => [key, { x: anchorA, y: Number(colA[key][row].y.toFixed(1)), size: PER_MON_FIELD_SIZE }])));
+    tables.push(Object.fromEntries(STAT_FIELD_LABELS.map(([key]) => [key, { x: anchorA, y: valueY(colA[key][row].y), size: PER_MON_FIELD_SIZE }])));
   }
   for (let row = 0; row < 3; row++) {
-    tables.push(Object.fromEntries(STAT_FIELD_LABELS.map(([key]) => [key, { x: anchorB, y: Number(colB[key][row].y.toFixed(1)), size: PER_MON_FIELD_SIZE }])));
+    tables.push(Object.fromEntries(STAT_FIELD_LABELS.map(([key]) => [key, { x: anchorB, y: valueY(colB[key][row].y), size: PER_MON_FIELD_SIZE }])));
   }
   return tables;
 }

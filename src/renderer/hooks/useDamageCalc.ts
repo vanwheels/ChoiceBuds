@@ -36,7 +36,7 @@ import type {
 import { validateSpeciesLegality, ALL_REGULATION_IDS, type RegulationId } from '../utils/pokemonRules';
 import { getFormeFamily, type FormeFamily } from '../utils/calcFormes';
 import { getChampionsCalcMoveOverride } from '../config/championsMoveOverrides';
-import { MAX_IVS, spsToEvs } from '../utils/championsStats';
+import { MAX_IVS, spsToEvs, resolveCalcSpecies } from '../utils/championsStats';
 import type { UseGameDataReturn } from './useGameData';
 
 const GEN_NUM = 9;
@@ -262,7 +262,7 @@ function computeEffectiveSpeed(gen: Generation, state: CalcPokemonState): number
 }
 
 function buildPokemon(gen: Generation, state: CalcPokemonState): InstanceType<typeof Pokemon> {
-  return new Pokemon(gen, state.species, {
+  return new Pokemon(gen, resolveCalcSpecies(state.species), {
     level: state.level,
     gender: state.gender || undefined,
     item: state.item || undefined,

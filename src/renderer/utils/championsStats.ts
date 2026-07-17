@@ -25,3 +25,21 @@ export function spsToEvs(sps: StatsTable): StatsTable {
     spa: spToEv(sps.spa), spd: spToEv(sps.spd), spe: spToEv(sps.spe),
   };
 }
+
+/**
+ * @smogon/calc has no bare "Aegislash" species entry - only its Blade/Shield
+ * stat-formes (confirmed directly against the bundled Gen 9 dex: Aegislash-
+ * Blade is the entry with no baseSpecies pointer, i.e. @smogon/calc's own
+ * "base" record, with -Shield pointing back to it as an alternate forme -
+ * there's no unnamed/neutral third entry). This app's own storage
+ * convention is always bare "Aegislash" (Showdown/Pokepaste exports never
+ * say Blade/Shield - Shield is simply its default/roster appearance, Blade
+ * a temporary in-battle Stance Change state) - see services/pokeapi.ts's
+ * normalizeSpeciesForAPI, which resolves the identical quirk for PokeAPI
+ * lookups. Any @smogon/calc species lookup needs this resolved first, or it
+ * either fails outright or silently resolves to Blade's very different stat
+ * spread (140 Atk/SpA, 50 Def/SpD, vs. Shield's 50/140).
+ */
+export function resolveCalcSpecies(species: string): string {
+  return species.toLowerCase() === 'aegislash' ? 'Aegislash-Shield' : species;
+}

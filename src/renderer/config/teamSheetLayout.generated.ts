@@ -155,32 +155,32 @@ export const TEAM_SHEET_LAYOUT: { page0: TeamSheetStaffPageLayout; page1: TeamSh
         "stats": {
           "hp": {
             "x": 287.3,
-            "y": 570.2,
+            "y": 556.6,
             "size": 9
           },
           "atk": {
             "x": 287.3,
-            "y": 547.1,
+            "y": 533.5,
             "size": 9
           },
           "def": {
             "x": 287.3,
-            "y": 523.9,
+            "y": 510.3,
             "size": 9
           },
           "spa": {
             "x": 287.3,
-            "y": 500.7,
+            "y": 487.1,
             "size": 9
           },
           "spd": {
             "x": 287.3,
-            "y": 477.6,
+            "y": 464,
             "size": 9
           },
           "spe": {
             "x": 287.3,
-            "y": 454.4,
+            "y": 440.8,
             "size": 9
           }
         }
@@ -229,32 +229,32 @@ export const TEAM_SHEET_LAYOUT: { page0: TeamSheetStaffPageLayout; page1: TeamSh
         "stats": {
           "hp": {
             "x": 287.3,
-            "y": 368.8,
+            "y": 355.2,
             "size": 9
           },
           "atk": {
             "x": 287.3,
-            "y": 345.6,
+            "y": 332.1,
             "size": 9
           },
           "def": {
             "x": 287.3,
-            "y": 322.5,
+            "y": 308.9,
             "size": 9
           },
           "spa": {
             "x": 287.3,
-            "y": 299.3,
+            "y": 285.7,
             "size": 9
           },
           "spd": {
             "x": 287.3,
-            "y": 276.2,
+            "y": 262.6,
             "size": 9
           },
           "spe": {
             "x": 287.3,
-            "y": 253,
+            "y": 239.4,
             "size": 9
           }
         }
@@ -303,32 +303,32 @@ export const TEAM_SHEET_LAYOUT: { page0: TeamSheetStaffPageLayout; page1: TeamSh
         "stats": {
           "hp": {
             "x": 287.3,
-            "y": 167.4,
+            "y": 153.8,
             "size": 9
           },
           "atk": {
             "x": 287.3,
-            "y": 144.3,
+            "y": 130.7,
             "size": 9
           },
           "def": {
             "x": 287.3,
-            "y": 121.1,
+            "y": 107.5,
             "size": 9
           },
           "spa": {
             "x": 287.3,
-            "y": 97.9,
+            "y": 84.4,
             "size": 9
           },
           "spd": {
             "x": 287.3,
-            "y": 74.8,
+            "y": 61.2,
             "size": 9
           },
           "spe": {
             "x": 287.3,
-            "y": 54.6,
+            "y": 41,
             "size": 9
           }
         }
@@ -377,32 +377,32 @@ export const TEAM_SHEET_LAYOUT: { page0: TeamSheetStaffPageLayout; page1: TeamSh
         "stats": {
           "hp": {
             "x": 579.4,
-            "y": 570.2,
+            "y": 556.6,
             "size": 9
           },
           "atk": {
             "x": 579.4,
-            "y": 547.1,
+            "y": 533.5,
             "size": 9
           },
           "def": {
             "x": 579.4,
-            "y": 523.9,
+            "y": 510.3,
             "size": 9
           },
           "spa": {
             "x": 579.4,
-            "y": 500.7,
+            "y": 487.1,
             "size": 9
           },
           "spd": {
             "x": 579.4,
-            "y": 477.6,
+            "y": 464,
             "size": 9
           },
           "spe": {
             "x": 579.4,
-            "y": 454.4,
+            "y": 440.8,
             "size": 9
           }
         }
@@ -451,32 +451,32 @@ export const TEAM_SHEET_LAYOUT: { page0: TeamSheetStaffPageLayout; page1: TeamSh
         "stats": {
           "hp": {
             "x": 579.4,
-            "y": 368.8,
+            "y": 355.2,
             "size": 9
           },
           "atk": {
             "x": 579.4,
-            "y": 345.6,
+            "y": 332.1,
             "size": 9
           },
           "def": {
             "x": 579.4,
-            "y": 322.5,
+            "y": 308.9,
             "size": 9
           },
           "spa": {
             "x": 579.4,
-            "y": 299.3,
+            "y": 285.7,
             "size": 9
           },
           "spd": {
             "x": 579.4,
-            "y": 276.2,
+            "y": 262.6,
             "size": 9
           },
           "spe": {
             "x": 579.4,
-            "y": 253,
+            "y": 239.4,
             "size": 9
           }
         }
@@ -525,32 +525,32 @@ export const TEAM_SHEET_LAYOUT: { page0: TeamSheetStaffPageLayout; page1: TeamSh
         "stats": {
           "hp": {
             "x": 579.4,
-            "y": 167.4,
+            "y": 153.8,
             "size": 9
           },
           "atk": {
             "x": 579.4,
-            "y": 144.3,
+            "y": 130.7,
             "size": 9
           },
           "def": {
             "x": 579.4,
-            "y": 121.1,
+            "y": 107.5,
             "size": 9
           },
           "spa": {
             "x": 579.4,
-            "y": 97.9,
+            "y": 84.4,
             "size": 9
           },
           "spd": {
             "x": 579.4,
-            "y": 74.8,
+            "y": 61.2,
             "size": 9
           },
           "spe": {
             "x": 579.4,
-            "y": 54.6,
+            "y": 41,
             "size": 9
           }
         }
