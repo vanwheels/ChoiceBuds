@@ -23,9 +23,19 @@ local ("see below"/"see above").
   done). `release.yml`'s `build-mac` CI job was updated to
   `--mac --universal --publish always` so future tag-triggered releases
   produce the same universal coverage automatically, rather than
-  arch-default (arm64-only on the `macos-latest` runner). See TODO.md's
-  "Publish real Mac release assets" for what's still outstanding (no Mac
-  assets exist yet on any published GitHub Release, including `v0.2.1`).
+  arch-default (arm64-only on the `macos-latest` runner). The locally-built
+  universal `.dmg`/`.zip` (plus their blockmaps and `latest-mac.yml`) were
+  then uploaded by hand to the existing `v0.2.1` GitHub Release, so it now
+  carries both Windows and Mac assets side by side - no new version tag
+  needed since no source changed, only docs/CI. Getting the upload done
+  required setting up git/GitHub auth on this Mac for the first time: SSH
+  push via the user's existing 1Password SSH-agent integration (`~/.ssh/
+  config`'s `IdentityAgent` already pointed at 1Password's agent socket;
+  just needed GitHub's host key added to `known_hosts` and 1Password's
+  agent unlocked/permitted), and a portable `gh` CLI binary (downloaded
+  directly from a GitHub release zip into `~/.local/gh-cli`, no Homebrew/
+  sudo available on this machine) authenticated via `gh auth login --web`
+  device-code flow for the release-asset upload itself.
 
 - **Battle Logger stat-inference, Phase 3 (partial): wider empirical species
   coverage** (2026-07-16): the second of Phase 3's three polish items - TTL

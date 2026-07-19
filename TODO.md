@@ -41,20 +41,6 @@ focused on what's actually next.
   3. **Done (2026-07-16)** - multi-hit move logging (Population Bomb,
      Triple Axel, Bullet Seed, etc.). See COMPLETED.md.
 
-- **Publish real Mac release assets**: the `v0.2.1` GitHub Release only has
-  Windows assets (`.exe`/`Setup.exe`/blockmap/`latest.yml`) - macOS was
-  never attached because the `release.yml` CI workflow (see COMPLETED.md)
-  didn't exist yet when that tag was pushed, and its `build-mac` job builds
-  arch-default (arm64-only on the `macos-latest` runner), not universal.
-  Needs the workflow's `build-mac` step changed to
-  `electron-builder --mac --universal --publish always` (done locally
-  2026-07-18, not yet applied to CI) and then a new version tag pushed so
-  CI actually produces and attaches signed... unsigned-but-real universal
-  Mac assets to a release. Still fully unsigned/unnotarized (no Apple
-  Developer account - $99/yr, user has one coming but hasn't set it up
-  yet) - Gatekeeper will block/warn on open; right-click-Open or
-  `xattr -cr` is the workaround until that's resolved.
-
 - **RoiDadadou spreadsheet - reliability is mixed, tab by tab**: got direct
   sheet access via its CSV export endpoint (19 tabs total). Two tabs
   processed and trusted (`Pokémon Ch.` - see COMPLETED.md); one tab actively
