@@ -5,6 +5,28 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Mac build verified working end-to-end** (2026-07-18): first real
+  verification since the Mac environment came back online (16 commits had
+  landed on `main` while off it - Settings page, sync/worker backend, team
+  sheet PDF export, team export images, saved Pokémon sets, auto-update
+  checks). Pulled clean, ran `npm install` (dependency set changed, 0
+  vulnerabilities), then drove the app via the `run-desktop` skill across
+  Teams/Battle Log/Calc/Statistics/Settings with no console errors or page
+  exceptions - real data loaded correctly on every tab (2 teams, 1 logged
+  battle, saved Calc sets, 100% win rate on Statistics). Then built a real
+  packaged Mac app for the first time (`npm run dist:mac`, then
+  `electron-builder --mac --universal` for arch coverage) - both produced
+  a working `.dmg`/`.zip`; superseded arm64-only artifacts were deleted
+  once the universal build was confirmed good, per user request. Still
+  unsigned/unnotarized (no Apple Developer account set up yet, despite the
+  user having one available - Gatekeeper will warn/block until that's
+  done). `release.yml`'s `build-mac` CI job was updated to
+  `--mac --universal --publish always` so future tag-triggered releases
+  produce the same universal coverage automatically, rather than
+  arch-default (arm64-only on the `macos-latest` runner). See TODO.md's
+  "Publish real Mac release assets" for what's still outstanding (no Mac
+  assets exist yet on any published GitHub Release, including `v0.2.1`).
+
 - **Battle Logger stat-inference, Phase 3 (partial): wider empirical species
   coverage** (2026-07-16): the second of Phase 3's three polish items - TTL
   tuning is still open, deferred by explicit user choice to tackle one item

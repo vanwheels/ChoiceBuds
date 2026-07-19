@@ -41,28 +41,19 @@ focused on what's actually next.
   3. **Done (2026-07-16)** - multi-hit move logging (Population Bomb,
      Triple Axel, Bullet Seed, etc.). See COMPLETED.md.
 
-- **Top priority for next macOS session: build + verify + publish the Mac
-  installer** (raised 2026-07-09): Windows now has a real, verified,
-  working installer attached to `v0.1.1` (see COMPLETED.md) - macOS is the
-  one remaining platform gap before real friend-testing can start on both.
-  `electron-builder`'s Mac config (dmg + zip targets) has existed since the
-  2026-07-06 packaging pass but has **never actually been built or run** -
-  needs a real Mac, which wasn't available until now. Steps: `npm run
-  dist:mac`, then actually launch the built `.app` (don't just trust that
-  the build commands succeeded - that exact false confidence is what let
-  the Windows build ship broken for days, see the "packaging bug" entry in
-  COMPLETED.md) and click through the app for real before calling it done.
-  Two things worth specifically watching for that don't affect Windows:
-  unsigned/unnotarized macOS builds get blocked or heavily warned by
-  Gatekeeper by default (no Apple Developer account yet - see the
-  in-app-auto-update backlog entry above for the same underlying
-  blocker) - may need to walk through right-click-Open or a
-  `xattr -cr`-style workaround for friend-testing until that's resolved;
-  and confirm the `run-desktop` skill's cross-platform path-resolution fix
-  (from the first macOS testing pass, see COMPLETED.md) still correctly
-  finds the Mac Electron binary for live UI verification. Once verified,
-  publish as a new asset on `v0.1.1` (or cut `v0.1.2` if anything needs
-  fixing along the way, same pattern as the Windows installer-bug patch).
+- **Publish real Mac release assets**: the `v0.2.1` GitHub Release only has
+  Windows assets (`.exe`/`Setup.exe`/blockmap/`latest.yml`) - macOS was
+  never attached because the `release.yml` CI workflow (see COMPLETED.md)
+  didn't exist yet when that tag was pushed, and its `build-mac` job builds
+  arch-default (arm64-only on the `macos-latest` runner), not universal.
+  Needs the workflow's `build-mac` step changed to
+  `electron-builder --mac --universal --publish always` (done locally
+  2026-07-18, not yet applied to CI) and then a new version tag pushed so
+  CI actually produces and attaches signed... unsigned-but-real universal
+  Mac assets to a release. Still fully unsigned/unnotarized (no Apple
+  Developer account - $99/yr, user has one coming but hasn't set it up
+  yet) - Gatekeeper will block/warn on open; right-click-Open or
+  `xattr -cr` is the workaround until that's resolved.
 
 - **RoiDadadou spreadsheet - reliability is mixed, tab by tab**: got direct
   sheet access via its CSV export endpoint (19 tabs total). Two tabs
