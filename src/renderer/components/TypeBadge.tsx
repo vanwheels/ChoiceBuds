@@ -17,7 +17,7 @@ export default function TypeBadge({ type }: TypeBadgeProps) {
 
   return (
     <span
-      className={`w-16 text-center text-[10px] font-bold py-0.5 rounded-sm uppercase tracking-wider ${theme.bg} ${theme.text}`}
+      className={`inline-block w-20 shrink-0 text-center text-[10px] font-bold py-0.5 rounded-sm uppercase tracking-wider whitespace-nowrap ${theme.bg} ${theme.text}`}
     >
       {type}
     </span>
