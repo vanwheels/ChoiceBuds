@@ -5,6 +5,37 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **2026-07-19 Type Matchup - type-changing abilities in Offensive Coverage**
+  (follow-up explicitly deferred at the standalone-calculator/Offensive-
+  Defensive-Coverage rebuild, see below/TODO.md item 9). New
+  `config/typeChangingAbilities.ts::getEffectiveMoveType(moveName, baseType,
+  ability)`, called from `hooks/useTeamMoveTypes.ts` against each Pokemon's
+  equipped `showdownData.ability` (always known for a saved team - no
+  revealed/unrevealed ambiguity like Battle Logger opponents) before a move's
+  type feeds `utils/typeCoverage.ts`. Covers all 6 real type-changing
+  abilities: Pixilate/Aerilate/Refrigerate/Galvanize (retype Normal-only to
+  Fairy/Flying/Ice/Electric), Normalize (retypes every damaging move to
+  Normal), and Liquid Voice (retypes sound-based moves to Water - reused
+  `config/moveBlockingAbilities.ts`'s existing `SOUND_BASED_MOVES` list,
+  exported for the purpose, rather than duplicating it for Soundproof's
+  block-list use). Deliberately excluded (documented in the config file's
+  header, not silently dropped): moves whose *effective* type varies by
+  user/field/item state but default to a fixed type in this app's static
+  move data (Weather Ball, Judgment, Techno Blast, Natural Gift, Multi-
+  Attack, Raging Bull, Ivy Cudgel, Revelation Dance, Terrain Pulse, Aura
+  Wheel, Tera Blast) - Bulbapedia confirms these are excluded from the
+  ability's effect in-game too, but applying the ability naively on top of
+  this app's single-fixed-type-per-move model would show a permanently wrong
+  type instead of the real conditional one. Tera typing generally isn't
+  factored into either Coverage table at all, a pre-existing gap not
+  introduced by this change. Live-verified via `run-desktop` against a
+  disposable Pixilate Sylveon (Hyper Voice/Mystical Fire/Shadow Ball) built
+  and deleted for the test: before the fix Hyper Voice would score neutral
+  against Fighting/Dragon-type defenders (Normal has no super-effective
+  matchups); after the fix, Offensive Coverage's Fighting and Dragon rows
+  both correctly light up 2x (Fairy's real super-effective matchups),
+  confirming the ability-based retype actually drives the table.
+
 - **2026-07-19 team edit mode: drag-to-reorder the 4 moves within a Pokemon's
   moveset** (follow-up to the existing whole-card drag-to-reorder, raised and
   built same day). New `utils/moveReorderDragTypes.ts`

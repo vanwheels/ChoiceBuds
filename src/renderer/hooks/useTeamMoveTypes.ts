@@ -7,6 +7,12 @@
  * EditOverlays.tsx's move-metadata-resolution effect (Promise.all over
  * getMoveData, cache-first, one live fetch per miss).
  *
+ * Each move's type is passed through config/typeChangingAbilities.ts's
+ * `getEffectiveMoveType` against the Pokemon's own equipped ability
+ * (Pixilate/Aerilate/Refrigerate/Galvanize/Normalize/Liquid Voice) before
+ * being returned, so Offensive Coverage reflects what the move actually
+ * hits with rather than its unmodified listed type.
+ *
  * `isLoading` is derived (whether the currently-selected team's id has been
  * resolved yet), not a separate state var set synchronously at the top of
  * the effect - same "avoid setState directly in the effect body" pattern as
@@ -16,6 +22,7 @@
 import { useEffect, useState } from 'react';
 import type { Team } from '../types/pokemon';
 import type { UseGameDataReturn } from './useGameData';
+import { getEffectiveMoveType } from '../config/typeChangingAbilities';
 
 export interface UseTeamMoveTypesReturn {
   /** One entry per team slot, parallel to team.pokemon - each slot's list of its damaging moves' types (deduped isn't necessary, computeOffensiveCoverage just takes the max). */
@@ -34,7 +41,9 @@ export function useTeamMoveTypes(team: Team | undefined, gameDataState: UseGameD
     Promise.all(
       team.pokemon.map(p =>
         Promise.all(p.showdownData.moves.map(name => getMoveData(name))).then(results =>
-          results.filter((m): m is NonNullable<typeof m> => !!m && m.category !== 'status').map(m => m.type)
+          results
+            .filter((m): m is NonNullable<typeof m> => !!m && m.category !== 'status')
+            .map(m => getEffectiveMoveType(m.name, m.type, p.showdownData.ability))
         )
       )
     ).then(results => {

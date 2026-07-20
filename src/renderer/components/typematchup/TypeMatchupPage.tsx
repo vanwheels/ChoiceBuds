@@ -8,8 +8,9 @@
  * version of this tab (see TODO.md/COMPLETED.md), since a team-driven view
  * is strictly more useful once teams exist to select from.
  *
- * Does not yet account for type-changing abilities (e.g. Pixilate turning
- * Normal moves Fairy) - deliberately deferred, see TODO.md.
+ * Offensive Coverage accounts for type-changing abilities (Pixilate turning
+ * Normal moves Fairy, etc.) via hooks/useTeamMoveTypes.ts - see
+ * config/typeChangingAbilities.ts.
  */
 
 import { useMemo, useState } from 'react';

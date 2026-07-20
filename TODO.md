@@ -60,14 +60,8 @@ focused on what's actually next.
   9. ~~New feature: standalone type-matchup calculator~~ **Done
      2026-07-19** - see COMPLETED.md. Rebuilt same-day into a team-driven
      Offensive/Defensive Coverage view (vgcmulticalc.com-style, per user
-     request) - also see COMPLETED.md. **Open follow-up, explicitly
-     deferred by the user**: type-changing abilities (Sylveon's Pixilate
-     Normal->Fairy, and others in that family - Aerilate/Refrigerate/
-     Galvanize/Liquid Voice/Normalize) aren't factored into Offensive
-     Coverage yet - a team member's raw move types are used as-is. Would
-     need each Pokemon's revealed/equipped ability checked against a new
-     type-conversion table before computing `moveTypesByPokemon` in
-     `hooks/useTeamMoveTypes.ts`.
+     request) - also see COMPLETED.md. ~~Open follow-up: type-changing
+     abilities~~ **Done 2026-07-19** - see COMPLETED.md.
 
 - ~~Newly discovered bug: Palafin can't be added as a Battle Logger opponent
   at all~~ **Fixed 2026-07-19** - see COMPLETED.md's "2026-07-19

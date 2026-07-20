@@ -69,6 +69,16 @@ export type BlockRule =
   | { kind: 'category'; category: 'status' }
   | { kind: 'move-list'; moves: string[] };
 
+/** Bulbapedia's Category:Sound-based_moves, cross-checked against Serebii - see file header. */
+export const SOUND_BASED_MOVES = [
+  'Alluring Voice', 'Boomburst', 'Bug Buzz', 'Chatter', 'Clanging Scales', 'Clangorous Soul',
+  'Clangorous Soulblaze', 'Confide', 'Disarming Voice', 'Dragon Cheer', 'Echoed Voice',
+  'Eerie Spell', 'Grass Whistle', 'Growl', 'Heal Bell', 'Howl', 'Hyper Voice', 'Metal Sound',
+  'Noble Roar', 'Overdrive', 'Parting Shot', 'Perish Song', 'Psychic Noise', 'Relic Song',
+  'Roar', 'Round', 'Screech', 'Sing', 'Snarl', 'Snore', 'Sparkling Aria', 'Supersonic',
+  'Torch Song', 'Uproar',
+];
+
 const MOVE_BLOCKING_ABILITIES: Record<string, BlockRule> = {
   // Type-immunity abilities. Volt Absorb/Water Absorb/Flash Fire/Dry Skin heal HP or buff move
   // power on the move they block - this app tracks no numeric/% HP and no move-power-buff concept
@@ -107,17 +117,10 @@ const MOVE_BLOCKING_ABILITIES: Record<string, BlockRule> = {
     ],
   },
   // Sound-based moves - Bulbapedia's Category:Sound-based_moves, cross-checked against Serebii's
-  // own Soundproof page (identical apart from Shadow Panic - see file header).
-  'soundproof': {
-    kind: 'move-list', moves: [
-      'Alluring Voice', 'Boomburst', 'Bug Buzz', 'Chatter', 'Clanging Scales', 'Clangorous Soul',
-      'Clangorous Soulblaze', 'Confide', 'Disarming Voice', 'Dragon Cheer', 'Echoed Voice',
-      'Eerie Spell', 'Grass Whistle', 'Growl', 'Heal Bell', 'Howl', 'Hyper Voice', 'Metal Sound',
-      'Noble Roar', 'Overdrive', 'Parting Shot', 'Perish Song', 'Psychic Noise', 'Relic Song',
-      'Roar', 'Round', 'Screech', 'Sing', 'Snarl', 'Snore', 'Sparkling Aria', 'Supersonic',
-      'Torch Song', 'Uproar',
-    ],
-  },
+  // own Soundproof page (identical apart from Shadow Panic - see file header). Shared with
+  // config/typeChangingAbilities.ts's Liquid Voice rule (same move category, no reason to
+  // duplicate the list) - see SOUND_BASED_MOVES below.
+  'soundproof': { kind: 'move-list', moves: SOUND_BASED_MOVES },
   // Powder/spore moves - Bulbapedia's Category:Powder_and_spore_moves (8 real moves; the category
   // page's own self-listing entry isn't a move). Overcoat also blocks sandstorm/hail chip damage
   // and Effect Spore's ability-trigger, neither of which is a "move" this table's shape covers.
