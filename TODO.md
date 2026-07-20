@@ -7,21 +7,8 @@ focused on what's actually next.
 
 ## In progress / up next
 
-- **Team edit mode: drag-to-reorder the 4 moves within a Pokemon's moveset**
-  (raised by the user 2026-07-19, a follow-up to the existing whole-card
-  drag-to-reorder). Scope: `MoveBubbleGrid.tsx`'s 2x2 move slots need their
-  own drag source/drop target - a new small MIME-type payload matching the
-  `TEAM_ROSTER_DRAG_TYPE` pattern in `utils/teamRosterDragTypes.ts` - that
-  swaps two move-name strings and commits via `useActiveEditor.ts`'s
-  existing `updateMoves()` (already takes the full 4-move array, so no new
-  data-layer plumbing needed, just the drag UI). Needs a companion fix:
-  `PokemonCard.tsx`'s outer card `<div>` currently sets
-  `draggable={isEditing}` on the *whole card*, so a drag starting anywhere
-  inside it - including from a move bubble - picks up the entire Pokemon
-  slot today. The move region needs to stop that from firing (e.g.
-  `e.stopPropagation()` on the move bubbles' own drag handlers, or
-  disabling the card's own `draggable` while a move-bubble drag is active)
-  so dragging a move only reorders that move, not the whole card.
+- ~~Team edit mode: drag-to-reorder the 4 moves within a Pokemon's
+  moveset~~ **Done 2026-07-19** - see COMPLETED.md.
 
 - **PokeAPI now has a real `champions` version group** (discovered
   2026-07-19 while fixing item 4 below - id 32, generation IX). This

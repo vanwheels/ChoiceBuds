@@ -7,7 +7,7 @@
  * <Tooltip> renders `position: fixed` next to whatever was actually hovered.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
 import type { MouseEvent } from 'react';
 import type { ImportedPokemonInfo, ItemData, MoveData, AbilityData, ShowdownPokemon } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
@@ -33,6 +33,8 @@ interface EditOverlaysProps {
 
 export default function EditOverlays({ pokemon, isEditing = false, gameDataState, rulesetId, onUpdatePokemon }: EditOverlaysProps) {
   const { items, getItemData, getAbilityData, getMoveData, getEnrichedSpeciesOptions } = gameDataState;
+  // Scopes a move-slot drag to this specific card's own MoveBubbleGrid - see moveReorderDragTypes.ts
+  const moveDragOwnerId = useId();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [activeMenuMaxHeight, setActiveMenuMaxHeight] = useState(400);
   const [hoveredKey, setHoveredKey] = useState<HoverKey>(null);
@@ -104,6 +106,20 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
       return next;
     });
     closeMenu();
+  };
+
+  const handleMoveReorder = (fromIndex: number, toIndex: number) => {
+    setSelectedMoves(prev => {
+      const next = [...prev];
+      [next[fromIndex], next[toIndex]] = [next[toIndex], next[fromIndex]];
+      onUpdatePokemon({ moves: next });
+      return next;
+    });
+    setMoveDataSlots(prev => {
+      const next = [...prev];
+      [next[fromIndex], next[toIndex]] = [next[toIndex], next[fromIndex]];
+      return next;
+    });
   };
 
   // Real legal movepool + ability pool for this species (never a per-Pokemon fallback)
@@ -216,9 +232,11 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
         moveDataSlots={moveDataSlots}
         selectedMoves={selectedMoves}
         isEditing={isEditing}
+        ownerId={moveDragOwnerId}
         onToggleMenu={toggleMenu}
         onHoverEnter={hoverEnter}
         onHoverLeave={hoverLeave}
+        onReorderMoves={handleMoveReorder}
       />
 
       {/* Single shared tooltip, fixed-positioned next to whatever was actually hovered */}

@@ -5,6 +5,40 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **2026-07-19 team edit mode: drag-to-reorder the 4 moves within a Pokemon's
+  moveset** (follow-up to the existing whole-card drag-to-reorder, raised and
+  built same day). New `utils/moveReorderDragTypes.ts`
+  (`MOVE_REORDER_DRAG_TYPE` MIME type + `MoveReorderDragPayload` - separate
+  from `teamRosterDragTypes.ts` since the payload shape/feature are
+  unrelated); payload carries an `ownerId` (React's own `useId()`, one per
+  `EditOverlays` instance) rather than a team/index pair, since a stray drag
+  from one Pokemon card's move grid onto a different card's move grid has no
+  other way to tell them apart. `MoveBubbleGrid.tsx`'s 4 slots are now each
+  their own drag source/drop target (`draggable`, `onDragStart`/`onDragOver`/
+  `onDragLeave`/`onDrop`), swapping the two move-name strings (and their
+  paired `moveDataSlots` entries, to keep type-theming in sync without a
+  refetch) via a new `onReorderMoves` callback wired up in `EditOverlays.tsx`
+  (`handleMoveReorder`), which commits through the same `onUpdatePokemon`
+  path `handleMoveClick` already uses - not `useActiveEditor.ts`'s
+  `updateMoves()` as originally scoped in the TODO item, since that hook
+  turned out to already be vestigial for this per-card edit flow (its
+  `editorState` is passed into `TeamsPage` but never actually read there;
+  `EditOverlays` keeps its own local `selectedMoves`/`moveDataSlots` state
+  and calls `onUpdatePokemon` directly instead). Also fixes the companion bug
+  named in the TODO: `PokemonCard.tsx`'s outer card `<div>` sets
+  `draggable={isEditing}` on the whole card, and since the move bubbles
+  previously had no `draggable` of their own, a drag starting from inside one
+  bubbled up to become the card's own drag (reordering the whole Pokemon
+  instead of just a move). Giving each bubble its own `draggable` plus
+  `e.stopPropagation()` in its own `dragstart` handler makes the bubble the
+  actual HTML5 drag source instead, so the outer card's `handleDragStart`
+  never fires. Live-verified via `run-desktop` against a disposable
+  4-move-Cresselia team (created and deleted for the test, not the user's
+  real data): dragging move slot 0 onto slot 2 swapped "Lunar Blessing" and
+  "Trick Room" in place, including the type-themed bubble color, with no
+  `TEAM_ROSTER_DRAG_TYPE` payload set on the drag (confirmed the outer card
+  never saw its own dragstart fire).
+
 - **2026-07-19 standalone type-matchup calculator** (TODO.md's "2026-07-19
   manual-testing batch" item 9; new top-level "Type Matchup" tab, per the
   user's earlier choice over embedding it in Calc or a cross-page modal).
