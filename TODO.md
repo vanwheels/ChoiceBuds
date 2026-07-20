@@ -54,14 +54,8 @@ focused on what's actually next.
      both are gated on a live PokeAPI fetch on cache miss - same root
      cause as item 2, covered by that item's bundled-snapshot scope rather
      than a separate fix.
-  9. **New feature: standalone type-matchup calculator** (user chose a new
-     top-level tab, alongside Teams/Calc/Battle Log/Statistics/Settings,
-     over embedding it in the Calc page or a cross-page modal). Data layer
-     is already free: `config/typeEffectiveness.ts` has the full 18-type
-     chart and an existing `getEffectivenessMultiplier()` helper. Scope is
-     mostly new UI: a type-select control (one or two types) and a
-     results view grouped by resistance/weakness/immunity, as a new page
-     component wired into `App.tsx`'s tab nav.
+  9. ~~New feature: standalone type-matchup calculator~~ **Done
+     2026-07-19** - see COMPLETED.md.
 
 - ~~Newly discovered bug: Palafin can't be added as a Battle Logger opponent
   at all~~ **Fixed 2026-07-19** - see COMPLETED.md's "2026-07-19

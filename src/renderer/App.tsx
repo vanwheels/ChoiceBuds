@@ -27,9 +27,10 @@ import LoadingScreen from './components/LoadingScreen';
 const CalcPage = lazy(() => import('./components/calc/CalcPage'));
 const BattleLogPage = lazy(() => import('./components/battlelog/BattleLogPage'));
 const StatisticsPage = lazy(() => import('./components/statistics/StatisticsPage'));
+const TypeMatchupPage = lazy(() => import('./components/typematchup/TypeMatchupPage'));
 const SettingsPage = lazy(() => import('./components/SettingsPage'));
 
-type ActiveTab = 'teams' | 'calc' | 'battles' | 'statistics' | 'settings';
+type ActiveTab = 'teams' | 'calc' | 'battles' | 'statistics' | 'typeMatchup' | 'settings';
 
 /**
  * Main application shell component
@@ -124,6 +125,16 @@ export default function App() {
                 Statistics
               </button>
             </li>
+            <li>
+              <button
+                onClick={() => setActiveTab('typeMatchup')}
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
+                  activeTab === 'typeMatchup' ? 'bg-blue-600 hover:bg-blue-700' : 'text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                Type Matchup
+              </button>
+            </li>
           </ul>
 
           <ul className="mt-auto pt-2">
@@ -197,6 +208,10 @@ export default function App() {
         ) : activeTab === 'statistics' ? (
           <Suspense fallback={<div className="text-gray-400 text-sm">Loading statistics...</div>}>
             <StatisticsPage battlesState={battlesState} spriteCacheState={spriteCacheState} />
+          </Suspense>
+        ) : activeTab === 'typeMatchup' ? (
+          <Suspense fallback={<div className="text-gray-400 text-sm">Loading type matchup...</div>}>
+            <TypeMatchupPage />
           </Suspense>
         ) : (
           <Suspense fallback={<div className="text-gray-400 text-sm">Loading settings...</div>}>

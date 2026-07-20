@@ -5,6 +5,22 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **2026-07-19 standalone type-matchup calculator** (TODO.md's "2026-07-19
+  manual-testing batch" item 9; new top-level "Type Matchup" tab, per the
+  user's earlier choice over embedding it in Calc or a cross-page modal).
+  New `components/typematchup/` (`TypeMatchupPage.tsx` owning UI-only
+  `selectedTypes` state, `TypeSelector.tsx` for the up-to-2-type toggle grid,
+  `TypeMatchupResults.tsx` for the grouped breakdown), wired into `App.tsx`
+  as a new lazy-loaded tab. Reuses `config/typeEffectiveness.ts`'s existing
+  `getEffectivenessMultiplier()` (already handles dual-type products, so
+  4x/0.25x/0x buckets fall out naturally) and the existing `TypeBadge`/
+  `getTypeTheme` styling - no new data layer needed beyond adding an
+  `ALL_TYPES` ordering export to `typeEffectiveness.ts`. Live-verified via
+  the `run-desktop` skill: single-type (Fire) and dual-type (Fire/Flying,
+  matching real Charizard-style weaknesses - 4x Rock, 2x Water/Electric,
+  immune Ground) selections both produced correct grouped results, and the
+  FIFO 3rd-click-replaces-first-selection behavior works as designed.
+
 - **2026-07-19 Calc auto-fill from usage data + export to Saved Sets**
   (TODO.md's "2026-07-19 manual-testing batch" item 5; user confirmed doing
   both, auto-fill first):

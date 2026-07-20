@@ -13,6 +13,12 @@
 
 export type EffectivenessMultiplier = 0 | 0.25 | 0.5 | 1 | 2 | 4;
 
+/** Canonical ordering of all 18 types, matching config/pokemonTheme.ts's TYPE_THEMES order. */
+export const ALL_TYPES = [
+  'normal', 'fire', 'water', 'electric', 'grass', 'ice', 'fighting', 'poison',
+  'ground', 'flying', 'psychic', 'bug', 'rock', 'ghost', 'dragon', 'dark', 'steel', 'fairy',
+] as const;
+
 const TYPE_CHART: Record<string, Record<string, number>> = {
   normal: { rock: 0.5, ghost: 0, steel: 0.5 },
   fire: { fire: 0.5, water: 0.5, grass: 2, ice: 2, bug: 2, rock: 0.5, dragon: 0.5, steel: 2 },
