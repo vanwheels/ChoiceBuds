@@ -5,6 +5,52 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **2026-07-19 Calc auto-fill from usage data + export to Saved Sets**
+  (TODO.md's "2026-07-19 manual-testing batch" item 5; user confirmed doing
+  both, auto-fill first):
+  - **Auto-fill**: `CalcPokemonPanel.tsx::handleSpeciesSelect` (fires only
+    on a real dropdown-list species pick, never mid-typing - same gate the
+    saved-set popover already used) now also calls
+    `gameDataState.getChampionsUsage(species)` and, on a hit, applies the
+    top-ranked ability/item/nature/Stat-Point-spread/top-4-moves onto the
+    draft via the existing `onChange(Partial<CalcPokemonState>)` merge
+    setter - no new state-setter plumbing needed since `moves` is already
+    part of `CalcPokemonState`. `autoFillRequestRef` (an incrementing
+    counter) guards against a slower now-stale fetch clobbering a faster
+    one if the user swaps species again before the first resolves. Reuses
+    the exact same usage-data source/cache as the Battle Logger's "Likely
+    Set" stat-inference popover (`services/championsBattleData.ts` via
+    `useGameData.ts`) - no new data layer. If a species has no Champions
+    usage page, `getChampionsUsage` resolves `null` and auto-fill is a
+    silent no-op (species selection itself still applies normally). Runs
+    unconditionally even when the species also has saved sets (the
+    saved-set popover still opens too) - auto-fill gives an immediate
+    starting point, picking a saved set from the popover overrides it.
+  - **Export**: new `utils/calcExport.ts::calcStateToShowdownPokemon` -
+    the inverse of the existing `calcTeamImport.ts::teamPokemonToCalcUpdates`
+    - maps `CalcPokemonState` to a `ShowdownPokemon` (`sps` copies directly
+    into `evs`, no /4 or *4 conversion, matching `calcTeamImport.ts`'s own
+    note on why this app's EVs field is SP-native). Two new buttons on each
+    `CalcPokemonPanel.tsx` title row (disabled until a species is picked):
+    "Copy Text" formats it via the existing `services/parser.ts::
+    formatShowdownText` and writes to the clipboard (same
+    copy-with-timed-confirmation pattern as `ExportTeamModal.tsx`); "Save
+    Set" runs it through `services/pokeapi.ts::enrichPokemonWithAPI` (using
+    `databaseState`'s PokeAPI cache getter/setter, same as
+    `CalcSavedSetsModal.tsx`'s own import path) and adds the result to
+    `useSavedPokemon.ts`'s store via `addSavedPokemonBatch([enriched])`
+    (a single-element batch, since that hook has no single-add function -
+    see its own doc comment on why batching exists).
+  - **Verified live** (run-desktop skill): selected Incineroar from the
+    species dropdown and confirmed real Champions usage data landed -
+    Sitrus Berry / Intimidate / Careful nature / a 32/0/32/-/-/0-ish real
+    Stat Point spread / Fake Out+Flare Blitz+Parting Shot+Darkest Lariat.
+    "Copy Text" produced correct Showdown-format text on the clipboard;
+    "Save Set" added a real entry to the Saved Sets store (confirmed via
+    the Saved Sets modal showing "Incineroar - Lv50", count 1) - deleted
+    afterward to avoid leaving test data in the user's real saved-sets
+    library. `npm run type-check` and `npm run lint` both clean.
+
 - **2026-07-19 manual-testing batch, quick-wins pass (items 1/3/4/6/8)**:
   fixed 5 of the 9 scoped items from the same-day testing batch (see
   TODO.md for the other 4, still open).

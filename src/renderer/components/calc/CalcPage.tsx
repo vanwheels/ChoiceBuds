@@ -127,6 +127,8 @@ export default function CalcPage({
           natureEffect={pokemon1NatureEffect}
           teams={teamsState.teams}
           savedPokemonState={savedPokemonState}
+          gameDataState={gameDataState}
+          databaseState={databaseState}
           resolveSprite={spriteCacheState.resolveSprite}
           onChange={setPokemon1}
         />
@@ -153,6 +155,8 @@ export default function CalcPage({
           natureEffect={pokemon2NatureEffect}
           teams={teamsState.teams}
           savedPokemonState={savedPokemonState}
+          gameDataState={gameDataState}
+          databaseState={databaseState}
           resolveSprite={spriteCacheState.resolveSprite}
           onChange={setPokemon2}
         />

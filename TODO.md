@@ -48,17 +48,8 @@ focused on what's actually next.
      deciding how sprites get bundled without bloating the installer) -
      needs its own design pass before implementation, not a drop-in fix.
      Covers item 7 below too (same root cause).
-  5. **Calc auto-fill from usage data, then export to Saved Sets** (user
-     confirmed: do both, auto-fill first). TODO.md's stat-inference entry
-     already flagged Calc-page integration as a planned fast-follow reusing
-     the same data layer - this is that fast-follow. (a) Auto-fill: on
-     species swap in the Calc, pull highest-usage move/ability/item/
-     nature/Stat-Points from `services/championsBattleData.ts` (same
-     source the Battle Logger's stat-inference popover already uses) and
-     populate the draft state with it. (b) Export: a new action wiring a
-     built Calc Pokemon into `useSavedPokemon.ts`'s saved-sets store (and/
-     or formatting it as Showdown paste text, reusing the existing team
-     Showdown-export formatter).
+  5. ~~Calc auto-fill from usage data, then export to Saved Sets~~ **Done
+     2026-07-19** - see COMPLETED.md.
   7. Battle Logger's move list and enemy-species picker feel slow because
      both are gated on a live PokeAPI fetch on cache miss - same root
      cause as item 2, covered by that item's bundled-snapshot scope rather
@@ -132,9 +123,10 @@ focused on what's actually next.
   2026-07-16, see COMPLETED.md. Phase 3's loading-state treatment and wider
   empirical species coverage (2 of its 3 polish items) are also done, see
   COMPLETED.md - by explicit user choice, tackled one item at a time rather
-  than all three together. Still open: TTL tuning. Explicitly out of scope
-  for now: Calc-page
-  integration (a planned fast-follow reusing the same data layer), the
+  than all three together. Still open: TTL tuning. Calc-page integration
+  (the planned fast-follow reusing the same data layer) is done, see
+  above's "2026-07-19 manual-testing batch" item 5 and COMPLETED.md.
+  Explicitly out of scope for now: the
   `teammate` usage category, and adding `nature`/`evs` fields to
   `OpponentPokemonEntry`. Synthesizing turn-log entries when a
   field condition changes is done (2026-07-15, see COMPLETED.md). Generic

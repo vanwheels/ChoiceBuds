@@ -13,9 +13,18 @@
  * fresh species search - see utils/calcFormes.ts for why regional/gendered
  * forms are deliberately excluded from this (they're already independently
  * searchable). Moves live in CalcMoveGrid, not here.
+ *
+ * A real dropdown-list species selection (see handleSpeciesSelect - never a
+ * mid-typing character) also auto-fills ability/item/nature/Stat-Points/
+ * moves from the species' highest-usage Champions ranked-ladder entries
+ * (services/championsBattleData.ts, same source as the Battle Logger's
+ * "Likely Set" stat-inference popover), as a starting point the saved-set
+ * picker or manual edits can still override. `autoFillRequestRef` guards
+ * against a slower, now-superseded fetch clobbering a faster one if the user
+ * swaps species again before the first request resolves.
  */
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { DragEvent } from 'react';
 import type { CalcPokemonState, NatureStatEffect } from '../../hooks/useDamageCalc';
 import { STATUS_OPTIONS } from '../../hooks/useDamageCalc';
@@ -24,8 +33,13 @@ import { formeDisplayLabel } from '../../utils/calcFormes';
 import type { NatureName, StatsTable } from '@smogon/calc/dist/data/interface';
 import type { Team, SavedPokemonEntry } from '../../types/pokemon';
 import type { UseSavedPokemonReturn } from '../../hooks/useSavedPokemon';
+import type { UseGameDataReturn } from '../../hooks/useGameData';
+import type { UseDatabaseReturn } from '../../hooks/useDatabase';
 import { CALC_TEAM_POKEMON_DRAG_TYPE, type CalcTeamPokemonDragPayload } from '../../utils/calcDragTypes';
 import { teamPokemonToCalcUpdates } from '../../utils/calcTeamImport';
+import { calcStateToShowdownPokemon } from '../../utils/calcExport';
+import { enrichPokemonWithAPI } from '../../services/pokeapi';
+import { formatShowdownText } from '../../services/parser';
 import CalcAutocomplete from './CalcAutocomplete';
 import CalcSavedSetPicker from './CalcSavedSetPicker';
 import CalcStatRows from './CalcStatRows';
@@ -44,9 +58,13 @@ interface CalcPokemonPanelProps {
   natureEffect: NatureStatEffect;
   teams: Team[];
   savedPokemonState: UseSavedPokemonReturn;
+  gameDataState: UseGameDataReturn;
+  databaseState: UseDatabaseReturn;
   resolveSprite: (remoteUrl: string) => string;
   onChange: (updates: Partial<CalcPokemonState>) => void;
 }
+
+const CONFIRMATION_MS = 2000;
 
 const STATUS_LABELS: Record<string, string> = {
   slp: 'Asleep', psn: 'Poisoned', brn: 'Burned', frz: 'Frozen', par: 'Paralyzed', tox: 'Badly Poisoned',
@@ -75,22 +93,71 @@ function FormeToggle({ group, current, onSelect }: { group: string[]; current: s
 
 export default function CalcPokemonPanel({
   title, state, speciesOptions, itemOptions, abilityOptions, natureOptions, formes, baseStats, boostedStats, natureEffect,
-  teams, savedPokemonState, resolveSprite, onChange,
+  teams, savedPokemonState, gameDataState, databaseState, resolveSprite, onChange,
 }: CalcPokemonPanelProps) {
   const [savedSetPickerSpecies, setSavedSetPickerSpecies] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
+  const [justCopied, setJustCopied] = useState(false);
+  const autoFillRequestRef = useRef(0);
+
+  const autoFillFromUsage = async (species: string) => {
+    const requestId = ++autoFillRequestRef.current;
+    const usage = await gameDataState.getChampionsUsage(species);
+    if (autoFillRequestRef.current !== requestId || !usage) return;
+
+    const updates: Partial<CalcPokemonState> = {};
+    if (usage.abilities[0]) updates.ability = usage.abilities[0].name;
+    if (usage.items[0]) updates.item = usage.items[0].name;
+    if (usage.natures[0]) updates.nature = usage.natures[0].name as NatureName;
+    if (usage.statSpreads[0]) updates.sps = usage.statSpreads[0].points;
+    if (usage.moves.length > 0) {
+      updates.moves = Array.from({ length: 4 }, (_, i) => ({ name: usage.moves[i]?.name ?? '', isCrit: false }));
+    }
+    onChange(updates);
+  };
 
   // Only fires on a real dropdown-list click (see CalcAutocomplete.tsx's
   // onSelect), never while typing - species is already applied via onChange
-  // immediately either way, this just decides whether to also offer a
-  // saved-set choice for what was just picked.
+  // immediately either way, this decides whether to also offer a saved-set
+  // choice for what was just picked, and kicks off the usage-based auto-fill
+  // as a starting point (the saved-set picker, if opened, can still override
+  // it below).
   const handleSpeciesSelect = (species: string) => {
     const sets = savedPokemonState.getSavedSetsForSpecies(species);
     if (sets.length > 0) setSavedSetPickerSpecies(species);
+    autoFillFromUsage(species);
   };
 
   const handlePickSavedSet = (entry: SavedPokemonEntry) => {
     onChange(teamPokemonToCalcUpdates(entry.pokemon));
     setSavedSetPickerSpecies(null);
+  };
+
+  const handleCopyText = async () => {
+    if (!state.species) return;
+    await navigator.clipboard.writeText(formatShowdownText([calcStateToShowdownPokemon(state)]));
+    setJustCopied(true);
+    window.setTimeout(() => setJustCopied(false), CONFIRMATION_MS);
+  };
+
+  const handleSaveSet = async () => {
+    if (!state.species || isSaving) return;
+    setIsSaving(true);
+    try {
+      const enriched = await enrichPokemonWithAPI(
+        calcStateToShowdownPokemon(state), databaseState.getCachedEntry, databaseState.setCacheEntry
+      );
+      const success = await savedPokemonState.addSavedPokemonBatch([enriched]);
+      if (success) {
+        setJustSaved(true);
+        window.setTimeout(() => setJustSaved(false), CONFIRMATION_MS);
+      }
+    } catch (err) {
+      console.error('Error saving Calc Pokemon as a set:', err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const cycleGender = () => {
@@ -124,7 +191,29 @@ export default function CalcPokemonPanel({
       onDragOver={(e) => { if (e.dataTransfer.types.includes(CALC_TEAM_POKEMON_DRAG_TYPE)) e.preventDefault(); }}
       onDrop={handleDrop}
     >
-      <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wide">{title}</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wide">{title}</h3>
+        <div className="flex gap-1">
+          <button
+            type="button"
+            onClick={handleCopyText}
+            disabled={!state.species}
+            title="Copy as Showdown text"
+            className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded transition-colors cursor-pointer bg-gray-800 text-gray-400 hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {justCopied ? 'Copied!' : 'Copy Text'}
+          </button>
+          <button
+            type="button"
+            onClick={handleSaveSet}
+            disabled={!state.species || isSaving}
+            title="Save to Saved Sets"
+            className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded transition-colors cursor-pointer bg-gray-800 text-gray-400 hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {justSaved ? 'Saved!' : isSaving ? 'Saving...' : 'Save Set'}
+          </button>
+        </div>
+      </div>
 
       <CalcTeamTray teams={teams} resolveSprite={resolveSprite} onLoadPokemon={(p) => onChange(teamPokemonToCalcUpdates(p))} />
 
