@@ -51,9 +51,19 @@
  * a game-wide absence). PokeAPI's Scarlet/Violet learnsets include it as a
  * universal TM move for nearly every species, so it's stripped
  * unconditionally below rather than needing a per-species entry.
+ *
+ * Hidden Power and Secret Power are also absent from Champions entirely
+ * (confirmed directly by the user, 2026-07-19 - both are pre-Gen-9 TM/tutor
+ * moves not present in Champions). `services/pokeapiService.ts::fetchSpeciesLearnset`
+ * now filters each species' movepool down to PokeAPI's own "champions"
+ * version-group tag when available, which already excludes both correctly
+ * (verified live for several species) - these two are listed here too as a
+ * defense-in-depth fallback for any species PokeAPI hasn't back-filled
+ * "champions" move data for yet, since that fetch falls back to the full
+ * untagged all-time movepool (which does include both) in that case.
  */
 
-const GLOBALLY_REMOVED_MOVES = ['tera-blast'];
+const GLOBALLY_REMOVED_MOVES = ['tera-blast', 'hidden-power', 'secret-power'];
 
 export const CHAMPIONS_MOVEPOOL_ADDITIONS: Record<string, string[]> = {
   'abomasnow': ['frost-breath', 'ice-hammer', 'iron-tail', 'shadow-ball'],

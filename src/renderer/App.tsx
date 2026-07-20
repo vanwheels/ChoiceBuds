@@ -178,6 +178,7 @@ export default function App() {
               databaseState={databaseState}
               savedPokemonState={savedPokemonState}
               spriteCacheState={spriteCacheState}
+              settingsState={settingsState}
               pendingCalcReview={pendingCalcReview}
               onConsumePendingCalcReview={() => setPendingCalcReview(null)}
             />

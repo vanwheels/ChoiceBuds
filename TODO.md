@@ -7,19 +7,76 @@ focused on what's actually next.
 
 ## In progress / up next
 
-- **Newly discovered bug: Palafin can't be added as a Battle Logger opponent
-  at all** (found 2026-07-16 during the stat-inference Phase 3 species-
-  coverage audit, unrelated to that feature itself - not yet fixed). The
-  opponent species picker (`SpeciesPickerCard.tsx`) filters its roster
-  through `validateSpeciesLegality`, which only accepts a species string
-  that exactly equals one of `utils/pokemonRules.ts`'s legal slugs (e.g.
-  `'palafin'`) - but `useSpeciesRoster.ts` (PokeAPI's own per-forme naming)
-  apparently produces a differently-suffixed string for Palafin specifically
-  (unconfirmed exactly which - `"No legal species found"` when searching
-  "Palafin" in the picker live, unlike every other checked species), so it
-  silently never appears as a selectable option. Needs its own investigation
-  (log the actual roster entry name PokeAPI returns for Palafin, compare
-  against the legality slug) rather than a guess.
+- **PokeAPI now has a real `champions` version group** (discovered
+  2026-07-19 while fixing item 4 below - id 32, generation IX). This
+  contradicts CLAUDE.md's stated premise that "PokeAPI... has no concept of
+  Pokémon Champions as a distinct game." Confirmed non-stub: a `champions`
+  pokedex with 208 species entries (`/api/v2/pokedex/36`), and real
+  per-species move-learnability tagged specifically `champions` (verified
+  live for Sharpedo/Palafin-Zero/Rotom-Heat/Gyarados - correctly excludes
+  Hidden Power/Secret Power). Does NOT yet appear to carry move-balance
+  data (`/api/v2/move/growth`'s `past_values` has no `champions` entry), so
+  `championsMoveOverrides.ts`'s stat corrections likely still earn their
+  keep. Coverage is incomplete species-by-species - e.g. Gholdengo
+  currently has zero `champions`-tagged moves - so this can't be trusted
+  blindly yet. User explicitly deferred investigating this deeply (chose
+  "narrow fix now" for item 4 below over pausing everything to explore it)
+  - worth its own dedicated pass to map out how much of
+  `utils/pokemonRules.ts`'s hand-maintained `REG_MA_SPECIES`/
+  `REG_MB_ADDED_SPECIES` lists and `config/championsMovepoolChanges.ts`'s
+  per-species learnset diffing could be simplified or replaced once PokeAPI's
+  own coverage matures - not a decision to make unilaterally given the
+  blast radius (species-legality correctness across the whole app).
+
+- **2026-07-19 manual-testing batch** (scoped out 2026-07-19 against the
+  actual code; items 1, 3, 4, 6, 8 are done - see COMPLETED.md for the full
+  implementation + live-verification trail. Remaining, not yet
+  implemented:)
+  2. **Offline support - full bundled snapshot** (user chose this over
+     the cheaper "pre-warm cache" and "Battle Logger only" alternatives).
+     Today, species roster (`useSpeciesRoster.ts`), movesets/abilities/
+     items (`useGameData.ts`), and usage data
+     (`services/championsBattleData.ts`) are all lazily fetched live on
+     first touch and only cached afterward (30-day expiration,
+     `pokeapi-cache.json`/`game-data-cache.json`/localStorage) - so a
+     fresh install, or any species/move not yet cached, requires network.
+     Scope: a build-time-generated static dataset (legal species,
+     movesets, sprites, a usage-data snapshot) bundled with the app and
+     used as an offline fallback/seed before falling back to live fetch.
+     This is real infra work (a data-generation script, a refresh/staleness
+     story for keeping the bundled snapshot current across releases,
+     deciding how sprites get bundled without bloating the installer) -
+     needs its own design pass before implementation, not a drop-in fix.
+     Covers item 7 below too (same root cause).
+  5. **Calc auto-fill from usage data, then export to Saved Sets** (user
+     confirmed: do both, auto-fill first). TODO.md's stat-inference entry
+     already flagged Calc-page integration as a planned fast-follow reusing
+     the same data layer - this is that fast-follow. (a) Auto-fill: on
+     species swap in the Calc, pull highest-usage move/ability/item/
+     nature/Stat-Points from `services/championsBattleData.ts` (same
+     source the Battle Logger's stat-inference popover already uses) and
+     populate the draft state with it. (b) Export: a new action wiring a
+     built Calc Pokemon into `useSavedPokemon.ts`'s saved-sets store (and/
+     or formatting it as Showdown paste text, reusing the existing team
+     Showdown-export formatter).
+  7. Battle Logger's move list and enemy-species picker feel slow because
+     both are gated on a live PokeAPI fetch on cache miss - same root
+     cause as item 2, covered by that item's bundled-snapshot scope rather
+     than a separate fix.
+  9. **New feature: standalone type-matchup calculator** (user chose a new
+     top-level tab, alongside Teams/Calc/Battle Log/Statistics/Settings,
+     over embedding it in the Calc page or a cross-page modal). Data layer
+     is already free: `config/typeEffectiveness.ts` has the full 18-type
+     chart and an existing `getEffectivenessMultiplier()` helper. Scope is
+     mostly new UI: a type-select control (one or two types) and a
+     results view grouped by resistance/weakness/immunity, as a new page
+     component wired into `App.tsx`'s tab nav.
+
+- ~~Newly discovered bug: Palafin can't be added as a Battle Logger opponent
+  at all~~ **Fixed 2026-07-19** - see COMPLETED.md's "2026-07-19
+  manual-testing batch, quick-wins pass" entry (item 4: PokeAPI only
+  exposes `palafin-zero`/`palafin-hero`, no bare `palafin`; the legal
+  species list now uses `palafin-zero`).
 
 - **Battle Logger: Miss/Crit/No Effect/Blocked outcome UX redesign** (raised
   2026-07-16, 3-part plan, tackling in order):

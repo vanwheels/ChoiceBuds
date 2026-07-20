@@ -36,7 +36,8 @@ export default function SettingsPage({ settingsState, teamsState, battlesState, 
       <div className="rounded-lg border border-gray-700 bg-gray-800 p-4">
         <h2 className="text-sm font-semibold text-gray-200">Default Regulation</h2>
         <p className="mt-1 text-xs text-gray-400">
-          Used to pre-select the Format when importing a new team.
+          Used to pre-select the Format when importing a new team, and the
+          Calc tab's starting regulation.
         </p>
         <div className="mt-3 flex gap-2">
           {ALL_REGULATION_IDS.map(id => (

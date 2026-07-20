@@ -65,7 +65,8 @@ const REG_MA_SPECIES: string[] = [
   'banette', 'chimecho', 'absol', 'glalie', 'torterra', 'infernape', 'empoleon', 'luxray', 'roserade',
   'rampardos', 'bastiodon', 'lopunny', 'spiritomb', 'garchomp', 'lucario', 'hippowdon', 'toxicroak',
   'abomasnow', 'weavile', 'rhyperior', 'leafeon', 'glaceon', 'gliscor', 'mamoswine', 'gallade',
-  'froslass', 'rotom', 'serperior', 'emboar', 'samurott', 'samurott-hisui', 'watchog', 'liepard',
+  'froslass', 'rotom', 'rotom-heat', 'rotom-wash', 'rotom-frost', 'rotom-fan', 'rotom-mow',
+  'serperior', 'emboar', 'samurott', 'samurott-hisui', 'watchog', 'liepard',
   'simisage', 'simisear', 'simipour', 'excadrill', 'audino', 'conkeldurr', 'whimsicott', 'krookodile',
   'cofagrigus', 'garbodor', 'zoroark', 'zoroark-hisui', 'reuniclus', 'vanilluxe', 'emolga', 'chandelure',
   'beartic', 'stunfisk', 'stunfisk-galar', 'golurk', 'hydreigon', 'volcarona', 'chesnaught', 'delphox',
@@ -79,7 +80,11 @@ const REG_MA_SPECIES: string[] = [
   'oranguru', 'passimian', 'mimikyu', 'drampa', 'kommo-o', 'corviknight', 'flapple', 'appletun',
   'sandaconda', 'polteageist', 'hatterene', 'mr-rime', 'runerigus', 'alcremie', 'morpeko', 'dragapult',
   'wyrdeer', 'kleavor', 'basculegion-male', 'basculegion-female', 'sneasler', 'meowscarada', 'skeledirge', 'quaquaval', 'maushold',
-  'garganacl', 'armarouge', 'ceruledge', 'bellibolt', 'scovillain', 'espathra', 'tinkaton', 'palafin',
+  'garganacl', 'armarouge', 'ceruledge', 'bellibolt', 'scovillain', 'espathra', 'tinkaton',
+  // PokeAPI has no bare "palafin" pokemon resource - only its palafin-zero/palafin-hero
+  // varieties (Zero is the team-building form; Hero is a battle-only transformation,
+  // deliberately excluded here the same way Mega forms are excluded from the roster).
+  'palafin-zero',
   'orthworm', 'glimmora', 'farigiraf', 'kingambit', 'sinistcha', 'archaludon', 'hydrapple',
 ];
 

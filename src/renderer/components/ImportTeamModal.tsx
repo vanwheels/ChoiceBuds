@@ -79,48 +79,46 @@ export default function ImportTeamModal({
   };
 
   /**
-   * Handle the import process
+   * Handle the import process. An empty paste box is allowed - it creates
+   * a team with no Pokémon yet, added to later from the Teams page, rather
+   * than requiring at least one parseable Pokémon up front.
    */
   const handleImport = async () => {
-    if (!pastedText.trim()) {
-      setError('Please paste team data');
-      return;
-    }
-
     setIsImporting(true);
     setError(null);
-    setImportProgress('Parsing team data...');
 
     try {
-      // Step 1: Parse Showdown text
-      const parseResult = parseShowdownText(pastedText);
-
-      if (!parseResult.success || parseResult.pokemon.length === 0) {
-        throw new Error(
-          parseResult.errors.length > 0
-            ? parseResult.errors.join(', ')
-            : 'Failed to parse team data'
-        );
-      }
-
-      setImportProgress(`Parsed ${parseResult.pokemon.length} Pokémon. Fetching data...`);
-
-      // Step 2: Enrich each Pokémon with PokeAPI data
+      // Step 1 & 2: Parse Showdown text and enrich with PokeAPI data, skipped entirely when empty
       const enrichedPokemon: ImportedPokemonInfo[] = [];
 
-      for (let i = 0; i < parseResult.pokemon.length; i++) {
-        const pokemon = parseResult.pokemon[i];
-        setImportProgress(
-          `Enriching ${pokemon.species} (${i + 1}/${parseResult.pokemon.length})...`
-        );
+      if (pastedText.trim()) {
+        setImportProgress('Parsing team data...');
+        const parseResult = parseShowdownText(pastedText);
 
-        const enriched = await enrichPokemonWithAPI(
-          pokemon,
-          databaseState.getCachedEntry,
-          databaseState.setCacheEntry
-        );
+        if (!parseResult.success || parseResult.pokemon.length === 0) {
+          throw new Error(
+            parseResult.errors.length > 0
+              ? parseResult.errors.join(', ')
+              : 'Failed to parse team data'
+          );
+        }
 
-        enrichedPokemon.push(enriched);
+        setImportProgress(`Parsed ${parseResult.pokemon.length} Pokémon. Fetching data...`);
+
+        for (let i = 0; i < parseResult.pokemon.length; i++) {
+          const pokemon = parseResult.pokemon[i];
+          setImportProgress(
+            `Enriching ${pokemon.species} (${i + 1}/${parseResult.pokemon.length})...`
+          );
+
+          const enriched = await enrichPokemonWithAPI(
+            pokemon,
+            databaseState.getCachedEntry,
+            databaseState.setCacheEntry
+          );
+
+          enrichedPokemon.push(enriched);
+        }
       }
 
       // Step 3: Create team object
@@ -245,6 +243,7 @@ export default function ImportTeamModal({
           <div>
             <label htmlFor="pasteArea" className="block text-sm font-medium text-gray-300 mb-2">
               Paste Team (Showdown Format or a pokepast.es link)
+              <span className="text-gray-500 font-normal"> (optional - leave blank to create an empty team)</span>
             </label>
             <textarea
               id="pasteArea"
@@ -252,7 +251,7 @@ export default function ImportTeamModal({
               onChange={(e) => setPastedText(e.target.value)}
               onBlur={handlePasteAreaBlur}
               disabled={isImporting}
-              placeholder="Paste your Showdown/Pokepaste team, or a pokepast.es link, here..."
+              placeholder="Paste your Showdown/Pokepaste team, or a pokepast.es link, here... (or leave blank for an empty team)"
               rows={12}
               className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-500 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 resize-none"
             />
@@ -299,10 +298,10 @@ export default function ImportTeamModal({
           </button>
           <button
             onClick={handleImport}
-            disabled={isImporting || !pastedText.trim()}
+            disabled={isImporting}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isImporting ? 'Importing...' : 'Import Team'}
+            {isImporting ? 'Importing...' : pastedText.trim() ? 'Import Team' : 'Create Empty Team'}
           </button>
         </div>
       </div>

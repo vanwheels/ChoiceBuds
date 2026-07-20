@@ -69,7 +69,10 @@ interface PokeAPIAbilityResponse {
 
 interface PokeAPISpeciesResponse {
   abilities?: Array<{ ability: { name: string } }>;
-  moves?: Array<{ move: { name: string } }>;
+  moves?: Array<{
+    move: { name: string };
+    version_group_details: Array<{ version_group: { name: string } }>;
+  }>;
 }
 
 function extractEffectDescription(effectEntries: PokeAPIEffectEntry[] | undefined, fallback: string): string {
@@ -201,11 +204,30 @@ export async function fetchSpeciesLearnset(
   const data = await fetchJSON<PokeAPISpeciesResponse>(`/pokemon/${normalizedSpecies}`);
   if (!data) return null;
 
+  const allMoves = data.moves || [];
+  // PokeAPI added a real "champions" version group (confirmed 2026-07-19 -
+  // not documented anywhere when this file was first written) whose
+  // per-species move tagging is more accurate than using the untagged
+  // all-time movepool below: it's how Hidden Power/Secret Power (old TM-era
+  // moves absent from Champions) were leaking into every move picker in the
+  // app despite neither being a real Champions move. Its species coverage
+  // is still being back-filled by PokeAPI itself, though - e.g. Gholdengo
+  // currently has zero "champions"-tagged moves - so this only narrows the
+  // list when there's at least one tagged move, falling back to the
+  // untouched all-time list otherwise rather than returning an
+  // artificially empty moveset for a species PokeAPI hasn't caught up on
+  // yet. Doesn't touch species *legality* (utils/pokemonRules.ts) - see
+  // TODO.md's note on investigating that PokeAPI version group more fully.
+  const championsMoves = allMoves.filter(m =>
+    m.version_group_details.some(vgd => vgd.version_group.name === 'champions')
+  );
+  const relevantMoves = championsMoves.length > 0 ? championsMoves : allMoves;
+
   const now = Date.now();
   return {
     species: normalizedSpecies,
     abilities: (data.abilities || []).map(a => a.ability.name.toLowerCase()),
-    moves: (data.moves || []).map(m => m.move.name.toLowerCase()),
+    moves: relevantMoves.map(m => m.move.name.toLowerCase()),
     cachedAt: now,
     expiresAt: now + CACHE_EXPIRATION_MS,
   };

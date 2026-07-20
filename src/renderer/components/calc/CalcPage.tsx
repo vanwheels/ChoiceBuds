@@ -18,8 +18,9 @@ import type { UseTeamsReturn } from '../../hooks/useTeams';
 import type { UseDatabaseReturn } from '../../hooks/useDatabase';
 import type { UseSavedPokemonReturn } from '../../hooks/useSavedPokemon';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
+import type { UseSettingsReturn } from '../../hooks/useSettings';
 import type { CalcReviewPayload } from '../../utils/battleCalcReview';
-import { getRegulationLabel } from '../../utils/pokemonRules';
+import { getRegulationLabel, toRegulationId } from '../../utils/pokemonRules';
 import CalcPokemonPanel from './CalcPokemonPanel';
 import CalcMoveGrid from './CalcMoveGrid';
 import CalcFieldPanel from './CalcFieldPanel';
@@ -32,16 +33,17 @@ interface CalcPageProps {
   databaseState: UseDatabaseReturn;
   savedPokemonState: UseSavedPokemonReturn;
   spriteCacheState: UseSpriteCacheReturn;
+  settingsState: UseSettingsReturn;
   pendingCalcReview: CalcReviewPayload | null;
   onConsumePendingCalcReview: () => void;
 }
 
 export default function CalcPage({
-  gameDataState, teamsState, databaseState, savedPokemonState, spriteCacheState,
+  gameDataState, teamsState, databaseState, savedPokemonState, spriteCacheState, settingsState,
   pendingCalcReview, onConsumePendingCalcReview,
 }: CalcPageProps) {
   const [isSavedSetsOpen, setIsSavedSetsOpen] = useState(false);
-  const calcState = useDamageCalc(gameDataState);
+  const calcState = useDamageCalc(gameDataState, toRegulationId(settingsState.settings.defaultRegulation));
   const {
     regulationId, setRegulationId,
     pokemon1, pokemon2, setPokemon1, setPokemon2, setPokemon1Move, setPokemon2Move,

@@ -227,28 +227,50 @@ function boostMultiplier(stage: number): number {
 }
 
 /**
+ * Speed-doubling abilities that key off the active field weather - the
+ * permanent-weather abilities (Desolate Land/Primordial Sea) count as their
+ * base weather too, since Chlorophyll/Swift Swim key off "is it sunny/
+ * rainy", not the specific ability that caused it. Doesn't cover Tailwind
+ * (a side condition, not a per-Pokemon ability, and not yet tracked as calc
+ * state) or Sand Force/Ice Body-style non-Speed weather abilities.
+ */
+const WEATHER_SPEED_ABILITIES: Record<string, Weather[]> = {
+  'swift swim': ['Rain', 'Heavy Rain'],
+  'chlorophyll': ['Sun', 'Harsh Sunshine'],
+  'sand rush': ['Sand'],
+  'slush rush': ['Snow', 'Hail'],
+};
+
+function weatherSpeedMultiplier(ability: string, weather: Weather | ''): number {
+  if (!weather) return 1;
+  const boostedIn = WEATHER_SPEED_ABILITIES[ability.toLowerCase()];
+  return boostedIn?.includes(weather) ? 2 : 1;
+}
+
+/**
  * Base+SPs+nature+stage boost for all 6 stats - what the Calc's stat table
  * shows as a single computed "Total" per row (see CalcStatRows.tsx),
  * matching what the real games display as a Pokemon's current stat (unlike
  * @smogon/calc's own `rawStats`, which is base+nature+SPs only, no boost).
- * Speed additionally applies paralysis-halving, since that's the only stat
- * paralysis affects in the real games - this is also what actually
- * determines turn order for the Speed-tier banner. Doesn't model Tailwind/
- * weather-based speed abilities (Swift Swim etc.) - the field state here
- * doesn't track which Pokemon's ability is actually active, so factoring
- * those in would be guessing; stage boosts and paralysis are both already
- * explicit, unambiguous inputs on this panel. Floored per-stat (not just at
- * the end) since that's how the real stat formula rounds a fractional
- * boost multiplier.
+ * Speed additionally applies weather-boosting abilities (Swift Swim etc.,
+ * keyed off the field's active weather) and then paralysis-halving, in that
+ * order, matching the real games' modifier ordering - both are already
+ * explicit, unambiguous inputs on this panel (state.ability, field.weather).
+ * Doesn't model Tailwind, since that's a side condition not yet tracked as
+ * calc state. Floored per-stat (not just at the end) since that's how the
+ * real stat formula rounds a fractional boost multiplier.
  */
-function computeBoostedStats(gen: Generation, state: CalcPokemonState): StatsTable | null {
+function computeBoostedStats(gen: Generation, state: CalcPokemonState, weather: Weather | ''): StatsTable | null {
   if (!state.species) return null;
   try {
     const pokemon = buildPokemon(gen, state);
     const keys = Object.keys(pokemon.rawStats) as (keyof StatsTable)[];
     const entries = keys.map(key => {
       const boosted = Math.floor(pokemon.rawStats[key] * boostMultiplier(state.boosts[key]));
-      const final = key === 'spe' && state.status === 'par' ? Math.floor(boosted / 2) : boosted;
+      const weatherBoosted = key === 'spe'
+        ? Math.floor(boosted * weatherSpeedMultiplier(state.ability, weather))
+        : boosted;
+      const final = key === 'spe' && state.status === 'par' ? Math.floor(weatherBoosted / 2) : weatherBoosted;
       return [key, final] as const;
     });
     return Object.fromEntries(entries) as StatsTable;
@@ -257,8 +279,8 @@ function computeBoostedStats(gen: Generation, state: CalcPokemonState): StatsTab
   }
 }
 
-function computeEffectiveSpeed(gen: Generation, state: CalcPokemonState): number | null {
-  return computeBoostedStats(gen, state)?.spe ?? null;
+function computeEffectiveSpeed(gen: Generation, state: CalcPokemonState, weather: Weather | ''): number | null {
+  return computeBoostedStats(gen, state, weather)?.spe ?? null;
 }
 
 function buildPokemon(gen: Generation, state: CalcPokemonState): InstanceType<typeof Pokemon> {
@@ -380,8 +402,8 @@ export interface UseDamageCalcReturn {
   selectedEntry: CalcMoveResultEntry | null;
 }
 
-export function useDamageCalc(gameDataState: UseGameDataReturn): UseDamageCalcReturn {
-  const [regulationId, setRegulationId] = useState<RegulationId>('REG-MA');
+export function useDamageCalc(gameDataState: UseGameDataReturn, defaultRegulation: RegulationId): UseDamageCalcReturn {
+  const [regulationId, setRegulationId] = useState<RegulationId>(defaultRegulation);
   const [pokemon1, setPokemon1State] = useState<CalcPokemonState>(defaultPokemonState);
   const [pokemon2, setPokemon2State] = useState<CalcPokemonState>(defaultPokemonState);
   const [field, setFieldState] = useState<CalcFieldState>(defaultFieldState);
@@ -407,11 +429,11 @@ export function useDamageCalc(gameDataState: UseGameDataReturn): UseDamageCalcRe
   const pokemon1NatureEffect = useMemo(() => getNatureStatEffect(gen, pokemon1.nature), [gen, pokemon1.nature]);
   const pokemon2NatureEffect = useMemo(() => getNatureStatEffect(gen, pokemon2.nature), [gen, pokemon2.nature]);
 
-  const pokemon1Speed = useMemo(() => computeEffectiveSpeed(gen, pokemon1), [gen, pokemon1]);
-  const pokemon2Speed = useMemo(() => computeEffectiveSpeed(gen, pokemon2), [gen, pokemon2]);
+  const pokemon1Speed = useMemo(() => computeEffectiveSpeed(gen, pokemon1, field.weather), [gen, pokemon1, field.weather]);
+  const pokemon2Speed = useMemo(() => computeEffectiveSpeed(gen, pokemon2, field.weather), [gen, pokemon2, field.weather]);
 
-  const pokemon1BoostedStats = useMemo(() => computeBoostedStats(gen, pokemon1), [gen, pokemon1]);
-  const pokemon2BoostedStats = useMemo(() => computeBoostedStats(gen, pokemon2), [gen, pokemon2]);
+  const pokemon1BoostedStats = useMemo(() => computeBoostedStats(gen, pokemon1, field.weather), [gen, pokemon1, field.weather]);
+  const pokemon2BoostedStats = useMemo(() => computeBoostedStats(gen, pokemon2, field.weather), [gen, pokemon2, field.weather]);
 
   const pokemon1BaseStats = useMemo(
     () => (pokemon1.species ? gen.species.get(toID(pokemon1.species))?.baseStats ?? null : null),

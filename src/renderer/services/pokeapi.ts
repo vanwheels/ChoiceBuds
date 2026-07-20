@@ -163,6 +163,10 @@ export function normalizeSpeciesForAPI(name: string, gender?: 'M' | 'F' | 'N' | 
     // (see utils/pokemonRules.ts). Showdown/pokepast.es exports always say
     // just "Aegislash" for its default forme, which is Shield.
     'aegislash': 'aegislash-shield',
+    // PokeAPI has no bare "palafin" slug either - only its Zero/Hero formes
+    // (see utils/pokemonRules.ts). Showdown/pokepast.es exports always say
+    // just "Palafin" for its default (team-building) forme, which is Zero.
+    'palafin': 'palafin-zero',
   };
   
   return formMappings[normalized] || normalized;

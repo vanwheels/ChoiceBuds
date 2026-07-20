@@ -5,6 +5,94 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **2026-07-19 manual-testing batch, quick-wins pass (items 1/3/4/6/8)**:
+  fixed 5 of the 9 scoped items from the same-day testing batch (see
+  TODO.md for the other 4, still open).
+  1. **Empty team creation**: `ImportTeamModal.tsx`'s Import flow now
+     accepts a blank paste box - parse/enrich is skipped entirely and
+     `onImport` is called with `pokemon: []`, with the footer button
+     relabeling to "Create Empty Team" when the paste area is empty.
+  2. **Calc regulation now defaults to Settings' Default Regulation**:
+     `useDamageCalc(gameDataState, defaultRegulation)` takes the initial
+     `regulationId` as a real parameter instead of hardcoding `'REG-MA'`;
+     `CalcPage.tsx` now receives `settingsState` (threaded from `App.tsx`)
+     and seeds it via `toRegulationId(settingsState.settings.defaultRegulation)`,
+     matching how Import Team already worked. Verified live: setting Reg
+     M-B in Settings and opening Calc showed Reg M-B active immediately.
+  3. **Calc Speed now factors in weather-boosting abilities**: the
+     justifying comment on `computeBoostedStats`/`computeEffectiveSpeed`
+     claiming "the field state doesn't track which Pokemon's ability is
+     active" was stale - `state.ability` and `field.weather` were both
+     already tracked and used elsewhere in the same hook. Added a
+     `WEATHER_SPEED_ABILITIES` table (Swift Swim/Chlorophyll/Sand Rush/
+     Slush Rush) and threaded `field.weather` into both functions, applied
+     before paralysis-halving to match real modifier ordering. Verified
+     live: Sharpedo w/ Swift Swim went from 115 Spe (no weather) to 230 Spe
+     (Rain) - a clean double.
+  4. **Rotom formes + the already-documented Palafin bug, fixed together**
+     (same root cause class): `utils/pokemonRules.ts`'s legal-species list
+     only had bare `'rotom'` and bare `'palafin'`, but PokeAPI's actual
+     `/pokemon` roster only exposes `rotom-heat/-wash/-frost/-fan/-mow` as
+     separate resources (base `rotom` also stays legal on its own) and
+     *only* `palafin-zero`/`palafin-hero` (no bare `palafin` resource at
+     all) - so `validateSpeciesLegality` was silently rejecting all of
+     them. Added the 5 Rotom formes and swapped `'palafin'` ->
+     `'palafin-zero'` (Palafin-Hero deliberately excluded, same treatment
+     as Mega forms, since it's a battle-only transformation not a
+     team-building choice). Also fixed a second, previously-undiscovered
+     instance of the identical bug in the Import path:
+     `services/pokeapi.ts::normalizeSpeciesForAPI` had no entry for bare
+     "Palafin" (what Showdown/Pokepaste exports always say), so importing
+     a team with Palafin on it would have 404'd against PokeAPI's
+     `/pokemon/palafin` - added a `'palafin': 'palafin-zero'` mapping
+     alongside the existing identical Aegislash-shield precedent. Verified
+     live via the Teams-page species picker: searching "rotom" now returns
+     all 6 rows, searching "palafin" now returns `Palafin-Zero` (previously
+     "No legal species found").
+  5. **Hidden Power / Secret Power no longer appear as selectable moves.**
+     Root cause was deeper than expected:
+     `services/pokeapiService.ts::fetchSpeciesLearnset` was taking a
+     species' entire *all-time* PokeAPI movepool (every move learned across
+     every game since Gen 1, unfiltered by version group) as the base
+     learnset - not just its Scarlet/Violet-era moves, which is how two
+     pre-Gen-9 TM/tutor moves neither in SV nor Champions were leaking into
+     every move picker app-wide. Investigating the right filter surfaced a
+     genuinely new finding: **PokeAPI now has a real `champions` version
+     group** (id 32, gen IX) - not documented anywhere in this codebase,
+     since it didn't exist when the hand-maintained Champions-data system
+     here was built. Confirmed live: a `champions` pokedex (208 species,
+     `/api/v2/pokedex/36`) and real per-species move tagging (Sharpedo's
+     `champions`-tagged moves correctly exclude both Hidden Power and
+     Secret Power). `fetchSpeciesLearnset` now filters to `champions`-
+     tagged moves when present, falling back to the untouched all-time list
+     for species PokeAPI hasn't back-filled yet (confirmed incomplete -
+     e.g. Gholdengo currently has zero `champions`-tagged moves). Also
+     added `'hidden-power'`/`'secret-power'` to
+     `championsMovepoolChanges.ts`'s existing `GLOBALLY_REMOVED_MOVES`
+     (previously just `['tera-blast']`) as a defense-in-depth safety net,
+     since that list is applied at the read boundary and self-heals against
+     already-cached stale learnsets immediately, without waiting on the
+     fetch-level fix or a 30-day cache expiry. Verified live against a
+     species (Furfrou) with an already-cached, pre-fix, stale learnset
+     known to include Hidden Power - its real move picker (156+ options
+     rendered) now shows zero Hidden Power/Secret Power matches. **The
+     `champions` version-group finding itself is not fully explored** -
+     logged as its own TODO.md item since it could mean a large hand-
+     maintained system (`utils/pokemonRules.ts`'s legal-species lists,
+     `config/championsMovepoolChanges.ts`'s per-species diffing) is
+     partially redundant now, which is a bigger, riskier change the user
+     explicitly deferred rather than folding into this fix.
+
+  All 5 changes verified via a live `run-desktop` pass (not just type-check/
+  lint, both also clean): created and deleted a disposable "Team 1", used
+  its Add-Pokémon picker to confirm the Rotom/Palafin fix and to add
+  Furfrou for the Hidden-Power/Secret-Power check, flipped Settings'
+  Default Regulation and confirmed Calc picked it up, and drove the Calc's
+  species/ability/weather inputs directly to confirm the Speed-doubling
+  math. Real user data (3 existing teams, `settings.json`,
+  `game-data-cache.json`) was untouched - disposable team deleted and the
+  regulation setting restored to its original value afterward.
+
 - **Mac build verified working end-to-end** (2026-07-18): first real
   verification since the Mac environment came back online (16 commits had
   landed on `main` while off it - Settings page, sync/worker backend, team
