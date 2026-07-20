@@ -5,6 +5,42 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Battle Logger stat-inference, Phase 3's 3rd polish item: TTL tuning**
+  (2026-07-20) - the only remaining Phase 3 item (see below), closing out
+  the whole stat-inference thread. "TTL tuning" was ambiguous enough to ask
+  the user what it should actually mean rather than guess; they picked two
+  of the four options offered (adjusting `USAGE_CACHE_DURATION_MS`'s 5-day
+  value itself was explicitly not one of them):
+  1. **Fixed a stale comment** - `services/championsBattleData.ts`'s
+     duration constant justified 5 days as "shorter than PokeAPI-sourced
+     sections' 30 days," but that comparison predates 79fa952's offline-
+     caching rework, which moved every other `GameDataCache` section
+     (moves/items/abilities/learnsets) to `NEVER_EXPIRES` - there's no more
+     30-day baseline to be shorter than. Reworded to justify the 5 days on
+     its own terms: usage is the only section here that's genuinely
+     time-varying (ranked-ladder standings shift week to week) rather than
+     static game data, so it's the only one that still needs a real TTL at
+     all.
+  2. **Surfaced staleness in the UI** - `LikelySetsPopover.tsx`'s footer
+     line ("Champions ranked usage · {season}") had no indication of how
+     old the cached data was, and there's no manual-refresh control, so a
+     user had no way to judge whether a shown percentage might already be
+     a few days stale. Added a small `formatCacheAge(cachedAt)` helper
+     (just-now / Xh ago / Xd ago) inline in the component - no new shared
+     util file, since this is its only consumer - appended to the footer
+     as "· updated Xh/d ago".
+  Live-verified via `run-desktop` against a disposable test battle: added
+  Kingambit as an opponent (cached from 2026-07-16 testing, ~4 days old),
+  opened the Likely Set popover, confirmed the footer read "Champions
+  ranked usage · Current · updated 14h ago" - the fetch had actually
+  refreshed sometime after the original 2026-07-16 cache (14h, not ~4
+  days), consistent with something re-warming the cache in the interim
+  rather than a bug in the new display code. Test battle cleaned up
+  afterward by cross-referencing `battles.json` directly (found by exact
+  opponent-roster/timestamp match, not a blind first-row click) to confirm
+  the right two disposable battles were deleted and a real pre-existing
+  battle was left untouched.
+
 - **2026-07-20 manual-testing batch** (raised after a testing session the
   night of 2026-07-19, all 6 items worked through the same day):
   1. **Move Stat Effects: Make It Rain's missing -2 Sp. Atk self-drop** -

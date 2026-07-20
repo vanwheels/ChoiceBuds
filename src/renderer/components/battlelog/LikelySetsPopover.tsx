@@ -45,6 +45,17 @@ function formatNature(name: string, statUp?: string, statDown?: string): string 
   return statUp && statDown ? `${name} (+${statUp}/-${statDown})` : name;
 }
 
+// Usage data is the one GameDataCache section on a real TTL (5 days, see
+// USAGE_CACHE_DURATION_MS) rather than caching forever - surfacing how old
+// it is lets a user judge whether "unconfirmed" ranked-usage stats might
+// already be a few days stale, since there's no manual refresh control here.
+function formatCacheAge(cachedAt: number): string {
+  const hours = Math.floor((Date.now() - cachedAt) / (60 * 60 * 1000));
+  if (hours < 1) return 'just now';
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
 export default function LikelySetsPopover({ usage, hideAbility, hideItem, confirmedMoves, onClose }: LikelySetsPopoverProps) {
   const ref = useDismissable<HTMLDivElement>(onClose);
   const abilities = hideAbility ? [] : usage.abilities.slice(0, 3);
@@ -115,7 +126,7 @@ export default function LikelySetsPopover({ usage, hideAbility, hideItem, confir
           ))}
         </div>
       )}
-      <span className="text-[8px] text-gray-600">Champions ranked usage · {usage.season}</span>
+      <span className="text-[8px] text-gray-600">Champions ranked usage · {usage.season} · updated {formatCacheAge(usage.cachedAt)}</span>
     </div>
   );
 }

@@ -64,10 +64,14 @@ import type { ChampionsUsageEntry, ChampionsUsageRankedEntry, ChampionsUsageNatu
 const CHAMPIONS_BASE_URL = 'https://championsbattledata.com';
 
 /**
- * Cache duration: 5 days in milliseconds. Shorter than PokeAPI-sourced
- * sections' 30 days (species data is static) since ranked-ladder usage
- * shifts meaningfully week to week - 5 days refreshes at worst once per
- * tournament weekend without re-fetching every single session.
+ * Cache duration: 5 days in milliseconds. This is the only GameDataCache
+ * section that still expires on a real TTL - every other section (moves/
+ * items/abilities/learnsets) caches forever (see cacheExpiry.ts's
+ * NEVER_EXPIRES) since it's static game data, but ranked-ladder usage is
+ * the one thing here that's genuinely time-varying - it shifts meaningfully
+ * week to week, so it needs periodic re-validation the rest of the cache
+ * doesn't. 5 days refreshes at worst once per tournament weekend without
+ * re-fetching every single session.
  */
 export const USAGE_CACHE_DURATION_MS = 5 * 24 * 60 * 60 * 1000;
 

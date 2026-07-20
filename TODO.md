@@ -163,7 +163,8 @@ focused on what's actually next.
   2026-07-16, see COMPLETED.md. Phase 3's loading-state treatment and wider
   empirical species coverage (2 of its 3 polish items) are also done, see
   COMPLETED.md - by explicit user choice, tackled one item at a time rather
-  than all three together. Still open: TTL tuning. Calc-page integration
+  than all three together. TTL tuning (the 3rd polish item) is also done
+  2026-07-20, see COMPLETED.md - Phase 3 is now fully complete. Calc-page integration
   (the planned fast-follow reusing the same data layer) is done, see
   above's "2026-07-19 manual-testing batch" item 5 and COMPLETED.md.
   Explicitly out of scope for now: the
