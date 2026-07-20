@@ -521,6 +521,13 @@ export interface SpeciesLearnsetEntry {
   species: string; // Normalized PokeAPI slug (gender-form aware)
   abilities: string[]; // Lowercase ability names this species can have
   moves: string[]; // Lowercase move names this species can naturally learn
+  // True when `moves` was narrowed using PokeAPI's own "champions" version-group
+  // move tags (real per-species data); false when PokeAPI had zero champions-tagged
+  // moves for this species yet and `moves` is the untouched all-time fallback list.
+  // Drives whether config/championsMovepoolChanges.ts's hand-curated corrections
+  // get applied at the read boundary - see useGameData.ts. Live PokeAPI data is
+  // trusted over the hand table whenever it's actually available.
+  hasChampionsMoveData: boolean;
   cachedAt: number; // Unix timestamp
   expiresAt: number; // Unix timestamp
 }

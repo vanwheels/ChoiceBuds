@@ -211,23 +211,29 @@ export async function fetchSpeciesLearnset(
   // all-time movepool below: it's how Hidden Power/Secret Power (old TM-era
   // moves absent from Champions) were leaking into every move picker in the
   // app despite neither being a real Champions move. Its species coverage
-  // is still being back-filled by PokeAPI itself, though - e.g. Gholdengo
-  // currently has zero "champions"-tagged moves - so this only narrows the
-  // list when there's at least one tagged move, falling back to the
-  // untouched all-time list otherwise rather than returning an
-  // artificially empty moveset for a species PokeAPI hasn't caught up on
-  // yet. Doesn't touch species *legality* (utils/pokemonRules.ts) - see
-  // TODO.md's note on investigating that PokeAPI version group more fully.
+  // is still being back-filled by PokeAPI itself, though - a full live audit
+  // (2026-07-19, see TODO.md) found it's specifically the 22 species
+  // Regulation M-B added (plus Floette) that PokeAPI hasn't tagged yet, 90%
+  // coverage otherwise - so this only narrows the list when there's at
+  // least one tagged move, falling back to the untouched all-time list
+  // otherwise rather than returning an artificially empty moveset for a
+  // species PokeAPI hasn't caught up on yet. `hasChampionsMoveData` records
+  // which case this was so useGameData.ts knows whether it's safe to trust
+  // this data as-is or still needs config/championsMovepoolChanges.ts's hand
+  // corrections layered on top. Doesn't touch species *legality*
+  // (utils/pokemonRules.ts) - see TODO.md.
   const championsMoves = allMoves.filter(m =>
     m.version_group_details.some(vgd => vgd.version_group.name === 'champions')
   );
-  const relevantMoves = championsMoves.length > 0 ? championsMoves : allMoves;
+  const hasChampionsMoveData = championsMoves.length > 0;
+  const relevantMoves = hasChampionsMoveData ? championsMoves : allMoves;
 
   const now = Date.now();
   return {
     species: normalizedSpecies,
     abilities: (data.abilities || []).map(a => a.ability.name.toLowerCase()),
     moves: relevantMoves.map(m => m.move.name.toLowerCase()),
+    hasChampionsMoveData,
     cachedAt: now,
     expiresAt: now + CACHE_EXPIRATION_MS,
   };

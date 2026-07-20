@@ -32,21 +32,35 @@ focused on what's actually next.
     `championsMovepoolChanges.ts`'s hand table still earns its keep, most of
     all for M-B's new species, on top of the narrow-fix fallback already
     live in `pokeapiService.ts`.
-  - **Caution on trusting the tag even where present**: spot-checked
-    Sharpedo (which PokeAPI does tag) - its `champions` move list still
-    includes `thief`, but `championsMovepoolChanges.ts`'s
+  - **Sharpedo/Thief conflict, resolved same day**: spot-checked Sharpedo
+    (which PokeAPI does tag) - its `champions` move list still includes
+    `thief`, but `championsMovepoolChanges.ts`'s
     `CHAMPIONS_MOVEPOOL_REMOVALS.sharpedo` (RoiDadadou-spreadsheet-sourced)
-    says Champions removed Thief from Sharpedo. One of the two sources is
-    wrong and this pass didn't resolve which - needs a third source
-    (Serebii/Bulbapedia/in-game) to settle, not a coin flip. Also found
-    Sharpedo's PokeAPI move data has literally zero `scarlet-violet`-tagged
-    moves (a separate, unrelated PokeAPI data gap), which further suggests
-    the `champions` tag isn't always a clean curated diff yet even for
-    "covered" species. A full systematic diff of `champions`-tagged moves
-    vs. `championsMovepoolChanges.ts` across all 208 species would probably
-    surface more of these and could meaningfully improve accuracy, but is
-    its own dedicated task (208-species move-set diffing + adjudicating
-    conflicts against a third source) - not attempted here.
+    said Champions removed Thief from Sharpedo. User confirmed in-game:
+    Sharpedo does have Thief - PokeAPI was right, the spreadsheet was wrong.
+    User's call: trust PokeAPI over the spreadsheet wherever PokeAPI has
+    live `champions`-tag coverage; the spreadsheet was only ever load-bearing
+    for the gap PokeAPI hasn't back-filled (Reg M-B's new species). Acted on
+    immediately (same day, see below) rather than left open: `useGameData.ts`
+    now only applies `championsMovepoolChanges.ts`'s corrections when
+    `SpeciesLearnsetEntry.hasChampionsMoveData` is false (a new field set by
+    `fetchSpeciesLearnset`), and the file itself was pruned from ~208
+    species down to exactly the 22 Reg M-B species + Floette found above -
+    unreachable entries for PokeAPI-covered species were deleted outright
+    rather than left as dead weight/a future footgun. Also separately found
+    Sharpedo's PokeAPI move data has zero `scarlet-violet`-tagged moves (an
+    unrelated PokeAPI data gap, doesn't affect the above). Live-verified
+    post-fix: Sharpedo/Mimikyu now trust PokeAPI directly (Thief present,
+    hand table not consulted); Gholdengo/Pyroar still correctly get the hand
+    table's corrections (Gholdengo gains Surf/loses Thunder Wave, Pyroar
+    gains Iron Tail/Payback/Scorching Sands and loses Work Up) since PokeAPI
+    still has no `champions` tag data for either. Old 30-day-cached learnset
+    entries predating the new field are treated as a cache miss (same
+    pattern as `getCachedMove`'s `target`/`meta` self-heal) so this takes
+    effect on next fetch rather than waiting out the cache TTL. Revisit
+    `championsMovepoolChanges.ts` (or delete it outright) once PokeAPI
+    back-fills `champions` tags for these 23 species too - the live coverage
+    check from this pass is easy to re-run to find out.
   - **Real bug found as a side effect, fixed same day**: auditing
     `normalizeSpeciesForAPI` (`services/pokeapi.ts`) for this pass surfaced
     that Gourgeist, Lycanroc, Maushold, **Mimikyu**, Morpeko, and Pyroar all

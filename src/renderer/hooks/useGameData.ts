@@ -126,10 +126,30 @@ export function useGameData(): UseGameDataReturn {
     return ability ? applyChampionsAbilityOverride(ability) : null;
   }, [cache]);
 
+  // Only layer the hand-curated championsMovepoolChanges.ts corrections on
+  // top when PokeAPI itself has no "champions"-tagged move data for this
+  // species yet - see hasChampionsMoveData's doc comment in types/pokemon.ts.
+  // Live PokeAPI data is trusted over the hand table whenever it's available:
+  // a live audit (2026-07-19, see TODO.md) found PokeAPI's own champions tag
+  // for Sharpedo correctly includes Thief (confirmed in-game), while the
+  // hand table (sourced from a community spreadsheet of mixed reliability)
+  // incorrectly had it removed - applying both unconditionally was actively
+  // introducing errors on species PokeAPI already had right.
+  const applyMovepoolChangesIfNeeded = (learnset: SpeciesLearnsetEntry): SpeciesLearnsetEntry =>
+    learnset.hasChampionsMoveData
+      ? learnset
+      : { ...learnset, moves: applyChampionsMovepoolChanges(learnset.species, learnset.moves) };
+
   const getCachedSpeciesLearnset = useCallback((species: string, gender?: Gender): SpeciesLearnsetEntry | null => {
     const learnset = readCacheEntry(cache?.learnsets, normalizeSpeciesForAPI(species, gender));
-    if (!learnset) return null;
-    return { ...learnset, moves: applyChampionsMovepoolChanges(learnset.species, learnset.moves) };
+    // hasChampionsMoveData was added 2026-07-19 - an entry cached before that
+    // (still valid for 30 days) predates the field despite the type now
+    // claiming it's required. Same self-healing treatment as getCachedMove's
+    // target/meta check above: treat it as a cache miss so users get the
+    // corrected trust-PokeAPI-first behavior on next fetch rather than
+    // silently defaulting to "apply the hand table" for up to 30 days.
+    if (!learnset || learnset.hasChampionsMoveData === undefined) return null;
+    return applyMovepoolChangesIfNeeded(learnset);
   }, [cache]);
 
   const getMoveData = useCallback(async (moveName: string): Promise<MoveData | null> => {
@@ -164,7 +184,7 @@ export function useGameData(): UseGameDataReturn {
     const normalizedSpecies = normalizeSpeciesForAPI(species, gender);
     const fresh = await runCachedFetch(setCache, setIsLoading, setError, 'learnsets', normalizedSpecies,
       () => fetchSpeciesLearnset(species, gender), `Failed to fetch learnset for "${species}"`);
-    return fresh ? { ...fresh, moves: applyChampionsMovepoolChanges(fresh.species, fresh.moves) } : null;
+    return fresh ? applyMovepoolChangesIfNeeded(fresh) : null;
   }, [getCachedSpeciesLearnset]);
 
   /**
