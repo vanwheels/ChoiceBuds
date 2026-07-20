@@ -78,28 +78,18 @@ focused on what's actually next.
   actual code; items 1, 3, 4, 6, 8 are done - see COMPLETED.md for the full
   implementation + live-verification trail. Remaining, not yet
   implemented:)
-  2. **Offline support - full bundled snapshot** (user chose this over
-     the cheaper "pre-warm cache" and "Battle Logger only" alternatives).
-     Today, species roster (`useSpeciesRoster.ts`), movesets/abilities/
-     items (`useGameData.ts`), and usage data
-     (`services/championsBattleData.ts`) are all lazily fetched live on
-     first touch and only cached afterward (30-day expiration,
-     `pokeapi-cache.json`/`game-data-cache.json`/localStorage) - so a
-     fresh install, or any species/move not yet cached, requires network.
-     Scope: a build-time-generated static dataset (legal species,
-     movesets, sprites, a usage-data snapshot) bundled with the app and
-     used as an offline fallback/seed before falling back to live fetch.
-     This is real infra work (a data-generation script, a refresh/staleness
-     story for keeping the bundled snapshot current across releases,
-     deciding how sprites get bundled without bloating the installer) -
-     needs its own design pass before implementation, not a drop-in fix.
-     Covers item 7 below too (same root cause).
+  2. ~~Offline support~~ **Done 2026-07-19** - see COMPLETED.md. Initial
+     plan (a build-time-bundled installer snapshot) was rejected by the
+     user in favor of what actually shipped: one comprehensive **live**
+     sync on first launch, then zero network needed for anything except
+     (a) syncing newly-legal species from a future regulation update and
+     (b) Champions usage data's existing 5-day refresh. Covers item 7
+     below too (same root cause).
   5. ~~Calc auto-fill from usage data, then export to Saved Sets~~ **Done
      2026-07-19** - see COMPLETED.md.
-  7. Battle Logger's move list and enemy-species picker feel slow because
-     both are gated on a live PokeAPI fetch on cache miss - same root
-     cause as item 2, covered by that item's bundled-snapshot scope rather
-     than a separate fix.
+  7. ~~Battle Logger's move list and enemy-species picker feel slow~~
+     **Done 2026-07-19** - same root cause as item 2, resolved by that
+     item's fix (see COMPLETED.md).
   9. ~~New feature: standalone type-matchup calculator~~ **Done
      2026-07-19** - see COMPLETED.md. Rebuilt same-day into a team-driven
      Offensive/Defensive Coverage view (vgcmulticalc.com-style, per user

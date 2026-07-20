@@ -6,14 +6,9 @@
 
 import type { AbilityData, ItemData, MoveData, SpeciesLearnsetEntry } from '../types/pokemon';
 import { normalizeSpeciesForAPI } from './pokeapi';
+import { NEVER_EXPIRES } from '../utils/cacheExpiry';
 
 export const POKEAPI_BASE_URL = 'https://pokeapi.co/api/v2';
-
-/**
- * Cache expiration duration: 30 days in milliseconds
- * Move/item/ability/learnset data is static, so long cache duration is acceptable
- */
-export const CACHE_EXPIRATION_MS = 30 * 24 * 60 * 60 * 1000;
 
 /**
  * Normalize move/item/ability name for API requests and cache keys
@@ -123,7 +118,7 @@ export async function fetchMoveData(normalizedName: string): Promise<MoveData | 
       critRate: data.meta?.crit_rate ?? 0,
     },
     cachedAt: now,
-    expiresAt: now + CACHE_EXPIRATION_MS,
+    expiresAt: NEVER_EXPIRES,
   };
 }
 
@@ -155,7 +150,7 @@ export async function fetchItemData(normalizedName: string): Promise<ItemData | 
     description: itemDescription,
     spriteUrl: data.sprites?.default || '',
     cachedAt: now,
-    expiresAt: now + CACHE_EXPIRATION_MS,
+    expiresAt: NEVER_EXPIRES,
   };
 }
 
@@ -171,7 +166,7 @@ export async function fetchAbilityData(normalizedName: string): Promise<AbilityD
     name: normalizedName,
     description: extractEffectDescription(data.effect_entries, 'No description available'),
     cachedAt: now,
-    expiresAt: now + CACHE_EXPIRATION_MS,
+    expiresAt: NEVER_EXPIRES,
   };
 }
 
@@ -235,6 +230,6 @@ export async function fetchSpeciesLearnset(
     moves: relevantMoves.map(m => m.move.name.toLowerCase()),
     hasChampionsMoveData,
     cachedAt: now,
-    expiresAt: now + CACHE_EXPIRATION_MS,
+    expiresAt: NEVER_EXPIRES,
   };
 }

@@ -59,7 +59,7 @@ export function createEmptyGameDataCache(): GameDataCache {
     learnsets: {},
     usage: {},
     lastCleaned: Date.now(),
-    initialBulkSyncCompletedAt: null,
+    lastSyncedSpeciesNames: [],
   };
 }
 

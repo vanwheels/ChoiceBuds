@@ -6,16 +6,12 @@
  */
 
 import type { PokemonStats, PokeAPICacheEntry, ShowdownPokemon, ImportedPokemonInfo } from '../types/pokemon';
+import { NEVER_EXPIRES } from '../utils/cacheExpiry';
 
 /**
  * Base URL for PokeAPI v2
  */
 const POKEAPI_BASE_URL = 'https://pokeapi.co/api/v2';
-
-/**
- * Cache duration: 7 days in milliseconds
- */
-const CACHE_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
  * Raw PokeAPI response structure for pokemon endpoint
@@ -256,7 +252,7 @@ function transformAPIResponse(data: PokeAPISpeciesResponse): PokeAPICacheEntry {
     spriteUrl,
     abilities,
     cachedAt: now,
-    expiresAt: now + CACHE_DURATION_MS,
+    expiresAt: NEVER_EXPIRES,
   };
 }
 

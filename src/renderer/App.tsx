@@ -43,9 +43,11 @@ type ActiveTab = 'teams' | 'calc' | 'battles' | 'statistics' | 'typeMatchup' | '
  * team/cache state, so writes made through it would silently not appear in
  * what's on screen.
  *
- * useInitialSync gates the whole app behind a LoadingScreen until the
- * one-time bulk first-launch sync (sprites + move/ability/learnset data for
- * the full legal dex) completes - see useInitialSync.ts.
+ * useInitialSync gates the whole app behind a LoadingScreen until every
+ * currently-unsynced legal species (sprites, move/ability/learnset data,
+ * species stats) is synced - the full legal dex on a fresh install, just the
+ * delta on a later launch after a regulation update adds new species - see
+ * useInitialSync.ts.
  */
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('teams');
@@ -67,7 +69,7 @@ export default function App() {
   const battlesState = useBattles();
   const settingsState = useSettings();
   const updateCheckState = useUpdateCheck();
-  const { isDone: isInitialSyncDone, progress: initialSyncProgress } = useInitialSync(gameDataState, speciesRosterState, spriteCacheState);
+  const { isDone: isInitialSyncDone, progress: initialSyncProgress } = useInitialSync(gameDataState, speciesRosterState, spriteCacheState, databaseState);
 
   if (!isInitialSyncDone) {
     return <LoadingScreen progress={initialSyncProgress} />;
@@ -215,7 +217,7 @@ export default function App() {
           </Suspense>
         ) : (
           <Suspense fallback={<div className="text-gray-400 text-sm">Loading settings...</div>}>
-            <SettingsPage settingsState={settingsState} teamsState={teamsState} battlesState={battlesState} updateCheckState={updateCheckState} />
+            <SettingsPage settingsState={settingsState} teamsState={teamsState} battlesState={battlesState} updateCheckState={updateCheckState} databaseState={databaseState} gameDataState={gameDataState} />
           </Suspense>
         )}
       </main>

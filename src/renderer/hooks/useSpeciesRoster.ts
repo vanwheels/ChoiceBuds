@@ -10,10 +10,10 @@
  * derived from the base species + holding the matching Mega Stone, not a
  * separate roster slot pick.
  *
- * Backed by a localStorage cache (30 days, mirroring the other PokeAPI caches'
- * expiration convention): a fresh app launch on a warm cache renders the full
- * roster instantly instead of waiting on a large network response every
- * single startup.
+ * Backed by a localStorage cache that never expires (the roster list itself -
+ * names/ids/sprite URLs - is effectively static; see utils/cacheExpiry.ts):
+ * a fresh app launch on a warm cache renders the full roster instantly
+ * instead of waiting on a large network response every single startup.
  */
 
 import { useState, useEffect } from 'react';
@@ -35,7 +35,6 @@ interface CachedRoster {
 }
 
 const CACHE_KEY = 'choicebuds:speciesRoster:v3';
-const CACHE_EXPIRATION_MS = 30 * 24 * 60 * 60 * 1000;
 
 /** Mega Evolution is item-driven (holding the right Mega Stone), not a roster pick */
 const MEGA_FORM_PATTERN = /-mega(-x|-y)?$/;
@@ -72,7 +71,6 @@ function readRosterCache(): SpeciesRosterEntry[] | null {
     const raw = localStorage.getItem(CACHE_KEY);
     if (!raw) return null;
     const parsed: CachedRoster = JSON.parse(raw);
-    if (Date.now() - parsed.cachedAt > CACHE_EXPIRATION_MS) return null;
     return parsed.entries;
   } catch {
     return null;

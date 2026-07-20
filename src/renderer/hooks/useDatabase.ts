@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { PokeAPICache, PokeAPICacheEntry } from '../types/pokemon';
+import { NEVER_EXPIRES } from '../utils/cacheExpiry';
 
 export interface UseDatabaseReturn {
   cache: PokeAPICache | null;
@@ -25,14 +26,11 @@ export interface UseDatabaseReturn {
 }
 
 /**
- * Cache expiration duration: 30 days in milliseconds
- * Pokémon data is relatively static, so long cache duration is acceptable
- */
-const CACHE_EXPIRATION_MS = 30 * 24 * 60 * 60 * 1000;
-
-/**
- * Cache cleaning interval: 7 days in milliseconds
- * Periodically remove expired entries to prevent cache bloat
+ * Cache cleaning interval: 7 days in milliseconds. Entries no longer expire
+ * (species data is treated as permanent once synced - see NEVER_EXPIRES), so
+ * this pass is now effectively a no-op safety net rather than a real
+ * maintenance cycle, kept only in case something still slips through with a
+ * real expiresAt (e.g. data cached before this change).
  */
 const CACHE_CLEAN_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -274,7 +272,7 @@ export function useDatabase(): UseDatabaseReturn {
 }
 
 /**
- * Utility function to create a new cache entry with automatic expiration
+ * Utility function to create a new cache entry (never expires)
  * Can be used by other services when fetching from PokeAPI
  */
 export function createCacheEntry(
@@ -295,6 +293,6 @@ export function createCacheEntry(
     spriteUrl,
     abilities,
     cachedAt: now,
-    expiresAt: now + CACHE_EXPIRATION_MS,
+    expiresAt: NEVER_EXPIRES,
   };
 }

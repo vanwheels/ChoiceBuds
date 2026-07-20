@@ -5,6 +5,70 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **2026-07-19 Offline support: one-time live sync + no auto-expiry** (TODO.md
+  items 2 and 7, resolved after an initial mis-scoped plan - a build-time
+  data snapshot bundled inside the installer - was proposed and rejected;
+  the user clarified the actual want: no data ships in the installer, the
+  app does one comprehensive **live** sync on first launch, and after that
+  needs zero network for anything except two explicit exceptions). Three
+  changes:
+  1. **`useInitialSync.ts` now also syncs `pokeapi-cache.json` species
+     stats/types** (`fetchPokemonData`/`setCacheEntry`, the same functions
+     `enrichPokemonWithAPI` uses at import time), closing a real gap where
+     it previously only synced `game-data-cache.json`'s moves/abilities/
+     learnsets - importing a never-touched species still needed network
+     even after "sync" completed.
+  2. **`GameDataCache.initialBulkSyncCompletedAt` (a one-shot boolean)
+     replaced with `lastSyncedSpeciesNames: string[]`.** `useInitialSync`
+     diffs the current legal roster against this list every launch and
+     syncs only what's missing - the full roster on a fresh install, just
+     the delta after a future regulation update adds species. One
+     mechanism covers both cases with no separate "detect regulation
+     change" logic.
+  3. **Cached species/move/item/ability/learnset data never expires once
+     synced** - new `utils/cacheExpiry.ts::NEVER_EXPIRES` sentinel
+     (`Number.MAX_SAFE_INTEGER`, since `Infinity` isn't JSON-serializable)
+     replaces every `expiresAt: now + <TTL>` write site across
+     `services/pokeapiService.ts`, `services/pokeapi.ts`,
+     `hooks/useDatabase.ts`, and drops `useSpeciesRoster.ts`'s localStorage
+     TTL check entirely. No `expiresAt` *read* site needed to change - they
+     already just compare against `Date.now()`, which the sentinel always
+     satisfies, and `useDatabase.ts`'s periodic cleanup pass naturally
+     becomes a no-op. Champions usage data (`championsBattleData.ts`'s
+     `USAGE_CACHE_DURATION_MS`, 5 days) is explicitly untouched - it's the
+     one thing meant to keep auto-refreshing. Synthesized item placeholders
+     (Mega Stones PokeAPI doesn't have yet) needed a different fix since a
+     permanent `NEVER_EXPIRES` would freeze them broken forever: `useGameData
+     .ts`'s `getCachedItem` now treats `spriteUrl === ''` as a cache miss,
+     the same self-healing-on-read pattern already used for
+     `hasChampionsMoveData`/`target`/`meta`, so they keep retrying every
+     launch instead of relying on TTL.
+
+  Also added a manual **"Refresh Game Data" button** (Settings ->
+  `GameDataResetSection.tsx`) as the escape hatch now that nothing
+  auto-revalidates - wraps both `useDatabase`/`useGameData`'s `clearCache()`.
+  Live-tested (`run-desktop`) clicking it twice in the same session surfaced
+  a real bug in the first pass: `useInitialSync`'s `hasStarted`/
+  `heavySyncDone` were a permanent one-shot latch, so a second in-session
+  resync would silently no-op instead of re-running - fixed by making the
+  guard "a sync is currently running" (`isSyncing` ref, reset at the end of
+  each run) instead of "has ever run," and resetting `heavySyncDone` to
+  `false` at the start of each new sync so the LoadingScreen gate correctly
+  reflects the new run in progress. Also caught and fixed live: reading a
+  cache file written before `lastSyncedSpeciesNames` existed left the field
+  `undefined` (not an empty array), which crashed `markSpeciesSynced`'s
+  array spread (`prev.lastSyncedSpeciesNames is not iterable`) - fixed by
+  normalizing it to `[]` once, at the mount-read boundary in `useGameData.ts`,
+  rather than defending against `undefined` at every call site. Both bugs
+  were caught by actually running the app against the real (old-schema,
+  225-species) cache file rather than trusting type-check alone - confirmed
+  live: the migration self-heals silently on first launch after the update
+  (harmless full re-pass, but every individual lookup is a cache hit so it
+  completes in seconds, not a real network re-fetch), a targeted
+  single-species delta-sync correctly re-syncs just that one species, and
+  Calc/Battle Log/Teams pages all render normally afterward with sprites
+  intact.
+
 - **2026-07-19 Type Matchup - type-changing abilities in Offensive Coverage**
   (follow-up explicitly deferred at the standalone-calculator/Offensive-
   Defensive-Coverage rebuild, see below/TODO.md item 9). New

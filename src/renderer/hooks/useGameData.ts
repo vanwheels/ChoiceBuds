@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { GameDataCache, MoveData, ItemData, AbilityData, SpeciesLearnsetEntry, ChampionsUsageEntry } from '../types/pokemon';
+import type { GameDataCache, MoveData, ItemData, AbilityData, SpeciesLearnsetEntry, ChampionsUsageEntry, SpeciesRosterEntry } from '../types/pokemon';
 import { VGC_ITEMS } from '../config/vgcData';
 import { normalizeSpeciesForAPI } from '../services/pokeapi';
 import {
@@ -14,10 +14,10 @@ import {
   fetchItemData,
   fetchAbilityData,
   fetchSpeciesLearnset,
-  CACHE_EXPIRATION_MS,
 } from '../services/pokeapiService';
 import { fetchChampionsUsage, normalizeUsageCacheKey } from '../services/championsBattleData';
 import { readCacheEntry, runCachedFetch, withCacheEntry, createEmptyGameDataCache } from '../utils/cacheManager';
+import { NEVER_EXPIRES } from '../utils/cacheExpiry';
 import { applyChampionsMoveOverride } from '../config/championsMoveOverrides';
 import { applyMoveFlags } from '../config/moveFlags';
 import { applyChampionsAbilityOverride } from '../config/championsAbilityOverrides';
@@ -54,9 +54,12 @@ export interface UseGameDataReturn {
 
   clearCache: () => Promise<boolean>;
 
-  // One-time bulk first-launch sync tracking (see useInitialSync.ts)
-  hasCompletedInitialBulkSync: boolean;
-  markInitialBulkSyncCompleted: () => void;
+  // First-launch/delta sync tracking (see useInitialSync.ts) - which legal
+  // species have already been fully synced (sprites/moves/abilities/
+  // learnset/species stats), diffed against the current legal roster each
+  // launch so species added by a future regulation update get synced too.
+  getUnsyncedSpecies: (legalRoster: SpeciesRosterEntry[]) => SpeciesRosterEntry[];
+  markSpeciesSynced: (names: string[]) => void;
 }
 
 /**
@@ -76,7 +79,14 @@ export function useGameData(): UseGameDataReturn {
     window.electron.readGameDataCache()
       .then((persisted: GameDataCache | null) => {
         if (cancelled) return;
-        setCache(persisted ?? createEmptyGameDataCache());
+        // A cache file written before lastSyncedSpeciesNames existed (was
+        // called initialBulkSyncCompletedAt) predates the field entirely -
+        // undefined, not an empty array - so every read/write site that
+        // touches it needs this normalized to a real array right here,
+        // once, rather than defending against undefined everywhere else.
+        setCache(persisted
+          ? { ...persisted, lastSyncedSpeciesNames: persisted.lastSyncedSpeciesNames ?? [] }
+          : createEmptyGameDataCache());
         setIsInitialized(true);
       })
       .catch((err: unknown) => {
@@ -118,8 +128,16 @@ export function useGameData(): UseGameDataReturn {
     return applyMoveFlags(applyChampionsMoveOverride(move));
   }, [cache]);
 
-  const getCachedItem = useCallback((itemName: string): ItemData | null =>
-    readCacheEntry(cache?.items, normalizeNameForAPI(itemName)), [cache]);
+  // A synthesized placeholder (spriteUrl === '', see the background-load
+  // effect below) is deliberately treated as a cache miss regardless of its
+  // expiresAt - now that cache entries never expire, TTL can't be what makes
+  // it retry once PokeAPI adds real data, so this presence check does that
+  // job instead, same self-healing pattern as getCachedMove's target/meta
+  // check and getCachedSpeciesLearnset's hasChampionsMoveData check below.
+  const getCachedItem = useCallback((itemName: string): ItemData | null => {
+    const item = readCacheEntry(cache?.items, normalizeNameForAPI(itemName));
+    return item && item.spriteUrl ? item : null;
+  }, [cache]);
 
   const getCachedAbility = useCallback((abilityName: string): AbilityData | null => {
     const ability = readCacheEntry(cache?.abilities, normalizeNameForAPI(abilityName));
@@ -247,9 +265,9 @@ export function useGameData(): UseGameDataReturn {
             category: 'unknown',
             effect: 'No effect data available',
             description: 'No description available',
-            spriteUrl: '',
+            spriteUrl: '', // empty spriteUrl is what getCachedItem treats as a permanent miss, so this keeps retrying every launch instead of being frozen forever
             cachedAt: now,
-            expiresAt: now + CACHE_EXPIRATION_MS,
+            expiresAt: NEVER_EXPIRES,
           };
           setCache(prev => prev ? withCacheEntry(prev, 'items', normalizedName, fallback) : prev);
         });
@@ -273,9 +291,17 @@ export function useGameData(): UseGameDataReturn {
     return true;
   }, []);
 
-  const hasCompletedInitialBulkSync = cache?.initialBulkSyncCompletedAt != null;
-  const markInitialBulkSyncCompleted = useCallback(() => {
-    setCache(prev => prev && { ...prev, initialBulkSyncCompletedAt: Date.now() });
+  const getUnsyncedSpecies = useCallback((legalRoster: SpeciesRosterEntry[]): SpeciesRosterEntry[] => {
+    const synced = new Set(cache?.lastSyncedSpeciesNames ?? []);
+    return legalRoster.filter(entry => !synced.has(entry.name));
+  }, [cache]);
+
+  const markSpeciesSynced = useCallback((names: string[]) => {
+    setCache(prev => {
+      if (!prev) return prev;
+      const merged = new Set([...prev.lastSyncedSpeciesNames, ...names]);
+      return { ...prev, lastSyncedSpeciesNames: [...merged] };
+    });
   }, []);
 
   return {
@@ -295,7 +321,7 @@ export function useGameData(): UseGameDataReturn {
     getChampionsUsage,
     getCachedChampionsUsage,
     clearCache,
-    hasCompletedInitialBulkSync,
-    markInitialBulkSyncCompleted,
+    getUnsyncedSpecies,
+    markSpeciesSynced,
   };
 }

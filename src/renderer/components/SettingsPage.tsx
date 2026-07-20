@@ -8,6 +8,8 @@ import type { UseSettingsReturn } from '../hooks/useSettings';
 import type { UseTeamsReturn } from '../hooks/useTeams';
 import type { UseBattlesReturn } from '../hooks/useBattles';
 import type { UseUpdateCheckReturn } from '../hooks/useUpdateCheck';
+import type { UseDatabaseReturn } from '../hooks/useDatabase';
+import type { UseGameDataReturn } from '../hooks/useGameData';
 import { ALL_REGULATION_IDS, getRegulationLabel, toRegulationId } from '../utils/pokemonRules';
 import { useSync } from '../hooks/useSync';
 import { useSeasonDataCheck } from '../hooks/useSeasonDataCheck';
@@ -15,15 +17,18 @@ import SyncSection from './SyncSection';
 import UpdateCheckSection from './UpdateCheckSection';
 import SeasonDataCheckSection from './SeasonDataCheckSection';
 import PlayerProfileSection from './PlayerProfileSection';
+import GameDataResetSection from './GameDataResetSection';
 
 interface SettingsPageProps {
   settingsState: UseSettingsReturn;
   teamsState: UseTeamsReturn;
   battlesState: UseBattlesReturn;
   updateCheckState: UseUpdateCheckReturn;
+  databaseState: UseDatabaseReturn;
+  gameDataState: UseGameDataReturn;
 }
 
-export default function SettingsPage({ settingsState, teamsState, battlesState, updateCheckState }: SettingsPageProps) {
+export default function SettingsPage({ settingsState, teamsState, battlesState, updateCheckState, databaseState, gameDataState }: SettingsPageProps) {
   const { settings, setDefaultRegulation, updateSettings } = settingsState;
   const currentId = toRegulationId(settings.defaultRegulation);
   const syncState = useSync(settingsState, teamsState, battlesState);
@@ -61,6 +66,8 @@ export default function SettingsPage({ settingsState, teamsState, battlesState, 
       <SyncSection syncState={syncState} />
 
       <SeasonDataCheckSection seasonDataCheckState={seasonDataCheckState} />
+
+      <GameDataResetSection databaseState={databaseState} gameDataState={gameDataState} />
 
       <UpdateCheckSection updateCheckState={updateCheckState} />
     </div>

@@ -605,7 +605,11 @@ export interface GameDataCache {
   learnsets: Record<string, SpeciesLearnsetEntry>; // Key: normalized species slug
   usage: Record<string, ChampionsUsageEntry>; // Key: species, lowercased, gender-suffix stripped
   lastCleaned: number; // Unix timestamp
-  // Set once the one-time bulk first-launch sync (useInitialSync) has completed -
-  // null means it still needs to run.
-  initialBulkSyncCompletedAt: number | null;
+  // Names (SpeciesRosterEntry.name) of every legal-roster species that has
+  // completed the full first-launch/delta sync (useInitialSync) - sprites,
+  // moves, abilities, learnset, and PokeAPICache species stats. Diffed
+  // against the current legal roster on every launch so a species newly
+  // added by a future regulation update gets synced too, not just species
+  // present the very first time this ever ran.
+  lastSyncedSpeciesNames: string[];
 }
