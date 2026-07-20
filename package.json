@@ -1,6 +1,6 @@
 {
   "name": "choicebuds",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "VGC Team Importer - Import and manage Pokémon Showdown teams",
   "type": "module",
   "main": "dist-electron/main.js",
