@@ -7,6 +7,13 @@ focused on what's actually next.
 
 ## In progress / up next
 
+- ~~**2026-07-20 manual-testing batch**~~ **Done 2026-07-20** - all 6 items
+  (move/ability usage-% ordering in the team editor, Calc tab-switch state
+  loss, Make It Rain's missing stat drop, Battle Logger sleep wake-up/
+  counter, the post-faint switch-in turn-timing bug, and the Calc Mega
+  toggle not updating abilities) - see COMPLETED.md for the full
+  implementation + live-verification trail on each.
+
 - ~~Team edit mode: drag-to-reorder the 4 moves within a Pokemon's
   moveset~~ **Done 2026-07-19** - see COMPLETED.md.
 

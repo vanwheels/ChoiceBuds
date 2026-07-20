@@ -19,6 +19,8 @@ import { parseTagFilter } from '../utils/tagSearch';
 interface MovePickerPanelProps {
   moveIndex: number;
   moves: MoveData[];
+  /** Champions ranked-ladder usage %, keyed by the same slug as MoveData.name - see EditOverlays.tsx. Absent entries just render with no badge. */
+  usagePercentByName?: Record<string, number>;
   rulesetId: RegulationId;
   maxHeight: number;
   onSelect: (move: MoveData) => void;
@@ -29,7 +31,7 @@ function matchesTag(move: MoveData, tag: string): boolean {
   return move.category === tag || move.type.toLowerCase() === tag;
 }
 
-export default function MovePickerPanel({ moveIndex, moves, rulesetId, maxHeight, onSelect, onClose }: MovePickerPanelProps) {
+export default function MovePickerPanel({ moveIndex, moves, usagePercentByName, rulesetId, maxHeight, onSelect, onClose }: MovePickerPanelProps) {
   const [search, setSearch] = useState('');
   const ref = useDismissable<HTMLDivElement>(onClose);
 
@@ -56,6 +58,7 @@ export default function MovePickerPanel({ moveIndex, moves, rulesetId, maxHeight
           filtered.map((move, idx) => {
             const theme = getTypeTheme(move.type);
             const isLegal = validateMoveLegality(move.name, rulesetId);
+            const percent = usagePercentByName?.[move.name];
             return (
               <div
                 key={idx}
@@ -70,6 +73,9 @@ export default function MovePickerPanel({ moveIndex, moves, rulesetId, maxHeight
                     <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-red-900/40 text-red-300 border border-red-800 whitespace-nowrap">
                       Not Legal in {getRegulationLabel(rulesetId)}
                     </span>
+                  )}
+                  {percent != null && (
+                    <span className="text-blue-400 text-[10px] font-bold whitespace-nowrap">{percent.toFixed(1)}%</span>
                   )}
                   <span className="text-gray-400 text-[10px] ml-auto whitespace-nowrap">
                     Pow {move.power ?? '--'} · Acc {move.accuracy ?? '--'} · PP {move.pp}

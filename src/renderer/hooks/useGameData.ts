@@ -16,6 +16,7 @@ import {
   fetchSpeciesLearnset,
 } from '../services/pokeapiService';
 import { fetchChampionsUsage, normalizeUsageCacheKey } from '../services/championsBattleData';
+import { normalizeSlug } from '../utils/pokemonRules';
 import { readCacheEntry, runCachedFetch, withCacheEntry, createEmptyGameDataCache } from '../utils/cacheManager';
 import { NEVER_EXPIRES } from '../utils/cacheExpiry';
 import { applyChampionsMoveOverride } from '../config/championsMoveOverrides';
@@ -196,6 +197,14 @@ export function useGameData(): UseGameDataReturn {
     return fresh ? applyChampionsAbilityOverride(fresh) : null;
   }, [getCachedAbility]);
 
+  // Cache-only (never triggers a live fetch) - moved above
+  // getEnrichedSpeciesOptions since that reads it synchronously for the
+  // most-used-first sort below; see getChampionsUsage further down for the
+  // on-demand fetch-and-cache version callers use when they need to
+  // guarantee fresh data for one specific species.
+  const getCachedChampionsUsage = useCallback((species: string): ChampionsUsageEntry | null =>
+    readCacheEntry(cache?.usage, normalizeUsageCacheKey(species)), [cache]);
+
   const getSpeciesLearnset = useCallback(async (species: string, gender?: Gender): Promise<SpeciesLearnsetEntry | null> => {
     const cached = getCachedSpeciesLearnset(species, gender);
     if (cached) return cached;
@@ -207,7 +216,21 @@ export function useGameData(): UseGameDataReturn {
 
   /**
    * Resolve a species' full legal option set: its real learnable moves and real
-   * possible abilities, each enriched with full metadata via the move/ability caches
+   * possible abilities, each enriched with full metadata via the move/ability caches.
+   *
+   * Sorted most-used-first whenever Champions ranked-ladder usage data for
+   * this species is already cached (getCachedChampionsUsage - never a live
+   * fetch here, since this function is also called in bulk across the
+   * whole legal roster during useInitialSync's first-launch sync, where a
+   * per-species usage fetch would be a real network-cost regression).
+   * Anything with no cached usage entry keeps its original learnset order,
+   * pushed after every ranked entry. This is what makes a freshly-added
+   * team slot's "first legal ability"/"first 4 legal moves" defaults
+   * (useRosterActions.ts's buildSlot) usage-driven rather than arbitrary,
+   * and what the team editor's Ability/Move picker panels sort by too
+   * (EditOverlays.tsx separately live-fetches usage for the % badges those
+   * panels show, then re-sorts client-side with that fresher data - see
+   * its own comment for why a live fetch is fine there but not here).
    */
   const getEnrichedSpeciesOptions = useCallback(async (
     species: string,
@@ -223,11 +246,19 @@ export function useGameData(): UseGameDataReturn {
       Promise.all(learnset.abilities.map(name => getAbilityData(name))),
     ]);
 
-    return {
-      moves: moveResults.filter((move): move is MoveData => move !== null),
-      abilities: abilityResults.filter((ability): ability is AbilityData => ability !== null),
-    };
-  }, [getSpeciesLearnset, getMoveData, getAbilityData]);
+    const moves = moveResults.filter((move): move is MoveData => move !== null);
+    const abilities = abilityResults.filter((ability): ability is AbilityData => ability !== null);
+
+    const usage = getCachedChampionsUsage(species);
+    if (usage) {
+      const moveRank = new Map(usage.moves.map(m => [normalizeSlug(m.name), m.percentage]));
+      const abilityRank = new Map(usage.abilities.map(a => [normalizeSlug(a.name), a.percentage]));
+      moves.sort((a, b) => (moveRank.get(b.name) ?? -1) - (moveRank.get(a.name) ?? -1));
+      abilities.sort((a, b) => (abilityRank.get(b.name) ?? -1) - (abilityRank.get(a.name) ?? -1));
+    }
+
+    return { moves, abilities };
+  }, [getSpeciesLearnset, getMoveData, getAbilityData, getCachedChampionsUsage]);
 
   /**
    * The true global items collection: every VGC-legal item (config/vgcData.ts),
@@ -274,9 +305,6 @@ export function useGameData(): UseGameDataReturn {
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isInitialized]);
-
-  const getCachedChampionsUsage = useCallback((species: string): ChampionsUsageEntry | null =>
-    readCacheEntry(cache?.usage, normalizeUsageCacheKey(species)), [cache]);
 
   const getChampionsUsage = useCallback(async (species: string): Promise<ChampionsUsageEntry | null> => {
     const cached = getCachedChampionsUsage(species);

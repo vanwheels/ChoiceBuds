@@ -5,6 +5,102 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **2026-07-20 manual-testing batch** (raised after a testing session the
+  night of 2026-07-19, all 6 items worked through the same day):
+  1. **Move Stat Effects: Make It Rain's missing -2 Sp. Atk self-drop** -
+     `config/moveStatEffects.ts` had every other Draco Meteor-family move
+     (Overheat/Leaf Storm/Psycho Boost/Fleur Cannon) but not Make It Rain
+     itself, so the Battle Logger never auto-applied its stat drop when
+     logged. Confirmed the effect against the existing
+     `championsMoveOverrides.ts` entry for the move (its own description
+     already said "Lowers the user's Sp. Atk by 2 stages") before adding
+     the missing row.
+  2. **Calc page: abilities weren't updating when a Pokemon's Mega toggle
+     was switched** - `CalcPokemonPanel.tsx`'s Mega Evolution `FormeToggle`
+     only called `onChange({ species })`, never touching `ability`, unlike
+     the Battle Logger's equivalent `setMegaEvolved` (which already used
+     `config/megaAbilities.ts::getMegaAbility`). Wired the same lookup into
+     the Calc panel's toggle handler so selecting e.g. Charizard-Mega-X now
+     also sets Ability to Tough Claws. Live-verified: selecting Mega X
+     updates the field to "Tough Claws" immediately.
+  3. **Battle Logger: a post-faint replacement sent in at the end of a turn
+     displayed as if switched in at the start of the turn** -
+     `TurnLog.tsx`'s `sortByPhase` unconditionally hoisted every
+     `sendIn`/`switch` action above that turn's `move` actions (correct for
+     a real start-of-turn switch, since real turns resolve switches before
+     moves) - but a forced replacement for a Pokemon that fainted *that
+     same turn* would get hoisted the same way, burying it above the very
+     moves that caused the faint. Fixed by detecting whether a `sendIn`/
+     `switch` action's natural (logged) position comes after a `'Fainted'`
+     note earlier in the turn; if so it now sorts alongside/after the
+     turn's moves in real chronological order instead of always floating
+     to the top.
+  4. **Calc page state reset on every tab switch** - `App.tsx` rendered
+     only the active tab (a ternary chain), so switching away and back
+     fully unmounted/remounted `CalcPage`, discarding its `useDamageCalc`
+     state (intentionally *not* lifted to `App.tsx`, to keep `@smogon/calc`
+     - the app's heaviest dependency - behind the `React.lazy()` boundary
+     for Teams-only sessions - see `CalcPage.tsx`'s header comment). Fixed
+     without lifting that state: `App.tsx` now tracks `visitedTabs` and
+     keeps every tab a user has opened this session mounted permanently
+     (toggled via CSS `display:none` instead of unmounting), while a tab
+     never opened yet still pays nothing (no `React.lazy()` import, no
+     mount at all) until first visited. Live-verified: set Calc species/
+     item, switched to Battle Log and back, values persisted.
+  5. **Battle Logger: no way to wake a sleeping Pokemon, no sleep-turn
+     counter** - added `Battle.statusSetOnTurn: Record<string, number>`
+     (mirrors `FieldState.weather`'s `setOnTurn` pattern), set/cleared in
+     lockstep with `statusConditions` by `setStatusCondition`.
+     `BattlefieldSlot.tsx`'s status badge now shows a live turn count next
+     to Sleep specifically (e.g. "SLP (2)") - the one status worth a
+     counter, since Sleep is turn-limited while Burn/Paralysis/Poison just
+     persist until cured. Added a one-tap "Wake Up" chip (visible whenever
+     a mon is asleep, same visual tier as the existing switch-in/reactive-
+     ability chips) that clears the status in one click, and relabeled the
+     existing `StatusConditionPopover`'s clear button from "None" to "Wake
+     Up" specifically when the current status is Sleep. Also backfilled a
+     pre-existing gap surfaced while touching this code: `statusConditions`
+     itself had no `normalizeBattle` default for battles saved before that
+     field existed - would have thrown on `battle.statusConditions[id]` for
+     a legacy record. Live-verified end-to-end in a disposable battle: SLP
+     (1) -> (2) -> (3) advancing one per turn, Wake Up chip clears it with
+     a "Woke up" log note, cleaned up afterward.
+  6. **Team editor: moves/abilities weren't ordered by Champions usage %,
+     and no percentage was shown** - two layers:
+     - `useGameData.ts::getEnrichedSpeciesOptions` (the single shared
+       source for the Ability/Move picker panels, the Team Builder's
+       "Smart Slot Initialization" default-picking, the Battle Logger's
+       opponent ability dropdown/move-blocking-ability suggestions, and
+       `useInitialSync`'s bulk sync) now sorts its returned moves/abilities
+       most-used-first whenever Champions usage data is already *cached*
+       for that species (`getCachedChampionsUsage` - never a live fetch
+       here, since this same function runs across the whole legal roster
+       during first-launch sync, where per-species usage fetches would be
+       a real network-cost regression). Anything with no cached usage entry
+       keeps its original learnset-order position, pushed after every
+       ranked entry.
+     - `EditOverlays.tsx` (feeds the team editor's `AbilityPickerPanel`/
+       `MovePickerPanel`) additionally live-fetches usage data for the
+       specific Pokemon being edited (`getChampionsUsage`, same on-demand
+       tier as the Calc page's own auto-fill), re-sorts client-side with
+       that guaranteed-fresh data, and passes a percentage lookup down so
+       both picker panels now show a "NN.N%" badge next to each option.
+     - `useRosterActions.ts::buildSlot` (a freshly-added team slot's
+       "first legal ability"/"first 4 legal moves" defaults) now also
+       live-fetches usage before picking defaults, for the same
+       first-time-species-view correctness reason as `EditOverlays.tsx` -
+       `getEnrichedSpeciesOptions`'s own cached-only sort is a nice best
+       effort but can't guarantee a species nobody's looked at yet is
+       already cached.
+     - Live-verified end-to-end in a disposable team: adding a fresh
+       Incineroar defaulted to Intimidate/Fake Out/Flare Blitz/Parting
+       Shot/Darkest Lariat - exactly matching the Calc page's own
+       usage-based auto-fill for the same species (same underlying data,
+       cross-checked as the correctness signal instead of guessing
+       real-world meta). Ability picker showed "Intimidate 99.7%" /
+       "Blaze 0.3%" in that order; Move picker showed "Fake Out 99.3%" /
+       "Flare Blitz 91.5%" in that order.
+
 - **2026-07-19 Offline support: one-time live sync + no auto-expiry** (TODO.md
   items 2 and 7, resolved after an initial mis-scoped plan - a build-time
   data snapshot bundled inside the installer - was proposed and rejected;

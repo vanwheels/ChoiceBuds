@@ -48,7 +48,8 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
     updateTeam,
     databaseState.getCachedEntry,
     databaseState.setCacheEntry,
-    gameDataState.getEnrichedSpeciesOptions
+    gameDataState.getEnrichedSpeciesOptions,
+    gameDataState.getChampionsUsage
   );
 
   const handleAddSpecies = async (species: SpeciesRosterEntry) => {

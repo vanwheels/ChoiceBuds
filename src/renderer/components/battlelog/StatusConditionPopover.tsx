@@ -43,7 +43,7 @@ export default function StatusConditionPopover({ current, onPick, onClose }: Sta
         disabled={!current}
         className="text-left px-2 py-1 text-[11px] rounded bg-gray-900 text-gray-500 hover:text-red-300 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
       >
-        None
+        {current === 'sleep' ? 'Wake Up' : 'None'}
       </button>
     </div>
   );

@@ -21,8 +21,24 @@ interface TurnLogProps {
 
 const PHASE_ORDER: Record<NonNullable<BattleAction['phase']>, number> = { sendIn: 0, switch: 0, mega: 1, move: 2 };
 
+/**
+ * A sendIn/switch logged after a 'Fainted' note earlier in the same turn's
+ * natural (logged) order isn't a start-of-turn switch - it's a forced
+ * replacement sent in after the KO, so it belongs with (and after) the
+ * turn's moves in display order, not hoisted above them. Ties within a
+ * phase tier fall back to natural logged order.
+ */
 function sortByPhase(actions: BattleAction[]): BattleAction[] {
-  return [...actions].sort((a, b) => PHASE_ORDER[a.phase ?? 'move'] - PHASE_ORDER[b.phase ?? 'move']);
+  const firstFaintIndex = actions.findIndex(a => a.note === 'Fainted');
+  const orderOf = (action: BattleAction, index: number): number => {
+    const isPostFaintReplacement = (action.phase === 'sendIn' || action.phase === 'switch')
+      && firstFaintIndex !== -1 && index > firstFaintIndex;
+    return isPostFaintReplacement ? PHASE_ORDER.move : PHASE_ORDER[action.phase ?? 'move'];
+  };
+  return actions
+    .map((action, index) => ({ action, index, order: orderOf(action, index) }))
+    .sort((a, b) => a.order - b.order || a.index - b.index)
+    .map(({ action }) => action);
 }
 
 /** Only non-neutral matchups get a callout - a 1x hit shows nothing, matching the "only call out what's notable" pattern used elsewhere in this log. */

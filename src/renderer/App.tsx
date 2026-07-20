@@ -51,6 +51,18 @@ type ActiveTab = 'teams' | 'calc' | 'battles' | 'statistics' | 'typeMatchup' | '
  */
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('teams');
+  // Every tab a user has opened at least once this session stays mounted
+  // (hidden via CSS instead of unmounted) once visited - switching tabs
+  // used to fully unmount the outgoing page, discarding any state that
+  // isn't already lifted into a hook here (e.g. the Calc tab's in-progress
+  // matchup, which intentionally lives in CalcPage's own useDamageCalc
+  // call rather than up here - see CalcPage.tsx's header comment for why).
+  // A tab is still only lazy-loaded the first time it's actually opened.
+  const [visitedTabs, setVisitedTabs] = useState<Set<ActiveTab>>(() => new Set(['teams']));
+  const goToTab = (tab: ActiveTab) => {
+    setActiveTab(tab);
+    setVisitedTabs(prev => prev.has(tab) ? prev : new Set(prev).add(tab));
+  };
   const teamsState = useTeams();
   const databaseState = useDatabase();
   const savedPokemonState = useSavedPokemon();
@@ -60,7 +72,7 @@ export default function App() {
   const [pendingCalcReview, setPendingCalcReview] = useState<CalcReviewPayload | null>(null);
   const handleReviewInCalc = (payload: CalcReviewPayload) => {
     setPendingCalcReview(payload);
-    setActiveTab('calc');
+    goToTab('calc');
   };
   const editorState = useActiveEditor();
   const gameDataState = useGameData();
@@ -89,7 +101,7 @@ export default function App() {
           <ul className="space-y-2">
             <li>
               <button
-                onClick={() => setActiveTab('teams')}
+                onClick={() => goToTab('teams')}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
                   activeTab === 'teams' ? 'bg-blue-600 hover:bg-blue-700' : 'text-gray-400 hover:bg-gray-700'
                 }`}
@@ -99,7 +111,7 @@ export default function App() {
             </li>
             <li>
               <button
-                onClick={() => setActiveTab('calc')}
+                onClick={() => goToTab('calc')}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
                   activeTab === 'calc' ? 'bg-blue-600 hover:bg-blue-700' : 'text-gray-400 hover:bg-gray-700'
                 }`}
@@ -109,7 +121,7 @@ export default function App() {
             </li>
             <li>
               <button
-                onClick={() => setActiveTab('battles')}
+                onClick={() => goToTab('battles')}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
                   activeTab === 'battles' ? 'bg-blue-600 hover:bg-blue-700' : 'text-gray-400 hover:bg-gray-700'
                 }`}
@@ -119,7 +131,7 @@ export default function App() {
             </li>
             <li>
               <button
-                onClick={() => setActiveTab('statistics')}
+                onClick={() => goToTab('statistics')}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
                   activeTab === 'statistics' ? 'bg-blue-600 hover:bg-blue-700' : 'text-gray-400 hover:bg-gray-700'
                 }`}
@@ -129,7 +141,7 @@ export default function App() {
             </li>
             <li>
               <button
-                onClick={() => setActiveTab('typeMatchup')}
+                onClick={() => goToTab('typeMatchup')}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
                   activeTab === 'typeMatchup' ? 'bg-blue-600 hover:bg-blue-700' : 'text-gray-400 hover:bg-gray-700'
                 }`}
@@ -142,7 +154,7 @@ export default function App() {
           <ul className="mt-auto pt-2">
             <li>
               <button
-                onClick={() => setActiveTab('settings')}
+                onClick={() => goToTab('settings')}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
                   activeTab === 'settings' ? 'bg-blue-600 hover:bg-blue-700' : 'text-gray-400 hover:bg-gray-700'
                 }`}
@@ -172,8 +184,12 @@ export default function App() {
       </aside>
 
       {/* Primary Content Viewport - Right Side */}
+      {/* Each visited tab stays mounted (display:none when inactive) rather
+          than being unmounted - see goToTab's comment above. Still gated on
+          visitedTabs so a tab never visited this session never even pays
+          for its React.lazy() import. */}
       <main className="flex-1 overflow-y-auto" style={{ paddingLeft: '2rem', paddingRight: '2rem', paddingTop: '1.5rem', paddingBottom: '1.5rem' }}>
-        {activeTab === 'teams' ? (
+        <div style={{ display: activeTab === 'teams' ? 'block' : 'none' }}>
           <TeamsPage
             teamsState={teamsState}
             databaseState={databaseState}
@@ -183,42 +199,57 @@ export default function App() {
             spriteCacheState={spriteCacheState}
             settingsState={settingsState}
           />
-        ) : activeTab === 'calc' ? (
-          <Suspense fallback={<div className="text-gray-400 text-sm">Loading calculator...</div>}>
-            <CalcPage
-              gameDataState={gameDataState}
-              teamsState={teamsState}
-              databaseState={databaseState}
-              savedPokemonState={savedPokemonState}
-              spriteCacheState={spriteCacheState}
-              settingsState={settingsState}
-              pendingCalcReview={pendingCalcReview}
-              onConsumePendingCalcReview={() => setPendingCalcReview(null)}
-            />
-          </Suspense>
-        ) : activeTab === 'battles' ? (
-          <Suspense fallback={<div className="text-gray-400 text-sm">Loading battle log...</div>}>
-            <BattleLogPage
-              battlesState={battlesState}
-              teamsState={teamsState}
-              speciesRosterState={speciesRosterState}
-              spriteCacheState={spriteCacheState}
-              gameDataState={gameDataState}
-              onReviewInCalc={handleReviewInCalc}
-            />
-          </Suspense>
-        ) : activeTab === 'statistics' ? (
-          <Suspense fallback={<div className="text-gray-400 text-sm">Loading statistics...</div>}>
-            <StatisticsPage battlesState={battlesState} spriteCacheState={spriteCacheState} />
-          </Suspense>
-        ) : activeTab === 'typeMatchup' ? (
-          <Suspense fallback={<div className="text-gray-400 text-sm">Loading type matchup...</div>}>
-            <TypeMatchupPage teamsState={teamsState} gameDataState={gameDataState} spriteCacheState={spriteCacheState} />
-          </Suspense>
-        ) : (
-          <Suspense fallback={<div className="text-gray-400 text-sm">Loading settings...</div>}>
-            <SettingsPage settingsState={settingsState} teamsState={teamsState} battlesState={battlesState} updateCheckState={updateCheckState} databaseState={databaseState} gameDataState={gameDataState} />
-          </Suspense>
+        </div>
+        {visitedTabs.has('calc') && (
+          <div style={{ display: activeTab === 'calc' ? 'block' : 'none' }}>
+            <Suspense fallback={<div className="text-gray-400 text-sm">Loading calculator...</div>}>
+              <CalcPage
+                gameDataState={gameDataState}
+                teamsState={teamsState}
+                databaseState={databaseState}
+                savedPokemonState={savedPokemonState}
+                spriteCacheState={spriteCacheState}
+                settingsState={settingsState}
+                pendingCalcReview={pendingCalcReview}
+                onConsumePendingCalcReview={() => setPendingCalcReview(null)}
+              />
+            </Suspense>
+          </div>
+        )}
+        {visitedTabs.has('battles') && (
+          <div style={{ display: activeTab === 'battles' ? 'block' : 'none' }}>
+            <Suspense fallback={<div className="text-gray-400 text-sm">Loading battle log...</div>}>
+              <BattleLogPage
+                battlesState={battlesState}
+                teamsState={teamsState}
+                speciesRosterState={speciesRosterState}
+                spriteCacheState={spriteCacheState}
+                gameDataState={gameDataState}
+                onReviewInCalc={handleReviewInCalc}
+              />
+            </Suspense>
+          </div>
+        )}
+        {visitedTabs.has('statistics') && (
+          <div style={{ display: activeTab === 'statistics' ? 'block' : 'none' }}>
+            <Suspense fallback={<div className="text-gray-400 text-sm">Loading statistics...</div>}>
+              <StatisticsPage battlesState={battlesState} spriteCacheState={spriteCacheState} />
+            </Suspense>
+          </div>
+        )}
+        {visitedTabs.has('typeMatchup') && (
+          <div style={{ display: activeTab === 'typeMatchup' ? 'block' : 'none' }}>
+            <Suspense fallback={<div className="text-gray-400 text-sm">Loading type matchup...</div>}>
+              <TypeMatchupPage teamsState={teamsState} gameDataState={gameDataState} spriteCacheState={spriteCacheState} />
+            </Suspense>
+          </div>
+        )}
+        {visitedTabs.has('settings') && (
+          <div style={{ display: activeTab === 'settings' ? 'block' : 'none' }}>
+            <Suspense fallback={<div className="text-gray-400 text-sm">Loading settings...</div>}>
+              <SettingsPage settingsState={settingsState} teamsState={teamsState} battlesState={battlesState} updateCheckState={updateCheckState} databaseState={databaseState} gameDataState={gameDataState} />
+            </Suspense>
+          </div>
         )}
       </main>
     </div>

@@ -68,6 +68,7 @@ const MOVE_STAT_EFFECTS: Record<string, MoveStatEffectEntry> = {
   'leaf-storm': { changes: [{ stat: 'spa', stages: -2 }], appliesTo: 'self' },
   'psycho-boost': { changes: [{ stat: 'spa', stages: -2 }], appliesTo: 'self' },
   'fleur-cannon': { changes: [{ stat: 'spa', stages: -2 }], appliesTo: 'self' },
+  'make-it-rain': { changes: [{ stat: 'spa', stages: -2 }], appliesTo: 'self' },
   'superpower': { changes: [{ stat: 'atk', stages: -1 }, { stat: 'def', stages: -1 }], appliesTo: 'self' },
   'close-combat': { changes: [{ stat: 'def', stages: -1 }, { stat: 'spd', stages: -1 }], appliesTo: 'self' },
   'v-create': { changes: [{ stat: 'def', stages: -1 }, { stat: 'spd', stages: -1 }, { stat: 'spe', stages: -1 }], appliesTo: 'self' },

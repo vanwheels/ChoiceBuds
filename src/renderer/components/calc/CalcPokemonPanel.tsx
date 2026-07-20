@@ -36,6 +36,7 @@ import type { UseSavedPokemonReturn } from '../../hooks/useSavedPokemon';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseDatabaseReturn } from '../../hooks/useDatabase';
 import { CALC_TEAM_POKEMON_DRAG_TYPE, type CalcTeamPokemonDragPayload } from '../../utils/calcDragTypes';
+import { getMegaAbility } from '../../config/megaAbilities';
 import { teamPokemonToCalcUpdates } from '../../utils/calcTeamImport';
 import { calcStateToShowdownPokemon } from '../../utils/calcExport';
 import { enrichPokemonWithAPI } from '../../services/pokeapi';
@@ -266,7 +267,14 @@ export default function CalcPokemonPanel({
         <FormeToggle group={formes.statFormes} current={state.species} onSelect={(species) => onChange({ species })} />
       )}
       {megaGroup.length > 0 && (
-        <FormeToggle group={megaGroup} current={state.species} onSelect={(species) => onChange({ species })} />
+        <FormeToggle
+          group={megaGroup}
+          current={state.species}
+          onSelect={(species) => {
+            const megaAbility = getMegaAbility(species.toLowerCase());
+            onChange(megaAbility ? { species, ability: megaAbility } : { species });
+          }}
+        />
       )}
 
       <div className="grid grid-cols-2 gap-2">

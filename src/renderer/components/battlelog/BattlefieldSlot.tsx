@@ -230,6 +230,15 @@ export default function BattlefieldSlot({
   const stages = battle.statStages[mon.id] ?? {};
   const statSummary = formatStatSummary(stages);
   const currentStatus: StatusCondition | null = battle.statusConditions[mon.id] ?? null;
+  // How many turns (inclusive of the turn it was inflicted) this mon has
+  // been asleep - Sleep only lasts 1-3 turns in-game, so this is the one
+  // status worth a live counter (unlike Burn/Paralysis/Poison, which just
+  // persist until cured). Falls back to the current turn (count of 1) if
+  // statusSetOnTurn somehow has no entry (e.g. a pre-existing battle from
+  // before this field existed - see useBattles.ts's normalizeBattle).
+  const sleepTurnCount = currentStatus === 'sleep'
+    ? battle.turns.length - (battle.statusSetOnTurn[mon.id] ?? battle.turns.length) + 1
+    : null;
   const arrow = <span className="text-[10px] leading-none text-yellow-400">{arrowAbove ? '▼' : '▲'}</span>;
 
   const knownAbility = mon.ability;
@@ -300,8 +309,18 @@ export default function BattlefieldSlot({
       {statSummary && <span className="text-[9px] text-gray-400">{statSummary}</span>}
       {currentStatus && (
         <span className={`text-[9px] font-bold px-1 rounded ${STATUS_COLORS[currentStatus]}`}>
-          {STATUS_ABBREVIATIONS[currentStatus]}
+          {STATUS_ABBREVIATIONS[currentStatus]}{sleepTurnCount != null && ` (${sleepTurnCount})`}
         </span>
+      )}
+      {currentStatus === 'sleep' && (
+        <button
+          type="button"
+          onClick={e => { e.stopPropagation(); battleLogActions.setStatusCondition(battle, side, mon.id, null); }}
+          title="Wake this Pokemon up"
+          className="text-[9px] px-1.5 py-0.5 rounded bg-gray-700/60 text-gray-200 hover:bg-gray-600 cursor-pointer"
+        >
+          Wake Up
+        </button>
       )}
 
       {showAbilityChip && (

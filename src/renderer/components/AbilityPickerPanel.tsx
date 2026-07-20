@@ -14,12 +14,14 @@ import { toReadableName } from '../utils/displayName';
 
 interface AbilityPickerPanelProps {
   abilities: AbilityData[];
+  /** Champions ranked-ladder usage %, keyed by the same slug as AbilityData.name - see EditOverlays.tsx. Absent entries just render with no badge. */
+  usagePercentByName?: Record<string, number>;
   maxHeight: number;
   onSelect: (ability: AbilityData) => void;
   onClose: () => void;
 }
 
-export default function AbilityPickerPanel({ abilities, maxHeight, onSelect, onClose }: AbilityPickerPanelProps) {
+export default function AbilityPickerPanel({ abilities, usagePercentByName, maxHeight, onSelect, onClose }: AbilityPickerPanelProps) {
   const [search, setSearch] = useState('');
   const ref = useDismissable<HTMLDivElement>(onClose);
 
@@ -39,16 +41,24 @@ export default function AbilityPickerPanel({ abilities, maxHeight, onSelect, onC
         {filtered.length === 0 ? (
           <p className="text-xs text-gray-400 text-center mt-2">No abilities found</p>
         ) : (
-          filtered.map((ability, idx) => (
-            <div
-              key={idx}
-              onClick={() => onSelect(ability)}
-              className="px-2 py-1 rounded hover:bg-gray-700 cursor-pointer transition-colors"
-            >
-              <div className="text-white text-sm font-medium truncate">{toReadableName(ability.name)}</div>
-              <div className="text-gray-400 text-xs truncate">{ability.description}</div>
-            </div>
-          ))
+          filtered.map((ability, idx) => {
+            const percent = usagePercentByName?.[ability.name];
+            return (
+              <div
+                key={idx}
+                onClick={() => onSelect(ability)}
+                className="px-2 py-1 rounded hover:bg-gray-700 cursor-pointer transition-colors"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-white text-sm font-medium truncate">{toReadableName(ability.name)}</span>
+                  {percent != null && (
+                    <span className="text-blue-400 text-xs font-bold shrink-0">{percent.toFixed(1)}%</span>
+                  )}
+                </div>
+                <div className="text-gray-400 text-xs truncate">{ability.description}</div>
+              </div>
+            );
+          })
         )}
       </div>
     </div>

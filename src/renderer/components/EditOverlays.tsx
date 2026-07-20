@@ -7,11 +7,12 @@
  * <Tooltip> renders `position: fixed` next to whatever was actually hovered.
  */
 
-import { useState, useEffect, useId } from 'react';
+import { useState, useEffect, useId, useMemo } from 'react';
 import type { MouseEvent } from 'react';
-import type { ImportedPokemonInfo, ItemData, MoveData, AbilityData, ShowdownPokemon } from '../types/pokemon';
+import type { ImportedPokemonInfo, ItemData, MoveData, AbilityData, ShowdownPokemon, ChampionsUsageRankedEntry } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { RegulationId } from '../utils/pokemonRules';
+import { normalizeSlug } from '../utils/pokemonRules';
 import { toReadableName } from '../utils/displayName';
 import { measureDropdownMaxHeight } from '../utils/measureDropdownHeight';
 import MoveBubbleGrid, { type HoverKey } from './MoveBubbleGrid';
@@ -32,7 +33,7 @@ interface EditOverlaysProps {
 }
 
 export default function EditOverlays({ pokemon, isEditing = false, gameDataState, rulesetId, onUpdatePokemon }: EditOverlaysProps) {
-  const { items, getItemData, getAbilityData, getMoveData, getEnrichedSpeciesOptions } = gameDataState;
+  const { items, getItemData, getAbilityData, getMoveData, getEnrichedSpeciesOptions, getChampionsUsage } = gameDataState;
   // Scopes a move-slot drag to this specific card's own MoveBubbleGrid - see moveReorderDragTypes.ts
   const moveDragOwnerId = useId();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -49,6 +50,8 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
   ]);
   const [legalMoves, setLegalMoves] = useState<MoveData[]>([]);
   const [legalAbilities, setLegalAbilities] = useState<AbilityData[]>([]);
+  const [moveUsage, setMoveUsage] = useState<ChampionsUsageRankedEntry[]>([]);
+  const [abilityUsage, setAbilityUsage] = useState<ChampionsUsageRankedEntry[]>([]);
   const [itemData, setItemData] = useState<ItemData | null>(null);
   const [itemSpriteFailed, setItemSpriteFailed] = useState(false);
   const [itemFallbackSpriteFailed, setItemFallbackSpriteFailed] = useState(false);
@@ -137,6 +140,52 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
     return () => { cancelled = true; };
   }, [pokemon.showdownData.species, pokemon.showdownData.gender, getEnrichedSpeciesOptions]);
 
+  // Champions ranked-ladder usage (same source/cache as the Calc page's
+  // auto-fill and the Battle Logger's "Likely Set" popover) - drives the
+  // Ability/Move picker panels' most-used-first ordering and percentage
+  // display below. A species with no usage data yet (never fetched, or the
+  // API has nothing for it) just leaves both pickers in their existing
+  // legality-derived order with no percentages shown - never blocks the
+  // move/ability lists themselves.
+  useEffect(() => {
+    let cancelled = false;
+    getChampionsUsage(pokemon.showdownData.species)
+      .then(usage => {
+        if (cancelled) return;
+        setMoveUsage(usage?.moves ?? []);
+        setAbilityUsage(usage?.abilities ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) { setMoveUsage([]); setAbilityUsage([]); }
+      });
+    return () => { cancelled = true; };
+  }, [pokemon.showdownData.species, getChampionsUsage]);
+
+  // Keyed by the same lowercase-hyphenated slug MoveData/AbilityData.name
+  // already uses - normalizeSlug is the exact inverse of toReadableName, so
+  // this lines up with the API's Title Case usage names without a live
+  // round-trip check.
+  const movePercentByName = useMemo(
+    () => Object.fromEntries(moveUsage.map(m => [normalizeSlug(m.name), m.percentage])),
+    [moveUsage]
+  );
+  const abilityPercentByName = useMemo(
+    () => Object.fromEntries(abilityUsage.map(a => [normalizeSlug(a.name), a.percentage])),
+    [abilityUsage]
+  );
+
+  // Most-used-first; anything with no usage entry (percentage undefined)
+  // sorts after every ranked entry, keeping its original relative order
+  // (Array.sort is stable) rather than being shuffled to a random spot.
+  const sortedLegalMoves = useMemo(
+    () => [...legalMoves].sort((a, b) => (movePercentByName[b.name] ?? -1) - (movePercentByName[a.name] ?? -1)),
+    [legalMoves, movePercentByName]
+  );
+  const sortedLegalAbilities = useMemo(
+    () => [...legalAbilities].sort((a, b) => (abilityPercentByName[b.name] ?? -1) - (abilityPercentByName[a.name] ?? -1)),
+    [legalAbilities, abilityPercentByName]
+  );
+
   // Resets sprite-failed flags and clears stale item data the moment
   // selectedItem changes - set during render rather than in an effect, see
   // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
@@ -186,14 +235,23 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
     return <ItemPickerPanel items={items} maxHeight={activeMenuMaxHeight} onSelect={handleItemClick} onClose={closeMenu} />;
   }
   if (activeMenu === 'ability') {
-    return <AbilityPickerPanel abilities={legalAbilities} maxHeight={activeMenuMaxHeight} onSelect={handleAbilityClick} onClose={closeMenu} />;
+    return (
+      <AbilityPickerPanel
+        abilities={sortedLegalAbilities}
+        usagePercentByName={abilityPercentByName}
+        maxHeight={activeMenuMaxHeight}
+        onSelect={handleAbilityClick}
+        onClose={closeMenu}
+      />
+    );
   }
   if (activeMenu?.startsWith('move')) {
     const moveIndex = Number(activeMenu.slice(4));
     return (
       <MovePickerPanel
         moveIndex={moveIndex}
-        moves={legalMoves}
+        moves={sortedLegalMoves}
+        usagePercentByName={movePercentByName}
         rulesetId={rulesetId}
         maxHeight={activeMenuMaxHeight}
         onSelect={(move) => handleMoveClick(moveIndex, move)}

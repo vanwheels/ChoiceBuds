@@ -208,6 +208,7 @@ export function useBattleLogActions(
       megaEvolvedIds: [],
       statStages: {},
       statusConditions: {},
+      statusSetOnTurn: {},
       turns: [{ number: 1, actions: [] }],
       fieldState: { playerSide: {}, opponentSide: {} },
       result: 'in-progress',
@@ -343,10 +344,13 @@ export function useBattleLogActions(
    * Manual set/clear for a major status condition (see types/pokemon.ts's
    * StatusCondition doc comment for why it's scoped to 6 statuses). Unlike
    * setFainted, both directions log a note - curing a status (Lum Berry,
-   * Rest, Refresh) is a real, common VGC event worth a turn-log entry, not
-   * just a misclick correction the way un-fainting is. `status: null` clears
-   * it entirely (removes the id from the record, matching clearStatStages'
-   * shape) rather than storing an explicit "none" value.
+   * Rest, Refresh, or just waking up from Sleep) is a real, common VGC
+   * event worth a turn-log entry, not just a misclick correction the way
+   * un-fainting is. `status: null` clears it entirely (removes the id from
+   * the record, matching clearStatStages' shape) rather than storing an
+   * explicit "none" value. statusSetOnTurn is kept in lockstep - set to the
+   * current turn whenever a status is applied, removed whenever cleared -
+   * see its own doc comment in types/pokemon.ts for what it drives.
    */
   const setStatusCondition = useCallback(async (
     battle: Battle,
@@ -360,8 +364,11 @@ export function useBattleLogActions(
     const statusConditions = status
       ? { ...battle.statusConditions, [pokemonId]: status }
       : Object.fromEntries(Object.entries(battle.statusConditions).filter(([id]) => id !== pokemonId));
-    const note = status ? `${STATUS_LABELS[status]}` : `Cured of ${STATUS_LABELS[current!]}`;
-    return updateBattle(battle.id, { statusConditions, turns: appendAction(battle.turns, { side, pokemonId, note }) });
+    const statusSetOnTurn = status
+      ? { ...battle.statusSetOnTurn, [pokemonId]: battle.turns.length }
+      : Object.fromEntries(Object.entries(battle.statusSetOnTurn).filter(([id]) => id !== pokemonId));
+    const note = status ? `${STATUS_LABELS[status]}` : (current === 'sleep' ? 'Woke up' : `Cured of ${STATUS_LABELS[current!]}`);
+    return updateBattle(battle.id, { statusConditions, statusSetOnTurn, turns: appendAction(battle.turns, { side, pokemonId, note }) });
   }, [updateBattle]);
 
   /**

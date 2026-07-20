@@ -19,6 +19,8 @@ interface LegacyBattleShape {
   broughtIds?: string[];
   megaEvolvedIds?: string[];
   statStages?: Battle['statStages'];
+  statusConditions?: Battle['statusConditions'];
+  statusSetOnTurn?: Battle['statusSetOnTurn'];
   playerActiveIds?: (string | null)[];
   opponentActiveIds?: (string | null)[];
   opponentRoster?: (OpponentPokemonEntry & { types?: string[] })[];
@@ -40,6 +42,7 @@ function toActiveSlots(ids: (string | null)[] | undefined): (string | null)[] {
  *   marked brought (matches what the old picker screen already enforced)
  * - megaEvolvedIds: added for the click-to-log flow's Mega tracking
  * - statStages: added for stat-stage tracking
+ * - statusConditions/statusSetOnTurn: added for major-status tracking
  * - playerActiveIds/opponentActiveIds: were a plain 0-2-length array with no
  *   slot meaning - padded into the fixed 2-slot tuple (see toActiveSlots)
  * - opponentRoster entries: gained `types` (for type-effectiveness tags) -
@@ -64,6 +67,8 @@ function normalizeBattle(b: Battle & LegacyBattleShape): Battle {
     opponentRoster: (b.opponentRoster ?? []).map(o => ({ ...o, types: o.types ?? [] })),
     megaEvolvedIds: b.megaEvolvedIds ?? [],
     statStages: b.statStages ?? {},
+    statusConditions: b.statusConditions ?? {},
+    statusSetOnTurn: b.statusSetOnTurn ?? {},
     fieldState: b.fieldState ?? { playerSide: {}, opponentSide: {} },
     turns: b.turns.map(turn => ({
       ...turn,

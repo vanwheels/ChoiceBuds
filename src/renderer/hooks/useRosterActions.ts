@@ -10,6 +10,7 @@ import type { EVSpread, ImportedPokemonInfo, ShowdownPokemon, Team, PokeAPICache
 import type { UseGameDataReturn } from './useGameData';
 import { enrichPokemonWithAPI } from '../services/pokeapi';
 import { getFallbackGender } from '../config/pokemonRules';
+import { normalizeSlug } from '../utils/pokemonRules';
 import { toReadableName } from '../utils/displayName';
 
 const ZERO_EVS: EVSpread = {
@@ -32,12 +33,27 @@ export function useRosterActions(
   updateTeam: (teamId: string, updates: Partial<Team>) => Promise<boolean>,
   getCachedEntry: (species: string) => PokeAPICacheEntry | null,
   setCacheEntry: (species: string, entry: PokeAPICacheEntry) => Promise<boolean>,
-  getEnrichedSpeciesOptions: UseGameDataReturn['getEnrichedSpeciesOptions']
+  getEnrichedSpeciesOptions: UseGameDataReturn['getEnrichedSpeciesOptions'],
+  getChampionsUsage: UseGameDataReturn['getChampionsUsage']
 ): UseRosterActionsReturn {
   /**
-   * Smart Slot Initialization: ability defaults to the species' first legal
-   * option, moves to its first 4 legal moves, EVs to zero, item to empty -
-   * all sourced from the real per-species learnset, never a fallback list.
+   * Smart Slot Initialization: ability defaults to the species' most-used
+   * legal option, moves to its 4 most-used legal moves (Champions
+   * ranked-ladder usage - same source as the Calc page's auto-fill and the
+   * Battle Logger's "Likely Set" popover), EVs to zero, item to empty - all
+   * sourced from the real per-species learnset, never a fallback list.
+   *
+   * getEnrichedSpeciesOptions already opportunistically sorts by usage
+   * using whatever's cached (see its own doc comment), but that's a
+   * zero-network-cost best effort that can be empty for a species nobody's
+   * looked at yet. This is a single on-demand "add one Pokemon to a team"
+   * action, not a bulk operation, so a live getChampionsUsage fetch here is
+   * proportionate (same tier as the Calc page's autoFillFromUsage) and
+   * guarantees a correct usage-based default even the first time a species
+   * is ever added. Falls back to whatever order getEnrichedSpeciesOptions
+   * already returned (learnset order, or its own cached-usage sort) if the
+   * live fetch comes back empty (e.g. the API has nothing for this species
+   * yet, or the request fails).
    *
    * getEnrichedSpeciesOptions' move/ability `.name` is the raw lowercase-hyphenated
    * PokeAPI slug (e.g. "iron-head"), not display text - every other path into
@@ -48,7 +64,17 @@ export function useRosterActions(
    */
   const buildSlot = useCallback(async (species: string): Promise<ImportedPokemonInfo> => {
     const gender = getFallbackGender(species);
-    const { moves, abilities } = await getEnrichedSpeciesOptions(species, gender);
+    const [{ moves, abilities }, usage] = await Promise.all([
+      getEnrichedSpeciesOptions(species, gender),
+      getChampionsUsage(species),
+    ]);
+
+    if (usage) {
+      const moveRank = new Map(usage.moves.map(m => [normalizeSlug(m.name), m.percentage]));
+      const abilityRank = new Map(usage.abilities.map(a => [normalizeSlug(a.name), a.percentage]));
+      moves.sort((a, b) => (moveRank.get(b.name) ?? -1) - (moveRank.get(a.name) ?? -1));
+      abilities.sort((a, b) => (abilityRank.get(b.name) ?? -1) - (abilityRank.get(a.name) ?? -1));
+    }
 
     const showdownData: ShowdownPokemon = {
       species,
@@ -64,7 +90,7 @@ export function useRosterActions(
     };
 
     return enrichPokemonWithAPI(showdownData, getCachedEntry, setCacheEntry);
-  }, [getEnrichedSpeciesOptions, getCachedEntry, setCacheEntry]);
+  }, [getEnrichedSpeciesOptions, getChampionsUsage, getCachedEntry, setCacheEntry]);
 
   const swapSlot = useCallback(async (team: Team, index: number, species: string): Promise<boolean> => {
     const newSlot = await buildSlot(species);

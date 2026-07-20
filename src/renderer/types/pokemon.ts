@@ -398,6 +398,11 @@ export interface Battle {
   // stat stages a major status persists through switching/fainting in the
   // real game, so this is never cleared by setFainted/switchOut/swapActive.
   statusConditions: Record<string, StatusCondition>;
+  // Keyed by pokemonId, either roster - the turn number `statusConditions[id]`
+  // was most recently set on (mirrors FieldState.weather's `setOnTurn`).
+  // Powers BattlefieldSlot's sleep-turn-count badge; entries are added/
+  // removed in lockstep with statusConditions by setStatusCondition.
+  statusSetOnTurn: Record<string, number>;
   turns: Turn[];
   fieldState: FieldState;
   result: 'win' | 'loss' | 'in-progress';
