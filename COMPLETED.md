@@ -8,18 +8,44 @@ local ("see below"/"see above").
 - **2026-07-19 standalone type-matchup calculator** (TODO.md's "2026-07-19
   manual-testing batch" item 9; new top-level "Type Matchup" tab, per the
   user's earlier choice over embedding it in Calc or a cross-page modal).
-  New `components/typematchup/` (`TypeMatchupPage.tsx` owning UI-only
-  `selectedTypes` state, `TypeSelector.tsx` for the up-to-2-type toggle grid,
-  `TypeMatchupResults.tsx` for the grouped breakdown), wired into `App.tsx`
-  as a new lazy-loaded tab. Reuses `config/typeEffectiveness.ts`'s existing
-  `getEffectivenessMultiplier()` (already handles dual-type products, so
-  4x/0.25x/0x buckets fall out naturally) and the existing `TypeBadge`/
-  `getTypeTheme` styling - no new data layer needed beyond adding an
-  `ALL_TYPES` ordering export to `typeEffectiveness.ts`. Live-verified via
-  the `run-desktop` skill: single-type (Fire) and dual-type (Fire/Flying,
-  matching real Charizard-style weaknesses - 4x Rock, 2x Water/Electric,
-  immune Ground) selections both produced correct grouped results, and the
-  FIFO 3rd-click-replaces-first-selection behavior works as designed.
+  Shipped in two passes the same day:
+  1. First pass: a manual 1-2 type picker with a grouped weakness/
+     resistance/immunity breakdown (`TypeSelector.tsx`/`TypeMatchupResults.tsx`).
+  2. **Replaced same-day** (explicit user call, `TypeSelector.tsx`/
+     `TypeMatchupResults.tsx` deleted) with a team-driven Offensive/
+     Defensive Coverage view modeled directly on vgcmulticalc.com's
+     type-calc tool (reference screenshot provided): pick a saved team, see
+     two tables - **Offensive Coverage** (per type, the best effectiveness
+     each team member's actual damaging moves would land against a
+     hypothetical mono-type defender of that type, i.e. "can this team hit
+     a Fire-type opponent hard?") and **Defensive Coverage** (per type, how
+     each member's own typing takes that hit) - each with per-team-member
+     columns plus two aggregate count columns (Not Very Effective/Super
+     Effective for offense, Total Weak/Total Resist for defense). New
+     `utils/typeCoverage.ts` (pure `computeOffensiveCoverage`/
+     `computeDefensiveCoverage` over the existing `getEffectivenessMultiplier`
+     chart - no changes to the type-effectiveness data itself, per the
+     user's explicit "keep the data" instruction) and
+     `hooks/useTeamMoveTypes.ts` (resolves each team member's damaging-move
+     types via `gameDataState.getMoveData`, status moves excluded since they
+     can't "hit" anything for coverage purposes; `isLoading` is derived from
+     a `resolvedForTeamId` comparison rather than a synchronous
+     `setState(true)` at the top of the effect, to satisfy the
+     `set-state-in-effect` lint rule - same pattern as `useMegaSprite.ts`).
+     `components/typematchup/` now holds `TypeMatchupPage.tsx` (team
+     `<select>`, mirrors `CalcTeamTray.tsx`'s dropdown pattern),
+     `CoverageTable.tsx` (shared table shell for both tables - they're
+     structurally identical, just different data/labels/favorable-direction),
+     and `CoverageCell.tsx` (renders one multiplier - color is direction-
+     aware: 2x is green on the Offensive table but orange on the Defensive
+     one, reusing the same green/orange/gray vocabulary as
+     `TurnLog.tsx`'s `effectivenessLabel`). Live-verified via the
+     `run-desktop` skill against a real saved team - both tables' per-slot
+     multipliers, immune tags, and aggregate counts all matched hand-checked
+     expectations. **Explicitly deferred by the user**: type-changing
+     abilities (e.g. Sylveon's Pixilate converting Normal moves to Fairy)
+     aren't factored into Offensive Coverage - a team member's raw move
+     types are used as-is.
 
 - **2026-07-19 Calc auto-fill from usage data + export to Saved Sets**
   (TODO.md's "2026-07-19 manual-testing batch" item 5; user confirmed doing

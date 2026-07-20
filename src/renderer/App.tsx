@@ -211,7 +211,7 @@ export default function App() {
           </Suspense>
         ) : activeTab === 'typeMatchup' ? (
           <Suspense fallback={<div className="text-gray-400 text-sm">Loading type matchup...</div>}>
-            <TypeMatchupPage />
+            <TypeMatchupPage teamsState={teamsState} gameDataState={gameDataState} spriteCacheState={spriteCacheState} />
           </Suspense>
         ) : (
           <Suspense fallback={<div className="text-gray-400 text-sm">Loading settings...</div>}>
