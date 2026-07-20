@@ -167,6 +167,25 @@ export function normalizeSpeciesForAPI(name: string, gender?: 'M' | 'F' | 'N' | 
     // (see utils/pokemonRules.ts). Showdown/pokepast.es exports always say
     // just "Palafin" for its default (team-building) forme, which is Zero.
     'palafin': 'palafin-zero',
+    // Same class of gap as aegislash/palafin above, found live 2026-07-19 while
+    // auditing PokeAPI's new "champions" version group: these species also have
+    // no bare PokeAPI slug, only their default-variety forme, but weren't
+    // caught yet because Showdown/pokepast.es exports them by bare name for
+    // their default forme same as Aegislash/Palafin. Confirmed live 404 on
+    // `/pokemon/mimikyu` etc. before this fix - Mimikyu is an extremely common
+    // VGC pick, so this was a real, silent import-enrichment failure.
+    'gourgeist': 'gourgeist-average',
+    'lycanroc': 'lycanroc-midday',
+    'maushold': 'maushold-family-of-four',
+    'mimikyu': 'mimikyu-disguised',
+    'morpeko': 'morpeko-full-belly',
+    'pyroar': 'pyroar-male',
+    // @smogon/calc spells the Paldean Tauros breeds without "-breed" (see
+    // utils/pokemonRules.ts) but PokeAPI's actual slugs all keep it - confirmed
+    // live 404 on `/pokemon/tauros-paldea-combat` before this fix.
+    'tauros-paldea-combat': 'tauros-paldea-combat-breed',
+    'tauros-paldea-blaze': 'tauros-paldea-blaze-breed',
+    'tauros-paldea-aqua': 'tauros-paldea-aqua-breed',
   };
   
   return formMappings[normalized] || normalized;

@@ -10,26 +10,55 @@ focused on what's actually next.
 - ~~Team edit mode: drag-to-reorder the 4 moves within a Pokemon's
   moveset~~ **Done 2026-07-19** - see COMPLETED.md.
 
-- **PokeAPI now has a real `champions` version group** (discovered
-  2026-07-19 while fixing item 4 below - id 32, generation IX). This
-  contradicts CLAUDE.md's stated premise that "PokeAPI... has no concept of
-  Pokémon Champions as a distinct game." Confirmed non-stub: a `champions`
-  pokedex with 208 species entries (`/api/v2/pokedex/36`), and real
-  per-species move-learnability tagged specifically `champions` (verified
-  live for Sharpedo/Palafin-Zero/Rotom-Heat/Gyarados - correctly excludes
-  Hidden Power/Secret Power). Does NOT yet appear to carry move-balance
-  data (`/api/v2/move/growth`'s `past_values` has no `champions` entry), so
-  `championsMoveOverrides.ts`'s stat corrections likely still earn their
-  keep. Coverage is incomplete species-by-species - e.g. Gholdengo
-  currently has zero `champions`-tagged moves - so this can't be trusted
-  blindly yet. User explicitly deferred investigating this deeply (chose
-  "narrow fix now" for item 4 below over pausing everything to explore it)
-  - worth its own dedicated pass to map out how much of
-  `utils/pokemonRules.ts`'s hand-maintained `REG_MA_SPECIES`/
-  `REG_MB_ADDED_SPECIES` lists and `config/championsMovepoolChanges.ts`'s
-  per-species learnset diffing could be simplified or replaced once PokeAPI's
-  own coverage matures - not a decision to make unilaterally given the
-  blast radius (species-legality correctness across the whole app).
+- ~~PokeAPI now has a real `champions` version group - dedicated pass to map
+  out how much hand-maintained config it could replace~~ **Investigated
+  2026-07-19, resolved as "keep both layers, PokeAPI data can't fully
+  replace either."** Full findings (queried live, not guessed):
+  - **Species legality**: the `champions` pokedex (`/api/v2/pokedex/36`, 208
+    entries) is a **perfect 1:1 match** with the combined REG-MA + REG-MB
+    base-species set in `utils/pokemonRules.ts` - zero species missing
+    either direction. Strong live validation that the Serebii-sourced
+    allowlist is accurate. But the pokedex only models base species, not
+    regulation history (M-A vs M-B split) or per-variety legality (regional
+    forms, gender-locked movesets, Palafin Zero-only, Aegislash
+    Blade/Shield) - so it can confirm the hand list, not replace it; the app
+    needs granularity PokeAPI's pokedex doesn't carry.
+  - **Move-learnability (`champions`-tagged moves)**: real per-species data,
+    but coverage is incomplete in a very specific, explicable way - checked
+    all 231 legal species/varieties live, 208 (90%) have at least one
+    `champions`-tagged move, and the 23 with zero are **exactly the 22
+    Regulation M-B-added species plus Floette**. PokeAPI's tagging clearly
+    lags the newest regulation's additions specifically - confirms
+    `championsMovepoolChanges.ts`'s hand table still earns its keep, most of
+    all for M-B's new species, on top of the narrow-fix fallback already
+    live in `pokeapiService.ts`.
+  - **Caution on trusting the tag even where present**: spot-checked
+    Sharpedo (which PokeAPI does tag) - its `champions` move list still
+    includes `thief`, but `championsMovepoolChanges.ts`'s
+    `CHAMPIONS_MOVEPOOL_REMOVALS.sharpedo` (RoiDadadou-spreadsheet-sourced)
+    says Champions removed Thief from Sharpedo. One of the two sources is
+    wrong and this pass didn't resolve which - needs a third source
+    (Serebii/Bulbapedia/in-game) to settle, not a coin flip. Also found
+    Sharpedo's PokeAPI move data has literally zero `scarlet-violet`-tagged
+    moves (a separate, unrelated PokeAPI data gap), which further suggests
+    the `champions` tag isn't always a clean curated diff yet even for
+    "covered" species. A full systematic diff of `champions`-tagged moves
+    vs. `championsMovepoolChanges.ts` across all 208 species would probably
+    surface more of these and could meaningfully improve accuracy, but is
+    its own dedicated task (208-species move-set diffing + adjudicating
+    conflicts against a third source) - not attempted here.
+  - **Real bug found as a side effect, fixed same day**: auditing
+    `normalizeSpeciesForAPI` (`services/pokeapi.ts`) for this pass surfaced
+    that Gourgeist, Lycanroc, Maushold, **Mimikyu**, Morpeko, and Pyroar all
+    have no bare PokeAPI `/pokemon/` slug (only their default-variety forme,
+    e.g. `mimikyu-disguised`) - same class of gap as the already-handled
+    Aegislash/Palafin cases, just never caught for these six. Confirmed live
+    404s before the fix. Since Showdown/pokepast.es exports these by bare
+    name for their default forme, this was a real, silent import-enrichment
+    failure - notably for Mimikyu, an extremely common VGC pick. Also fixed
+    the 3 Paldean Tauros breeds' non-"-breed" spelling
+    (`tauros-paldea-combat` etc., the form `@smogon/calc` uses) the same
+    way. All 9 added to `normalizeSpeciesForAPI`'s `formMappings`.
 
 - **2026-07-19 manual-testing batch** (scoped out 2026-07-19 against the
   actual code; items 1, 3, 4, 6, 8 are done - see COMPLETED.md for the full
