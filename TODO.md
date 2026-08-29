@@ -130,6 +130,48 @@ focused on what's actually next.
      `useTeams` (both mirror the already-covered load/persist/CRUD shape,
      covering the batch-label-dedupe logic and reorder-insert-before-target
      semantics unique to each). `type-check`/`lint`/`build` all still clean.
+  1e. **Done (2026-08-29), leg 4b** - persisted-cache/IPC hooks:
+     `useDatabase` (12 cases) and `useGameData` (25 cases), 37 new cases, all
+     passing. `useDatabase`: SWR init (instant-serve-then-background-clean),
+     empty-cache bootstrap + persist when nothing's on disk, read-failure
+     still initializes, background revalidation actually deletes expired
+     entries once `lastCleaned` is 7+ days stale, species-key
+     normalization, expired-entry-is-a-miss, write-failure leaves state
+     untouched, `cleanExpiredEntries`/`clearCache`/`refreshCache`, and
+     `createCacheEntry`'s never-expires sentinel. `useGameData` (the
+     bigger one - `vi.mock`s `services/pokeapiService`/
+     `services/championsBattleData`'s fetch functions only, via
+     `importOriginal` to keep their real pure helpers like
+     `normalizeNameForAPI`): legacy-cache migration
+     (`lastSyncedSpeciesNames` backfilled to `[]`), read-failure fallback,
+     write-through-on-change, and per-section self-healing-cache-miss
+     behavior for moves (`target`/`meta` presence), items (empty
+     `spriteUrl` placeholder), and learnsets (`hasChampionsMoveData`
+     undefined) - each proven to actually trigger a re-fetch, not just
+     documented in a comment. Also covers the PP-retier + Champions
+     move/ability override application, `applyChampionsMovepoolChanges`
+     only firing when `hasChampionsMoveData` is false (confirmed via
+     Tera Blast survival/removal), `getEnrichedSpeciesOptions`'
+     usage-percentage sort overriding learnset order (mirrors
+     `useRosterActions.test.ts`'s equivalent case), the VGC-items
+     background-fill effect synthesizing empty-`spriteUrl` placeholders
+     for every configured item PokeAPI has no data for (real `VGC_ITEMS`
+     imported, not hand-picked) and confirming those placeholders are
+     excluded from the computed `items` list, `getChampionsUsage`'s
+     null-is-not-an-error contract, and `getUnsyncedSpecies`/
+     `markSpeciesSynced`. One real testing gotcha hit and fixed: calling
+     `result.current.someAsyncFn()` and then immediately reading a
+     `getCached*` getter in the same tick raced ahead of React's state
+     flush and saw stale cache (a second `getMoveData` call still
+     re-fetched instead of hitting the freshly-written cache) - fixed by
+     asserting the post-write cache read through `waitFor(...)` instead of
+     reading `result.current` synchronously right after the awaited call,
+     rather than wrapping every such call in `act()` (which also hit an
+     unrelated TS control-flow quirk narrowing the awaited result to
+     `never` when reassigned from inside an `act(async () => ...)`
+     closure). `type-check`/`lint`/`build` all still clean. **Not yet
+     done**: 4c (`useSync`, `useInitialSync`) and 4d (`useActiveEditor`,
+     `useDamageCalc`).
   2. Separately, a GW2-Squaded-style standalone audit script (in the mold
      of its `scripts/audit-data-completeness.ts`) that scans this repo's
      own hand-curated config tables (`config/championsMoveOverrides.ts`,
