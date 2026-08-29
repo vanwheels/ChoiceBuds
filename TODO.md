@@ -102,12 +102,34 @@ focused on what's actually next.
      `typeChangingAbilities.ts` integration), `useSpriteCache` and
      `useUpdateCheck` (both exercise the `window.electron` mock directly,
      the latter also mocks `services/github.ts`). `type-check`/`lint`/
-     `build` all still clean. **Not yet done**: the ~13 remaining hooks
-     (`useTeams`, `useSettings`, `useDatabase`, `useGameData`, `useSync`,
-     `useInitialSync`, `useSavedPokemon`, `useSpeciesRoster`,
+     `build` all still clean. **Not yet done at the time**: the 11 remaining
+     hooks (`useTeams`, `useSettings`, `useDatabase`, `useGameData`,
+     `useSync`, `useInitialSync`, `useSavedPokemon`, `useSpeciesRoster`,
      `useRosterActions`, `useActiveEditor`, `useDamageCalc`,
      `usePokemonTypeFilter`'s sibling `useMoveNameList` intentionally
-     excluded above) - a future leg 4. Still not wired into CI.
+     excluded above) - a future leg 4, sized down into sub-legs below.
+  1d. **Done (2026-08-29), leg 4a** - leg 4 (2822 lines across the 11 hooks
+     above) sized down into sub-legs by kind (decided with the user before
+     writing any tests, same as leg 3's sequencing): 4a covers the simpler
+     CRUD/load-on-mount hooks (`useSettings`, `useSpeciesRoster`,
+     `useRosterActions`, `useSavedPokemon`, `useTeams`); 4b
+     (persisted-cache/IPC: `useDatabase`, `useGameData`), 4c
+     (sync-orchestration: `useSync`, `useInitialSync`), and 4d
+     (draft/editor-state: `useActiveEditor`, `useDamageCalc` - the biggest
+     and most complex) are still open. 5 new test files, 40 new cases, all
+     passing - `useSettings` (default-merge-over-persisted-partial,
+     write-failure-leaves-state-untouched), `useSpeciesRoster` (mocked
+     `pokeapiService.fetchJSON`, real `localStorage` exercised directly -
+     Mega-form filtering, display-name casing, cache-hit-skips-refetch,
+     corrupted-cache-JSON treated as a miss), `useRosterActions` (mocked
+     `updateTeam`/cache getter-setter/`getEnrichedSpeciesOptions`/
+     `getChampionsUsage` injected params - `getCachedEntry` always returns a
+     hit so `enrichPokemonWithAPI`'s real code runs with no network needed;
+     covers usage-based move/ability sort overriding learnset order, the
+     6-Pokemon-cap refusal, remove/reorder index math), `useSavedPokemon` and
+     `useTeams` (both mirror the already-covered load/persist/CRUD shape,
+     covering the batch-label-dedupe logic and reorder-insert-before-target
+     semantics unique to each). `type-check`/`lint`/`build` all still clean.
   2. Separately, a GW2-Squaded-style standalone audit script (in the mold
      of its `scripts/audit-data-completeness.ts`) that scans this repo's
      own hand-curated config tables (`config/championsMoveOverrides.ts`,
