@@ -163,7 +163,7 @@ focused on what's actually next.
         divider match the mockup exactly), a live Validate Team result
         popping inside the still-open menu, and the Edit pill's active gold
         highlight while expanded with the menu still open on top.
-      - **Follow-up bug found + fixed same day (2026-08-29), two passes**:
+      - **Follow-up bug found + fixed same day (2026-08-29), three passes**:
         leg 2's new overflow menu (and expanding a team) could push content
         past one viewport height, and the vertical scrollbar popping in
         shrank the team card's own width by the scrollbar's track width -
@@ -186,12 +186,41 @@ focused on what's actually next.
         inner div's already-fixed `clientHeight` and trigger a scrollbar
         there specifically, even while `<main>` above it has room to spare
         and shows none. 2nd pass added the same `scrollbarGutter: 'stable'`
-        fix to that inner div too - both scroll containers now reserve their
-        gutter permanently. Live-verified via `run-desktop`: the team card's
-        `clientWidth` (923px) read identical before and after opening the
-        overflow menu, confirmed against the inner div's `scrollHeight`
-        (308) actually exceeding its `clientHeight` (296) once open - i.e.
-        a real overflow condition that previously did shrink it.
+        fix to that inner div too. **User then found the actual root cause**
+        from a screenshot: a lower team's open overflow menu was visibly cut
+        off mid-list, not just growing the container's scrollable area -
+        `overflow-y-auto` on that div forces `overflow-x` to `auto` too per
+        the CSS spec's "if one axis is visible and the other isn't, the
+        visible one gets coerced to auto" rule (confirmed live via
+        `getComputedStyle`), so the div was clipping the dropdown on both
+        axes the whole time, not just inflating scrollHeight - the
+        `scrollbarGutter` passes were reserving space for a symptom, not
+        fixing the real defect. 3rd pass: `TeamOverflowMenu.tsx` rewritten
+        to render its dropdown through a `createPortal` to `document.body`,
+        `position: fixed` and positioned off the trigger button's own
+        `getBoundingClientRect()` (computed in a `useLayoutEffect` so it
+        never flashes at the wrong spot) instead of a plain `absolute` child
+        - not a DOM descendant of the clipping/scrolling div any more, so it
+        can neither be clipped by it nor count toward its `scrollHeight`,
+        fixing both symptoms at their actual source. Since a portaled node
+        isn't a DOM descendant of the trigger's own wrapper either,
+        `useDismissable`'s single-ref `contains()` check no longer works for
+        it - outside-click/Escape dismissal reimplemented inline with two
+        refs (trigger + portaled menu content), and the menu now also
+        dismisses on scroll/resize (a capturing `window` listener, so it
+        still catches a nested scrolling container's own scroll) rather than
+        trying to keep its position live-tracking the trigger while open.
+        The two `scrollbarGutter` passes above were left in place - they're
+        still doing real work for genuine content-driven overflow (many
+        teams, several expanded at once), just no longer load-bearing for
+        the overflow-menu case specifically. `type-check`/`lint`/`build`/
+        `test` (395 cases) all clean. Live-verified via `run-desktop`:
+        confirmed the portaled menu's parent actually is `document.body`,
+        confirmed the teams-list div's `scrollHeight`/`clientHeight` now
+        stay exactly equal with the menu open (no overflow induced at all,
+        vs. the 2nd pass's still-genuine-but-now-moot 308-vs-296 gap),
+        re-confirmed Escape and clicking a menu item (Validate Team) both
+        still work correctly now that the menu's DOM location moved.
       - **Legs 3-4 not yet started**: expanded-grid stats restoration,
         responsive grid + drag-reorder gating change.
 
