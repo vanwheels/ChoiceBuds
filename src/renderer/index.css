@@ -72,6 +72,105 @@
   opacity: 0.38;
 }
 
+/**
+ * Teams-page collapsed-card coverflow (design-approved 2026-08-29, see
+ * TODO.md). Replaces the old flat mini-sprite-strip with a 3D auto-rotating
+ * coverflow - `--cf-index`/`--cf-delay-step` are set inline per-card by
+ * `TeamCoverflow.tsx`. Pausing on hover uses `animation-play-state`, not a
+ * JS timer - "crisp" just means the motion stops immediately, and every
+ * card's orbit passes through the exact same `translateX(0) scale(1)`
+ * center point, so a single fixed-position ring/badge at the container's
+ * center always overlaps whichever card is currently front-most without
+ * needing to track which Pokemon index that is.
+ */
+.coverflow {
+  position: relative;
+  width: 240px;
+  height: 84px;
+  perspective: 640px;
+  flex-shrink: 0;
+}
+
+.coverflow-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60px;
+  height: 48px;
+  margin: -24px 0 0 -30px;
+  border-radius: 9px;
+  background: #09090b;
+  border: 1px solid #3f3f46;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation-name: coverflow-orbit;
+  animation-duration: 12s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-delay: calc(var(--cf-index, 0) * var(--cf-delay-step, -2s));
+}
+
+.coverflow:hover .coverflow-card {
+  animation-play-state: paused;
+}
+
+@keyframes coverflow-orbit {
+  0%      { transform: translateX(130px) rotateY(-45deg) scale(0.4); opacity: 0; z-index: 1; }
+  16.667% { transform: translateX(92px) rotateY(-38deg) scale(0.55); opacity: 0.5; z-index: 20; }
+  33.333% { transform: translateX(50px) rotateY(-26deg) scale(0.75); opacity: 0.85; z-index: 40; }
+  50%     { transform: translateX(0) rotateY(0deg) scale(1); opacity: 1; z-index: 50; }
+  66.667% { transform: translateX(-50px) rotateY(26deg) scale(0.75); opacity: 0.85; z-index: 40; }
+  83.333% { transform: translateX(-92px) rotateY(38deg) scale(0.55); opacity: 0.5; z-index: 20; }
+  100%    { transform: translateX(-130px) rotateY(45deg) scale(0.4); opacity: 0; z-index: 1; }
+}
+
+.coverflow-center-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60px;
+  height: 48px;
+  margin: -24px 0 0 -30px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  z-index: 51;
+  opacity: 0;
+  transition: opacity 150ms ease;
+  pointer-events: none;
+}
+
+.coverflow:hover .coverflow-center-ring {
+  opacity: 1;
+  border-color: var(--color-accent-gold);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), 0 0 0 3px rgba(240, 200, 64, 0.15);
+}
+
+.coverflow-pause-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -31px 0 0 22px;
+  border-radius: 50%;
+  background: #27272a;
+  border: 1px solid #3f3f46;
+  color: #d4d4d8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 52;
+  opacity: 0;
+  transition: opacity 150ms ease;
+  pointer-events: none;
+}
+
+.coverflow:hover .coverflow-pause-badge {
+  opacity: 1;
+}
+
 /* Custom Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 8px;

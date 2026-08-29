@@ -86,12 +86,53 @@ focused on what's actually next.
       batch above - that whole static-grid layout is being replaced by
       this rework, so worth checking whether that bug report is even still
       relevant once this lands.
-    - **Not yet implemented** - this was a design-mockup pass only, no real
-      component code written yet. Needs its own implementation-leg
-      breakdown before starting (e.g. coverflow component + Framer Motion
-      wiring, header/controls rework, expanded-grid stats restoration,
-      responsive grid + drag-reorder gating change) - not yet broken down
-      or sequenced with the user.
+    - **Implementation started 2026-08-29** - sequenced into 4 legs with the
+      user (coverflow component, header/controls rework, expanded-grid
+      stats restoration, responsive grid + drag-reorder gating change),
+      confirmed via `AskUserQuestion` before writing any code; coverflow
+      picked as leg 1.
+      - **Leg 1 done (2026-08-29)** - the 3D coverflow itself, replacing
+        `TeamCard.tsx`'s old flat mini-sprite-strip. New
+        `TeamCoverflow.tsx` (presentational, takes `pokemon`/
+        `resolveSprite`) + `index.css`'s `.coverflow*` rules reproduce the
+        approved mockup's exact `cfOrbit` keyframe values (translate/
+        rotateY/scale/opacity/z-index at the 0/16.667/33.333/50/66.667/
+        83.333/100% stops, pulled by parsing the design artifact's own
+        `Main.dc.html`/`Hover.dc.html` source rather than eyeballing the
+        screenshots) - plain CSS `animation`, not Framer Motion: the loop
+        is purely time-driven with no interactive state, so CSS handles it
+        natively and correctly for the continuous 12s cycle (a discrete
+        Framer Motion `animate`-per-slot approach was considered and
+        rejected - modeling the cyclic sweep as 6 discrete slot-swaps loses
+        the necessary 7th "fade out past the far edge" waypoint between the
+        83.333% and 100% keyframes, causing a card to visibly snap/streak
+        across the whole container at the wrap point instead of fading out
+        invisibly). Stagger scales with roster size (`12s / pokemon.length`
+        per-card delay step) rather than assuming a full 6-mon roster, since
+        a mid-build team can have fewer. Pause-on-hover is
+        `animation-play-state: paused` (immediate/"crisp" by construction,
+        no snap-to-nearest-beat logic). The pause badge and center
+        highlight ring don't track which Pokemon index is currently
+        centered (no JS state) - both are single fixed-position overlays at
+        the container's own center coordinate, which works because every
+        card's orbit passes through that exact same `translateX(0) scale(1)`
+        point, so the overlay always lands on whichever card is currently
+        front-most regardless of which one that is. `type-check`/`lint`/
+        `build` all clean. Live-verified via `run-desktop`: confirmed the
+        animation's computed transform actually changes over a 1.5s window
+        (not frozen), and - since CSS `:hover` doesn't activate from a
+        synthetic dispatched event, only real pointer input - wrote a
+        one-off Playwright script using `page.hover()` directly (not the
+        driver's own `eval`-based click/hover) to confirm the pause badge
+        and gold center ring both actually reach `opacity: 1` on real hover
+        and stay scoped to just the hovered team's own coverflow, not both
+        teams' cards on the page. Header's fixed `h-16` height swapped for
+        `min-h-[116px] py-4` to fit the coverflow's 84px height (was clipped
+        otherwise) - the only other layout change this leg made; the
+        header's control-cluster/name-position rework is still leg 2, not
+        touched here.
+      - **Legs 2-4 not yet started**: header/controls rework, expanded-grid
+        stats restoration, responsive grid + drag-reorder gating change.
 
   - **Sidebar/menuing rework - design approved 2026-08-29**, same artifact
     as above (`SidebarExpanded.dc.html`/`SidebarCollapsed.dc.html`

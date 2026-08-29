@@ -10,10 +10,10 @@ import type { UseSettingsReturn } from '../hooks/useSettings';
 import { useRosterActions } from '../hooks/useRosterActions';
 import { toRegulationId } from '../utils/pokemonRules';
 import { getRegulationTheme } from '../config/pokemonTheme';
-import { getPixelSpriteUrl } from '../utils/spriteUrl';
 import { TEAMS_LIST_DRAG_TYPE, type TeamsListDragPayload } from '../utils/teamsListDragTypes';
 import PokemonCard from './PokemonCard';
 import SpeciesPickerCard from './SpeciesPickerCard';
+import TeamCoverflow from './TeamCoverflow';
 import TeamValidationButton from './TeamValidationButton';
 import RegulationBadge from './RegulationBadge';
 import ExportTeamModal from './ExportTeamModal';
@@ -105,27 +105,17 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
         onDragOver={handleDragOver}
         onDragLeave={() => setIsDragOver(false)}
         onDrop={handleDrop}
-        className={`w-full flex flex-row items-center h-16 px-6 bg-zinc-950/40 rounded-t-xl transition-colors cursor-grab ${
+        className={`w-full flex flex-row items-center min-h-[116px] py-4 px-6 bg-zinc-950/40 rounded-t-xl transition-colors cursor-grab ${
           isDragOver ? 'ring-2 ring-inset ring-accent-gold' : ''
         }`}
         style={{ paddingLeft: '1.25rem', paddingRight: '1.25rem' }}
       >
-        {/* Horizontal Mini Sprites Row - always reserves 6 slots (padding
-            empty ones) so the team name's starting x-position stays fixed
-            regardless of roster size, instead of drifting per team. */}
-        <div className="flex flex-row items-center gap-3 mr-6" style={{ marginRight: '1.5rem' }}>
-          {Array.from({ length: 6 }, (_, idx) => team.pokemon?.[idx]).map((p, idx) => (
-            p ? (
-              <img
-                key={idx}
-                src={spriteCacheState.resolveSprite(getPixelSpriteUrl(p.pokedexNumber, p.showdownData.species, p.showdownData.gender || 'M', p.showdownData.shiny))}
-                alt={p.showdownData.species}
-                className="w-8 h-8 object-contain [image-rendering:pixelated] shrink-0"
-              />
-            ) : (
-              <div key={idx} className="w-8 h-8 shrink-0" />
-            )
-          ))}
+        {/* 3D coverflow (design-approved 2026-08-29, see TODO.md) - replaces the
+            old flat mini-sprite-strip; a fixed 240x84px box regardless of roster
+            size, so the team name's starting x-position stays put the same way
+            the old always-6-slots row did. */}
+        <div className="mr-6" style={{ marginRight: '1.5rem' }}>
+          <TeamCoverflow pokemon={team.pokemon} resolveSprite={spriteCacheState.resolveSprite} />
         </div>
 
         {/* Team Title - Editable when in edit mode */}
