@@ -170,8 +170,57 @@ focused on what's actually next.
      unrelated TS control-flow quirk narrowing the awaited result to
      `never` when reassigned from inside an `act(async () => ...)`
      closure). `type-check`/`lint`/`build` all still clean. **Not yet
-     done**: 4c (`useSync`, `useInitialSync`) and 4d (`useActiveEditor`,
-     `useDamageCalc`).
+     done at the time**: 4c (`useSync`, `useInitialSync`) and 4d
+     (`useActiveEditor`, `useDamageCalc`).
+  1f. **Done (2026-08-29), leg 4c** - sync-orchestration hooks: `useSync`
+     (26 cases) and `useInitialSync` (9 cases), 35 new cases, all passing.
+     `useSync` takes its 3 collaborator hooks' full return objects
+     (`UseSettingsReturn`/`UseTeamsReturn`/`UseBattlesReturn`) as params, so
+     `setup()` builds hand-rolled fakes for all three rather than mocking a
+     service boundary; `services/syncApi.ts`'s `pushSyncData`/`pullSyncData`
+     are the only real `vi.mock`. Covers all 4 status branches
+     (never-synced short-circuiting before any network call when
+     push/pull timestamps are both still null, up-to-date, unpulled-changes,
+     unpushed-changes) plus a throw-during-refresh case proving a failed
+     status check degrades to 'unknown' silently rather than crashing or
+     surfacing as `error`; `createIdentifier`'s username sanitization,
+     discriminator-collision retry (asserts the retried candidate actually
+     differs from the first, not a specific value), exhausting all
+     `MAX_DISCRIMINATOR_ATTEMPTS`, and availability-check-throws paths;
+     `pairExistingIdentifier`/`forgetIdentifier`; and `push`/`pull`'s
+     needs-pull-first/needs-push-first refusals, `force` actually bypassing
+     the freshness check (proven by configuring the remote as if always
+     newer and asserting a forced push still succeeds, rather than a
+     brittle call-count assertion, since a successful push's own post-hoc
+     status refresh legitimately calls `pullSyncData` too), and error-path
+     handling. One real gotcha: an early "force skips" case asserted
+     `pullSyncData` was never called at all under `force: true`, which
+     flaked - `push()`'s own trailing `refreshStatus({ lastPushedAt })`
+     call still invokes it as part of computing post-push status, so
+     absence-of-call was the wrong signal; asserting the outcome instead
+     (succeeds despite a remote that would otherwise block) is what's
+     actually being guaranteed. Also had to add an explicit
+     `await waitFor(() => status !== 'unknown')` before exercising
+     `forgetIdentifier` in isolation - without it, the mount-time status
+     refresh (already in flight) could resolve after `forgetIdentifier`'s
+     own `setStatus('never-synced')`, and clobber it back to whatever the
+     mount computed. `useInitialSync` mocks only `validateSpeciesLegality`
+     (`utils/pokemonRules`) and `fetchPokemonData` (`services/pokeapi`, kept
+     `normalizeSpeciesForAPI` real via `importOriginal`) - the 4 collaborator
+     hooks it takes as params are the same hand-rolled-fake pattern as
+     `useSync`. Covers the not-ready gate (each of roster-loading/empty-roster/
+     gameData-uninitialized/database-uninitialized), the zero-network
+     already-synced fast path, REG-MB legality filtering before diffing
+     against `getUnsyncedSpecies`, a full sync pass asserting every stage
+     (sprite downloads for both normal+shiny per species, learnset+species-
+     stats fetch per species, real `VGC_ITEMS` iterated for item sprites,
+     final `markSpeciesSynced` call and terminal progress state), the
+     already-cached-species skip in `syncSpeciesStats`, an item with no
+     `spriteUrl` never reaching `downloadSprite`, and one species failing
+     mid-sync not aborting the rest (per-item `runWithConcurrency` catch).
+     `type-check`/`lint`/`build` all still clean. **Not yet done**: 4d
+     (`useActiveEditor`, `useDamageCalc` - the biggest and most complex,
+     saved for last as originally sequenced).
   2. Separately, a GW2-Squaded-style standalone audit script (in the mold
      of its `scripts/audit-data-completeness.ts`) that scans this repo's
      own hand-curated config tables (`config/championsMoveOverrides.ts`,
