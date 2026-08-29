@@ -221,6 +221,66 @@ focused on what's actually next.
      `type-check`/`lint`/`build` all still clean. **Not yet done**: 4d
      (`useActiveEditor`, `useDamageCalc` - the biggest and most complex,
      saved for last as originally sequenced).
+  1g. **Done (2026-08-29), leg 4d** - draft/editor-state hooks, closing out
+     leg 4 (and the hooks pass as a whole): `useActiveEditor` (22 cases) and
+     `useDamageCalc` (30 cases), 52 new cases, all passing.
+     `useActiveEditor`: deep-clone isolation on `enterEditMode` (mutating the
+     original after cloning doesn't leak into the draft, verified on the
+     nested `evs`/`moves` arrays specifically, not just a shallow `toEqual`),
+     tolerating a missing `calculatedStats`, every `update*` setter (including
+     the empty-string-clears-to-`undefined` convention shared by
+     nickname/gender/item/ability/teraType/nature, the level 1-100 and
+     happiness 0-255 clamps, the 4-move truncation on `updateMoves`, and
+     `updateMove`'s out-of-range-index no-op), `update*` calls before
+     `enterEditMode` being a no-op (no draft to mutate), `getCommittableData`/
+     `hasUnsavedChanges`/`discardChanges`, and re-entering edit mode for a
+     different Pokemon replacing the draft and resetting `isDirty`.
+     `useDamageCalc` (the big one - real `@smogon/calc` Gen 9 data used
+     throughout, not mocked, matching the file's own doc comment on why:
+     `calculate()` matches names against its own internal data layer, so a
+     fake would risk testing nothing real): regulation-filtered
+     `speciesOptions` via the real `validateSpeciesLegality` allowlists
+     (Gengar REG-MA-legal, Swampert REG-MB-only, Mewtwo legal in neither),
+     sorted item/ability/nature option lists, `setPokemon1/2`/
+     `setPokemon1Move/2`/`setField`/`setPokemon1Side/2` all merging partial
+     updates without disturbing sibling state, `pokemon*BaseStats`/
+     `NatureEffect` wiring, and `computeBoostedStats`'s full stack proven
+     against real computed numbers (not just "it changed"): a known
+     base+SPs+nature raw stat (Gengar's level-50 zero-SP Speed is 130), a
+     stage-boost multiplier floored both up and down, a weather-matching
+     ability doubling Speed only when the field weather actually matches,
+     paralysis halving, and weather-boost-before-paralysis-halving as a
+     single combined case (floor(floor(130*2)/2) lands back on 130, which
+     wouldn't happen if the order were reversed) - matching the function's
+     own doc comment on real-game modifier ordering. `p1Results`/`p2Results`:
+     empty entries with no species set, a real Gengar-vs-Garchomp Shadow Ball
+     calculation asserted against hand-verified numbers (range, percent
+     string, kochance text, deduped/sorted possibleDamages - all pulled from
+     a one-off Node probe script run directly against the installed
+     `@smogon/calc` package rather than hand-computed, so the fixture itself
+     is real-engine-verified), a crit slot producing a higher range, a
+     multihit move's `multihitRange`/engine-default `effectiveHits` and an
+     explicit `hits` override, and an unresolvable species string producing
+     an error entry for every move slot on that side (proven via `buildPokemon`
+     actually throwing on a garbage species, not asserted from reading the
+     code). `selectedResult`/`selectedEntry` including the out-of-range-index
+     case. The learned-moveset-filtering effect (`pokemon1MoveOptions`/
+     `pokemon2MoveOptions`): same-reference passthrough when unfiltered
+     (`toBe`, not `toEqual` - the hook returns `moveOptions` itself rather
+     than a copy when there's no learned-set to filter by), the real filter
+     applying once the fetch resolves, falling back to the full list on a
+     no-real-move-name-intersects miss and on a rejected fetch, the
+     render-time-effect clear-on-empty-species behavior, and (the one real
+     gotcha worth calling out) a stale in-flight fetch losing a race against
+     a newer species change - built with hand-rolled deferred promises so the
+     stale fetch could be resolved *after* the newer one had already been
+     kicked off, proving the `cancelled` flag in the effect's cleanup
+     actually suppresses the stale write rather than just asserting the final
+     state is correct by coincidence. `type-check`/`lint`/`build` all still
+     clean. This closes out leg 4 (2822 lines across all 11 hooks) and the
+     hooks-coverage pass entered in leg 3 - every hook in `src/renderer/
+     hooks/` is now covered except the 3 Battle-Logger-only ones deliberately
+     skipped in leg 3 for the same already-slated-for-retirement reason.
   2. Separately, a GW2-Squaded-style standalone audit script (in the mold
      of its `scripts/audit-data-completeness.ts`) that scans this repo's
      own hand-curated config tables (`config/championsMoveOverrides.ts`,
