@@ -131,8 +131,40 @@ focused on what's actually next.
         otherwise) - the only other layout change this leg made; the
         header's control-cluster/name-position rework is still leg 2, not
         touched here.
-      - **Legs 2-4 not yet started**: header/controls rework, expanded-grid
-        stats restoration, responsive grid + drag-reorder gating change.
+      - **Leg 2 done (2026-08-29)** - header/controls rework. Two new
+        components: `TeamOverflowMenu.tsx` (the "⋮" trigger + dropdown,
+        self-contained open/close state via `useState`+`useDismissable`,
+        same pattern as `RegulationBadge.tsx`) and `TeamValidationButton.tsx`
+        rewritten from a standalone round icon button into a menu row (its
+        only remaining consumer is now the overflow dropdown, so no variant
+        prop needed - just restyled in place, self-contained result-popup
+        logic unchanged). All row icons/copy/order (Validate Team/Export
+        (Showdown text)/Export Image/Export PDF/divider/Delete Team in red)
+        and the pill cluster's Edit/divider/Expand/divider/More layout
+        pulled verbatim from the approved mockup's `Main.dc.html`/
+        `Overflow.dc.html` artboard source (parsed out of the design
+        artifact's own embedded `canvas.json`, same "read the source, don't
+        eyeball the screenshot" approach leg 1 used for the coverflow
+        keyframes) rather than guessed - exact SVG path data, `.controls`/
+        `.ctrl`/`.menu`/`.menu-row` CSS values translated 1:1 to Tailwind
+        classes. `TeamCard.tsx`'s header reordered to match: a new identity
+        column (`RegulationBadge` + team name + author, was previously split
+        across the name up front and author/badge in the old far-right
+        cluster) sits left of the coverflow, which now centers in the
+        remaining flex space instead of sitting flush left; the far-right
+        cluster is now just the one pill (`bg-zinc-800 border-zinc-700
+        rounded-full`) holding Edit + Expand (both gain a `.ctrl.active`-
+        equivalent highlight - `bg-zinc-700` + accent text - when
+        editing/expanded, matching the mockup's active-state class) and
+        `TeamOverflowMenu`. `type-check`/`lint`/`build`/`test` (395 cases)
+        all clean. Live-verified via `run-desktop`: screenshotted the
+        collapsed header (identity column/coverflow/pill all in the right
+        positions), the overflow menu open (row order/icons/red Delete
+        divider match the mockup exactly), a live Validate Team result
+        popping inside the still-open menu, and the Edit pill's active gold
+        highlight while expanded with the menu still open on top.
+      - **Legs 3-4 not yet started**: expanded-grid stats restoration,
+        responsive grid + drag-reorder gating change.
 
   - **Sidebar/menuing rework - design approved 2026-08-29**, same artifact
     as above (`SidebarExpanded.dc.html`/`SidebarCollapsed.dc.html`

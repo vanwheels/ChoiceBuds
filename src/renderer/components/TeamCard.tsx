@@ -14,7 +14,7 @@ import { TEAMS_LIST_DRAG_TYPE, type TeamsListDragPayload } from '../utils/teamsL
 import PokemonCard from './PokemonCard';
 import SpeciesPickerCard from './SpeciesPickerCard';
 import TeamCoverflow from './TeamCoverflow';
-import TeamValidationButton from './TeamValidationButton';
+import TeamOverflowMenu from './TeamOverflowMenu';
 import RegulationBadge from './RegulationBadge';
 import ExportTeamModal from './ExportTeamModal';
 import TeamExportImageModal from './TeamExportImageModal';
@@ -110,49 +110,44 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
         }`}
         style={{ paddingLeft: '1.25rem', paddingRight: '1.25rem' }}
       >
-        {/* 3D coverflow (design-approved 2026-08-29, see TODO.md) - replaces the
-            old flat mini-sprite-strip; a fixed 240x84px box regardless of roster
-            size, so the team name's starting x-position stays put the same way
-            the old always-6-slots row did. */}
-        <div className="mr-6" style={{ marginRight: '1.5rem' }}>
-          <TeamCoverflow pokemon={team.pokemon} resolveSprite={spriteCacheState.resolveSprite} />
-        </div>
+        {/* Identity column (header/controls rework leg 2, see TODO.md) - regulation
+            badge, team name, and author all moved here from the old far-right
+            button cluster, matching the approved mockup's left-column grouping. */}
+        <div className="flex flex-col gap-1 min-w-[190px] shrink-0">
+          <RegulationBadge team={team} onChange={(format) => updateTeam(team.id, { format })} />
 
-        {/* Team Title - Editable when in edit mode */}
-        {isEditingTeam ? (
-          <input
-            type="text"
-            value={localTeamName}
-            onChange={(e) => setLocalTeamName(e.target.value)}
-            onBlur={async () => {
-              // Save team name on blur
-              if (localTeamName !== team.name) {
-                await updateTeam(team.id, { name: localTeamName });
-              }
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.currentTarget.blur();
-              }
-            }}
-            className="flex-1 text-left font-bold text-sm text-zinc-100 truncate tracking-wide"
-            style={{
-              backgroundColor: 'transparent',
-              borderBottom: '1px dashed #4b5563',
-              color: '#ffffff',
-              fontWeight: 'bold',
-              outline: 'none',
-              padding: '0.125rem 0.25rem',
-            }}
-          />
-        ) : (
-          <h2 className="flex-1 text-left font-bold text-sm text-zinc-100 truncate tracking-wide">
-            {team.name.replace(/^(Reg\s*M-[AB]\s*)+/i, '').trim() || 'Untitled Team'}
-          </h2>
-        )}
+          {isEditingTeam ? (
+            <input
+              type="text"
+              value={localTeamName}
+              onChange={(e) => setLocalTeamName(e.target.value)}
+              onBlur={async () => {
+                // Save team name on blur
+                if (localTeamName !== team.name) {
+                  await updateTeam(team.id, { name: localTeamName });
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.currentTarget.blur();
+                }
+              }}
+              className="text-left font-bold text-base text-zinc-100 truncate tracking-wide mt-0.5"
+              style={{
+                backgroundColor: 'transparent',
+                borderBottom: '1px dashed #4b5563',
+                color: '#ffffff',
+                fontWeight: 'bold',
+                outline: 'none',
+                padding: '0.125rem 0.25rem',
+              }}
+            />
+          ) : (
+            <h2 className="text-left font-bold text-base text-zinc-100 truncate tracking-wide mt-0.5">
+              {team.name.replace(/^(Reg\s*M-[AB]\s*)+/i, '').trim() || 'Untitled Team'}
+            </h2>
+          )}
 
-        {/* Far-Right Controls Cluster */}
-        <div className="flex flex-row items-center gap-2 shrink-0 ml-4">
           {/* Author - team-level metadata, not per-Pokemon. Pokepaste pages carry one; a plain
               Showdown export doesn't, so this stays manually editable either way. Hidden entirely
               when not editing and no author is set, so teams without one show no empty chrome. */}
@@ -172,45 +167,25 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
               className="w-24 px-1.5 py-0.5 text-[10px] bg-zinc-800 border border-zinc-700 rounded text-zinc-100 placeholder-zinc-600 outline-none focus:border-accent-gold"
             />
           ) : team.author ? (
-            <span className="text-[10px] text-zinc-500 whitespace-nowrap" title={`by ${team.author}`}>by {team.author}</span>
+            <span className="text-[11px] text-zinc-500 whitespace-nowrap" title={`by ${team.author}`}>by {team.author}</span>
           ) : null}
+        </div>
 
-          {/* A. Regulation Indicator Badge */}
-          <div className="mr-2">
-            <RegulationBadge team={team} onChange={(format) => updateTeam(team.id, { format })} />
-          </div>
+        {/* 3D coverflow (design-approved 2026-08-29, see TODO.md) - replaces the
+            old flat mini-sprite-strip; a fixed 240x84px box regardless of roster
+            size, centered in the remaining space between the identity column and
+            the controls pill. */}
+        <div className="flex-1 flex items-center justify-center">
+          <TeamCoverflow pokemon={team.pokemon} resolveSprite={spriteCacheState.resolveSprite} />
+        </div>
 
-          {/* A2. Validate Team Button + Popup */}
-          <TeamValidationButton team={team} rulesetId={toRegulationId(team.format)} />
-
-          {/* A3. Export Button - opens a modal with Showdown-format text (services/parser.ts::formatShowdownText) */}
-          <button
-            onClick={() => setIsExportOpen(true)}
-            title="Export Team (Showdown format)"
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-accent-gold hover:bg-zinc-800 text-sm transition-all cursor-pointer"
-          >
-            ⇩
-          </button>
-
-          {/* A4. Export Team Image Button - opens a shareable poster-image modal (TeamExportImageModal.tsx) */}
-          <button
-            onClick={() => setIsImageExportOpen(true)}
-            title="Export Team Image"
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-accent-gold hover:bg-zinc-800 text-sm transition-all cursor-pointer"
-          >
-            ▦
-          </button>
-
-          {/* A5. Export Team Sheet PDF Button - opens TeamSheetPdfModal.tsx */}
-          <button
-            onClick={() => setIsPdfExportOpen(true)}
-            title="Export Team Sheet PDF"
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-accent-gold hover:bg-zinc-800 text-sm transition-all cursor-pointer"
-          >
-            🗎
-          </button>
-
-          {/* B. Edit Button */}
+        {/* Pill-shaped controls cluster (header/controls rework leg 2, see
+            TODO.md) - only Edit and Expand stay always-visible; everything else
+            (Validate/Export/Export Image/Export PDF/Delete) moved into
+            TeamOverflowMenu.tsx's "⋮" dropdown. Icons/layout pulled verbatim
+            from the approved mockup's Main.dc.html/Overflow.dc.html artboards. */}
+        <div className="flex items-center gap-0.5 bg-zinc-800 border border-zinc-700 rounded-full p-1 shrink-0">
+          {/* Edit Button */}
           <button
             onClick={() => {
               setIsEditingTeam(!isEditingTeam);
@@ -222,23 +197,19 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
               }
             }}
             title="Edit Team"
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-accent-gold hover:bg-zinc-800 text-sm transition-all cursor-pointer"
+            className={`w-8 h-8 flex items-center justify-center rounded-full text-zinc-400 hover:text-accent-gold hover:bg-zinc-700 transition-colors cursor-pointer ${
+              isEditingTeam ? 'bg-zinc-700 text-accent-gold' : ''
+            }`}
           >
-            ✎
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+            </svg>
           </button>
 
-          {/* C. Delete Button */}
-          {onDelete && (
-            <button
-              onClick={onDelete}
-              className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-red-400 hover:bg-zinc-800 text-sm transition-all cursor-pointer"
-              title="Delete Team"
-            >
-              ×
-            </button>
-          )}
+          <span className="w-px h-[18px] bg-zinc-700 mx-0.5" />
 
-          {/* D. Expand/Collapse Toggle Button */}
+          {/* Expand/Collapse Toggle Button */}
           <button
             onClick={() => {
               const nextExpanded = !isExpanded;
@@ -247,11 +218,27 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
                 setIsEditingTeam(false);
               }
             }}
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 text-sm transition-all cursor-pointer"
+            className={`w-8 h-8 flex items-center justify-center rounded-full text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 transition-colors cursor-pointer ${
+              isExpanded ? 'bg-zinc-700 text-zinc-200' : ''
+            }`}
             title={isExpanded ? 'Collapse' : 'Expand'}
           >
-            ▼
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m6 9 6 6 6-6" />
+            </svg>
           </button>
+
+          <span className="w-px h-[18px] bg-zinc-700 mx-0.5" />
+
+          {/* Overflow ("More") Menu - Validate/Export/Export Image/Export PDF/Delete */}
+          <TeamOverflowMenu
+            team={team}
+            rulesetId={toRegulationId(team.format)}
+            onExport={() => setIsExportOpen(true)}
+            onExportImage={() => setIsImageExportOpen(true)}
+            onExportPdf={() => setIsPdfExportOpen(true)}
+            onDelete={onDelete}
+          />
         </div>
       </div>
 

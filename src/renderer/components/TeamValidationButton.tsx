@@ -1,10 +1,13 @@
 /**
- * TeamValidationButton.tsx - "Validate Team" Button + Result Popup
+ * TeamValidationButton.tsx - "Validate Team" Overflow-Menu Row + Result Popup
  * Computes validateTeam() on click and shows a brief popup listing pass/fail
- * and any issues found, anchored under the button. Auto-dismisses after a
- * few seconds, or immediately via Escape/click-outside (useDismissable).
- * Self-contained so TeamCard.tsx just renders this rather than owning the
- * popup state itself.
+ * and any issues found, anchored under the row. Auto-dismisses after a few
+ * seconds, or immediately via Escape/click-outside (useDismissable). Lives
+ * exclusively inside TeamOverflowMenu.tsx's dropdown (header/controls rework,
+ * see TODO.md) as one of its menu rows, styled to match the other rows there
+ * rather than the standalone round icon button it used to be - still
+ * self-contained so TeamOverflowMenu just renders this rather than owning
+ * the popup state itself.
  */
 
 import { useEffect, useState } from 'react';
@@ -38,10 +41,13 @@ export default function TeamValidationButton({ team, rulesetId }: TeamValidation
     <div ref={ref} className="relative">
       <button
         onClick={handleValidate}
-        title="Validate Team"
-        className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-emerald-400 hover:bg-zinc-800 text-sm transition-all cursor-pointer"
+        className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[13px] text-zinc-300 hover:bg-zinc-800 transition-colors cursor-pointer"
       >
-        ✓
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500 shrink-0">
+          <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3Z" />
+          <path d="m9 12 2 2 4-4" />
+        </svg>
+        <span>Validate Team</span>
       </button>
       {result && (
         <div className="absolute z-50 top-full right-0 mt-1 w-72 rounded-lg border-2 bg-slate-900 shadow-xl p-3"
