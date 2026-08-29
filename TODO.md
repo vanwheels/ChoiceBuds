@@ -50,9 +50,31 @@ focused on what's actually next.
      `vite.config.ts` even though nothing needs it yet). `services/parser.ts`
      is the first module covered - its old placeholder console.log-assertions
      script (`parser.test.ts`) is now 18 real `describe`/`it` Vitest cases,
-     all passing; `type-check`/`build` still clean. **Not yet done**: the
-     rest of `services/`/`utils/` (pure functions, easiest to test next),
-     then hooks. Not yet wired into CI either.
+     all passing; `type-check`/`build` still clean.
+  1b. **Done (2026-08-29), leg 2** - the rest of `utils/`'s pure functions
+     now covered: `tagSearch`, `displayName`, `spriteUrl`,
+     `measureDropdownHeight`, `statAlignment`, `pokemonRules`,
+     `teamValidation`, `typeCoverage`, `battleSets`, `calcFormes`,
+     `championsStats`, `calcExport`, `calcTeamImport`, `cacheManager`
+     (including `runCachedFetch`'s async/error-branch orchestration via
+     `vi.fn()`-mocked setState functions - no real React needed), and
+     `battleStats` (the Statistics page's aggregations) - 15 new test files,
+     159 new cases, all passing; `type-check`/`lint`/`build` all still clean.
+     Deliberately skipped: `appVersion.ts`/`cacheExpiry.ts` (single
+     constants, nothing to assert) and the `*DragTypes.ts` files (just
+     react-dnd MIME-type constants/interfaces, same reasoning); services/
+     (besides `parser.ts`) are all live-`fetch` wrappers (`pokeapi.ts`,
+     `pokeapiService.ts`, `syncApi.ts`, `github.ts`, `pokepaste.ts`,
+     `championsBattleData.ts`) or PDF generation (`teamSheetPdf.ts`), not
+     pure functions, so out of scope for unit tests without a mocking layer
+     not yet built. Also deliberately skipped: `battleLookup.ts` and
+     `battleCalcReview.ts` - both are Battle-Logger-turn-log-internals (see
+     the "Battle Logger: retire live turn-by-turn logging" entry below,
+     which plans to drop this exact code from active use) - not worth
+     investing test-writing effort into what's slated to be archived soon.
+     **Not yet done**: hooks (deferred further per the file's own original
+     note - pure functions were always meant to come first). Not yet wired
+     into CI either.
   2. Separately, a GW2-Squaded-style standalone audit script (in the mold
      of its `scripts/audit-data-completeness.ts`) that scans this repo's
      own hand-curated config tables (`config/championsMoveOverrides.ts`,
