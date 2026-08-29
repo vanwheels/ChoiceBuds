@@ -35,11 +35,254 @@ focused on what's actually next.
 - **UI/UX overhaul** (raised 2026-08-28, discussion started 2026-08-29):
   user wants the app to stop reading as a "generic vibe-coded Electron app"
   - scope named so far: menuing, color palette, animations, window sizing.
-  Sequencing decided: user will describe the target look/feel in words and
-  Claude iterates directly in code (rather than drafting mockups via the
-  `design` skill first). **Blocked on**: the actual description of the
-  target look/feel hasn't been given yet - needs a follow-up ask before any
-  code starts.
+  All five pieces below (Teams page carousel/grid, sidebar/menuing, color
+  palette, animation/motion, window sizing) are now **design-approved**
+  (2026-08-29) - each designed/discussed via the `design` skill as mockups
+  first (supersedes the original "describe in words, iterate in code"
+  sequencing note for the pieces that needed visual review; window sizing
+  was decisions-only, no mockup needed). **None of the five are implemented
+  in real code yet** - this was entirely a design/discussion pass. Next up
+  is sequencing an actual implementation-leg breakdown across all five with
+  the user before writing any component code.
+
+  - **Teams page carousel/grid rework - design approved 2026-08-29**, mockup
+    at `https://claude.ai/code/artifact/66752fbf-5e68-456a-bfff-564ba4a5d67f`
+    (private Claude artifact, 6 artboards). Approved spec:
+    - Each collapsed team's old mini sprite-strip is replaced by a compact
+      3D coverflow (~240x84px, real CSS `rotateY`/scale/opacity keyframes,
+      not a static image) cycling through all 6 roster Pokémon.
+      Auto-rotates while idle, pauses crisp on hover (small pause badge).
+    - Header's action-icon row is reworked into a pill-shaped control
+      cluster: only Edit (pencil) and Expand (chevron) stay always-visible;
+      Validate/Export (text)/Export Image/Export PDF/Delete move into a new
+      `⋮` overflow menu (Delete visually distinguished in red).
+    - Team name/author move out of the far-right button cluster (where
+      they oddly live today) to sit directly under the regulation badge in
+      the header's left column.
+    - Expand/collapse stays **independent per card** (no accordion) -
+      explicit user call to keep the diff smaller; revisit later if
+      several teams expanded at once takes up too much space.
+    - Drag-to-reorder the teams list changes from "always active on the
+      collapsed header regardless of state" (today's behavior) to **gated
+      behind both expanded AND edit-mode** - only draggable once the edit
+      pencil is toggled on an expanded card.
+    - Expanded+edit-mode roster cards keep the full existing feature set
+      (don't drop these for the new layout): SP-spread grid + nature pill
+      (matching `StatsColumn.tsx`'s exact per-stat colors), gender toggle,
+      shiny toggle - plus a new drag-handle affordance icon per card.
+    - Teams list becomes a responsive grid instead of always one column:
+      2 columns on wide windows, 1 on narrow, via a **container query**
+      on the teams-list wrapper (not a viewport media query - same
+      reasoning as the existing `@container`/`@[1760px]` roster-grid
+      breakpoint in `TeamCard.tsx`: viewport width alone doesn't account
+      for the sidebar eating into actual content width). Exact breakpoint
+      not yet chosen - mockup used "~1160px+ content width -> 2 columns"
+      as a placeholder, needs tuning once real. When a team expands inside
+      the 2-column grid, it spans the full row width (explicit user
+      call - grid-column 1/-1), pushing subsequent cards down rather than
+      squeezing the roster grid into a half-width column.
+    - Likely supersedes/relates to the "Team cards render as 2x3 grid
+      instead of 1x6" regression noted in the 2026-08-28 manual-testing
+      batch above - that whole static-grid layout is being replaced by
+      this rework, so worth checking whether that bug report is even still
+      relevant once this lands.
+    - **Not yet implemented** - this was a design-mockup pass only, no real
+      component code written yet. Needs its own implementation-leg
+      breakdown before starting (e.g. coverflow component + Framer Motion
+      wiring, header/controls rework, expanded-grid stats restoration,
+      responsive grid + drag-reorder gating change) - not yet broken down
+      or sequenced with the user.
+
+  - **Sidebar/menuing rework - design approved 2026-08-29**, same artifact
+    as above (`SidebarExpanded.dc.html`/`SidebarCollapsed.dc.html`
+    artboards). Approved spec, replacing today's `App.tsx` sidebar (flat
+    128px-wide text-only nav list, plain "ChoiceBuds" wordmark, debug-y
+    status footer):
+    - Nav items get a consistent inline-SVG icon set (icon + label) instead
+      of text-only - one icon per tab (Teams/Calc/Battle Log/Statistics/
+      Type Matchup/Settings). User confirmed the specific icon metaphors
+      (grid for Teams, calculator, crossed swords for Battle Log, ascending
+      bars for Statistics, shield for Type Matchup, gear for Settings) are
+      fine for now with no strong alternatives in mind - **not locked in as
+      permanent**, revisit if a better metaphor comes up later, but no
+      blocker to using them elsewhere in the app meanwhile (buttons, empty
+      states) for icon-language consistency.
+    - Sidebar becomes collapsible: a toggle row collapses the ~208px
+      expanded sidebar (icon+label) down to a ~68px icon-only rail, with a
+      hover flyout tooltip showing the label when collapsed. Ties into the
+      window-sizing piece of the overhaul too.
+    - `build/icon.png` (the mascot art, previously unused inside the app -
+      app-icon/installer only) gets pulled into the sidebar header as a
+      small mark next to the "ChoiceBuds" wordmark (hidden, mascot-only, in
+      the collapsed rail).
+    - Active nav-item indicator changes from today's flat solid-blue fill to
+      a softer tinted background + a 3px left accent bar (blue-500),
+      consistent with the pill/capsule visual language established in the
+      Teams-carousel controls above.
+    - The existing status footer (Cache Status / Teams Loaded / Ver X)
+      moves out of the sidebar into the Settings page entirely - explicit
+      user call, to keep the sidebar pure navigation.
+    - Deliberately did **not** touch sidebar/shell colors in this pass
+      (kept today's gray-800/900/700 + blue tokens from the live `App.tsx`
+      rather than the zinc tones used in the Teams-carousel mockup) - color
+      palette is still its own separate, not-yet-discussed piece of the
+      overhaul; didn't want to sneak a palette change in via the menuing
+      pass.
+    - **Not yet implemented** - design-mockup pass only, no code written.
+    - **Superseded by the color-palette pass below**: the "kept blue" call
+      above no longer holds now that gold/royal-purple is approved (next
+      entry) - the sidebar's active-nav accent (today described as a
+      blue-tinted background + blue-500 left bar) should use gold instead
+      when this is implemented, matching the palette entry's token mapping.
+
+  - **Color palette rework - design approved 2026-08-29**, same artifact,
+    two new artboards (`Palette.dc.html`/`TypedGrid.dc.html`). Approved
+    spec, replacing `blue-600` as the app's primary accent everywhere and
+    standardizing the gray/zinc inconsistency already present in the live
+    app today (`App.tsx`/`PokemonCard.tsx`/`StatsColumn.tsx` use
+    `gray-700/800/900`; `TeamCard.tsx` already uses `zinc-800/900/950` -
+    picking one family resolves that split, doesn't introduce a new one):
+    - **Primary accent -> gold**, sampled directly from the Gholdengo
+      sprite (not eyeballed from the mascot art) - `#f0c840` base
+      (96%+ pixel agreement between the small PokeAPI pixel sprite and the
+      official-artwork version, sampled programmatically with Pillow) and
+      `#c09830` deep/shadow tone, both real sampled values. Replaces
+      `blue-600` for buttons, active states, focus rings, etc. app-wide.
+    - **Secondary accent -> royal purple**, sampled from `build/icon.png`'s
+      own background fill - `#381070` (99.8% of background pixels are this
+      exact value) for deep surface/badge tints, plus a lightened
+      same-hue derived shade `#6d25d0` for interactive uses where the raw
+      sampled purple is too dark to read on dark surfaces. Reg M-B's
+      existing purple badge color can keep doing double-duty (explicit
+      user non-objection) rather than being reassigned.
+    - **Neutral base standardized on zinc** app-wide (Zinc 950/900/800/
+      700/500/100 - `#09090b`/`#18181b`/`#27272a`/`#3f3f46`/`#71717a`/
+      `#f4f4f5`), replacing every remaining `gray-*` usage.
+    - **Semantic colors (success green, danger red) stay as-is** - not
+      brand color, kept for conventional legibility (danger = red, etc.).
+    - **Real design tokens, not another hardcoded-class sweep** - explicit
+      user call for scope: introduce named CSS custom properties (a
+      Tailwind v4 `@theme` block in `index.css`, e.g. `--color-accent-*`)
+      so this palette lives in one place; a future tweak becomes a
+      one-file change instead of resweeping every component again like
+      this pass has to.
+    - **New idea layered on top, also approved**: individual Pokémon cards
+      (the expanded roster grid, not the team-card level) get a per-type
+      accent instead of a flat `gray-600` border - a soft colored glow/ring
+      around the card (not a full-card tint, not a flat border) using the
+      real type colors already in `pokemonTheme.ts`'s `TYPE_THEMES`. A
+      dual-type Pokémon (e.g. Water/Flying) gets a diagonal gradient
+      blending both type colors rather than showing only its primary type.
+    - **Two real bugs found and fixed live during this pass, both
+      instructive for implementation**:
+      1. The dual-type glow was built as two separate stacked
+         `box-shadow`s (one per type color) - CSS renders the *first*
+         listed shadow visually on top, so whichever type happened to be
+         listed first silently dominated regardless of the actual
+         gradient, reading as "favors one type" rather than a 50/50 blend.
+         Fix: a single blurred `::before` pseudo-element using the exact
+         same `linear-gradient` as the ring itself (not two independent
+         shadows) - inherently balanced since it's one gradient, not a
+         stacking order.
+      2. Some type colors are too close to the app's own near-black
+         surfaces to read as a glow at all regardless of compositing -
+         Dark (`#1f2937`) most severely (nearly identical to the app's own
+         dark grays), Dragon (`#4f46e5`) more subtly (indigo reads muted
+         against dark backgrounds even at reasonable lightness). Fix: a
+         **glow-safe variant rule** - same hue, lightness floor raised
+         (Dark -> `#524267`, Dragon -> `#6366f1` used for the glow only,
+         *not* the type-badge pill color, which reads fine as plain text
+         on a dark pill and stays unchanged) - documented as a general
+         rule to check against all 18 types during implementation, not a
+         one-off fix for just these two.
+      3. The glow's blur/spread was initially too strong (`inset:-9px`,
+         `blur(15px)`, `opacity:0.6`) and visibly bled across the roster
+         grid's 24px gap into neighboring cards' glows, muddying the
+         effect - tightened to `inset:-3px`, `blur(7px)`, `opacity:0.38`,
+         confirmed to stay within each card's own footprint.
+    - **Not yet implemented** - design-mockup pass only, no code written.
+      Needs an implementation-leg breakdown (the `@theme` token
+      infrastructure itself is probably its own leg before any component
+      touches it) - not yet sequenced with the user.
+
+  - **Animation/motion language - design approved 2026-08-29**, same
+    artifact, four new artboards built as **live, clickable demos** (real
+    CSS transitions standing in for the actual Framer Motion timings/
+    easings, since motion can't be judged from a static screenshot) -
+    `ModalDemo.dc.html`, `CardExpandDemo.dc.html`, `SidebarDemo.dc.html`,
+    `DragReorderDemo.dc.html`. Current baseline (confirmed by grepping the
+    renderer): the app has almost no motion today - a few Tailwind
+    `transition-all`/`transition-colors` hover fades, two loading spinners,
+    one `animate-pulse` badge. No modal enter/exit, no tab-switch
+    transition (`App.tsx` just flips `display:none`/`block`), no card
+    expand/collapse animation, no drag-reorder repositioning animation.
+    Approved spec:
+    - **Framer Motion becomes the app's general-purpose animation
+      library** (not scoped to just the Teams-carousel coverflow as
+      originally planned) - one consistent motion engine/vocabulary for
+      modal transitions, card expand/collapse, sidebar collapse, and
+      drag-reorder, instead of ad hoc CSS per interaction.
+    - **Duration/easing scale** (demoed live, not just described): micro
+      ~150ms for hover/press micro-interactions; standard 200-280ms for
+      modals, card-expand height, and content fades; deliberate 320-340ms
+      for sidebar width and drag-reorder list repositioning (bigger layout
+      shifts get more time). Entrances ease-out (decelerate in); exits
+      ease-in and noticeably faster than the matching entrance (a modal's
+      150ms close vs. its 200ms open, for instance) - dismissal should
+      feel snappier than appearance.
+    - **`prefers-reduced-motion` should collapse all of the above toward
+      near-instant** - explicitly not built into any of the demos (those
+      are for judging feel), but a firm rule to carry into implementation,
+      not an afterthought.
+    - **Card expand/collapse** uses a `grid-template-rows: 0fr -> 1fr` CSS
+      trick for a genuinely transitionable height (plain `height: auto`
+      isn't animatable) - worth carrying into the real Framer Motion
+      implementation's approach (or using Framer's own `layout` prop,
+      whichever ends up cleaner in React) rather than measuring pixel
+      heights in JS.
+    - **Drag-reorder** demoed with up/down buttons instead of real
+      HTML5 drag events (unreliable in the sandboxed iframe this preview
+      runs in) - the actual thing demonstrated (both the moved row and
+      whichever row it swaps with animating to their new slot via a shared
+      position transition, not an instant re-sort) is exactly what Framer
+      Motion's `layout` animation gives for free on a real drop.
+    - **Small addition approved same session**: sidebar nav icons get a
+      150ms hover-magnify (`scale(1.18)`), same micro-interaction duration
+      bucket as everything else at that scale - added retroactively to all
+      three sidebar artboards (`SidebarExpanded`/`SidebarCollapsed`/
+      `SidebarDemo`), plus a subtle background-tint hover state for
+      inactive nav items that hadn't had one before.
+    - **Not yet implemented** - design-mockup pass only (interactive demos,
+      not production code). Needs its own implementation-leg breakdown,
+      likely threaded through each of the other three approved pieces'
+      legs rather than being one standalone leg (e.g. the sidebar's own
+      implementation leg is where its collapse animation actually gets
+      built) - not yet sequenced with the user.
+
+  - **Window sizing - decisions approved 2026-08-29** (behavioral, no
+    mockup - nothing here is a visual design question). Today's baseline
+    (`main.ts`): the window is created at exactly `1280x720` with
+    `minWidth`/`minHeight` both also `1280x720` - it always launches at its
+    own floor and can never be resized smaller (no cap on growing larger).
+    Approved:
+    - **Keep the 1280x720 floor as-is, for now** - explicit user call.
+      Real tension surfaced before deciding: the sidebar rail + more
+      compact Teams cards free up horizontal room that could justify a
+      smaller floor, but Calc and Battle Log already scroll a bit at
+      today's exact 1280x720 floor (see the 2026-07-07 review-pass entries
+      above - both stopped short deliberately, not fully solved) - they're
+      still the binding constraint regardless of the other pieces' wins,
+      so lowering the floor now would just make their existing scroll
+      worse. Revisit if/when Calc/Battle Log get their own tightening pass.
+    - **Persist window size/position across launches** - the app should
+      remember the last size/position (via `useSettings`/`settings.json`,
+      restored on next launch) instead of always opening at the fixed
+      default. Real behavior change from today - not yet implemented.
+    - **Teams-page grid caps at 2 columns, no matter how wide the window
+      gets** - explicit user call over adding a 3rd-column tier for very
+      wide/ultrawide monitors, to keep card width comfortable/consistent
+      rather than stretching or multiplying further.
+    - **Not yet implemented** - decisions only, no code written.
 
 - **Adopt testing + verification workflow from GW2 Squaded** (decided
   2026-08-29): this repo has no wired-up test runner today (see the
