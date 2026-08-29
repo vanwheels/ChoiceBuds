@@ -7,6 +7,93 @@ focused on what's actually next.
 
 ## In progress / up next
 
+- **2026-08-28 manual-testing batch** (offline-testing feedback, not yet
+  scoped/fixed):
+  1. Regulation Z-A Megas aren't showing up as mega-eligible in the team
+     builder, but do show up in Calc - the two surfaces likely read
+     mega-eligibility from different/out-of-sync sources; needs
+     investigation before a fix.
+  2. Item sprites and Mega sprites don't load while offline - likely a gap
+     in what the offline-sync/caching pass (`useInitialSync`,
+     `pokeapi-cache.json`) actually covers; needs investigation into
+     whether these sprite URLs are cached at all.
+  3. Team cards render as a 2x3 grid instead of the original 1x6 single-row
+     design, even fullscreened on a MacBook - layout regression in the
+     Teams page grid, needs a repro + root-cause look (may be
+     screen-width/breakpoint-dependent given it reproduced on a laptop
+     screen).
+  4. Feature request: searching the Pokemon picker by a move name should
+     surface every Pokemon that can learn that move, not just exact
+     species-name matches.
+  5. The "Add Pokemon" box is wider than an actual Pokemon card once one is
+     added - visual mismatch, should match card width.
+  6. Calc: toggling a Mega off doesn't revert the Pokemon's ability back to
+     whatever ability was selected pre-Mega.
+  - UI/UX overhaul discussion (flagged in this batch) is now underway - see
+    the dedicated entry below.
+
+- **UI/UX overhaul** (raised 2026-08-28, discussion started 2026-08-29):
+  user wants the app to stop reading as a "generic vibe-coded Electron app"
+  - scope named so far: menuing, color palette, animations, window sizing.
+  Sequencing decided: user will describe the target look/feel in words and
+  Claude iterates directly in code (rather than drafting mockups via the
+  `design` skill first). **Blocked on**: the actual description of the
+  target look/feel hasn't been given yet - needs a follow-up ask before any
+  code starts.
+
+- **Adopt testing + verification workflow from GW2 Squaded** (decided
+  2026-08-29): this repo has no wired-up test runner today (see the
+  Commands section above). Plan, not yet started:
+  1. Wire up Vitest (`vitest.config.ts` + `npm run test`/`test:watch`),
+     matching the GW2 Squaded project's setup. Start with
+     `services/parser.ts` (already has a placeholder assertions-only script
+     at `parser.test.ts` to convert into real tests), then the rest of
+     `services/`/`utils/` (pure functions, easiest to test), then hooks.
+  2. Separately, a GW2-Squaded-style standalone audit script (in the mold
+     of its `scripts/audit-data-completeness.ts`) that scans this repo's
+     own hand-curated config tables (`config/championsMoveOverrides.ts`,
+     `config/moveStatEffects.ts`, `config/onSwitchInAbilities.ts`, etc.)
+     for structural gaps, complementing (not replacing) the
+     comprehensive-coverage rule already in CLAUDE.md's Style rules for
+     those files.
+  - Why: user has been running this exact combination (Vitest unit tests +
+    standalone data-completeness audit scripts) on GW2 Squaded and wants
+    the same rigor here.
+
+- **Battle Logger: retire live turn-by-turn logging + stat-inference,
+  replace with a lightweight post-match record** (decided 2026-08-29, not
+  yet scoped/started): user's interest in the live-logging concept has
+  dwindled. Reasoning worked through in conversation: any inference-quality
+  data capture for a real (cartridge/Switch) Champions match is inherently
+  either live-and-distracting (costs attention during play) or
+  after-the-fact-and-unreliable (relies on memory) - there's no
+  automatable data source to lean on instead (no official API, no replay
+  system, no exportable battle log), so neither horn of that tradeoff is
+  fixable with a better UI. A Showdown-log-based post-battle version was
+  also considered and rejected: Champions isn't simulated by Showdown, so
+  replaying a Showdown log would just be replicating Showdown itself, not
+  adding anything Champions-specific. Decision: drop the turn-by-turn
+  logging + stat-inference feature (BattlefieldSlot, TurnLog,
+  LikelySetsPopover, useBattleLogActions, and the whole
+  championsbattledata.com-backed inference layer) from active use, but
+  **archive rather than delete** the implementation in case Champions ever
+  exposes real match data/replays later. Replace it with a much lighter
+  post-match record: a ~30-second entry logged after a game ends (final
+  teams, result, freeform notes) that tolerates "good enough" memory since
+  it's no longer feeding live inference - feeds only the Statistics/
+  season-breakdown page, not any in-battle assistance.
+  - **Not yet scoped** - needs its own planning pass before implementation:
+    - What "archive" means concretely (a separate branch/tag, a code
+      folder moved out of the active build, a feature flag, something
+      else) - whatever it is, it needs to actually stay recoverable, not
+      just deleted-and-in-git-history.
+    - The new lightweight record feature's actual design: where it fits in
+      the app relative to the existing Teams/Battle Log navigation, what
+      fields it captures beyond "teams, result, notes," whether it's a new
+      page or replaces the Battle Logger entry point, and what happens to
+      the existing Battle Log data already saved by users under the old
+      shape.
+
 - ~~**2026-07-20 manual-testing batch**~~ **Done 2026-07-20** - all 6 items
   (move/ability usage-% ordering in the team editor, Calc tab-switch state
   loss, Make It Rain's missing stat drop, Battle Logger sleep wake-up/
