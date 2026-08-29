@@ -40,7 +40,7 @@ export default function CalcSavedSetPicker({ species, sets, resolveSprite, onPic
       <button
         type="button"
         onClick={onClose}
-        className="text-left px-2 py-1 text-xs rounded text-zinc-400 hover:bg-blue-600 hover:text-white cursor-pointer transition-colors"
+        className="text-left px-2 py-1 text-xs rounded text-zinc-400 hover:bg-accent-gold hover:text-zinc-900 cursor-pointer transition-colors"
       >
         Blank
       </button>
@@ -50,7 +50,7 @@ export default function CalcSavedSetPicker({ species, sets, resolveSprite, onPic
           key={entry.id}
           type="button"
           onClick={() => onPick(entry)}
-          className="flex items-center gap-2 px-2 py-1 rounded hover:bg-blue-600 cursor-pointer transition-colors text-left"
+          className="flex items-center gap-2 px-2 py-1 rounded hover:bg-accent-gold hover:text-zinc-900 cursor-pointer transition-colors text-left"
         >
           <img
             src={resolveSprite(getPixelSpriteUrl(

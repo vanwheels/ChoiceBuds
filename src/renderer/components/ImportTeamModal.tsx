@@ -202,7 +202,7 @@ export default function ImportTeamModal({
               onChange={(e) => setTeamName(e.target.value)}
               disabled={isImporting}
               placeholder="Enter team name... (defaults to &quot;Team N&quot; if left blank)"
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50"
             />
           </div>
 
@@ -218,7 +218,7 @@ export default function ImportTeamModal({
               onChange={(e) => setAuthor(e.target.value)}
               disabled={isImporting}
               placeholder="Who built this team?"
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50"
             />
           </div>
 
@@ -232,7 +232,7 @@ export default function ImportTeamModal({
               value={teamFormat}
               onChange={(e) => setTeamFormat(e.target.value as typeof teamFormat)}
               disabled={isImporting}
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50"
             >
               <option value="Reg M-A">Reg M-A</option>
               <option value="Reg M-B">Reg M-B</option>
@@ -253,13 +253,13 @@ export default function ImportTeamModal({
               disabled={isImporting}
               placeholder="Paste your Showdown/Pokepaste team, or a pokepast.es link, here... (or leave blank for an empty team)"
               rows={12}
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-500 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 resize-none"
+              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-500 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50 resize-none"
             />
           </div>
 
           {/* Pokepaste Fetch Progress */}
           {isFetchingPokepaste && (
-            <div className="flex items-center gap-2 text-blue-400 text-sm">
+            <div className="flex items-center gap-2 text-accent-gold text-sm">
               <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -270,7 +270,7 @@ export default function ImportTeamModal({
 
           {/* Progress Message */}
           {importProgress && (
-            <div className="flex items-center gap-2 text-blue-400 text-sm">
+            <div className="flex items-center gap-2 text-accent-gold text-sm">
               <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -299,7 +299,7 @@ export default function ImportTeamModal({
           <button
             onClick={handleImport}
             disabled={isImporting}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-accent-gold hover:bg-accent-gold-deep text-zinc-900 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isImporting ? 'Importing...' : pastedText.trim() ? 'Import Team' : 'Create Empty Team'}
           </button>

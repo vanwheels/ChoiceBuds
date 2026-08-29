@@ -41,7 +41,7 @@ export default function RegulationBadge({ team, onChange }: RegulationBadgeProps
                 setIsOpen(false);
               }}
               className={`w-full text-left px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
-                id === currentId ? 'bg-blue-600 text-white' : 'text-zinc-300 hover:bg-zinc-800'
+                id === currentId ? 'bg-accent-gold text-zinc-900' : 'text-zinc-300 hover:bg-zinc-800'
               }`}
             >
               {getRegulationLabel(id)}

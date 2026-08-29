@@ -20,7 +20,7 @@ interface TeamSheetPdfModalProps {
   onClose: () => void;
 }
 
-const inputClass = 'flex-1 px-3 py-1.5 text-sm bg-gray-900 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500';
+const inputClass = 'flex-1 px-3 py-1.5 text-sm bg-gray-900 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-gold';
 
 export default function TeamSheetPdfModal({ team, teamsState, settingsState, onClose }: TeamSheetPdfModalProps) {
   const { updateTeam } = teamsState;
@@ -127,7 +127,7 @@ export default function TeamSheetPdfModal({ team, teamsState, settingsState, onC
           <button
             onClick={handleDownload}
             disabled={isWorking}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-accent-gold hover:bg-accent-gold-deep text-zinc-900 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isWorking ? 'Generating...' : 'Download PDF'}
           </button>

@@ -84,7 +84,7 @@ export default function ActiveBattleView({ battle, battleLogActions, roster, res
               <button
                 type="button"
                 onClick={() => battleLogActions.advanceTurn(battle)}
-                className="px-3 py-1 text-xs rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold cursor-pointer"
+                className="px-3 py-1 text-xs rounded bg-accent-gold hover:bg-accent-gold-deep text-zinc-900 font-semibold cursor-pointer"
               >
                 Next Turn
               </button>
@@ -111,7 +111,7 @@ export default function ActiveBattleView({ battle, battleLogActions, roster, res
         onBlur={() => battleLogActions.setNotes(battle, notes)}
         placeholder="Notes..."
         rows={2}
-        className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-700 rounded-lg text-gray-200 outline-none focus:border-blue-500 resize-none"
+        className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-700 rounded-lg text-gray-200 outline-none focus:border-accent-gold resize-none"
       />
     </div>
   );

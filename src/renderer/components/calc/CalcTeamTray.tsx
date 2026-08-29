@@ -39,7 +39,7 @@ export default function CalcTeamTray({ teams, resolveSprite, onLoadPokemon }: Ca
       <select
         value={selectedTeamId}
         onChange={(e) => setSelectedTeamId(e.target.value)}
-        className="px-2 py-0.5 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500"
+        className="px-2 py-0.5 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-accent-gold"
       >
         <option value="">Select a team...</option>
         {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
@@ -54,7 +54,7 @@ export default function CalcTeamTray({ teams, resolveSprite, onLoadPokemon }: Ca
               onDragStart={handleDragStart(selectedTeam.id, i)}
               onClick={() => onLoadPokemon(p)}
               title={`${p.showdownData.nickname || p.showdownData.species} - click or drag onto a panel to load`}
-              className="w-9 h-9 shrink-0 rounded bg-gray-800 border border-gray-600 hover:border-blue-500 flex items-center justify-center cursor-grab transition-colors"
+              className="w-9 h-9 shrink-0 rounded bg-gray-800 border border-gray-600 hover:border-accent-gold flex items-center justify-center cursor-grab transition-colors"
             >
               <img
                 src={resolveSprite(getPixelSpriteUrl(p.pokedexNumber, p.showdownData.species, p.showdownData.gender || 'M', p.showdownData.shiny))}

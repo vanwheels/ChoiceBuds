@@ -82,7 +82,7 @@ export default function CalcPage({
             key={id}
             onClick={() => setRegulationId(id)}
             className={`px-3 py-1 text-xs font-bold uppercase tracking-wide rounded transition-colors cursor-pointer ${
-              regulationId === id ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+              regulationId === id ? 'bg-accent-gold text-zinc-900' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
             }`}
           >
             {getRegulationLabel(id)}

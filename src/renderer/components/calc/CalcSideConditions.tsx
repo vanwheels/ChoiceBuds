@@ -64,7 +64,7 @@ function ToggleButton({ active, label, align, onClick }: { active: boolean; labe
       type="button"
       onClick={onClick}
       className={`w-full px-2 py-0.5 text-xs font-bold rounded transition-colors cursor-pointer ${align === 'right' ? 'text-right' : 'text-left'} ${
-        active ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+        active ? 'bg-accent-gold text-zinc-900' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
       }`}
     >
       {label}
@@ -92,7 +92,7 @@ export default function CalcSideConditions({ title, side, align, ownAbility, onC
               type="button"
               onClick={() => onChange({ spikes: count })}
               className={`flex-1 px-1 py-0.5 text-xs font-bold rounded transition-colors cursor-pointer ${
-                side.spikes === count ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                side.spikes === count ? 'bg-accent-gold text-zinc-900' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
               }`}
             >
               {count}

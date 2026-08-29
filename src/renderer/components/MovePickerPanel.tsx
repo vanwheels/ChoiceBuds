@@ -41,7 +41,7 @@ export default function MovePickerPanel({ moveIndex, moves, usagePercentByName, 
   );
 
   return (
-    <div ref={ref} className="w-full flex flex-col gap-2 bg-gray-800 border-2 border-blue-500 rounded-lg p-2">
+    <div ref={ref} className="w-full flex flex-col gap-2 bg-gray-800 border-2 border-accent-gold rounded-lg p-2">
       <p className="text-[10px] font-bold text-gray-400 uppercase text-center">Select Move {moveIndex + 1}</p>
       <input
         type="text"
@@ -49,7 +49,7 @@ export default function MovePickerPanel({ moveIndex, moves, usagePercentByName, 
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search moves... (#physical, #fire, ...)"
         autoFocus
-        className="w-full px-2 py-1 text-sm font-bold text-white bg-gray-900 border border-gray-600 rounded text-center outline-none focus:border-blue-500"
+        className="w-full px-2 py-1 text-sm font-bold text-white bg-gray-900 border border-gray-600 rounded text-center outline-none focus:border-accent-gold"
       />
       <div className="overflow-y-auto flex flex-col divide-y divide-gray-700" style={{ maxHeight }}>
         {filtered.length === 0 ? (
@@ -75,7 +75,7 @@ export default function MovePickerPanel({ moveIndex, moves, usagePercentByName, 
                     </span>
                   )}
                   {percent != null && (
-                    <span className="text-blue-400 text-[10px] font-bold whitespace-nowrap">{percent.toFixed(1)}%</span>
+                    <span className="text-accent-gold text-[10px] font-bold whitespace-nowrap">{percent.toFixed(1)}%</span>
                   )}
                   <span className="text-gray-400 text-[10px] ml-auto whitespace-nowrap">
                     Pow {move.power ?? '--'} · Acc {move.accuracy ?? '--'} · PP {move.pp}

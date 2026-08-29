@@ -59,7 +59,7 @@ export default function CalcAutocomplete({ label, value, options, placeholder, o
         placeholder={placeholder}
         onChange={(e) => { setQuery(e.target.value); setIsOpen(true); }}
         onFocus={() => setIsOpen(true)}
-        className="px-2 py-0.5 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500"
+        className="px-2 py-0.5 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-accent-gold"
       />
       {isOpen && filtered.length > 0 && (
         <div className="absolute z-50 top-full left-0 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-zinc-700 bg-slate-900 shadow-xl">
@@ -68,7 +68,7 @@ export default function CalcAutocomplete({ label, value, options, placeholder, o
               key={option}
               type="button"
               onClick={() => handleSelect(option)}
-              className="w-full text-left px-2 py-1 text-sm text-zinc-200 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer"
+              className="w-full text-left px-2 py-1 text-sm text-zinc-200 hover:bg-accent-gold hover:text-zinc-900 transition-colors cursor-pointer"
             >
               {option}
             </button>

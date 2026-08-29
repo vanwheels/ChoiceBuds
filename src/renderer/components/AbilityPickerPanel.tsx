@@ -28,14 +28,14 @@ export default function AbilityPickerPanel({ abilities, usagePercentByName, maxH
   const filtered = abilities.filter(ability => toReadableName(ability.name).toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div ref={ref} className="w-full flex flex-col gap-2 bg-gray-800 border-2 border-blue-500 rounded-lg p-2">
+    <div ref={ref} className="w-full flex flex-col gap-2 bg-gray-800 border-2 border-accent-gold rounded-lg p-2">
       <input
         type="text"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search abilities..."
         autoFocus
-        className="w-full px-2 py-1 text-sm font-bold text-white bg-gray-900 border border-gray-600 rounded text-center outline-none focus:border-blue-500"
+        className="w-full px-2 py-1 text-sm font-bold text-white bg-gray-900 border border-gray-600 rounded text-center outline-none focus:border-accent-gold"
       />
       <div className="overflow-y-auto flex flex-col gap-1" style={{ maxHeight }}>
         {filtered.length === 0 ? (
@@ -52,7 +52,7 @@ export default function AbilityPickerPanel({ abilities, usagePercentByName, maxH
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-white text-sm font-medium truncate">{toReadableName(ability.name)}</span>
                   {percent != null && (
-                    <span className="text-blue-400 text-xs font-bold shrink-0">{percent.toFixed(1)}%</span>
+                    <span className="text-accent-gold text-xs font-bold shrink-0">{percent.toFixed(1)}%</span>
                   )}
                 </div>
                 <div className="text-gray-400 text-xs truncate">{ability.description}</div>

@@ -146,7 +146,7 @@ export default function MoveOutcomePrompt({ battle, battleLogActions, gameDataSt
                       type="button"
                       onClick={() => battleLogActions.setActionHitsLanded(battle, turnNumber, actionId, t.pokemonId, hits === n ? null : n)}
                       className={`text-[9px] w-4 h-4 rounded cursor-pointer transition-colors ${
-                        hits === n ? 'bg-blue-900/70 text-blue-300' : 'bg-gray-800 text-gray-400 hover:text-gray-200 hover:bg-gray-700'
+                        hits === n ? 'bg-accent-gold/20 text-accent-gold' : 'bg-gray-800 text-gray-400 hover:text-gray-200 hover:bg-gray-700'
                       }`}
                     >
                       {n}

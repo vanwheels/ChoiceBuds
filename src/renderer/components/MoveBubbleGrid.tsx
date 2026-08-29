@@ -104,7 +104,7 @@ export default function MoveBubbleGrid({
             onMouseEnter={(e) => onHoverEnter(key, e.currentTarget.getBoundingClientRect())}
             onMouseLeave={() => onHoverLeave(key)}
             onClick={isEditing ? (e) => onToggleMenu(key, e) : undefined}
-            className={`w-full min-h-[2.75rem] flex items-center justify-center text-center whitespace-normal break-words p-1 rounded-xl text-xs font-bold transition-colors ${theme.bg} ${theme.text} ${isEditing ? 'cursor-grab hover:opacity-80' : ''} ${dragOverIndex === index ? 'ring-2 ring-blue-400' : ''}`}
+            className={`w-full min-h-[2.75rem] flex items-center justify-center text-center whitespace-normal break-words p-1 rounded-xl text-xs font-bold transition-colors ${theme.bg} ${theme.text} ${isEditing ? 'cursor-grab hover:opacity-80' : ''} ${dragOverIndex === index ? 'ring-2 ring-accent-gold' : ''}`}
           >
             {selectedMoves[index] || `Move ${index + 1}`}
           </div>

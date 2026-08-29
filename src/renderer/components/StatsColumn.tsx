@@ -97,7 +97,7 @@ export default function StatsColumn({ evs, nature, isEditing = false, onUpdatePo
                 value={nature || ''}
                 onChange={(e) => onUpdatePokemon({ nature: e.target.value || undefined })}
                 title="Nature"
-                className="min-w-0 text-[10px] bg-gray-900 border border-gray-600 rounded px-1 py-0 text-gray-200 outline-none focus:border-blue-500"
+                className="min-w-0 text-[10px] bg-gray-900 border border-gray-600 rounded px-1 py-0 text-gray-200 outline-none focus:border-accent-gold"
               >
                 <option value="">Nature</option>
                 {NATURES.map(n => <option key={n} value={n}>{n}</option>)}

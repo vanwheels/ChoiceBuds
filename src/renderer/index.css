@@ -4,6 +4,20 @@
  */
 @import "tailwindcss";
 
+/**
+ * Design tokens - color palette (2026-08-29 palette rework, see TODO.md)
+ * Primary accent -> gold (sampled from the Gholdengo sprite), secondary
+ * accent -> royal purple (sampled from build/icon.png's background fill).
+ * Named here once so a future palette tweak is a one-file change instead of
+ * resweeping every component's Tailwind classes again.
+ */
+@theme {
+  --color-accent-gold: #f0c840;
+  --color-accent-gold-deep: #c09830;
+  --color-accent-purple: #381070;
+  --color-accent-purple-light: #6d25d0;
+}
+
 /* Global Reset and Base Styles */
 @layer base {
   * {

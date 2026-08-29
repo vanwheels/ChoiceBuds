@@ -20,7 +20,7 @@ export default function StatusConditionPopover({ current, onPick, onClose }: Sta
   const ref = useDismissable<HTMLDivElement>(onClose);
 
   return (
-    <div ref={ref} className="absolute z-20 top-full mt-1 left-1/2 -translate-x-1/2 w-32 p-2 rounded-lg bg-gray-800 border-2 border-blue-500 shadow-lg flex flex-col gap-1">
+    <div ref={ref} className="absolute z-20 top-full mt-1 left-1/2 -translate-x-1/2 w-32 p-2 rounded-lg bg-gray-800 border-2 border-accent-gold shadow-lg flex flex-col gap-1">
       <div className="flex items-center justify-between">
         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Status</span>
         <button type="button" onClick={onClose} className="text-gray-500 hover:text-red-400 cursor-pointer text-xs">×</button>

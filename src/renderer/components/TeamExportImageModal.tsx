@@ -110,7 +110,7 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
                   onClick={() => setViewMode('team')}
                   title="Full per-Pokemon detail grid"
                   className={`px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
-                    viewMode === 'team' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    viewMode === 'team' ? 'bg-accent-gold text-zinc-900' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                   }`}
                 >
                   Team
@@ -119,7 +119,7 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
                   onClick={() => setViewMode('notes')}
                   title="Compact sprite strip + the full strategy writeup"
                   className={`px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
-                    viewMode === 'notes' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    viewMode === 'notes' ? 'bg-accent-gold text-zinc-900' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                   }`}
                 >
                   Notes
@@ -136,7 +136,7 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
                   onClick={() => setSheetMode('open')}
                   title="Shows species, item, ability, moves, and Stat Alignment (Nature + EVs)"
                   className={`px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
-                    sheetMode === 'open' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    sheetMode === 'open' ? 'bg-accent-gold text-zinc-900' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                   }`}
                 >
                   Open
@@ -145,7 +145,7 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
                   onClick={() => setSheetMode('closed')}
                   title="Hides Stat Alignment (Nature + EVs) - matches a Closed Team Sheet"
                   className={`px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
-                    sheetMode === 'closed' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    sheetMode === 'closed' ? 'bg-accent-gold text-zinc-900' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                   }`}
                 >
                   Closed
@@ -168,7 +168,7 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
           <button
             onClick={handleCopy}
             disabled={isWorking}
-            className="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+            className="px-3 py-1.5 text-sm bg-accent-gold hover:bg-accent-gold-deep text-zinc-900 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
           >
             {copied ? 'Copied!' : 'Copy to Clipboard'}
           </button>

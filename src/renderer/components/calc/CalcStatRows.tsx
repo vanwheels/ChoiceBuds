@@ -69,7 +69,7 @@ export default function CalcStatRows({ baseStats, boostedStats, sps, boosts, nat
               if (!Number.isNaN(parsed)) onChangeSp(key, Math.max(0, Math.min(32, parsed)));
             }}
             title="Stat Points (0-32)"
-            className="w-10 shrink-0 px-1 py-0.5 text-xs text-center bg-gray-900 border border-gray-600 rounded text-white outline-none focus:border-blue-500"
+            className="w-10 shrink-0 px-1 py-0.5 text-xs text-center bg-gray-900 border border-gray-600 rounded text-white outline-none focus:border-accent-gold"
           />
           <input
             type="number"
@@ -81,7 +81,7 @@ export default function CalcStatRows({ baseStats, boostedStats, sps, boosts, nat
               if (!Number.isNaN(parsed)) onChangeBoost(key, Math.max(-6, Math.min(6, parsed)));
             }}
             title="Stat stage boost (-6 to +6)"
-            className="w-10 shrink-0 px-1 py-0.5 text-xs text-center bg-gray-900 border border-gray-600 rounded text-white outline-none focus:border-blue-500"
+            className="w-10 shrink-0 px-1 py-0.5 text-xs text-center bg-gray-900 border border-gray-600 rounded text-white outline-none focus:border-accent-gold"
           />
           <span
             className={`w-10 text-center text-xs font-bold shrink-0 ${

@@ -106,7 +106,7 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
         onDragLeave={() => setIsDragOver(false)}
         onDrop={handleDrop}
         className={`w-full flex flex-row items-center h-16 px-6 bg-zinc-950/40 rounded-t-xl transition-colors cursor-grab ${
-          isDragOver ? 'ring-2 ring-inset ring-blue-500' : ''
+          isDragOver ? 'ring-2 ring-inset ring-accent-gold' : ''
         }`}
         style={{ paddingLeft: '1.25rem', paddingRight: '1.25rem' }}
       >
@@ -179,7 +179,7 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
               onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
               placeholder="Author"
               title="Author"
-              className="w-24 px-1.5 py-0.5 text-[10px] bg-zinc-800 border border-zinc-700 rounded text-zinc-100 placeholder-zinc-600 outline-none focus:border-blue-500"
+              className="w-24 px-1.5 py-0.5 text-[10px] bg-zinc-800 border border-zinc-700 rounded text-zinc-100 placeholder-zinc-600 outline-none focus:border-accent-gold"
             />
           ) : team.author ? (
             <span className="text-[10px] text-zinc-500 whitespace-nowrap" title={`by ${team.author}`}>by {team.author}</span>
@@ -197,7 +197,7 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
           <button
             onClick={() => setIsExportOpen(true)}
             title="Export Team (Showdown format)"
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-blue-400 hover:bg-zinc-800 text-sm transition-all cursor-pointer"
+            className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-accent-gold hover:bg-zinc-800 text-sm transition-all cursor-pointer"
           >
             ⇩
           </button>
@@ -206,7 +206,7 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
           <button
             onClick={() => setIsImageExportOpen(true)}
             title="Export Team Image"
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-blue-400 hover:bg-zinc-800 text-sm transition-all cursor-pointer"
+            className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-accent-gold hover:bg-zinc-800 text-sm transition-all cursor-pointer"
           >
             ▦
           </button>
@@ -215,7 +215,7 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
           <button
             onClick={() => setIsPdfExportOpen(true)}
             title="Export Team Sheet PDF"
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-blue-400 hover:bg-zinc-800 text-sm transition-all cursor-pointer"
+            className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-accent-gold hover:bg-zinc-800 text-sm transition-all cursor-pointer"
           >
             🗎
           </button>
@@ -232,7 +232,7 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
               }
             }}
             title="Edit Team"
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-blue-400 hover:bg-zinc-800 text-sm transition-all cursor-pointer"
+            className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-accent-gold hover:bg-zinc-800 text-sm transition-all cursor-pointer"
           >
             ✎
           </button>
@@ -308,7 +308,7 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
               ) : (
                 <button
                   onClick={() => setIsAddPickerOpen(true)}
-                  className="w-full h-full min-h-[280px] flex items-center justify-center rounded-lg border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-blue-400 hover:border-blue-500 transition-colors cursor-pointer"
+                  className="w-full h-full min-h-[280px] flex items-center justify-center rounded-lg border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer"
                 >
                   <span className="text-sm font-semibold">+ Add Pokémon</span>
                 </button>
@@ -334,7 +334,7 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
                   }}
                   placeholder="Strategy notes, game plan, matchup tips..."
                   rows={3}
-                  className="w-full px-3 py-2 text-sm bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-600 outline-none focus:border-blue-500 resize-y"
+                  className="w-full px-3 py-2 text-sm bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-600 outline-none focus:border-accent-gold resize-y"
                 />
               ) : (
                 <p className="text-sm text-zinc-400 whitespace-pre-wrap border-l-2 border-zinc-700 pl-3">{team.notes}</p>

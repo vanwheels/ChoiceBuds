@@ -46,7 +46,7 @@ export default function UpdateCheckSection({ updateCheckState }: UpdateCheckSect
             <p className="text-xs text-yellow-400">Update available: {latestVersion}</p>
             <button
               onClick={handleViewRelease}
-              className="px-2 py-1 text-[11px] font-bold rounded bg-blue-600 text-white hover:bg-blue-500 transition-colors cursor-pointer"
+              className="px-2 py-1 text-[11px] font-bold rounded bg-accent-gold text-zinc-900 hover:bg-accent-gold-deep transition-colors cursor-pointer"
             >
               View Release
             </button>
@@ -63,7 +63,7 @@ export default function UpdateCheckSection({ updateCheckState }: UpdateCheckSect
             <p className="text-xs text-green-400">Update {latestVersion} ready to install.</p>
             <button
               onClick={installUpdate}
-              className="px-2 py-1 text-[11px] font-bold rounded bg-blue-600 text-white hover:bg-blue-500 transition-colors cursor-pointer"
+              className="px-2 py-1 text-[11px] font-bold rounded bg-accent-gold text-zinc-900 hover:bg-accent-gold-deep transition-colors cursor-pointer"
             >
               Restart & Update
             </button>

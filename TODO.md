@@ -200,11 +200,42 @@ focused on what's actually next.
          grid's 24px gap into neighboring cards' glows, muddying the
          effect - tightened to `inset:-3px`, `blur(7px)`, `opacity:0.38`,
          confirmed to stay within each card's own footprint.
-    - **Not yet implemented** - design-mockup pass only, no code written.
-      Needs an implementation-leg breakdown (the `@theme` token
-      infrastructure itself is probably its own leg before any component
-      touches it) - not yet sequenced with the user.
-
+    - **Implementation started 2026-08-29** - sequenced into legs with the
+      user (A+B combined, then C, then D):
+      - **Leg A+B done (2026-08-29)** - token infrastructure + the
+        blue-600-as-primary-accent sweep, together since sweeping to gold
+        needs the token to exist first. `index.css` gained a Tailwind v4
+        `@theme` block (`--color-accent-gold: #f0c840`,
+        `--color-accent-gold-deep: #c09830`, `--color-accent-purple:
+        #381070`, `--color-accent-purple-light: #6d25d0` - purple tokens
+        defined now, not yet consumed anywhere pending a future leg). Swept
+        ~50 files: every `bg-blue-600`/`hover:bg-blue-700`/`focus:ring-
+        blue-500`/`focus:border-blue-500`/active-picker-panel `border-
+        blue-500`/drag-over `ring-blue-400` instance that was acting as
+        the app's primary interactive accent (buttons, active tab/toggle
+        states, focus rings, popover borders, the "ChoiceBuds" wordmark)
+        now uses `accent-gold`/`accent-gold-deep`; a solid `bg-accent-gold`
+        pairs with `text-zinc-900` instead of `text-white` since the gold
+        base is light (poor contrast with white). Deliberately left blue
+        alone where it wasn't the primary accent but a separate existing
+        color convention: the player(blue)/opponent(red) identity pairing
+        throughout Battle Log (`TurnLog`/`BattlefieldSlot`/
+        `MoveOutcomePrompt`/`SideConditionsRow`/`PlayerFieldPanel`/
+        `Battlefield`'s "Your Side" label), the male-gender ♂ symbol
+        (`PokemonCard`/`CalcPokemonPanel`, blue/pink is a fixed convention
+        paired with female pink), nature-lowered-stat text color
+        (`CalcStatRows`), the Water-type badge and SpA stat-label colors
+        (`pokemonTheme.ts`), and Reg M-A's own blue regulation-badge theme
+        (kept as a category-identity color the same way Reg M-B's purple
+        badge was explicitly kept in the approved spec above) - this is an
+        assumption, not something the approved spec called out one way or
+        the other, so flag if any of these should actually have moved to
+        gold too. `type-check`/`lint`/`build` all clean; live-verified via
+        `run-desktop` (Teams page nav/buttons/active filter, Settings page
+        active toggles all render gold with dark text; Reg M-B badge purple
+        untouched).
+      - **Not yet started**: Leg C (gray/zinc neutral-standardization sweep)
+        and Leg D (per-type Pokémon card glow effect).
   - **Animation/motion language - design approved 2026-08-29**, same
     artifact, four new artboards built as **live, clickable demos** (real
     CSS transitions standing in for the actual Framer Motion timings/

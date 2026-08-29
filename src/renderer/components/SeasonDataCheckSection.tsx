@@ -37,7 +37,7 @@ export default function SeasonDataCheckSection({ seasonDataCheckState }: SeasonD
       <div className="mt-3 flex items-center gap-2">
         <button
           onClick={markChecked}
-          className="px-2 py-1 text-[11px] font-bold rounded bg-blue-600 text-white hover:bg-blue-500 transition-colors cursor-pointer"
+          className="px-2 py-1 text-[11px] font-bold rounded bg-accent-gold text-zinc-900 hover:bg-accent-gold-deep transition-colors cursor-pointer"
         >
           Mark as Checked
         </button>

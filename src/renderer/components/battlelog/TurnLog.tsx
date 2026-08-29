@@ -116,7 +116,7 @@ export default function TurnLog({ battle, battleLogActions, onReviewInCalc }: Tu
                         type="button"
                         onClick={() => onReviewInCalc(buildCalcReviewPayload(battle, turn.number, action, action.target![0].pokemonId))}
                         title="Open this matchup in the Calc tab, reconstructed as it was on this turn"
-                        className="text-[10px] px-1.5 py-0.5 rounded bg-gray-800 text-gray-400 hover:text-blue-300 hover:bg-blue-900/40 cursor-pointer"
+                        className="text-[10px] px-1.5 py-0.5 rounded bg-gray-800 text-gray-400 hover:text-accent-gold hover:bg-accent-gold/15 cursor-pointer"
                       >
                         Show Calc
                       </button>

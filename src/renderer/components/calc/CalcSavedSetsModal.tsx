@@ -121,18 +121,18 @@ export default function CalcSavedSetsModal({ onClose, databaseState, savedPokemo
               disabled={isImporting}
               placeholder="Paste one or more Showdown-format Pokémon sets, separated by a blank line..."
               rows={8}
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-500 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 resize-none"
+              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-500 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50 resize-none"
             />
             <div className="flex justify-end mt-2">
               <button
                 onClick={handleImport}
                 disabled={isImporting || !pastedText.trim()}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-accent-gold hover:bg-accent-gold-deep text-zinc-900 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isImporting ? 'Saving...' : 'Save Set(s)'}
               </button>
             </div>
-            {importProgress && <p className="text-blue-400 text-sm mt-2">{importProgress}</p>}
+            {importProgress && <p className="text-accent-gold text-sm mt-2">{importProgress}</p>}
             {error && (
               <div className="mt-2 p-3 bg-red-900 bg-opacity-50 border border-red-700 rounded-lg text-red-200 text-sm">
                 {error}
@@ -173,14 +173,14 @@ export default function CalcSavedSetsModal({ onClose, databaseState, savedPokemo
                           onBlur={commitRename}
                           onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
                           autoFocus
-                          className="w-full px-1.5 py-0.5 text-sm bg-gray-800 border border-blue-500 rounded text-gray-100 outline-none"
+                          className="w-full px-1.5 py-0.5 text-sm bg-gray-800 border border-accent-gold rounded text-gray-100 outline-none"
                         />
                       ) : (
                         <button
                           type="button"
                           onClick={() => startRename(entry.id, entry.label)}
                           title="Click to rename"
-                          className="text-left text-sm font-semibold text-gray-100 hover:text-blue-400 truncate cursor-pointer"
+                          className="text-left text-sm font-semibold text-gray-100 hover:text-accent-gold truncate cursor-pointer"
                         >
                           {entry.label}
                         </button>

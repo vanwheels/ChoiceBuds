@@ -67,7 +67,7 @@ export default function TeamsPage({
           {/* Add New Team Button */}
           <button
             onClick={() => setIsImportModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+            className="flex items-center gap-2 px-4 py-2 bg-accent-gold hover:bg-accent-gold-deep text-zinc-900 rounded-lg transition-colors font-medium"
           >
             <span className="text-xl">+</span>
             <span>Add New Team</span>
@@ -82,7 +82,7 @@ export default function TeamsPage({
               onClick={() => setActiveFilter(filter)}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 activeFilter === filter
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-accent-gold text-zinc-900'
                   : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
               }`}
             >

@@ -79,7 +79,7 @@ function EmptySlot({ side, onClick, onDrop }: { side: BattleSide; onClick: () =>
       title={dragState === 'invalid' ? `Can't send in a Pokemon from the other side` : 'Bring in a benched Pokemon (click or drag)'}
       className={`w-20 h-20 rounded-lg border-2 border-dashed flex items-center justify-center text-xs cursor-pointer transition-colors ${
         dragState === 'valid'
-          ? 'border-blue-400 bg-blue-500/10 text-blue-300'
+          ? 'border-accent-gold bg-accent-gold/10 text-accent-gold'
           : dragState === 'invalid'
             ? 'border-red-500 bg-red-500/10 text-red-400 cursor-not-allowed'
             : 'border-gray-800 text-gray-700 hover:border-gray-600 hover:text-gray-500'
@@ -100,7 +100,7 @@ function BenchPicker({
 }) {
   const ref = useDismissable<HTMLDivElement>(onClose);
   return (
-    <div ref={ref} className="absolute z-20 top-full mt-1 left-1/2 -translate-x-1/2 w-40 p-2 rounded-lg bg-gray-800 border-2 border-blue-500 shadow-lg flex flex-col gap-1">
+    <div ref={ref} className="absolute z-20 top-full mt-1 left-1/2 -translate-x-1/2 w-40 p-2 rounded-lg bg-gray-800 border-2 border-accent-gold shadow-lg flex flex-col gap-1">
       <div className="flex items-center justify-between">
         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Switch in</span>
         <button type="button" onClick={onClose} className="text-gray-500 hover:text-red-400 cursor-pointer text-xs">×</button>
@@ -117,7 +117,7 @@ function BenchPicker({
               key={mon.id}
               type="button"
               onClick={() => onPick(mon.id)}
-              className="flex items-center gap-2 px-1.5 py-1 rounded hover:bg-blue-900/60 cursor-pointer transition-colors"
+              className="flex items-center gap-2 px-1.5 py-1 rounded hover:bg-accent-gold/15 cursor-pointer transition-colors"
             >
               <img
                 src={resolveSprite(getPixelSpriteUrl(mon.pokedexNumber, mon.species, gender, false))}
@@ -299,7 +299,7 @@ export default function BattlefieldSlot({
         onClick={onSlotClick}
         title={!canAct ? 'Already acted this turn' : undefined}
         className={`relative rounded-lg p-1 cursor-pointer transition-colors ${!canAct ? 'opacity-50' : ''} ${
-          isArmed ? 'bg-blue-600/30 ring-2 ring-blue-400' : isCandidate ? 'bg-yellow-500/20 ring-2 ring-yellow-400' : 'hover:bg-gray-800/60'
+          isArmed ? 'bg-accent-gold/30 ring-2 ring-accent-gold' : isCandidate ? 'bg-yellow-500/20 ring-2 ring-yellow-400' : 'hover:bg-gray-800/60'
         }`}
       >
         <img src={spriteUrl} alt={mon.species} className="w-20 h-20 object-contain [image-rendering:pixelated]" />
@@ -389,7 +389,7 @@ export default function BattlefieldSlot({
           type="button"
           onClick={e => { e.stopPropagation(); onOpenStats(); }}
           title="Adjust stat stages"
-          className="text-[9px] px-1 rounded bg-gray-900 text-gray-500 hover:text-blue-300 cursor-pointer"
+          className="text-[9px] px-1 rounded bg-gray-900 text-gray-500 hover:text-accent-gold cursor-pointer"
         >
           Stats
         </button>

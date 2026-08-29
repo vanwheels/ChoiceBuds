@@ -51,7 +51,7 @@ export default function SettingsPage({ settingsState, teamsState, battlesState, 
               onClick={() => setDefaultRegulation(getRegulationLabel(id) as 'Reg M-A' | 'Reg M-B')}
               className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded transition-colors cursor-pointer ${
                 id === currentId
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-accent-gold text-zinc-900'
                   : 'text-zinc-300 bg-gray-900 hover:bg-zinc-800'
               }`}
             >

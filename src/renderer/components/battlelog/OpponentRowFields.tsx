@@ -38,7 +38,7 @@ export function formatAbilityName(slug: string): string {
   return slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
 
-const cellSelectClass = 'block w-full px-1 py-0 leading-4 text-[10px] bg-gray-900 border border-gray-700 rounded text-gray-200 outline-none focus:border-blue-500';
+const cellSelectClass = 'block w-full px-1 py-0 leading-4 text-[10px] bg-gray-900 border border-gray-700 rounded text-gray-200 outline-none focus:border-accent-gold';
 
 export function OpponentAbilityCell({ battle, opponent, battleLogActions, gameDataState }: RowFieldProps & { gameDataState: UseGameDataReturn }) {
   const [legalAbilities, setLegalAbilities] = useState<string[]>([]);

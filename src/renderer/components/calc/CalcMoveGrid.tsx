@@ -34,7 +34,7 @@ export default function CalcMoveGrid({ title, moves, results, moveOptions, selec
             key={index}
             onClick={() => slot.name && onSelect(index)}
             className={`flex items-center gap-2 px-2 py-0.5 rounded border transition-colors ${
-              isSelected ? 'border-blue-500 bg-blue-950/40' : 'border-zinc-800 hover:border-zinc-700'
+              isSelected ? 'border-accent-gold bg-accent-gold/10' : 'border-zinc-800 hover:border-zinc-700'
             } ${slot.name ? 'cursor-pointer' : ''}`}
           >
             <div className="w-40 shrink-0" onClick={(e) => e.stopPropagation()}>
@@ -51,7 +51,7 @@ export default function CalcMoveGrid({ title, moves, results, moveOptions, selec
                 onChange={(e) => { e.stopPropagation(); onChangeMove(index, { hits: Number(e.target.value) }); }}
                 onClick={(e) => e.stopPropagation()}
                 title="Number of hits"
-                className="px-1 py-0.5 text-xs bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500 cursor-pointer"
+                className="px-1 py-0.5 text-xs bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-accent-gold cursor-pointer"
               >
                 {Array.from({ length: maxHits - minHits + 1 }, (_, i) => minHits + i).map(n => (
                   <option key={n} value={n}>×{n}</option>
@@ -62,7 +62,7 @@ export default function CalcMoveGrid({ title, moves, results, moveOptions, selec
               type="button"
               onClick={(e) => { e.stopPropagation(); onChangeMove(index, { isCrit: !slot.isCrit }); }}
               className={`px-2 py-0.5 text-[10px] font-bold rounded transition-colors cursor-pointer shrink-0 ${
-                slot.isCrit ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                slot.isCrit ? 'bg-accent-gold text-zinc-900' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
               }`}
             >
               Crit

@@ -42,7 +42,7 @@ export default function SpeciesPickerCard({ roster, rulesetId, resolveSprite, on
     : legalRoster.filter(pkmn => pkmn.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div ref={ref} className="relative bg-gray-700 border-2 border-blue-500 rounded-lg p-3 flex flex-col gap-3 max-w-[280px] min-h-[280px] max-h-[32rem]">
+    <div ref={ref} className="relative bg-gray-700 border-2 border-accent-gold rounded-lg p-3 flex flex-col gap-3 max-w-[280px] min-h-[280px] max-h-[32rem]">
       <button
         onClick={onClose}
         title="Cancel"
@@ -59,7 +59,7 @@ export default function SpeciesPickerCard({ roster, rulesetId, resolveSprite, on
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search species... (#fire, #grass, ...)"
           autoFocus
-          className="w-full px-2 py-1 text-sm font-bold text-white bg-gray-800 border border-gray-600 rounded text-center outline-none focus:border-blue-500"
+          className="w-full px-2 py-1 text-sm font-bold text-white bg-gray-800 border border-gray-600 rounded text-center outline-none focus:border-accent-gold"
         />
       </div>
 

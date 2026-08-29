@@ -52,7 +52,7 @@ export default function TypeMatchupPage({ teamsState, gameDataState, spriteCache
         <select
           value={selectedTeamId}
           onChange={e => setSelectedTeamId(e.target.value)}
-          className="px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500"
+          className="px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-accent-gold"
         >
           <option value="">Select a team...</option>
           {teams.map(t => (

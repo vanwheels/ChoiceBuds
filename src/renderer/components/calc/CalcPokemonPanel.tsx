@@ -82,7 +82,7 @@ function FormeToggle({ group, current, onSelect }: { group: string[]; current: s
           type="button"
           onClick={() => onSelect(name)}
           className={`px-2 py-1 text-xs font-bold rounded transition-colors cursor-pointer ${
-            current === name ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+            current === name ? 'bg-accent-gold text-zinc-900' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
           }`}
         >
           {formeDisplayLabel(group, name)}
@@ -249,11 +249,11 @@ export default function CalcPokemonPanel({
               const parsed = Number(e.target.value);
               if (!Number.isNaN(parsed)) onChange({ level: Math.max(1, Math.min(100, parsed)) });
             }}
-            className="w-14 px-1 py-0.5 text-sm text-center bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500"
+            className="w-14 px-1 py-0.5 text-sm text-center bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-accent-gold"
           />
         </div>
         <div
-          className="w-9 h-9 shrink-0 bg-gray-800 rounded-lg border border-gray-600 flex items-center justify-center overflow-hidden cursor-pointer hover:border-blue-500 transition-colors"
+          className="w-9 h-9 shrink-0 bg-gray-800 rounded-lg border border-gray-600 flex items-center justify-center overflow-hidden cursor-pointer hover:border-accent-gold transition-colors"
           onClick={cycleGender}
           title="Click to toggle gender"
         >
@@ -300,7 +300,7 @@ export default function CalcPokemonPanel({
           <select
             value={state.nature}
             onChange={(e) => onChange({ nature: e.target.value as NatureName })}
-            className="px-2 py-0.5 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500"
+            className="px-2 py-0.5 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-accent-gold"
           >
             {natureOptions.map(n => <option key={n} value={n}>{n}</option>)}
           </select>
@@ -310,7 +310,7 @@ export default function CalcPokemonPanel({
           <select
             value={state.status}
             onChange={(e) => onChange({ status: e.target.value as CalcPokemonState['status'] })}
-            className="px-2 py-0.5 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-blue-500"
+            className="px-2 py-0.5 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-accent-gold"
           >
             <option value="">Healthy</option>
             {STATUS_OPTIONS.map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}

@@ -29,7 +29,7 @@ export default function AbilityCapsule({
       onMouseEnter={onHoverEnter}
       onMouseLeave={onHoverLeave}
       onClick={isEditing ? onToggleMenu : undefined}
-      className={`px-4 py-1.5 rounded-full border border-gray-600 bg-gray-800 text-xs font-semibold text-white truncate w-[134px] text-center transition-colors ${isEditing ? 'cursor-pointer hover:border-blue-500' : ''}`}
+      className={`px-4 py-1.5 rounded-full border border-gray-600 bg-gray-800 text-xs font-semibold text-white truncate w-[134px] text-center transition-colors ${isEditing ? 'cursor-pointer hover:border-accent-gold' : ''}`}
     >
       {selectedAbility || 'Select Ability'}
     </div>

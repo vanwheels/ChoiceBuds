@@ -45,7 +45,7 @@ export default function ItemSpriteBox({
       onMouseEnter={onHoverEnter}
       onMouseLeave={onHoverLeave}
       onClick={isEditing ? onToggleMenu : undefined}
-      className={`w-14 h-14 bg-gray-800 rounded-lg border border-gray-600 flex items-center justify-center overflow-hidden transition-colors ${isEditing ? 'cursor-pointer hover:border-blue-500' : ''}`}
+      className={`w-14 h-14 bg-gray-800 rounded-lg border border-gray-600 flex items-center justify-center overflow-hidden transition-colors ${isEditing ? 'cursor-pointer hover:border-accent-gold' : ''}`}
     >
       {itemData?.spriteUrl && !spriteFailed ? (
         <img

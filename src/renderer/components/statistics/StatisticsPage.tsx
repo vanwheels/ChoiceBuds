@@ -81,7 +81,7 @@ export default function StatisticsPage({ battlesState, spriteCacheState }: Stati
               onClick={() => setSeasonFilter(option.id)}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 seasonFilter === option.id
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-accent-gold text-zinc-900'
                   : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
               }`}
             >

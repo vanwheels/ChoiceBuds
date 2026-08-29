@@ -83,7 +83,7 @@ export default function ExportTeamModal({ pokemonList, title, onClose }: ExportT
           </button>
           <button
             onClick={handleCopy}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            className="px-4 py-2 bg-accent-gold hover:bg-accent-gold-deep text-zinc-900 rounded-lg transition-colors"
           >
             {copied ? 'Copied!' : 'Copy to Clipboard'}
           </button>

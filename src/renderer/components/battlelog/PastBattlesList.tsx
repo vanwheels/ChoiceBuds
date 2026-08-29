@@ -46,7 +46,7 @@ function BattleRow({ battle, gameLabel, onOpen, onDelete }: {
 
   return (
     <div
-      className={`flex items-center justify-between px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 border-l-4 ${RESULT_ACCENT_BORDER[battle.result]} hover:border-blue-500 transition-colors cursor-pointer`}
+      className={`flex items-center justify-between px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 border-l-4 ${RESULT_ACCENT_BORDER[battle.result]} hover:border-accent-gold transition-colors cursor-pointer`}
       onClick={() => onOpen(battle.id)}
     >
       <div>

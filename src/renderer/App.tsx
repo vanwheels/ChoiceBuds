@@ -93,7 +93,7 @@ export default function App() {
       <aside className="w-32 bg-gray-800 border-r border-gray-700 flex flex-col" style={{ paddingLeft: '1.25rem', paddingRight: '1.25rem', paddingTop: '1rem', paddingBottom: '1rem' }}>
         {/* App Header */}
         <div className="pb-4 border-b border-gray-700">
-          <h1 className="text-base font-bold text-blue-400 leading-tight">ChoiceBuds</h1>
+          <h1 className="text-base font-bold text-accent-gold leading-tight">ChoiceBuds</h1>
         </div>
 
         {/* Navigation Menu */}
@@ -103,7 +103,7 @@ export default function App() {
               <button
                 onClick={() => goToTab('teams')}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
-                  activeTab === 'teams' ? 'bg-blue-600 hover:bg-blue-700' : 'text-gray-400 hover:bg-gray-700'
+                  activeTab === 'teams' ? 'bg-accent-gold hover:bg-accent-gold-deep text-zinc-900' : 'text-gray-400 hover:bg-gray-700'
                 }`}
               >
                 Teams
@@ -113,7 +113,7 @@ export default function App() {
               <button
                 onClick={() => goToTab('calc')}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
-                  activeTab === 'calc' ? 'bg-blue-600 hover:bg-blue-700' : 'text-gray-400 hover:bg-gray-700'
+                  activeTab === 'calc' ? 'bg-accent-gold hover:bg-accent-gold-deep text-zinc-900' : 'text-gray-400 hover:bg-gray-700'
                 }`}
               >
                 Calc
@@ -123,7 +123,7 @@ export default function App() {
               <button
                 onClick={() => goToTab('battles')}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
-                  activeTab === 'battles' ? 'bg-blue-600 hover:bg-blue-700' : 'text-gray-400 hover:bg-gray-700'
+                  activeTab === 'battles' ? 'bg-accent-gold hover:bg-accent-gold-deep text-zinc-900' : 'text-gray-400 hover:bg-gray-700'
                 }`}
               >
                 Battle Log
@@ -133,7 +133,7 @@ export default function App() {
               <button
                 onClick={() => goToTab('statistics')}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
-                  activeTab === 'statistics' ? 'bg-blue-600 hover:bg-blue-700' : 'text-gray-400 hover:bg-gray-700'
+                  activeTab === 'statistics' ? 'bg-accent-gold hover:bg-accent-gold-deep text-zinc-900' : 'text-gray-400 hover:bg-gray-700'
                 }`}
               >
                 Statistics
@@ -143,7 +143,7 @@ export default function App() {
               <button
                 onClick={() => goToTab('typeMatchup')}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
-                  activeTab === 'typeMatchup' ? 'bg-blue-600 hover:bg-blue-700' : 'text-gray-400 hover:bg-gray-700'
+                  activeTab === 'typeMatchup' ? 'bg-accent-gold hover:bg-accent-gold-deep text-zinc-900' : 'text-gray-400 hover:bg-gray-700'
                 }`}
               >
                 Type Matchup
@@ -156,7 +156,7 @@ export default function App() {
               <button
                 onClick={() => goToTab('settings')}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
-                  activeTab === 'settings' ? 'bg-blue-600 hover:bg-blue-700' : 'text-gray-400 hover:bg-gray-700'
+                  activeTab === 'settings' ? 'bg-accent-gold hover:bg-accent-gold-deep text-zinc-900' : 'text-gray-400 hover:bg-gray-700'
                 }`}
               >
                 Settings
@@ -175,7 +175,7 @@ export default function App() {
           </div>
           <div className="flex items-center justify-between mt-1">
             <span>Teams Loaded:</span>
-            <span className="text-blue-400">{teamsState.teams.length}</span>
+            <span className="text-accent-gold">{teamsState.teams.length}</span>
           </div>
           <div className="flex items-center justify-between mt-1">
             <span>Ver {CURRENT_APP_VERSION}</span>

@@ -61,10 +61,10 @@ export default function BattleLogPage({ battlesState, teamsState, speciesRosterS
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-blue-400">Battle Log</h1>
+        <h1 className="text-2xl font-bold text-accent-gold">Battle Log</h1>
         <button
           onClick={() => setIsStarting(true)}
-          className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors cursor-pointer"
+          className="px-4 py-2 rounded-lg bg-accent-gold hover:bg-accent-gold-deep text-zinc-900 font-semibold transition-colors cursor-pointer"
         >
           + New Battle
         </button>

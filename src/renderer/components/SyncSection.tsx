@@ -86,12 +86,12 @@ export default function SyncSection({ syncState }: SyncSectionProps) {
                 value={newUsername}
                 onChange={e => setNewUsername(e.target.value)}
                 placeholder="username"
-                className="flex-1 px-3 py-1.5 text-sm bg-gray-900 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 px-3 py-1.5 text-sm bg-gray-900 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
               />
               <button
                 onClick={handleCreate}
                 disabled={!newUsername.trim()}
-                className="px-3 py-1.5 text-xs font-bold rounded bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                className="px-3 py-1.5 text-xs font-bold rounded bg-accent-gold text-zinc-900 hover:bg-accent-gold-deep disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
               >
                 Create
               </button>
@@ -104,7 +104,7 @@ export default function SyncSection({ syncState }: SyncSectionProps) {
                 value={pairInput}
                 onChange={e => setPairInput(e.target.value)}
                 placeholder="username#1234"
-                className="flex-1 px-3 py-1.5 text-sm bg-gray-900 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 px-3 py-1.5 text-sm bg-gray-900 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
               />
               <button
                 onClick={handlePair}
@@ -143,7 +143,7 @@ export default function SyncSection({ syncState }: SyncSectionProps) {
             <button
               onClick={() => handlePush()}
               disabled={isBusy}
-              className="px-3 py-1.5 text-xs font-bold rounded bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              className="px-3 py-1.5 text-xs font-bold rounded bg-accent-gold text-zinc-900 hover:bg-accent-gold-deep disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
               {isBusy ? 'Working...' : 'Push'}
             </button>

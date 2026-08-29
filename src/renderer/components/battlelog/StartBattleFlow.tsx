@@ -57,7 +57,7 @@ export default function StartBattleFlow({ teamsState, battlesState, battleLogAct
           value={opponentName}
           onChange={e => setOpponentName(e.target.value)}
           placeholder="Who are you playing?"
-          className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
         />
         <datalist id="prior-opponent-names">
           {priorOpponentNames.map(name => <option key={name} value={name} />)}
@@ -74,7 +74,7 @@ export default function StartBattleFlow({ teamsState, battlesState, battleLogAct
             <button
               key={team.id}
               onClick={() => handleSelect(team)}
-              className="text-left px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 hover:border-blue-500 transition-colors"
+              className="text-left px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 hover:border-accent-gold transition-colors"
             >
               <div className="font-semibold text-gray-100">{team.name}</div>
               <div className="text-xs text-gray-400">{team.format} - {team.pokemon.length} Pokemon</div>

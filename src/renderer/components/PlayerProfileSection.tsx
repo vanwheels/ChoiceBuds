@@ -22,7 +22,7 @@ interface PlayerProfileSectionProps {
 
 const AGE_DIVISIONS: PlayerProfile['ageDivision'][] = ['Juniors', 'Seniors', 'Masters'];
 
-const inputClass = 'w-full px-3 py-1.5 text-sm bg-gray-900 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500';
+const inputClass = 'w-full px-3 py-1.5 text-sm bg-gray-900 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-gold';
 const labelClass = 'block text-xs font-medium text-gray-300 mb-1';
 
 export default function PlayerProfileSection({ settingsState }: PlayerProfileSectionProps) {
@@ -125,7 +125,7 @@ export default function PlayerProfileSection({ settingsState }: PlayerProfileSec
                 onClick={() => setAgeDivision(division)}
                 className={`px-3 py-1.5 text-xs font-bold rounded transition-colors cursor-pointer ${
                   playerProfile.ageDivision === division
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-accent-gold text-zinc-900'
                     : 'text-zinc-300 bg-gray-900 hover:bg-zinc-800'
                 }`}
               >
