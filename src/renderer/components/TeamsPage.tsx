@@ -93,7 +93,20 @@ export default function TeamsPage({
       </header>
 
       {/* Teams Content Area */}
-      <div className="flex-1 overflow-y-auto px-8 py-6">
+      {/* scrollbarGutter: 'stable' - this div, not App.tsx's <main>, is the actual
+          scroll container whose scrollbar was popping in/out and shrinking every
+          team card by the scrollbar's own width (reported 2026-08-29, following
+          leg 2's overflow-menu addition). Its height gets fixed by flexbox layout
+          (flex-1 inside TeamsPage's own h-full flex-col) independently of content
+          added afterward - so a card's open dropdown, though position:absolute
+          and out of flow, can still push scrollHeight past that already-fixed
+          clientHeight and trigger a scrollbar here specifically, even while
+          <main> itself (already fixed the same way, see App.tsx) has plenty of
+          room to spare and shows no scrollbar at all. Confirmed live by walking
+          the DOM ancestor chain and diffing scrollHeight/clientHeight per
+          ancestor before/after opening the dropdown - this was the only one
+          whose clientHeight was exceeded. */}
+      <div className="flex-1 overflow-y-auto px-8 py-6" style={{ scrollbarGutter: 'stable' }}>
         {teamsState.isLoading ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-zinc-400">Loading teams...</div>

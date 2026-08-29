@@ -163,27 +163,35 @@ focused on what's actually next.
         divider match the mockup exactly), a live Validate Team result
         popping inside the still-open menu, and the Edit pill's active gold
         highlight while expanded with the menu still open on top.
-      - **Follow-up bug found + fixed same day (2026-08-29)**: leg 2's new
-        overflow menu (and expanding a team) could push page content past
-        one viewport height, and the vertical scrollbar popping in shrank
-        `<main>`'s content width by its own track width - every team card
-        visibly narrowed/shifted the instant the scrollbar appeared. Root
-        cause wasn't specific to this leg's new markup: `App.tsx`'s `<main>`
-        (the real scrolling viewport for every tab - confirmed
-        `TeamsPage.tsx`'s own nested `overflow-y-auto` div never actually
-        gets tall enough to scroll on its own, since its ancestor in
-        `App.tsx` is plain `display:block`, not height-constrained) never
-        reserved gutter space for a scrollbar that isn't currently showing.
-        Fixed with `scrollbarGutter: 'stable'` on that one element -
-        reserves the track's width permanently regardless of whether
-        content actually overflows, so the scrollbar popping in/out no
-        longer resizes anything. Since `<main>` is shared by every tab, this
-        fixes the same class of shift anywhere else in the app it could
-        occur, not just the Teams page. Live-verified via `run-desktop`:
-        `main.clientWidth` read identical (1128px) before expanding a team,
-        after expanding it (confirmed `scrollHeight` 2044 vs `clientHeight`
-        655, i.e. a scrollbar really is showing), and with the overflow menu
-        open - previously any of those would have shrunk it.
+      - **Follow-up bug found + fixed same day (2026-08-29), two passes**:
+        leg 2's new overflow menu (and expanding a team) could push content
+        past one viewport height, and the vertical scrollbar popping in
+        shrank the team card's own width by the scrollbar's track width -
+        visibly narrowing/shifting every card the instant it appeared.
+        1st pass added `scrollbarGutter: 'stable'` to `App.tsx`'s `<main>`
+        (the outer scroll container shared by every tab) - a real fix for
+        *that* container, verified via `main.clientWidth` staying identical
+        across expand/collapse, but **user reported the shrink still
+        happened from the overflow menu specifically**, which turned out to
+        be a second, different scroll container: walking the DOM ancestor
+        chain and diffing each one's `scrollHeight`/`clientHeight`
+        before/after opening the dropdown found `TeamsPage.tsx`'s own
+        nested `overflow-y-auto` content div was the one actually
+        overflowing, not `<main>` - correcting the 1st pass's (wrong)
+        assumption that div could never get height-constrained on its own;
+        it does, via `TeamsPage`'s own `h-full flex flex-col` flexbox
+        layout fixing that div's height independently of `<main>`'s. Since
+        the dropdown is `position:absolute`, it doesn't affect layout height
+        but does still count toward `scrollHeight`, so it can push past this
+        inner div's already-fixed `clientHeight` and trigger a scrollbar
+        there specifically, even while `<main>` above it has room to spare
+        and shows none. 2nd pass added the same `scrollbarGutter: 'stable'`
+        fix to that inner div too - both scroll containers now reserve their
+        gutter permanently. Live-verified via `run-desktop`: the team card's
+        `clientWidth` (923px) read identical before and after opening the
+        overflow menu, confirmed against the inner div's `scrollHeight`
+        (308) actually exceeding its `clientHeight` (296) once open - i.e.
+        a real overflow condition that previously did shrink it.
       - **Legs 3-4 not yet started**: expanded-grid stats restoration,
         responsive grid + drag-reorder gating change.
 
