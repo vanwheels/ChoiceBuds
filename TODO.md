@@ -227,10 +227,12 @@ focused on what's actually next.
         (`CalcStatRows`), the Water-type badge and SpA stat-label colors
         (`pokemonTheme.ts`), and Reg M-A's own blue regulation-badge theme
         (kept as a category-identity color the same way Reg M-B's purple
-        badge was explicitly kept in the approved spec above) - this is an
-        assumption, not something the approved spec called out one way or
-        the other, so flag if any of these should actually have moved to
-        gold too. `type-check`/`lint`/`build` all clean; live-verified via
+        badge was explicitly kept in the approved spec above) - this was an
+        assumption at the time, **confirmed correct by the user afterward**:
+        regulation-badge colors are just a quick visual indicator, not
+        significant enough to matter, and can be swapped to something else
+        entirely in a later pass if wanted. `type-check`/`lint`/`build` all
+        clean; live-verified via
         `run-desktop` (Teams page nav/buttons/active filter, Settings page
         active toggles all render gold with dark text; Reg M-B badge purple
         untouched).
