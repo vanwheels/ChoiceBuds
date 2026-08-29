@@ -188,7 +188,15 @@ export default function App() {
           than being unmounted - see goToTab's comment above. Still gated on
           visitedTabs so a tab never visited this session never even pays
           for its React.lazy() import. */}
-      <main className="flex-1 overflow-y-auto" style={{ paddingLeft: '2rem', paddingRight: '2rem', paddingTop: '1.5rem', paddingBottom: '1.5rem' }}>
+      {/* scrollbarGutter: 'stable' reserves the scrollbar's track width whether or
+          not it's actually showing, so content (e.g. TeamCard's header pill/
+          overflow menu) doesn't shift/shrink the instant a popover or an expanded
+          team pushes this viewport's content past one page and the scrollbar pops
+          in - reported 2026-08-29, this is the actual scrolling container, not
+          TeamsPage.tsx's own nested overflow-y-auto div (that one's never height-
+          constrained since its ancestor here is plain display:block, not h-full,
+          so it never gets tall enough to scroll on its own). */}
+      <main className="flex-1 overflow-y-auto" style={{ paddingLeft: '2rem', paddingRight: '2rem', paddingTop: '1.5rem', paddingBottom: '1.5rem', scrollbarGutter: 'stable' }}>
         <div style={{ display: activeTab === 'teams' ? 'block' : 'none' }}>
           <TeamsPage
             teamsState={teamsState}
