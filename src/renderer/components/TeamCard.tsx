@@ -57,14 +57,23 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
     await rosterActions.addSlot(team, species.name);
   };
 
-  // Teams-list reorder via drag-and-drop, always available (not gated
-  // behind this card's own roster-edit mode, since list position and
-  // roster editing are unrelated toggles) - same MIME-type-payload pattern
-  // as the Pokemon-within-a-team reorder (utils/teamRosterDragTypes.ts).
+  // Teams-list reorder via drag-and-drop, gated behind both expanded AND
+  // edit-mode (carousel/grid rework leg 4, see TODO.md) - changed from the
+  // original "always active on the collapsed header regardless of state"
+  // behavior, since an always-draggable collapsed header made every header
+  // click/drag ambiguous. Same MIME-type-payload pattern as the
+  // Pokemon-within-a-team reorder (utils/teamRosterDragTypes.ts).
   // reorderTeam itself resolves the drop against the full unfiltered teams
   // array, so this works the same whether TeamsPage.tsx is showing "All"
-  // or a filtered subset.
+  // or a filtered subset. Only the drag *source* is gated - any card can
+  // still be dropped onto as a target regardless of its own state.
+  const canReorder = isExpanded && isEditingTeam;
+
   const handleDragStart = (e: DragEvent<HTMLDivElement>) => {
+    if (!canReorder) {
+      e.preventDefault();
+      return;
+    }
     const payload: TeamsListDragPayload = { draggedTeamId: team.id };
     e.dataTransfer.setData(TEAMS_LIST_DRAG_TYPE, JSON.stringify(payload));
     e.dataTransfer.effectAllowed = 'move';
@@ -94,20 +103,23 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
   const regulationTheme = getRegulationTheme(toRegulationId(team.format));
 
   return (
-    <div className={`bg-zinc-900/40 border border-zinc-800/80 border-l-4 ${regulationTheme.accentBorder} rounded-xl transition-all`}>
+    <div className={`bg-zinc-900/40 border border-zinc-800/80 border-l-4 ${regulationTheme.accentBorder} rounded-xl transition-all ${
+      isExpanded ? 'col-span-full' : ''
+    }`}>
 
       {/* MINIMIZED VIEW CONTAINER ROW - Enhanced Header with Controls */}
       {/* rounded-t-xl replaces the parent's old overflow-hidden clip (removed so
           tooltips/popovers from expanded cards below are never cut off) */}
       <div
-        draggable
+        draggable={canReorder}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragLeave={() => setIsDragOver(false)}
         onDrop={handleDrop}
-        className={`w-full flex flex-row items-center min-h-[116px] py-4 px-6 bg-zinc-950/40 rounded-t-xl transition-colors cursor-grab ${
-          isDragOver ? 'ring-2 ring-inset ring-accent-gold' : ''
-        }`}
+        title={canReorder ? 'Drag to reorder' : undefined}
+        className={`w-full flex flex-row items-center min-h-[116px] py-4 px-6 bg-zinc-950/40 rounded-t-xl transition-colors ${
+          canReorder ? 'cursor-grab' : ''
+        } ${isDragOver ? 'ring-2 ring-inset ring-accent-gold' : ''}`}
         style={{ paddingLeft: '1.25rem', paddingRight: '1.25rem' }}
       >
         {/* Identity column (header/controls rework leg 2, see TODO.md) - regulation

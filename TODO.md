@@ -246,8 +246,64 @@ focused on what's actually next.
         correctly, matching the mockup) and again with edit mode toggled
         back off (grip icon and delete button both gone, only the export
         button remains, same as before this leg).
-      - **Leg 4 not yet started**: responsive grid + drag-reorder gating
-        change.
+      - **Leg 4 done (2026-08-29)** - responsive grid + drag-reorder gating
+        change, closing out the Teams-carousel rework's implementation
+        sequence. Exact breakpoint pulled from the approved mockup's own
+        `GridWide.dc.html`/`GridNarrow.dc.html` artboard source (same
+        "read the source, don't eyeball the screenshot" approach legs 1-3
+        used) rather than guessed - confirmed both artboards use
+        `grid-template-columns: repeat(2, minmax(0, 1fr))`/`1fr` with a
+        `.span-full { grid-column: 1 / -1; }` rule, at mockup content widths
+        of 1600px (2-col) and 820px (1-col); the TODO's own "~1160px+"
+        placeholder wasn't pinned to anything more specific in the mockup
+        itself (both artboards are static snapshots, not a live-resizing
+        container-query demo), so `@[1160px]` was kept as the real value
+        rather than re-guessed. `TeamsPage.tsx`'s scrollable content div
+        gained `@container` (Tailwind v4 container-query root, same pattern
+        `TeamCard.tsx`'s own `@[1760px]` roster-grid breakpoint already
+        uses) and the teams-list wrapper changed from `flex flex-col gap-3`
+        to `grid grid-cols-1 @[1160px]:grid-cols-2 gap-4` - keyed off this
+        wrapper's own container width, not viewport width, for the same
+        reason the roster-grid breakpoint is container-based (the sidebar
+        eats into actual content width, so raw viewport width lies).
+        `TeamCard.tsx`'s root div now adds `col-span-full` whenever
+        `isExpanded` is true, so an expanded card spans the full grid row
+        width in the 2-column layout (pushing subsequent cards down) rather
+        than being squeezed into a half-width column - no prop threading
+        needed since `isExpanded` was already local state on the card
+        itself. Drag-to-reorder gating changed from "the collapsed header
+        is always draggable regardless of state" to gated behind **both**
+        expanded AND edit-mode (`canReorder = isExpanded && isEditingTeam`):
+        the header row's `draggable` attribute, its `cursor-grab` styling,
+        and a new `title="Drag to reorder"` hint all read off `canReorder`
+        now instead of being unconditional, and `handleDragStart` itself
+        also early-returns (`e.preventDefault()`) as defense-in-depth if
+        somehow invoked while `canReorder` is false. Only the drag *source*
+        is gated - `onDragOver`/`onDrop` stay unconditional so any card can
+        still be a drop target regardless of its own expand/edit state,
+        matching how `reorderTeam` already resolves against the full teams
+        array regardless of which card triggered the drop.
+        `type-check`/`lint`/`build`/`test` (395 cases) all clean.
+        Live-verified via a one-off Playwright script (same precedent as
+        leg 2's real-hover script - needed direct `BrowserWindow.setSize()`
+        access via `electronApp.evaluate()` to actually resize the OS
+        window, which the shared `run-desktop` driver doesn't expose):
+        created two disposable empty teams, confirmed
+        `getComputedStyle(gridEl).gridTemplateColumns` is a single track at
+        the app's 1280x720 floor size (992px container width, under the
+        1160px breakpoint - screenshotted showing 1 column) and two tracks
+        once resized to 1900x900 (1612px container width - screenshotted
+        showing 2 columns), confirmed the expanded card's computed
+        `gridColumn` is actually `1 / -1` with `offsetWidth` matching the
+        full row rather than a half column (screenshotted), and walked the
+        full gating state machine on the same card: `draggable="false"`
+        while collapsed, still `"false"` once expanded but not editing,
+        `"true"` only once both expanded AND editing (screenshotted), and
+        back to `"false"` after toggling edit off again - matching the
+        approved spec exactly at every step. Cleaned up both disposable
+        teams afterward and confirmed the user's real 2 teams were
+        untouched throughout. This closes out all 4 legs of the
+        Teams-carousel/grid rework's implementation.
 
   - **Sidebar/menuing rework - design approved 2026-08-29**, same artifact
     as above (`SidebarExpanded.dc.html`/`SidebarCollapsed.dc.html`
