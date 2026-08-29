@@ -236,8 +236,28 @@ focused on what's actually next.
         `run-desktop` (Teams page nav/buttons/active filter, Settings page
         active toggles all render gold with dark text; Reg M-B badge purple
         untouched).
-      - **Not yet started**: Leg C (gray/zinc neutral-standardization sweep)
-        and Leg D (per-type Pokémon card glow effect).
+      - **Leg C done (2026-08-29)** - gray/zinc neutral-standardization
+        sweep. Mechanical, not a redesign: every remaining `gray-{100-900}`
+        Tailwind class across `src/renderer` (63 files, 9 shades in use -
+        100/200/300/400/500/600/700/800/900, no `gray-50`/`gray-950` were
+        present) renamed 1:1 to the matching `zinc-*` shade
+        (`sed -E 's/gray-([0-9]+)/zinc-\1/g'`), preserving every existing
+        bg/text/border/hover/placeholder/opacity-modifier prefix and
+        lightness relationship rather than re-picking shades by eye -
+        confirmed by diff (exactly one token swapped per line, nothing else
+        touched) and by a `grep -rn gray` sanity pass turning up only
+        unrelated hits (`grayscale` CSS utility/comment mentions, not
+        Tailwind color classes). This includes `pokemonTheme.ts`'s
+        `TYPE_THEMES` Dark/Steel/Normal/Electric/Ice/Bug/Fairy entries,
+        which used `gray-*` as their type-badge color - in scope per the
+        approved spec's "every remaining gray-* usage," and visually
+        identical since zinc is the same neutral family. `type-check`/
+        `lint`/`build`/`test` (395 cases) all clean after the sweep.
+        Live-verified via `run-desktop`: Teams page (collapsed list, filter
+        pills, expanded roster grid), Settings, Calc, and Battle Log's empty
+        state all render consistent zinc surfaces with no leftover
+        mismatched gray.
+      - **Not yet started**: Leg D (per-type Pokémon card glow effect).
   - **Animation/motion language - design approved 2026-08-29**, same
     artifact, four new artboards built as **live, clickable demos** (real
     CSS transitions standing in for the actual Framer Motion timings/

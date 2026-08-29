@@ -63,15 +63,15 @@ export default function StatisticsPage({ battlesState, spriteCacheState }: Stati
   if (battles.length === 0) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-xl font-bold text-gray-100">Statistics</h1>
-        <p className="text-sm text-gray-400">Log some battles to see stats here.</p>
+        <h1 className="text-xl font-bold text-zinc-100">Statistics</h1>
+        <p className="text-sm text-zinc-400">Log some battles to see stats here.</p>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-bold text-gray-100">Statistics</h1>
+      <h1 className="text-xl font-bold text-zinc-100">Statistics</h1>
 
       {availableSeasons.length > 1 && (
         <div className="flex gap-2 flex-wrap">
@@ -82,7 +82,7 @@ export default function StatisticsPage({ battlesState, spriteCacheState }: Stati
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 seasonFilter === option.id
                   ? 'bg-accent-gold text-zinc-900'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
               }`}
             >
               {option.label}

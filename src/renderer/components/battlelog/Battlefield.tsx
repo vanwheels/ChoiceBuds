@@ -247,7 +247,7 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
   );
 
   return (
-    <div className="flex flex-col gap-4 py-4 px-4 rounded-lg bg-gray-900/60 border border-gray-800 flex-1">
+    <div className="flex flex-col gap-4 py-4 px-4 rounded-lg bg-zinc-900/60 border border-zinc-800 flex-1">
       {pendingTarget && (
         <div className="flex items-center gap-2 px-2 py-1 rounded bg-yellow-500/10 border border-yellow-600 text-[11px] text-yellow-300 self-center">
           Choose a target for {pendingTarget.move}...
@@ -283,7 +283,7 @@ export default function Battlefield({ battle, battleLogActions, gameDataState, r
         <div className="flex-1 min-w-0" />
       </div>
 
-      <div className="w-full border-t border-dashed border-gray-800" />
+      <div className="w-full border-t border-dashed border-zinc-800" />
 
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">

@@ -41,18 +41,18 @@ export default function TypeMatchupPage({ teamsState, gameDataState, spriteCache
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-xl font-bold text-gray-100">Type Matchup</h1>
-        <p className="text-sm text-gray-400 mt-1">
+        <h1 className="text-xl font-bold text-zinc-100">Type Matchup</h1>
+        <p className="text-sm text-zinc-400 mt-1">
           Select a team to see its offensive move coverage and defensive type weaknesses at a glance.
         </p>
       </div>
 
       <div className="flex flex-col gap-1.5 max-w-xs">
-        <label className="text-[10px] text-gray-400 uppercase tracking-wide">Team</label>
+        <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Team</label>
         <select
           value={selectedTeamId}
           onChange={e => setSelectedTeamId(e.target.value)}
-          className="px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-accent-gold"
+          className="px-3 py-2 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
         >
           <option value="">Select a team...</option>
           {teams.map(t => (
@@ -64,11 +64,11 @@ export default function TypeMatchupPage({ teamsState, gameDataState, spriteCache
       </div>
 
       {!selectedTeam ? (
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-zinc-400">
           {teams.length === 0 ? 'Import or create a team first to see its type coverage.' : 'Pick a team above to see its type coverage.'}
         </p>
       ) : isLoading ? (
-        <p className="text-sm text-gray-400">Loading move data...</p>
+        <p className="text-sm text-zinc-400">Loading move data...</p>
       ) : (
         <div className="grid grid-cols-1 2xl:grid-cols-2 gap-6">
           <CoverageTable

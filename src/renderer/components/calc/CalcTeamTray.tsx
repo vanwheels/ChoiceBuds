@@ -35,11 +35,11 @@ export default function CalcTeamTray({ teams, resolveSprite, onLoadPokemon }: Ca
 
   return (
     <div className="flex flex-col gap-1.5 pb-2 border-b border-zinc-800">
-      <label className="text-[10px] text-gray-400 uppercase tracking-wide">Load from Team</label>
+      <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Load from Team</label>
       <select
         value={selectedTeamId}
         onChange={(e) => setSelectedTeamId(e.target.value)}
-        className="px-2 py-0.5 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-accent-gold"
+        className="px-2 py-0.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
       >
         <option value="">Select a team...</option>
         {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
@@ -54,7 +54,7 @@ export default function CalcTeamTray({ teams, resolveSprite, onLoadPokemon }: Ca
               onDragStart={handleDragStart(selectedTeam.id, i)}
               onClick={() => onLoadPokemon(p)}
               title={`${p.showdownData.nickname || p.showdownData.species} - click or drag onto a panel to load`}
-              className="w-9 h-9 shrink-0 rounded bg-gray-800 border border-gray-600 hover:border-accent-gold flex items-center justify-center cursor-grab transition-colors"
+              className="w-9 h-9 shrink-0 rounded bg-zinc-800 border border-zinc-600 hover:border-accent-gold flex items-center justify-center cursor-grab transition-colors"
             >
               <img
                 src={resolveSprite(getPixelSpriteUrl(p.pokedexNumber, p.showdownData.species, p.showdownData.gender || 'M', p.showdownData.shiny))}

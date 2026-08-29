@@ -33,14 +33,14 @@ export default function CoverageTable({
   spriteCacheState,
 }: CoverageTableProps) {
   return (
-    <div className="bg-gray-800 rounded-lg p-4 overflow-x-auto">
-      <h2 className="text-sm font-bold text-gray-100 mb-3">{title}</h2>
+    <div className="bg-zinc-800 rounded-lg p-4 overflow-x-auto">
+      <h2 className="text-sm font-bold text-zinc-100 mb-3">{title}</h2>
       <table className="text-xs border-collapse w-full">
         <thead>
-          <tr className="bg-gray-900/60">
-            <th className="w-20 border border-gray-700/60" />
+          <tr className="bg-zinc-900/60">
+            <th className="w-20 border border-zinc-700/60" />
             {pokemon.map((p, i) => (
-              <th key={i} className="py-1.5 px-1 border border-gray-700/60" title={p.showdownData.nickname || p.showdownData.species}>
+              <th key={i} className="py-1.5 px-1 border border-zinc-700/60" title={p.showdownData.nickname || p.showdownData.species}>
                 <img
                   src={spriteCacheState.resolveSprite(
                     getPixelSpriteUrl(p.pokedexNumber, p.showdownData.species, p.showdownData.gender || 'M', p.showdownData.shiny)
@@ -50,25 +50,25 @@ export default function CoverageTable({
                 />
               </th>
             ))}
-            <th className="py-1.5 px-2 text-gray-300 font-medium whitespace-nowrap border border-gray-700/60">{unfavorableLabel}</th>
-            <th className="py-1.5 px-2 text-gray-300 font-medium whitespace-nowrap border border-gray-700/60">{favorableLabel}</th>
+            <th className="py-1.5 px-2 text-zinc-300 font-medium whitespace-nowrap border border-zinc-700/60">{unfavorableLabel}</th>
+            <th className="py-1.5 px-2 text-zinc-300 font-medium whitespace-nowrap border border-zinc-700/60">{favorableLabel}</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={row.type} className={i % 2 === 1 ? 'bg-gray-900/30' : undefined}>
-              <td className="py-1.5 px-2 border border-gray-700/60">
+            <tr key={row.type} className={i % 2 === 1 ? 'bg-zinc-900/30' : undefined}>
+              <td className="py-1.5 px-2 border border-zinc-700/60">
                 <TypeBadge type={row.type} />
               </td>
               {row.cells.map((cell, j) => (
                 <CoverageCell key={j} multiplier={cell} favorableWhenAbove1={favorableWhenAbove1} />
               ))}
-              <td className="text-center py-1.5 border border-gray-700/60">
+              <td className="text-center py-1.5 border border-zinc-700/60">
                 <span className="inline-block w-6 rounded bg-orange-900/50 text-orange-300 py-0.5 font-semibold">
                   {row.unfavorableCount}
                 </span>
               </td>
-              <td className="text-center py-1.5 border border-gray-700/60">
+              <td className="text-center py-1.5 border border-zinc-700/60">
                 <span className="inline-block w-6 rounded bg-green-900/50 text-green-300 py-0.5 font-semibold">
                   {row.favorableCount}
                 </span>

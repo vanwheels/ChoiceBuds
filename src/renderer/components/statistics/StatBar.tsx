@@ -19,8 +19,8 @@ export default function StatBar({ label, wins, losses, winRate }: StatBarProps) 
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between text-sm">
-        <span className="text-gray-200">{label}</span>
-        <span className="text-gray-400 text-xs">
+        <span className="text-zinc-200">{label}</span>
+        <span className="text-zinc-400 text-xs">
           {wins}-{losses} ({Math.round(winRate * 100)}%)
         </span>
       </div>

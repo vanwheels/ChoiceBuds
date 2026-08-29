@@ -87,7 +87,7 @@ function UnrevealedAbilityPicker({
       value=""
       onChange={e => { if (e.target.value) onPick(e.target.value); }}
       title="Which ability blocked it?"
-      className="text-[9px] px-1 py-0.5 rounded bg-gray-800 text-gray-400 border border-gray-700 outline-none cursor-pointer hover:text-gray-200"
+      className="text-[9px] px-1 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700 outline-none cursor-pointer hover:text-zinc-200"
     >
       <option value="">blocked by...?</option>
       {candidates.map(a => <option key={a} value={a}>{a}</option>)}
@@ -96,9 +96,9 @@ function UnrevealedAbilityPicker({
 }
 
 const OUTCOME_BUTTONS: { key: OutcomeResult; label: string; activeClass: string }[] = [
-  { key: 'miss', label: 'Miss', activeClass: 'bg-gray-600 text-gray-200' },
+  { key: 'miss', label: 'Miss', activeClass: 'bg-zinc-600 text-zinc-200' },
   { key: 'crit', label: 'Crit', activeClass: 'bg-yellow-900/70 text-yellow-300' },
-  { key: 'no-effect', label: 'No Effect', activeClass: 'bg-gray-600 text-gray-200' },
+  { key: 'no-effect', label: 'No Effect', activeClass: 'bg-zinc-600 text-zinc-200' },
   { key: 'blocked-ability', label: 'Blocked', activeClass: 'bg-purple-900/70 text-purple-300' },
 ];
 
@@ -131,7 +131,7 @@ export default function MoveOutcomePrompt({ battle, battleLogActions, gameDataSt
                   type="button"
                   onClick={() => battleLogActions.setActionTargetOutcome(battle, turnNumber, actionId, t.pokemonId, outcome === b.key ? null : b.key)}
                   className={`text-[9px] px-1.5 py-0.5 rounded cursor-pointer transition-colors ${
-                    outcome === b.key ? b.activeClass : 'bg-gray-800 text-gray-400 hover:text-gray-200 hover:bg-gray-700'
+                    outcome === b.key ? b.activeClass : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700'
                   }`}
                 >
                   {b.label}
@@ -139,14 +139,14 @@ export default function MoveOutcomePrompt({ battle, battleLogActions, gameDataSt
               ))}
               {showHitPicker && (
                 <div className="flex items-center gap-0.5">
-                  <span className="text-[9px] text-gray-500">Hits:</span>
+                  <span className="text-[9px] text-zinc-500">Hits:</span>
                   {Array.from({ length: hitRange.max - hitRange.min + 1 }, (_, i) => hitRange.min + i).map(n => (
                     <button
                       key={n}
                       type="button"
                       onClick={() => battleLogActions.setActionHitsLanded(battle, turnNumber, actionId, t.pokemonId, hits === n ? null : n)}
                       className={`text-[9px] w-4 h-4 rounded cursor-pointer transition-colors ${
-                        hits === n ? 'bg-accent-gold/20 text-accent-gold' : 'bg-gray-800 text-gray-400 hover:text-gray-200 hover:bg-gray-700'
+                        hits === n ? 'bg-accent-gold/20 text-accent-gold' : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700'
                       }`}
                     >
                       {n}

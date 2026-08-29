@@ -82,7 +82,7 @@ function FormeToggle({ group, current, onSelect }: { group: string[]; current: s
           type="button"
           onClick={() => onSelect(name)}
           className={`px-2 py-1 text-xs font-bold rounded transition-colors cursor-pointer ${
-            current === name ? 'bg-accent-gold text-zinc-900' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+            current === name ? 'bg-accent-gold text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
           }`}
         >
           {formeDisplayLabel(group, name)}
@@ -200,7 +200,7 @@ export default function CalcPokemonPanel({
             onClick={handleCopyText}
             disabled={!state.species}
             title="Copy as Showdown text"
-            className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded transition-colors cursor-pointer bg-gray-800 text-gray-400 hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded transition-colors cursor-pointer bg-zinc-800 text-zinc-400 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {justCopied ? 'Copied!' : 'Copy Text'}
           </button>
@@ -209,7 +209,7 @@ export default function CalcPokemonPanel({
             onClick={handleSaveSet}
             disabled={!state.species || isSaving}
             title="Save to Saved Sets"
-            className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded transition-colors cursor-pointer bg-gray-800 text-gray-400 hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded transition-colors cursor-pointer bg-zinc-800 text-zinc-400 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {justSaved ? 'Saved!' : isSaving ? 'Saving...' : 'Save Set'}
           </button>
@@ -239,7 +239,7 @@ export default function CalcPokemonPanel({
           )}
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-[10px] text-gray-400 uppercase tracking-wide">Lv</label>
+          <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Lv</label>
           <input
             type="number"
             min={1}
@@ -249,11 +249,11 @@ export default function CalcPokemonPanel({
               const parsed = Number(e.target.value);
               if (!Number.isNaN(parsed)) onChange({ level: Math.max(1, Math.min(100, parsed)) });
             }}
-            className="w-14 px-1 py-0.5 text-sm text-center bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-accent-gold"
+            className="w-14 px-1 py-0.5 text-sm text-center bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
           />
         </div>
         <div
-          className="w-9 h-9 shrink-0 bg-gray-800 rounded-lg border border-gray-600 flex items-center justify-center overflow-hidden cursor-pointer hover:border-accent-gold transition-colors"
+          className="w-9 h-9 shrink-0 bg-zinc-800 rounded-lg border border-zinc-600 flex items-center justify-center overflow-hidden cursor-pointer hover:border-accent-gold transition-colors"
           onClick={cycleGender}
           title="Click to toggle gender"
         >
@@ -296,21 +296,21 @@ export default function CalcPokemonPanel({
 
       <div className="grid grid-cols-2 gap-2">
         <div className="flex flex-col gap-1">
-          <label className="text-[10px] text-gray-400 uppercase tracking-wide">Nature</label>
+          <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Nature</label>
           <select
             value={state.nature}
             onChange={(e) => onChange({ nature: e.target.value as NatureName })}
-            className="px-2 py-0.5 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-accent-gold"
+            className="px-2 py-0.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
           >
             {natureOptions.map(n => <option key={n} value={n}>{n}</option>)}
           </select>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-[10px] text-gray-400 uppercase tracking-wide">Status</label>
+          <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Status</label>
           <select
             value={state.status}
             onChange={(e) => onChange({ status: e.target.value as CalcPokemonState['status'] })}
-            className="px-2 py-0.5 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-accent-gold"
+            className="px-2 py-0.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
           >
             <option value="">Healthy</option>
             {STATUS_OPTIONS.map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}

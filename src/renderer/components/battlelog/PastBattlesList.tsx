@@ -46,14 +46,14 @@ function BattleRow({ battle, gameLabel, onOpen, onDelete }: {
 
   return (
     <div
-      className={`flex items-center justify-between px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 border-l-4 ${RESULT_ACCENT_BORDER[battle.result]} hover:border-accent-gold transition-colors cursor-pointer`}
+      className={`flex items-center justify-between px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 border-l-4 ${RESULT_ACCENT_BORDER[battle.result]} hover:border-accent-gold transition-colors cursor-pointer`}
       onClick={() => onOpen(battle.id)}
     >
       <div>
-        <div className="font-semibold text-gray-100">
+        <div className="font-semibold text-zinc-100">
           {gameLabel || battle.teamName}
         </div>
-        <div className="text-xs text-gray-400">
+        <div className="text-xs text-zinc-400">
           {battle.format} - {new Date(battle.date).toLocaleDateString()} - {turnCount} turn{turnCount === 1 ? '' : 's'}
         </div>
       </div>
@@ -64,7 +64,7 @@ function BattleRow({ battle, gameLabel, onOpen, onDelete }: {
         <button
           onClick={e => { e.stopPropagation(); onDelete(battle.id); }}
           title="Delete"
-          className="w-6 h-6 flex items-center justify-center rounded text-gray-500 hover:text-red-400 hover:bg-gray-700 cursor-pointer"
+          className="w-6 h-6 flex items-center justify-center rounded text-zinc-500 hover:text-red-400 hover:bg-zinc-700 cursor-pointer"
         >
           ×
         </button>
@@ -75,14 +75,14 @@ function BattleRow({ battle, gameLabel, onOpen, onDelete }: {
 
 export default function PastBattlesList({ battles, onOpen, onDelete }: PastBattlesListProps) {
   if (battles.length === 0) {
-    return <p className="text-sm text-gray-400">No battles logged yet.</p>;
+    return <p className="text-sm text-zinc-400">No battles logged yet.</p>;
   }
 
   const groups = groupBattlesBySet(battles);
 
   return (
     <div className="flex flex-col gap-2">
-      <h2 className="text-sm font-bold text-gray-300 uppercase tracking-wide">Past Battles</h2>
+      <h2 className="text-sm font-bold text-zinc-300 uppercase tracking-wide">Past Battles</h2>
       <div className="grid items-start gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))' }}>
         {groups.map(group => {
           if (group.battles.length === 1) {
@@ -99,7 +99,7 @@ export default function PastBattlesList({ battles, onOpen, onDelete }: PastBattl
               className="flex flex-col gap-1.5 p-2 rounded-lg border border-zinc-700 bg-zinc-900/40"
               style={{ gridColumn: '1 / -1' }}
             >
-              <span className="px-2 text-xs font-bold text-gray-300">
+              <span className="px-2 text-xs font-bold text-zinc-300">
                 {teamName} vs {group.opponentName} - Set {outcome.wins}-{outcome.losses}{!outcome.decided ? ' (in progress)' : ''}
               </span>
               <div className="grid gap-1.5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))' }}>

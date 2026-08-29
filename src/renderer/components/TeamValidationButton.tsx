@@ -52,7 +52,7 @@ export default function TeamValidationButton({ team, rulesetId }: TeamValidation
           ) : (
             <>
               <p className="text-sm font-bold text-red-400 mb-1">✗ {result.issues.length} issue{result.issues.length === 1 ? '' : 's'} found</p>
-              <ul className="text-xs text-gray-300 list-disc list-inside space-y-0.5">
+              <ul className="text-xs text-zinc-300 list-disc list-inside space-y-0.5">
                 {result.issues.map((issue, idx) => <li key={idx}>{issue}</li>)}
               </ul>
             </>

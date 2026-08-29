@@ -36,11 +36,11 @@ export default function SettingsPage({ settingsState, teamsState, battlesState, 
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-bold text-gray-100">Settings</h1>
+      <h1 className="text-xl font-bold text-zinc-100">Settings</h1>
 
-      <div className="rounded-lg border border-gray-700 bg-gray-800 p-4">
-        <h2 className="text-sm font-semibold text-gray-200">Default Regulation</h2>
-        <p className="mt-1 text-xs text-gray-400">
+      <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-4">
+        <h2 className="text-sm font-semibold text-zinc-200">Default Regulation</h2>
+        <p className="mt-1 text-xs text-zinc-400">
           Used to pre-select the Format when importing a new team, and the
           Calc tab's starting regulation.
         </p>
@@ -52,7 +52,7 @@ export default function SettingsPage({ settingsState, teamsState, battlesState, 
               className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded transition-colors cursor-pointer ${
                 id === currentId
                   ? 'bg-accent-gold text-zinc-900'
-                  : 'text-zinc-300 bg-gray-900 hover:bg-zinc-800'
+                  : 'text-zinc-300 bg-zinc-900 hover:bg-zinc-800'
               }`}
             >
               {getRegulationLabel(id)}

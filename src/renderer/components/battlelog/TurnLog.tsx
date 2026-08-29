@@ -44,7 +44,7 @@ function sortByPhase(actions: BattleAction[]): BattleAction[] {
 /** Only non-neutral matchups get a callout - a 1x hit shows nothing, matching the "only call out what's notable" pattern used elsewhere in this log. */
 function effectivenessLabel(multiplier: number | undefined): { text: string; className: string } | null {
   if (multiplier == null || multiplier === 1) return null;
-  if (multiplier === 0) return { text: 'No Effect', className: 'text-gray-500' };
+  if (multiplier === 0) return { text: 'No Effect', className: 'text-zinc-500' };
   if (multiplier > 1) return { text: 'Super Effective!', className: 'text-green-400' };
   return { text: 'Not Very Effective', className: 'text-orange-400' };
 }
@@ -52,8 +52,8 @@ function effectivenessLabel(multiplier: number | undefined): { text: string; cla
 /** Per-target outcome label - the interactive toggle chips for these now live on the target's own BattlefieldSlot (see BattlefieldSlot.tsx), this is just the read-only historical record. */
 function outcomeLabel(result: 'crit' | 'miss' | 'no-effect' | 'blocked-ability' | undefined): { text: string; className: string } | null {
   if (result === 'crit') return { text: 'crit!', className: 'text-yellow-400' };
-  if (result === 'miss') return { text: 'missed', className: 'text-gray-400' };
-  if (result === 'no-effect') return { text: 'no effect', className: 'text-gray-400' };
+  if (result === 'miss') return { text: 'missed', className: 'text-zinc-400' };
+  if (result === 'no-effect') return { text: 'no effect', className: 'text-zinc-400' };
   if (result === 'blocked-ability') return { text: 'blocked (ability)', className: 'text-purple-400' };
   return null;
 }
@@ -62,10 +62,10 @@ export default function TurnLog({ battle, battleLogActions, onReviewInCalc }: Tu
   return (
     <div className="flex flex-col gap-3">
       {battle.turns.map(turn => (
-        <div key={turn.number} className="border-l-2 border-gray-700 pl-3">
-          <div className="text-xs font-bold text-gray-400 mb-1">Turn {turn.number}</div>
+        <div key={turn.number} className="border-l-2 border-zinc-700 pl-3">
+          <div className="text-xs font-bold text-zinc-400 mb-1">Turn {turn.number}</div>
           {turn.actions.length === 0 ? (
-            <p className="text-xs text-gray-600 italic">No actions logged yet</p>
+            <p className="text-xs text-zinc-600 italic">No actions logged yet</p>
           ) : (
             <ul className="flex flex-col gap-1">
               {sortByPhase(turn.actions).map(action => {
@@ -74,15 +74,15 @@ export default function TurnLog({ battle, battleLogActions, onReviewInCalc }: Tu
                 return (
                   <li key={action.id} className="text-sm flex items-center gap-1.5 flex-wrap">
                     {action.pokemonId === FIELD_EVENT_ID ? (
-                      <span className="text-gray-400 font-semibold">Field</span>
+                      <span className="text-zinc-400 font-semibold">Field</span>
                     ) : (
                       <span className={action.side === 'player' ? 'text-blue-400' : 'text-red-400'}>
                         {battlePokemonDisplayName(battle, action.side, action.pokemonId)}
                       </span>
                     )}
-                    {action.move && <span className="text-gray-200"> used {action.move}</span>}
+                    {action.move && <span className="text-zinc-200"> used {action.move}</span>}
                     {action.target && action.target.length > 0 && (
-                      <span className="text-gray-400">
+                      <span className="text-zinc-400">
                         {' '}on{' '}
                         {action.target.map((t, i) => {
                           const effLabel = effectivenessLabel(action.effectiveness?.find(e => e.pokemonId === t.pokemonId)?.multiplier);
@@ -94,19 +94,19 @@ export default function TurnLog({ battle, battleLogActions, onReviewInCalc }: Tu
                               {battlePokemonDisplayName(battle, t.side, t.pokemonId)}
                               {effLabel && <span className={`text-xs ${effLabel.className}`}> ({effLabel.text})</span>}
                               {outLabel && <span className={`text-xs ${outLabel.className}`}> ({outLabel.text})</span>}
-                              {hits != null && <span className="text-xs text-gray-500"> (x{hits} hits)</span>}
+                              {hits != null && <span className="text-xs text-zinc-500"> (x{hits} hits)</span>}
                             </span>
                           );
                         })}
                       </span>
                     )}
-                    {action.note && <span className="text-gray-500 italic"> ({action.note})</span>}
+                    {action.note && <span className="text-zinc-500 italic"> ({action.note})</span>}
                     {action.failed && <span className="text-red-400 text-xs italic">- failed</span>}
                     {showFailChip && !action.failed && (
                       <button
                         type="button"
                         onClick={() => battleLogActions.setActionFailed(battle, turn.number, action.id, true)}
-                        className="text-[10px] px-1.5 py-0.5 rounded bg-gray-800 text-gray-400 hover:text-red-300 hover:bg-red-900/40 cursor-pointer"
+                        className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 hover:text-red-300 hover:bg-red-900/40 cursor-pointer"
                       >
                         Failed?
                       </button>
@@ -116,7 +116,7 @@ export default function TurnLog({ battle, battleLogActions, onReviewInCalc }: Tu
                         type="button"
                         onClick={() => onReviewInCalc(buildCalcReviewPayload(battle, turn.number, action, action.target![0].pokemonId))}
                         title="Open this matchup in the Calc tab, reconstructed as it was on this turn"
-                        className="text-[10px] px-1.5 py-0.5 rounded bg-gray-800 text-gray-400 hover:text-accent-gold hover:bg-accent-gold/15 cursor-pointer"
+                        className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 hover:text-accent-gold hover:bg-accent-gold/15 cursor-pointer"
                       >
                         Show Calc
                       </button>

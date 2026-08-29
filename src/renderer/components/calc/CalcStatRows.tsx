@@ -37,8 +37,8 @@ export default function CalcStatRows({ baseStats, boostedStats, sps, boosts, nat
   const total = Object.values(sps).reduce((sum, v) => sum + v, 0);
 
   return (
-    <div className="bg-gray-800 rounded px-2 py-1.5 border border-gray-600 flex flex-col gap-1">
-      <div className="flex items-center gap-2 text-[10px] text-gray-400 uppercase tracking-wide">
+    <div className="bg-zinc-800 rounded px-2 py-1.5 border border-zinc-600 flex flex-col gap-1">
+      <div className="flex items-center gap-2 text-[10px] text-zinc-400 uppercase tracking-wide">
         <span className="w-8 shrink-0" />
         <span className="w-10 text-center shrink-0">Base</span>
         <span className="w-10 text-center shrink-0">SP</span>
@@ -69,7 +69,7 @@ export default function CalcStatRows({ baseStats, boostedStats, sps, boosts, nat
               if (!Number.isNaN(parsed)) onChangeSp(key, Math.max(0, Math.min(32, parsed)));
             }}
             title="Stat Points (0-32)"
-            className="w-10 shrink-0 px-1 py-0.5 text-xs text-center bg-gray-900 border border-gray-600 rounded text-white outline-none focus:border-accent-gold"
+            className="w-10 shrink-0 px-1 py-0.5 text-xs text-center bg-zinc-900 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
           />
           <input
             type="number"
@@ -81,7 +81,7 @@ export default function CalcStatRows({ baseStats, boostedStats, sps, boosts, nat
               if (!Number.isNaN(parsed)) onChangeBoost(key, Math.max(-6, Math.min(6, parsed)));
             }}
             title="Stat stage boost (-6 to +6)"
-            className="w-10 shrink-0 px-1 py-0.5 text-xs text-center bg-gray-900 border border-gray-600 rounded text-white outline-none focus:border-accent-gold"
+            className="w-10 shrink-0 px-1 py-0.5 text-xs text-center bg-zinc-900 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
           />
           <span
             className={`w-10 text-center text-xs font-bold shrink-0 ${
@@ -94,7 +94,7 @@ export default function CalcStatRows({ baseStats, boostedStats, sps, boosts, nat
         </div>
         );
       })}
-      <p className={`text-[10px] text-right ${total > MAX_SP_TOTAL ? 'text-red-400' : 'text-gray-500'}`}>
+      <p className={`text-[10px] text-right ${total > MAX_SP_TOTAL ? 'text-red-400' : 'text-zinc-500'}`}>
         {total} / {MAX_SP_TOTAL} SP total
       </p>
     </div>

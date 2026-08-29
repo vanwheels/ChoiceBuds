@@ -185,16 +185,16 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
       onDragOver={isEditing ? handleDragOver : undefined}
       onDragLeave={isEditing ? () => setIsDragOver(false) : undefined}
       onDrop={isEditing ? handleDrop : undefined}
-      className={`relative bg-gray-700 border rounded-lg p-3 flex flex-col gap-3 max-w-[280px] transition-colors ${
+      className={`relative bg-zinc-700 border rounded-lg p-3 flex flex-col gap-3 max-w-[280px] transition-colors ${
         isEditing ? 'cursor-grab' : ''
-      } ${isDragOver ? 'border-accent-gold ring-2 ring-accent-gold' : 'border-gray-600'}`}
+      } ${isDragOver ? 'border-accent-gold ring-2 ring-accent-gold' : 'border-zinc-600'}`}
     >
       {/* Left-Shifting Slot Deletion */}
       {isEditing && (
         <button
           onClick={handleDelete}
           title="Remove from roster"
-          className="absolute top-2 right-2 z-10 w-6 h-6 flex items-center justify-center rounded-full bg-gray-800 border border-gray-600 text-zinc-500 hover:text-red-400 hover:border-red-500 transition-colors cursor-pointer text-sm"
+          className="absolute top-2 right-2 z-10 w-6 h-6 flex items-center justify-center rounded-full bg-zinc-800 border border-zinc-600 text-zinc-500 hover:text-red-400 hover:border-red-500 transition-colors cursor-pointer text-sm"
         >
           ×
         </button>
@@ -207,7 +207,7 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
       <button
         onClick={() => setIsExportOpen(true)}
         title="Export Pokémon (Showdown format)"
-        className={`absolute top-2 z-10 w-6 h-6 flex items-center justify-center rounded-full bg-gray-800 border border-gray-600 text-zinc-500 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer text-sm ${isEditing ? 'right-9' : 'right-2'}`}
+        className={`absolute top-2 z-10 w-6 h-6 flex items-center justify-center rounded-full bg-zinc-800 border border-zinc-600 text-zinc-500 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer text-sm ${isEditing ? 'right-9' : 'right-2'}`}
       >
         ⇩
       </button>
@@ -222,12 +222,12 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
             onBlur={handleNicknameBlur}
             maxLength={12}
             placeholder={showdownData.species}
-            className="w-full px-2 py-1 text-sm font-bold text-white bg-gray-800 border border-gray-600 rounded text-center outline-none"
+            className="w-full px-2 py-1 text-sm font-bold text-white bg-zinc-800 border border-zinc-600 rounded text-center outline-none"
           />
         ) : (
-          <h4 className="text-sm font-bold text-gray-100 truncate">{showdownData.nickname || showdownData.species}</h4>
+          <h4 className="text-sm font-bold text-zinc-100 truncate">{showdownData.nickname || showdownData.species}</h4>
         )}
-        <p className="text-xs text-gray-300 truncate">{showdownData.species} #{pokedexNumber}</p>
+        <p className="text-xs text-zinc-300 truncate">{showdownData.species} #{pokedexNumber}</p>
       </div>
 
       {/* Sprite Container - clickable in edit mode to open the Roster Swap picker.
@@ -237,13 +237,13 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
       <div className="flex justify-center">
         <div
           onClick={isEditing ? () => setIsSwapPickerOpen(true) : undefined}
-          className={`w-[134px] mx-auto h-24 bg-gray-800 rounded-lg border border-gray-600 flex items-center justify-center overflow-hidden ${isEditing ? 'cursor-pointer hover:border-accent-gold transition-colors' : ''}`}
+          className={`w-[134px] mx-auto h-24 bg-zinc-800 rounded-lg border border-zinc-600 flex items-center justify-center overflow-hidden ${isEditing ? 'cursor-pointer hover:border-accent-gold transition-colors' : ''}`}
           title={isEditing ? 'Click to swap this Pokémon' : undefined}
         >
           {displaySpriteUrl ? (
             <img src={spriteCacheState.resolveSprite(displaySpriteUrl)} alt={showdownData.species} className="w-24 h-24 object-contain mx-auto transition-transform duration-150 [image-rendering:pixelated]" />
           ) : (
-            <span className="text-xs text-gray-400">No sprite</span>
+            <span className="text-xs text-zinc-400">No sprite</span>
           )}
         </div>
       </div>
@@ -266,7 +266,7 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
       {/* Footer: Gender and Shiny Indicators - each in its own item-sprite-style box, side by side */}
       <div className="flex flex-row items-center justify-center gap-3 pt-2 mt-1 border-t border-zinc-800/60 w-full">
         <div
-          className={`w-14 h-14 bg-gray-800 rounded-lg border border-gray-600 flex items-center justify-center overflow-hidden transition-colors ${isGenderClickable() ? 'cursor-pointer hover:border-accent-gold' : 'cursor-not-allowed opacity-60'}`}
+          className={`w-14 h-14 bg-zinc-800 rounded-lg border border-zinc-600 flex items-center justify-center overflow-hidden transition-colors ${isGenderClickable() ? 'cursor-pointer hover:border-accent-gold' : 'cursor-not-allowed opacity-60'}`}
           onClick={isGenderClickable() ? handleGenderToggle : undefined}
           title={isGenderless(showdownData.species) ? 'Genderless species' : isFemaleLocked(showdownData.species) ? 'Female-only species' : 'Click to toggle gender'}
         >
@@ -275,7 +275,7 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
           {localGender !== 'M' && localGender !== 'F' && <span className="text-2xl font-bold text-zinc-400">⌀</span>}
         </div>
         <div
-          className="w-14 h-14 bg-gray-800 rounded-lg border border-gray-600 flex items-center justify-center overflow-hidden cursor-pointer hover:border-accent-gold transition-colors"
+          className="w-14 h-14 bg-zinc-800 rounded-lg border border-zinc-600 flex items-center justify-center overflow-hidden cursor-pointer hover:border-accent-gold transition-colors"
           onClick={handleShinyToggle}
           title="Click to toggle shiny status"
         >

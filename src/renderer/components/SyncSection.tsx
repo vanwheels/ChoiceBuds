@@ -71,22 +71,22 @@ export default function SyncSection({ syncState }: SyncSectionProps) {
   };
 
   return (
-    <div className="rounded-lg border border-gray-700 bg-gray-800 p-4">
-      <h2 className="text-sm font-semibold text-gray-200">Cross-Device Sync</h2>
-      <p className="mt-1 text-xs text-gray-400">
+    <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-4">
+      <h2 className="text-sm font-semibold text-zinc-200">Cross-Device Sync</h2>
+      <p className="mt-1 text-xs text-zinc-400">
         Manually push/pull your teams and battle logs to your own sync server. Nothing syncs automatically.
       </p>
 
       {!syncIdentifier ? (
         <div className="mt-3 flex flex-col gap-3">
           <div>
-            <label className="block text-xs font-medium text-gray-300 mb-1">Create a new sync identifier</label>
+            <label className="block text-xs font-medium text-zinc-300 mb-1">Create a new sync identifier</label>
             <div className="flex gap-2">
               <input
                 value={newUsername}
                 onChange={e => setNewUsername(e.target.value)}
                 placeholder="username"
-                className="flex-1 px-3 py-1.5 text-sm bg-gray-900 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
+                className="flex-1 px-3 py-1.5 text-sm bg-zinc-900 border border-zinc-600 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
               />
               <button
                 onClick={handleCreate}
@@ -98,18 +98,18 @@ export default function SyncSection({ syncState }: SyncSectionProps) {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-300 mb-1">Or pair with an identifier from another device</label>
+            <label className="block text-xs font-medium text-zinc-300 mb-1">Or pair with an identifier from another device</label>
             <div className="flex gap-2">
               <input
                 value={pairInput}
                 onChange={e => setPairInput(e.target.value)}
                 placeholder="username#1234"
-                className="flex-1 px-3 py-1.5 text-sm bg-gray-900 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
+                className="flex-1 px-3 py-1.5 text-sm bg-zinc-900 border border-zinc-600 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
               />
               <button
                 onClick={handlePair}
                 disabled={!pairInput.trim()}
-                className="px-3 py-1.5 text-xs font-bold rounded bg-gray-700 text-gray-200 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                className="px-3 py-1.5 text-xs font-bold rounded bg-zinc-700 text-zinc-200 hover:bg-zinc-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
               >
                 Pair
               </button>
@@ -121,20 +121,20 @@ export default function SyncSection({ syncState }: SyncSectionProps) {
         <div className="mt-3 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-xs text-gray-400">Identifier: </span>
-              <span className="text-sm font-mono text-gray-100">{syncIdentifier}</span>
+              <span className="text-xs text-zinc-400">Identifier: </span>
+              <span className="text-sm font-mono text-zinc-100">{syncIdentifier}</span>
             </div>
             <button
               onClick={forgetIdentifier}
-              className="text-xs text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
+              className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
             >
               Forget
             </button>
           </div>
 
           <div className="flex items-center gap-2 text-xs">
-            <span className="text-gray-400">Status:</span>
-            <span className={status === 'up-to-date' ? 'text-green-400' : status === 'unknown' ? 'text-gray-500' : 'text-yellow-400'}>
+            <span className="text-zinc-400">Status:</span>
+            <span className={status === 'up-to-date' ? 'text-green-400' : status === 'unknown' ? 'text-zinc-500' : 'text-yellow-400'}>
               {STATUS_LABEL[status]}
             </span>
           </div>
@@ -150,14 +150,14 @@ export default function SyncSection({ syncState }: SyncSectionProps) {
             <button
               onClick={() => handlePull()}
               disabled={isBusy}
-              className="px-3 py-1.5 text-xs font-bold rounded bg-gray-700 text-gray-200 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              className="px-3 py-1.5 text-xs font-bold rounded bg-zinc-700 text-zinc-200 hover:bg-zinc-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
               {isBusy ? 'Working...' : 'Pull'}
             </button>
           </div>
 
-          {lastPushedAt && <p className="text-[11px] text-gray-500">Last pushed: {new Date(lastPushedAt).toLocaleString()}</p>}
-          {lastPulledAt && <p className="text-[11px] text-gray-500">Last pulled: {new Date(lastPulledAt).toLocaleString()}</p>}
+          {lastPushedAt && <p className="text-[11px] text-zinc-500">Last pushed: {new Date(lastPushedAt).toLocaleString()}</p>}
+          {lastPulledAt && <p className="text-[11px] text-zinc-500">Last pulled: {new Date(lastPulledAt).toLocaleString()}</p>}
 
           {blocked && (
             <div className="rounded border border-yellow-700 bg-yellow-900/30 p-2 flex flex-col gap-2">
@@ -165,12 +165,12 @@ export default function SyncSection({ syncState }: SyncSectionProps) {
               <div className="flex gap-2">
                 {blocked.type === 'push' ? (
                   <>
-                    <button onClick={() => handlePull()} className="px-2 py-1 text-[11px] font-bold rounded bg-gray-700 text-gray-200 hover:bg-gray-600 cursor-pointer">Pull first</button>
+                    <button onClick={() => handlePull()} className="px-2 py-1 text-[11px] font-bold rounded bg-zinc-700 text-zinc-200 hover:bg-zinc-600 cursor-pointer">Pull first</button>
                     <button onClick={() => handlePush(true)} className="px-2 py-1 text-[11px] font-bold rounded bg-red-900 text-red-200 hover:bg-red-800 cursor-pointer">Push anyway</button>
                   </>
                 ) : (
                   <>
-                    <button onClick={() => handlePush()} className="px-2 py-1 text-[11px] font-bold rounded bg-gray-700 text-gray-200 hover:bg-gray-600 cursor-pointer">Push first</button>
+                    <button onClick={() => handlePush()} className="px-2 py-1 text-[11px] font-bold rounded bg-zinc-700 text-zinc-200 hover:bg-zinc-600 cursor-pointer">Push first</button>
                     <button onClick={() => handlePull(true)} className="px-2 py-1 text-[11px] font-bold rounded bg-red-900 text-red-200 hover:bg-red-800 cursor-pointer">Pull anyway</button>
                   </>
                 )}

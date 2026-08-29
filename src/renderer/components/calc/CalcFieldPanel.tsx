@@ -55,7 +55,7 @@ export default function CalcFieldPanel({
             type="button"
             onClick={() => onChangeField({ gameType: type })}
             className={`flex-1 px-2 py-0.5 text-xs font-bold rounded transition-colors cursor-pointer ${
-              field.gameType === type ? 'bg-accent-gold text-zinc-900' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+              field.gameType === type ? 'bg-accent-gold text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
             }`}
           >
             {type}
@@ -65,22 +65,22 @@ export default function CalcFieldPanel({
 
       <div className="grid grid-cols-2 gap-2">
         <div className="flex flex-col gap-1">
-          <label className="text-[10px] text-gray-400 uppercase tracking-wide">Weather</label>
+          <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Weather</label>
           <select
             value={field.weather}
             onChange={(e) => onChangeField({ weather: e.target.value as CalcFieldState['weather'] })}
-            className="px-2 py-0.5 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-accent-gold"
+            className="px-2 py-0.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
           >
             <option value="">None</option>
             {WEATHER_OPTIONS.map(w => <option key={w} value={w}>{w}</option>)}
           </select>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-[10px] text-gray-400 uppercase tracking-wide">Terrain</label>
+          <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Terrain</label>
           <select
             value={field.terrain}
             onChange={(e) => onChangeField({ terrain: e.target.value as CalcFieldState['terrain'] })}
-            className="px-2 py-0.5 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-accent-gold"
+            className="px-2 py-0.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
           >
             <option value="">None</option>
             {TERRAIN_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}

@@ -29,9 +29,9 @@ export default function GameDataResetSection({ databaseState, gameDataState }: G
   };
 
   return (
-    <div className="rounded-lg border border-gray-700 bg-gray-800 p-4">
-      <h2 className="text-sm font-semibold text-gray-200">Game Data</h2>
-      <p className="mt-1 text-xs text-gray-400">
+    <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-4">
+      <h2 className="text-sm font-semibold text-zinc-200">Game Data</h2>
+      <p className="mt-1 text-xs text-zinc-400">
         Species, move, item, and ability data is downloaded once and kept
         offline permanently rather than periodically re-checked. If
         something looks wrong or out of date, clear it here to force a

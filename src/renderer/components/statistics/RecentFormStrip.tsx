@@ -19,10 +19,10 @@ const CHIP_STYLES: Record<Battle['result'], string> = {
 
 export default function RecentFormStrip({ form }: RecentFormStripProps) {
   return (
-    <div className="flex flex-col gap-2 p-4 rounded-lg bg-gray-800 border border-gray-700">
-      <h3 className="text-sm font-bold text-gray-300 uppercase tracking-wide">Recent Form</h3>
+    <div className="flex flex-col gap-2 p-4 rounded-lg bg-zinc-800 border border-zinc-700">
+      <h3 className="text-sm font-bold text-zinc-300 uppercase tracking-wide">Recent Form</h3>
       {form.length === 0 ? (
-        <p className="text-sm text-gray-500">No completed battles yet.</p>
+        <p className="text-sm text-zinc-500">No completed battles yet.</p>
       ) : (
         <div className="flex flex-wrap gap-1.5">
           {form.map(entry => (

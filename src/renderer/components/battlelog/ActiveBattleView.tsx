@@ -45,23 +45,23 @@ export default function ActiveBattleView({ battle, battleLogActions, roster, res
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-gray-100">{battle.teamName}</h2>
-          <p className="text-xs text-gray-400">{battle.format} - {new Date(battle.date).toLocaleDateString()}</p>
+          <h2 className="text-lg font-bold text-zinc-100">{battle.teamName}</h2>
+          <p className="text-xs text-zinc-400">{battle.format} - {new Date(battle.date).toLocaleDateString()}</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => battleLogActions.setResult(battle, 'win')}
-            className={`px-3 py-1 text-xs font-bold rounded cursor-pointer ${battle.result === 'win' ? 'bg-green-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+            className={`px-3 py-1 text-xs font-bold rounded cursor-pointer ${battle.result === 'win' ? 'bg-green-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}
           >
             Win
           </button>
           <button
             onClick={() => battleLogActions.setResult(battle, 'loss')}
-            className={`px-3 py-1 text-xs font-bold rounded cursor-pointer ${battle.result === 'loss' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+            className={`px-3 py-1 text-xs font-bold rounded cursor-pointer ${battle.result === 'loss' ? 'bg-red-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}
           >
             Loss
           </button>
-          <button onClick={onClose} className="text-sm text-gray-400 hover:text-gray-200 ml-2">Back</button>
+          <button onClick={onClose} className="text-sm text-zinc-400 hover:text-zinc-200 ml-2">Back</button>
         </div>
       </div>
 
@@ -72,12 +72,12 @@ export default function ActiveBattleView({ battle, battleLogActions, roster, res
           <Battlefield battle={battle} battleLogActions={battleLogActions} gameDataState={gameDataState} resolveSprite={resolveSprite} />
 
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">Turn {battle.turns.length}</span>
+            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wide">Turn {battle.turns.length}</span>
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() => battleLogActions.undoLastAction(battle)}
-                className="px-3 py-1 text-xs rounded bg-gray-800 hover:bg-gray-700 text-gray-300 cursor-pointer"
+                className="px-3 py-1 text-xs rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 cursor-pointer"
               >
                 Undo Last
               </button>
@@ -91,7 +91,7 @@ export default function ActiveBattleView({ battle, battleLogActions, roster, res
             </div>
           </div>
 
-          <div ref={turnLogRef} className="flex-1 min-h-[12rem] max-h-[24rem] bg-gray-900/40 rounded-lg p-3 overflow-y-auto">
+          <div ref={turnLogRef} className="flex-1 min-h-[12rem] max-h-[24rem] bg-zinc-900/40 rounded-lg p-3 overflow-y-auto">
             <TurnLog battle={battle} battleLogActions={battleLogActions} onReviewInCalc={onReviewInCalc} />
           </div>
         </div>
@@ -111,7 +111,7 @@ export default function ActiveBattleView({ battle, battleLogActions, roster, res
         onBlur={() => battleLogActions.setNotes(battle, notes)}
         placeholder="Notes..."
         rows={2}
-        className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-700 rounded-lg text-gray-200 outline-none focus:border-accent-gold resize-none"
+        className="w-full px-3 py-2 text-sm bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-200 outline-none focus:border-accent-gold resize-none"
       />
     </div>
   );

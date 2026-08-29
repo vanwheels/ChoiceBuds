@@ -24,19 +24,19 @@ export default function UpdateCheckSection({ updateCheckState }: UpdateCheckSect
   };
 
   return (
-    <div className="rounded-lg border border-gray-700 bg-gray-800 p-4">
-      <h2 className="text-sm font-semibold text-gray-200">Updates</h2>
-      <p className="mt-1 text-xs text-gray-400">Current version: {currentVersion}</p>
+    <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-4">
+      <h2 className="text-sm font-semibold text-zinc-200">Updates</h2>
+      <p className="mt-1 text-xs text-zinc-400">Current version: {currentVersion}</p>
 
       <div className="mt-3">
         {status === 'checking' && (
-          <p className="text-xs text-gray-500">Checking for updates...</p>
+          <p className="text-xs text-zinc-500">Checking for updates...</p>
         )}
         {status === 'up-to-date' && (
           <p className="text-xs text-green-400">You're up to date.</p>
         )}
         {status === 'no-releases' && (
-          <p className="text-xs text-gray-500">No releases published yet.</p>
+          <p className="text-xs text-zinc-500">No releases published yet.</p>
         )}
         {status === 'error' && (
           <p className="text-xs text-red-400">Couldn't check for updates - check your connection.</p>

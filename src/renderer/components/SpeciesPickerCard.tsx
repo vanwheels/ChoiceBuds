@@ -42,11 +42,11 @@ export default function SpeciesPickerCard({ roster, rulesetId, resolveSprite, on
     : legalRoster.filter(pkmn => pkmn.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div ref={ref} className="relative bg-gray-700 border-2 border-accent-gold rounded-lg p-3 flex flex-col gap-3 max-w-[280px] min-h-[280px] max-h-[32rem]">
+    <div ref={ref} className="relative bg-zinc-700 border-2 border-accent-gold rounded-lg p-3 flex flex-col gap-3 max-w-[280px] min-h-[280px] max-h-[32rem]">
       <button
         onClick={onClose}
         title="Cancel"
-        className="absolute top-2 right-2 z-10 w-6 h-6 flex items-center justify-center rounded-full bg-gray-800 border border-gray-600 text-zinc-500 hover:text-red-400 hover:border-red-500 transition-colors cursor-pointer text-sm"
+        className="absolute top-2 right-2 z-10 w-6 h-6 flex items-center justify-center rounded-full bg-zinc-800 border border-zinc-600 text-zinc-500 hover:text-red-400 hover:border-red-500 transition-colors cursor-pointer text-sm"
       >
         ×
       </button>
@@ -59,14 +59,14 @@ export default function SpeciesPickerCard({ roster, rulesetId, resolveSprite, on
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search species... (#fire, #grass, ...)"
           autoFocus
-          className="w-full px-2 py-1 text-sm font-bold text-white bg-gray-800 border border-gray-600 rounded text-center outline-none focus:border-accent-gold"
+          className="w-full px-2 py-1 text-sm font-bold text-white bg-zinc-800 border border-zinc-600 rounded text-center outline-none focus:border-accent-gold"
         />
       </div>
 
       {/* Results fill the rest of the slot, capped and scrollable */}
       <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-1">
         {filtered.length === 0 ? (
-          <p className="text-xs text-gray-400 text-center mt-4">
+          <p className="text-xs text-zinc-400 text-center mt-4">
             {tag !== null && typeMembers === null ? 'Loading type…' : 'No legal species found'}
           </p>
         ) : (
@@ -74,7 +74,7 @@ export default function SpeciesPickerCard({ roster, rulesetId, resolveSprite, on
             <div
               key={pkmn.id}
               onClick={() => onSelect(pkmn)}
-              className="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-600 cursor-pointer transition-colors"
+              className="flex items-center gap-2 px-2 py-1 rounded hover:bg-zinc-600 cursor-pointer transition-colors"
             >
               <img src={resolveSprite(pkmn.spriteUrl)} alt={pkmn.name} loading="lazy" className="w-8 h-8 object-contain [image-rendering:pixelated] shrink-0" />
               <span className="text-xs text-white truncate">{pkmn.name}</span>

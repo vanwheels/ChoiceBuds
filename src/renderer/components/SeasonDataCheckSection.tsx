@@ -15,15 +15,15 @@ export default function SeasonDataCheckSection({ seasonDataCheckState }: SeasonD
   const { latestSeason, isStale, lastCheckedAt, markChecked } = seasonDataCheckState;
 
   return (
-    <div className="rounded-lg border border-gray-700 bg-gray-800 p-4">
-      <h2 className="text-sm font-semibold text-gray-200">Season Data</h2>
-      <p className="mt-1 text-xs text-gray-400">
+    <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-4">
+      <h2 className="text-sm font-semibold text-zinc-200">Season Data</h2>
+      <p className="mt-1 text-xs text-zinc-400">
         Ranked season dates are hand-maintained from Bulbapedia/Serebii, not fetched live.
       </p>
 
       <div className="mt-3">
         {/* seasons.ts stores dates as UTC midnight - format in UTC or it renders a day early in negative-offset timezones. */}
-        <p className="text-xs text-gray-300">
+        <p className="text-xs text-zinc-300">
           Latest tracked season: <span className="font-semibold">{latestSeason.label}</span> ({latestSeason.regulation}),
           {' '}ends {new Date(latestSeason.end).toLocaleDateString(undefined, { timeZone: 'UTC' })}
         </p>
@@ -41,7 +41,7 @@ export default function SeasonDataCheckSection({ seasonDataCheckState }: SeasonD
         >
           Mark as Checked
         </button>
-        <p className="text-[11px] text-gray-500">
+        <p className="text-[11px] text-zinc-500">
           {lastCheckedAt ? `Last checked: ${new Date(lastCheckedAt).toLocaleString()}` : 'Never checked'}
         </p>
       </div>

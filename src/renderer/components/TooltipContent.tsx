@@ -46,7 +46,7 @@ export default function TooltipContent({
     return (
       <>
         <div className="font-bold text-white mb-1">{selectedItem || 'No Item'}</div>
-        {selectedItem && <div className="text-gray-300">{itemData?.description || 'Loading…'}</div>}
+        {selectedItem && <div className="text-zinc-300">{itemData?.description || 'Loading…'}</div>}
       </>
     );
   }
@@ -55,7 +55,7 @@ export default function TooltipContent({
     return (
       <>
         <div className="font-bold text-white mb-1">{selectedAbility || 'No Ability'}</div>
-        {selectedAbility && <div className="text-gray-300">{abilityData?.description || 'Loading…'}</div>}
+        {selectedAbility && <div className="text-zinc-300">{abilityData?.description || 'Loading…'}</div>}
       </>
     );
   }
@@ -64,7 +64,7 @@ export default function TooltipContent({
     const index = Number(hoveredKey.slice(4));
     const move = moveDataSlots[index];
     if (!move) {
-      return <div className="text-gray-400">{selectedMoves[index] || 'No move selected'}</div>;
+      return <div className="text-zinc-400">{selectedMoves[index] || 'No move selected'}</div>;
     }
     return (
       <div className="flex flex-col gap-1">
@@ -72,7 +72,7 @@ export default function TooltipContent({
           <span className="font-bold text-white">{toReadableName(move.name)}</span>
           <TypeBadge type={move.type} />
         </div>
-        <div className="flex items-center gap-1.5 text-gray-300">
+        <div className="flex items-center gap-1.5 text-zinc-300">
           {!failedBadges[move.category] ? (
             <img
               src={MOVE_CATEGORY_BADGE[move.category]}
@@ -99,7 +99,7 @@ export default function TooltipContent({
             })}
           </div>
         )}
-        <div className="text-gray-400">{move.description}</div>
+        <div className="text-zinc-400">{move.description}</div>
       </div>
     );
   }

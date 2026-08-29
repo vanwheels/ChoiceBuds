@@ -20,10 +20,10 @@ export default function StatusConditionPopover({ current, onPick, onClose }: Sta
   const ref = useDismissable<HTMLDivElement>(onClose);
 
   return (
-    <div ref={ref} className="absolute z-20 top-full mt-1 left-1/2 -translate-x-1/2 w-32 p-2 rounded-lg bg-gray-800 border-2 border-accent-gold shadow-lg flex flex-col gap-1">
+    <div ref={ref} className="absolute z-20 top-full mt-1 left-1/2 -translate-x-1/2 w-32 p-2 rounded-lg bg-zinc-800 border-2 border-accent-gold shadow-lg flex flex-col gap-1">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Status</span>
-        <button type="button" onClick={onClose} className="text-gray-500 hover:text-red-400 cursor-pointer text-xs">×</button>
+        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Status</span>
+        <button type="button" onClick={onClose} className="text-zinc-500 hover:text-red-400 cursor-pointer text-xs">×</button>
       </div>
       {STATUS_ORDER.map(status => (
         <button
@@ -31,7 +31,7 @@ export default function StatusConditionPopover({ current, onPick, onClose }: Sta
           type="button"
           onClick={() => onPick(status)}
           className={`text-left px-2 py-1 text-[11px] rounded cursor-pointer transition-colors ${
-            current === status ? STATUS_COLORS[status] : 'bg-gray-900 text-gray-300 hover:bg-gray-700'
+            current === status ? STATUS_COLORS[status] : 'bg-zinc-900 text-zinc-300 hover:bg-zinc-700'
           }`}
         >
           {STATUS_LABELS[status]}
@@ -41,7 +41,7 @@ export default function StatusConditionPopover({ current, onPick, onClose }: Sta
         type="button"
         onClick={() => onPick(null)}
         disabled={!current}
-        className="text-left px-2 py-1 text-[11px] rounded bg-gray-900 text-gray-500 hover:text-red-300 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
+        className="text-left px-2 py-1 text-[11px] rounded bg-zinc-900 text-zinc-500 hover:text-red-300 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
       >
         {current === 'sleep' ? 'Wake Up' : 'None'}
       </button>

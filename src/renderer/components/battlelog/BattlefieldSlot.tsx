@@ -82,7 +82,7 @@ function EmptySlot({ side, onClick, onDrop }: { side: BattleSide; onClick: () =>
           ? 'border-accent-gold bg-accent-gold/10 text-accent-gold'
           : dragState === 'invalid'
             ? 'border-red-500 bg-red-500/10 text-red-400 cursor-not-allowed'
-            : 'border-gray-800 text-gray-700 hover:border-gray-600 hover:text-gray-500'
+            : 'border-zinc-800 text-zinc-700 hover:border-zinc-600 hover:text-zinc-500'
       }`}
     >
       {dragState === 'invalid' ? '⊘' : '+'}
@@ -100,13 +100,13 @@ function BenchPicker({
 }) {
   const ref = useDismissable<HTMLDivElement>(onClose);
   return (
-    <div ref={ref} className="absolute z-20 top-full mt-1 left-1/2 -translate-x-1/2 w-40 p-2 rounded-lg bg-gray-800 border-2 border-accent-gold shadow-lg flex flex-col gap-1">
+    <div ref={ref} className="absolute z-20 top-full mt-1 left-1/2 -translate-x-1/2 w-40 p-2 rounded-lg bg-zinc-800 border-2 border-accent-gold shadow-lg flex flex-col gap-1">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Switch in</span>
-        <button type="button" onClick={onClose} className="text-gray-500 hover:text-red-400 cursor-pointer text-xs">×</button>
+        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Switch in</span>
+        <button type="button" onClick={onClose} className="text-zinc-500 hover:text-red-400 cursor-pointer text-xs">×</button>
       </div>
       {options.length === 0 ? (
-        <p className="text-[11px] text-gray-500 italic">Nobody available</p>
+        <p className="text-[11px] text-zinc-500 italic">Nobody available</p>
       ) : (
         options.map(mon => {
           const isPlayer = 'nickname' in mon;
@@ -124,7 +124,7 @@ function BenchPicker({
                 alt={mon.species}
                 className="w-7 h-7 object-contain [image-rendering:pixelated] shrink-0"
               />
-              <span className="text-xs text-gray-100 truncate">{displayName}</span>
+              <span className="text-xs text-zinc-100 truncate">{displayName}</span>
             </button>
           );
         })
@@ -142,14 +142,14 @@ function MegaFormPicker({
 }) {
   const ref = useDismissable<HTMLDivElement>(onClose);
   return (
-    <div ref={ref} className="absolute z-20 top-full mt-1 left-1/2 -translate-x-1/2 p-1 rounded-lg bg-gray-800 border-2 border-yellow-500 shadow-lg flex gap-1">
+    <div ref={ref} className="absolute z-20 top-full mt-1 left-1/2 -translate-x-1/2 p-1 rounded-lg bg-zinc-800 border-2 border-yellow-500 shadow-lg flex gap-1">
       {forms.map(form => (
         <button
           key={form.item}
           type="button"
           onClick={() => onPick(form)}
           title={titleCase(form.item)}
-          className="px-2 py-1 text-[10px] font-bold rounded bg-gray-900 text-yellow-300 hover:bg-yellow-900/60 cursor-pointer"
+          className="px-2 py-1 text-[10px] font-bold rounded bg-zinc-900 text-yellow-300 hover:bg-yellow-900/60 cursor-pointer"
         >
           {form.suffix.replace('mega-', '').toUpperCase()}
         </button>
@@ -299,14 +299,14 @@ export default function BattlefieldSlot({
         onClick={onSlotClick}
         title={!canAct ? 'Already acted this turn' : undefined}
         className={`relative rounded-lg p-1 cursor-pointer transition-colors ${!canAct ? 'opacity-50' : ''} ${
-          isArmed ? 'bg-accent-gold/30 ring-2 ring-accent-gold' : isCandidate ? 'bg-yellow-500/20 ring-2 ring-yellow-400' : 'hover:bg-gray-800/60'
+          isArmed ? 'bg-accent-gold/30 ring-2 ring-accent-gold' : isCandidate ? 'bg-yellow-500/20 ring-2 ring-yellow-400' : 'hover:bg-zinc-800/60'
         }`}
       >
         <img src={spriteUrl} alt={mon.species} className="w-20 h-20 object-contain [image-rendering:pixelated]" />
       </button>
       <span className={isPlayer ? 'text-xs text-blue-300' : 'text-xs text-red-300'}>{displayName}{isMega ? ' ⚡' : ''}</span>
       {!arrowAbove && switchedIn && arrow}
-      {statSummary && <span className="text-[9px] text-gray-400">{statSummary}</span>}
+      {statSummary && <span className="text-[9px] text-zinc-400">{statSummary}</span>}
       {currentStatus && (
         <span className={`text-[9px] font-bold px-1 rounded ${STATUS_COLORS[currentStatus]}`}>
           {STATUS_ABBREVIATIONS[currentStatus]}{sleepTurnCount != null && ` (${sleepTurnCount})`}
@@ -317,7 +317,7 @@ export default function BattlefieldSlot({
           type="button"
           onClick={e => { e.stopPropagation(); battleLogActions.setStatusCondition(battle, side, mon.id, null); }}
           title="Wake this Pokemon up"
-          className="text-[9px] px-1.5 py-0.5 rounded bg-gray-700/60 text-gray-200 hover:bg-gray-600 cursor-pointer"
+          className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-700/60 text-zinc-200 hover:bg-zinc-600 cursor-pointer"
         >
           Wake Up
         </button>
@@ -370,7 +370,7 @@ export default function BattlefieldSlot({
           onClick={handleSwitchClick}
           disabled={!canSwitchOut}
           title={canSwitchOut ? (hasReplacement ? 'Switch this Pokemon out' : 'Switch this Pokemon out (last one standing)') : "Can't switch out - already acted this turn"}
-          className={`text-[9px] px-1 rounded bg-gray-900 ${canSwitchOut ? 'text-gray-500 hover:text-gray-300 cursor-pointer' : 'text-gray-700 cursor-not-allowed'}`}
+          className={`text-[9px] px-1 rounded bg-zinc-900 ${canSwitchOut ? 'text-zinc-500 hover:text-zinc-300 cursor-pointer' : 'text-zinc-700 cursor-not-allowed'}`}
         >
           Switch
         </button>
@@ -380,7 +380,7 @@ export default function BattlefieldSlot({
             onClick={handleMegaClick}
             disabled={!canAct}
             title={canAct ? 'Mark as Mega Evolved' : 'Already acted this turn'}
-            className={`text-[9px] px-1 rounded bg-gray-900 ${canAct ? 'text-gray-500 hover:text-yellow-300 cursor-pointer' : 'text-gray-700 cursor-not-allowed'}`}
+            className={`text-[9px] px-1 rounded bg-zinc-900 ${canAct ? 'text-zinc-500 hover:text-yellow-300 cursor-pointer' : 'text-zinc-700 cursor-not-allowed'}`}
           >
             Mega
           </button>
@@ -389,7 +389,7 @@ export default function BattlefieldSlot({
           type="button"
           onClick={e => { e.stopPropagation(); onOpenStats(); }}
           title="Adjust stat stages"
-          className="text-[9px] px-1 rounded bg-gray-900 text-gray-500 hover:text-accent-gold cursor-pointer"
+          className="text-[9px] px-1 rounded bg-zinc-900 text-zinc-500 hover:text-accent-gold cursor-pointer"
         >
           Stats
         </button>
@@ -397,7 +397,7 @@ export default function BattlefieldSlot({
           type="button"
           onClick={e => { e.stopPropagation(); onOpenStatus(); }}
           title="Set status condition"
-          className="text-[9px] px-1 rounded bg-gray-900 text-gray-500 hover:text-yellow-300 cursor-pointer"
+          className="text-[9px] px-1 rounded bg-zinc-900 text-zinc-500 hover:text-yellow-300 cursor-pointer"
         >
           Status
         </button>
@@ -405,7 +405,7 @@ export default function BattlefieldSlot({
           type="button"
           onClick={e => { e.stopPropagation(); battleLogActions.setFainted(battle, side, mon.id, true); }}
           title="Mark fainted"
-          className="text-[9px] px-1 rounded bg-gray-900 text-gray-500 hover:text-red-400 cursor-pointer"
+          className="text-[9px] px-1 rounded bg-zinc-900 text-zinc-500 hover:text-red-400 cursor-pointer"
         >
           Fainted
         </button>

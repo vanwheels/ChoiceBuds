@@ -31,24 +31,24 @@ export default function ItemPickerPanel({ items, maxHeight, onSelect, onClose }:
   );
 
   return (
-    <div ref={ref} className="w-full flex flex-col gap-2 bg-gray-800 border-2 border-accent-gold rounded-lg p-2">
+    <div ref={ref} className="w-full flex flex-col gap-2 bg-zinc-800 border-2 border-accent-gold rounded-lg p-2">
       <input
         type="text"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search items... (#MegaStone, #Berry, #HoldItem)"
         autoFocus
-        className="w-full px-2 py-1 text-sm font-bold text-white bg-gray-900 border border-gray-600 rounded text-center outline-none focus:border-accent-gold"
+        className="w-full px-2 py-1 text-sm font-bold text-white bg-zinc-900 border border-zinc-600 rounded text-center outline-none focus:border-accent-gold"
       />
       <div className="overflow-y-auto flex flex-col gap-1" style={{ maxHeight }}>
         {filtered.length === 0 ? (
-          <p className="text-xs text-gray-400 text-center mt-2">No items found</p>
+          <p className="text-xs text-zinc-400 text-center mt-2">No items found</p>
         ) : (
           filtered.map((item, idx) => (
             <div
               key={idx}
               onClick={() => onSelect(item)}
-              className="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-700 cursor-pointer transition-colors"
+              className="flex items-center gap-2 px-2 py-1 rounded hover:bg-zinc-700 cursor-pointer transition-colors"
             >
               {item.spriteUrl ? (
                 <img src={item.spriteUrl} alt={item.name} loading="lazy" className="w-8 h-8 object-contain shrink-0" />
@@ -57,7 +57,7 @@ export default function ItemPickerPanel({ items, maxHeight, onSelect, onClose }:
               )}
               <div className="min-w-0">
                 <div className="text-white text-sm font-medium truncate">{toReadableName(item.name)}</div>
-                <div className="text-gray-400 text-xs truncate">{item.description}</div>
+                <div className="text-zinc-400 text-xs truncate">{item.description}</div>
               </div>
             </div>
           ))

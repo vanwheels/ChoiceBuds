@@ -37,12 +37,12 @@ interface MoveLogPopoverProps {
  */
 function NoActionButtons({ currentStatus, onLogNoAction }: { currentStatus: StatusCondition | null; onLogNoAction: (note: string) => void }) {
   return (
-    <div className="flex flex-col gap-1 pb-1 mb-1 border-b border-gray-700">
+    <div className="flex flex-col gap-1 pb-1 mb-1 border-b border-zinc-700">
       {currentStatus === 'paralysis' && (
         <button
           type="button"
           onClick={() => onLogNoAction('Full Paralysis')}
-          className="text-left px-2 py-1 text-xs rounded bg-gray-900 hover:bg-yellow-900/60 text-yellow-300 cursor-pointer transition-colors"
+          className="text-left px-2 py-1 text-xs rounded bg-zinc-900 hover:bg-yellow-900/60 text-yellow-300 cursor-pointer transition-colors"
         >
           Full Paralysis
         </button>
@@ -51,7 +51,7 @@ function NoActionButtons({ currentStatus, onLogNoAction }: { currentStatus: Stat
         <button
           type="button"
           onClick={() => onLogNoAction("Didn't Wake Up")}
-          className="text-left px-2 py-1 text-xs rounded bg-gray-900 hover:bg-gray-700 text-gray-300 cursor-pointer transition-colors"
+          className="text-left px-2 py-1 text-xs rounded bg-zinc-900 hover:bg-zinc-700 text-zinc-300 cursor-pointer transition-colors"
         >
           Didn&apos;t Wake Up
         </button>
@@ -59,7 +59,7 @@ function NoActionButtons({ currentStatus, onLogNoAction }: { currentStatus: Stat
       <button
         type="button"
         onClick={() => onLogNoAction('Flinched')}
-        className="text-left px-2 py-1 text-xs rounded bg-gray-900 hover:bg-purple-900/60 text-purple-300 cursor-pointer transition-colors"
+        className="text-left px-2 py-1 text-xs rounded bg-zinc-900 hover:bg-purple-900/60 text-purple-300 cursor-pointer transition-colors"
       >
         Flinched
       </button>
@@ -93,11 +93,11 @@ export default function MoveLogPopover({ actorLabel, moves, allowFreeform, curre
   };
 
   return (
-    <div ref={ref} className="absolute z-20 top-full mt-1 left-1/2 -translate-x-1/2 w-48 p-2 rounded-lg bg-gray-800 border-2 border-accent-gold shadow-lg flex flex-col gap-1">
-      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide truncate">{actorLabel}</span>
+    <div ref={ref} className="absolute z-20 top-full mt-1 left-1/2 -translate-x-1/2 w-48 p-2 rounded-lg bg-zinc-800 border-2 border-accent-gold shadow-lg flex flex-col gap-1">
+      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide truncate">{actorLabel}</span>
       <NoActionButtons currentStatus={currentStatus} onLogNoAction={onLogNoAction} />
       {moves.length === 0 ? (
-        <p className="text-[11px] text-gray-500 italic">No moves known yet</p>
+        <p className="text-[11px] text-zinc-500 italic">No moves known yet</p>
       ) : (
         moves.map(move => {
           const weatherNote = getMoveWeatherNote(move, weather);
@@ -106,7 +106,7 @@ export default function MoveLogPopover({ actorLabel, moves, allowFreeform, curre
               key={move}
               type="button"
               onClick={() => onPickMove(move)}
-              className="flex items-center justify-between gap-1 text-left px-2 py-1 text-xs rounded bg-gray-900 hover:bg-accent-gold/15 text-gray-200 cursor-pointer transition-colors"
+              className="flex items-center justify-between gap-1 text-left px-2 py-1 text-xs rounded bg-zinc-900 hover:bg-accent-gold/15 text-zinc-200 cursor-pointer transition-colors"
             >
               <span className="truncate">{move}</span>
               {weatherNote && weather && (
@@ -131,7 +131,7 @@ export default function MoveLogPopover({ actorLabel, moves, allowFreeform, curre
             onKeyDown={e => { if (e.key === 'Enter') submitFreeform(); }}
             placeholder="+ new move seen..."
             autoFocus={moves.length === 0}
-            className="w-full px-1.5 py-1 text-[11px] bg-gray-900 border border-gray-700 rounded text-gray-200 outline-none focus:border-accent-gold"
+            className="w-full px-1.5 py-1 text-[11px] bg-zinc-900 border border-zinc-700 rounded text-zinc-200 outline-none focus:border-accent-gold"
           />
           <datalist id="move-name-suggestions">
             {allMoveNames.map(name => <option key={name} value={name} />)}

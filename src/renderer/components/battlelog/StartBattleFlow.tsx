@@ -42,13 +42,13 @@ export default function StartBattleFlow({ teamsState, battlesState, battleLogAct
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-gray-100">Start a New Battle</h2>
-        <button onClick={onCancel} className="text-sm text-gray-400 hover:text-gray-200">Cancel</button>
+        <h2 className="text-lg font-bold text-zinc-100">Start a New Battle</h2>
+        <button onClick={onCancel} className="text-sm text-zinc-400 hover:text-zinc-200">Cancel</button>
       </div>
 
       <div>
-        <label htmlFor="opponentName" className="block text-sm font-medium text-gray-300 mb-2">
-          Opponent Name <span className="text-gray-500 font-normal">(optional - type the same name again to continue a Bo3 set)</span>
+        <label htmlFor="opponentName" className="block text-sm font-medium text-zinc-300 mb-2">
+          Opponent Name <span className="text-zinc-500 font-normal">(optional - type the same name again to continue a Bo3 set)</span>
         </label>
         <input
           id="opponentName"
@@ -57,7 +57,7 @@ export default function StartBattleFlow({ teamsState, battlesState, battleLogAct
           value={opponentName}
           onChange={e => setOpponentName(e.target.value)}
           placeholder="Who are you playing?"
-          className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
+          className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
         />
         <datalist id="prior-opponent-names">
           {priorOpponentNames.map(name => <option key={name} value={name} />)}
@@ -65,7 +65,7 @@ export default function StartBattleFlow({ teamsState, battlesState, battleLogAct
       </div>
 
       {eligibleTeams.length === 0 ? (
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-zinc-400">
           No saved teams with at least 4 Pokemon yet - build one in the Teams tab first.
         </p>
       ) : (
@@ -74,10 +74,10 @@ export default function StartBattleFlow({ teamsState, battlesState, battleLogAct
             <button
               key={team.id}
               onClick={() => handleSelect(team)}
-              className="text-left px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 hover:border-accent-gold transition-colors"
+              className="text-left px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 hover:border-accent-gold transition-colors"
             >
-              <div className="font-semibold text-gray-100">{team.name}</div>
-              <div className="text-xs text-gray-400">{team.format} - {team.pokemon.length} Pokemon</div>
+              <div className="font-semibold text-zinc-100">{team.name}</div>
+              <div className="text-xs text-zinc-400">{team.format} - {team.pokemon.length} Pokemon</div>
             </button>
           ))}
         </div>

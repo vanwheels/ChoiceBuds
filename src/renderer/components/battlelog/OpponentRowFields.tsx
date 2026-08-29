@@ -38,7 +38,7 @@ export function formatAbilityName(slug: string): string {
   return slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
 
-const cellSelectClass = 'block w-full px-1 py-0 leading-4 text-[10px] bg-gray-900 border border-gray-700 rounded text-gray-200 outline-none focus:border-accent-gold';
+const cellSelectClass = 'block w-full px-1 py-0 leading-4 text-[10px] bg-zinc-900 border border-zinc-700 rounded text-zinc-200 outline-none focus:border-accent-gold';
 
 export function OpponentAbilityCell({ battle, opponent, battleLogActions, gameDataState }: RowFieldProps & { gameDataState: UseGameDataReturn }) {
   const [legalAbilities, setLegalAbilities] = useState<string[]>([]);
@@ -102,12 +102,12 @@ export function OpponentMoveCell({ battle, opponent, battleLogActions, index }: 
 
   if (move) {
     return (
-      <span className="flex items-center justify-between gap-1 leading-4 text-[10px] bg-gray-700 text-gray-200 px-1 rounded truncate">
+      <span className="flex items-center justify-between gap-1 leading-4 text-[10px] bg-zinc-700 text-zinc-200 px-1 rounded truncate">
         <span className="truncate">{move}</span>
         <button
           type="button"
           onClick={() => battleLogActions.removeOpponentMove(battle, opponent.id, move)}
-          className="text-gray-400 hover:text-red-400 cursor-pointer shrink-0"
+          className="text-zinc-400 hover:text-red-400 cursor-pointer shrink-0"
         >
           ×
         </button>
@@ -116,7 +116,7 @@ export function OpponentMoveCell({ battle, opponent, battleLogActions, index }: 
   }
 
   // Only the next empty slot doubles as the add-move input - later empty slots stay blank until it's their turn.
-  if (index !== opponent.moves.length) return <span className="block text-[10px] text-gray-700">—</span>;
+  if (index !== opponent.moves.length) return <span className="block text-[10px] text-zinc-700">—</span>;
 
   const submit = () => {
     if (!draft.trim()) return;
@@ -152,12 +152,12 @@ export function OpponentExtras({ battle, opponent, battleLogActions }: RowFieldP
       {overflowMoves.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {overflowMoves.map(move => (
-            <span key={move} className="flex items-center gap-1 text-[10px] bg-gray-700 text-gray-200 px-1.5 py-0.5 rounded">
+            <span key={move} className="flex items-center gap-1 text-[10px] bg-zinc-700 text-zinc-200 px-1.5 py-0.5 rounded">
               {move}
               <button
                 type="button"
                 onClick={() => battleLogActions.removeOpponentMove(battle, opponent.id, move)}
-                className="text-gray-400 hover:text-red-400 cursor-pointer"
+                className="text-zinc-400 hover:text-red-400 cursor-pointer"
               >
                 ×
               </button>
@@ -167,7 +167,7 @@ export function OpponentExtras({ battle, opponent, battleLogActions }: RowFieldP
       )}
 
       {isConsumableItem(opponent.item) && (
-        <label className="flex items-center gap-1.5 text-[10px] text-gray-400 cursor-pointer">
+        <label className="flex items-center gap-1.5 text-[10px] text-zinc-400 cursor-pointer">
           <input
             type="checkbox"
             checked={!!opponent.itemConsumed}
@@ -257,7 +257,7 @@ export function OpponentLikelySetsTrigger({ opponent, gameDataState }: { opponen
 
   if (status === 'checking') {
     return (
-      <span className="inline-block mt-1 text-[9px] px-1.5 py-0.5 rounded border border-dashed border-gray-700 text-gray-600 animate-pulse select-none">
+      <span className="inline-block mt-1 text-[9px] px-1.5 py-0.5 rounded border border-dashed border-zinc-700 text-zinc-600 animate-pulse select-none">
         📊 Likely Set
       </span>
     );

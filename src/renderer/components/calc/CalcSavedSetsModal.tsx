@@ -98,10 +98,10 @@ export default function CalcSavedSetsModal({ onClose, databaseState, savedPokemo
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
-        <div className="px-6 py-4 border-b border-gray-700 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-100">Saved Pokémon Sets</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-200 transition-colors">
+      <div className="bg-zinc-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+        <div className="px-6 py-4 border-b border-zinc-700 flex items-center justify-between">
+          <h2 className="text-xl font-bold text-zinc-100">Saved Pokémon Sets</h2>
+          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-200 transition-colors">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -111,7 +111,7 @@ export default function CalcSavedSetsModal({ onClose, databaseState, savedPokemo
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {/* Import section */}
           <div>
-            <label htmlFor="savedSetsPasteArea" className="block text-sm font-medium text-gray-300 mb-2">
+            <label htmlFor="savedSetsPasteArea" className="block text-sm font-medium text-zinc-300 mb-2">
               Paste one or more Pokémon (Showdown format)
             </label>
             <textarea
@@ -121,7 +121,7 @@ export default function CalcSavedSetsModal({ onClose, databaseState, savedPokemo
               disabled={isImporting}
               placeholder="Paste one or more Showdown-format Pokémon sets, separated by a blank line..."
               rows={8}
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-500 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50 resize-none"
+              className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-500 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50 resize-none"
             />
             <div className="flex justify-end mt-2">
               <button
@@ -141,18 +141,18 @@ export default function CalcSavedSetsModal({ onClose, databaseState, savedPokemo
           </div>
 
           {/* Management list */}
-          <div className="pt-2 border-t border-gray-700">
-            <h3 className="text-sm font-bold text-gray-300 uppercase tracking-wide mb-2">
+          <div className="pt-2 border-t border-zinc-700">
+            <h3 className="text-sm font-bold text-zinc-300 uppercase tracking-wide mb-2">
               Your Saved Sets ({sortedSets.length})
             </h3>
             {sortedSets.length === 0 ? (
-              <p className="text-sm text-gray-400">No saved sets yet - paste one above to get started.</p>
+              <p className="text-sm text-zinc-400">No saved sets yet - paste one above to get started.</p>
             ) : (
               <div className="flex flex-col gap-1.5">
                 {sortedSets.map(entry => (
                   <div
                     key={entry.id}
-                    className="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-900/60 border border-gray-700"
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg bg-zinc-900/60 border border-zinc-700"
                   >
                     <img
                       src={resolveSprite(getPixelSpriteUrl(
@@ -173,25 +173,25 @@ export default function CalcSavedSetsModal({ onClose, databaseState, savedPokemo
                           onBlur={commitRename}
                           onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
                           autoFocus
-                          className="w-full px-1.5 py-0.5 text-sm bg-gray-800 border border-accent-gold rounded text-gray-100 outline-none"
+                          className="w-full px-1.5 py-0.5 text-sm bg-zinc-800 border border-accent-gold rounded text-zinc-100 outline-none"
                         />
                       ) : (
                         <button
                           type="button"
                           onClick={() => startRename(entry.id, entry.label)}
                           title="Click to rename"
-                          className="text-left text-sm font-semibold text-gray-100 hover:text-accent-gold truncate cursor-pointer"
+                          className="text-left text-sm font-semibold text-zinc-100 hover:text-accent-gold truncate cursor-pointer"
                         >
                           {entry.label}
                         </button>
                       )}
-                      <p className="text-xs text-gray-400 truncate">{entry.pokemon.showdownData.species} - Lv{entry.pokemon.showdownData.level}</p>
+                      <p className="text-xs text-zinc-400 truncate">{entry.pokemon.showdownData.species} - Lv{entry.pokemon.showdownData.level}</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => savedPokemonState.deleteSavedPokemon(entry.id)}
                       title="Delete"
-                      className="w-7 h-7 flex items-center justify-center rounded text-gray-500 hover:text-red-400 hover:bg-gray-700 cursor-pointer shrink-0"
+                      className="w-7 h-7 flex items-center justify-center rounded text-zinc-500 hover:text-red-400 hover:bg-zinc-700 cursor-pointer shrink-0"
                     >
                       ×
                     </button>

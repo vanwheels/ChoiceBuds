@@ -12,7 +12,7 @@ const MULTIPLIER_LABELS: Record<number, string> = { 4: '4x', 2: '2x', 0.5: '1/2'
 
 // Shared by every branch below so the grid lines stay unbroken regardless of
 // which variant (blank/immune/multiplier) a given cell renders.
-const CELL_BORDER = 'border border-gray-700/60';
+const CELL_BORDER = 'border border-zinc-700/60';
 
 interface CoverageCellProps {
   multiplier: number | null;
@@ -27,7 +27,7 @@ export default function CoverageCell({ multiplier, favorableWhenAbove1 }: Covera
   if (multiplier === 0) {
     return (
       <td className={`text-center py-1.5 ${CELL_BORDER}`}>
-        <span className="inline-block px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide rounded bg-gray-700 text-gray-300">
+        <span className="inline-block px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide rounded bg-zinc-700 text-zinc-300">
           immune
         </span>
       </td>

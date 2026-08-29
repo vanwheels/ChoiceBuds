@@ -15,10 +15,10 @@ interface BreakdownPanelProps {
 
 export default function BreakdownPanel({ title, records, emptyMessage }: BreakdownPanelProps) {
   return (
-    <div className="flex flex-col gap-3 p-4 rounded-lg bg-gray-800 border border-gray-700">
-      <h3 className="text-sm font-bold text-gray-300 uppercase tracking-wide">{title}</h3>
+    <div className="flex flex-col gap-3 p-4 rounded-lg bg-zinc-800 border border-zinc-700">
+      <h3 className="text-sm font-bold text-zinc-300 uppercase tracking-wide">{title}</h3>
       {records.length === 0 ? (
-        <p className="text-sm text-gray-500">{emptyMessage}</p>
+        <p className="text-sm text-zinc-500">{emptyMessage}</p>
       ) : (
         <div className="flex flex-col gap-3">
           {records.map(record => (

@@ -94,23 +94,23 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-zinc-800 rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* Single consolidated top bar - title, poster controls, and export actions all in
             one row (deliberately OUTSIDE posterRef so none of it gets rasterized into the
             exported image). The standalone "Close" button was dropped - the X here already
             does that. */}
-        <div className="px-6 py-3 border-b border-gray-700 flex items-center gap-5 flex-wrap">
-          <h2 className="text-lg font-bold text-gray-100 shrink-0">Export Team Image</h2>
+        <div className="px-6 py-3 border-b border-zinc-700 flex items-center gap-5 flex-wrap">
+          <h2 className="text-lg font-bold text-zinc-100 shrink-0">Export Team Image</h2>
 
           {team.notes && (
             <div className="flex items-center gap-2 shrink-0">
-              <span className="text-xs font-semibold text-gray-400">View:</span>
-              <div className="flex rounded-lg overflow-hidden border border-gray-600">
+              <span className="text-xs font-semibold text-zinc-400">View:</span>
+              <div className="flex rounded-lg overflow-hidden border border-zinc-600">
                 <button
                   onClick={() => setViewMode('team')}
                   title="Full per-Pokemon detail grid"
                   className={`px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
-                    viewMode === 'team' ? 'bg-accent-gold text-zinc-900' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    viewMode === 'team' ? 'bg-accent-gold text-zinc-900' : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
                   }`}
                 >
                   Team
@@ -119,7 +119,7 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
                   onClick={() => setViewMode('notes')}
                   title="Compact sprite strip + the full strategy writeup"
                   className={`px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
-                    viewMode === 'notes' ? 'bg-accent-gold text-zinc-900' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    viewMode === 'notes' ? 'bg-accent-gold text-zinc-900' : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
                   }`}
                 >
                   Notes
@@ -130,13 +130,13 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
 
           {viewMode === 'team' && (
             <div className="flex items-center gap-2 shrink-0">
-              <span className="text-xs font-semibold text-gray-400">Team Sheet:</span>
-              <div className="flex rounded-lg overflow-hidden border border-gray-600">
+              <span className="text-xs font-semibold text-zinc-400">Team Sheet:</span>
+              <div className="flex rounded-lg overflow-hidden border border-zinc-600">
                 <button
                   onClick={() => setSheetMode('open')}
                   title="Shows species, item, ability, moves, and Stat Alignment (Nature + EVs)"
                   className={`px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
-                    sheetMode === 'open' ? 'bg-accent-gold text-zinc-900' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    sheetMode === 'open' ? 'bg-accent-gold text-zinc-900' : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
                   }`}
                 >
                   Open
@@ -145,7 +145,7 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
                   onClick={() => setSheetMode('closed')}
                   title="Hides Stat Alignment (Nature + EVs) - matches a Closed Team Sheet"
                   className={`px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
-                    sheetMode === 'closed' ? 'bg-accent-gold text-zinc-900' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    sheetMode === 'closed' ? 'bg-accent-gold text-zinc-900' : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
                   }`}
                 >
                   Closed
@@ -161,7 +161,7 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
           <button
             onClick={handleDownload}
             disabled={isWorking}
-            className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+            className="px-3 py-1.5 text-sm bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
           >
             Download
           </button>
@@ -173,7 +173,7 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
             {copied ? 'Copied!' : 'Copy to Clipboard'}
           </button>
 
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-200 transition-colors shrink-0">
+          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-200 transition-colors shrink-0">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>

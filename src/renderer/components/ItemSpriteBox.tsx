@@ -45,7 +45,7 @@ export default function ItemSpriteBox({
       onMouseEnter={onHoverEnter}
       onMouseLeave={onHoverLeave}
       onClick={isEditing ? onToggleMenu : undefined}
-      className={`w-14 h-14 bg-gray-800 rounded-lg border border-gray-600 flex items-center justify-center overflow-hidden transition-colors ${isEditing ? 'cursor-pointer hover:border-accent-gold' : ''}`}
+      className={`w-14 h-14 bg-zinc-800 rounded-lg border border-zinc-600 flex items-center justify-center overflow-hidden transition-colors ${isEditing ? 'cursor-pointer hover:border-accent-gold' : ''}`}
     >
       {itemData?.spriteUrl && !spriteFailed ? (
         <img
@@ -68,7 +68,7 @@ export default function ItemSpriteBox({
       ) : selectedItem ? (
         <span className="text-lg leading-none" role="img" aria-label="Unknown item">🎒</span>
       ) : (
-        <span className="text-[9px] text-gray-500">No Item</span>
+        <span className="text-[9px] text-zinc-500">No Item</span>
       )}
     </div>
   );

@@ -19,8 +19,8 @@ export interface TypeTheme {
  */
 export const TYPE_THEMES: Record<string, TypeTheme> = {
   normal: {
-    bg: 'bg-gray-400',
-    text: 'text-gray-900',
+    bg: 'bg-zinc-400',
+    text: 'text-zinc-900',
   },
   fire: {
     bg: 'bg-orange-500',
@@ -32,7 +32,7 @@ export const TYPE_THEMES: Record<string, TypeTheme> = {
   },
   electric: {
     bg: 'bg-yellow-400',
-    text: 'text-gray-900',
+    text: 'text-zinc-900',
   },
   grass: {
     bg: 'bg-green-500',
@@ -40,7 +40,7 @@ export const TYPE_THEMES: Record<string, TypeTheme> = {
   },
   ice: {
     bg: 'bg-cyan-300',
-    text: 'text-gray-900',
+    text: 'text-zinc-900',
   },
   fighting: {
     bg: 'bg-red-600',
@@ -64,7 +64,7 @@ export const TYPE_THEMES: Record<string, TypeTheme> = {
   },
   bug: {
     bg: 'bg-lime-500',
-    text: 'text-gray-900',
+    text: 'text-zinc-900',
   },
   rock: {
     bg: 'bg-yellow-700',
@@ -79,16 +79,16 @@ export const TYPE_THEMES: Record<string, TypeTheme> = {
     text: 'text-white',
   },
   dark: {
-    bg: 'bg-gray-800',
+    bg: 'bg-zinc-800',
     text: 'text-white',
   },
   steel: {
-    bg: 'bg-gray-500',
+    bg: 'bg-zinc-500',
     text: 'text-white',
   },
   fairy: {
     bg: 'bg-pink-300',
-    text: 'text-gray-900',
+    text: 'text-zinc-900',
   },
 };
 
@@ -96,8 +96,8 @@ export const TYPE_THEMES: Record<string, TypeTheme> = {
  * Default fallback theme for unknown types
  */
 export const DEFAULT_TYPE_THEME: TypeTheme = {
-  bg: 'bg-gray-300',
-  text: 'text-gray-900',
+  bg: 'bg-zinc-300',
+  text: 'text-zinc-900',
 };
 
 /**
@@ -116,14 +116,14 @@ export function getTypeTheme(type: string): TypeTheme {
  * other and from type badges.
  */
 export const MOVE_FLAG_THEMES: Record<string, TypeTheme> = {
-  contact: { bg: 'bg-zinc-400', text: 'text-gray-900' },
+  contact: { bg: 'bg-zinc-400', text: 'text-zinc-900' },
   bite: { bg: 'bg-amber-600', text: 'text-white' },
   sound: { bg: 'bg-fuchsia-500', text: 'text-white' },
   punch: { bg: 'bg-rose-500', text: 'text-white' },
   bullet: { bg: 'bg-stone-500', text: 'text-white' },
   pulse: { bg: 'bg-violet-500', text: 'text-white' },
-  slicing: { bg: 'bg-slate-400', text: 'text-gray-900' },
-  wind: { bg: 'bg-teal-400', text: 'text-gray-900' },
+  slicing: { bg: 'bg-slate-400', text: 'text-zinc-900' },
+  wind: { bg: 'bg-teal-400', text: 'text-zinc-900' },
 };
 
 export function getMoveFlagTheme(flag: string): TypeTheme {
@@ -149,7 +149,7 @@ export const STAT_LABEL_COLORS: Record<string, string> = {
 };
 
 export function getStatLabelColor(label: string): string {
-  return STAT_LABEL_COLORS[label] || 'text-gray-400';
+  return STAT_LABEL_COLORS[label] || 'text-zinc-400';
 }
 
 /**
@@ -164,5 +164,5 @@ export const REGULATION_THEMES: Record<string, { accentBorder: string; badgeBg: 
 };
 
 export function getRegulationTheme(regulationId: string): { accentBorder: string; badgeBg: string } {
-  return REGULATION_THEMES[regulationId] || { accentBorder: 'border-l-gray-600', badgeBg: 'bg-gray-600 hover:bg-gray-500' };
+  return REGULATION_THEMES[regulationId] || { accentBorder: 'border-l-zinc-600', badgeBg: 'bg-zinc-600 hover:bg-zinc-500' };
 }

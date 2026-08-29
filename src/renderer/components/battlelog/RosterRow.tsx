@@ -48,12 +48,12 @@ export default function RosterRow({ row, side, activeColorClass, resolveSprite, 
       onDragStart={handleDragStart}
       className={`relative p-1 rounded-lg border-2 transition-colors ${isDraggable ? 'cursor-grab' : ''} ${
         row.isFainted
-          ? 'border-gray-800 bg-gray-900/40 opacity-40'
+          ? 'border-zinc-800 bg-zinc-900/40 opacity-40'
           : isBenched
-            ? 'border-gray-800 bg-gray-900/40 opacity-50'
+            ? 'border-zinc-800 bg-zinc-900/40 opacity-50'
             : row.isActive
               ? activeColorClass
-              : 'border-gray-700 bg-gray-800'
+              : 'border-zinc-700 bg-zinc-800'
       }`}
     >
       <div className="flex items-center gap-2">
@@ -69,7 +69,7 @@ export default function RosterRow({ row, side, activeColorClass, resolveSprite, 
             alt={row.species}
             className="w-7 h-7 object-contain [image-rendering:pixelated] shrink-0"
           />
-          <span className="text-xs text-gray-100 truncate">{row.displayName}{row.isMega ? ' ⚡' : ''}</span>
+          <span className="text-xs text-zinc-100 truncate">{row.displayName}{row.isMega ? ' ⚡' : ''}</span>
         </button>
 
         {row.isFainted && <span title="Fainted" className="text-sm shrink-0 opacity-70">{'💀'}</span>}

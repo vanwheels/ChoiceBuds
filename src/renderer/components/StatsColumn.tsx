@@ -76,17 +76,17 @@ export default function StatsColumn({ evs, nature, isEditing = false, onUpdatePo
   };
 
   return (
-    <div ref={ref} className="bg-gray-800 rounded px-2 py-1.5 border border-gray-600">
+    <div ref={ref} className="bg-zinc-800 rounded px-2 py-1.5 border border-zinc-600">
       <div className="mb-1">
         <div className="flex justify-between items-center">
-          <p className="text-xs text-gray-400 uppercase tracking-wide shrink-0">SP</p>
+          <p className="text-xs text-zinc-400 uppercase tracking-wide shrink-0">SP</p>
           {isEditing && (
             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
               totalEVs > 66
                 ? 'bg-red-600 text-white border border-red-400'
                 : totalEVs === 66
                   ? 'bg-emerald-500 text-white'
-                  : 'bg-gray-700 text-gray-400'
+                  : 'bg-zinc-700 text-zinc-400'
             }`}>{totalEVs > 66 ? '⚠ ' : ''}{totalEVs}/66</span>
           )}
         </div>
@@ -97,13 +97,13 @@ export default function StatsColumn({ evs, nature, isEditing = false, onUpdatePo
                 value={nature || ''}
                 onChange={(e) => onUpdatePokemon({ nature: e.target.value || undefined })}
                 title="Nature"
-                className="min-w-0 text-[10px] bg-gray-900 border border-gray-600 rounded px-1 py-0 text-gray-200 outline-none focus:border-accent-gold"
+                className="min-w-0 text-[10px] bg-zinc-900 border border-zinc-600 rounded px-1 py-0 text-zinc-200 outline-none focus:border-accent-gold"
               >
                 <option value="">Nature</option>
                 {NATURES.map(n => <option key={n} value={n}>{n}</option>)}
               </select>
             ) : (
-              <span className="text-[10px] text-gray-500 truncate">{nature}</span>
+              <span className="text-[10px] text-zinc-500 truncate">{nature}</span>
             )}
             {natureEffect && (
               <span className="text-[10px] whitespace-nowrap shrink-0">

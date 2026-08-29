@@ -35,7 +35,7 @@ export const STATUS_COLORS: Record<StatusCondition, string> = {
   paralysis: 'text-yellow-300 bg-yellow-900/60',
   poison: 'text-purple-300 bg-purple-900/60',
   'badly-poisoned': 'text-purple-300 bg-purple-950/80',
-  sleep: 'text-gray-300 bg-gray-700/60',
+  sleep: 'text-zinc-300 bg-zinc-700/60',
 };
 
 /**

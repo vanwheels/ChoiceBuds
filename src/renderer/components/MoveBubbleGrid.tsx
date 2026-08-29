@@ -13,7 +13,7 @@ import type { MoveData } from '../types/pokemon';
 import { getTypeTheme, type TypeTheme } from '../config/pokemonTheme';
 import { MOVE_REORDER_DRAG_TYPE, type MoveReorderDragPayload } from '../utils/moveReorderDragTypes';
 
-const NEUTRAL_THEME: TypeTheme = { bg: 'bg-gray-800', text: 'text-gray-400' };
+const NEUTRAL_THEME: TypeTheme = { bg: 'bg-zinc-800', text: 'text-zinc-400' };
 
 export type HoverKey = 'item' | 'ability' | `move${0 | 1 | 2 | 3}` | null;
 

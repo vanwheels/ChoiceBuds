@@ -22,8 +22,8 @@ interface PlayerProfileSectionProps {
 
 const AGE_DIVISIONS: PlayerProfile['ageDivision'][] = ['Juniors', 'Seniors', 'Masters'];
 
-const inputClass = 'w-full px-3 py-1.5 text-sm bg-gray-900 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-gold';
-const labelClass = 'block text-xs font-medium text-gray-300 mb-1';
+const inputClass = 'w-full px-3 py-1.5 text-sm bg-zinc-900 border border-zinc-600 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold';
+const labelClass = 'block text-xs font-medium text-zinc-300 mb-1';
 
 export default function PlayerProfileSection({ settingsState }: PlayerProfileSectionProps) {
   const { settings, updateSettings } = settingsState;
@@ -47,9 +47,9 @@ export default function PlayerProfileSection({ settingsState }: PlayerProfileSec
   };
 
   return (
-    <div className="rounded-lg border border-gray-700 bg-gray-800 p-4">
-      <h2 className="text-sm font-semibold text-gray-200">Player Profile</h2>
-      <p className="mt-1 text-xs text-gray-400">
+    <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-4">
+      <h2 className="text-sm font-semibold text-zinc-200">Player Profile</h2>
+      <p className="mt-1 text-xs text-zinc-400">
         Entered once and reused on every VGC Team Sheet PDF export (Teams page, per-team export button) -
         a team's own Battle Team Number/Name is entered separately at export time.
       </p>
@@ -126,7 +126,7 @@ export default function PlayerProfileSection({ settingsState }: PlayerProfileSec
                 className={`px-3 py-1.5 text-xs font-bold rounded transition-colors cursor-pointer ${
                   playerProfile.ageDivision === division
                     ? 'bg-accent-gold text-zinc-900'
-                    : 'text-zinc-300 bg-gray-900 hover:bg-zinc-800'
+                    : 'text-zinc-300 bg-zinc-900 hover:bg-zinc-800'
                 }`}
               >
                 {division}

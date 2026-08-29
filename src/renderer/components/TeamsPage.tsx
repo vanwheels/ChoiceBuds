@@ -54,11 +54,11 @@ export default function TeamsPage({
   return (
     <div className="h-full flex flex-col">
       {/* Header Control Bar */}
-      <header className="bg-gray-800 border-b border-gray-700 px-6 py-4" style={{ paddingLeft: '2rem', paddingRight: '2rem' }}>
+      <header className="bg-zinc-800 border-b border-zinc-700 px-6 py-4" style={{ paddingLeft: '2rem', paddingRight: '2rem' }}>
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-100">My Teams</h2>
-            <p className="text-sm text-gray-400 mt-1">
+            <h2 className="text-2xl font-bold text-zinc-100">My Teams</h2>
+            <p className="text-sm text-zinc-400 mt-1">
               {filteredTeams.length} {filteredTeams.length === 1 ? 'team' : 'teams'}
               {activeFilter !== 'All' && ` in ${activeFilter}`}
             </p>
@@ -83,7 +83,7 @@ export default function TeamsPage({
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 activeFilter === filter
                   ? 'bg-accent-gold text-zinc-900'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
               }`}
             >
               {filter}
@@ -96,14 +96,14 @@ export default function TeamsPage({
       <div className="flex-1 overflow-y-auto px-8 py-6">
         {teamsState.isLoading ? (
           <div className="flex items-center justify-center h-64">
-            <div className="text-gray-400">Loading teams...</div>
+            <div className="text-zinc-400">Loading teams...</div>
           </div>
         ) : teamsState.error ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-red-400">Error: {teamsState.error}</div>
           </div>
         ) : filteredTeams.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+          <div className="flex flex-col items-center justify-center h-64 text-zinc-400">
             <p className="text-lg">No teams found</p>
             <p className="text-sm mt-2">Click "Add New Team" to import your first team</p>
           </div>

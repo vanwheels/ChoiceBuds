@@ -173,14 +173,14 @@ export default function ImportTeamModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-zinc-800 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-gray-700 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-100">Import Team</h2>
+        <div className="px-6 py-4 border-b border-zinc-700 flex items-center justify-between">
+          <h2 className="text-xl font-bold text-zinc-100">Import Team</h2>
           <button
             onClick={handleClose}
             disabled={isImporting}
-            className="text-gray-400 hover:text-gray-200 transition-colors disabled:opacity-50"
+            className="text-zinc-400 hover:text-zinc-200 transition-colors disabled:opacity-50"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -192,7 +192,7 @@ export default function ImportTeamModal({
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {/* Team Name Input */}
           <div>
-            <label htmlFor="teamName" className="block text-sm font-medium text-gray-300 mb-2">
+            <label htmlFor="teamName" className="block text-sm font-medium text-zinc-300 mb-2">
               Team Name
             </label>
             <input
@@ -202,14 +202,14 @@ export default function ImportTeamModal({
               onChange={(e) => setTeamName(e.target.value)}
               disabled={isImporting}
               placeholder="Enter team name... (defaults to &quot;Team N&quot; if left blank)"
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50"
+              className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50"
             />
           </div>
 
           {/* Author (optional) - Pokepaste pages have one; a plain Showdown export doesn't */}
           <div>
-            <label htmlFor="teamAuthor" className="block text-sm font-medium text-gray-300 mb-2">
-              Author <span className="text-gray-500 font-normal">(optional)</span>
+            <label htmlFor="teamAuthor" className="block text-sm font-medium text-zinc-300 mb-2">
+              Author <span className="text-zinc-500 font-normal">(optional)</span>
             </label>
             <input
               id="teamAuthor"
@@ -218,13 +218,13 @@ export default function ImportTeamModal({
               onChange={(e) => setAuthor(e.target.value)}
               disabled={isImporting}
               placeholder="Who built this team?"
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50"
+              className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50"
             />
           </div>
 
           {/* Format Selection */}
           <div>
-            <label htmlFor="teamFormat" className="block text-sm font-medium text-gray-300 mb-2">
+            <label htmlFor="teamFormat" className="block text-sm font-medium text-zinc-300 mb-2">
               Format
             </label>
             <select
@@ -232,7 +232,7 @@ export default function ImportTeamModal({
               value={teamFormat}
               onChange={(e) => setTeamFormat(e.target.value as typeof teamFormat)}
               disabled={isImporting}
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50"
+              className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50"
             >
               <option value="Reg M-A">Reg M-A</option>
               <option value="Reg M-B">Reg M-B</option>
@@ -241,9 +241,9 @@ export default function ImportTeamModal({
 
           {/* Paste Area - also accepts a pokepast.es link directly (see handlePasteAreaBlur) */}
           <div>
-            <label htmlFor="pasteArea" className="block text-sm font-medium text-gray-300 mb-2">
+            <label htmlFor="pasteArea" className="block text-sm font-medium text-zinc-300 mb-2">
               Paste Team (Showdown Format or a pokepast.es link)
-              <span className="text-gray-500 font-normal"> (optional - leave blank to create an empty team)</span>
+              <span className="text-zinc-500 font-normal"> (optional - leave blank to create an empty team)</span>
             </label>
             <textarea
               id="pasteArea"
@@ -253,7 +253,7 @@ export default function ImportTeamModal({
               disabled={isImporting}
               placeholder="Paste your Showdown/Pokepaste team, or a pokepast.es link, here... (or leave blank for an empty team)"
               rows={12}
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-500 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50 resize-none"
+              className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-500 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50 resize-none"
             />
           </div>
 
@@ -288,11 +288,11 @@ export default function ImportTeamModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-4 border-t border-gray-700 flex items-center justify-end gap-3">
+        <div className="px-6 py-4 border-t border-zinc-700 flex items-center justify-end gap-3">
           <button
             onClick={handleClose}
             disabled={isImporting}
-            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg transition-colors disabled:opacity-50"
+            className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded-lg transition-colors disabled:opacity-50"
           >
             Cancel
           </button>

@@ -37,12 +37,12 @@ export default function ExportTeamModal({ pokemonList, title, onClose }: ExportT
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="px-6 py-4 border-b border-gray-700 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-100">{title}</h2>
+      <div className="bg-zinc-800 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="px-6 py-4 border-b border-zinc-700 flex items-center justify-between">
+          <h2 className="text-xl font-bold text-zinc-100">{title}</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-200 transition-colors"
+            className="text-zinc-400 hover:text-zinc-200 transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -51,7 +51,7 @@ export default function ExportTeamModal({ pokemonList, title, onClose }: ExportT
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
-          <div className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg font-mono text-sm text-gray-100 whitespace-pre-wrap">
+          <div className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg font-mono text-sm text-zinc-100 whitespace-pre-wrap">
             {pokemonList.map((pokemon, pIdx) => (
               <div key={pIdx} className={pIdx > 0 ? 'mt-4' : ''}>
                 {formatPokemonLines(pokemon).map((line, lIdx) => (
@@ -74,10 +74,10 @@ export default function ExportTeamModal({ pokemonList, title, onClose }: ExportT
           </div>
         </div>
 
-        <div className="px-6 py-4 border-t border-gray-700 flex items-center justify-end gap-3">
+        <div className="px-6 py-4 border-t border-zinc-700 flex items-center justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg transition-colors"
+            className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded-lg transition-colors"
           >
             Close
           </button>

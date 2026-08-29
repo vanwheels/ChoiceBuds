@@ -88,11 +88,11 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-900 text-gray-100">
+    <div className="flex h-screen bg-zinc-900 text-zinc-100">
       {/* Fixed Navigation Sidebar - Left Side */}
-      <aside className="w-32 bg-gray-800 border-r border-gray-700 flex flex-col" style={{ paddingLeft: '1.25rem', paddingRight: '1.25rem', paddingTop: '1rem', paddingBottom: '1rem' }}>
+      <aside className="w-32 bg-zinc-800 border-r border-zinc-700 flex flex-col" style={{ paddingLeft: '1.25rem', paddingRight: '1.25rem', paddingTop: '1rem', paddingBottom: '1rem' }}>
         {/* App Header */}
-        <div className="pb-4 border-b border-gray-700">
+        <div className="pb-4 border-b border-zinc-700">
           <h1 className="text-base font-bold text-accent-gold leading-tight">ChoiceBuds</h1>
         </div>
 
@@ -103,7 +103,7 @@ export default function App() {
               <button
                 onClick={() => goToTab('teams')}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
-                  activeTab === 'teams' ? 'bg-accent-gold hover:bg-accent-gold-deep text-zinc-900' : 'text-gray-400 hover:bg-gray-700'
+                  activeTab === 'teams' ? 'bg-accent-gold hover:bg-accent-gold-deep text-zinc-900' : 'text-zinc-400 hover:bg-zinc-700'
                 }`}
               >
                 Teams
@@ -113,7 +113,7 @@ export default function App() {
               <button
                 onClick={() => goToTab('calc')}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
-                  activeTab === 'calc' ? 'bg-accent-gold hover:bg-accent-gold-deep text-zinc-900' : 'text-gray-400 hover:bg-gray-700'
+                  activeTab === 'calc' ? 'bg-accent-gold hover:bg-accent-gold-deep text-zinc-900' : 'text-zinc-400 hover:bg-zinc-700'
                 }`}
               >
                 Calc
@@ -123,7 +123,7 @@ export default function App() {
               <button
                 onClick={() => goToTab('battles')}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
-                  activeTab === 'battles' ? 'bg-accent-gold hover:bg-accent-gold-deep text-zinc-900' : 'text-gray-400 hover:bg-gray-700'
+                  activeTab === 'battles' ? 'bg-accent-gold hover:bg-accent-gold-deep text-zinc-900' : 'text-zinc-400 hover:bg-zinc-700'
                 }`}
               >
                 Battle Log
@@ -133,7 +133,7 @@ export default function App() {
               <button
                 onClick={() => goToTab('statistics')}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
-                  activeTab === 'statistics' ? 'bg-accent-gold hover:bg-accent-gold-deep text-zinc-900' : 'text-gray-400 hover:bg-gray-700'
+                  activeTab === 'statistics' ? 'bg-accent-gold hover:bg-accent-gold-deep text-zinc-900' : 'text-zinc-400 hover:bg-zinc-700'
                 }`}
               >
                 Statistics
@@ -143,7 +143,7 @@ export default function App() {
               <button
                 onClick={() => goToTab('typeMatchup')}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
-                  activeTab === 'typeMatchup' ? 'bg-accent-gold hover:bg-accent-gold-deep text-zinc-900' : 'text-gray-400 hover:bg-gray-700'
+                  activeTab === 'typeMatchup' ? 'bg-accent-gold hover:bg-accent-gold-deep text-zinc-900' : 'text-zinc-400 hover:bg-zinc-700'
                 }`}
               >
                 Type Matchup
@@ -156,7 +156,7 @@ export default function App() {
               <button
                 onClick={() => goToTab('settings')}
                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
-                  activeTab === 'settings' ? 'bg-accent-gold hover:bg-accent-gold-deep text-zinc-900' : 'text-gray-400 hover:bg-gray-700'
+                  activeTab === 'settings' ? 'bg-accent-gold hover:bg-accent-gold-deep text-zinc-900' : 'text-zinc-400 hover:bg-zinc-700'
                 }`}
               >
                 Settings
@@ -166,7 +166,7 @@ export default function App() {
         </nav>
 
         {/* Status Footer */}
-        <div className="pt-4 border-t border-gray-700 text-xs text-gray-500">
+        <div className="pt-4 border-t border-zinc-700 text-xs text-zinc-500">
           <div className="flex items-center justify-between">
             <span>Cache Status:</span>
             <span className={databaseState.isInitialized ? 'text-green-400' : 'text-yellow-400'}>
@@ -202,7 +202,7 @@ export default function App() {
         </div>
         {visitedTabs.has('calc') && (
           <div style={{ display: activeTab === 'calc' ? 'block' : 'none' }}>
-            <Suspense fallback={<div className="text-gray-400 text-sm">Loading calculator...</div>}>
+            <Suspense fallback={<div className="text-zinc-400 text-sm">Loading calculator...</div>}>
               <CalcPage
                 gameDataState={gameDataState}
                 teamsState={teamsState}
@@ -218,7 +218,7 @@ export default function App() {
         )}
         {visitedTabs.has('battles') && (
           <div style={{ display: activeTab === 'battles' ? 'block' : 'none' }}>
-            <Suspense fallback={<div className="text-gray-400 text-sm">Loading battle log...</div>}>
+            <Suspense fallback={<div className="text-zinc-400 text-sm">Loading battle log...</div>}>
               <BattleLogPage
                 battlesState={battlesState}
                 teamsState={teamsState}
@@ -232,21 +232,21 @@ export default function App() {
         )}
         {visitedTabs.has('statistics') && (
           <div style={{ display: activeTab === 'statistics' ? 'block' : 'none' }}>
-            <Suspense fallback={<div className="text-gray-400 text-sm">Loading statistics...</div>}>
+            <Suspense fallback={<div className="text-zinc-400 text-sm">Loading statistics...</div>}>
               <StatisticsPage battlesState={battlesState} spriteCacheState={spriteCacheState} />
             </Suspense>
           </div>
         )}
         {visitedTabs.has('typeMatchup') && (
           <div style={{ display: activeTab === 'typeMatchup' ? 'block' : 'none' }}>
-            <Suspense fallback={<div className="text-gray-400 text-sm">Loading type matchup...</div>}>
+            <Suspense fallback={<div className="text-zinc-400 text-sm">Loading type matchup...</div>}>
               <TypeMatchupPage teamsState={teamsState} gameDataState={gameDataState} spriteCacheState={spriteCacheState} />
             </Suspense>
           </div>
         )}
         {visitedTabs.has('settings') && (
           <div style={{ display: activeTab === 'settings' ? 'block' : 'none' }}>
-            <Suspense fallback={<div className="text-gray-400 text-sm">Loading settings...</div>}>
+            <Suspense fallback={<div className="text-zinc-400 text-sm">Loading settings...</div>}>
               <SettingsPage settingsState={settingsState} teamsState={teamsState} battlesState={battlesState} updateCheckState={updateCheckState} databaseState={databaseState} gameDataState={gameDataState} />
             </Suspense>
           </div>

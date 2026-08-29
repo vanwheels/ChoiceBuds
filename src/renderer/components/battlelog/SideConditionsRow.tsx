@@ -45,7 +45,7 @@ export default function SideConditionsRow({ battle, side, battleLogActions }: Si
               type="button"
               onClick={() => battleLogActions.toggleTurnCondition(battle, side, key)}
               className={`px-1.5 py-0.5 text-[9px] font-semibold rounded-sm cursor-pointer transition-colors ${
-                isActive ? activeColor : 'bg-gray-900 text-gray-600 hover:text-gray-400'
+                isActive ? activeColor : 'bg-zinc-900 text-zinc-600 hover:text-zinc-400'
               }`}
             >
               {SIDE_CONDITION_LABELS[key]}{isActive ? ` (${remaining})` : ''}
@@ -56,7 +56,7 @@ export default function SideConditionsRow({ battle, side, battleLogActions }: Si
                 onClick={() => battleLogActions.toggleScreenExtended(battle, side, key)}
                 title="Toggle whether this was set by a Pokemon holding Light Clay (8-turn duration instead of 5)"
                 className={`px-1 py-0.5 text-[8px] font-semibold rounded-sm cursor-pointer transition-colors ${
-                  isExtended ? 'bg-yellow-600 text-white' : 'bg-gray-900 text-gray-600 hover:text-gray-400'
+                  isExtended ? 'bg-yellow-600 text-white' : 'bg-zinc-900 text-zinc-600 hover:text-zinc-400'
                 }`}
               >
                 Clay
@@ -74,7 +74,7 @@ export default function SideConditionsRow({ battle, side, battleLogActions }: Si
             type="button"
             onClick={() => battleLogActions.toggleBooleanHazard(battle, side, key)}
             className={`px-1.5 py-0.5 text-[9px] font-semibold rounded-sm cursor-pointer transition-colors ${
-              isActive ? activeColor : 'bg-gray-900 text-gray-600 hover:text-gray-400'
+              isActive ? activeColor : 'bg-zinc-900 text-zinc-600 hover:text-zinc-400'
             }`}
           >
             {HAZARD_LABELS[key]}
@@ -93,7 +93,7 @@ export default function SideConditionsRow({ battle, side, battleLogActions }: Si
             onClick={() => battleLogActions.setStackableHazard(battle, side, key, (layers + 1) % (max + 1))}
             title={`Click to cycle 0-${max}`}
             className={`px-1.5 py-0.5 text-[9px] font-semibold rounded-sm cursor-pointer transition-colors ${
-              isActive ? activeColor : 'bg-gray-900 text-gray-600 hover:text-gray-400'
+              isActive ? activeColor : 'bg-zinc-900 text-zinc-600 hover:text-zinc-400'
             }`}
           >
             {HAZARD_LABELS[key]}{isActive ? ` (${layers})` : ''}

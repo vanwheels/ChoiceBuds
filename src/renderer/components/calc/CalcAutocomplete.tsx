@@ -52,14 +52,14 @@ export default function CalcAutocomplete({ label, value, options, placeholder, o
 
   return (
     <div ref={ref} className="relative flex flex-col gap-1">
-      {label && <label className="text-[10px] text-gray-400 uppercase tracking-wide">{label}</label>}
+      {label && <label className="text-[10px] text-zinc-400 uppercase tracking-wide">{label}</label>}
       <input
         type="text"
         value={query}
         placeholder={placeholder}
         onChange={(e) => { setQuery(e.target.value); setIsOpen(true); }}
         onFocus={() => setIsOpen(true)}
-        className="px-2 py-0.5 text-sm bg-gray-800 border border-gray-600 rounded text-white outline-none focus:border-accent-gold"
+        className="px-2 py-0.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
       />
       {isOpen && filtered.length > 0 && (
         <div className="absolute z-50 top-full left-0 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-zinc-700 bg-slate-900 shadow-xl">

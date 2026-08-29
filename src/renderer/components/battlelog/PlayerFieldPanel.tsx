@@ -29,7 +29,7 @@ interface PlayerFieldPanelProps {
 function StaticCell({ value }: { value?: string }) {
   return (
     <span
-      className="block w-full px-1 py-0 leading-4 text-[10px] bg-gray-900/60 border border-gray-800 rounded text-gray-400 truncate"
+      className="block w-full px-1 py-0 leading-4 text-[10px] bg-zinc-900/60 border border-zinc-800 rounded text-zinc-400 truncate"
       title={value}
     >
       {value || '—'}

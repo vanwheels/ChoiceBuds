@@ -64,7 +64,7 @@ function ToggleButton({ active, label, align, onClick }: { active: boolean; labe
       type="button"
       onClick={onClick}
       className={`w-full px-2 py-0.5 text-xs font-bold rounded transition-colors cursor-pointer ${align === 'right' ? 'text-right' : 'text-left'} ${
-        active ? 'bg-accent-gold text-zinc-900' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+        active ? 'bg-accent-gold text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
       }`}
     >
       {label}
@@ -81,10 +81,10 @@ export default function CalcSideConditions({ title, side, align, ownAbility, onC
 
   return (
     <div className="flex-1 flex flex-col gap-1 min-w-0">
-      <p className={`text-[10px] text-gray-400 uppercase tracking-wide ${alignClass}`}>{title}</p>
+      <p className={`text-[10px] text-zinc-400 uppercase tracking-wide ${alignClass}`}>{title}</p>
 
       <div className="flex flex-col gap-1">
-        <label className={`text-[10px] text-gray-400 uppercase tracking-wide ${alignClass}`}>Spikes</label>
+        <label className={`text-[10px] text-zinc-400 uppercase tracking-wide ${alignClass}`}>Spikes</label>
         <div className="flex gap-1">
           {spikesOptions.map(count => (
             <button
@@ -92,7 +92,7 @@ export default function CalcSideConditions({ title, side, align, ownAbility, onC
               type="button"
               onClick={() => onChange({ spikes: count })}
               className={`flex-1 px-1 py-0.5 text-xs font-bold rounded transition-colors cursor-pointer ${
-                side.spikes === count ? 'bg-accent-gold text-zinc-900' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                side.spikes === count ? 'bg-accent-gold text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
               }`}
             >
               {count}

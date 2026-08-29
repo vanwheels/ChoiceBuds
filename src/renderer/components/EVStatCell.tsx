@@ -25,7 +25,7 @@ interface EVStatCellProps {
 
 const valueClassName = (exceedsMax: boolean, editableBorder: boolean) =>
   `text-sm font-mono font-bold rounded border ${
-    exceedsMax ? 'border-red-500 text-red-400 bg-red-950/20' : editableBorder ? 'border-gray-600 bg-gray-900 text-gray-100' : 'border-transparent text-gray-100'
+    exceedsMax ? 'border-red-500 text-red-400 bg-red-950/20' : editableBorder ? 'border-zinc-600 bg-zinc-900 text-zinc-100' : 'border-transparent text-zinc-100'
   }`;
 
 export default function EVStatCell({
@@ -57,7 +57,7 @@ export default function EVStatCell({
       <button
         type="button"
         onClick={onActivate}
-        className="flex flex-col items-center gap-0.5 rounded px-1 py-0.5 hover:bg-gray-700/60 transition-colors cursor-pointer"
+        className="flex flex-col items-center gap-0.5 rounded px-1 py-0.5 hover:bg-zinc-700/60 transition-colors cursor-pointer"
       >
         <span className={`text-[10px] font-bold uppercase ${getStatLabelColor(label)}`}>{label}</span>
         <span className={`${valueClassName(exceedsMax, false)} px-1.5 py-0.5`}>{value}</span>
@@ -67,7 +67,7 @@ export default function EVStatCell({
 
   return (
     <div className="flex flex-col items-center gap-0.5">
-      <span className="text-[10px] font-bold text-gray-400 uppercase">{label}</span>
+      <span className="text-[10px] font-bold text-zinc-400 uppercase">{label}</span>
       <div className="flex items-center gap-0.5 min-w-0">
         <button
           {...decRepeat}

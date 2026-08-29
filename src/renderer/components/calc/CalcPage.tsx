@@ -73,7 +73,7 @@ export default function CalcPage({
       <div className="flex justify-end gap-2">
         <button
           onClick={() => setIsSavedSetsOpen(true)}
-          className="px-3 py-1 text-xs font-bold uppercase tracking-wide rounded transition-colors cursor-pointer bg-gray-800 text-gray-400 hover:bg-gray-700"
+          className="px-3 py-1 text-xs font-bold uppercase tracking-wide rounded transition-colors cursor-pointer bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
         >
           Saved Sets
         </button>
@@ -82,7 +82,7 @@ export default function CalcPage({
             key={id}
             onClick={() => setRegulationId(id)}
             className={`px-3 py-1 text-xs font-bold uppercase tracking-wide rounded transition-colors cursor-pointer ${
-              regulationId === id ? 'bg-accent-gold text-zinc-900' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+              regulationId === id ? 'bg-accent-gold text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
             }`}
           >
             {getRegulationLabel(id)}
@@ -162,7 +162,7 @@ export default function CalcPage({
         />
       </div>
 
-      <p className="text-center text-[10px] text-gray-600">Powered by @smogon/calc</p>
+      <p className="text-center text-[10px] text-zinc-600">Powered by @smogon/calc</p>
 
       {isSavedSetsOpen && (
         <CalcSavedSetsModal
