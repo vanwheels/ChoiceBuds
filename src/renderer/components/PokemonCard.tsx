@@ -198,6 +198,25 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
           isEditing ? 'cursor-grab' : ''
         } ${isDragOver ? 'ring-2 ring-accent-gold' : ''}`}
       >
+        {/* Drag-handle affordance icon (carousel rework leg 3, see TODO.md) - purely
+            visual, matching the approved mockup's `.grip` element exactly (top-left
+            22x22px rounded box, 6-dot grid icon); the whole card is already
+            draggable/cursor-grab while editing (handleDragStart etc. above), this
+            just gives that affordance a visible anchor instead of an invisible
+            whole-card drag zone. */}
+        {isEditing && (
+          <div className="absolute top-2 left-2 z-10 w-[22px] h-[22px] flex items-center justify-center rounded-md bg-zinc-900/55 border border-zinc-600/60 text-zinc-400">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+              <circle cx="9" cy="6" r="1.4" />
+              <circle cx="15" cy="6" r="1.4" />
+              <circle cx="9" cy="12" r="1.4" />
+              <circle cx="15" cy="12" r="1.4" />
+              <circle cx="9" cy="18" r="1.4" />
+              <circle cx="15" cy="18" r="1.4" />
+            </svg>
+          </div>
+        )}
+
         {/* Left-Shifting Slot Deletion */}
         {isEditing && (
           <button

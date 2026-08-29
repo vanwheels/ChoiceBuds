@@ -221,8 +221,33 @@ focused on what's actually next.
         vs. the 2nd pass's still-genuine-but-now-moot 308-vs-296 gap),
         re-confirmed Escape and clicking a menu item (Validate Team) both
         still work correctly now that the menu's DOM location moved.
-      - **Legs 3-4 not yet started**: expanded-grid stats restoration,
-        responsive grid + drag-reorder gating change.
+      - **Leg 3 done (2026-08-29)** - expanded-grid stats restoration. Turned
+        out to already be almost entirely in place: `StatsColumn.tsx`/
+        `EVStatCell.tsx` (SP grid + nature pill), `PokemonCard.tsx`'s gender/
+        shiny footer toggles, and drag-to-reorder (`draggable={isEditing}` +
+        `handleDragStart`/`Over`/`Drop`) all predate the coverflow rework and
+        were never actually dropped by legs 1-2 - confirmed by reading the
+        code rather than assuming from the TODO wording, and cross-checked
+        against the approved mockup's `Expanded.dc.html` artboard (parsed out
+        of the design artifact the same "read the source" way legs 1-2 did):
+        `pokemonTheme.ts`'s `STAT_LABEL_COLORS` (red/orange/yellow/blue/
+        green/pink-400) already match the mockup's per-stat hexes exactly.
+        The one actually-missing piece was the mockup's `.grip` element - a
+        22x22px rounded top-left drag-handle icon (6-dot grid SVG) that
+        didn't exist in the live app (the whole card was already draggable/
+        `cursor-grab` while editing, just with no visible handle affordance
+        for it) - added to `PokemonCard.tsx`, edit-mode-gated same as the
+        delete button, exact SVG path/positioning/colors pulled from the
+        mockup source rather than guessed. `type-check`/`lint`/`build`/`test`
+        (395 cases) all clean. Live-verified via `run-desktop`:
+        screenshotted an expanded team's roster grid in edit mode (grip
+        icon top-left on every card,
+        SP/EV grid + nature pill + gender/shiny footer all rendering
+        correctly, matching the mockup) and again with edit mode toggled
+        back off (grip icon and delete button both gone, only the export
+        button remains, same as before this leg).
+      - **Leg 4 not yet started**: responsive grid + drag-reorder gating
+        change.
 
   - **Sidebar/menuing rework - design approved 2026-08-29**, same artifact
     as above (`SidebarExpanded.dc.html`/`SidebarCollapsed.dc.html`
