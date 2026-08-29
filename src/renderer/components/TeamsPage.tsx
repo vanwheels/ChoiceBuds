@@ -122,19 +122,28 @@ export default function TeamsPage({
           </div>
         ) : (
           <div
-            className="grid grid-cols-1 @[1160px]:grid-cols-2 gap-4 w-full"
+            className="grid grid-cols-1 @[1360px]:grid-cols-2 gap-4 w-full"
             style={{ paddingLeft: '2rem', paddingRight: '2rem' }}
           >
             {/* Responsive teams grid (carousel/grid rework leg 4, see TODO.md):
                 1 column by default, 2 once this wrapper's own @container width
                 (not viewport width - the sidebar eats into that) clears
-                ~1160px, capped at 2 no matter how wide the window gets
+                1360px, capped at 2 no matter how wide the window gets
                 (explicit user call, see the Window-sizing entry in TODO.md) -
-                no 3rd-column tier for ultrawide monitors. A no max-width cap
-                remains further down: each TeamCard's Pokemon grid (auto-fill,
-                minmax(240px, 280px)) still needs the full available column
-                width to fit up to 6 comfortable columns in one row on wide
-                windows. */}
+                no 3rd-column tier for ultrawide monitors. 1360px (not the
+                mockup's own placeholder ~1160px) is picked from the collapsed
+                header's actual hard-minimum content width: the identity
+                column (max-w-[190px]) + the coverflow's fixed 240px box
+                (flex-shrink:0, never compresses) + the controls pill (~124px)
+                + header padding add up to a real ~574px floor per card
+                (measured live) that a too-low breakpoint leaves no room for -
+                confirmed live at 1160px each column lands at ~570px, clipping
+                the coverflow/controls together. 1360px keeps a comfortable
+                ~50px+ buffer above that floor once 2 columns activate. A no
+                max-width cap remains further down: each TeamCard's Pokemon
+                grid (auto-fill, minmax(240px, 280px)) still needs the full
+                available column width to fit up to 6 comfortable columns in
+                one row on wide windows. */}
             {filteredTeams.map(team => (
               <TeamCard
                 key={team.id}

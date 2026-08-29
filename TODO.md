@@ -304,6 +304,45 @@ focused on what's actually next.
         teams afterward and confirmed the user's real 2 teams were
         untouched throughout. This closes out all 4 legs of the
         Teams-carousel/grid rework's implementation.
+      - **Follow-up bug found + fixed same day (2026-08-29)**: user reported
+        (with a screenshot) a window size where the two 2-column team cards
+        looked visibly squeezed - coverflow icons crowding the controls
+        pill with no breathing room. Root cause was leg 4's own
+        `@[1160px]` breakpoint being too low for the header's actual
+        hard-minimum content width: the header row's three sections
+        (identity column, the coverflow's fixed 240px box, the controls
+        pill) are all effectively non-shrinking (`flex-shrink:0` on the
+        coverflow, `shrink-0` on the other two), so once total available
+        column width drops below their combined minimum the row has to
+        overflow rather than compress - and 1160px put each column right
+        at ~570px, under that floor. Live-measured the real floor via a
+        one-off Playwright script (same `BrowserWindow.setSize` +
+        `electronApp.evaluate` approach as the leg-4 verification script):
+        ~574px of hard-minimum header content width. A second, related bug
+        surfaced during that measurement: the identity column (`min-w-
+        [190px] shrink-0`, no `max-w`) could grow past its intended 190px
+        for a long team name/author, since the `truncate` class on the name
+        `<h2>` never had a bounded width to truncate against - so a long
+        name was quietly making the true minimum worse than the 190px the
+        layout was designed around. Fixed both: identity column gained
+        `max-w-[190px]` (now a true fixed 190px, `truncate` actually
+        engages), and the author `<span>` switched from `whitespace-nowrap`
+        to `truncate block` (needs `block` since `truncate` requires a
+        non-inline box to respect a bounded width) so a long author name
+        also ellipsizes instead of pushing width. With identity capped, the
+        real measured floor came down slightly and became name-length-
+        independent; re-measured live across a full window-size sweep
+        (1400-2000px) to find where the 2-column layout stays comfortably
+        clear of it, landing on `@[1360px]` (~50px+ slack once 2 columns
+        activate, vs. the mockup's own placeholder ~1160px which was never
+        pinned to anything more specific than two static snapshot widths).
+        Re-verified the full sweep shows zero header overflow at every
+        tested width including right at the new crossover (1650px window),
+        and specifically re-tested a window size matching the user's
+        reported screenshot (1466px) - now stays single-column with the
+        team name visibly truncating ("Shock me like an elect...") instead
+        of squeezing into a broken 2-column layout. `type-check`/`lint`/
+        `build`/`test` (395 cases) all clean.
 
   - **Sidebar/menuing rework - design approved 2026-08-29**, same artifact
     as above (`SidebarExpanded.dc.html`/`SidebarCollapsed.dc.html`

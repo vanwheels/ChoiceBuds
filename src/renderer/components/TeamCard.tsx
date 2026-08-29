@@ -125,7 +125,7 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
         {/* Identity column (header/controls rework leg 2, see TODO.md) - regulation
             badge, team name, and author all moved here from the old far-right
             button cluster, matching the approved mockup's left-column grouping. */}
-        <div className="flex flex-col gap-1 min-w-[190px] shrink-0">
+        <div className="flex flex-col gap-1 min-w-[190px] max-w-[190px] shrink-0">
           <RegulationBadge team={team} onChange={(format) => updateTeam(team.id, { format })} />
 
           {isEditingTeam ? (
@@ -179,7 +179,7 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
               className="w-24 px-1.5 py-0.5 text-[10px] bg-zinc-800 border border-zinc-700 rounded text-zinc-100 placeholder-zinc-600 outline-none focus:border-accent-gold"
             />
           ) : team.author ? (
-            <span className="text-[11px] text-zinc-500 whitespace-nowrap" title={`by ${team.author}`}>by {team.author}</span>
+            <span className="text-[11px] text-zinc-500 truncate block" title={`by ${team.author}`}>by {team.author}</span>
           ) : null}
         </div>
 
