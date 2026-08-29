@@ -43,6 +43,35 @@
   }
 }
 
+/**
+ * Per-type Pokémon-card glow ring (design-approved 2026-08-29, see TODO.md).
+ * `--glow-c1`/`--glow-c2` are set inline per-card by `PokemonCard.tsx` from
+ * `config/pokemonTheme.ts::getTypeGlowColors` - a soft colored ring around
+ * the card (the gradient itself, at 2px padding) plus a blurred copy of the
+ * exact same gradient as the outer glow. Deliberately one gradient blurred
+ * twice, not two independent `box-shadow`s: CSS renders the first-listed
+ * shadow on top, so a dual-type Pokémon's two type colors would silently
+ * favor whichever was listed first instead of blending evenly.
+ */
+.type-glow-ring {
+  position: relative;
+  z-index: 0;
+  padding: 2px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, var(--glow-c1), var(--glow-c2));
+}
+
+.type-glow-ring::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  z-index: -1;
+  border-radius: 15px;
+  background: linear-gradient(135deg, var(--glow-c1), var(--glow-c2));
+  filter: blur(7px);
+  opacity: 0.38;
+}
+
 /* Custom Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 8px;

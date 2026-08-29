@@ -257,7 +257,47 @@ focused on what's actually next.
         pills, expanded roster grid), Settings, Calc, and Battle Log's empty
         state all render consistent zinc surfaces with no leftover
         mismatched gray.
-      - **Not yet started**: Leg D (per-type Pokémon card glow effect).
+      - **Leg D done (2026-08-29)** - per-type Pokémon card glow effect,
+        closing out the color-palette rework's implementation. `TypeTheme`
+        (`config/pokemonTheme.ts`) gained an optional `glow` hex field
+        alongside the existing `bg`/`text` Tailwind classes (a plain hex,
+        not a class, since it feeds a dynamic per-instance CSS custom
+        property rather than a static badge) - all 18 types reuse their
+        badge hex directly except Dark and Dragon, which use the
+        design-approved glow-safe overrides (`#524267`/`#6366f1`) instead
+        of their actual badge hexes (`#27272a`/`#4f46e5`) per the spec's
+        finding; a new `getTypeGlowColors(types)` returns the 2-color tuple
+        (single-type Pokémon get the same color twice, degenerating the
+        gradient to solid). Re-audited all 18 against the app's actual
+        (post-Leg-C zinc) near-black surfaces while implementing, not just
+        assumed from the design pass's pre-sweep swatch - confirmed only
+        Dark/Dragon still need the floor-raise, same as originally found.
+        `index.css` gained the shared `.type-glow-ring`/`.type-glow-ring::before`
+        rule (2px gradient-background padding for the ring itself, plus a
+        `blur(7px)`/`opacity:0.38`/`inset:-3px` blurred copy of the *same*
+        gradient for the outer glow - one gradient blurred twice, not two
+        stacked `box-shadow`s, per the spec's own bug-fix finding) reading
+        `--glow-c1`/`--glow-c2` custom properties. `PokemonCard.tsx` wraps
+        its existing card in this ring (outer wrapper carries the ring +
+        `max-w-[280px]`, drag handlers/`data-pokemon-card` stayed on the
+        inner content div which lost its old flat `border-zinc-600` in favor
+        of the ring) and sets those two properties inline via
+        `getTypeGlowColors(types)` - the `isDragOver` gold highlight became
+        a `ring-2 ring-accent-gold` on the inner div, layering on top of the
+        outer glow rather than replacing it. `type-check`/`lint`/`build`/
+        `test` (395 cases) all clean. Live-verified via `run-desktop`:
+        screenshotted the roster grid with mono-type (Eelektross, plain
+        yellow ring), dual-type same-family (Whimsicott Grass/Fairy, visible
+        green-to-pink diagonal blend), and both glow-safe cases in the same
+        real roster (Incineroar Fire/Dark and Garchomp Dragon/Ground) -
+        confirmed via computed-style read that `--glow-c1`/`--glow-c2`
+        actually carry the glow-safe hexes (not the raw badge hexes) for
+        those two, and confirmed visually the ring/glow stays legible against
+        the dark card background instead of vanishing. Also re-screenshotted
+        with edit mode toggled on - ring persists, no double-border with the
+        new gold drag-over ring, delete button and drag-handle affordance
+        unaffected. This closes out the color-palette rework's Leg A+B/C/D
+        implementation sequence in full - all three legs done.
   - **Animation/motion language - design approved 2026-08-29**, same
     artifact, four new artboards built as **live, clickable demos** (real
     CSS transitions standing in for the actual Framer Motion timings/
