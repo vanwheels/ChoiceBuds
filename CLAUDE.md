@@ -13,12 +13,17 @@ ChoiceBuds — an Electron + React + TypeScript desktop app for importing and ma
 - `npm run type-check` — `tsc --noEmit` only
 - `npm run lint` — ESLint over `src` for `.ts`/`.tsx`
 - `npm run test` — Vitest, single run (`test:watch` for watch mode). Config
-  is `vitest.config.ts` (Node environment, `src/**/*.test.ts`), separate from
-  `vite.config.ts` since the Electron/Tailwind plugins there have nothing to
-  do with unit tests. Coverage starts with pure `services/`/`utils/`
-  functions (`services/parser.test.ts` is the first one, converted from a
-  former console.log-assertions script); hooks aren't covered yet. Not yet
-  wired into CI.
+  is `vitest.config.ts` (jsdom environment, `src/**/*.test.ts`), separate
+  from `vite.config.ts` since the Electron/Tailwind plugins there have
+  nothing to do with unit tests. `setupFiles` stubs `window.electron`
+  (`src/renderer/test/setupElectronMock.ts`) with `vi.fn()` mocks before
+  every test, since jsdom has no real Electron main process behind it.
+  Coverage starts with pure `services/`/`utils/` functions
+  (`services/parser.test.ts` is the first one, converted from a former
+  console.log-assertions script) and now also covers a first batch of
+  simpler `hooks/` (via `@testing-library/react`'s `renderHook`/`act`) —
+  see `TODO.md`'s testing-workflow entry for which hooks are covered so far
+  and which are intentionally still open. Not yet wired into CI.
 
 ## Architecture
 

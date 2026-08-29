@@ -75,6 +75,39 @@ focused on what's actually next.
      **Not yet done**: hooks (deferred further per the file's own original
      note - pure functions were always meant to come first). Not yet wired
      into CI either.
+  1c. **Done (2026-08-29), leg 3** - hooks coverage started. New test infra
+     first: `vitest.config.ts` switched from `environment: 'node'` to
+     `'jsdom'` (hooks render real effects/refs against a DOM; the existing
+     pure-function tests run fine under jsdom too, so one shared environment
+     was simpler than splitting by glob) plus `@testing-library/react`
+     (`renderHook`/`act`) and `jsdom` added as devDependencies. A new
+     `src/renderer/test/setupElectronMock.ts`, wired in via `setupFiles`,
+     stubs `window.electron` with `vi.fn()` mocks (reset fresh before every
+     test) since jsdom has no real Electron main process to back the
+     preload bridge. Sequencing decided with the user before writing any
+     tests (two explicit calls, not assumed): skip the 3 Battle-Logger-only
+     hooks (`useBattleLogActions.ts` - 1001 lines, `useBattles.ts`,
+     `useMoveNameList.ts`) for the same reason leg 2 skipped
+     `battleLookup.ts`/`battleCalcReview.ts` - that whole feature is already
+     slated for retirement (see the dedicated TODO entry below), not worth
+     investing test-writing effort into; and size this leg to the ~8
+     simplest/self-contained remaining hooks, saving the big
+     stateful/IPC-heavy ones for a future leg. Covered this leg: 8 new test
+     files, 54 new cases, all passing - `useDismissable`, `useHoldRepeat`
+     (fake timers), `usePokemonTypeFilter`/`useMegaSprite` (mocked
+     `pokeapiService.fetchJSON`, module-level-cache-aware via
+     never-reused-per-test cache keys), `useSeasonDataCheck` (fake
+     `Date.now()` via `vi.setSystemTime`), `useTeamMoveTypes` (mocked
+     `UseGameDataReturn.getMoveData`, verifies status-move exclusion +
+     `typeChangingAbilities.ts` integration), `useSpriteCache` and
+     `useUpdateCheck` (both exercise the `window.electron` mock directly,
+     the latter also mocks `services/github.ts`). `type-check`/`lint`/
+     `build` all still clean. **Not yet done**: the ~13 remaining hooks
+     (`useTeams`, `useSettings`, `useDatabase`, `useGameData`, `useSync`,
+     `useInitialSync`, `useSavedPokemon`, `useSpeciesRoster`,
+     `useRosterActions`, `useActiveEditor`, `useDamageCalc`,
+     `usePokemonTypeFilter`'s sibling `useMoveNameList` intentionally
+     excluded above) - a future leg 4. Still not wired into CI.
   2. Separately, a GW2-Squaded-style standalone audit script (in the mold
      of its `scripts/audit-data-completeness.ts`) that scans this repo's
      own hand-curated config tables (`config/championsMoveOverrides.ts`,

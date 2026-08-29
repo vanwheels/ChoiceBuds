@@ -13,7 +13,13 @@ export default defineConfig({
     },
   },
   test: {
-    environment: 'node',
+    // jsdom (not 'node') because hooks tests render real React effects/refs
+    // against a DOM - the plain-function tests (services/utils) run fine
+    // under it too, so one shared environment is simpler than splitting by
+    // glob. setupFiles stubs window.electron (normally injected by
+    // preload.ts's contextBridge, absent under jsdom) before every test.
+    environment: 'jsdom',
+    setupFiles: ['./src/renderer/test/setupElectronMock.ts'],
     include: ['src/**/*.test.ts'],
   },
 });
