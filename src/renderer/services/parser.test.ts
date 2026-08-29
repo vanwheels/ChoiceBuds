@@ -3,6 +3,7 @@
  * Tests gender-locks, form variants, and default assignments
  */
 
+import { describe, expect, it } from 'vitest';
 import { parseShowdownText } from './parser';
 import { getFallbackGender } from '../config/pokemonRules';
 
@@ -139,97 +140,61 @@ Adamant Nature
 - U-turn`,
 };
 
-// Run tests
-console.log('=== GENDER FALLBACK UTILITY TESTS ===\n');
+describe('parseShowdownText - gender fallback', () => {
+  it('applies the female-locked fallback (Cresselia)', () => {
+    const result = parseShowdownText(TEST_CASES.femaleLocked);
+    expect(result.pokemon[0]?.gender).toBe('F');
+  });
 
-// Test 1: Female-locked species
-console.log('Test 1: Female-locked species (Cresselia)');
-const result1 = parseShowdownText(TEST_CASES.femaleLocked);
-console.log(`  Species: ${result1.pokemon[0]?.species}`);
-console.log(`  Gender: ${result1.pokemon[0]?.gender}`);
-console.log(`  Expected: F, Got: ${result1.pokemon[0]?.gender}`);
-console.log(`  ✓ ${result1.pokemon[0]?.gender === 'F' ? 'PASS' : 'FAIL'}\n`);
+  it('applies the genderless fallback (Gholdengo)', () => {
+    const result = parseShowdownText(TEST_CASES.genderless);
+    expect(result.pokemon[0]?.gender).toBe('N');
+  });
 
-// Test 2: Genderless species
-console.log('Test 2: Genderless species (Gholdengo)');
-const result2 = parseShowdownText(TEST_CASES.genderless);
-console.log(`  Species: ${result2.pokemon[0]?.species}`);
-console.log(`  Gender: ${result2.pokemon[0]?.gender}`);
-console.log(`  Expected: N, Got: ${result2.pokemon[0]?.gender}`);
-console.log(`  ✓ ${result2.pokemon[0]?.gender === 'N' ? 'PASS' : 'FAIL'}\n`);
+  it('applies the gendered-form fallback (Basculegion-F)', () => {
+    const result = parseShowdownText(TEST_CASES.genderedFormFemale);
+    expect(result.pokemon[0]?.gender).toBe('F');
+  });
 
-// Test 3: Gendered form variant (Basculegion-F)
-console.log('Test 3: Gendered form variant (Basculegion-F)');
-const result3 = parseShowdownText(TEST_CASES.genderedFormFemale);
-console.log(`  Species: ${result3.pokemon[0]?.species}`);
-console.log(`  Gender: ${result3.pokemon[0]?.gender}`);
-console.log(`  Expected: F, Got: ${result3.pokemon[0]?.gender}`);
-console.log(`  ✓ ${result3.pokemon[0]?.gender === 'F' ? 'PASS' : 'FAIL'}\n`);
+  it('applies the gendered-form fallback (Indeedee-F)', () => {
+    const result = parseShowdownText(TEST_CASES.indeedeeFemale);
+    expect(result.pokemon[0]?.gender).toBe('F');
+  });
 
-// Test 4: Indeedee-F
-console.log('Test 4: Gendered form variant (Indeedee-F)');
-const result4 = parseShowdownText(TEST_CASES.indeedeeFemale);
-console.log(`  Species: ${result4.pokemon[0]?.species}`);
-console.log(`  Gender: ${result4.pokemon[0]?.gender}`);
-console.log(`  Expected: F, Got: ${result4.pokemon[0]?.gender}`);
-console.log(`  ✓ ${result4.pokemon[0]?.gender === 'F' ? 'PASS' : 'FAIL'}\n`);
+  it('applies the genderless-form fallback (Rotom-Wash)', () => {
+    const result = parseShowdownText(TEST_CASES.rotomWash);
+    expect(result.pokemon[0]?.gender).toBe('N');
+  });
 
-// Test 5: Rotom-Wash (genderless form)
-console.log('Test 5: Genderless form variant (Rotom-Wash)');
-const result5 = parseShowdownText(TEST_CASES.rotomWash);
-console.log(`  Species: ${result5.pokemon[0]?.species}`);
-console.log(`  Gender: ${result5.pokemon[0]?.gender}`);
-console.log(`  Expected: N, Got: ${result5.pokemon[0]?.gender}`);
-console.log(`  ✓ ${result5.pokemon[0]?.gender === 'N' ? 'PASS' : 'FAIL'}\n`);
+  it('lets an explicit gender override the fallback (Cresselia (M))', () => {
+    const result = parseShowdownText(TEST_CASES.explicitMale);
+    expect(result.pokemon[0]?.gender).toBe('M');
+  });
 
-// Test 6: Explicit gender overrides fallback
-console.log('Test 6: Explicit gender overrides fallback (Cresselia (M))');
-const result6 = parseShowdownText(TEST_CASES.explicitMale);
-console.log(`  Species: ${result6.pokemon[0]?.species}`);
-console.log(`  Gender: ${result6.pokemon[0]?.gender}`);
-console.log(`  Expected: M (explicit override), Got: ${result6.pokemon[0]?.gender}`);
-console.log(`  ✓ ${result6.pokemon[0]?.gender === 'M' ? 'PASS' : 'FAIL'}\n`);
+  it('defaults an ungendered regular species to M (Rillaboom)', () => {
+    const result = parseShowdownText(TEST_CASES.regularNoGender);
+    expect(result.pokemon[0]?.gender).toBe('M');
+  });
 
-// Test 7: Regular Pokémon defaults to M
-console.log('Test 7: Regular Pokémon defaults to M (Rillaboom)');
-const result7 = parseShowdownText(TEST_CASES.regularNoGender);
-console.log(`  Species: ${result7.pokemon[0]?.species}`);
-console.log(`  Gender: ${result7.pokemon[0]?.gender}`);
-console.log(`  Expected: M, Got: ${result7.pokemon[0]?.gender}`);
-console.log(`  ✓ ${result7.pokemon[0]?.gender === 'M' ? 'PASS' : 'FAIL'}\n`);
-
-// Test 8: Mixed team with various gender rules
-console.log('Test 8: Mixed team with various gender rules');
-const result8 = parseShowdownText(TEST_CASES.mixedTeam);
-console.log(`  Parsed ${result8.pokemon.length} Pokémon`);
-result8.pokemon.forEach((p, i) => {
-  console.log(`  ${i + 1}. ${p.species}: ${p.gender}`);
-});
-const expectedGenders = ['F', 'N', 'F', 'M'];
-const allCorrect = result8.pokemon.every((p, i) => p.gender === expectedGenders[i]);
-console.log(`  Expected: [F, N, F, M]`);
-console.log(`  Got: [${result8.pokemon.map(p => p.gender).join(', ')}]`);
-console.log(`  ✓ ${allCorrect ? 'PASS' : 'FAIL'}\n`);
-
-// Test 9: Direct utility function tests
-console.log('Test 9: Direct utility function tests');
-const utilityTests = [
-  { species: 'Cresselia', expected: 'F' },
-  { species: 'Gholdengo', expected: 'N' },
-  { species: 'Basculegion-F', expected: 'F' },
-  { species: 'Basculegion', expected: 'M' },
-  { species: 'Rotom-Wash', expected: 'N' },
-  { species: 'Indeedee-F', expected: 'F' },
-  { species: 'Indeedee', expected: 'M' },
-  { species: 'Pikachu', expected: 'M' },
-  { species: 'Tinkaton', expected: 'F' },
-  { species: 'Metagross', expected: 'N' },
-];
-
-utilityTests.forEach(test => {
-  const result = getFallbackGender(test.species);
-  const pass = result === test.expected;
-  console.log(`  ${test.species}: Expected ${test.expected}, Got ${result} ${pass ? '✓' : '✗'}`);
+  it('applies the right fallback per-Pokémon across a mixed team', () => {
+    const result = parseShowdownText(TEST_CASES.mixedTeam);
+    expect(result.pokemon.map(p => p.gender)).toEqual(['F', 'N', 'F', 'M']);
+  });
 });
 
-console.log('\n=== ALL TESTS COMPLETE ===');
+describe('getFallbackGender', () => {
+  it.each([
+    ['Cresselia', 'F'],
+    ['Gholdengo', 'N'],
+    ['Basculegion-F', 'F'],
+    ['Basculegion', 'M'],
+    ['Rotom-Wash', 'N'],
+    ['Indeedee-F', 'F'],
+    ['Indeedee', 'M'],
+    ['Pikachu', 'M'],
+    ['Tinkaton', 'F'],
+    ['Metagross', 'N'],
+  ])('%s -> %s', (species, expected) => {
+    expect(getFallbackGender(species)).toBe(expected);
+  });
+});

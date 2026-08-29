@@ -12,8 +12,13 @@ ChoiceBuds — an Electron + React + TypeScript desktop app for importing and ma
 - `npm run build` — type-check (`tsc`) then production build via `vite build`
 - `npm run type-check` — `tsc --noEmit` only
 - `npm run lint` — ESLint over `src` for `.ts`/`.tsx`
-
-There is no test runner wired up. `src/renderer/services/parser.test.ts` is a standalone script (console.log assertions, no Jest/Vitest) — run it directly with a TS runner (e.g. `npx tsx src/renderer/services/parser.test.ts`) if you need to exercise it; it is not part of `npm run build`/CI.
+- `npm run test` — Vitest, single run (`test:watch` for watch mode). Config
+  is `vitest.config.ts` (Node environment, `src/**/*.test.ts`), separate from
+  `vite.config.ts` since the Electron/Tailwind plugins there have nothing to
+  do with unit tests. Coverage starts with pure `services/`/`utils/`
+  functions (`services/parser.test.ts` is the first one, converted from a
+  former console.log-assertions script); hooks aren't covered yet. Not yet
+  wired into CI.
 
 ## Architecture
 

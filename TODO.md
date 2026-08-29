@@ -43,19 +43,23 @@ focused on what's actually next.
 
 - **Adopt testing + verification workflow from GW2 Squaded** (decided
   2026-08-29): this repo has no wired-up test runner today (see the
-  Commands section above). Plan, not yet started:
-  1. Wire up Vitest (`vitest.config.ts` + `npm run test`/`test:watch`),
-     matching the GW2 Squaded project's setup. Start with
-     `services/parser.ts` (already has a placeholder assertions-only script
-     at `parser.test.ts` to convert into real tests), then the rest of
-     `services/`/`utils/` (pure functions, easiest to test), then hooks.
+  Commands section above).
+  1. **Done (2026-08-29)** - Vitest wired up (`vitest.config.ts` +
+     `npm run test`/`test:watch`), config matched to the GW2 Squaded
+     project's own setup (Node environment, `@` alias carried over from
+     `vite.config.ts` even though nothing needs it yet). `services/parser.ts`
+     is the first module covered - its old placeholder console.log-assertions
+     script (`parser.test.ts`) is now 18 real `describe`/`it` Vitest cases,
+     all passing; `type-check`/`build` still clean. **Not yet done**: the
+     rest of `services/`/`utils/` (pure functions, easiest to test next),
+     then hooks. Not yet wired into CI either.
   2. Separately, a GW2-Squaded-style standalone audit script (in the mold
      of its `scripts/audit-data-completeness.ts`) that scans this repo's
      own hand-curated config tables (`config/championsMoveOverrides.ts`,
      `config/moveStatEffects.ts`, `config/onSwitchInAbilities.ts`, etc.)
      for structural gaps, complementing (not replacing) the
      comprehensive-coverage rule already in CLAUDE.md's Style rules for
-     those files.
+     those files. Not started.
   - Why: user has been running this exact combination (Vitest unit tests +
     standalone data-completeness audit scripts) on GW2 Squaded and wants
     the same rigor here.
