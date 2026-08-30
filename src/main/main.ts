@@ -3,11 +3,12 @@
  * Initializes the application window with enforced minimum dimensions
  */
 
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, screen, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs/promises';
+import fsSync from 'fs';
 import crypto from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -73,6 +74,13 @@ function getSettingsPath(): string {
 }
 
 /**
+ * Get the full path to the persisted window bounds file
+ */
+function getWindowStatePath(): string {
+  return path.join(getUserDataPath(), 'window-state.json');
+}
+
+/**
  * Get (and ensure exists) the local sprite cache directory
  */
 async function getSpriteCacheDir(): Promise<string> {
@@ -119,16 +127,130 @@ async function atomicWriteFile(filePath: string, content: string): Promise<void>
   return run;
 }
 
+const DEFAULT_WINDOW_WIDTH = 1280;
+const DEFAULT_WINDOW_HEIGHT = 720;
+
+interface WindowState {
+  width: number;
+  height: number;
+  x?: number;
+  y?: number;
+}
+
+/**
+ * Window bounds persisted across launches (leg 1 of the window-sizing piece
+ * of the UI/UX overhaul, see TODO.md). Kept in its own file rather than
+ * folded into settings.json/AppSettings/useSettings - the renderer's
+ * useSettings hook writes its whole in-memory AppSettings object back on
+ * every change, so a field only the main process ever updates (window
+ * resize/move happens entirely outside the renderer) would risk getting
+ * clobbered back to a stale value by the next unrelated settings write from
+ * the renderer. A dedicated file main.ts alone reads and writes avoids that
+ * race entirely, matching the existing main/renderer ownership split.
+ */
+async function loadWindowState(): Promise<WindowState | null> {
+  try {
+    const fileContent = await fs.readFile(getWindowStatePath(), 'utf-8');
+    const parsed = JSON.parse(fileContent);
+
+    if (
+      typeof parsed?.width !== 'number' ||
+      typeof parsed?.height !== 'number' ||
+      !Number.isFinite(parsed.width) ||
+      !Number.isFinite(parsed.height)
+    ) {
+      return null;
+    }
+
+    const state: WindowState = {
+      width: Math.max(parsed.width, DEFAULT_WINDOW_WIDTH),
+      height: Math.max(parsed.height, DEFAULT_WINDOW_HEIGHT),
+    };
+
+    // Only restore a remembered position if it still lands on a currently
+    // connected display - a monitor unplugged since last launch (or a
+    // saved position from an ultrawide the user is no longer on) would
+    // otherwise place the window somewhere unreachable. Falls back to
+    // Electron's own default centering when dropped.
+    if (typeof parsed?.x === 'number' && typeof parsed?.y === 'number') {
+      const candidate = { x: parsed.x, y: parsed.y, width: state.width, height: state.height };
+      const onScreen = screen.getAllDisplays().some((display) => {
+        const area = display.workArea;
+        return (
+          candidate.x < area.x + area.width &&
+          candidate.x + candidate.width > area.x &&
+          candidate.y < area.y + area.height &&
+          candidate.y + candidate.height > area.y
+        );
+      });
+      if (onScreen) {
+        state.x = parsed.x;
+        state.y = parsed.y;
+      }
+    }
+
+    return state;
+  } catch {
+    // No file yet, or it's corrupt - fall back to the fixed default.
+    return null;
+  }
+}
+
+/**
+ * Debounced so a drag-resize/move (which fires 'resize'/'move' continuously,
+ * not just once at the end) doesn't hammer disk on every intermediate frame.
+ */
+let windowStateSaveTimer: NodeJS.Timeout | null = null;
+function scheduleWindowStateSave(): void {
+  if (windowStateSaveTimer) clearTimeout(windowStateSaveTimer);
+  windowStateSaveTimer = setTimeout(() => {
+    windowStateSaveTimer = null;
+    if (!mainWindow || mainWindow.isDestroyed() || mainWindow.isMinimized()) return;
+    const bounds = mainWindow.getBounds();
+    const state: WindowState = { width: bounds.width, height: bounds.height, x: bounds.x, y: bounds.y };
+    atomicWriteFile(getWindowStatePath(), JSON.stringify(state, null, 2)).catch((err) => {
+      console.error('Error persisting window state:', err);
+    });
+  }, 500);
+}
+
+/**
+ * Synchronous best-effort save for app quit - the debounced save above may
+ * not have had time to fire (or complete) before the process exits, and a
+ * resize/move immediately followed by closing the window is a completely
+ * normal sequence, not an edge case worth losing.
+ */
+function saveWindowStateSync(): void {
+  try {
+    if (windowStateSaveTimer) {
+      clearTimeout(windowStateSaveTimer);
+      windowStateSaveTimer = null;
+    }
+    if (!mainWindow || mainWindow.isDestroyed() || mainWindow.isMinimized()) return;
+    const bounds = mainWindow.getBounds();
+    const state: WindowState = { width: bounds.width, height: bounds.height, x: bounds.x, y: bounds.y };
+    fsSync.writeFileSync(getWindowStatePath(), JSON.stringify(state, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error persisting window state on close:', err);
+  }
+}
+
 /**
  * Creates the main application window with strict dimension constraints
- * Enforces minWidth: 1280 and minHeight: 720 for layout container integrity
+ * Enforces minWidth: 1280 and minHeight: 720 for layout container integrity,
+ * but the actual launch size/position is restored from the last session
+ * when available (see loadWindowState above).
  */
-function createWindow(): void {
+async function createWindow(): Promise<void> {
+  const restored = await loadWindowState();
+
   mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 720,
-    minWidth: 1280,
-    minHeight: 720,
+    width: restored?.width ?? DEFAULT_WINDOW_WIDTH,
+    height: restored?.height ?? DEFAULT_WINDOW_HEIGHT,
+    x: restored?.x,
+    y: restored?.y,
+    minWidth: DEFAULT_WINDOW_WIDTH,
+    minHeight: DEFAULT_WINDOW_HEIGHT,
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
       contextIsolation: true,
@@ -139,6 +261,10 @@ function createWindow(): void {
     backgroundColor: '#1a1a1a',
     show: false, // Don't show until ready-to-show event
   });
+
+  mainWindow.on('resize', scheduleWindowStateSave);
+  mainWindow.on('move', scheduleWindowStateSave);
+  mainWindow.on('close', saveWindowStateSync);
 
   // Show window when ready to prevent visual flash
   mainWindow.once('ready-to-show', () => {
@@ -481,11 +607,11 @@ function registerIPCHandlers(): void {
  * App lifecycle: ready event
  * Create window when Electron has finished initialization
  */
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   // Register IPC handlers before creating window
   registerIPCHandlers();
 
-  createWindow();
+  await createWindow();
 
   registerAutoUpdater();
 

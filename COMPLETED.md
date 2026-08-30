@@ -5,6 +5,523 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **Window sizing rework - decisions approved 2026-08-29, implemented same
+  day** - leg 1 of the UI/UX overhaul's three remaining pieces (see
+  TODO.md's "UI/UX overhaul" entry), picked over sidebar/menuing or
+  animation/motion as the smaller, purely-behavioral piece (no mockup
+  needed - nothing here was a visual design question). Baseline before this
+  leg (`main.ts`): the window was created at exactly `1280x720` with
+  `minWidth`/`minHeight` both also `1280x720` - it always launched at its
+  own floor, at whatever position Electron/the OS defaulted to, and could
+  never be resized smaller (no cap on growing larger). All three approved
+  decisions:
+  - **Keep the 1280x720 floor as-is, for now** - explicit user call, no
+    code change needed (already true). Real tension surfaced before
+    deciding: the sidebar rail + more compact Teams cards free up
+    horizontal room that could justify a smaller floor, but Calc and
+    Battle Log already scroll a bit at today's exact 1280x720 floor (see
+    the 2026-07-07 review-pass entries in TODO.md - both stopped short
+    deliberately, not fully solved) - they're still the binding constraint
+    regardless of the other pieces' wins, so lowering the floor now would
+    just make their existing scroll worse. Revisit if/when Calc/Battle Log
+    get their own tightening pass.
+  - **Persist window size/position across launches** - implemented in
+    `main.ts` via a dedicated `window-state.json` in the userData
+    directory, main-process-owned end to end (never round-tripped through
+    the renderer/`useSettings`, despite the original TODO wording
+    suggesting `AppSettings`/`settings.json`) - a deliberate deviation, not
+    an oversight: `useSettings` persists by writing its whole in-memory
+    `AppSettings` object back to disk on every change, so a field only the
+    main process ever updates (window resize/move happens entirely outside
+    the renderer) would risk getting clobbered back to a stale value by the
+    next unrelated settings write from the renderer (e.g. toggling default
+    regulation mid-session after a resize). A dedicated file sidesteps that
+    race entirely and matches the existing main/renderer file-ownership
+    split elsewhere in the app. Bounds are saved debounced (500ms) on
+    `resize`/`move` (so a drag doesn't hammer disk every frame), plus a
+    synchronous (`fs.writeFileSync`, not the queued atomic-rename path) save
+    on `close` so a resize immediately followed by quitting isn't lost to
+    the debounce. Restored bounds are clamped to the 1280x720 floor, and a
+    remembered `x`/`y` is only honored if it still intersects a currently-
+    connected display (via `screen.getAllDisplays()`'s `workArea`) -
+    otherwise Electron's own default centering kicks in, so an unplugged
+    second monitor since last launch can't strand the window off-screen.
+    Live-verified with a standalone Playwright-Electron script (not the
+    `run-desktop` skill itself, which only exposes renderer-side `eval` -
+    this needed main-process `BrowserWindow.setBounds`/`getBounds` control
+    the skill's driver doesn't expose): resize+move -> close -> relaunch
+    correctly restored the exact saved bounds, and a hand-written
+    sub-floor (400x300) state file was correctly clamped back to 1280x720
+    on load.
+  - **Teams-page grid caps at 2 columns, no matter how wide the window
+    gets** - already implemented as part of the earlier Teams-carousel leg
+    (`TeamsPage.tsx`'s `@[1360px]:grid-cols-2`, no 3rd-column tier exists)
+    - confirmed still correct while scoping this leg, no separate work
+    needed here.
+
+- **Teams page carousel/grid rework - design approved 2026-08-29**, mockup
+  at `https://claude.ai/code/artifact/66752fbf-5e68-456a-bfff-564ba4a5d67f`
+  (private Claude artifact, 6 artboards). Approved spec:
+  - Each collapsed team's old mini sprite-strip is replaced by a compact
+    3D coverflow (~240x84px, real CSS `rotateY`/scale/opacity keyframes,
+    not a static image) cycling through all 6 roster Pokémon.
+    Auto-rotates while idle, pauses crisp on hover (small pause badge).
+  - Header's action-icon row is reworked into a pill-shaped control
+    cluster: only Edit (pencil) and Expand (chevron) stay always-visible;
+    Validate/Export (text)/Export Image/Export PDF/Delete move into a new
+    `⋮` overflow menu (Delete visually distinguished in red).
+  - Team name/author move out of the far-right button cluster (where
+    they oddly live today) to sit directly under the regulation badge in
+    the header's left column.
+  - Expand/collapse stays **independent per card** (no accordion) -
+    explicit user call to keep the diff smaller; revisit later if
+    several teams expanded at once takes up too much space.
+  - Drag-to-reorder the teams list changes from "always active on the
+    collapsed header regardless of state" (today's behavior) to **gated
+    behind both expanded AND edit-mode** - only draggable once the edit
+    pencil is toggled on an expanded card.
+  - Expanded+edit-mode roster cards keep the full existing feature set
+    (don't drop these for the new layout): SP-spread grid + nature pill
+    (matching `StatsColumn.tsx`'s exact per-stat colors), gender toggle,
+    shiny toggle - plus a new drag-handle affordance icon per card.
+  - Teams list becomes a responsive grid instead of always one column:
+    2 columns on wide windows, 1 on narrow, via a **container query**
+    on the teams-list wrapper (not a viewport media query - same
+    reasoning as the existing `@container`/`@[1760px]` roster-grid
+    breakpoint in `TeamCard.tsx`: viewport width alone doesn't account
+    for the sidebar eating into actual content width). Exact breakpoint
+    not yet chosen - mockup used "~1160px+ content width -> 2 columns"
+    as a placeholder, needs tuning once real. When a team expands inside
+    the 2-column grid, it spans the full row width (explicit user
+    call - grid-column 1/-1), pushing subsequent cards down rather than
+    squeezing the roster grid into a half-width column.
+  - Likely supersedes/relates to the "Team cards render as 2x3 grid
+    instead of 1x6" regression noted in the 2026-08-28 manual-testing
+    batch above - that whole static-grid layout is being replaced by
+    this rework, so worth checking whether that bug report is even still
+    relevant once this lands.
+  - **Implementation started 2026-08-29** - sequenced into 4 legs with the
+    user (coverflow component, header/controls rework, expanded-grid
+    stats restoration, responsive grid + drag-reorder gating change),
+    confirmed via `AskUserQuestion` before writing any code; coverflow
+    picked as leg 1.
+    - **Leg 1 done (2026-08-29)** - the 3D coverflow itself, replacing
+      `TeamCard.tsx`'s old flat mini-sprite-strip. New
+      `TeamCoverflow.tsx` (presentational, takes `pokemon`/
+      `resolveSprite`) + `index.css`'s `.coverflow*` rules reproduce the
+      approved mockup's exact `cfOrbit` keyframe values (translate/
+      rotateY/scale/opacity/z-index at the 0/16.667/33.333/50/66.667/
+      83.333/100% stops, pulled by parsing the design artifact's own
+      `Main.dc.html`/`Hover.dc.html` source rather than eyeballing the
+      screenshots) - plain CSS `animation`, not Framer Motion: the loop
+      is purely time-driven with no interactive state, so CSS handles it
+      natively and correctly for the continuous 12s cycle (a discrete
+      Framer Motion `animate`-per-slot approach was considered and
+      rejected - modeling the cyclic sweep as 6 discrete slot-swaps loses
+      the necessary 7th "fade out past the far edge" waypoint between the
+      83.333% and 100% keyframes, causing a card to visibly snap/streak
+      across the whole container at the wrap point instead of fading out
+      invisibly). Stagger scales with roster size (`12s / pokemon.length`
+      per-card delay step) rather than assuming a full 6-mon roster, since
+      a mid-build team can have fewer. Pause-on-hover is
+      `animation-play-state: paused` (immediate/"crisp" by construction,
+      no snap-to-nearest-beat logic). The pause badge and center
+      highlight ring don't track which Pokemon index is currently
+      centered (no JS state) - both are single fixed-position overlays at
+      the container's own center coordinate, which works because every
+      card's orbit passes through that exact same `translateX(0) scale(1)`
+      point, so the overlay always lands on whichever card is currently
+      front-most regardless of which one that is. `type-check`/`lint`/
+      `build` all clean. Live-verified via `run-desktop`: confirmed the
+      animation's computed transform actually changes over a 1.5s window
+      (not frozen), and - since CSS `:hover` doesn't activate from a
+      synthetic dispatched event, only real pointer input - wrote a
+      one-off Playwright script using `page.hover()` directly (not the
+      driver's own `eval`-based click/hover) to confirm the pause badge
+      and gold center ring both actually reach `opacity: 1` on real hover
+      and stay scoped to just the hovered team's own coverflow, not both
+      teams' cards on the page. Header's fixed `h-16` height swapped for
+      `min-h-[116px] py-4` to fit the coverflow's 84px height (was clipped
+      otherwise) - the only other layout change this leg made; the
+      header's control-cluster/name-position rework is still leg 2, not
+      touched here.
+    - **Leg 2 done (2026-08-29)** - header/controls rework. Two new
+      components: `TeamOverflowMenu.tsx` (the "⋮" trigger + dropdown,
+      self-contained open/close state via `useState`+`useDismissable`,
+      same pattern as `RegulationBadge.tsx`) and `TeamValidationButton.tsx`
+      rewritten from a standalone round icon button into a menu row (its
+      only remaining consumer is now the overflow dropdown, so no variant
+      prop needed - just restyled in place, self-contained result-popup
+      logic unchanged). All row icons/copy/order (Validate Team/Export
+      (Showdown text)/Export Image/Export PDF/divider/Delete Team in red)
+      and the pill cluster's Edit/divider/Expand/divider/More layout
+      pulled verbatim from the approved mockup's `Main.dc.html`/
+      `Overflow.dc.html` artboard source (parsed out of the design
+      artifact's own embedded `canvas.json`, same "read the source, don't
+      eyeball the screenshot" approach leg 1 used for the coverflow
+      keyframes) rather than guessed - exact SVG path data, `.controls`/
+      `.ctrl`/`.menu`/`.menu-row` CSS values translated 1:1 to Tailwind
+      classes. `TeamCard.tsx`'s header reordered to match: a new identity
+      column (`RegulationBadge` + team name + author, was previously split
+      across the name up front and author/badge in the old far-right
+      cluster) sits left of the coverflow, which now centers in the
+      remaining flex space instead of sitting flush left; the far-right
+      cluster is now just the one pill (`bg-zinc-800 border-zinc-700
+      rounded-full`) holding Edit + Expand (both gain a `.ctrl.active`-
+      equivalent highlight - `bg-zinc-700` + accent text - when
+      editing/expanded, matching the mockup's active-state class) and
+      `TeamOverflowMenu`. `type-check`/`lint`/`build`/`test` (395 cases)
+      all clean. Live-verified via `run-desktop`: screenshotted the
+      collapsed header (identity column/coverflow/pill all in the right
+      positions), the overflow menu open (row order/icons/red Delete
+      divider match the mockup exactly), a live Validate Team result
+      popping inside the still-open menu, and the Edit pill's active gold
+      highlight while expanded with the menu still open on top.
+    - **Follow-up bug found + fixed same day (2026-08-29), three passes**:
+      leg 2's new overflow menu (and expanding a team) could push content
+      past one viewport height, and the vertical scrollbar popping in
+      shrank the team card's own width by the scrollbar's track width -
+      visibly narrowing/shifting every card the instant it appeared.
+      1st pass added `scrollbarGutter: 'stable'` to `App.tsx`'s `<main>`
+      (the outer scroll container shared by every tab) - a real fix for
+      *that* container, verified via `main.clientWidth` staying identical
+      across expand/collapse, but **user reported the shrink still
+      happened from the overflow menu specifically**, which turned out to
+      be a second, different scroll container: walking the DOM ancestor
+      chain and diffing each one's `scrollHeight`/`clientHeight`
+      before/after opening the dropdown found `TeamsPage.tsx`'s own
+      nested `overflow-y-auto` content div was the one actually
+      overflowing, not `<main>` - correcting the 1st pass's (wrong)
+      assumption that div could never get height-constrained on its own;
+      it does, via `TeamsPage`'s own `h-full flex flex-col` flexbox
+      layout fixing that div's height independently of `<main>`'s. Since
+      the dropdown is `position:absolute`, it doesn't affect layout height
+      but does still count toward `scrollHeight`, so it can push past this
+      inner div's already-fixed `clientHeight` and trigger a scrollbar
+      there specifically, even while `<main>` above it has room to spare
+      and shows none. 2nd pass added the same `scrollbarGutter: 'stable'`
+      fix to that inner div too. **User then found the actual root cause**
+      from a screenshot: a lower team's open overflow menu was visibly cut
+      off mid-list, not just growing the container's scrollable area -
+      `overflow-y-auto` on that div forces `overflow-x` to `auto` too per
+      the CSS spec's "if one axis is visible and the other isn't, the
+      visible one gets coerced to auto" rule (confirmed live via
+      `getComputedStyle`), so the div was clipping the dropdown on both
+      axes the whole time, not just inflating scrollHeight - the
+      `scrollbarGutter` passes were reserving space for a symptom, not
+      fixing the real defect. 3rd pass: `TeamOverflowMenu.tsx` rewritten
+      to render its dropdown through a `createPortal` to `document.body`,
+      `position: fixed` and positioned off the trigger button's own
+      `getBoundingClientRect()` (computed in a `useLayoutEffect` so it
+      never flashes at the wrong spot) instead of a plain `absolute` child
+      - not a DOM descendant of the clipping/scrolling div any more, so it
+      can neither be clipped by it nor count toward its `scrollHeight`,
+      fixing both symptoms at their actual source. Since a portaled node
+      isn't a DOM descendant of the trigger's own wrapper either,
+      `useDismissable`'s single-ref `contains()` check no longer works for
+      it - outside-click/Escape dismissal reimplemented inline with two
+      refs (trigger + portaled menu content), and the menu now also
+      dismisses on scroll/resize (a capturing `window` listener, so it
+      still catches a nested scrolling container's own scroll) rather than
+      trying to keep its position live-tracking the trigger while open.
+      The two `scrollbarGutter` passes above were left in place - they're
+      still doing real work for genuine content-driven overflow (many
+      teams, several expanded at once), just no longer load-bearing for
+      the overflow-menu case specifically. `type-check`/`lint`/`build`/
+      `test` (395 cases) all clean. Live-verified via `run-desktop`:
+      confirmed the portaled menu's parent actually is `document.body`,
+      confirmed the teams-list div's `scrollHeight`/`clientHeight` now
+      stay exactly equal with the menu open (no overflow induced at all,
+      vs. the 2nd pass's still-genuine-but-now-moot 308-vs-296 gap),
+      re-confirmed Escape and clicking a menu item (Validate Team) both
+      still work correctly now that the menu's DOM location moved.
+    - **Leg 3 done (2026-08-29)** - expanded-grid stats restoration. Turned
+      out to already be almost entirely in place: `StatsColumn.tsx`/
+      `EVStatCell.tsx` (SP grid + nature pill), `PokemonCard.tsx`'s gender/
+      shiny footer toggles, and drag-to-reorder (`draggable={isEditing}` +
+      `handleDragStart`/`Over`/`Drop`) all predate the coverflow rework and
+      were never actually dropped by legs 1-2 - confirmed by reading the
+      code rather than assuming from the TODO wording, and cross-checked
+      against the approved mockup's `Expanded.dc.html` artboard (parsed out
+      of the design artifact the same "read the source" way legs 1-2 did):
+      `pokemonTheme.ts`'s `STAT_LABEL_COLORS` (red/orange/yellow/blue/
+      green/pink-400) already match the mockup's per-stat hexes exactly.
+      The one actually-missing piece was the mockup's `.grip` element - a
+      22x22px rounded top-left drag-handle icon (6-dot grid SVG) that
+      didn't exist in the live app (the whole card was already draggable/
+      `cursor-grab` while editing, just with no visible handle affordance
+      for it) - added to `PokemonCard.tsx`, edit-mode-gated same as the
+      delete button, exact SVG path/positioning/colors pulled from the
+      mockup source rather than guessed. `type-check`/`lint`/`build`/`test`
+      (395 cases) all clean. Live-verified via `run-desktop`:
+      screenshotted an expanded team's roster grid in edit mode (grip
+      icon top-left on every card,
+      SP/EV grid + nature pill + gender/shiny footer all rendering
+      correctly, matching the mockup) and again with edit mode toggled
+      back off (grip icon and delete button both gone, only the export
+      button remains, same as before this leg).
+    - **Leg 4 done (2026-08-29)** - responsive grid + drag-reorder gating
+      change, closing out the Teams-carousel rework's implementation
+      sequence. Exact breakpoint pulled from the approved mockup's own
+      `GridWide.dc.html`/`GridNarrow.dc.html` artboard source (same
+      "read the source, don't eyeball the screenshot" approach legs 1-3
+      used) rather than guessed - confirmed both artboards use
+      `grid-template-columns: repeat(2, minmax(0, 1fr))`/`1fr` with a
+      `.span-full { grid-column: 1 / -1; }` rule, at mockup content widths
+      of 1600px (2-col) and 820px (1-col); the TODO's own "~1160px+"
+      placeholder wasn't pinned to anything more specific in the mockup
+      itself (both artboards are static snapshots, not a live-resizing
+      container-query demo), so `@[1160px]` was kept as the real value
+      rather than re-guessed. `TeamsPage.tsx`'s scrollable content div
+      gained `@container` (Tailwind v4 container-query root, same pattern
+      `TeamCard.tsx`'s own `@[1760px]` roster-grid breakpoint already
+      uses) and the teams-list wrapper changed from `flex flex-col gap-3`
+      to `grid grid-cols-1 @[1160px]:grid-cols-2 gap-4` - keyed off this
+      wrapper's own container width, not viewport width, for the same
+      reason the roster-grid breakpoint is container-based (the sidebar
+      eats into actual content width, so raw viewport width lies).
+      `TeamCard.tsx`'s root div now adds `col-span-full` whenever
+      `isExpanded` is true, so an expanded card spans the full grid row
+      width in the 2-column layout (pushing subsequent cards down) rather
+      than being squeezed into a half-width column - no prop threading
+      needed since `isExpanded` was already local state on the card
+      itself. Drag-to-reorder gating changed from "the collapsed header
+      is always draggable regardless of state" to gated behind **both**
+      expanded AND edit-mode (`canReorder = isExpanded && isEditingTeam`):
+      the header row's `draggable` attribute, its `cursor-grab` styling,
+      and a new `title="Drag to reorder"` hint all read off `canReorder`
+      now instead of being unconditional, and `handleDragStart` itself
+      also early-returns (`e.preventDefault()`) as defense-in-depth if
+      somehow invoked while `canReorder` is false. Only the drag *source*
+      is gated - `onDragOver`/`onDrop` stay unconditional so any card can
+      still be a drop target regardless of its own expand/edit state,
+      matching how `reorderTeam` already resolves against the full teams
+      array regardless of which card triggered the drop.
+      `type-check`/`lint`/`build`/`test` (395 cases) all clean.
+      Live-verified via a one-off Playwright script (same precedent as
+      leg 2's real-hover script - needed direct `BrowserWindow.setSize()`
+      access via `electronApp.evaluate()` to actually resize the OS
+      window, which the shared `run-desktop` driver doesn't expose):
+      created two disposable empty teams, confirmed
+      `getComputedStyle(gridEl).gridTemplateColumns` is a single track at
+      the app's 1280x720 floor size (992px container width, under the
+      1160px breakpoint - screenshotted showing 1 column) and two tracks
+      once resized to 1900x900 (1612px container width - screenshotted
+      showing 2 columns), confirmed the expanded card's computed
+      `gridColumn` is actually `1 / -1` with `offsetWidth` matching the
+      full row rather than a half column (screenshotted), and walked the
+      full gating state machine on the same card: `draggable="false"`
+      while collapsed, still `"false"` once expanded but not editing,
+      `"true"` only once both expanded AND editing (screenshotted), and
+      back to `"false"` after toggling edit off again - matching the
+      approved spec exactly at every step. Cleaned up both disposable
+      teams afterward and confirmed the user's real 2 teams were
+      untouched throughout. This closes out all 4 legs of the
+      Teams-carousel/grid rework's implementation.
+    - **Follow-up bug found + fixed same day (2026-08-29)**: user reported
+      (with a screenshot) a window size where the two 2-column team cards
+      looked visibly squeezed - coverflow icons crowding the controls
+      pill with no breathing room. Root cause was leg 4's own
+      `@[1160px]` breakpoint being too low for the header's actual
+      hard-minimum content width: the header row's three sections
+      (identity column, the coverflow's fixed 240px box, the controls
+      pill) are all effectively non-shrinking (`flex-shrink:0` on the
+      coverflow, `shrink-0` on the other two), so once total available
+      column width drops below their combined minimum the row has to
+      overflow rather than compress - and 1160px put each column right
+      at ~570px, under that floor. Live-measured the real floor via a
+      one-off Playwright script (same `BrowserWindow.setSize` +
+      `electronApp.evaluate` approach as the leg-4 verification script):
+      ~574px of hard-minimum header content width. A second, related bug
+      surfaced during that measurement: the identity column (`min-w-
+      [190px] shrink-0`, no `max-w`) could grow past its intended 190px
+      for a long team name/author, since the `truncate` class on the name
+      `<h2>` never had a bounded width to truncate against - so a long
+      name was quietly making the true minimum worse than the 190px the
+      layout was designed around. Fixed both: identity column gained
+      `max-w-[190px]` (now a true fixed 190px, `truncate` actually
+      engages), and the author `<span>` switched from `whitespace-nowrap`
+      to `truncate block` (needs `block` since `truncate` requires a
+      non-inline box to respect a bounded width) so a long author name
+      also ellipsizes instead of pushing width. With identity capped, the
+      real measured floor came down slightly and became name-length-
+      independent; re-measured live across a full window-size sweep
+      (1400-2000px) to find where the 2-column layout stays comfortably
+      clear of it, landing on `@[1360px]` (~50px+ slack once 2 columns
+      activate, vs. the mockup's own placeholder ~1160px which was never
+      pinned to anything more specific than two static snapshot widths).
+      Re-verified the full sweep shows zero header overflow at every
+      tested width including right at the new crossover (1650px window),
+      and specifically re-tested a window size matching the user's
+      reported screenshot (1466px) - now stays single-column with the
+      team name visibly truncating ("Shock me like an elect...") instead
+      of squeezing into a broken 2-column layout. `type-check`/`lint`/
+      `build`/`test` (395 cases) all clean.
+
+- **Color palette rework - design approved 2026-08-29**, same artifact,
+  two new artboards (`Palette.dc.html`/`TypedGrid.dc.html`). Approved
+  spec, replacing `blue-600` as the app's primary accent everywhere and
+  standardizing the gray/zinc inconsistency already present in the live
+  app today (`App.tsx`/`PokemonCard.tsx`/`StatsColumn.tsx` use
+  `gray-700/800/900`; `TeamCard.tsx` already uses `zinc-800/900/950` -
+  picking one family resolves that split, doesn't introduce a new one):
+  - **Primary accent -> gold**, sampled directly from the Gholdengo
+    sprite (not eyeballed from the mascot art) - `#f0c840` base
+    (96%+ pixel agreement between the small PokeAPI pixel sprite and the
+    official-artwork version, sampled programmatically with Pillow) and
+    `#c09830` deep/shadow tone, both real sampled values. Replaces
+    `blue-600` for buttons, active states, focus rings, etc. app-wide.
+  - **Secondary accent -> royal purple**, sampled from `build/icon.png`'s
+    own background fill - `#381070` (99.8% of background pixels are this
+    exact value) for deep surface/badge tints, plus a lightened
+    same-hue derived shade `#6d25d0` for interactive uses where the raw
+    sampled purple is too dark to read on dark surfaces. Reg M-B's
+    existing purple badge color can keep doing double-duty (explicit
+    user non-objection) rather than being reassigned.
+  - **Neutral base standardized on zinc** app-wide (Zinc 950/900/800/
+    700/500/100 - `#09090b`/`#18181b`/`#27272a`/`#3f3f46`/`#71717a`/
+    `#f4f4f5`), replacing every remaining `gray-*` usage.
+  - **Semantic colors (success green, danger red) stay as-is** - not
+    brand color, kept for conventional legibility (danger = red, etc.).
+  - **Real design tokens, not another hardcoded-class sweep** - explicit
+    user call for scope: introduce named CSS custom properties (a
+    Tailwind v4 `@theme` block in `index.css`, e.g. `--color-accent-*`)
+    so this palette lives in one place; a future tweak becomes a
+    one-file change instead of resweeping every component again like
+    this pass has to.
+  - **New idea layered on top, also approved**: individual Pokémon cards
+    (the expanded roster grid, not the team-card level) get a per-type
+    accent instead of a flat `gray-600` border - a soft colored glow/ring
+    around the card (not a full-card tint, not a flat border) using the
+    real type colors already in `pokemonTheme.ts`'s `TYPE_THEMES`. A
+    dual-type Pokémon (e.g. Water/Flying) gets a diagonal gradient
+    blending both type colors rather than showing only its primary type.
+  - **Two real bugs found and fixed live during this pass, both
+    instructive for implementation**:
+    1. The dual-type glow was built as two separate stacked
+       `box-shadow`s (one per type color) - CSS renders the *first*
+       listed shadow visually on top, so whichever type happened to be
+       listed first silently dominated regardless of the actual
+       gradient, reading as "favors one type" rather than a 50/50 blend.
+       Fix: a single blurred `::before` pseudo-element using the exact
+       same `linear-gradient` as the ring itself (not two independent
+       shadows) - inherently balanced since it's one gradient, not a
+       stacking order.
+    2. Some type colors are too close to the app's own near-black
+       surfaces to read as a glow at all regardless of compositing -
+       Dark (`#1f2937`) most severely (nearly identical to the app's own
+       dark grays), Dragon (`#4f46e5`) more subtly (indigo reads muted
+       against dark backgrounds even at reasonable lightness). Fix: a
+       **glow-safe variant rule** - same hue, lightness floor raised
+       (Dark -> `#524267`, Dragon -> `#6366f1` used for the glow only,
+       *not* the type-badge pill color, which reads fine as plain text
+       on a dark pill and stays unchanged) - documented as a general
+       rule to check against all 18 types during implementation, not a
+       one-off fix for just these two.
+    3. The glow's blur/spread was initially too strong (`inset:-9px`,
+       `blur(15px)`, `opacity:0.6`) and visibly bled across the roster
+       grid's 24px gap into neighboring cards' glows, muddying the
+       effect - tightened to `inset:-3px`, `blur(7px)`, `opacity:0.38`,
+       confirmed to stay within each card's own footprint.
+  - **Implementation started 2026-08-29** - sequenced into legs with the
+    user (A+B combined, then C, then D):
+    - **Leg A+B done (2026-08-29)** - token infrastructure + the
+      blue-600-as-primary-accent sweep, together since sweeping to gold
+      needs the token to exist first. `index.css` gained a Tailwind v4
+      `@theme` block (`--color-accent-gold: #f0c840`,
+      `--color-accent-gold-deep: #c09830`, `--color-accent-purple:
+      #381070`, `--color-accent-purple-light: #6d25d0` - purple tokens
+      defined now, not yet consumed anywhere pending a future leg). Swept
+      ~50 files: every `bg-blue-600`/`hover:bg-blue-700`/`focus:ring-
+      blue-500`/`focus:border-blue-500`/active-picker-panel `border-
+      blue-500`/drag-over `ring-blue-400` instance that was acting as
+      the app's primary interactive accent (buttons, active tab/toggle
+      states, focus rings, popover borders, the "ChoiceBuds" wordmark)
+      now uses `accent-gold`/`accent-gold-deep`; a solid `bg-accent-gold`
+      pairs with `text-zinc-900` instead of `text-white` since the gold
+      base is light (poor contrast with white). Deliberately left blue
+      alone where it wasn't the primary accent but a separate existing
+      color convention: the player(blue)/opponent(red) identity pairing
+      throughout Battle Log (`TurnLog`/`BattlefieldSlot`/
+      `MoveOutcomePrompt`/`SideConditionsRow`/`PlayerFieldPanel`/
+      `Battlefield`'s "Your Side" label), the male-gender ♂ symbol
+      (`PokemonCard`/`CalcPokemonPanel`, blue/pink is a fixed convention
+      paired with female pink), nature-lowered-stat text color
+      (`CalcStatRows`), the Water-type badge and SpA stat-label colors
+      (`pokemonTheme.ts`), and Reg M-A's own blue regulation-badge theme
+      (kept as a category-identity color the same way Reg M-B's purple
+      badge was explicitly kept in the approved spec above) - this was an
+      assumption at the time, **confirmed correct by the user afterward**:
+      regulation-badge colors are just a quick visual indicator, not
+      significant enough to matter, and can be swapped to something else
+      entirely in a later pass if wanted. `type-check`/`lint`/`build` all
+      clean; live-verified via
+      `run-desktop` (Teams page nav/buttons/active filter, Settings page
+      active toggles all render gold with dark text; Reg M-B badge purple
+      untouched).
+    - **Leg C done (2026-08-29)** - gray/zinc neutral-standardization
+      sweep. Mechanical, not a redesign: every remaining `gray-{100-900}`
+      Tailwind class across `src/renderer` (63 files, 9 shades in use -
+      100/200/300/400/500/600/700/800/900, no `gray-50`/`gray-950` were
+      present) renamed 1:1 to the matching `zinc-*` shade
+      (`sed -E 's/gray-([0-9]+)/zinc-\1/g'`), preserving every existing
+      bg/text/border/hover/placeholder/opacity-modifier prefix and
+      lightness relationship rather than re-picking shades by eye -
+      confirmed by diff (exactly one token swapped per line, nothing else
+      touched) and by a `grep -rn gray` sanity pass turning up only
+      unrelated hits (`grayscale` CSS utility/comment mentions, not
+      Tailwind color classes). This includes `pokemonTheme.ts`'s
+      `TYPE_THEMES` Dark/Steel/Normal/Electric/Ice/Bug/Fairy entries,
+      which used `gray-*` as their type-badge color - in scope per the
+      approved spec's "every remaining gray-* usage," and visually
+      identical since zinc is the same neutral family. `type-check`/
+      `lint`/`build`/`test` (395 cases) all clean after the sweep.
+      Live-verified via `run-desktop`: Teams page (collapsed list, filter
+      pills, expanded roster grid), Settings, Calc, and Battle Log's empty
+      state all render consistent zinc surfaces with no leftover
+      mismatched gray.
+    - **Leg D done (2026-08-29)** - per-type Pokémon card glow effect,
+      closing out the color-palette rework's implementation. `TypeTheme`
+      (`config/pokemonTheme.ts`) gained an optional `glow` hex field
+      alongside the existing `bg`/`text` Tailwind classes (a plain hex,
+      not a class, since it feeds a dynamic per-instance CSS custom
+      property rather than a static badge) - all 18 types reuse their
+      badge hex directly except Dark and Dragon, which use the
+      design-approved glow-safe overrides (`#524267`/`#6366f1`) instead
+      of their actual badge hexes (`#27272a`/`#4f46e5`) per the spec's
+      finding; a new `getTypeGlowColors(types)` returns the 2-color tuple
+      (single-type Pokémon get the same color twice, degenerating the
+      gradient to solid). Re-audited all 18 against the app's actual
+      (post-Leg-C zinc) near-black surfaces while implementing, not just
+      assumed from the design pass's pre-sweep swatch - confirmed only
+      Dark/Dragon still need the floor-raise, same as originally found.
+      `index.css` gained the shared `.type-glow-ring`/`.type-glow-ring::before`
+      rule (2px gradient-background padding for the ring itself, plus a
+      `blur(7px)`/`opacity:0.38`/`inset:-3px` blurred copy of the *same*
+      gradient for the outer glow - one gradient blurred twice, not two
+      stacked `box-shadow`s, per the spec's own bug-fix finding) reading
+      `--glow-c1`/`--glow-c2` custom properties. `PokemonCard.tsx` wraps
+      its existing card in this ring (outer wrapper carries the ring +
+      `max-w-[280px]`, drag handlers/`data-pokemon-card` stayed on the
+      inner content div which lost its old flat `border-zinc-600` in favor
+      of the ring) and sets those two properties inline via
+      `getTypeGlowColors(types)` - the `isDragOver` gold highlight became
+      a `ring-2 ring-accent-gold` on the inner div, layering on top of the
+      outer glow rather than replacing it. `type-check`/`lint`/`build`/
+      `test` (395 cases) all clean. Live-verified via `run-desktop`:
+      screenshotted the roster grid with mono-type (Eelektross, plain
+      yellow ring), dual-type same-family (Whimsicott Grass/Fairy, visible
+      green-to-pink diagonal blend), and both glow-safe cases in the same
+      real roster (Incineroar Fire/Dark and Garchomp Dragon/Ground) -
+      confirmed via computed-style read that `--glow-c1`/`--glow-c2`
+      actually carry the glow-safe hexes (not the raw badge hexes) for
+      those two, and confirmed visually the ring/glow stays legible against
+      the dark card background instead of vanishing. Also re-screenshotted
+      with edit mode toggled on - ring persists, no double-border with the
+      new gold drag-over ring, delete button and drag-handle affordance
+      unaffected. This closes out the color-palette rework's Leg A+B/C/D
+      implementation sequence in full - all three legs done.
+
 - **Battle Logger stat-inference, Phase 3's 3rd polish item: TTL tuning**
   (2026-07-20) - the only remaining Phase 3 item (see below), closing out
   the whole stat-inference thread. "TTL tuning" was ambiguous enough to ask
