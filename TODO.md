@@ -246,8 +246,29 @@ focused on what's actually next.
         console/page errors (exercised against a disposable team created and
         deleted for the test, per this file's own testing-workflow
         convention - the two real teams were untouched).
-      - Leg 3 (sidebar collapse migration to Framer Motion, currently plain
-        CSS) and leg 4 (drag-reorder animation) not yet started.
+      - ~~Leg 3: Sidebar collapse migration to Framer Motion~~ **Done
+        2026-08-29.** `Sidebar.tsx`'s rail (`<aside>`) is now `motion.aside`,
+        animating `width` between 68px (collapsed) and 208px (expanded) via a
+        new `SIDEBAR_WIDTH_TRANSITION` in `config/motion.ts` (deliberate
+        320ms bucket, same duration/easing the plain-CSS
+        `transition-[width]` it replaced already used) - symmetric ease-out
+        in both directions rather than the modal/card-expand enter/exit
+        split, since this is a toggle between two steady states, not a
+        mount/unmount, and the approved `SidebarDemo.dc.html` only ever
+        specified one timing for the rail width itself. Deliberately left
+        as plain CSS/Tailwind (unchanged from leg 2 of the sidebar/menuing
+        rework): icon hover-scale and nav-item hover backgrounds - the
+        motion pass's own note already called out the micro-interaction
+        bucket as not worth porting to Framer Motion, and nothing here
+        needed AnimatePresence (no mount/unmount involved, just a numeric
+        style toggle on an already-mounted element).
+        `type-check`/`lint`/`test`/`build` all clean; live-verified via
+        `run-desktop` - collapse and expand both animate smoothly through
+        Framer Motion, the active-tab gold accent and collapsed-state hover
+        tooltips still render correctly, tab switching (Teams/Calc/Settings)
+        still works, and no console/page errors surfaced beyond the
+        expected Electron dev-mode CSP warning.
+      - Leg 4 (drag-reorder animation) not yet started.
 
   - ~~Window sizing rework~~ **Done 2026-08-29** - picked as leg 1 of the
     three remaining overhaul pieces (smaller, purely-behavioral, no mockup

@@ -21,15 +21,17 @@
  *
  * Collapse state lives in useSidebarCollapsed.ts (persisted via
  * localStorage - see that hook's own header comment for why not
- * settings.json). The rail width transition (320ms ease-out) matches the
- * "sidebar width" bucket of the approved-but-not-yet-implemented
- * animation/motion pass's duration scale; everything else in this pass
- * (icon hover-scale, hover backgrounds) is plain CSS/Tailwind since Framer
- * Motion itself isn't wired into the app yet - this is the leg where the
- * motion pass said the sidebar's own collapse animation should land.
+ * settings.json). The rail width transition (320ms ease-out, the
+ * "deliberate" bucket) now runs through Framer Motion
+ * (`SIDEBAR_WIDTH_TRANSITION` in config/motion.ts) rather than the plain CSS
+ * `transition-[width]` this leg replaced - animation/motion pass leg 3. Icon
+ * hover-scale and hover backgrounds stay plain CSS/Tailwind, per the motion
+ * pass's own note that the micro-interaction bucket wasn't worth porting.
  */
 
+import { motion } from 'framer-motion';
 import type { ActiveTab } from '../App';
+import { SIDEBAR_WIDTH_TRANSITION } from '../config/motion';
 import { useSidebarCollapsed } from '../hooks/useSidebarCollapsed';
 import {
   TeamsIcon,
@@ -95,9 +97,11 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
   };
 
   return (
-    <aside
-      className={`flex flex-col border-r border-zinc-700 bg-zinc-800 py-4 transition-[width] duration-[320ms] ease-out ${
-        collapsed ? 'w-[68px] px-2.5 items-center' : 'w-52 px-3'
+    <motion.aside
+      animate={{ width: collapsed ? 68 : 208 }}
+      transition={SIDEBAR_WIDTH_TRANSITION}
+      className={`flex flex-col border-r border-zinc-700 bg-zinc-800 py-4 ${
+        collapsed ? 'px-2.5 items-center' : 'px-3'
       }`}
     >
       {/* Brand Header */}
@@ -130,6 +134,6 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
       <div className="mt-auto w-full border-t border-zinc-700 pt-2">
         {BOTTOM_NAV_ITEMS.map(renderNavItem)}
       </div>
-    </aside>
+    </motion.aside>
   );
 }

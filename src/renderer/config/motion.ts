@@ -37,3 +37,13 @@ export const CARD_EXPAND_ENTER_TRANSITION = { duration: STANDARD_ENTER_DURATION,
 
 /** Card expand exit: standard bucket, faster than its matching entrance, ease-in (accelerate out). */
 export const CARD_EXPAND_EXIT_TRANSITION = { duration: STANDARD_EXIT_DURATION, ease: 'easeIn' } as const;
+
+/**
+ * Sidebar rail width toggle: deliberate bucket. Symmetric ease-out in both
+ * directions (collapse and expand alike) rather than the enter/ease-out vs.
+ * exit/ease-in split used for modals/card-expand - this is a toggle between
+ * two steady states, not a mount/unmount, and the design-approved demo
+ * (`SidebarDemo.dc.html`) only ever specified one duration/easing for the
+ * rail width itself.
+ */
+export const SIDEBAR_WIDTH_TRANSITION = { duration: DELIBERATE_DURATION, ease: 'easeOut' } as const;
