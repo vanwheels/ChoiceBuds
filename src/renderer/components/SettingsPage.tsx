@@ -18,6 +18,7 @@ import UpdateCheckSection from './UpdateCheckSection';
 import SeasonDataCheckSection from './SeasonDataCheckSection';
 import PlayerProfileSection from './PlayerProfileSection';
 import GameDataResetSection from './GameDataResetSection';
+import AppStatusSection from './AppStatusSection';
 
 interface SettingsPageProps {
   settingsState: UseSettingsReturn;
@@ -70,6 +71,8 @@ export default function SettingsPage({ settingsState, teamsState, battlesState, 
       <GameDataResetSection databaseState={databaseState} gameDataState={gameDataState} />
 
       <UpdateCheckSection updateCheckState={updateCheckState} />
+
+      <AppStatusSection databaseState={databaseState} teamsState={teamsState} />
     </div>
   );
 }

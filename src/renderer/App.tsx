@@ -17,9 +17,9 @@ import { useInitialSync } from './hooks/useInitialSync';
 import { useBattles } from './hooks/useBattles';
 import { useSettings } from './hooks/useSettings';
 import { useUpdateCheck } from './hooks/useUpdateCheck';
-import { CURRENT_APP_VERSION } from './utils/appVersion';
 import TeamsPage from './components/TeamsPage';
 import LoadingScreen from './components/LoadingScreen';
+import Sidebar from './components/Sidebar';
 
 // Lazy-loaded so each tab's code is only fetched/parsed once a user actually
 // opens it, not on every app startup - CalcPage in particular pulls in
@@ -30,7 +30,7 @@ const StatisticsPage = lazy(() => import('./components/statistics/StatisticsPage
 const TypeMatchupPage = lazy(() => import('./components/typematchup/TypeMatchupPage'));
 const SettingsPage = lazy(() => import('./components/SettingsPage'));
 
-type ActiveTab = 'teams' | 'calc' | 'battles' | 'statistics' | 'typeMatchup' | 'settings';
+export type ActiveTab = 'teams' | 'calc' | 'battles' | 'statistics' | 'typeMatchup' | 'settings';
 
 /**
  * Main application shell component
@@ -89,99 +89,7 @@ export default function App() {
 
   return (
     <div className="flex h-screen bg-zinc-900 text-zinc-100">
-      {/* Fixed Navigation Sidebar - Left Side */}
-      <aside className="w-32 bg-zinc-800 border-r border-zinc-700 flex flex-col" style={{ paddingLeft: '1.25rem', paddingRight: '1.25rem', paddingTop: '1rem', paddingBottom: '1rem' }}>
-        {/* App Header */}
-        <div className="pb-4 border-b border-zinc-700">
-          <h1 className="text-base font-bold text-accent-gold leading-tight">ChoiceBuds</h1>
-        </div>
-
-        {/* Navigation Menu */}
-        <nav className="flex-1 flex flex-col pt-4">
-          <ul className="space-y-2">
-            <li>
-              <button
-                onClick={() => goToTab('teams')}
-                className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
-                  activeTab === 'teams' ? 'bg-accent-gold hover:bg-accent-gold-deep text-zinc-900' : 'text-zinc-400 hover:bg-zinc-700'
-                }`}
-              >
-                Teams
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => goToTab('calc')}
-                className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
-                  activeTab === 'calc' ? 'bg-accent-gold hover:bg-accent-gold-deep text-zinc-900' : 'text-zinc-400 hover:bg-zinc-700'
-                }`}
-              >
-                Calc
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => goToTab('battles')}
-                className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
-                  activeTab === 'battles' ? 'bg-accent-gold hover:bg-accent-gold-deep text-zinc-900' : 'text-zinc-400 hover:bg-zinc-700'
-                }`}
-              >
-                Battle Log
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => goToTab('statistics')}
-                className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
-                  activeTab === 'statistics' ? 'bg-accent-gold hover:bg-accent-gold-deep text-zinc-900' : 'text-zinc-400 hover:bg-zinc-700'
-                }`}
-              >
-                Statistics
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => goToTab('typeMatchup')}
-                className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
-                  activeTab === 'typeMatchup' ? 'bg-accent-gold hover:bg-accent-gold-deep text-zinc-900' : 'text-zinc-400 hover:bg-zinc-700'
-                }`}
-              >
-                Type Matchup
-              </button>
-            </li>
-          </ul>
-
-          <ul className="mt-auto pt-2">
-            <li>
-              <button
-                onClick={() => goToTab('settings')}
-                className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
-                  activeTab === 'settings' ? 'bg-accent-gold hover:bg-accent-gold-deep text-zinc-900' : 'text-zinc-400 hover:bg-zinc-700'
-                }`}
-              >
-                Settings
-              </button>
-            </li>
-          </ul>
-        </nav>
-
-        {/* Status Footer */}
-        <div className="pt-4 border-t border-zinc-700 text-xs text-zinc-500">
-          <div className="flex items-center justify-between">
-            <span>Cache Status:</span>
-            <span className={databaseState.isInitialized ? 'text-green-400' : 'text-yellow-400'}>
-              {databaseState.isInitialized ? 'Ready' : 'Loading...'}
-            </span>
-          </div>
-          <div className="flex items-center justify-between mt-1">
-            <span>Teams Loaded:</span>
-            <span className="text-accent-gold">{teamsState.teams.length}</span>
-          </div>
-          <div className="flex items-center justify-between mt-1">
-            <span>Ver {CURRENT_APP_VERSION}</span>
-          </div>
-        </div>
-      </aside>
+      <Sidebar activeTab={activeTab} onTabChange={goToTab} />
 
       {/* Primary Content Viewport - Right Side */}
       {/* Each visited tab stays mounted (display:none when inactive) rather

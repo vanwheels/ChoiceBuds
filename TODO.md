@@ -40,62 +40,81 @@ focused on what's actually next.
   (2026-08-29) - each designed/discussed via the `design` skill as mockups
   first (supersedes the original "describe in words, iterate in code"
   sequencing note for the pieces that needed visual review; window sizing
-  was decisions-only, no mockup needed). Three of the five are now fully
+  was decisions-only, no mockup needed). Four of the five are now fully
   **implemented and shipped** (Teams page carousel/grid, color palette,
-  window sizing - see COMPLETED.md for the first two, this file's own
-  Window sizing entry below for the third); the remaining two
-  (sidebar/menuing, animation/motion) are still design/decisions-only, no
-  code written yet - still need their own implementation-leg breakdown
-  sequenced with the user. Window sizing was picked as the first leg
-  (2026-08-29) over the other two, being the smaller purely-behavioral
-  piece.
+  window sizing, sidebar/menuing - see COMPLETED.md for the first two, this
+  file's own Window sizing and Sidebar/menuing entries below for the other
+  two); animation/motion is still design/decisions-only, no code written
+  yet beyond what each of the other legs already implemented in its own
+  scope (icon hover-scale, sidebar-width transition) per the motion pass's
+  own note that it'd thread through each other piece's leg rather than
+  standing alone. Window sizing was picked as the first leg (2026-08-29)
+  over the other two, being the smaller purely-behavioral piece;
+  sidebar/menuing picked as the second leg the same day.
 
   - ~~Teams page carousel/grid rework~~ **Done 2026-08-29** - all 4
     implementation legs plus the two follow-up scrollbar/squeeze bugs found
     while verifying them - see COMPLETED.md for the full design-approval
     spec and implementation trail.
 
-  - **Sidebar/menuing rework - design approved 2026-08-29**, same artifact
-    as above (`SidebarExpanded.dc.html`/`SidebarCollapsed.dc.html`
-    artboards). Approved spec, replacing today's `App.tsx` sidebar (flat
-    128px-wide text-only nav list, plain "ChoiceBuds" wordmark, debug-y
-    status footer):
-    - Nav items get a consistent inline-SVG icon set (icon + label) instead
-      of text-only - one icon per tab (Teams/Calc/Battle Log/Statistics/
-      Type Matchup/Settings). User confirmed the specific icon metaphors
-      (grid for Teams, calculator, crossed swords for Battle Log, ascending
-      bars for Statistics, shield for Type Matchup, gear for Settings) are
-      fine for now with no strong alternatives in mind - **not locked in as
-      permanent**, revisit if a better metaphor comes up later, but no
-      blocker to using them elsewhere in the app meanwhile (buttons, empty
-      states) for icon-language consistency.
-    - Sidebar becomes collapsible: a toggle row collapses the ~208px
-      expanded sidebar (icon+label) down to a ~68px icon-only rail, with a
-      hover flyout tooltip showing the label when collapsed. Ties into the
-      window-sizing piece of the overhaul too.
-    - `build/icon.png` (the mascot art, previously unused inside the app -
-      app-icon/installer only) gets pulled into the sidebar header as a
-      small mark next to the "ChoiceBuds" wordmark (hidden, mascot-only, in
-      the collapsed rail).
-    - Active nav-item indicator changes from today's flat solid-blue fill to
-      a softer tinted background + a 3px left accent bar (blue-500),
-      consistent with the pill/capsule visual language established in the
-      Teams-carousel controls above.
-    - The existing status footer (Cache Status / Teams Loaded / Ver X)
-      moves out of the sidebar into the Settings page entirely - explicit
-      user call, to keep the sidebar pure navigation.
-    - Deliberately did **not** touch sidebar/shell colors in this pass
-      (kept today's gray-800/900/700 + blue tokens from the live `App.tsx`
-      rather than the zinc tones used in the Teams-carousel mockup) - color
-      palette is still its own separate, not-yet-discussed piece of the
-      overhaul; didn't want to sneak a palette change in via the menuing
-      pass.
-    - **Not yet implemented** - design-mockup pass only, no code written.
-    - **Superseded by the color-palette pass below**: the "kept blue" call
-      above no longer holds now that gold/royal-purple is approved (next
-      entry) - the sidebar's active-nav accent (today described as a
-      blue-tinted background + blue-500 left bar) should use gold instead
-      when this is implemented, matching the palette entry's token mapping.
+  - ~~Sidebar/menuing rework~~ **Done 2026-08-29** - design approved same
+    day, same artifact as above (`SidebarExpanded.dc.html`/
+    `SidebarCollapsed.dc.html` artboards). Replaced the old `App.tsx` sidebar
+    (flat 128px-wide text-only nav list, plain "ChoiceBuds" wordmark,
+    debug-y status footer). Implementation:
+    - New `components/Sidebar.tsx` (extracted out of `App.tsx`, which now
+      just renders `<Sidebar activeTab={...} onTabChange={goToTab} />`) plus
+      a standalone `components/icons/SidebarIcons.tsx` icon set (grid for
+      Teams, calculator for Calc, crossed swords for Battle Log, ascending
+      bars for Statistics, shield for Type Matchup, gear for Settings, plus
+      the collapse-rail toggle glyph) ported directly from the mockup's
+      inline SVGs - kept as standalone exports (not colocated private
+      components) per the mockup note that these are fair game to reuse
+      elsewhere later for icon-language consistency, still not locked in as
+      permanent metaphors.
+    - Collapsible via a new `hooks/useSidebarCollapsed.ts` (localStorage-backed,
+      same pattern `useSpeciesRoster.ts` already uses for a similar
+      not-quite-app-data cache, since this is a pure UI-chrome preference
+      rather than real app data through settings.json) - toggle row collapses
+      the 208px (`w-52`) expanded rail to a 68px icon-only rail, with a
+      hover flyout tooltip (Tailwind `group`/`group-hover`, first use of
+      that pattern in this codebase) showing the label when collapsed. Rail
+      width transitions over 320ms ease-out - matches the "sidebar width"
+      bucket of the approved-but-not-yet-implemented animation/motion pass's
+      duration scale, plain CSS for now since Framer Motion itself isn't
+      wired into the app yet (this is the leg the motion-pass entry itself
+      said the sidebar's own collapse animation should land in). Icon
+      hover-scale (150ms, `scale(1.18)`) also implemented, matching the
+      motion pass's micro-interaction bucket.
+    - `build/icon.png` copied to `public/mascot.png` (Vite's static-asset
+      dir, same convention as the existing `vg-team-list-template.pdf`) and
+      rendered in the sidebar header next to the "ChoiceBuds" wordmark
+      (mascot-only, no wordmark, in the collapsed rail).
+    - Active nav-item indicator: tinted background + 3px left accent bar,
+      using `accent-gold`/`accent-gold/15` rather than the mockup's literal
+      blue - per this entry's own supersede note below once the color
+      palette pass shipped gold/purple, translated the mockup's colors
+      generally (not just the active accent) into this app's real zinc/gold
+      tokens rather than copied verbatim, since the mockup predates the
+      palette rework and used its own then-current gray-800/900/700 + blue.
+      One deliberate departure from the mockup's literal hex: inactive
+      nav-item hover uses `zinc-700`, not the mockup's `#27272a` - that hex
+      is indistinguishable from this app's zinc-800 sidebar background
+      itself and would render as no visible hover at all.
+    - The old status footer (Cache Status / Teams Loaded / Ver X) moved out
+      of the sidebar into a new `components/AppStatusSection.tsx` card at
+      the bottom of the Settings page (same card pattern as
+      `UpdateCheckSection.tsx` etc.) - sidebar is now pure navigation, per
+      the original spec's explicit call.
+    - New tests: `hooks/useSidebarCollapsed.test.ts` (5 cases - default
+      state, reading a persisted value, toggling+persisting, and an
+      unrecognized stored value falling back to expanded).
+      `type-check`/`lint`/`test`/`build` all clean; live-verified via
+      `run-desktop` - all 6 tabs switch correctly, collapse/expand
+      round-trips cleanly (including a second full cycle), the Settings
+      page's new App Status card renders with live values, and no
+      console/page errors surfaced beyond the expected Electron dev-mode
+      CSP warning.
 
   - ~~Color palette rework~~ **Done 2026-08-29** - gold/purple accent
     tokens, the gray-to-zinc sweep, and the per-type Pokemon-card glow
