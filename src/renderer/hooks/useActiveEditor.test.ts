@@ -33,6 +33,7 @@ function makePokemon(overrides: Partial<ShowdownPokemon> = {}): ImportedPokemonI
     spriteUrl: 'https://example.com/gengar.png',
     calculatedStats: { hp: 150, attack: 90, defense: 80, specialAttack: 200, specialDefense: 100, speed: 180 },
     importedAt: Date.now(),
+    id: crypto.randomUUID(),
   };
 }
 

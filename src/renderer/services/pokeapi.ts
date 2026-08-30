@@ -349,6 +349,7 @@ export async function enrichPokemonWithAPI(
     baseStats: apiData.baseStats,
     spriteUrl: apiData.spriteUrl,
     importedAt: Date.now(),
+    id: crypto.randomUUID(),
   };
   
   return enrichedPokemon;

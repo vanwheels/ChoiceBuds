@@ -5,7 +5,23 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import type { Team, TeamsDatabase } from '../types/pokemon';
+import type { ImportedPokemonInfo, Team, TeamsDatabase } from '../types/pokemon';
+
+/**
+ * Backfills a per-Pokemon `id` for teams persisted before that field existed
+ * (added for the roster drag-reorder animation, leg 4 - see TODO.md and
+ * ImportedPokemonInfo's own doc comment), at the read boundary - same
+ * pattern as useBattles.ts's normalizeBattle. Never written back to disk
+ * proactively; a team just picks up real ids the next time it's saved
+ * through any normal mutation (addTeam/updateTeam/reorderTeam all persist
+ * the full `teams` array state, which holds these backfilled ids).
+ */
+function normalizeTeam(team: Team & { pokemon: (ImportedPokemonInfo & { id?: string })[] }): Team {
+  return {
+    ...team,
+    pokemon: team.pokemon.map(p => ({ ...p, id: p.id ?? crypto.randomUUID() })),
+  };
+}
 
 export interface UseTeamsReturn {
   teams: Team[];
@@ -51,7 +67,7 @@ export function useTeams(): UseTeamsReturn {
       const database = await window.electron.readTeamsDatabase();
 
       if (database) {
-        setTeams(database.teams);
+        setTeams(database.teams.map(normalizeTeam));
       } else {
         // Initialize empty database if none exists
         setTeams([]);

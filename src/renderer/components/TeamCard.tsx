@@ -12,7 +12,7 @@ import { useRosterActions } from '../hooks/useRosterActions';
 import { toRegulationId } from '../utils/pokemonRules';
 import { getRegulationTheme } from '../config/pokemonTheme';
 import { TEAMS_LIST_DRAG_TYPE, type TeamsListDragPayload } from '../utils/teamsListDragTypes';
-import { CARD_EXPAND_ENTER_TRANSITION, CARD_EXPAND_EXIT_TRANSITION } from '../config/motion';
+import { CARD_EXPAND_ENTER_TRANSITION, CARD_EXPAND_EXIT_TRANSITION, DRAG_REORDER_TRANSITION } from '../config/motion';
 import PokemonCard from './PokemonCard';
 import SpeciesPickerCard from './SpeciesPickerCard';
 import TeamCoverflow from './TeamCoverflow';
@@ -141,7 +141,15 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
   const regulationTheme = getRegulationTheme(toRegulationId(team.format));
 
   return (
-    <div className={`bg-zinc-900/40 border border-zinc-800/80 border-l-4 ${regulationTheme.accentBorder} rounded-xl transition-all ${
+    // layout="position" (leg 4, see TODO.md): animates this card sliding to its
+    // new grid slot when reorderTeam changes team order (position delta only -
+    // NOT plain `layout`, which would also try to FLIP-animate the col-span-full
+    // width/height change on expand and fight the EXPANDED VIEW CONTAINER's own
+    // height animation below for the same box).
+    <motion.div
+      layout="position"
+      transition={DRAG_REORDER_TRANSITION}
+      className={`bg-zinc-900/40 border border-zinc-800/80 border-l-4 ${regulationTheme.accentBorder} rounded-xl transition-all ${
       isExpanded ? 'col-span-full' : ''
     }`}>
 
@@ -318,7 +326,7 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
               <div className="grid grid-cols-3 @[1760px]:grid-cols-6 gap-4 w-full">
                 {team.pokemon && team.pokemon.map((p, idx) => (
                   <PokemonCard
-                    key={`${idx}-${p.importedAt}`}
+                    key={p.id}
                     pokemon={p}
                     team={team}
                     pokemonIndex={idx}
@@ -413,6 +421,6 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
           />
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }

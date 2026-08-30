@@ -67,6 +67,19 @@ export interface ImportedPokemonInfo {
   
   // Metadata
   importedAt: number; // Unix timestamp
+  // Stable identity for this roster slot's occupant, independent of its
+  // array position - added for the roster drag-reorder animation (leg 4,
+  // see TODO.md): a reorder must keep the SAME React element/DOM node
+  // attached to the moved Pokemon so Framer Motion's `layout` prop can
+  // animate it sliding to its new slot, rather than keying by array index
+  // (which changes on every reorder and forces an unmount/remount instead
+  // of a slide). Generated once via crypto.randomUUID() at enrichment time
+  // (services/pokeapi.ts::enrichPokemonWithAPI, the single choke point
+  // every roster slot - import, add, swap - is built through). Teams
+  // persisted before this field existed are backfilled at the read
+  // boundary (useTeams.ts::loadTeamsFromDisk), same pattern as
+  // useBattles.ts's normalizeBattle.
+  id: string;
 }
 
 /**

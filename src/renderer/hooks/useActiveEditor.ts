@@ -78,6 +78,7 @@ export function useActiveEditor(): UseActiveEditorReturn {
       spriteUrl: pokemon.spriteUrl,
       calculatedStats: pokemon.calculatedStats ? { ...pokemon.calculatedStats } : undefined,
       importedAt: pokemon.importedAt,
+      id: pokemon.id,
     };
     
     setDraftPokemon(clonedPokemon);

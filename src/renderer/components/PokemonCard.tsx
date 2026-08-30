@@ -10,7 +10,7 @@
  */
 
 import { useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import type { CSSProperties, DragEvent } from 'react';
 import type { ImportedPokemonInfo, ShowdownPokemon, Team, SpeciesRosterEntry } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
@@ -29,6 +29,7 @@ import { getMegaApiSlug } from '../config/megaEvolution';
 import { useMegaSprite } from '../hooks/useMegaSprite';
 import { getPixelSpriteUrl } from '../utils/spriteUrl';
 import { TEAM_ROSTER_DRAG_TYPE, type TeamRosterDragPayload } from '../utils/teamRosterDragTypes';
+import { DRAG_REORDER_TRANSITION } from '../config/motion';
 
 interface PokemonCardProps {
   pokemon: ImportedPokemonInfo;
@@ -187,7 +188,11 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
     // a dual-type Pokemon blends both type colors via one shared gradient.
     // This replaces the card's own flat border; the inner card below carries
     // no border of its own, only its background/radius/padding.
-    <div className="type-glow-ring max-w-[280px]" style={glowRingStyle}>
+    // layout="position" (leg 4, see TODO.md): animates this card sliding to its
+    // new grid slot when reorderSlot changes roster order (position delta only -
+    // NOT plain `layout`, which would also try to FLIP-animate this card's own
+    // size if its content ever changes height).
+    <motion.div layout="position" transition={DRAG_REORDER_TRANSITION} className="type-glow-ring max-w-[280px]" style={glowRingStyle}>
       <div
         data-pokemon-card
         draggable={isEditing}
@@ -322,6 +327,6 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
           )}
         </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
   );
 }

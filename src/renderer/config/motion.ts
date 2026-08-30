@@ -47,3 +47,17 @@ export const CARD_EXPAND_EXIT_TRANSITION = { duration: STANDARD_EXIT_DURATION, e
  * rail width itself.
  */
 export const SIDEBAR_WIDTH_TRANSITION = { duration: DELIBERATE_DURATION, ease: 'easeOut' } as const;
+
+/**
+ * Drag-reorder list repositioning (leg 4, see TODO.md): deliberate bucket,
+ * same shape/rationale as SIDEBAR_WIDTH_TRANSITION above - a position swap
+ * between two already-settled layout states, not a mount/unmount, so there's
+ * one symmetric ease-out rather than the modal/card-expand enter/exit split.
+ * Used with Framer's `layout="position"` (not plain `layout`) on the teams
+ * list (TeamCard.tsx) and team roster (PokemonCard.tsx) items specifically
+ * so this only animates the FLIP position delta from a reorder - leaving
+ * each card's own size-driven animations (TeamCard's expand/collapse height,
+ * both card's react to their own content changes) to their own existing
+ * transitions instead of fighting them for the same box.
+ */
+export const DRAG_REORDER_TRANSITION = { duration: DELIBERATE_DURATION, ease: 'easeOut' } as const;

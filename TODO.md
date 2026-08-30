@@ -40,17 +40,16 @@ focused on what's actually next.
   (2026-08-29) - each designed/discussed via the `design` skill as mockups
   first (supersedes the original "describe in words, iterate in code"
   sequencing note for the pieces that needed visual review; window sizing
-  was decisions-only, no mockup needed). Four of the five are now fully
-  **implemented and shipped** (Teams page carousel/grid, color palette,
-  window sizing, sidebar/menuing - see COMPLETED.md for the first two, this
-  file's own Window sizing and Sidebar/menuing entries below for the other
-  two); animation/motion is still design/decisions-only, no code written
-  yet beyond what each of the other legs already implemented in its own
-  scope (icon hover-scale, sidebar-width transition) per the motion pass's
-  own note that it'd thread through each other piece's leg rather than
-  standing alone. Window sizing was picked as the first leg (2026-08-29)
-  over the other two, being the smaller purely-behavioral piece;
-  sidebar/menuing picked as the second leg the same day.
+  was decisions-only, no mockup needed). **All five pieces are now fully
+  implemented and shipped** (Teams page carousel/grid, color palette,
+  window sizing, sidebar/menuing, animation/motion - see COMPLETED.md for
+  the first two, this file's own Window sizing, Sidebar/menuing, and
+  Animation/motion entries below for the other three). Window sizing was
+  picked as the first leg (2026-08-29) over the other two, being the
+  smaller purely-behavioral piece; sidebar/menuing picked as the second leg
+  the same day; animation/motion's own 4 implementation legs (modal
+  transitions / card expand-collapse / sidebar collapse migration /
+  drag-reorder) closed out the whole overhaul the same day.
 
   - ~~Teams page carousel/grid rework~~ **Done 2026-08-29** - all 4
     implementation legs plus the two follow-up scrollbar/squeeze bugs found
@@ -120,7 +119,7 @@ focused on what's actually next.
     tokens, the gray-to-zinc sweep, and the per-type Pokemon-card glow
     effect (Legs A+B/C/D) - see COMPLETED.md for the full design-approval
     spec and implementation trail.
-  - **Animation/motion language - design approved 2026-08-29**, same
+  - ~~Animation/motion language~~ **Done 2026-08-29** - design approved same
     artifact, four new artboards built as **live, clickable demos** (real
     CSS transitions standing in for the actual Framer Motion timings/
     easings, since motion can't be judged from a static screenshot) -
@@ -268,7 +267,74 @@ focused on what's actually next.
         tooltips still render correctly, tab switching (Teams/Calc/Settings)
         still works, and no console/page errors surfaced beyond the
         expected Electron dev-mode CSP warning.
-      - Leg 4 (drag-reorder animation) not yet started.
+      - ~~Leg 4: Drag-reorder animation~~ **Done 2026-08-29.** Scoped down
+        with the user before starting (same "ask, don't assume" sequencing
+        as leg 3's hooks-coverage split): covers the teams list
+        (TeamsPage.tsx/TeamCard.tsx) and the Pokemon-within-a-team roster
+        (PokemonCard.tsx) - both true "N items in a list, order changes"
+        cases, exactly what the approved `DragReorderDemo.dc.html` modeled.
+        MoveBubbleGrid.tsx's move-slot reorder was explicitly left out - it's
+        a fixed 4-slot content swap (position IS the slot identity), a
+        different interaction shape from a traveling list item, deferred to
+        its own future decision rather than bundled in here.
+
+        Used Framer's `layout="position"` (not plain `layout`) on
+        TeamCard.tsx's and PokemonCard.tsx's root elements, with a new
+        `DRAG_REORDER_TRANSITION` in `config/motion.ts` (deliberate 320ms
+        bucket, symmetric ease-out - same shape/rationale as
+        `SIDEBAR_WIDTH_TRANSITION`, a position swap between two settled
+        states rather than a mount/unmount). `layout="position"` specifically
+        (not the full `layout` prop) so this only animates the FLIP position
+        delta from a reorder, leaving each card's own size-driven animations
+        (TeamCard's expand/collapse height from leg 2, either card reacting
+        to its own content changes) alone instead of fighting them for the
+        same box.
+
+        Uncovered a real correctness bug on the way in: the roster grid was
+        keying each `PokemonCard` by `` `${idx}-${p.importedAt}` `` -
+        since `idx` was part of the key, swapping two Pokemon's array
+        positions changed both their keys, so React unmounted/remounted
+        both cards on every reorder instead of moving them - no `layout`
+        prop can animate a remount into a slide. Fixed at the data-model
+        level rather than papering over it:
+        added a real `id: string` field to `ImportedPokemonInfo`
+        (`types/pokemon.ts`), generated once via `crypto.randomUUID()` at
+        the single choke point every roster slot is built through
+        (`services/pokeapi.ts::enrichPokemonWithAPI` - covers import, add,
+        and swap alike), and keyed the roster map by `p.id` instead. Teams
+        persisted before this field existed are backfilled at the read
+        boundary (`useTeams.ts::loadTeamsFromDisk`'s new `normalizeTeam`),
+        same pattern as `useBattles.ts`'s `normalizeBattle` - never written
+        back proactively, a team just picks up real ids next time it's
+        saved through any normal mutation. `useActiveEditor.ts`'s explicit
+        (non-spread) draft-clone field list picked up the new field too.
+        Six test fixture files needed a `crypto.randomUUID()` id added to
+        their `ImportedPokemonInfo` literals now that the field is required
+        (`calcTeamImport.test.ts`, `useActiveEditor.test.ts`,
+        `teamValidation.test.ts`, `useSavedPokemon.test.ts`,
+        `useRosterActions.test.ts`, `useTeamMoveTypes.test.ts`) - every real
+        (non-test) construction path already went through
+        `enrichPokemonWithAPI`, so no other call site needed a manual id.
+
+        `type-check`/`lint`/`test` (399 passed)/`build` all clean.
+        Live-verified via `run-desktop` against disposable teams (created
+        and fully deleted afterward, both confirmed via a direct
+        `teams.json` read before and after - the user's own 2 real teams
+        were never touched): the roster reorder screenshot sequence caught
+        Framer's FLIP animation genuinely mid-flight (the dragged card
+        visibly overlapping the card it was sliding past, not an instant
+        snap), settled into the correct new order with no clipping: a
+        before/after DOM-node-identity check (tagging each card with a
+        custom `dataset` attribute pre-drag) confirmed all 3 cards stayed
+        attached to the DOM through the reorder (no remount) with each
+        marker's species mapping unchanged - proof the same node traveled
+        with its Pokemon rather than the grid slot keeping a fixed node and
+        swapping content into it. The teams-list reorder got the same
+        attached/position-delta check (first attempt happened to drag onto
+        an already-adjacent slot, a same-position no-op that looked like a
+        failure until repeated with a real position change - both cards
+        confirmed to swap places and stay attached, not remount). No
+        console/page errors in either pass.
 
   - ~~Window sizing rework~~ **Done 2026-08-29** - picked as leg 1 of the
     three remaining overhaul pieces (smaller, purely-behavioral, no mockup
