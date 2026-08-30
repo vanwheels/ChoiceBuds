@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import type { DragEvent } from 'react';
 import { Team, SpeciesRosterEntry } from '../types/pokemon';
 import type { UseTeamsReturn } from '../hooks/useTeams';
@@ -12,6 +12,7 @@ import { useRosterActions } from '../hooks/useRosterActions';
 import { toRegulationId } from '../utils/pokemonRules';
 import { getRegulationTheme } from '../config/pokemonTheme';
 import { TEAMS_LIST_DRAG_TYPE, type TeamsListDragPayload } from '../utils/teamsListDragTypes';
+import { CARD_EXPAND_ENTER_TRANSITION, CARD_EXPAND_EXIT_TRANSITION } from '../config/motion';
 import PokemonCard from './PokemonCard';
 import SpeciesPickerCard from './SpeciesPickerCard';
 import TeamCoverflow from './TeamCoverflow';
@@ -32,6 +33,42 @@ interface TeamCardProps {
   spriteCacheState: UseSpriteCacheReturn;
   settingsState: UseSettingsReturn;
 }
+
+// Card expand/collapse (animation/motion leg 2, see TODO.md): animates height
+// 0 -> 'auto' via Framer Motion rather than the design demo's plain-CSS
+// grid-template-rows trick (Framer measures 'auto' natively, so no
+// equivalent trick is needed in real React). `overflow: hidden` only holds
+// while a transition is actually in flight - `transitionEnd` flips it back
+// to 'visible' once fully expanded, otherwise it would permanently
+// reintroduce the popover/tooltip clipping the parent card's own
+// overflow-hidden removal (see the comment above the MINIMIZED VIEW
+// CONTAINER ROW below) was specifically fixed to avoid.
+const cardExpandVariants = {
+  collapsed: {
+    height: 0,
+    opacity: 0,
+    overflow: 'hidden',
+    transition: CARD_EXPAND_EXIT_TRANSITION,
+  },
+  expanded: {
+    height: 'auto',
+    opacity: 1,
+    overflow: 'hidden',
+    // Explicit height here too, not just overflow: live-tested opening the
+    // Add Pokemon picker after the expand animation had already settled
+    // showed the wrapper's inline height frozen at the pixel value Framer
+    // measured during the transition rather than snapping back to real CSS
+    // `auto` - so later content growth (the picker, the notes textarea,
+    // adding/removing a Pokemon) overflowed past that stale height, got
+    // painted over by the next team card in normal flow, and looked exactly
+    // like the clipping bug the parent's own overflow-hidden removal (see
+    // the comment above the MINIMIZED VIEW CONTAINER ROW below) was fixed to
+    // avoid. Forcing both back explicitly once the transition ends closes
+    // that gap.
+    transitionEnd: { overflow: 'visible', height: 'auto' },
+    transition: CARD_EXPAND_ENTER_TRANSITION,
+  },
+};
 
 export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseState, gameDataState, speciesRosterState, spriteCacheState, settingsState }: TeamCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -261,78 +298,89 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
           breakpoints were the original bug, since raw viewport width crossing 1280px
           doesn't mean the sidebar-reduced content area actually has room for 6 real
           280px columns. */}
-      {isExpanded && (
-        <div className="@container p-6 border-t border-zinc-800/60 bg-zinc-900/10 rounded-b-xl">
-          {/* Two clean states, not a continuous reflow: 3 columns (2x3 for a full
-              6-mon roster) until the container itself is wide enough for 6 real
-              ~280px columns (6*280px + 5*1rem gaps = 1760px), then snaps to 6 (1x6).
-              @[1760px]: is a container-query variant (keyed off the @container
-              ancestor above), not a viewport media query - unlike the old
-              xl:grid-cols-6 this can't misfire from raw viewport width alone. */}
-          <div className="grid grid-cols-3 @[1760px]:grid-cols-6 gap-4 w-full">
-            {team.pokemon && team.pokemon.map((p, idx) => (
-              <PokemonCard
-                key={`${idx}-${p.importedAt}`}
-                pokemon={p}
-                team={team}
-                pokemonIndex={idx}
-                isEditing={isEditingTeam}
-                updateTeam={updateTeam}
-                gameDataState={gameDataState}
-                speciesRosterState={speciesRosterState}
-                spriteCacheState={spriteCacheState}
-                rosterActions={rosterActions}
-              />
-            ))}
+      <AnimatePresence initial={false}>
+        {isExpanded && (
+          <motion.div
+            key="expanded-content"
+            className="@container"
+            variants={cardExpandVariants}
+            initial="collapsed"
+            animate="expanded"
+            exit="collapsed"
+          >
+            <div className="p-6 border-t border-zinc-800/60 bg-zinc-900/10 rounded-b-xl">
+              {/* Two clean states, not a continuous reflow: 3 columns (2x3 for a full
+                  6-mon roster) until the container itself is wide enough for 6 real
+                  ~280px columns (6*280px + 5*1rem gaps = 1760px), then snaps to 6 (1x6).
+                  @[1760px]: is a container-query variant (keyed off the @container
+                  ancestor above), not a viewport media query - unlike the old
+                  xl:grid-cols-6 this can't misfire from raw viewport width alone. */}
+              <div className="grid grid-cols-3 @[1760px]:grid-cols-6 gap-4 w-full">
+                {team.pokemon && team.pokemon.map((p, idx) => (
+                  <PokemonCard
+                    key={`${idx}-${p.importedAt}`}
+                    pokemon={p}
+                    team={team}
+                    pokemonIndex={idx}
+                    isEditing={isEditingTeam}
+                    updateTeam={updateTeam}
+                    gameDataState={gameDataState}
+                    speciesRosterState={speciesRosterState}
+                    spriteCacheState={spriteCacheState}
+                    rosterActions={rosterActions}
+                  />
+                ))}
 
-            {/* Append Add Button - only while editing and roster has room */}
-            {isEditingTeam && team.pokemon.length < 6 && (
-              isAddPickerOpen ? (
-                <SpeciesPickerCard
-                  roster={speciesRosterState.roster}
-                  rulesetId={toRegulationId(team.format)}
-                  resolveSprite={spriteCacheState.resolveSprite}
-                  onSelect={handleAddSpecies}
-                  onClose={() => setIsAddPickerOpen(false)}
-                />
-              ) : (
-                <button
-                  onClick={() => setIsAddPickerOpen(true)}
-                  className="w-full h-full min-h-[280px] flex items-center justify-center rounded-lg border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer"
-                >
-                  <span className="text-sm font-semibold">+ Add Pokémon</span>
-                </button>
-              )
-            )}
-          </div>
+                {/* Append Add Button - only while editing and roster has room */}
+                {isEditingTeam && team.pokemon.length < 6 && (
+                  isAddPickerOpen ? (
+                    <SpeciesPickerCard
+                      roster={speciesRosterState.roster}
+                      rulesetId={toRegulationId(team.format)}
+                      resolveSprite={spriteCacheState.resolveSprite}
+                      onSelect={handleAddSpecies}
+                      onClose={() => setIsAddPickerOpen(false)}
+                    />
+                  ) : (
+                    <button
+                      onClick={() => setIsAddPickerOpen(true)}
+                      className="w-full h-full min-h-[280px] flex items-center justify-center rounded-lg border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer"
+                    >
+                      <span className="text-sm font-semibold">+ Add Pokémon</span>
+                    </button>
+                  )
+                )}
+              </div>
 
-          {/* Strategy Notes - team-level free text (Team.notes), same "local state + save
-              on blur" pattern as the name/author fields above. Hidden entirely when not
-              editing and no notes are set, same as the author field's empty-chrome rule.
-              Placed after the roster grid (not before) so the team's visual composition
-              is always the first thing seen when expanding a card. */}
-          {(isEditingTeam || team.notes) && (
-            <div className="mt-4">
-              {isEditingTeam ? (
-                <textarea
-                  value={localNotes}
-                  onChange={(e) => setLocalNotes(e.target.value)}
-                  onBlur={async () => {
-                    if (localNotes !== (team.notes || '')) {
-                      await updateTeam(team.id, { notes: localNotes.trim() || undefined });
-                    }
-                  }}
-                  placeholder="Strategy notes, game plan, matchup tips..."
-                  rows={3}
-                  className="w-full px-3 py-2 text-sm bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-600 outline-none focus:border-accent-gold resize-y"
-                />
-              ) : (
-                <p className="text-sm text-zinc-400 whitespace-pre-wrap border-l-2 border-zinc-700 pl-3">{team.notes}</p>
+              {/* Strategy Notes - team-level free text (Team.notes), same "local state + save
+                  on blur" pattern as the name/author fields above. Hidden entirely when not
+                  editing and no notes are set, same as the author field's empty-chrome rule.
+                  Placed after the roster grid (not before) so the team's visual composition
+                  is always the first thing seen when expanding a card. */}
+              {(isEditingTeam || team.notes) && (
+                <div className="mt-4">
+                  {isEditingTeam ? (
+                    <textarea
+                      value={localNotes}
+                      onChange={(e) => setLocalNotes(e.target.value)}
+                      onBlur={async () => {
+                        if (localNotes !== (team.notes || '')) {
+                          await updateTeam(team.id, { notes: localNotes.trim() || undefined });
+                        }
+                      }}
+                      placeholder="Strategy notes, game plan, matchup tips..."
+                      rows={3}
+                      className="w-full px-3 py-2 text-sm bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-600 outline-none focus:border-accent-gold resize-y"
+                    />
+                  ) : (
+                    <p className="text-sm text-zinc-400 whitespace-pre-wrap border-l-2 border-zinc-700 pl-3">{team.notes}</p>
+                  )}
+                </div>
               )}
             </div>
-          )}
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {isExportOpen && (

@@ -31,3 +31,9 @@ export const MODAL_PANEL_ENTER_TRANSITION = { duration: STANDARD_ENTER_DURATION,
 
 /** Modal panel exit: standard bucket, faster than its matching entrance, ease-in (accelerate out). */
 export const MODAL_PANEL_EXIT_TRANSITION = { duration: STANDARD_EXIT_DURATION, ease: 'easeIn' } as const;
+
+/** Card expand (height + content fade) enter: standard bucket, ease-out (decelerate in). */
+export const CARD_EXPAND_ENTER_TRANSITION = { duration: STANDARD_ENTER_DURATION, ease: 'easeOut' } as const;
+
+/** Card expand exit: standard bucket, faster than its matching entrance, ease-in (accelerate out). */
+export const CARD_EXPAND_EXIT_TRANSITION = { duration: STANDARD_EXIT_DURATION, ease: 'easeIn' } as const;

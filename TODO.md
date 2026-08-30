@@ -207,9 +207,47 @@ focused on what's actually next.
         cleanly with no console/page errors, and the sidebar collapse (leg 2
         of the overhaul, already shipped) still works correctly alongside
         the new `MotionConfig` wrapper.
-      - Leg 2 (card expand/collapse), leg 3 (sidebar collapse migration to
-        Framer Motion, currently plain CSS), and leg 4 (drag-reorder
-        animation) not yet started.
+      - ~~Leg 2: Card expand/collapse~~ **Done 2026-08-29.** `TeamCard.tsx`'s
+        expanded-roster section (previously a plain `{isExpanded && <div>...}`
+        conditional, snapping open/closed with no animation) now animates via
+        Framer Motion instead of the design demo's plain-CSS
+        `grid-template-rows: 0fr -> 1fr` trick - Framer measures `height:
+        'auto'` natively, so no CSS-side trick is needed in real React. New
+        `CARD_EXPAND_ENTER_TRANSITION`/`CARD_EXPAND_EXIT_TRANSITION` added to
+        `config/motion.ts` (both the standard 200-280ms bucket, enter
+        ease-out, exit faster ease-in, matching the modal transition
+        constants' shape). `TeamCard.tsx`'s `cardExpandVariants` animates
+        height 0->auto + opacity 0->1, with `overflow: 'hidden'` held only
+        while a transition is actually in flight and a `transitionEnd`
+        flipping both `overflow` back to `'visible'` *and* `height` back to
+        literal `'auto'` once settled - the height half of that
+        `transitionEnd` turned out load-bearing, not just belt-and-suspenders:
+        an early version that only reset `overflow` left the wrapper's inline
+        height frozen at whatever pixel value Framer measured during the
+        transition, so opening the trailing "+ Add Pokémon" species picker
+        afterward grew the content but not the frozen-height wrapper - the
+        picker visually overflowed past the card's own bottom edge and got
+        painted over by the next team card in the list (confirmed live via
+        `run-desktop`, screenshotted before and after the fix - see the
+        skill's own `shots/` history from this session). Also hit a
+        misleading-if-not-understood artifact while diagnosing it: reading
+        the wrapper's inline style via `eval` immediately after firing a click
+        (no real delay) caught Framer's animation mid-flight (`opacity: 0`,
+        a tiny interpolated height) even though the click handler had already
+        returned - Framer's `requestAnimationFrame`-driven tweening doesn't
+        finish synchronously with the event handler, so a real
+        `setTimeout`-based wait was needed before asserting on post-transition
+        state, both here and in any future live-verification of a Framer
+        animation's settled DOM. `type-check`/`lint`/`test`/`build` all clean;
+        live-verified via `run-desktop` - expand/collapse animates smoothly,
+        `overflow`/`height` correctly resolve to `visible`/`auto` after
+        settling, and the full edit -> open picker -> add a Pokémon -> exit
+        edit -> collapse round-trip works with no clipping and no
+        console/page errors (exercised against a disposable team created and
+        deleted for the test, per this file's own testing-workflow
+        convention - the two real teams were untouched).
+      - Leg 3 (sidebar collapse migration to Framer Motion, currently plain
+        CSS) and leg 4 (drag-reorder animation) not yet started.
 
   - ~~Window sizing rework~~ **Done 2026-08-29** - picked as leg 1 of the
     three remaining overhaul pieces (smaller, purely-behavioral, no mockup
