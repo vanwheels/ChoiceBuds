@@ -12,6 +12,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { useDamageCalc, ALL_REGULATION_IDS } from '../../hooks/useDamageCalc';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseTeamsReturn } from '../../hooks/useTeams';
@@ -164,14 +165,16 @@ export default function CalcPage({
 
       <p className="text-center text-[10px] text-zinc-600">Powered by @smogon/calc</p>
 
-      {isSavedSetsOpen && (
-        <CalcSavedSetsModal
-          onClose={() => setIsSavedSetsOpen(false)}
-          databaseState={databaseState}
-          savedPokemonState={savedPokemonState}
-          resolveSprite={spriteCacheState.resolveSprite}
-        />
-      )}
+      <AnimatePresence>
+        {isSavedSetsOpen && (
+          <CalcSavedSetsModal
+            onClose={() => setIsSavedSetsOpen(false)}
+            databaseState={databaseState}
+            savedPokemonState={savedPokemonState}
+            resolveSprite={spriteCacheState.resolveSprite}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

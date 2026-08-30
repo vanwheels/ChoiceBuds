@@ -10,9 +10,9 @@ import { enrichPokemonWithAPI } from '../services/pokeapi';
 import { extractPokepasteId, fetchPokepaste, detectRegulationFromNotes } from '../services/pokepaste';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
 import type { Team, ImportedPokemonInfo } from '../types/pokemon';
+import Modal from './Modal';
 
 interface ImportTeamModalProps {
-  isOpen: boolean;
   onClose: () => void;
   onImport: (team: Team) => Promise<boolean>;
   databaseState: UseDatabaseReturn;
@@ -32,7 +32,6 @@ function nextGenericTeamName(existingTeamNames: string[]): string {
  * Modal component for importing teams from Showdown/Pokepaste format
  */
 export default function ImportTeamModal({
-  isOpen,
   onClose,
   onImport,
   databaseState,
@@ -47,8 +46,6 @@ export default function ImportTeamModal({
   const [error, setError] = useState<string | null>(null);
   const [importProgress, setImportProgress] = useState<string>('');
   const [isFetchingPokepaste, setIsFetchingPokepaste] = useState(false);
-
-  if (!isOpen) return null;
 
   /**
    * If the paste box holds nothing but a pokepast.es link, fetch that paste's
@@ -172,139 +169,137 @@ export default function ImportTeamModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-zinc-800 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-zinc-700 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-zinc-100">Import Team</h2>
-          <button
-            onClick={handleClose}
-            disabled={isImporting}
-            className="text-zinc-400 hover:text-zinc-200 transition-colors disabled:opacity-50"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Modal Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {/* Team Name Input */}
-          <div>
-            <label htmlFor="teamName" className="block text-sm font-medium text-zinc-300 mb-2">
-              Team Name
-            </label>
-            <input
-              id="teamName"
-              type="text"
-              value={teamName}
-              onChange={(e) => setTeamName(e.target.value)}
-              disabled={isImporting}
-              placeholder="Enter team name... (defaults to &quot;Team N&quot; if left blank)"
-              className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50"
-            />
-          </div>
-
-          {/* Author (optional) - Pokepaste pages have one; a plain Showdown export doesn't */}
-          <div>
-            <label htmlFor="teamAuthor" className="block text-sm font-medium text-zinc-300 mb-2">
-              Author <span className="text-zinc-500 font-normal">(optional)</span>
-            </label>
-            <input
-              id="teamAuthor"
-              type="text"
-              value={author}
-              onChange={(e) => setAuthor(e.target.value)}
-              disabled={isImporting}
-              placeholder="Who built this team?"
-              className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50"
-            />
-          </div>
-
-          {/* Format Selection */}
-          <div>
-            <label htmlFor="teamFormat" className="block text-sm font-medium text-zinc-300 mb-2">
-              Format
-            </label>
-            <select
-              id="teamFormat"
-              value={teamFormat}
-              onChange={(e) => setTeamFormat(e.target.value as typeof teamFormat)}
-              disabled={isImporting}
-              className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50"
-            >
-              <option value="Reg M-A">Reg M-A</option>
-              <option value="Reg M-B">Reg M-B</option>
-            </select>
-          </div>
-
-          {/* Paste Area - also accepts a pokepast.es link directly (see handlePasteAreaBlur) */}
-          <div>
-            <label htmlFor="pasteArea" className="block text-sm font-medium text-zinc-300 mb-2">
-              Paste Team (Showdown Format or a pokepast.es link)
-              <span className="text-zinc-500 font-normal"> (optional - leave blank to create an empty team)</span>
-            </label>
-            <textarea
-              id="pasteArea"
-              value={pastedText}
-              onChange={(e) => setPastedText(e.target.value)}
-              onBlur={handlePasteAreaBlur}
-              disabled={isImporting}
-              placeholder="Paste your Showdown/Pokepaste team, or a pokepast.es link, here... (or leave blank for an empty team)"
-              rows={12}
-              className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-500 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50 resize-none"
-            />
-          </div>
-
-          {/* Pokepaste Fetch Progress */}
-          {isFetchingPokepaste && (
-            <div className="flex items-center gap-2 text-accent-gold text-sm">
-              <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              <span>Fetching from Pokepaste...</span>
-            </div>
-          )}
-
-          {/* Progress Message */}
-          {importProgress && (
-            <div className="flex items-center gap-2 text-accent-gold text-sm">
-              <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              <span>{importProgress}</span>
-            </div>
-          )}
-
-          {/* Error Message */}
-          {error && (
-            <div className="p-3 bg-red-900 bg-opacity-50 border border-red-700 rounded-lg text-red-200 text-sm">
-              {error}
-            </div>
-          )}
-        </div>
-
-        {/* Modal Footer */}
-        <div className="px-6 py-4 border-t border-zinc-700 flex items-center justify-end gap-3">
-          <button
-            onClick={handleClose}
-            disabled={isImporting}
-            className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded-lg transition-colors disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleImport}
-            disabled={isImporting}
-            className="px-4 py-2 bg-accent-gold hover:bg-accent-gold-deep text-zinc-900 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isImporting ? 'Importing...' : pastedText.trim() ? 'Import Team' : 'Create Empty Team'}
-          </button>
-        </div>
+    <Modal>
+      {/* Modal Header */}
+      <div className="px-6 py-4 border-b border-zinc-700 flex items-center justify-between">
+        <h2 className="text-xl font-bold text-zinc-100">Import Team</h2>
+        <button
+          onClick={handleClose}
+          disabled={isImporting}
+          className="text-zinc-400 hover:text-zinc-200 transition-colors disabled:opacity-50"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
-    </div>
+
+      {/* Modal Body */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        {/* Team Name Input */}
+        <div>
+          <label htmlFor="teamName" className="block text-sm font-medium text-zinc-300 mb-2">
+            Team Name
+          </label>
+          <input
+            id="teamName"
+            type="text"
+            value={teamName}
+            onChange={(e) => setTeamName(e.target.value)}
+            disabled={isImporting}
+            placeholder="Enter team name... (defaults to &quot;Team N&quot; if left blank)"
+            className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50"
+          />
+        </div>
+
+        {/* Author (optional) - Pokepaste pages have one; a plain Showdown export doesn't */}
+        <div>
+          <label htmlFor="teamAuthor" className="block text-sm font-medium text-zinc-300 mb-2">
+            Author <span className="text-zinc-500 font-normal">(optional)</span>
+          </label>
+          <input
+            id="teamAuthor"
+            type="text"
+            value={author}
+            onChange={(e) => setAuthor(e.target.value)}
+            disabled={isImporting}
+            placeholder="Who built this team?"
+            className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50"
+          />
+        </div>
+
+        {/* Format Selection */}
+        <div>
+          <label htmlFor="teamFormat" className="block text-sm font-medium text-zinc-300 mb-2">
+            Format
+          </label>
+          <select
+            id="teamFormat"
+            value={teamFormat}
+            onChange={(e) => setTeamFormat(e.target.value as typeof teamFormat)}
+            disabled={isImporting}
+            className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50"
+          >
+            <option value="Reg M-A">Reg M-A</option>
+            <option value="Reg M-B">Reg M-B</option>
+          </select>
+        </div>
+
+        {/* Paste Area - also accepts a pokepast.es link directly (see handlePasteAreaBlur) */}
+        <div>
+          <label htmlFor="pasteArea" className="block text-sm font-medium text-zinc-300 mb-2">
+            Paste Team (Showdown Format or a pokepast.es link)
+            <span className="text-zinc-500 font-normal"> (optional - leave blank to create an empty team)</span>
+          </label>
+          <textarea
+            id="pasteArea"
+            value={pastedText}
+            onChange={(e) => setPastedText(e.target.value)}
+            onBlur={handlePasteAreaBlur}
+            disabled={isImporting}
+            placeholder="Paste your Showdown/Pokepaste team, or a pokepast.es link, here... (or leave blank for an empty team)"
+            rows={12}
+            className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-500 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50 resize-none"
+          />
+        </div>
+
+        {/* Pokepaste Fetch Progress */}
+        {isFetchingPokepaste && (
+          <div className="flex items-center gap-2 text-accent-gold text-sm">
+            <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+            <span>Fetching from Pokepaste...</span>
+          </div>
+        )}
+
+        {/* Progress Message */}
+        {importProgress && (
+          <div className="flex items-center gap-2 text-accent-gold text-sm">
+            <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+            <span>{importProgress}</span>
+          </div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="p-3 bg-red-900 bg-opacity-50 border border-red-700 rounded-lg text-red-200 text-sm">
+            {error}
+          </div>
+        )}
+      </div>
+
+      {/* Modal Footer */}
+      <div className="px-6 py-4 border-t border-zinc-700 flex items-center justify-end gap-3">
+        <button
+          onClick={handleClose}
+          disabled={isImporting}
+          className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded-lg transition-colors disabled:opacity-50"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleImport}
+          disabled={isImporting}
+          className="px-4 py-2 bg-accent-gold hover:bg-accent-gold-deep text-zinc-900 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isImporting ? 'Importing...' : pastedText.trim() ? 'Import Team' : 'Create Empty Team'}
+        </button>
+      </div>
+    </Modal>
   );
 }

@@ -12,6 +12,7 @@ import { useState } from 'react';
 import type { Team } from '../types/pokemon';
 import type { UseTeamsReturn } from '../hooks/useTeams';
 import type { UseSettingsReturn } from '../hooks/useSettings';
+import Modal from './Modal';
 
 interface TeamSheetPdfModalProps {
   team: Team;
@@ -69,70 +70,68 @@ export default function TeamSheetPdfModal({ team, teamsState, settingsState, onC
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-zinc-800 rounded-lg shadow-xl w-full max-w-md overflow-hidden flex flex-col">
-        <div className="px-6 py-4 border-b border-zinc-700 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-zinc-100">Team Sheet PDF</h2>
-          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-200 transition-colors">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="p-6 flex flex-col gap-4">
-          <p className="text-xs text-zinc-400">
-            Fills the official Play! Pokémon Video Game Team List PDF with this team's 6 Pokémon and your Player Profile.
-          </p>
-
-          {!hasProfile && (
-            <p className="text-xs text-yellow-400">
-              Your Player Profile is empty - fill it in on the Settings page for a fully-completed sheet. Generating now will still work, just with those fields left blank.
-            </p>
-          )}
-
-          <div className="flex flex-col gap-3">
-            <div>
-              <label className="block text-xs font-medium text-zinc-300 mb-1">Battle Team Number</label>
-              <input
-                type="text"
-                value={battleTeamNumber}
-                onChange={e => setBattleTeamNumber(e.target.value)}
-                placeholder="e.g. 1"
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-300 mb-1">Battle Team Name</label>
-              <input
-                type="text"
-                value={battleTeamName}
-                onChange={e => setBattleTeamName(e.target.value)}
-                placeholder="e.g. Rain Balance"
-                className={inputClass}
-              />
-            </div>
-          </div>
-
-          {error && <p className="text-xs text-red-400">{error}</p>}
-        </div>
-
-        <div className="px-6 py-4 border-t border-zinc-700 flex items-center justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded-lg transition-colors"
-          >
-            Close
-          </button>
-          <button
-            onClick={handleDownload}
-            disabled={isWorking}
-            className="px-4 py-2 bg-accent-gold hover:bg-accent-gold-deep text-zinc-900 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isWorking ? 'Generating...' : 'Download PDF'}
-          </button>
-        </div>
+    <Modal panelClassName="max-w-md">
+      <div className="px-6 py-4 border-b border-zinc-700 flex items-center justify-between">
+        <h2 className="text-xl font-bold text-zinc-100">Team Sheet PDF</h2>
+        <button onClick={onClose} className="text-zinc-400 hover:text-zinc-200 transition-colors">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
-    </div>
+
+      <div className="p-6 flex flex-col gap-4">
+        <p className="text-xs text-zinc-400">
+          Fills the official Play! Pokémon Video Game Team List PDF with this team's 6 Pokémon and your Player Profile.
+        </p>
+
+        {!hasProfile && (
+          <p className="text-xs text-yellow-400">
+            Your Player Profile is empty - fill it in on the Settings page for a fully-completed sheet. Generating now will still work, just with those fields left blank.
+          </p>
+        )}
+
+        <div className="flex flex-col gap-3">
+          <div>
+            <label className="block text-xs font-medium text-zinc-300 mb-1">Battle Team Number</label>
+            <input
+              type="text"
+              value={battleTeamNumber}
+              onChange={e => setBattleTeamNumber(e.target.value)}
+              placeholder="e.g. 1"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-300 mb-1">Battle Team Name</label>
+            <input
+              type="text"
+              value={battleTeamName}
+              onChange={e => setBattleTeamName(e.target.value)}
+              placeholder="e.g. Rain Balance"
+              className={inputClass}
+            />
+          </div>
+        </div>
+
+        {error && <p className="text-xs text-red-400">{error}</p>}
+      </div>
+
+      <div className="px-6 py-4 border-t border-zinc-700 flex items-center justify-end gap-3">
+        <button
+          onClick={onClose}
+          className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded-lg transition-colors"
+        >
+          Close
+        </button>
+        <button
+          onClick={handleDownload}
+          disabled={isWorking}
+          className="px-4 py-2 bg-accent-gold hover:bg-accent-gold-deep text-zinc-900 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isWorking ? 'Generating...' : 'Download PDF'}
+        </button>
+      </div>
+    </Modal>
   );
 }

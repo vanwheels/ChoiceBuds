@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import type { DragEvent } from 'react';
 import { Team, SpeciesRosterEntry } from '../types/pokemon';
 import type { UseTeamsReturn } from '../hooks/useTeams';
@@ -333,31 +334,37 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
         </div>
       )}
 
-      {isExportOpen && (
-        <ExportTeamModal
-          pokemonList={team.pokemon.map(p => p.showdownData)}
-          title="Export Team"
-          onClose={() => setIsExportOpen(false)}
-        />
-      )}
+      <AnimatePresence>
+        {isExportOpen && (
+          <ExportTeamModal
+            pokemonList={team.pokemon.map(p => p.showdownData)}
+            title="Export Team"
+            onClose={() => setIsExportOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
-      {isImageExportOpen && (
-        <TeamExportImageModal
-          team={team}
-          gameDataState={gameDataState}
-          spriteCacheState={spriteCacheState}
-          onClose={() => setIsImageExportOpen(false)}
-        />
-      )}
+      <AnimatePresence>
+        {isImageExportOpen && (
+          <TeamExportImageModal
+            team={team}
+            gameDataState={gameDataState}
+            spriteCacheState={spriteCacheState}
+            onClose={() => setIsImageExportOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
-      {isPdfExportOpen && (
-        <TeamSheetPdfModal
-          team={team}
-          teamsState={teamsState}
-          settingsState={settingsState}
-          onClose={() => setIsPdfExportOpen(false)}
-        />
-      )}
+      <AnimatePresence>
+        {isPdfExportOpen && (
+          <TeamSheetPdfModal
+            team={team}
+            teamsState={teamsState}
+            settingsState={settingsState}
+            onClose={() => setIsPdfExportOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

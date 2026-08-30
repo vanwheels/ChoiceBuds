@@ -85,6 +85,7 @@
   "dependencies": {
     "@smogon/calc": "^0.11.0",
     "electron-updater": "^6.8.9",
+    "framer-motion": "^13.1.1",
     "html-to-image": "^1.11.13",
     "pdf-lib": "^1.17.1",
     "react": "^19.2.7",

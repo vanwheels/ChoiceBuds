@@ -10,6 +10,7 @@
  */
 
 import { useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import type { CSSProperties, DragEvent } from 'react';
 import type { ImportedPokemonInfo, ShowdownPokemon, Team, SpeciesRosterEntry } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
@@ -311,13 +312,15 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
           </div>
         </div>
 
-        {isExportOpen && (
-          <ExportTeamModal
-            pokemonList={[showdownData]}
-            title={`Export ${showdownData.nickname || showdownData.species}`}
-            onClose={() => setIsExportOpen(false)}
-          />
-        )}
+        <AnimatePresence>
+          {isExportOpen && (
+            <ExportTeamModal
+              pokemonList={[showdownData]}
+              title={`Export ${showdownData.nickname || showdownData.species}`}
+              onClose={() => setIsExportOpen(false)}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

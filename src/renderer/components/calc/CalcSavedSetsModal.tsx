@@ -19,6 +19,7 @@ import type { UseDatabaseReturn } from '../../hooks/useDatabase';
 import type { UseSavedPokemonReturn } from '../../hooks/useSavedPokemon';
 import type { ImportedPokemonInfo } from '../../types/pokemon';
 import { getPixelSpriteUrl } from '../../utils/spriteUrl';
+import Modal from '../Modal';
 
 interface CalcSavedSetsModalProps {
   onClose: () => void;
@@ -97,111 +98,109 @@ export default function CalcSavedSetsModal({ onClose, databaseState, savedPokemo
   });
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-zinc-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
-        <div className="px-6 py-4 border-b border-zinc-700 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-zinc-100">Saved Pokémon Sets</h2>
-          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-200 transition-colors">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+    <Modal panelClassName="max-w-2xl max-h-[85vh]">
+      <div className="px-6 py-4 border-b border-zinc-700 flex items-center justify-between">
+        <h2 className="text-xl font-bold text-zinc-100">Saved Pokémon Sets</h2>
+        <button onClick={onClose} className="text-zinc-400 hover:text-zinc-200 transition-colors">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        {/* Import section */}
+        <div>
+          <label htmlFor="savedSetsPasteArea" className="block text-sm font-medium text-zinc-300 mb-2">
+            Paste one or more Pokémon (Showdown format)
+          </label>
+          <textarea
+            id="savedSetsPasteArea"
+            value={pastedText}
+            onChange={(e) => setPastedText(e.target.value)}
+            disabled={isImporting}
+            placeholder="Paste one or more Showdown-format Pokémon sets, separated by a blank line..."
+            rows={8}
+            className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-500 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50 resize-none"
+          />
+          <div className="flex justify-end mt-2">
+            <button
+              onClick={handleImport}
+              disabled={isImporting || !pastedText.trim()}
+              className="px-4 py-2 bg-accent-gold hover:bg-accent-gold-deep text-zinc-900 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isImporting ? 'Saving...' : 'Save Set(s)'}
+            </button>
+          </div>
+          {importProgress && <p className="text-accent-gold text-sm mt-2">{importProgress}</p>}
+          {error && (
+            <div className="mt-2 p-3 bg-red-900 bg-opacity-50 border border-red-700 rounded-lg text-red-200 text-sm">
+              {error}
+            </div>
+          )}
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {/* Import section */}
-          <div>
-            <label htmlFor="savedSetsPasteArea" className="block text-sm font-medium text-zinc-300 mb-2">
-              Paste one or more Pokémon (Showdown format)
-            </label>
-            <textarea
-              id="savedSetsPasteArea"
-              value={pastedText}
-              onChange={(e) => setPastedText(e.target.value)}
-              disabled={isImporting}
-              placeholder="Paste one or more Showdown-format Pokémon sets, separated by a blank line..."
-              rows={8}
-              className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-500 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50 resize-none"
-            />
-            <div className="flex justify-end mt-2">
-              <button
-                onClick={handleImport}
-                disabled={isImporting || !pastedText.trim()}
-                className="px-4 py-2 bg-accent-gold hover:bg-accent-gold-deep text-zinc-900 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isImporting ? 'Saving...' : 'Save Set(s)'}
-              </button>
-            </div>
-            {importProgress && <p className="text-accent-gold text-sm mt-2">{importProgress}</p>}
-            {error && (
-              <div className="mt-2 p-3 bg-red-900 bg-opacity-50 border border-red-700 rounded-lg text-red-200 text-sm">
-                {error}
-              </div>
-            )}
-          </div>
-
-          {/* Management list */}
-          <div className="pt-2 border-t border-zinc-700">
-            <h3 className="text-sm font-bold text-zinc-300 uppercase tracking-wide mb-2">
-              Your Saved Sets ({sortedSets.length})
-            </h3>
-            {sortedSets.length === 0 ? (
-              <p className="text-sm text-zinc-400">No saved sets yet - paste one above to get started.</p>
-            ) : (
-              <div className="flex flex-col gap-1.5">
-                {sortedSets.map(entry => (
-                  <div
-                    key={entry.id}
-                    className="flex items-center gap-3 px-3 py-2 rounded-lg bg-zinc-900/60 border border-zinc-700"
-                  >
-                    <img
-                      src={resolveSprite(getPixelSpriteUrl(
-                        entry.pokemon.pokedexNumber,
-                        entry.pokemon.showdownData.species,
-                        entry.pokemon.showdownData.gender || 'M',
-                        entry.pokemon.showdownData.shiny
-                      ))}
-                      alt={entry.pokemon.showdownData.species}
-                      className="w-9 h-9 object-contain [image-rendering:pixelated] shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      {renamingId === entry.id ? (
-                        <input
-                          type="text"
-                          value={renameDraft}
-                          onChange={(e) => setRenameDraft(e.target.value)}
-                          onBlur={commitRename}
-                          onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
-                          autoFocus
-                          className="w-full px-1.5 py-0.5 text-sm bg-zinc-800 border border-accent-gold rounded text-zinc-100 outline-none"
-                        />
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => startRename(entry.id, entry.label)}
-                          title="Click to rename"
-                          className="text-left text-sm font-semibold text-zinc-100 hover:text-accent-gold truncate cursor-pointer"
-                        >
-                          {entry.label}
-                        </button>
-                      )}
-                      <p className="text-xs text-zinc-400 truncate">{entry.pokemon.showdownData.species} - Lv{entry.pokemon.showdownData.level}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => savedPokemonState.deleteSavedPokemon(entry.id)}
-                      title="Delete"
-                      className="w-7 h-7 flex items-center justify-center rounded text-zinc-500 hover:text-red-400 hover:bg-zinc-700 cursor-pointer shrink-0"
-                    >
-                      ×
-                    </button>
+        {/* Management list */}
+        <div className="pt-2 border-t border-zinc-700">
+          <h3 className="text-sm font-bold text-zinc-300 uppercase tracking-wide mb-2">
+            Your Saved Sets ({sortedSets.length})
+          </h3>
+          {sortedSets.length === 0 ? (
+            <p className="text-sm text-zinc-400">No saved sets yet - paste one above to get started.</p>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              {sortedSets.map(entry => (
+                <div
+                  key={entry.id}
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg bg-zinc-900/60 border border-zinc-700"
+                >
+                  <img
+                    src={resolveSprite(getPixelSpriteUrl(
+                      entry.pokemon.pokedexNumber,
+                      entry.pokemon.showdownData.species,
+                      entry.pokemon.showdownData.gender || 'M',
+                      entry.pokemon.showdownData.shiny
+                    ))}
+                    alt={entry.pokemon.showdownData.species}
+                    className="w-9 h-9 object-contain [image-rendering:pixelated] shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    {renamingId === entry.id ? (
+                      <input
+                        type="text"
+                        value={renameDraft}
+                        onChange={(e) => setRenameDraft(e.target.value)}
+                        onBlur={commitRename}
+                        onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+                        autoFocus
+                        className="w-full px-1.5 py-0.5 text-sm bg-zinc-800 border border-accent-gold rounded text-zinc-100 outline-none"
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => startRename(entry.id, entry.label)}
+                        title="Click to rename"
+                        className="text-left text-sm font-semibold text-zinc-100 hover:text-accent-gold truncate cursor-pointer"
+                      >
+                        {entry.label}
+                      </button>
+                    )}
+                    <p className="text-xs text-zinc-400 truncate">{entry.pokemon.showdownData.species} - Lv{entry.pokemon.showdownData.level}</p>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  <button
+                    type="button"
+                    onClick={() => savedPokemonState.deleteSavedPokemon(entry.id)}
+                    title="Delete"
+                    className="w-7 h-7 flex items-center justify-center rounded text-zinc-500 hover:text-red-400 hover:bg-zinc-700 cursor-pointer shrink-0"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

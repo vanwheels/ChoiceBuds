@@ -5,6 +5,7 @@
  */
 
 import { useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import type { UseTeamsReturn } from '../hooks/useTeams';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
 import type { UseActiveEditorReturn } from '../hooks/useActiveEditor';
@@ -162,16 +163,17 @@ export default function TeamsPage({
       </div>
 
       {/* Import Team Modal */}
-      {isImportModalOpen && (
-        <ImportTeamModal
-          isOpen={isImportModalOpen}
-          onClose={() => setIsImportModalOpen(false)}
-          onImport={teamsState.addTeam}
-          databaseState={databaseState}
-          existingTeamNames={teamsState.teams.map(team => team.name)}
-          defaultRegulation={settingsState.settings.defaultRegulation}
-        />
-      )}
+      <AnimatePresence>
+        {isImportModalOpen && (
+          <ImportTeamModal
+            onClose={() => setIsImportModalOpen(false)}
+            onImport={teamsState.addTeam}
+            databaseState={databaseState}
+            existingTeamNames={teamsState.teams.map(team => team.name)}
+            defaultRegulation={settingsState.settings.defaultRegulation}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

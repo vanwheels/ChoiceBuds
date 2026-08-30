@@ -167,12 +167,49 @@ focused on what's actually next.
       three sidebar artboards (`SidebarExpanded`/`SidebarCollapsed`/
       `SidebarDemo`), plus a subtle background-tint hover state for
       inactive nav items that hadn't had one before.
-    - **Not yet implemented** - design-mockup pass only (interactive demos,
-      not production code). Needs its own implementation-leg breakdown,
-      likely threaded through each of the other three approved pieces'
-      legs rather than being one standalone leg (e.g. the sidebar's own
-      implementation leg is where its collapse animation actually gets
-      built) - not yet sequenced with the user.
+    - **Implementation started 2026-08-29** - sequenced with the user into 4
+      legs (modal transitions / card expand-collapse / sidebar collapse
+      migration / drag-reorder animation); modal transitions picked as leg 1,
+      with a decision to extract a shared `Modal.tsx` first rather than
+      animate each of the 5 modals in place (no shared wrapper existed
+      before this - each modal duplicated its own overlay/panel markup).
+      - ~~Leg 1: Modal transitions~~ **Done 2026-08-29.** `framer-motion`
+        added as a dependency (first real user of it in the app).
+        `config/motion.ts` is the new central home for the approved
+        duration/easing scale (`MICRO_DURATION`/`STANDARD_ENTER_DURATION`/
+        `STANDARD_EXIT_DURATION`/`DELIBERATE_DURATION` plus the modal-specific
+        transition objects) - every future Framer Motion `transition` prop
+        should pull from here rather than inlining ad hoc numbers, matching
+        the project's usual config-table convention. New `components/Modal.tsx`
+        owns the overlay fade + panel scale/opacity/y enter-exit (panel exit
+        faster + ease-in than its enter, per spec) via `variants`, and is a
+        pure animation shell (no overlay-click/Escape-to-close - none of the
+        5 modals supported that before, so none was added). Mount/unmount of
+        `<Modal>` IS open/close (no `open` prop) - each caller's own
+        `{isOpen && <SomeModal/>}` conditional still drives visibility
+        exactly as before, just now wrapped in an `AnimatePresence` at the
+        call site (`TeamsPage.tsx`, `PokemonCard.tsx`, `TeamCard.tsx` x3,
+        `calc/CalcPage.tsx`) so the exit animation gets to play before the
+        real unmount - deliberately not the alternative design (Modal always
+        mounted, gated by an internal `open` prop), since that would have
+        eagerly mounted every modal's content (e.g. `TeamExportImageModal`'s
+        full 6-tile poster grid) on every team card whether or not it's ever
+        opened. All 5 modals ported: `ImportTeamModal` (dropped its now-redundant
+        `isOpen` prop entirely), `ExportTeamModal`, `TeamSheetPdfModal`,
+        `TeamExportImageModal`, `CalcSavedSetsModal` - each just supplies its
+        own `panelClassName` (max-width/max-height) to `<Modal>`, content
+        unchanged. `App.tsx`'s root is now wrapped in Framer Motion's own
+        `<MotionConfig reducedMotion="user">` - handles the spec's
+        prefers-reduced-motion requirement globally for every current and
+        future Framer Motion animation in the app, rather than each
+        component checking for it itself. `type-check`/`lint`/`test`/`build`
+        all clean; live-verified via `run-desktop` - all 5 modals open/close
+        cleanly with no console/page errors, and the sidebar collapse (leg 2
+        of the overhaul, already shipped) still works correctly alongside
+        the new `MotionConfig` wrapper.
+      - Leg 2 (card expand/collapse), leg 3 (sidebar collapse migration to
+        Framer Motion, currently plain CSS), and leg 4 (drag-reorder
+        animation) not yet started.
 
   - ~~Window sizing rework~~ **Done 2026-08-29** - picked as leg 1 of the
     three remaining overhaul pieces (smaller, purely-behavioral, no mockup

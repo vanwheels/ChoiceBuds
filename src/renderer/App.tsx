@@ -5,6 +5,7 @@
  */
 
 import { lazy, Suspense, useState } from 'react';
+import { MotionConfig } from 'framer-motion';
 import { useTeams } from './hooks/useTeams';
 import { useDatabase } from './hooks/useDatabase';
 import { useSavedPokemon } from './hooks/useSavedPokemon';
@@ -88,87 +89,93 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen bg-zinc-900 text-zinc-100">
-      <Sidebar activeTab={activeTab} onTabChange={goToTab} />
+    // reducedMotion="user" - every Framer Motion animation in the app (modals so
+    // far, more to follow per TODO.md's animation/motion pass) automatically
+    // collapses toward near-instant when the OS-level prefers-reduced-motion
+    // setting is on, rather than each component having to check for it itself.
+    <MotionConfig reducedMotion="user">
+      <div className="flex h-screen bg-zinc-900 text-zinc-100">
+        <Sidebar activeTab={activeTab} onTabChange={goToTab} />
 
-      {/* Primary Content Viewport - Right Side */}
-      {/* Each visited tab stays mounted (display:none when inactive) rather
-          than being unmounted - see goToTab's comment above. Still gated on
-          visitedTabs so a tab never visited this session never even pays
-          for its React.lazy() import. */}
-      {/* scrollbarGutter: 'stable' reserves the scrollbar's track width whether or
-          not it's actually showing, so content shifting past one page's height
-          doesn't shrink whatever's rendered here the instant the scrollbar pops
-          in - reported 2026-08-29. This is the outer scroll container shared by
-          every tab; individual tabs can (and do, see TeamsPage.tsx's own nested
-          overflow-y-auto content div) have their own inner scroll container too,
-          each needing this same treatment independently - fixing this one alone
-          doesn't cover a shift happening on an inner container whose height gets
-          fixed below this one's. */}
-      <main className="flex-1 overflow-y-auto" style={{ paddingLeft: '2rem', paddingRight: '2rem', paddingTop: '1.5rem', paddingBottom: '1.5rem', scrollbarGutter: 'stable' }}>
-        <div style={{ display: activeTab === 'teams' ? 'block' : 'none' }}>
-          <TeamsPage
-            teamsState={teamsState}
-            databaseState={databaseState}
-            editorState={editorState}
-            gameDataState={gameDataState}
-            speciesRosterState={speciesRosterState}
-            spriteCacheState={spriteCacheState}
-            settingsState={settingsState}
-          />
-        </div>
-        {visitedTabs.has('calc') && (
-          <div style={{ display: activeTab === 'calc' ? 'block' : 'none' }}>
-            <Suspense fallback={<div className="text-zinc-400 text-sm">Loading calculator...</div>}>
-              <CalcPage
-                gameDataState={gameDataState}
-                teamsState={teamsState}
-                databaseState={databaseState}
-                savedPokemonState={savedPokemonState}
-                spriteCacheState={spriteCacheState}
-                settingsState={settingsState}
-                pendingCalcReview={pendingCalcReview}
-                onConsumePendingCalcReview={() => setPendingCalcReview(null)}
-              />
-            </Suspense>
+        {/* Primary Content Viewport - Right Side */}
+        {/* Each visited tab stays mounted (display:none when inactive) rather
+            than being unmounted - see goToTab's comment above. Still gated on
+            visitedTabs so a tab never visited this session never even pays
+            for its React.lazy() import. */}
+        {/* scrollbarGutter: 'stable' reserves the scrollbar's track width whether or
+            not it's actually showing, so content shifting past one page's height
+            doesn't shrink whatever's rendered here the instant the scrollbar pops
+            in - reported 2026-08-29. This is the outer scroll container shared by
+            every tab; individual tabs can (and do, see TeamsPage.tsx's own nested
+            overflow-y-auto content div) have their own inner scroll container too,
+            each needing this same treatment independently - fixing this one alone
+            doesn't cover a shift happening on an inner container whose height gets
+            fixed below this one's. */}
+        <main className="flex-1 overflow-y-auto" style={{ paddingLeft: '2rem', paddingRight: '2rem', paddingTop: '1.5rem', paddingBottom: '1.5rem', scrollbarGutter: 'stable' }}>
+          <div style={{ display: activeTab === 'teams' ? 'block' : 'none' }}>
+            <TeamsPage
+              teamsState={teamsState}
+              databaseState={databaseState}
+              editorState={editorState}
+              gameDataState={gameDataState}
+              speciesRosterState={speciesRosterState}
+              spriteCacheState={spriteCacheState}
+              settingsState={settingsState}
+            />
           </div>
-        )}
-        {visitedTabs.has('battles') && (
-          <div style={{ display: activeTab === 'battles' ? 'block' : 'none' }}>
-            <Suspense fallback={<div className="text-zinc-400 text-sm">Loading battle log...</div>}>
-              <BattleLogPage
-                battlesState={battlesState}
-                teamsState={teamsState}
-                speciesRosterState={speciesRosterState}
-                spriteCacheState={spriteCacheState}
-                gameDataState={gameDataState}
-                onReviewInCalc={handleReviewInCalc}
-              />
-            </Suspense>
-          </div>
-        )}
-        {visitedTabs.has('statistics') && (
-          <div style={{ display: activeTab === 'statistics' ? 'block' : 'none' }}>
-            <Suspense fallback={<div className="text-zinc-400 text-sm">Loading statistics...</div>}>
-              <StatisticsPage battlesState={battlesState} spriteCacheState={spriteCacheState} />
-            </Suspense>
-          </div>
-        )}
-        {visitedTabs.has('typeMatchup') && (
-          <div style={{ display: activeTab === 'typeMatchup' ? 'block' : 'none' }}>
-            <Suspense fallback={<div className="text-zinc-400 text-sm">Loading type matchup...</div>}>
-              <TypeMatchupPage teamsState={teamsState} gameDataState={gameDataState} spriteCacheState={spriteCacheState} />
-            </Suspense>
-          </div>
-        )}
-        {visitedTabs.has('settings') && (
-          <div style={{ display: activeTab === 'settings' ? 'block' : 'none' }}>
-            <Suspense fallback={<div className="text-zinc-400 text-sm">Loading settings...</div>}>
-              <SettingsPage settingsState={settingsState} teamsState={teamsState} battlesState={battlesState} updateCheckState={updateCheckState} databaseState={databaseState} gameDataState={gameDataState} />
-            </Suspense>
-          </div>
-        )}
-      </main>
-    </div>
+          {visitedTabs.has('calc') && (
+            <div style={{ display: activeTab === 'calc' ? 'block' : 'none' }}>
+              <Suspense fallback={<div className="text-zinc-400 text-sm">Loading calculator...</div>}>
+                <CalcPage
+                  gameDataState={gameDataState}
+                  teamsState={teamsState}
+                  databaseState={databaseState}
+                  savedPokemonState={savedPokemonState}
+                  spriteCacheState={spriteCacheState}
+                  settingsState={settingsState}
+                  pendingCalcReview={pendingCalcReview}
+                  onConsumePendingCalcReview={() => setPendingCalcReview(null)}
+                />
+              </Suspense>
+            </div>
+          )}
+          {visitedTabs.has('battles') && (
+            <div style={{ display: activeTab === 'battles' ? 'block' : 'none' }}>
+              <Suspense fallback={<div className="text-zinc-400 text-sm">Loading battle log...</div>}>
+                <BattleLogPage
+                  battlesState={battlesState}
+                  teamsState={teamsState}
+                  speciesRosterState={speciesRosterState}
+                  spriteCacheState={spriteCacheState}
+                  gameDataState={gameDataState}
+                  onReviewInCalc={handleReviewInCalc}
+                />
+              </Suspense>
+            </div>
+          )}
+          {visitedTabs.has('statistics') && (
+            <div style={{ display: activeTab === 'statistics' ? 'block' : 'none' }}>
+              <Suspense fallback={<div className="text-zinc-400 text-sm">Loading statistics...</div>}>
+                <StatisticsPage battlesState={battlesState} spriteCacheState={spriteCacheState} />
+              </Suspense>
+            </div>
+          )}
+          {visitedTabs.has('typeMatchup') && (
+            <div style={{ display: activeTab === 'typeMatchup' ? 'block' : 'none' }}>
+              <Suspense fallback={<div className="text-zinc-400 text-sm">Loading type matchup...</div>}>
+                <TypeMatchupPage teamsState={teamsState} gameDataState={gameDataState} spriteCacheState={spriteCacheState} />
+              </Suspense>
+            </div>
+          )}
+          {visitedTabs.has('settings') && (
+            <div style={{ display: activeTab === 'settings' ? 'block' : 'none' }}>
+              <Suspense fallback={<div className="text-zinc-400 text-sm">Loading settings...</div>}>
+                <SettingsPage settingsState={settingsState} teamsState={teamsState} battlesState={battlesState} updateCheckState={updateCheckState} databaseState={databaseState} gameDataState={gameDataState} />
+              </Suspense>
+            </div>
+          )}
+        </main>
+      </div>
+    </MotionConfig>
   );
 }
