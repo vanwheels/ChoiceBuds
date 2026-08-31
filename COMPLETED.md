@@ -21,7 +21,7 @@ in:
   `learned_by_pokemon` field already lists every species that can learn it,
   surfacing all of them instead of requiring an exact species-name match.
   New `usePokemonMoveFilter` hook mirrors `usePokemonTypeFilter`'s
-  cache/loading shape. See commit `<pending>`.
+  cache/loading shape. See commit `b994422`.
 
 - **Calc Mega Toggle Ability Revert - Leg 1** (2026-08-31). Toggling a Mega
   off left the ability field stuck on the Mega-forced ability instead of
