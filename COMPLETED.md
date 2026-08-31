@@ -25,7 +25,7 @@ in:
   does it fall back to an ability lookup — the new `isMoveResolved` export
   from `usePokemonMoveFilter.ts` is what lets the fallback tell "still
   loading" apart from "confirmed not a move" using the hook's existing
-  cache, without changing its own return contract. Commit TBD.
+  cache, without changing its own return contract. See commit `09dfd34`.
 
 - **Pokemon Picker Move-Name Search - Leg 1** (2026-08-31). The species
   picker's `#tag` convention (previously type-only, e.g. `#fire`) now also
