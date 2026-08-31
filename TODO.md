@@ -13,26 +13,67 @@ Finished work moves to [COMPLETED.md](COMPLETED.md).
 
 ## In progress / up next
 
-- **[Manual-Testing Batch Fixes] — Leg 1** *(Last touched: 2026-08-28 ·
+- **[Regulation M-C Prep] — Leg 1** *(Last touched: 2026-08-31 · Re-checks:
+  0)*
+  Reg M-C announced, drops 2026-09-08 6pm PST. Confirmed so far: three new
+  Z-Megas — Absol (Sharpness), Lucario (Aura Break — new ability, halves
+  incoming damage from contact-tagged moves), Garchomp (Levitate) — plus two
+  new non-Mega additions, Rillaboom and Baxcaliber (no word yet on a
+  Baxcaliber Mega). User is feeding more details as they land; nothing to
+  implement yet — this item exists to hold the info until it's complete
+  enough to scope config-table/species-roster updates against (Mega
+  eligibility lists, `championsAbilityOverrides.ts` for Aura Break,
+  `useInitialSync`'s legal-roster diff, `seasons.ts`'s M-6+ rows once M-C's
+  season dates are known). Purely additive — no known removals this reg.
+
+- **[Mega Eligibility Team Builder vs Calc Mismatch] — Leg 1** *(Last
+  touched: 2026-08-28 · Re-checks: 0)*
+  Regulation Z-A Megas don't show as mega-eligible in the team builder but
+  do in Calc — the two surfaces likely read eligibility from
+  different/out-of-sync sources; needs investigation. Split out of the
+  former "Manual-Testing Batch Fixes" item (see COMPLETED.md for the
+  UI/UX-overhaul portion of that batch).
+
+- **[Offline Item/Mega Sprite Caching] — Leg 1** *(Last touched: 2026-08-28
+  · Re-checks: 0)*
+  Item/Mega sprites don't load offline — likely a gap in what
+  `useInitialSync`/`pokeapi-cache.json` actually caches; needs investigation
+  into whether these URLs are cached at all. Split out of the former
+  "Manual-Testing Batch Fixes" item.
+
+- **[Team Card Grid Layout Re-check] — Leg 1** *(Last touched: 2026-08-31 ·
   Re-checks: 0)*
-  Six independent bugs/requests from offline testing, none fixed yet (the
-  UI/UX overhaul flagged in the same batch is done — see COMPLETED.md):
-  1. Regulation Z-A Megas don't show as mega-eligible in the team builder
-     but do in Calc — the two surfaces likely read eligibility from
-     different/out-of-sync sources; needs investigation.
-  2. Item/Mega sprites don't load offline — likely a gap in what
-     `useInitialSync`/`pokeapi-cache.json` actually caches; needs
-     investigation into whether these URLs are cached at all.
-  3. Team cards render 2x3 instead of the original 1x6 single row, even
-     fullscreened on a MacBook — may already be fixed by the 2026-08-29
-     Teams-carousel/grid rework (see COMPLETED.md); re-check before
-     investigating further.
-  4. Pokemon picker search by move name should surface every Pokemon that
-     can learn it, not just exact species-name matches.
-  5. "Add Pokemon" box is wider than an actual Pokemon card once one's
-     added — should match card width.
-  6. Calc: toggling a Mega off doesn't revert the Pokemon's ability back to
-     whatever was selected pre-Mega.
+  Root cause found: not already fixed by the carousel rework — that rework
+  is what introduced it. `TeamCard.tsx`'s 3-vs-6-column snap required a
+  1760px container (6*280px + 5*1rem gaps), unreachable on any MacBook's
+  built-in display once the sidebar/page padding is subtracted (~1128px
+  available on a 14" MacBook fullscreen, sidebar expanded). Lowered the
+  breakpoint to 1100px, computed against that real 14"-MacBook budget (see
+  `TeamCard.tsx`'s updated comment for the math); cards render narrower than
+  their 280px cap near that threshold but stay well above the ~158px content
+  floor. Also corrected a stale comment in `TeamsPage.tsx` describing an
+  auto-fill/minmax grid that no longer matches the actual implementation.
+  Not yet live-verified on the reporter's actual 14" MacBook — per this
+  project's manual-UI-testing convention, needs a real check before this can
+  move to COMPLETED.md.
+
+- **[Pokemon Picker Move-Name Search] — Leg 1** *(Last touched: 2026-08-28
+  · Re-checks: 0)*
+  Pokemon picker search by move name should surface every Pokemon that can
+  learn it, not just exact species-name matches. Split out of the former
+  "Manual-Testing Batch Fixes" item.
+
+- **[Add Pokemon Box Width Match] — Leg 1** *(Last touched: 2026-08-28 ·
+  Re-checks: 0)*
+  "Add Pokemon" box is wider than an actual Pokemon card once one's added —
+  should match card width. Split out of the former "Manual-Testing Batch
+  Fixes" item.
+
+- **[Calc Mega Toggle Ability Revert] — Leg 1** *(Last touched: 2026-08-28
+  · Re-checks: 0)*
+  Calc: toggling a Mega off doesn't revert the Pokemon's ability back to
+  whatever was selected pre-Mega. Split out of the former "Manual-Testing
+  Batch Fixes" item.
 
 - **[Config-Table Audit Script] — Leg 1** *(Last touched: 2026-08-29 ·
   Re-checks: 0)*

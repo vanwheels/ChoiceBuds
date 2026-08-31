@@ -140,11 +140,13 @@ export default function TeamsPage({
                 (measured live) that a too-low breakpoint leaves no room for -
                 confirmed live at 1160px each column lands at ~570px, clipping
                 the coverflow/controls together. 1360px keeps a comfortable
-                ~50px+ buffer above that floor once 2 columns activate. A no
-                max-width cap remains further down: each TeamCard's Pokemon
-                grid (auto-fill, minmax(240px, 280px)) still needs the full
-                available column width to fit up to 6 comfortable columns in
-                one row on wide windows. */}
+                ~50px+ buffer above that floor once 2 columns activate. Note
+                this halves the width available to each TeamCard's own Pokemon
+                grid once 2 columns activate - TeamCard.tsx's 3-vs-6-column
+                snap (see its own comment) is tuned against realistic
+                single-column widths, not this 2-column state, so 2 teams
+                side-by-side may render 2x3 even where 1 team alone would
+                reach 1x6. */}
             {filteredTeams.map(team => (
               <TeamCard
                 key={team.id}
