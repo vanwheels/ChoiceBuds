@@ -14,6 +14,15 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **Mega Eligibility Team Builder vs Calc Mismatch - Leg 1** (2026-08-31).
+  Root cause: the two surfaces read Mega eligibility from two unrelated
+  data sources - the team builder from a Serebii-verified curated list,
+  Calc from `@smogon/calc`'s own bundled species dex, which turned out to
+  model a broader mainline/Legends Z-A roster than Champions actually
+  supports (15 extra species, plus a spurious duplicate Mega form for
+  Absol/Garchomp/Lucario). Fixed by gating Calc's forme detection on the
+  same curated list. See commit `e9680f1`.
+
 - **Offline Item/Mega Sprite Caching - Leg 1** (2026-08-31). Root cause was
   two-fold: item sprites were bulk-downloaded by `useInitialSync` but the
   components rendering them (`ItemSpriteBox`, `ItemPickerPanel`) never asked
