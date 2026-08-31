@@ -14,6 +14,15 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **Pokemon Picker Move-Name Search - Leg 1** (2026-08-31). The species
+  picker's `#tag` convention (previously type-only, e.g. `#fire`) now also
+  accepts a move name (e.g. `#dragon dance`): a `#tag` that isn't one of the
+  18 real types is looked up via PokeAPI's `/move/{name}` endpoint, whose
+  `learned_by_pokemon` field already lists every species that can learn it,
+  surfacing all of them instead of requiring an exact species-name match.
+  New `usePokemonMoveFilter` hook mirrors `usePokemonTypeFilter`'s
+  cache/loading shape. See commit `<pending>`.
+
 - **Calc Mega Toggle Ability Revert - Leg 1** (2026-08-31). Toggling a Mega
   off left the ability field stuck on the Mega-forced ability instead of
   restoring whatever was set beforehand. Fixed in `CalcPokemonPanel.tsx` by
