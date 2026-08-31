@@ -6,6 +6,10 @@
  * /move/{name} endpoint - its `learned_by_pokemon` field already lists every
  * species that can learn it, so no per-species learnset scan is needed.
  * Cached per-move for the rest of the session, same as the type cache.
+ *
+ * Takes an array rather than a single move because the species picker ANDs
+ * several '#tag's together - each non-type tag in the search needs its own
+ * move lookup resolved independently.
  */
 
 import { useState, useEffect } from 'react';
@@ -27,34 +31,55 @@ async function fetchMoveLearners(move: string): Promise<Set<string> | null> {
 
 /**
  * Whether `move` has finished resolving (found or 404) - lets a caller tell
- * "still loading" (this returns false, hook returns null) apart from
- * "confirmed not a move" (this returns true, hook returns null) without
- * reaching into the module-private cache. SpeciesPickerCard.tsx uses this to
- * know when to fall back to treating the tag as an ability name instead.
+ * "still loading" (this returns false, hook returns null for it) apart from
+ * "confirmed not a move" (this returns true, hook returns null for it)
+ * without reaching into the module-private cache. SpeciesPickerCard.tsx uses
+ * this to know when to fall back to treating a given tag as an ability name
+ * instead.
  */
 export function isMoveResolved(move: string): boolean {
   return moveLearnerCache.has(move);
 }
 
-/** Returns null while loading/inapplicable, or the set of matching species slugs (lowercase) */
-export function usePokemonMoveFilter(move: string | null): Set<string> | null {
-  const [result, setResult] = useState<Set<string> | null>(move ? moveLearnerCache.get(move) ?? null : null);
+function buildResultMap(moves: string[]): Map<string, Set<string> | null> {
+  const map = new Map<string, Set<string> | null>();
+  for (const move of moves) map.set(move, moveLearnerCache.get(move) ?? null);
+  return map;
+}
 
-  // Re-derives synchronously from cache the moment move changes - set during
-  // render rather than in an effect, see
-  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
-  const [resolvedForMove, setResolvedForMove] = useState(move);
-  if (move !== resolvedForMove) {
-    setResolvedForMove(move);
-    setResult(move ? moveLearnerCache.get(move) ?? null : null);
+/**
+ * Returns a Map from each requested move to its matching learner species
+ * slugs (lowercase), or null for a move that's still loading/inapplicable.
+ * An empty `moves` array resolves to an empty Map immediately, with no fetch.
+ */
+export function usePokemonMoveFilter(moves: string[]): Map<string, Set<string> | null> {
+  const [result, setResult] = useState<Map<string, Set<string> | null>>(() => buildResultMap(moves));
+
+  // Re-derives synchronously from cache the moment the requested moves
+  // change - set during render rather than in an effect, see
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes.
+  // JSON.stringify (not a plain join) so two different arrays can never
+  // collide onto the same key string.
+  const key = JSON.stringify(moves);
+  const [resolvedKey, setResolvedKey] = useState(key);
+  if (key !== resolvedKey) {
+    setResolvedKey(key);
+    setResult(buildResultMap(moves));
   }
 
   useEffect(() => {
-    if (!move || moveLearnerCache.has(move)) return;
+    const missing = moves.filter(move => !moveLearnerCache.has(move));
+    if (missing.length === 0) return;
     let cancelled = false;
-    fetchMoveLearners(move).then(members => { if (!cancelled) setResult(members); });
+    Promise.all(missing.map(fetchMoveLearners)).then(() => {
+      if (!cancelled) setResult(buildResultMap(moves));
+    });
     return () => { cancelled = true; };
-  }, [move]);
+    // Depends on `key` (a stable stringified snapshot of `moves`), not
+    // `moves` itself - a fresh array reference every render would otherwise
+    // rerun this effect on every keystroke even when the tags didn't change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
 
   return result;
 }

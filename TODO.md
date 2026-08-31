@@ -29,16 +29,6 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
   legal-roster diff, `seasons.ts`'s M-6+ rows once M-C's season dates are
   known). Purely additive — no known removals this reg.
 
-- **[Pokemon Picker Multi-Filter Search] — Leg 1** *(Last touched: 2026-08-31
-  · Re-checks: 0)*
-  Support multiple space-separated `#tag`s in one search (e.g. `#fire
-  #shadowclaw #shadowsneak #flashfire`), ANDed together — species must match
-  every tag, mixing type/move/ability tags freely in the same query.
-  Straightforward now that each tag already resolves to a `Set<string>` (per
-  [Pokemon Picker Move-Name Search](COMPLETED.md) and [Pokemon Picker Ability
-  Search](COMPLETED.md)): parse multiple tags out of `search`, resolve each
-  to a member set, intersect. All three tag kinds now exist to combine.
-
 - **[Add Pokemon Box Width Match] — Leg 1** *(Last touched: 2026-08-28 ·
   Re-checks: 0)*
   "Add Pokemon" box is wider than an actual Pokemon card once one's added —

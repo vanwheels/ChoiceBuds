@@ -14,6 +14,21 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **Pokemon Picker Multi-Filter Search - Leg 1** (2026-08-31). The species
+  picker's `#tag` search only ever took one tag at a time. Now multiple
+  space-separated `#tag`s in one search (e.g. `#fire #shadowclaw
+  #flashfire`) AND together - a species must match every tag, freely mixing
+  type/move/ability tags in the same query. `tagSearch.ts` gained
+  `parseTagFilters` (splits on `#`, not whitespace, since a single move/
+  ability tag's own text can contain spaces, e.g. `#dragon dance`).
+  `usePokemonTypeFilter`/`usePokemonMoveFilter`/`usePokemonAbilityFilter` all
+  changed shape from a single key returning one `Set | null` to an array of
+  keys returning a `Map<key, Set | null>`, so each tag's own type -> move ->
+  ability fallback chain still resolves independently without violating the
+  rules of hooks for a variable tag count; `SpeciesPickerCard.tsx` now
+  intersects every tag's resolved set per-species instead of picking one
+  chain's result directly. See commit `<pending>`.
+
 - **Pokemon Picker Ability Search - Leg 1** (2026-08-31). Extends the
   species picker's `#tag` search (see Move-Name Search below) with a third
   kind: an ability name, e.g. `#flashfire` surfacing every species that can
