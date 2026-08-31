@@ -27,7 +27,7 @@ in:
   ability fallback chain still resolves independently without violating the
   rules of hooks for a variable tag count; `SpeciesPickerCard.tsx` now
   intersects every tag's resolved set per-species instead of picking one
-  chain's result directly. See commit `<pending>`.
+  chain's result directly. See commit `cdaffb5`.
 
 - **Pokemon Picker Ability Search - Leg 1** (2026-08-31). Extends the
   species picker's `#tag` search (see Move-Name Search below) with a third
