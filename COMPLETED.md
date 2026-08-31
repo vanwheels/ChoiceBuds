@@ -14,6 +14,13 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **Offline Item/Mega Sprite Caching - Leg 1** (2026-08-31). Root cause was
+  two-fold: item sprites were bulk-downloaded by `useInitialSync` but the
+  components rendering them (`ItemSpriteBox`, `ItemPickerPanel`) never asked
+  for the resolved local path, and Mega form sprites weren't part of the
+  bulk sync at all (plus the Battle Log roster rendered them unresolved even
+  when cached). See commit `37f984e`.
+
 - **Post-Mortem + Milestones System - Leg 1** (2026-08-31). Set up
   `MILESTONES.md` at repo root and `docs/postmortems/<milestone-slug>.md`
   per CLAUDE.md's archiving convention, anchored to the first real
