@@ -14,6 +14,23 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **Post-Mortem + Milestones System - Leg 1** (2026-08-31). Set up
+  `MILESTONES.md` at repo root and `docs/postmortems/<milestone-slug>.md`
+  per CLAUDE.md's archiving convention, anchored to the first real
+  milestone (user's call, over waiting for the next version bump): the
+  UI/UX overhaul that wrapped 2026-08-29 (color palette, Teams-carousel/
+  grid, sidebar/menuing, window sizing, animation/motion - see entries
+  below). First post-mortem covers what shipped, what went well (design-
+  approval-first workflow, "read the source not the screenshot," live-
+  verification catching real bugs pre-merge, disposable-team testing
+  discipline), what didn't (several bugs needing multiple root-cause
+  passes, a mockup placeholder breakpoint shipping unvalidated and needing
+  a user-reported follow-up fix, `run-desktop`'s recurring resize/hover
+  driver gap), and scope creep observed (Framer Motion's role expanding
+  from "just the coverflow" to "general-purpose animation library" mid-arc,
+  a data-model bug fixed inline rather than deferred) - see
+  [docs/postmortems/ui-ux-overhaul.md](docs/postmortems/ui-ux-overhaul.md).
+
 - **UI/UX overhaul - sidebar/menuing rework** (design approved 2026-08-29,
   same artifact as the Teams-carousel/color-palette entries below -
   `SidebarExpanded.dc.html`/`SidebarCollapsed.dc.html` artboards). Replaced

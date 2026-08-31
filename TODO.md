@@ -13,16 +13,6 @@ Finished work moves to [COMPLETED.md](COMPLETED.md).
 
 ## In progress / up next
 
-- **[Post-Mortem + Milestones System] — Leg 1** *(Last touched: 2026-08-31 ·
-  Re-checks: 0)*
-  Set up `MILESTONES.md` at repo root (name, date, status, link to
-  post-mortem — index only, same scannable spirit as this file) and
-  `docs/postmortems/<milestone-slug>.md` per the new CLAUDE.md convention.
-  Starts fresh from current/upcoming work only — no retroactive post-mortems
-  for already-shipped past work. Needs the first actual milestone identified
-  (likely the next version bump, or the UI-overhaul work that just wrapped)
-  to anchor the first real entry. Not started.
-
 - **[Manual-Testing Batch Fixes] — Leg 1** *(Last touched: 2026-08-28 ·
   Re-checks: 0)*
   Six independent bugs/requests from offline testing, none fixed yet (the
@@ -98,10 +88,6 @@ Finished work moves to [COMPLETED.md](COMPLETED.md).
   2. General UI polish (#1) — nothing further scoped beyond what's shipped.
   3. Limitless usage data (#7) — blocked externally on API key approval.
      Blocked: waiting on Limitless API key approval.
-
-## Done
-
-See [COMPLETED.md](COMPLETED.md) for the full log of finished work.
 
 ## Backlog / ideas (not yet scoped, reordered highest-to-lowest priority)
 
