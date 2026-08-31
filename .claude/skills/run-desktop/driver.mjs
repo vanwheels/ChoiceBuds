@@ -53,6 +53,21 @@ const COMMANDS = {
     console.log('launched.', app.windows().length, 'window(s):', page.url());
   },
 
+  // setContentSize (not setSize/resizeTo) targets the web-content viewport
+  // itself, excluding the native title bar/frame - matches what the
+  // renderer's CSS actually measures (window.innerWidth, @container
+  // queries), unlike outer-window sizing which would be off by however
+  // tall the OS title bar happens to be.
+  async resize(args) {
+    if (!app) return console.log('ERROR: launch first');
+    const [w, h] = args.split(/\s+/).map(Number);
+    if (!w || !h) return console.log('ERROR: usage - resize <width> <height>');
+    await app.evaluate(({ BrowserWindow }, [width, height]) => {
+      BrowserWindow.getAllWindows()[0]?.setContentSize(width, height);
+    }, [w, h]);
+    console.log('resized to', w, 'x', h, '(content size)');
+  },
+
   async ss(name) {
     if (!page) return console.log('ERROR: launch first');
     const f = path.join(SHOT_DIR, (name || `ss-${Date.now()}`) + '.png');

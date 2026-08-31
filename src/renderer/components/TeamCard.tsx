@@ -321,21 +321,20 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
                   6-mon roster) until the container itself is wide enough, then snaps to
                   6 (1x6). The original 1760px breakpoint (6*280px + 5*1rem gaps, treating
                   280px as a hard requirement rather than PokemonCard's actual max-w-[280px]
-                  cap) was never reachable on a real laptop: a 14" MacBook (1512px logical
-                  width) fullscreen with the sidebar expanded only has ~1128px left for this
-                  grid after the sidebar (208px), TeamsPage's own px-8 (64px) + its grid
-                  wrapper's 2rem/2rem padding (64px), and this section's p-6 (48px) - so 1x6
-                  was silently unreachable on real hardware (manual-testing bug, see
-                  TODO.md). 1100px (rounded down from that ~1128px for margin) is the
-                  smallest realistic full-window width this should snap at; cards render
-                  narrower than their 280px cap at 6 columns near that threshold (down to
-                  ~170px), which PokemonCard's fixed-width content (134px sprite + padding)
-                  still comfortably fits. @[1100px]: is a container-query variant (keyed off
-                  the @container ancestor above), not a viewport media query - unlike the
-                  old xl:grid-cols-6 this can't misfire from raw viewport width alone.
-                  Verify live against the real MacBook this was reported on (per manual-UI
-                  testing convention) before considering this closed. */}
-              <div className="grid grid-cols-3 @[1100px]:grid-cols-6 gap-4 w-full">
+                  cap) was never reachable on a real laptop. Measured live via run-desktop
+                  (see TODO.md) on the reporter's actual setup - 14" MacBook, sidebar
+                  expanded (default), 2 real teams, single-column Teams-page layout - this
+                  grid only gets 1043px of real container width, well short of even a first
+                  attempted 1100px breakpoint. 1040px (a small margin under that measured
+                  number) is what's actually reachable there; cards land around ~160px wide
+                  at 6 columns, confirmed live to still clear PokemonCard's ~158px
+                  fixed-content floor (134px sprite box + padding) without squishing.
+                  Doesn't help a 13" MacBook (measured 818px there, sidebar expanded) - not
+                  a target device for this fix. @[1040px]: is a container-query variant
+                  (keyed off the @container ancestor above), not a viewport media query -
+                  unlike the old xl:grid-cols-6 this can't misfire from raw viewport width
+                  alone. */}
+              <div className="grid grid-cols-3 @[1040px]:grid-cols-6 gap-4 w-full">
                 {team.pokemon && team.pokemon.map((p, idx) => (
                   <PokemonCard
                     key={p.id}

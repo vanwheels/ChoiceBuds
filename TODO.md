@@ -43,19 +43,24 @@ Finished work moves to [COMPLETED.md](COMPLETED.md).
 
 - **[Team Card Grid Layout Re-check] — Leg 1** *(Last touched: 2026-08-31 ·
   Re-checks: 0)*
-  Root cause found: not already fixed by the carousel rework — that rework
-  is what introduced it. `TeamCard.tsx`'s 3-vs-6-column snap required a
-  1760px container (6*280px + 5*1rem gaps), unreachable on any MacBook's
-  built-in display once the sidebar/page padding is subtracted (~1128px
-  available on a 14" MacBook fullscreen, sidebar expanded). Lowered the
-  breakpoint to 1100px, computed against that real 14"-MacBook budget (see
-  `TeamCard.tsx`'s updated comment for the math); cards render narrower than
-  their 280px cap near that threshold but stay well above the ~158px content
-  floor. Also corrected a stale comment in `TeamsPage.tsx` describing an
-  auto-fill/minmax grid that no longer matches the actual implementation.
-  Not yet live-verified on the reporter's actual 14" MacBook — per this
-  project's manual-UI-testing convention, needs a real check before this can
-  move to COMPLETED.md.
+  Fixed and live-verified via `run-desktop` (added a `resize` command to
+  `driver.mjs` — sets Electron's content size directly, matching what the
+  renderer's CSS/`@container` actually measures). Root cause: not already
+  fixed by the carousel rework — that rework is what introduced it.
+  `TeamCard.tsx`'s 3-vs-6-column snap required a 1760px container (6*280px +
+  5*1rem gaps), unreachable on any MacBook. First attempt (1100px, based on
+  a theoretical estimate) still wasn't low enough — measured live at the
+  reporter's actual conditions (14" MacBook, sidebar expanded, 2 real teams,
+  single-column layout) the container only gets 1043px. Retuned to 1040px
+  against that measured number; confirmed live it renders a clean 1x6 with
+  no truncation at 1512x982/sidebar-expanded (screenshot:
+  `.claude/skills/run-desktop/shots/06-fixed-1512-expanded-sidebar.png`).
+  Doesn't cover a 13" MacBook (measured 818px there) — not this fix's
+  target device. Also corrected a stale `TeamsPage.tsx` comment describing
+  an auto-fill/minmax grid that no longer matches the real implementation.
+  Ready to move to COMPLETED.md once the user does their own pass on the
+  physical MacBook (this was verified via a resized Electron window on the
+  dev machine, not the actual hardware).
 
 - **[Pokemon Picker Move-Name Search] — Leg 1** *(Last touched: 2026-08-28
   · Re-checks: 0)*
