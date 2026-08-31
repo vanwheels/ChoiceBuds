@@ -20,7 +20,7 @@ in:
   capturing the pre-Mega ability into a ref (keyed to the forme family, so a
   stale value can't survive an unrelated species swap) when toggling into a
   Mega, and restoring it when toggling back to the base forme. See commit
-  `<pending>`.
+  `3070c35`.
 
 - **Mega Eligibility Team Builder vs Calc Mismatch - Leg 1** (2026-08-31).
   Root cause: the two surfaces read Mega eligibility from two unrelated
