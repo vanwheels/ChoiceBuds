@@ -20,7 +20,26 @@ const UNRELATED: CalcSpeciesRef[] = [
   { name: 'Pikachu-F', baseSpecies: 'Pikachu' },
 ];
 
-const ALL_SPECIES = [...CHARIZARD_FAMILY, ...AEGISLASH_FAMILY, ...UNRELATED];
+// Mewtwo has no Mega Stone anywhere in Champions' real item pool (see
+// megaEvolution.ts's MEGA_STONE_TO_SPECIES) - only present here to prove a
+// @smogon/calc-shaped Mega entry with no curated backing is filtered out
+// entirely, not misclassified into statFormes.
+const UNCURATED_MEGA_FAMILY: CalcSpeciesRef[] = [
+  { name: 'Mewtwo' },
+  { name: 'Mewtwo-Mega-X', baseSpecies: 'Mewtwo' },
+  { name: 'Mewtwo-Mega-Y', baseSpecies: 'Mewtwo' },
+];
+
+// Absol has a real curated Mega ("Absol-Mega", from Absolite) but @smogon/calc
+// also ships a spurious "-Mega-Z" duplicate with no matching Champions stone -
+// only the curated one should survive.
+const ABSOL_FAMILY: CalcSpeciesRef[] = [
+  { name: 'Absol' },
+  { name: 'Absol-Mega', baseSpecies: 'Absol' },
+  { name: 'Absol-Mega-Z', baseSpecies: 'Absol' },
+];
+
+const ALL_SPECIES = [...CHARIZARD_FAMILY, ...AEGISLASH_FAMILY, ...UNRELATED, ...UNCURATED_MEGA_FAMILY, ...ABSOL_FAMILY];
 
 describe('getFormeFamily', () => {
   it('returns an empty family for an empty species name', () => {
@@ -67,6 +86,17 @@ describe('getFormeFamily', () => {
   it('a species with only one real stat forme has a single-element statFormes (no toggle needed)', () => {
     const family = getFormeFamily(ALL_SPECIES, 'Pikachu');
     expect(family.statFormes).toHaveLength(1);
+  });
+
+  it('excludes a Mega forme with no curated Champions Mega Stone backing it, without leaking it into statFormes', () => {
+    const family = getFormeFamily(ALL_SPECIES, 'Mewtwo');
+    expect(family.megaFormes).toEqual([]);
+    expect(family.statFormes).toEqual(['Mewtwo']);
+  });
+
+  it('keeps a curated Mega forme but drops an uncurated "-Mega-Z" duplicate for the same species', () => {
+    const family = getFormeFamily(ALL_SPECIES, 'Absol');
+    expect(family.megaFormes).toEqual(['Absol-Mega']);
   });
 });
 

@@ -10,9 +10,20 @@
  * General detector (walks @smogon/calc's own baseSpecies links) rather than
  * a hardcoded species list, so it keeps working if future regulations add
  * more stat-forme species - verified against the current Reg M-A/M-B legal
- * dex to have exactly one real stat-forme case (Aegislash) and ~70 Mega-
- * capable species.
+ * dex to have exactly one real stat-forme case (Aegislash).
+ *
+ * Mega Evolution is the one exception to "general detector": @smogon/calc's
+ * bundled species dex models a broader mainline/Legends Z-A roster than
+ * Champions actually supports (confirmed live 2026-08-31 - see TODO.md's
+ * "Mega Eligibility Team Builder vs Calc Mismatch" entry), so a name-shape
+ * match alone would show Mega toggles for species/forms Champions doesn't
+ * have a stone for. megaFormes is therefore additionally gated on
+ * config/megaEvolution.ts's CURATED_MEGA_FORM_SLUGS - the same
+ * Champions-verified roster the team builder's sprite swap already trusts -
+ * so both surfaces agree on what's actually Mega-eligible.
  */
+
+import { CURATED_MEGA_FORM_SLUGS } from '../config/megaEvolution';
 
 const REGIONAL_SUFFIXES = ['-alola', '-galar', '-hisui', '-paldea'];
 const GENDER_SUFFIX = '-f';
@@ -73,7 +84,9 @@ export function getFormeFamily(allSpecies: CalcSpeciesRef[], speciesName: string
   return {
     root,
     statFormes: family.filter(s => classify(s.name) === 'other').map(s => s.name),
-    megaFormes: family.filter(s => classify(s.name) === 'mega').map(s => s.name),
+    megaFormes: family
+      .filter(s => classify(s.name) === 'mega' && CURATED_MEGA_FORM_SLUGS.has(s.name.toLowerCase()))
+      .map(s => s.name),
   };
 }
 

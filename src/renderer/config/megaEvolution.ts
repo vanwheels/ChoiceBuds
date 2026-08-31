@@ -96,6 +96,22 @@ export const MEGA_STONE_TO_SPECIES: Record<string, { species: string; suffix: st
 };
 
 /**
+ * Every real Champions Mega form's full slug ("absol-mega", "charizard-mega-x"),
+ * derived from MEGA_STONE_TO_SPECIES. Used by utils/calcFormes.ts to constrain
+ * the Calc tab's Mega toggle to this same Champions-verified roster instead of
+ * trusting @smogon/calc's own bundled species dex at face value - that dex
+ * models a broader mainline/Legends Z-A roster and, as of @smogon/calc 0.11.0,
+ * includes ~15 species (Mewtwo, Rayquaza, Latias/Latios, Salamence, etc.) with
+ * no Mega Stone anywhere in Champions' real item pool (see vgcData.ts), plus a
+ * spurious second "-Mega-Z" entry for Absol/Garchomp/Lucario duplicating their
+ * real Mega's ability data. Confirmed via live diff 2026-08-31 - see TODO.md's
+ * "Mega Eligibility Team Builder vs Calc Mismatch" entry.
+ */
+export const CURATED_MEGA_FORM_SLUGS = new Set(
+  Object.values(MEGA_STONE_TO_SPECIES).map(entry => `${entry.species}-${entry.suffix}`)
+);
+
+/**
  * Resolves the PokeAPI resource slug ("gengar-mega", "charizard-mega-x") for
  * a held item + species pair, or null if that item isn't this species' own
  * Mega Stone. Regional forms (e.g. Slowbro-Galar) never match - Mega
