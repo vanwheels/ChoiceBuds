@@ -29,10 +29,11 @@ interface EditOverlaysProps {
   isEditing?: boolean;
   gameDataState: UseGameDataReturn;
   rulesetId: RegulationId;
+  resolveSprite: (remoteUrl: string) => string;
   onUpdatePokemon: (updates: Partial<ShowdownPokemon>) => void;
 }
 
-export default function EditOverlays({ pokemon, isEditing = false, gameDataState, rulesetId, onUpdatePokemon }: EditOverlaysProps) {
+export default function EditOverlays({ pokemon, isEditing = false, gameDataState, rulesetId, resolveSprite, onUpdatePokemon }: EditOverlaysProps) {
   const { items, getItemData, getAbilityData, getMoveData, getEnrichedSpeciesOptions, getChampionsUsage } = gameDataState;
   // Scopes a move-slot drag to this specific card's own MoveBubbleGrid - see moveReorderDragTypes.ts
   const moveDragOwnerId = useId();
@@ -232,7 +233,7 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
   // the card's top - that's species swap's job), so the picker always sits
   // solely inside the PokemonCard's own width instead of floating past it.
   if (activeMenu === 'item') {
-    return <ItemPickerPanel items={items} maxHeight={activeMenuMaxHeight} onSelect={handleItemClick} onClose={closeMenu} />;
+    return <ItemPickerPanel items={items} maxHeight={activeMenuMaxHeight} resolveSprite={resolveSprite} onSelect={handleItemClick} onClose={closeMenu} />;
   }
   if (activeMenu === 'ability') {
     return (
@@ -269,6 +270,7 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
         isEditing={isEditing}
         spriteFailed={itemSpriteFailed}
         fallbackSpriteFailed={itemFallbackSpriteFailed}
+        resolveSprite={resolveSprite}
         onSpriteError={() => setItemSpriteFailed(true)}
         onFallbackSpriteError={() => setItemFallbackSpriteFailed(true)}
         onHoverEnter={(e) => hoverEnter('item', e.currentTarget.getBoundingClientRect())}

@@ -17,11 +17,12 @@ import { parseTagFilter } from '../utils/tagSearch';
 interface ItemPickerPanelProps {
   items: ItemData[];
   maxHeight: number;
+  resolveSprite: (remoteUrl: string) => string;
   onSelect: (item: ItemData) => void;
   onClose: () => void;
 }
 
-export default function ItemPickerPanel({ items, maxHeight, onSelect, onClose }: ItemPickerPanelProps) {
+export default function ItemPickerPanel({ items, maxHeight, resolveSprite, onSelect, onClose }: ItemPickerPanelProps) {
   const [search, setSearch] = useState('');
   const ref = useDismissable<HTMLDivElement>(onClose);
 
@@ -51,7 +52,7 @@ export default function ItemPickerPanel({ items, maxHeight, onSelect, onClose }:
               className="flex items-center gap-2 px-2 py-1 rounded hover:bg-zinc-700 cursor-pointer transition-colors"
             >
               {item.spriteUrl ? (
-                <img src={item.spriteUrl} alt={item.name} loading="lazy" className="w-8 h-8 object-contain shrink-0" />
+                <img src={resolveSprite(item.spriteUrl)} alt={item.name} loading="lazy" className="w-8 h-8 object-contain shrink-0" />
               ) : (
                 <span className="w-8 h-8 flex items-center justify-center text-base shrink-0" role="img" aria-label="Unknown item">🎒</span>
               )}

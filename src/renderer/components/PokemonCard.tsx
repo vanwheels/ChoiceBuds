@@ -292,7 +292,7 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
         </div>
 
         {/* Item Sprite Box / Ability Capsule / Move Bubbles */}
-        <EditOverlays pokemon={pokemon} isEditing={isEditing} gameDataState={gameDataState} rulesetId={rulesetId} onUpdatePokemon={updateShowdownData} />
+        <EditOverlays pokemon={pokemon} isEditing={isEditing} gameDataState={gameDataState} rulesetId={rulesetId} resolveSprite={spriteCacheState.resolveSprite} onUpdatePokemon={updateShowdownData} />
 
         {/* EVs Grid Block */}
         <StatsColumn evs={showdownData.evs} nature={showdownData.nature} isEditing={isEditing} onUpdatePokemon={updateShowdownData} />

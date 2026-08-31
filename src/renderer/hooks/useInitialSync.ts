@@ -19,6 +19,17 @@
  * useGameData's own background effect, not here - this hook only needs to
  * wait on getItemData per item to know each one's spriteUrl before it can
  * download the actual sprite image bytes.
+ *
+ * Mega form sprites are also bulk-downloaded here, off the full static
+ * MEGA_STONE_TO_SPECIES table rather than the current legal roster - a Mega
+ * form lives at its own distinct PokeAPI id (see useMegaSprite.ts), so it's
+ * never covered by the species sprite pass above even for a species already
+ * synced. Gated on the same "something is unsynced" trigger as the rest of
+ * this pass rather than its own tracked flag, so it stays cheap (existing
+ * downloads are a local file check, not a re-fetch) - the one known gap is a
+ * future regulation adding a Mega Stone to an already-synced species with no
+ * other roster change in the same update, which wouldn't re-trigger this
+ * pass; not worth a dedicated cache flag for until that actually happens.
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -29,8 +40,12 @@ import type { UseDatabaseReturn } from './useDatabase';
 import { validateSpeciesLegality } from '../utils/pokemonRules';
 import { VGC_ITEMS } from '../config/vgcData';
 import { fetchPokemonData, normalizeSpeciesForAPI } from '../services/pokeapi';
+import { MEGA_STONE_TO_SPECIES } from '../config/megaEvolution';
+import { fetchMegaSprite } from './useMegaSprite';
 
 const CONCURRENCY = 8;
+
+const MEGA_API_SLUGS = [...new Set(Object.values(MEGA_STONE_TO_SPECIES).map(entry => `${entry.species}-${entry.suffix}`))];
 
 export interface SyncProgress {
   label: string;
@@ -144,6 +159,18 @@ export function useInitialSync(
         async itemName => {
           const item = await getItemData(itemName);
           if (item?.spriteUrl) await downloadSprite(item.spriteUrl);
+        }
+      );
+
+      completed = 0;
+      setProgress({ label: 'Downloading Mega Sprites', current: 0, total: MEGA_API_SLUGS.length });
+      await runWithConcurrency(
+        MEGA_API_SLUGS, CONCURRENCY,
+        () => setProgress({ label: 'Downloading Mega Sprites', current: ++completed, total: MEGA_API_SLUGS.length }),
+        async apiSlug => {
+          // A 404 here just means "no Mega sprite yet" (see useMegaSprite.ts) - skipped, not fatal.
+          const mega = await fetchMegaSprite(apiSlug);
+          if (mega) await Promise.all([downloadSprite(mega.spriteUrl), downloadSprite(mega.shinySpriteUrl)]);
         }
       );
 

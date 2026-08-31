@@ -32,7 +32,7 @@ export default function RosterRow({ row, side, activeColorClass, resolveSprite, 
   const isDraggable = !!enableDrag && !isBenched && !row.isActive && !row.isFainted;
 
   const megaSprite = useMegaSprite(row.isMega ? getMegaApiSlug(row.item, row.species) : null);
-  const spriteUrl = megaSprite ? megaSprite.spriteUrl : resolveSprite(row.spriteUrl);
+  const spriteUrl = megaSprite ? resolveSprite(megaSprite.spriteUrl) : resolveSprite(row.spriteUrl);
 
   const handleDragStart = isDraggable
     ? (e: DragEvent<HTMLDivElement>) => {

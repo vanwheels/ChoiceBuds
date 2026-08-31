@@ -19,6 +19,7 @@ interface ItemSpriteBoxProps {
   isEditing: boolean;
   spriteFailed: boolean;
   fallbackSpriteFailed: boolean;
+  resolveSprite: (remoteUrl: string) => string;
   onSpriteError: () => void;
   onFallbackSpriteError: () => void;
   onHoverEnter: (e: MouseEvent<HTMLDivElement>) => void;
@@ -32,6 +33,7 @@ export default function ItemSpriteBox({
   isEditing,
   spriteFailed,
   fallbackSpriteFailed,
+  resolveSprite,
   onSpriteError,
   onFallbackSpriteError,
   onHoverEnter,
@@ -49,7 +51,7 @@ export default function ItemSpriteBox({
     >
       {itemData?.spriteUrl && !spriteFailed ? (
         <img
-          src={itemData.spriteUrl}
+          src={resolveSprite(itemData.spriteUrl)}
           alt={selectedItem}
           loading="lazy"
           className="w-9 h-9 object-contain [image-rendering:pixelated]"

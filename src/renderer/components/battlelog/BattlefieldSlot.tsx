@@ -264,7 +264,7 @@ export default function BattlefieldSlot({
   const sideAlreadyMega = battle.megaEvolvedIds.some(id => sideRoster.some(p => p.id === id));
 
   const megaForms = getMegaFormsForSpecies(mon.species);
-  const spriteUrl = megaSprite ? megaSprite.spriteUrl : resolveSprite(getPixelSpriteUrl(mon.pokedexNumber, mon.species, gender, false));
+  const spriteUrl = megaSprite ? resolveSprite(megaSprite.spriteUrl) : resolveSprite(getPixelSpriteUrl(mon.pokedexNumber, mon.species, gender, false));
 
   const declareMega = (form?: { item: string; suffix: string }) => {
     battleLogActions.setMegaEvolved(battle, mon.id, form ? titleCase(form.item) : undefined);

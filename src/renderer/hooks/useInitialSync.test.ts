@@ -17,11 +17,20 @@ vi.mock('../services/pokeapi', async (importOriginal) => {
   return { ...actual, fetchPokemonData: vi.fn() };
 });
 
+// Real network calls, not exercised here - the Mega Sprites phase's own
+// behavior (id lookup -> sprite download) is useMegaSprite's job, already
+// covered by useMegaSprite.test.ts.
+vi.mock('./useMegaSprite', () => ({ fetchMegaSprite: vi.fn().mockResolvedValue(null) }));
+
 import { validateSpeciesLegality } from '../utils/pokemonRules';
 import { fetchPokemonData } from '../services/pokeapi';
+import { fetchMegaSprite } from './useMegaSprite';
+import { MEGA_STONE_TO_SPECIES } from '../config/megaEvolution';
 
 const mockedValidateLegality = vi.mocked(validateSpeciesLegality);
 const mockedFetchPokemonData = vi.mocked(fetchPokemonData);
+const mockedFetchMegaSprite = vi.mocked(fetchMegaSprite);
+const MEGA_SLUG_COUNT = new Set(Object.values(MEGA_STONE_TO_SPECIES).map(e => `${e.species}-${e.suffix}`)).size;
 
 const CACHE_ENTRY: PokeAPICacheEntry = {
   species: 'gengar',
@@ -111,6 +120,7 @@ describe('useInitialSync', () => {
   beforeEach(() => {
     mockedValidateLegality.mockReset().mockReturnValue(true); // every roster entry legal by default
     mockedFetchPokemonData.mockReset().mockResolvedValue(CACHE_ENTRY);
+    mockedFetchMegaSprite.mockReset().mockResolvedValue(null);
   });
 
   it('reports not-done with a Starting up placeholder until every input hook is ready', () => {
@@ -188,8 +198,31 @@ describe('useInitialSync', () => {
     expect(getItemData).toHaveBeenCalledTimes(VGC_ITEMS.length);
     expect(downloadSprite).toHaveBeenCalledWith('https://example.com/item.png');
 
+    // Every Mega form's id looked up too (no matching sprite mocked, so none downloaded)
+    expect(mockedFetchMegaSprite).toHaveBeenCalledTimes(MEGA_SLUG_COUNT);
+
     expect(markSpeciesSynced).toHaveBeenCalledWith(['Gengar', 'Rillaboom']);
-    expect(result.current.progress).toEqual({ label: 'Downloading Item Sprites', current: VGC_ITEMS.length, total: VGC_ITEMS.length });
+    expect(result.current.progress).toEqual({ label: 'Downloading Mega Sprites', current: MEGA_SLUG_COUNT, total: MEGA_SLUG_COUNT });
+  }, 15_000);
+
+  it('downloads both sprite variants for a Mega form whose id lookup succeeds', async () => {
+    const unsynced = [makeRosterEntry()];
+    const downloadSprite = vi.fn().mockResolvedValue('/local/sprite.png');
+    mockedFetchMegaSprite.mockImplementation(async slug =>
+      slug === 'gengar-mega'
+        ? { id: 10024, spriteUrl: 'https://example.com/10024.png', shinySpriteUrl: 'https://example.com/10024-shiny.png' }
+        : null
+    );
+
+    const { result } = setup({
+      gameData: { getUnsyncedSpecies: vi.fn().mockReturnValue(unsynced) },
+      spriteCache: { downloadSprite },
+    });
+
+    await waitFor(() => expect(result.current.isDone).toBe(true));
+
+    expect(downloadSprite).toHaveBeenCalledWith('https://example.com/10024.png');
+    expect(downloadSprite).toHaveBeenCalledWith('https://example.com/10024-shiny.png');
   }, 15_000);
 
   it('skips re-fetching PokeAPICache species stats for a species already cached', async () => {

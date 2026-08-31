@@ -35,7 +35,14 @@ function buildResult(id: number): MegaSpriteResult {
   };
 }
 
-async function fetchMegaSprite(apiSlug: string): Promise<MegaSpriteResult | null> {
+/**
+ * Exported (not just used internally) so useInitialSync can bulk-prefetch
+ * every Mega form's id/sprite URLs during the first-launch/regulation-delta
+ * sync pass - it shares this same module-level cache, so a component that
+ * later calls useMegaSprite for an already-prefetched slug gets an instant
+ * hit instead of re-fetching.
+ */
+export async function fetchMegaSprite(apiSlug: string): Promise<MegaSpriteResult | null> {
   if (cache.has(apiSlug)) return cache.get(apiSlug)!;
   const data = await fetchJSON<PokeAPIPokemonResponse>(`/pokemon/${apiSlug}`);
   const result = data ? buildResult(data.id) : null;
