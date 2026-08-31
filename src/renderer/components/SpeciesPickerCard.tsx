@@ -19,7 +19,8 @@ import type { RegulationId } from '../utils/pokemonRules';
 import { validateSpeciesLegality } from '../utils/pokemonRules';
 import { useDismissable } from '../hooks/useDismissable';
 import { usePokemonTypeFilter } from '../hooks/usePokemonTypeFilter';
-import { usePokemonMoveFilter } from '../hooks/usePokemonMoveFilter';
+import { usePokemonMoveFilter, isMoveResolved } from '../hooks/usePokemonMoveFilter';
+import { usePokemonAbilityFilter } from '../hooks/usePokemonAbilityFilter';
 import { parseTagFilter } from '../utils/tagSearch';
 import { ALL_TYPES } from '../config/typeEffectiveness';
 import { normalizeNameForAPI } from '../services/pokeapiService';
@@ -37,20 +38,28 @@ export default function SpeciesPickerCard({ roster, rulesetId, resolveSprite, on
   const ref = useDismissable<HTMLDivElement>(onClose);
 
   // A '#tag' is a type lookup when it names one of the 18 real types;
-  // otherwise it's treated as a move name, surfacing every species that can
-  // learn it (learned_by_pokemon) rather than requiring an exact species
-  // name match - see usePokemonMoveFilter.ts.
+  // otherwise it's tried as a move name first, surfacing every species that
+  // can learn it (learned_by_pokemon) rather than requiring an exact species
+  // name match - see usePokemonMoveFilter.ts. Only once the move lookup
+  // confirms a 404 (isMoveResolved true, moveMembers still null - not just
+  // "hasn't loaded yet") does it fall back to an ability name lookup
+  // against /ability/{name}'s `pokemon` field - see usePokemonAbilityFilter.ts.
   const tag = parseTagFilter(search);
   const isTypeTag = tag !== null && (ALL_TYPES as readonly string[]).includes(tag);
+  const normalizedTag = tag !== null && !isTypeTag ? normalizeNameForAPI(tag) : null;
   const typeMembers = usePokemonTypeFilter(isTypeTag ? tag : null);
-  const moveMembers = usePokemonMoveFilter(tag !== null && !isTypeTag ? normalizeNameForAPI(tag) : null);
+  const moveMembers = usePokemonMoveFilter(normalizedTag);
+  const moveFailed = normalizedTag !== null && isMoveResolved(normalizedTag) && moveMembers === null;
+  const abilityMembers = usePokemonAbilityFilter(moveFailed ? normalizedTag : null);
 
   const legalRoster = roster.filter(pkmn => validateSpeciesLegality(pkmn.name, rulesetId));
   const filtered = tag === null
     ? legalRoster.filter(pkmn => pkmn.name.toLowerCase().includes(search.toLowerCase()))
     : isTypeTag
       ? legalRoster.filter(pkmn => typeMembers?.has(pkmn.name.toLowerCase()) ?? false)
-      : legalRoster.filter(pkmn => moveMembers?.has(pkmn.name.toLowerCase()) ?? false);
+      : moveMembers !== null
+        ? legalRoster.filter(pkmn => moveMembers.has(pkmn.name.toLowerCase()))
+        : legalRoster.filter(pkmn => abilityMembers?.has(pkmn.name.toLowerCase()) ?? false);
 
   return (
     <div ref={ref} className="relative bg-zinc-700 border-2 border-accent-gold rounded-lg p-3 flex flex-col gap-3 max-w-[280px] min-h-[280px] max-h-[32rem]">
@@ -68,7 +77,7 @@ export default function SpeciesPickerCard({ roster, rulesetId, resolveSprite, on
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search species... (#fire, #dragon dance, ...)"
+          placeholder="Search species... (#fire, #dragon dance, #flash fire, ...)"
           autoFocus
           className="w-full px-2 py-1 text-sm font-bold text-white bg-zinc-800 border border-zinc-600 rounded text-center outline-none focus:border-accent-gold"
         />
@@ -80,9 +89,11 @@ export default function SpeciesPickerCard({ roster, rulesetId, resolveSprite, on
           <p className="text-xs text-zinc-400 text-center mt-4">
             {tag !== null && isTypeTag && typeMembers === null
               ? 'Loading type…'
-              : tag !== null && !isTypeTag && moveMembers === null
+              : tag !== null && !isTypeTag && !moveFailed && moveMembers === null
                 ? 'Loading move…'
-                : 'No legal species found'}
+                : tag !== null && !isTypeTag && moveFailed && abilityMembers === null
+                  ? 'Loading ability…'
+                  : 'No legal species found'}
           </p>
         ) : (
           filtered.map(pkmn => (

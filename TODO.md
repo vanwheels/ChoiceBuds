@@ -29,31 +29,15 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
   legal-roster diff, `seasons.ts`'s M-6+ rows once M-C's season dates are
   known). Purely additive — no known removals this reg.
 
-- **[Pokemon Picker Ability Search] — Leg 1** *(Last touched: 2026-08-31 ·
-  Re-checks: 0)*
-  Extend the species picker's `#tag` search (see [Pokemon Picker Move-Name
-  Search](COMPLETED.md), which added move-name tags on top of the original
-  type-only tags) to also accept an ability name, e.g. `#flashfire`
-  surfacing every species that can have Flash Fire. Mirror the
-  same shape: `usePokemonMoveFilter`'s pattern (per-tag cache, PokeAPI fetch,
-  loading state) but against `/ability/{name}`, whose `pokemon` field lists
-  every species that can have it (analogous to `/move/{name}`'s
-  `learned_by_pokemon`). `SpeciesPickerCard.tsx`'s tag disambiguation
-  (currently type-vs-move via `ALL_TYPES`) needs a third branch — likely
-  requires checking type match, then move match, then falling back to
-  ability, or an explicit prefix scheme if that ordering proves ambiguous in
-  practice.
-
 - **[Pokemon Picker Multi-Filter Search] — Leg 1** *(Last touched: 2026-08-31
   · Re-checks: 0)*
   Support multiple space-separated `#tag`s in one search (e.g. `#fire
   #shadowclaw #shadowsneak #flashfire`), ANDed together — species must match
   every tag, mixing type/move/ability tags freely in the same query.
-  Straightforward once each tag already resolves to a `Set<string>` (per
-  [Pokemon Picker Move-Name Search](COMPLETED.md) and the Ability Search leg
-  above): parse multiple tags out of `search`, resolve each to a member set,
-  intersect. Should land after Ability Search above so all three tag kinds
-  exist to combine.
+  Straightforward now that each tag already resolves to a `Set<string>` (per
+  [Pokemon Picker Move-Name Search](COMPLETED.md) and [Pokemon Picker Ability
+  Search](COMPLETED.md)): parse multiple tags out of `search`, resolve each
+  to a member set, intersect. All three tag kinds now exist to combine.
 
 - **[Add Pokemon Box Width Match] — Leg 1** *(Last touched: 2026-08-28 ·
   Re-checks: 0)*

@@ -14,6 +14,19 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **Pokemon Picker Ability Search - Leg 1** (2026-08-31). Extends the
+  species picker's `#tag` search (see Move-Name Search below) with a third
+  kind: an ability name, e.g. `#flashfire` surfacing every species that can
+  have Flash Fire, via PokeAPI's `/ability/{name}` endpoint (`pokemon`
+  field). New `usePokemonAbilityFilter` hook mirrors `usePokemonMoveFilter`'s
+  cache/loading shape. Tag disambiguation in `SpeciesPickerCard.tsx` is
+  sequential: a type match wins outright, then a move name is tried, and
+  only once the move lookup confirms a 404 (not just "hasn't loaded yet")
+  does it fall back to an ability lookup — the new `isMoveResolved` export
+  from `usePokemonMoveFilter.ts` is what lets the fallback tell "still
+  loading" apart from "confirmed not a move" using the hook's existing
+  cache, without changing its own return contract. Commit TBD.
+
 - **Pokemon Picker Move-Name Search - Leg 1** (2026-08-31). The species
   picker's `#tag` convention (previously type-only, e.g. `#fire`) now also
   accepts a move name (e.g. `#dragon dance`): a `#tag` that isn't one of the

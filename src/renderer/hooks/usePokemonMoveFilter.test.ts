@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
-import { usePokemonMoveFilter } from './usePokemonMoveFilter';
+import { usePokemonMoveFilter, isMoveResolved } from './usePokemonMoveFilter';
 import { fetchJSON } from '../services/pokeapiService';
 
 vi.mock('../services/pokeapiService', () => ({
@@ -73,5 +73,18 @@ describe('usePokemonMoveFilter', () => {
     const { result } = renderHook(() => usePokemonMoveFilter('splash-test-1'));
     await waitFor(() => expect(result.current).not.toBeNull());
     expect(result.current).toEqual(new Set());
+  });
+
+  describe('isMoveResolved', () => {
+    it('is false before a move has been fetched and true once it resolves, including on a 404', async () => {
+      expect(isMoveResolved('resolve-check-test-1')).toBe(false);
+
+      mockedFetchJSON.mockResolvedValueOnce(null);
+      const { result } = renderHook(() => usePokemonMoveFilter('resolve-check-test-1'));
+      await waitFor(() => expect(mockedFetchJSON).toHaveBeenCalledTimes(1));
+
+      expect(result.current).toBeNull(); // 404 -> no match
+      expect(isMoveResolved('resolve-check-test-1')).toBe(true); // but resolution is confirmed
+    });
   });
 });

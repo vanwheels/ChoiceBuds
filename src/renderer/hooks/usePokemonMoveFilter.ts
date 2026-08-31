@@ -25,6 +25,17 @@ async function fetchMoveLearners(move: string): Promise<Set<string> | null> {
   return result;
 }
 
+/**
+ * Whether `move` has finished resolving (found or 404) - lets a caller tell
+ * "still loading" (this returns false, hook returns null) apart from
+ * "confirmed not a move" (this returns true, hook returns null) without
+ * reaching into the module-private cache. SpeciesPickerCard.tsx uses this to
+ * know when to fall back to treating the tag as an ability name instead.
+ */
+export function isMoveResolved(move: string): boolean {
+  return moveLearnerCache.has(move);
+}
+
 /** Returns null while loading/inapplicable, or the set of matching species slugs (lowercase) */
 export function usePokemonMoveFilter(move: string | null): Set<string> | null {
   const [result, setResult] = useState<Set<string> | null>(move ? moveLearnerCache.get(move) ?? null : null);
