@@ -29,12 +29,6 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
   legal-roster diff, `seasons.ts`'s M-6+ rows once M-C's season dates are
   known). Purely additive — no known removals this reg.
 
-- **[Calc Mega Toggle Ability Revert] — Leg 1** *(Last touched: 2026-08-28
-  · Re-checks: 0)*
-  Calc: toggling a Mega off doesn't revert the Pokemon's ability back to
-  whatever was selected pre-Mega. Split out of the former "Manual-Testing
-  Batch Fixes" item.
-
 - **[Pokemon Picker Move-Name Search] — Leg 1** *(Last touched: 2026-08-28
   · Re-checks: 0)*
   Pokemon picker search by move name should surface every Pokemon that can

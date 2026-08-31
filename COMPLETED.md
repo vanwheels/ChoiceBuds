@@ -14,6 +14,14 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **Calc Mega Toggle Ability Revert - Leg 1** (2026-08-31). Toggling a Mega
+  off left the ability field stuck on the Mega-forced ability instead of
+  restoring whatever was set beforehand. Fixed in `CalcPokemonPanel.tsx` by
+  capturing the pre-Mega ability into a ref (keyed to the forme family, so a
+  stale value can't survive an unrelated species swap) when toggling into a
+  Mega, and restoring it when toggling back to the base forme. See commit
+  `<pending>`.
+
 - **Mega Eligibility Team Builder vs Calc Mismatch - Leg 1** (2026-08-31).
   Root cause: the two surfaces read Mega eligibility from two unrelated
   data sources - the team builder from a Serebii-verified curated list,

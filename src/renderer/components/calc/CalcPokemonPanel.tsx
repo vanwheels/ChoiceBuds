@@ -101,6 +101,12 @@ export default function CalcPokemonPanel({
   const [justSaved, setJustSaved] = useState(false);
   const [justCopied, setJustCopied] = useState(false);
   const autoFillRequestRef = useRef(0);
+  // Remembers the ability that was active right before Mega-ing, keyed to
+  // the forme family it was captured for, so toggling back off restores it
+  // instead of leaving the Mega-forced ability stuck. Keying on formes.root
+  // (rather than always trusting a non-null ref) guards against a stale
+  // value surviving an unrelated species swap made while still Mega'd.
+  const preMegaAbilityRef = useRef<{ root: string; ability: string } | null>(null);
 
   const autoFillFromUsage = async (species: string) => {
     const requestId = ++autoFillRequestRef.current;
@@ -272,7 +278,16 @@ export default function CalcPokemonPanel({
           current={state.species}
           onSelect={(species) => {
             const megaAbility = getMegaAbility(species.toLowerCase());
-            onChange(megaAbility ? { species, ability: megaAbility } : { species });
+            if (megaAbility) {
+              if (preMegaAbilityRef.current?.root !== formes.root) {
+                preMegaAbilityRef.current = { root: formes.root, ability: state.ability };
+              }
+              onChange({ species, ability: megaAbility });
+            } else {
+              const revert = preMegaAbilityRef.current?.root === formes.root ? preMegaAbilityRef.current.ability : null;
+              preMegaAbilityRef.current = null;
+              onChange(revert !== null ? { species, ability: revert } : { species });
+            }
           }}
         />
       )}
