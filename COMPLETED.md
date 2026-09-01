@@ -14,6 +14,15 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[Team Gap Analysis] - Leg 1** (2026-09-01). Added a background
+  `useUsageSync` hook (same batched-concurrency shape as `useInitialSync`,
+  shared `runWithConcurrency` extracted to `utils/concurrency.ts`) that
+  keeps `ChampionsUsageEntry.columnPosition` - championsbattledata.com's own
+  ladder-wide usage rank - synced for the whole legal roster on the existing
+  5-day usage TTL, no UI change. See commit `b637a8d`. Leg 2 (the actual
+  ranked-gap-list feature consuming this data) is in TODO.md, not yet
+  scoped.
+
 - **Fix `npm run build`/`type-check` Break in `championsMoveOverrides.test.ts` -
   Leg 1** (2026-09-01). `makeMove`'s fixture now sets `cachedAt`/`expiresAt`
   defaults before the `...overrides` spread, matching the sibling `makeMove`

@@ -15,29 +15,18 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
 
 ## In progress / up next
 
-- **[Team Gap Analysis] — Leg 1** *(Last touched: 2026-08-31 · Re-checks: 0)*
-  Came out of a 2026-08-31 strategic discussion on differentiation vs.
-  Showdown/calc.pokemonshowdown.com/PokeDD (see chat — worth writing up in
-  a design doc if this becomes a real multi-leg push): the Type Matchup
-  page's existing offensive/defensive coverage tables (`CoverageTable.tsx`)
-  are a raw 18-row multiplier grid the user has to interpret themselves,
-  identical in spirit to vgcmulticalc.com's own tool. The differentiated
-  version is one ranked "threats your team can't answer" list, weighted by
-  actual Champions ladder usage rather than showing every type equally.
-  Researched championsbattledata.com's API live: no bulk usage-ranking
-  endpoint exists (`/api/index` is name-normalization only, `/api/metadata`
-  is base stats/typing only). Every row returned by the existing
-  `/api/battle/:format/:name` endpoint (already called by
-  `fetchChampionsUsage`) carries a `column_position` field, constant per
-  species - confirmed by user to be the site's own usage ordering (lower =
-  more used), sourced from its underlying wide-format usage CSV.
-  Leg 1 scope: a batched sync (shape of `useInitialSync`) that fetches
-  `column_position` for every species in the legal roster and caches it,
-  refreshed on a cadence - reuse `ChampionsUsageEntry`'s existing 5-day TTL
-  rather than inventing a new one. No UI change in this leg. Leg 2 (not yet
-  scoped) is the actual ranked-gap-list feature on the Type Matchup page,
-  consuming this leg's data - design that once the ranking data is actually
-  in hand rather than speculating now. Not started.
+- **[Team Gap Analysis] — Leg 2** *(Last touched: 2026-09-01 · Re-checks: 0)*
+  Leg 1 (see COMPLETED.md) landed a background batched sync that keeps
+  `ChampionsUsageEntry.columnPosition` (championsbattledata.com's own
+  ladder-wide usage rank, lower = more used) populated for the whole legal
+  roster. This leg is the actual differentiated feature it was built for: a
+  ranked "threats your team can't answer" list on the Type Matchup page,
+  replacing/supplementing `CoverageTable.tsx`'s raw 18-row multiplier grid
+  with something weighted by real usage instead of showing every type
+  equally. Not yet scoped - design once picked up as its own session (which
+  usage threshold counts as "a real threat," how it reads alongside the
+  existing coverage table, whether it replaces or supplements it). Not
+  started.
 
 - **[Regulation M-C Prep] — Leg 1** *(Last touched: 2026-08-31 · Re-checks:
   0)*
@@ -92,6 +81,30 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
   2. General UI polish (#1) — nothing further scoped beyond what's shipped.
   3. Limitless usage data (#7) — blocked externally on API key approval.
      Blocked: waiting on Limitless API key approval.
+
+- **[Prune Dead `championsMovepoolChanges.ts` Entries] — Leg 1**
+  *(Last touched: 2026-09-01 · Re-checks: 0)*
+  Scoped 2026-09-01 (see chat) — decision resolved, ready to implement as its
+  own session. Two-part fix, not a full delete:
+  1. Self-heal the stale-cache bug: extend `useGameData.ts`'s
+     `getCachedSpeciesLearnset` to treat `hasChampionsMoveData === false` as
+     a forced cache miss too, same pattern already used there for
+     `=== undefined`. Any `NEVER_EXPIRES`-cached false-entry then self-heals
+     to `true` on its next read, since Champions Data Leg 4a/6's audits
+     confirmed every current-roster species already has real PokeAPI
+     champions move data.
+  2. Prune only the confirmed-dead per-species rows — the 22 Reg M-B
+     species' + Floette's `CHAMPIONS_MOVEPOOL_ADDITIONS`/
+     `CHAMPIONS_MOVEPOOL_REMOVALS` entries in `config/championsMovepoolChanges.ts`
+     — but keep `GLOBALLY_REMOVED_MOVES` and the whole
+     `applyMovepoolChangesIfNeeded` gate mechanism alive as-is. Reasoning:
+     Reg M-C (drops 2026-09-08, see its own TODO item) adds new species that
+     will very likely hit this exact "PokeAPI hasn't backfilled its champions
+     tag yet" gap the same way the 22 M-B species originally did, so the
+     mechanism itself still needs to stay live — it's the per-species M-B
+     data specifically that's dead, not the fallback path.
+  Add/update `useGameData.test.ts` coverage for the new forced-miss branch
+  alongside the prune.
 
 ## Blocked
 
