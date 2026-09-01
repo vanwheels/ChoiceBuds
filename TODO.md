@@ -54,19 +54,10 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
   known). Purely additive — no known removals this reg.
 
 - **[Champions Data: Adopt Showdown's `champions` Mod as Primary Reference] —
-  Leg 4b** *(Last touched: 2026-09-01 · Re-checks: 0)*
-  Leg 2, Leg 3, and now Leg 4a are all done — see COMPLETED.md. Leg 4a's
-  investigation found the original "~200 Past-only moves →
-  `GLOBALLY_REMOVED_MOVES`" premise rested on a wrong assumption (that the
-  list applies to every species) - it only ever applies to species PokeAPI
-  hasn't "champions"-tagged yet, confirmed via a full live roster audit to
-  be just Floette today. Resolved and applied same day - see
-  `docs/investigations/champions-showdown-mod-audit.md`'s "Leg 4a
-  resolution" section.
-  Leg 4b (`championsMovepoolChanges.ts`'s `CHAMPIONS_MOVEPOOL_ADDITIONS`/
-  `REMOVALS` audit against Showdown's `learnsets.ts`) is next, not started.
-  Leg 5 (evaluate `formats-data.ts`/`items.ts` as a roster/tier source,
-  likely its own scoping pass) still follows.
+  Leg 5** *(Last touched: 2026-09-01 · Re-checks: 0)*
+  Leg 2, Leg 3, Leg 4a, and now Leg 4b are all done — see COMPLETED.md. Leg 5
+  (evaluate `formats-data.ts`/`items.ts` as a roster/tier source) is next,
+  not started — likely its own scoping pass rather than a straight build leg.
 
 - **[2026-07-07 Review-Pass Leftovers] — Leg 2** *(Last touched: 2026-08-31 ·
   Re-checks: 0)*

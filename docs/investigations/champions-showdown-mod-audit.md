@@ -381,6 +381,90 @@ species's backfill would still be relying on those corrections until that
 cache entry is invalidated some other way, and no such invalidation path
 exists today. See TODO.md's new backlog entry.
 
+## Leg 4b (2026-09-01, same day): a second, stronger Showdown source
+
+Leg 4a used `moves.ts`'s blanket per-move Past-flag list. This leg instead
+used `data/mods/champions/learnsets.ts` - a *per-species* table, one entry
+per species whose Champions moveset differs from mainline, each a complete
+standalone movepool (not a delta list: confirmed by checking for PS's
+`inherit: true` flag, which appears exactly once in the whole file, on
+`floetteeternal` - an unrelated Eternal Flower form override; bare
+`floette` has no entry at all in this file). 232 species are covered.
+
+**Method**: for each of the 22 Reg M-B species, fetched its real PokeAPI
+all-time movepool (every version group PokeAPI has ever recorded a move
+for, matching `fetchSpeciesLearnset`'s actual fallback baseline exactly -
+*not* scoped to `scarlet-violet`, which four of these species don't even
+have any moves tagged under at all: Barbaracle, Mawile, Musharna, and
+Scolipede aren't in mainline SV's dex, only Champions'). Applied this
+file's `GLOBALLY_REMOVED_MOVES`/`ADDITIONS`/`REMOVALS` to that baseline and
+diffed the result against the species' real `learnsets.ts` entry.
+`annihilape` (Gen-9-native, no legacy-game moves in its all-time pool at
+all) matched exactly on the first pass - good confirmation the method
+itself is sound before trusting it on the other 21.
+
+**Finding 1 (applied)**: aggregating every "our correction expects this
+move, Showdown's mod says it's gone" gap across all 22 species and keeping
+only the moves absent from literally every one of the 232 tracked species
+(not just one species' own restricted movepool) surfaced 46 more moves
+missing from `GLOBALLY_REMOVED_MOVES` - now added
+([championsMovepoolChanges.ts](../../src/renderer/config/championsMovepoolChanges.ts),
+189 -> 235 entries). All 5 of Leg 4a's Floette carve-out moves (`vine-whip`,
+`tackle`, `razor-leaf`, `fairy-wind`, `magical-leaf`) are among the 46 -
+none appear anywhere in `learnsets.ts`'s 232 species, including several
+Grass-types elsewhere in the file that would have no reason to lose Vine
+Whip if Champions left their movepool untouched. That's stronger,
+species-scoped evidence than `moves.ts`'s blanket Past flag, so Leg 4a's
+carve-out is superseded: all 5 are globally removed now, meaning Floette
+(the one species this file's corrections actually reach today) loses them
+like every other species.
+
+Moves like `toxic`/`attract`/`doubleteam`/`swagger`/`return`/`revenge` also
+showed up as "expected but absent" for several of the 22, but do appear
+elsewhere in `learnsets.ts` for other species (e.g. `swagger` is confirmed
+present for `annihilape` itself) - real per-species removals, not global
+ones, so they were **not** added to `GLOBALLY_REMOVED_MOVES`.
+
+**Finding 2 (documented, not applied - dead code)**: after applying
+Finding 1's fix, each of the 22 species still has a residual set of
+real per-species discrepancies against its own `learnsets.ts` entry. Not
+applied to `CHAMPIONS_MOVEPOOL_ADDITIONS`/`REMOVALS` this session, per Leg
+4a's standing finding that all 22 species' entries are dead code today
+(PokeAPI's own `champions` tag already covers them, bypassing this file
+entirely) - see the "Prune Dead `championsMovepoolChanges.ts` Per-Species
+Entries" TODO.md item. Recorded here so whoever resolves that item has the
+data instead of re-deriving it:
+
+| Species | Missing from `REMOVALS` (still shows as learnable, Champions disagrees) | Missing from `ADDITIONS` |
+|---|---|---|
+| barbaracle | doubleteam, torment | - |
+| blaziken | seismictoss, toxic, doubleteam, swagger, attract, dynamicpunch, roleplay, defog | - |
+| dragalge | swagger, attract, bounce | - |
+| eelektross | bind, roar, toxic, doubleteam, swagger, attract, magnetrise, aquatail | - |
+| falinks | *(none - matches exactly)* | - |
+| gholdengo | *(none - matches exactly)* | - |
+| grimmsnarl | attract, darkest-lariat | - |
+| houndstone | *(none - matches exactly)* | - |
+| malamar | bind, toxic, attract, roleplay, block, allyswitch | - |
+| metagross | toxic, doubleteam, dynamicpunch, block, rockpolish, allyswitch | - |
+| pyroar-male | toxic, doubleteam, swagger, attract, bounce | - |
+| qwilfish | doubleteam, explosion, swagger, attract, bounce, scald | - |
+| sceptile | pound, counter, seismictoss, toxic, mudslap, swagger, attract, safeguard, dynamicpunch | - |
+| scolipede | doubleteam, strugglebug | - |
+| scrafty | toxic, doubleteam, attract | - |
+| staraptor | toxic, mudslap, attract, pluck, defog, strugglebug | - |
+| swampert | seismictoss, toxic, doubleteam, swagger, attract, dynamicpunch, aquatail, scald, darkest-lariat | - |
+| vileplume | doubleedge, doubleteam, reflect, curse, swagger, safeguard, gastroacid, worryseed, drainpunch, infestation | - |
+| mawile | doubleteam, mudslap, torment, lastresort | **charm** (Champions grants it; absent from Mawile's PokeAPI all-time movepool entirely, so this isn't even a "removed by Champions" case - it's a Champions-exclusive addition) |
+| musharna | torment, worryseed | - |
+| overqwil | *(none - matches exactly)* | - |
+
+(Move names above are camelCase-to-kebab as PokeAPI slugs, e.g.
+`doubleteam` -> `double-team`, `dynamicpunch` -> `dynamic-punch`,
+`allyswitch` -> `ally-switch` - written without the dash here to match
+Showdown's own raw move keys, for easy re-searching in
+`champions-learnsets.ts` if this table needs re-deriving.)
+
 ## Recommended Leg 2+ breakdown
 
 Per the "smaller working slice per leg" convention, splitting rather than

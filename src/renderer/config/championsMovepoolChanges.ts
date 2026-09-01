@@ -90,56 +90,114 @@
  * question was "does removing any of these 194 moves take something away
  * from Floette specifically" - checked directly against Floette's own SV
  * learnset (`pokemon-species` `moves`, filtered to the `scarlet-violet`
- * version group and split by learn method): 5 of the 194 are moves Floette
- * actually learns by level-up (`vine-whip`, `tackle`, `razor-leaf`,
- * `fairy-wind`, plus `magical-leaf` which it gets both by level-up and
- * machine) - those 5 are excluded below so Floette keeps them. The other
- * 189 aren't in Floette's SV learnset via any method, so removing them
- * changes nothing for Floette and matches Showdown's mod either way.
- * `double-shock` and `revival-blessing` were also dropped from the
- * candidate set - Bulbapedia's per-move pages (cross-checked per Leg 4a's
- * investigation) list both as available in Champions, disagreeing with the
- * Past flag; excluding them costs nothing today since neither is in
- * Floette's learnset regardless, but keeps this list honest for whenever
- * its scope next changes (e.g. a future species losing its champions tag).
- * `v-create` (Victini's signature move) is included - Victini isn't on
- * this app's legal roster at all (see `utils/pokemonRules.ts`), so the
- * signature-move collision the Leg 1 heads-up worried about doesn't apply.
+ * version group and split by learn method): Leg 4a found 5 of the 194 are
+ * moves Floette learns by level-up in mainline SV (`vine-whip`, `tackle`,
+ * `razor-leaf`, `fairy-wind`, `magical-leaf`) and excluded all 5 from this
+ * list on the assumption that a `moves.ts` "Past" flag only means
+ * "not TM/Tutor-teachable," not "absent." Leg 4b (below) found stronger,
+ * species-scoped evidence that assumption was wrong for all 5 - they're
+ * included below now. `double-shock` and `revival-blessing` were also
+ * dropped from the candidate set - Bulbapedia's per-move pages (cross-
+ * checked per Leg 4a's investigation) list both as available in Champions,
+ * disagreeing with the Past flag; excluding them costs nothing today since
+ * neither is in Floette's learnset regardless, but keeps this list honest
+ * for whenever its scope next changes (e.g. a future species losing its
+ * champions tag). `v-create` (Victini's signature move) is included -
+ * Victini isn't on this app's legal roster at all (see
+ * `utils/pokemonRules.ts`), so the signature-move collision the Leg 1
+ * heads-up worried about doesn't apply.
+ *
+ * EXPANDED AGAIN 2026-09-01 (Champions Data Leg 4b): audited this file's
+ * two per-species maps against a *second*, independent Showdown source -
+ * `data/mods/champions/learnsets.ts`, not `moves.ts`. Unlike `moves.ts`'s
+ * blanket Past-flag list, this file gives each of 232 species (every
+ * species Champions' moveset differs from mainline for) its own complete,
+ * standalone Champions movepool - no inheritance, every entry a full
+ * replacement (confirmed: only one `inherit: true` species in the whole
+ * file, `floetteeternal`, an unrelated Eternal Flower form override; bare
+ * `floette` has no entry at all, meaning Showdown's mod applies no delta to
+ * regular Floette beyond what `moves.ts`/this file already handle).
+ * Cross-checked all 22 Reg M-B species by computing, per species, its real
+ * PokeAPI all-time movepool (the same baseline `fetchSpeciesLearnset`
+ * itself uses when `hasChampionsMoveData` is false - the full historical
+ * moveset across every version group PokeAPI has ever recorded, not just
+ * `scarlet-violet`) with this file's `GLOBALLY_REMOVED_MOVES`/`ADDITIONS`/
+ * `REMOVALS` applied, then diffed the result against that species' real
+ * Showdown-mod entry. `annihilape` (a Gen 9-native species with no legacy-
+ * game moves in its all-time pool at all) matched exactly. The other 21
+ * species turned up real per-species gaps - not applied here, since Leg 4a
+ * already confirmed PokeAPI has back-filled real `champions`-tagged move
+ * data for all 22, making their entries in this file dead code today (see
+ * the "Prune Dead `championsMovepoolChanges.ts` Per-Species Entries"
+ * TODO.md item) - spending further effort perfecting confirmed-dead-code
+ * accuracy isn't worthwhile until that item resolves one way or the other.
+ * Full per-species discrepancy tables are recorded in
+ * `docs/investigations/champions-showdown-mod-audit.md`'s Leg 4b section
+ * for whoever resolves that item next.
+ *
+ * What *did* come out of this pass as a live fix: aggregating every
+ * species' "our correction expects this move present, Showdown's mod says
+ * it's absent" gaps and keeping only the moves absent from literally every
+ * one of the 232 tracked species (not just gaps specific to one species'
+ * own restricted movepool) surfaced 46 more moves missing from
+ * `GLOBALLY_REMOVED_MOVES` - added below. All 5 of Leg 4a's Floette
+ * carve-out moves (`vine-whip`, `tackle`, `razor-leaf`, `fairy-wind`,
+ * `magical-leaf`) are among the 46: none of them appear anywhere in
+ * `learnsets.ts`'s 232 species, including species that plainly would have
+ * kept them if Champions left their movepool untouched (e.g. multiple
+ * Grass-types elsewhere in the file with no reason to lose Vine Whip
+ * otherwise). That's stronger, species-scoped evidence than `moves.ts`'s
+ * blanket Past flag, so Leg 4a's carve-out is superseded - all 5 are
+ * globally removed now, meaning Floette loses them like every other
+ * species. (Moves like `toxic`/`attract`/`doubleteam`/`swagger` also
+ * showed up as "expected but absent" for several of the 22 species, but
+ * DO appear elsewhere in `learnsets.ts` for other species - e.g. `swagger`
+ * is confirmed present for `annihilape` - so those are real per-species
+ * removals, not global ones, and were left for the per-species dead-code
+ * question above rather than added here.)
  */
 
 const GLOBALLY_REMOVED_MOVES = [
-  'absorb', 'acid', 'aeroblast', 'arm-thrust', 'astonish', 'attack-order',
-  'aurora-beam', 'behemoth-bash', 'behemoth-blade', 'blazing-torque', 'bleakwind-storm', 'blue-flare',
-  'bolt-strike', 'branch-poke', 'brine', 'bubble-beam', 'burning-bulwark', 'celebrate',
-  'chloroblast', 'collision-course', 'combat-torque', 'confide', 'confusion', 'conversion',
-  'conversion-2', 'court-change', 'crush-grip', 'cut', 'dark-void', 'defend-order',
-  'defense-curl', 'diamond-storm', 'disarming-voice', 'doodle', 'doom-desire', 'double-kick',
-  'dragon-ascent', 'dragon-breath', 'dragon-energy', 'dream-eater', 'drum-beating', 'dynamax-cannon',
-  'echoed-voice', 'electro-drift', 'ember', 'esper-wing', 'false-surrender', 'false-swipe',
-  'fiery-wrath', 'fillet-away', 'fire-pledge', 'flame-wheel', 'fleur-cannon', 'floral-healing',
-  'force-palm', 'freeze-shock', 'freezing-glare', 'fury-attack', 'fury-cutter', 'fury-swipes',
-  'fusion-bolt', 'fusion-flare', 'glacial-lance', 'glaciate', 'glaive-rush', 'grass-pledge',
-  'growl', 'gust', 'happy-hour', 'harden', 'headbutt', 'heart-swap',
-  'hidden-power', 'hold-back', 'hold-hands', 'hone-claws', 'horn-attack', 'hydro-steam',
-  'hyperspace-fury', 'hyperspace-hole', 'ice-burn', 'incinerate', 'ivy-cudgel', 'jaw-lock',
-  'judgment', 'jungle-healing', 'leafage', 'leer', 'lick', 'lunar-blessing',
-  'lunar-dance', 'luster-purge', 'magical-torque', 'magma-storm', 'malignant-chain', 'mega-drain',
-  'mega-punch', 'metronome', 'mighty-cleave', 'milk-drink', 'mimic', 'mist',
-  'mist-ball', 'moongeist-beam', 'mystical-power', 'noxious-torque', 'order-up', 'origin-pulse',
-  'overdrive', 'pay-day', 'peck', 'photon-geyser', 'play-nice', 'poison-gas',
-  'poison-sting', 'poison-tail', 'powder-snow', 'precipice-blades', 'present', 'prismatic-laser',
-  'psybeam', 'psyblade', 'psycho-boost', 'psystrike', 'pyro-ball', 'relic-song',
-  'retaliate', 'roar-of-time', 'rock-smash', 'rock-throw', 'rollout', 'ruination',
-  'sacred-fire', 'sand-attack', 'sandsear-storm', 'scratch', 'secret-power', 'secret-sword',
-  'seed-flare', 'shadow-force', 'shift-gear', 'shock-wave', 'shore-up', 'silk-trap',
-  'sketch', 'slam', 'slash', 'sludge', 'smog', 'smokescreen',
-  'spacial-rend', 'spark', 'splash', 'springtide-storm', 'steam-eruption', 'stomp',
+  'absorb', 'acid', 'aeroblast', 'arm-thrust', 'aromatherapy', 'astonish',
+  'attack-order', 'aurora-beam', 'behemoth-bash', 'behemoth-blade', 'bide', 'blazing-torque',
+  'bleakwind-storm', 'blue-flare', 'bolt-strike', 'branch-poke', 'brine', 'bubble',
+  'bubble-beam', 'burning-bulwark', 'camouflage', 'captivate', 'celebrate', 'chip-away',
+  'chloroblast', 'clamp', 'collision-course', 'combat-torque', 'confide', 'confusion',
+  'constrict', 'conversion', 'conversion-2', 'court-change', 'crush-grip', 'cut',
+  'dark-void', 'defend-order', 'defense-curl', 'diamond-storm', 'disarming-voice', 'doodle',
+  'doom-desire', 'double-kick', 'dragon-ascent', 'dragon-breath', 'dragon-energy', 'dream-eater',
+  'drum-beating', 'dual-chop', 'dynamax-cannon', 'echoed-voice', 'electro-drift', 'embargo',
+  'ember', 'esper-wing', 'fairy-wind', 'false-surrender', 'false-swipe', 'feint-attack',
+  'fiery-wrath', 'fillet-away', 'fire-pledge', 'flame-wheel', 'flash', 'fleur-cannon',
+  'floral-healing', 'force-palm', 'foresight', 'freeze-shock', 'freezing-glare', 'frustration',
+  'fury-attack', 'fury-cutter', 'fury-swipes', 'fusion-bolt', 'fusion-flare', 'glacial-lance',
+  'glaciate', 'glaive-rush', 'grass-pledge', 'growl', 'gust', 'hail',
+  'happy-hour', 'harden', 'headbutt', 'heart-swap', 'hidden-power', 'hold-back',
+  'hold-hands', 'hone-claws', 'horn-attack', 'hydro-steam', 'hyperspace-fury', 'hyperspace-hole',
+  'ice-burn', 'incinerate', 'ion-deluge', 'ivy-cudgel', 'jaw-lock', 'judgment',
+  'jungle-healing', 'laser-focus', 'leafage', 'leer', 'lick', 'lucky-chant',
+  'lunar-blessing', 'lunar-dance', 'luster-purge', 'magical-leaf', 'magical-torque', 'magma-storm',
+  'malignant-chain', 'mega-drain', 'mega-punch', 'metal-claw', 'metronome', 'mighty-cleave',
+  'milk-drink', 'mimic', 'miracle-eye', 'mirror-move', 'mist', 'mist-ball',
+  'moongeist-beam', 'mud-bomb', 'mud-sport', 'mystical-power', 'natural-gift', 'nature-power',
+  'noxious-torque', 'ominous-wind', 'order-up', 'origin-pulse', 'overdrive', 'pay-day',
+  'peck', 'photon-geyser', 'play-nice', 'poison-gas', 'poison-sting', 'poison-tail',
+  'powder-snow', 'power-up-punch', 'precipice-blades', 'present', 'prismatic-laser', 'psybeam',
+  'psyblade', 'psycho-boost', 'psystrike', 'psywave', 'punishment', 'pursuit',
+  'pyro-ball', 'rage', 'razor-leaf', 'relic-song', 'retaliate', 'return',
+  'revenge', 'roar-of-time', 'rock-climb', 'rock-smash', 'rock-throw', 'rollout',
+  'ruination', 'sacred-fire', 'sand-attack', 'sandsear-storm', 'scratch', 'secret-power',
+  'secret-sword', 'seed-flare', 'shadow-force', 'shift-gear', 'shock-wave', 'shore-up',
+  'signal-beam', 'silk-trap', 'sketch', 'skull-bash', 'sky-uppercut', 'slam',
+  'slash', 'sludge', 'smog', 'smokescreen', 'snatch', 'spacial-rend',
+  'spark', 'splash', 'springtide-storm', 'steam-eruption', 'steamroller', 'stomp',
   'strange-steam', 'strength', 'sunsteel-strike', 'supersonic', 'surging-strikes', 'swift',
-  'tachyon-cutter', 'tail-glow', 'tail-whip', 'take-down', 'take-heart', 'tar-shot',
-  'teleport', 'tera-blast', 'tera-starstorm', 'thunder-cage', 'thunder-shock', 'thunderclap',
-  'thunderous-kick', 'triple-kick', 'twister', 'v-create', 'vice-grip', 'victory-dance',
-  'water-gun', 'water-pledge', 'wicked-blow', 'wicked-torque', 'wildbolt-storm', 'wing-attack',
-  'withdraw', 'work-up', 'zing-zap',
+  'tachyon-cutter', 'tackle', 'tail-glow', 'tail-whip', 'take-down', 'take-heart',
+  'tar-shot', 'telekinesis', 'teleport', 'tera-blast', 'tera-starstorm', 'thunder-cage',
+  'thunder-shock', 'thunderclap', 'thunderous-kick', 'triple-kick', 'twister', 'v-create',
+  'venom-drench', 'vice-grip', 'victory-dance', 'vine-whip', 'water-gun', 'water-pledge',
+  'wicked-blow', 'wicked-torque', 'wildbolt-storm', 'wing-attack', 'withdraw', 'work-up',
+  'zing-zap',
 ];
 
 export const CHAMPIONS_MOVEPOOL_ADDITIONS: Record<string, string[]> = {

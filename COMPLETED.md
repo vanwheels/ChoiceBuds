@@ -15,6 +15,24 @@ in:
   (the 50 oldest entries as of the 2026-08-31 split)
 
 - **Champions Data: Adopt Showdown's `champions` Mod as Primary Reference -
+  Leg 4b** (2026-09-01). Cross-checked `championsMovepoolChanges.ts` against
+  a second, stronger Showdown source than Leg 4a's blanket move-flag list:
+  `learnsets.ts`'s per-species complete Champions movepools (232 species).
+  Computing each of the 22 Reg M-B species' real PokeAPI all-time movepool
+  with this file's corrections applied and diffing against its real
+  Showdown entry surfaced 46 more moves absent from literally every tracked
+  species - added to `GLOBALLY_REMOVED_MOVES` (189 → 235). All 5 of Leg
+  4a's Floette carve-out moves (vine-whip/tackle/razor-leaf/fairy-wind/
+  magical-leaf) turned out to be among the 46, so that carve-out is
+  superseded - Floette loses them like everyone else now. Added
+  `championsMovepoolChanges.test.ts` (previously untested). The 22 species'
+  own remaining per-species discrepancies were documented but not applied -
+  still confirmed dead code per Leg 4a, so left for the "Prune Dead" backlog
+  item to resolve first. See commit `<pending>` and
+  `docs/investigations/champions-showdown-mod-audit.md`'s "Leg 4b" section
+  for the full trail and per-species discrepancy table.
+
+- **Champions Data: Adopt Showdown's `champions` Mod as Primary Reference -
   Leg 4a** (2026-09-01). Expanded `GLOBALLY_REMOVED_MOVES` from 3 to 189
   entries using Showdown's 194 Past-only moves as the candidate source. A
   same-day earlier pass had found this unsafe, assuming the list applies to
