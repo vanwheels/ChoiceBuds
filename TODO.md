@@ -29,18 +29,6 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
   legal-roster diff, `seasons.ts`'s M-6+ rows once M-C's season dates are
   known). Purely additive — no known removals this reg.
 
-- **[Config-Table Audit Script] — Leg 1** *(Last touched: 2026-08-29 ·
-  Re-checks: 0)*
-  Everything else from the GW2-Squaded testing-workflow adoption is done —
-  Vitest is wired up and every hook has coverage except the 3
-  Battle-Logger-only ones, deliberately skipped pending its retirement (see
-  below). Remaining piece: a standalone audit script (GW2 Squaded's
-  `scripts/audit-data-completeness.ts` mold) that scans this repo's
-  hand-curated config tables (`config/championsMoveOverrides.ts`,
-  `config/moveStatEffects.ts`, `config/onSwitchInAbilities.ts`, etc.) for
-  structural gaps, complementing the comprehensive-coverage rule already in
-  CLAUDE.md. Not started.
-
 - **[Battle Logger Retirement] — Leg 1** *(Last touched: 2026-08-29 ·
   Re-checks: 0)*
   Decision made: drop live turn-by-turn logging + stat-inference
@@ -169,3 +157,18 @@ unblocked.
   (`championsMoveOverrides.ts`/`championsAbilityOverrides.ts`/etc.) if
   useful later. No concrete driver yet beyond the original season/regulation
   use case. Not started.
+
+- **[Config-Table Audit Script Coverage Extension] — Leg 2** *(Last touched:
+  2026-08-31 · Re-checks: 0)*
+  Leg 1 (see COMPLETED.md) scoped `scripts/auditConfigTables.ts`'s
+  referential-integrity check to 7 files — the 4 tables CLAUDE.md's
+  "Curated effect tables" rule names plus the 3 Champions-override files
+  TODO's own item body named. Not yet covered: `moveBlockingAbilities.ts`,
+  `megaAbilities.ts`, `moveFieldEffects.ts`, `moveWeatherEffects.ts`,
+  `moveTargeting.ts`, `typeChangingAbilities.ts`, `protectMoves.ts`,
+  `switchOutMoves.ts`, `moveFlags.ts` — several of these nest move-name
+  arrays inside object values (e.g. `moveBlockingAbilities.ts`'s
+  `move-list`/`SOUND_BASED_MOVES`) rather than being flat
+  `Record<string, X>`/`string[]`, so extending the script's TS-AST walker to
+  reach them isn't just copy-pasting the existing per-file blocks. Not
+  started.

@@ -14,6 +14,25 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **Config-Table Audit Script - Leg 1** (2026-08-31). Standalone
+  `scripts/auditConfigTables.ts`, in the mold of GW2 Squaded's
+  `scripts/audit-data-completeness.ts`: a local, no-network, console-report
+  scan of 7 hand-curated config tables (the 4 CLAUDE.md's "Curated effect
+  tables" rule names, plus the 3 Champions-override files this item's body
+  named) for stale/typo'd move or ability slugs, using `@smogon/calc`'s
+  bundled Gen 9 dex (already this repo's only offline movedex, per
+  `scripts/generateMoveFlags.ts`) as the canonical name source, plus a
+  Champions-movepool add/remove self-contradiction check. Scoped down from
+  the GW2 mold's "missing coverage shape" style check during the build - that
+  package exposes no boosts/secondary-effect data at runtime (only
+  id/name/flags/category/type/basePower per move), so there's no local
+  structured signal here to detect a table missing an entry, only whether an
+  existing entry's slug is real; extending coverage to the rest of this
+  repo's move/ability-keyed tables is tracked separately (see TODO.md's Leg
+  2). First run found 0 hits - a clean result, not a null one; the script's
+  own detection logic was verified against a known-real and a known-fake
+  slug before the real run. See commit `<pending>`.
+
 - **Add Pokemon Box Width Match - Leg 1** (2026-08-31). The "+ Add Pokémon"
   placeholder button filled its entire grid cell width with no cap, while
   `PokemonCard`/`SpeciesPickerCard` both cap at `max-w-[280px]` - in the
