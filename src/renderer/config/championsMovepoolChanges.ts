@@ -155,6 +155,28 @@
  * is confirmed present for `annihilape` - so those are real per-species
  * removals, not global ones, and were left for the per-species dead-code
  * question above rather than added here.)
+ *
+ * LEG 6 UPDATE (2026-09-01): the "Floette" this file's Leg 4a/4b passes
+ * audited was the wrong species. `utils/pokemonRules.ts`'s roster entry has
+ * been corrected from `floette` to `floette-eternal` - Champions' real
+ * legal Floette is the Eternal Flower form (see
+ * `docs/investigations/champions-showdown-mod-audit.md`'s Leg 5/6
+ * sections). Re-ran the `hasChampionsMoveData` check directly against
+ * PokeAPI's `floette-eternal` resource: unlike bare `floette` (0
+ * champions-tagged moves), `floette-eternal` already carries 41
+ * champions-tagged moves (all via the `train`/Move Reminder learn method).
+ * That means `hasChampionsMoveData` resolves `true` for the species this
+ * app actually uses now, so `useGameData.ts::applyMovepoolChangesIfNeeded`
+ * never calls into this file for it - same as the 22 Reg M-B species Leg 4a
+ * already found. **This file's per-species scope is now empty**: every
+ * entry below (`GLOBALLY_REMOVED_MOVES` included, not just the
+ * `ADDITIONS`/`REMOVALS` maps) is unreachable dead code for the current
+ * legal roster. Not pruned here for the same reason the 22 species weren't
+ * in Leg 4a/4b - an already-cached (`NEVER_EXPIRES`) `hasChampionsMoveData:
+ * false` learnset entry from before a user's PokeAPI backfill would still
+ * rely on these corrections until invalidated some other way. See TODO.md's
+ * "Prune Dead `championsMovepoolChanges.ts` Per-Species Entries" item,
+ * whose scope now covers this whole file rather than just the 22 species.
  */
 
 const GLOBALLY_REMOVED_MOVES = [

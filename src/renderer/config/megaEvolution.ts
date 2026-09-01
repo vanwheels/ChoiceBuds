@@ -48,7 +48,9 @@ export const MEGA_STONE_TO_SPECIES: Record<string, { species: string; suffix: st
   'excadrite': { species: 'excadrill', suffix: 'mega' },
   'falinksite': { species: 'falinks', suffix: 'mega' },
   'feraligite': { species: 'feraligatr', suffix: 'mega' },
-  'floettite': { species: 'floette', suffix: 'mega' },
+  // Champions' real legal Floette is the Eternal Flower form, not the
+  // ordinary color-variant form - see utils/pokemonRules.ts's REG_MA_SPECIES.
+  'floettite': { species: 'floette-eternal', suffix: 'mega' },
   'froslassite': { species: 'froslass', suffix: 'mega' },
   'galladite': { species: 'gallade', suffix: 'mega' },
   'garchompite': { species: 'garchomp', suffix: 'mega' },
@@ -110,6 +112,22 @@ export const MEGA_STONE_TO_SPECIES: Record<string, { species: string; suffix: st
 export const CURATED_MEGA_FORM_SLUGS = new Set(
   Object.values(MEGA_STONE_TO_SPECIES).map(entry => `${entry.species}-${entry.suffix}`)
 );
+
+/**
+ * Floette exception (Champions Data Leg 6): MEGA_STONE_TO_SPECIES's
+ * `floettite` entry above uses `floette-eternal` as its species - the real
+ * legal Floette per utils/pokemonRules.ts, and what showdownData.species
+ * actually holds for a Floette on a team, so getMegaApiSlug/
+ * getMegaFormsForSpecies match correctly against that. But @smogon/calc's
+ * own bundled species dex (unaware of Champions' Floette/Floette-Eternal
+ * legal-form swap) still attaches its "Floette-Mega" entry to base
+ * "Floette", not "Floette-Eternal" - so the mechanically-derived
+ * "floette-eternal-mega" above would never match what calcFormes.ts actually
+ * finds in @smogon/calc's dex, silently hiding the Calc tab's Mega toggle for
+ * Floette. Substituted with the slug @smogon/calc itself uses.
+ */
+CURATED_MEGA_FORM_SLUGS.delete('floette-eternal-mega');
+CURATED_MEGA_FORM_SLUGS.add('floette-mega');
 
 /**
  * Resolves the PokeAPI resource slug ("gengar-mega", "charizard-mega-x") for

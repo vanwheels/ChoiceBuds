@@ -588,6 +588,69 @@ Net result of running the cross-check: 232/233 species agree, 72/72
 sampled items agree, and the one disagreement is a real, concrete, fixable
 roster bug rather than noise. See TODO.md's new Leg 6 for the fix.
 
+## Leg 6 (2026-09-01): the roster fix, and what it revealed
+
+Applied Leg 5's recommended fix and re-ran the two follow-up checks its
+"Touch points" list called for.
+
+**`utils/pokemonRules.ts`**: `REG_MA_SPECIES`'s `'floette'` entry swapped to
+`'floette-eternal'`.
+
+**`config/pokemonRules.ts`'s gendered-form entry**: checked, no change
+needed. Floette isn't in `GENDERED_FORM_VARIANTS` at all (that table is only
+for the four species PokeAPI splits into distinct `-male`/`-female`
+resources) - it's in `FEMALE_LOCKED_SPECIES` instead, keyed on the bare
+species name. `getFallbackGender` checks `isFemaleLocked` against both the
+full species string and `species.split('-')[0]` (the base), so
+`"Floette-Eternal"` still resolves its base to `"Floette"` and matches the
+existing entry correctly - no static-gift-form special case needed.
+
+**`config/megaEvolution.ts`'s `floettite` mapping**: species field swapped to
+`'floette-eternal'`, matching what `showdownData.species` actually holds for
+a Floette on a team now (`toDisplayName` in `useSpeciesRoster.ts` renders
+PokeAPI's `floette-eternal` slug as `"Floette-Eternal"`). This surfaced a new
+finding, not anticipated by Leg 5's touch-points list: `@smogon/calc`'s own
+bundled species dex (checked directly in `node_modules/@smogon/calc/src/data/
+species.ts`) still attaches its `"Floette-Mega"` entry to base `"Floette"`
+(`baseSpecies: 'Floette'`), not `"Floette-Eternal"` - it has no concept of
+Champions' Floette/Floette-Eternal legal-form swap. `CURATED_MEGA_FORM_SLUGS`
+(consumed by `calcFormes.ts` to gate the Calc tab's Mega toggle) is
+mechanically derived as `${species}-${suffix}` from the same map, so once
+`species` became `'floette-eternal'` that derivation produced
+`'floette-eternal-mega'` - which would never match `@smogon/calc`'s actual
+`'floette-mega'` name, silently hiding the Calc tab's Mega toggle for Floette
+even though the Team Builder's own sprite-swap match (which does key off our
+`species` field) would keep working. Fixed with a small, explicitly-commented
+post-processing exception in `megaEvolution.ts` (swap the one Set entry) -
+see that file and its new `megaEvolution.test.ts` rather than restating the
+reasoning here. Scoped narrowly to Floette; not a general reconciliation of
+the two systems (that was already done, see COMPLETED.md's "Mega Eligibility
+Team Builder vs Calc Mismatch" entry) - this is a fresh, single-species
+instance of the same category of mismatch that entry's fix didn't (and
+couldn't have) anticipated, since the roster bug this leg fixes is what
+exposed it.
+
+**Re-ran the `hasChampionsMoveData` audit against `floette-eternal` instead
+of plain `floette`**, per Leg 5's third touch point (`championsMovepoolChanges.ts`'s Floette-specific corrections). Fetched
+`pokemon/floette-eternal` directly from PokeAPI (raw JSON, not summarized):
+it carries **41 `champions`-tagged move entries** (all via the `train`/Move
+Reminder learn method), vs. bare `floette`'s 0. That means
+`hasChampionsMoveData` now resolves `true` for the species this app actually
+uses, so `useGameData.ts::applyMovepoolChangesIfNeeded` never reaches
+`championsMovepoolChanges.ts` for it at all - same outcome Leg 4a already
+found for the 22 Reg M-B species. **This retires `championsMovepoolChanges.ts`'s per-species scope entirely** - there is no longer any species in the
+current legal roster this file's corrections (`GLOBALLY_REMOVED_MOVES`
+included) actually reach. Not pruned this session, same standing reason as
+Leg 4a/4b (an already-cached `NEVER_EXPIRES` `hasChampionsMoveData: false`
+entry from before a user's backfill would still depend on it) - see
+TODO.md's "Prune Dead `championsMovepoolChanges.ts` Per-Species Entries"
+item, whose scope now covers the whole file rather than just the 22 species.
+This also means Leg 4a's original 5-move learn-by-level-up safety check
+(superseded by Leg 4b anyway) never needed re-deriving against
+`floette-eternal`'s real learnset - the question it was trying to answer
+("is it safe for `GLOBALLY_REMOVED_MOVES` to apply to Floette") is moot once
+`hasChampionsMoveData` gates the whole file out for Floette regardless.
+
 ## Recommended Leg 2+ breakdown
 
 Per the "smaller working slice per leg" convention, splitting rather than

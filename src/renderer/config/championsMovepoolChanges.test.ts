@@ -1,8 +1,11 @@
 /**
  * Test suite for the Champions movepool corrections applied on top of a
- * species' PokeAPI all-time movepool (see file header - only actually
- * consulted for species PokeAPI hasn't "champions"-tagged yet, which is
- * Floette today). Covers the Leg 4b findings in particular: the game-wide
+ * species' PokeAPI all-time movepool (see file header - as of Leg 6, no
+ * species in the current legal roster actually reaches this table anymore;
+ * every entry is unreachable dead code pending the "Prune Dead
+ * championsMovepoolChanges.ts Per-Species Entries" TODO item). Still tests
+ * the pure `applyChampionsMovepoolChanges` function directly, independent of
+ * that gating. Covers the Leg 4b findings in particular: the game-wide
  * removal list and the moves it now strips that used to be carved out for
  * Floette (see docs/investigations/champions-showdown-mod-audit.md's Leg 4b
  * section for how those 5 moves were confirmed absent from Champions).

@@ -15,6 +15,18 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
 
 ## In progress / up next
 
+- **[Fix `npm run build`/`type-check` Break in `championsMoveOverrides.test.ts`]
+  — Leg 1** *(Last touched: 2026-09-01 · Re-checks: 0)*
+  Discovered incidentally while verifying Champions Data Leg 6 (unrelated to
+  that leg's actual changes - confirmed pre-existing via `git stash`).
+  `tsc --noEmit` (and therefore `npm run build`, which runs `tsc` first)
+  fails: `championsMoveOverrides.test.ts`'s `makeMove` fixture builds a
+  `MoveData` object without a `cachedAt` field, which the type now requires
+  as `number` (not optional). `npm run test`/`npm run lint` are both
+  unaffected (Vitest doesn't type-check, ESLint doesn't catch this). Not
+  fixed here - out of this leg's scope - but flagged since it currently
+  blocks a real production build on `main`. Not started.
+
 - **[Team Gap Analysis] — Leg 1** *(Last touched: 2026-08-31 · Re-checks: 0)*
   Came out of a 2026-08-31 strategic discussion on differentiation vs.
   Showdown/calc.pokemonshowdown.com/PokeDD (see chat — worth writing up in
@@ -52,23 +64,6 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
   `championsAbilityOverrides.ts` for Aura Break, `useInitialSync`'s
   legal-roster diff, `seasons.ts`'s M-6+ rows once M-C's season dates are
   known). Purely additive — no known removals this reg.
-
-- **[Champions Data: Adopt Showdown's `champions` Mod as Primary Reference] —
-  Leg 6** *(Last touched: 2026-09-01 · Re-checks: 0)*
-  Leg 5 (scoping only, see COMPLETED.md) confirmed `formats-data.ts` is a
-  reliable species-roster cross-check (232/233 agree with our REG-M-B list)
-  and surfaced a real bug: our roster's `'floette'` should be
-  `'floette-eternal'` — Champions' mod flips mainline's legal/Illegal status
-  for the two forms, and `learnsets.ts`/PokeAPI both back that up (see
-  `docs/investigations/champions-showdown-mod-audit.md`'s Leg 5 section for
-  the full evidence chain). Leg 6 is the actual fix: swap the slug in
-  `utils/pokemonRules.ts` (`REG_MA_SPECIES`), check whether
-  `config/pokemonRules.ts`'s gendered-form entry still applies the same way
-  to a static-gift form, update `config/megaEvolution.ts`'s `floettite`
-  mapping, and re-run `championsMovepoolChanges.ts`'s Floette-specific
-  `hasChampionsMoveData` audit (including Leg 4a's 5-move learn-by-level-up
-  exclusion check) against `floette-eternal` instead of plain `floette`.
-  Not started.
 
 - **[2026-07-07 Review-Pass Leftovers] — Leg 2** *(Last touched: 2026-08-31 ·
   Re-checks: 0)*
@@ -160,21 +155,25 @@ unblocked.
 
 ## Backlog / ideas (not yet scoped, highest-to-lowest priority)
 
-- **[Prune Dead `championsMovepoolChanges.ts` Per-Species Entries] — Leg 1**
+- **[Prune Dead `championsMovepoolChanges.ts` Entries] — Leg 1**
   *(Last touched: 2026-09-01 · Re-checks: 0)*
-  Leg 4a's live audit confirmed PokeAPI has back-filled "champions"-tagged
-  move data for all 22 of the Reg M-B species this file's
-  `CHAMPIONS_MOVEPOOL_ADDITIONS`/`REMOVALS` maps still hold entries for -
-  only Floette (which has no entries in either map) still lacks it. That
-  makes those 22 species' entries dead code under
+  Scope widened by Champions Data Leg 6 (see COMPLETED.md): Leg 4a's live
+  audit found PokeAPI had back-filled "champions"-tagged move data for all 22
+  Reg M-B species, leaving only Floette (then still keyed to the wrong
+  `'floette'` slug) out of coverage; Leg 6 fixed the roster to
+  `'floette-eternal'` and found PokeAPI already covers that slug too (41
+  champions-tagged moves). That means **every** entry in this file -
+  `GLOBALLY_REMOVED_MOVES` included, not just the 22 species'
+  `CHAMPIONS_MOVEPOOL_ADDITIONS`/`REMOVALS` entries - is now dead code under
   `useGameData.ts::applyMovepoolChangesIfNeeded`'s `hasChampionsMoveData`
-  gate. Not pruned in Leg 4a because a user with an already-cached
-  (`NEVER_EXPIRES`) `hasChampionsMoveData: false` entry from before their
-  species's backfill would still be relying on those corrections, and there
-  is no cache-invalidation path that would self-heal that. Needs a decision
-  on how to safely retire them (a cache-version bump? a one-time forced
-  re-fetch for affected species? just accept the small residual-user risk
-  and delete?) before doing the prune. Not started.
+  gate; no species in the current legal roster reaches this file at all.
+  Not pruned yet because a user with an already-cached (`NEVER_EXPIRES`)
+  `hasChampionsMoveData: false` entry from before their species's backfill
+  would still be relying on those corrections, and there is no
+  cache-invalidation path that would self-heal that. Needs a decision on how
+  to safely retire it (a cache-version bump? a one-time forced re-fetch for
+  affected species? just accept the small residual-user risk and delete?)
+  before doing the prune. Not started.
 
 - **[Calc Auto Ability-Effect Application] — Leg 1** *(Last touched:
   2026-08-31 · Re-checks: 0)*

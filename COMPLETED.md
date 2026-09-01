@@ -15,6 +15,24 @@ in:
   (the 50 oldest entries as of the 2026-08-31 split)
 
 - **Champions Data: Adopt Showdown's `champions` Mod as Primary Reference -
+  Leg 6** (2026-09-01). The actual fix for Leg 5's Floette roster bug:
+  `utils/pokemonRules.ts`'s `REG_MA_SPECIES` now lists `'floette-eternal'`
+  instead of `'floette'`. Verified `config/pokemonRules.ts`'s gendered-form
+  handling needs no change (Floette's female-lock resolves off the base
+  species name either way). Updated `config/megaEvolution.ts`'s `floettite`
+  mapping to match, which surfaced a new mismatch: `@smogon/calc`'s own
+  species dex still attaches its Mega form to base `"Floette"`, not
+  `"Floette-Eternal"`, which would have silently hidden the Calc tab's Mega
+  toggle for Floette - fixed with a small, explicitly-commented exception
+  (new `megaEvolution.test.ts`). Re-ran `championsMovepoolChanges.ts`'s
+  Floette audit against the corrected slug and found PokeAPI already has 41
+  champions-tagged moves for `floette-eternal` - that file's per-species
+  scope is now entirely unreachable dead code, widening the existing "Prune
+  Dead" backlog item's scope (see TODO.md). See
+  `docs/investigations/champions-showdown-mod-audit.md`'s Leg 6 section for
+  the full trail.
+
+- **Champions Data: Adopt Showdown's `champions` Mod as Primary Reference -
   Leg 5** (2026-09-01). Scoping-only pass (per project convention): evaluated
   `formats-data.ts`/`items.ts` as a roster/item source, resolving the
   ruleset-alignment question the original Leg 5 recommendation left open.

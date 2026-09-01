@@ -207,10 +207,16 @@ export async function fetchSpeciesLearnset(
   // moves absent from Champions) were leaking into every move picker in the
   // app despite neither being a real Champions move. Its species coverage
   // is still being back-filled by PokeAPI itself, though - a full live audit
-  // (2026-07-19, see TODO.md) found it's specifically the 22 species
-  // Regulation M-B added (plus Floette) that PokeAPI hasn't tagged yet, 90%
-  // coverage otherwise - so this only narrows the list when there's at
-  // least one tagged move, falling back to the untouched all-time list
+  // (2026-07-19, see TODO.md) originally found it was specifically the 22
+  // species Regulation M-B added (plus Floette) that PokeAPI hadn't tagged
+  // yet, 90% coverage otherwise; a later re-audit (2026-09-01, Champions Data
+  // Legs 4a/6) found PokeAPI has since back-filled all 23 of those (Floette's
+  // real legal form turned out to be `floette-eternal`, not bare `floette` -
+  // see utils/pokemonRules.ts), so this narrowing is now effectively always
+  // hit for the current legal roster, but the all-time-list fallback stays in
+  // place for whatever the next uncovered species turns out to be - this only
+  // narrows the list when there's at least one tagged move, falling back to
+  // the untouched all-time list
   // otherwise rather than returning an artificially empty moveset for a
   // species PokeAPI hasn't caught up on yet. `hasChampionsMoveData` records
   // which case this was so useGameData.ts knows whether it's safe to trust

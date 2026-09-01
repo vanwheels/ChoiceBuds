@@ -70,7 +70,10 @@ const REG_MA_SPECIES: string[] = [
   'simisage', 'simisear', 'simipour', 'excadrill', 'audino', 'conkeldurr', 'whimsicott', 'krookodile',
   'cofagrigus', 'garbodor', 'zoroark', 'zoroark-hisui', 'reuniclus', 'vanilluxe', 'emolga', 'chandelure',
   'beartic', 'stunfisk', 'stunfisk-galar', 'golurk', 'hydreigon', 'volcarona', 'chesnaught', 'delphox',
-  'greninja', 'diggersby', 'talonflame', 'vivillon', 'floette', 'florges', 'pangoro', 'furfrou',
+  // Champions' real legal Floette is the Eternal Flower form, not the ordinary
+  // color-variant form - confirmed via Showdown's champions mod, see Leg 5/6
+  // of docs/investigations/champions-showdown-mod-audit.md.
+  'greninja', 'diggersby', 'talonflame', 'vivillon', 'floette-eternal', 'florges', 'pangoro', 'furfrou',
   'meowstic-male', 'meowstic-female', 'aegislash', 'aromatisse', 'slurpuff', 'clawitzer', 'heliolisk', 'tyrantrum', 'aurorus',
   // @smogon/calc has no bare "Aegislash" entry - only its Blade/Shield stat-formes
   'aegislash-blade', 'aegislash-shield',
