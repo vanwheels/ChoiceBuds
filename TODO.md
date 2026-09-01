@@ -119,6 +119,30 @@ unblocked.
 
 ## Backlog / ideas (not yet scoped, highest-to-lowest priority)
 
+- **[Calc Auto Ability-Effect Application] — Leg 1** *(Last touched:
+  2026-08-31 · Re-checks: 0)*
+  Today the Calc page's ability-based outcomes (e.g. a move blocked by
+  Levitate/Bulletproof/Wonder Guard/etc.) are manual - the user has to pick
+  `blocked-ability` on the outcome dropdown themselves; nothing in
+  `useDamageCalc.ts` inspects the defender's ability against the move being
+  used. User: this is the actual goal the Battle Logger's stat-inference
+  feature was originally reaching for before its retirement (see COMPLETED.md's
+  Battle Logger Retirement entry) - auto-applying ability effects instead of
+  requiring the user to already know/flag them. Confirmed worth building.
+  Surfaced by looking at github.com/Seancheey/PokeDD (a similar Champions
+  companion app) for architecture ideas: its `src/lib/damage.ts` hand-rolls
+  the full formula with ~25 ability modifiers baked in, rather than
+  delegating to `@smogon/calc` like this project does - closing this gap
+  here likely means either extending how `@smogon/calc` is driven or
+  layering a comparable ability-modifier pass on top of it, either of which
+  is a real design decision, not a small patch. Needs scoping: which
+  abilities to cover first (start from the existing curated tables -
+  `moveBlockingAbilities.ts`, `reactiveAbilities.ts`, `hitReactiveAbilities.ts`,
+  `onSwitchInAbilities.ts` - already hold researched ability-effect data
+  that could feed this), where in `useDamageCalc.ts`'s pipeline the check
+  belongs, and whether it replaces or supplements the manual outcome picker.
+  Not started.
+
 - **[Remaining Champions Mega Ability Audit] — Leg 1** *(Last touched:
   2026-08-31 · Re-checks: 0)*
   `config/megaAbilities.ts` still deliberately excludes ~30 Champions-
