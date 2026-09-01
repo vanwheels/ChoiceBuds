@@ -20,7 +20,7 @@ in:
   3-column layout (grid cells wider than 280px) that made the empty add-slot
   visibly wider than any actual roster card. Added the same `max-w-[280px]`
   to the button in `TeamCard.tsx`. Split out of the former "Manual-Testing
-  Batch Fixes" item. See commit `<pending>`.
+  Batch Fixes" item. See commit `dca840e`.
 
 - **Pokemon Picker Multi-Filter Search - Leg 1** (2026-08-31). The species
   picker's `#tag` search only ever took one tag at a time. Now multiple
