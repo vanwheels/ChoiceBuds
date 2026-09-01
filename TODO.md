@@ -29,34 +29,34 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
   legal-roster diff, `seasons.ts`'s M-6+ rows once M-C's season dates are
   known). Purely additive — no known removals this reg.
 
-- **[2026-07-07 Review-Pass Leftovers] — Leg 2** *(Last touched: 2026-08-31 ·
+- **[Export Team to Pokepaste] — Leg 1** *(Last touched: 2026-09-01 ·
   Re-checks: 0)*
-  Three items outstanding from three earlier review-pass batches (everything
-  else from them is done — see COMPLETED.md):
-  1. Calc page still scrolls slightly at 1280x720 after the 2026-07-14
-     tightening pass. **Re-measured 2026-08-31 with the now-fixed
-     `run-desktop` `resize` command (sets Electron content size directly,
-     per the Team Card Grid Layout fix) — actual gap is 144px** (main's
-     `scrollHeight` 864 vs. a full 720px `clientHeight`/`innerHeight`, no
-     title-bar chrome eating into it), not the previously recorded ~209px,
-     which was measured against an outer-window-frame size before that fix
-     existed. Fits fine at 1920x1080. Options to close it further (reversing
-     `CalcSideConditions.tsx`'s deliberate one-row-per-condition layout, or
-     trimming padding/gaps further toward a click-comfort/legibility risk)
-     were presented again; user chose to stop here and just bank the
-     corrected number. Revisit if wanted.
-  2. Battle Logger's move-stat-effects table: waiting on the user to name a
-     move with a weather-conditional stage *amount* like Growth's — no
-     second example found in research so far. This table lives in
-     `config/moveStatEffects.ts`, which is unaffected by the Battle Logger
-     Retirement (see COMPLETED.md) — still active, just no longer consumed
-     by an in-battle UI.
-     Blocked: needs the user to name a candidate move.
-  3. Stretch/uncertain: export a team *to* a new Pokepaste via its write
-     API — unconfirmed whether pokepast.es exposes one; needs research
-     before scoping.
-  (The former item 1, Battle Log page scrolling at 1280x720, is moot — the
-  live-battle view it was about no longer exists, see COMPLETED.md.)
+  Split out of Leg 2 item 3 above once research resolved its "does a write
+  API even exist" blocker — scoped 2026-09-01, not started. Confirmed via
+  `felixphew/pokepaste`'s `server.go` (the actual pokepast.es source, per
+  its GitHub repo) that a write endpoint exists: `POST /create`,
+  form-urlencoded body (`paste` required, `title`/`author`/`notes`
+  optional), responds `303` with a `Location: /<id>` header on success, `400`
+  on a missing/unparseable `paste` field. Three real pieces of work, not one:
+  1. **Unverified risk:** the site is a traditional server-rendered form
+     target, not a fetch-oriented API — untested whether pokepast.es sends
+     CORS headers permitting a cross-origin `fetch()` POST (with
+     `redirect: 'manual'` needed to read the `Location` header) from the
+     renderer's origin. The existing read path (`GET /<id>/json`) already
+     works live, but that doesn't guarantee the write path does — needs a
+     throwaway live test before any UI work.
+  2. No Showdown-export-text serializer exists anywhere in the codebase
+     today (`services/parser.ts` only goes text→`ShowdownPokemon[]`, never
+     the reverse) — this needs a new `ImportedPokemonInfo[]`→Showdown-text
+     function first, which is its own small design (item/move/EV/IV
+     formatting, Tera Type line, etc.) before there's anything to POST.
+  3. CLAUDE.md's pokepast.es exception (#2 in the external-integration list)
+     currently only sanctions the read direction
+     (`GET /<id>/json`, user-paste-triggered import) — a write call needs its
+     own explicit exception added there, not an assumed extension of the
+     existing one.
+  Next session should start with (1), the CORS spike, since a negative
+  result there closes the item outright before (2)/(3) are worth doing.
 
 - **[Original Roadmap Leftovers] — Leg 1** *(Last touched: not recorded,
   predates leg-tracking · Re-checks: 0)*

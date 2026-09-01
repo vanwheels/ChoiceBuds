@@ -14,6 +14,15 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[2026-07-07 Review-Pass Leftovers] - Leg 2** (2026-09-01). Both remaining
+  sub-items closed by user decision, no code changes: (1) the Calc page's
+  1280x720 scroll gap (re-measured 144px) stays as-is — user chose to bank
+  the corrected number rather than trim further; (2) the Battle Logger
+  move-stat-effects table's search for a second weather-conditional
+  stage-amount move (like Growth's) turned up nothing, and the user has none
+  in mind either, so the search is dropped rather than left open-ended. A new
+  TODO item can reopen either if something changes.
+
 - **[Team Gap Analysis] - Leg 2** (2026-09-01). New pure
   `utils/usageThreats.ts` pairs Leg 1's `columnPosition` usage rank with
   each species' real types (from `useDatabase`'s already-warm cache) and
