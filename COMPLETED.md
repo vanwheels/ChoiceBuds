@@ -31,7 +31,7 @@ in:
   repo's move/ability-keyed tables is tracked separately (see TODO.md's Leg
   2). First run found 0 hits - a clean result, not a null one; the script's
   own detection logic was verified against a known-real and a known-fake
-  slug before the real run. See commit `<pending>`.
+  slug before the real run. See commit `6f960ce`.
 
 - **Add Pokemon Box Width Match - Leg 1** (2026-08-31). The "+ Add Pokémon"
   placeholder button filled its entire grid cell width with no cap, while
