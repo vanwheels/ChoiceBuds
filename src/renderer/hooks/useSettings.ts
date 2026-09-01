@@ -23,6 +23,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   lastPushedAt: null,
   lastPulledAt: null,
   lastSeasonDataCheckedAt: null,
+  showAnimatedSprites: false,
   playerProfile: DEFAULT_PLAYER_PROFILE,
   lastModified: Date.now(),
 };

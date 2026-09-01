@@ -347,6 +347,7 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
                     speciesRosterState={speciesRosterState}
                     spriteCacheState={spriteCacheState}
                     rosterActions={rosterActions}
+                    showAnimatedSprites={settingsState.settings.showAnimatedSprites}
                   />
                 ))}
 

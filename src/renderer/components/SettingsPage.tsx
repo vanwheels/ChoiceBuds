@@ -62,6 +62,24 @@ export default function SettingsPage({ settingsState, teamsState, battlesState, 
         </div>
       </div>
 
+      <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-4">
+        <h2 className="text-sm font-semibold text-zinc-200">Animated Sprites</h2>
+        <p className="mt-1 text-xs text-zinc-400">
+          Swaps each team card's main sprite for Showdown's animated GIF
+          version. Only affects the Teams page's Pokémon cards - every other
+          sprite in the app stays static.
+        </p>
+        <label className="mt-3 flex items-center gap-2 text-xs text-zinc-300 cursor-pointer w-fit">
+          <input
+            type="checkbox"
+            checked={settings.showAnimatedSprites}
+            onChange={e => updateSettings({ showAnimatedSprites: e.target.checked })}
+            className="cursor-pointer accent-accent-gold"
+          />
+          Show Animated Sprites
+        </label>
+      </div>
+
       <PlayerProfileSection settingsState={settingsState} />
 
       <SyncSection syncState={syncState} />

@@ -27,7 +27,7 @@ import { isGenderless, isFemaleLocked } from '../config/pokemonRules';
 import { toRegulationId } from '../utils/pokemonRules';
 import { getMegaApiSlug } from '../config/megaEvolution';
 import { useMegaSprite } from '../hooks/useMegaSprite';
-import { getPixelSpriteUrl } from '../utils/spriteUrl';
+import { getPixelSpriteUrl, getAnimatedSpriteUrl } from '../utils/spriteUrl';
 import { TEAM_ROSTER_DRAG_TYPE, type TeamRosterDragPayload } from '../utils/teamRosterDragTypes';
 import { DRAG_REORDER_TRANSITION } from '../config/motion';
 
@@ -41,11 +41,12 @@ interface PokemonCardProps {
   speciesRosterState: UseSpeciesRosterReturn;
   spriteCacheState: UseSpriteCacheReturn;
   rosterActions: UseRosterActionsReturn;
+  showAnimatedSprites: boolean;
 }
 
 const FORM_DIVERGENT: Record<string, boolean> = { 'basculegion': true, 'indeedee': true, 'meowstic': true, 'oinkologne': true };
 
-export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = false, updateTeam, gameDataState, speciesRosterState, spriteCacheState, rosterActions }: PokemonCardProps) {
+export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = false, updateTeam, gameDataState, speciesRosterState, spriteCacheState, rosterActions, showAnimatedSprites }: PokemonCardProps) {
   const { showdownData, types, pokedexNumber } = pokemon;
   const [isLocalShiny, setIsLocalShiny] = useState(showdownData.shiny);
   const [localGender, setLocalGender] = useState<'M' | 'F' | 'N' | '' | undefined>(showdownData.gender);
@@ -53,6 +54,12 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
   const [isSwapPickerOpen, setIsSwapPickerOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  // Tracks the specific animated URL that last failed to load, not just a
+  // bare "give up" flag - so a subsequent gender/shiny/Mega-state change
+  // (which produces a different candidate URL) gets a fresh chance rather
+  // than being stuck on the static fallback for the rest of this card's
+  // lifetime.
+  const [failedAnimatedUrl, setFailedAnimatedUrl] = useState<string | null>(null);
   const spriteUrl = getPixelSpriteUrl(pokedexNumber, showdownData.species, localGender || 'M', isLocalShiny);
   const rulesetId = toRegulationId(team.format);
   const [glowC1, glowC2] = getTypeGlowColors(types);
@@ -62,7 +69,16 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
   // Stone - see config/megaEvolution.ts for the verified stone->species map.
   const megaApiSlug = getMegaApiSlug(showdownData.item, showdownData.species);
   const megaSprite = useMegaSprite(megaApiSlug);
-  const displaySpriteUrl = megaSprite ? (isLocalShiny ? megaSprite.shinySpriteUrl : megaSprite.spriteUrl) : spriteUrl;
+  const staticSpriteUrl = megaSprite ? (isLocalShiny ? megaSprite.shinySpriteUrl : megaSprite.spriteUrl) : spriteUrl;
+
+  // Showdown's sprite roster can lag official reveals (a newly-added Mega,
+  // in particular) - onError below records this exact URL as failed so the
+  // card degrades to the static PNG instead of a broken image.
+  const animatedCandidateUrl = showAnimatedSprites
+    ? getAnimatedSpriteUrl(megaApiSlug || showdownData.species, localGender || 'M', isLocalShiny)
+    : null;
+  const useAnimated = animatedCandidateUrl !== null && animatedCandidateUrl !== failedAnimatedUrl;
+  const displaySpriteUrl = useAnimated ? animatedCandidateUrl : staticSpriteUrl;
 
   // Item/ability/move/EV edits commit immediately through this, same
   // "write on every mutation" convention gender/shiny toggling already uses.
@@ -275,7 +291,12 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
             title={isEditing ? 'Click to swap this Pokémon' : undefined}
           >
             {displaySpriteUrl ? (
-              <img src={spriteCacheState.resolveSprite(displaySpriteUrl)} alt={showdownData.species} className="w-24 h-24 object-contain mx-auto transition-transform duration-150 [image-rendering:pixelated]" />
+              <img
+                src={spriteCacheState.resolveSprite(displaySpriteUrl)}
+                alt={showdownData.species}
+                onError={useAnimated ? () => setFailedAnimatedUrl(animatedCandidateUrl) : undefined}
+                className={`w-24 h-24 object-contain mx-auto transition-transform duration-150 ${useAnimated ? '' : '[image-rendering:pixelated]'}`}
+              />
             ) : (
               <span className="text-xs text-zinc-400">No sprite</span>
             )}

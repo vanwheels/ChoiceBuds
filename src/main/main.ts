@@ -92,7 +92,9 @@ async function getSpriteCacheDir(): Promise<string> {
 /**
  * Deterministic local filename for a remote sprite URL - hashed so it's
  * filesystem-safe regardless of the URL's own path structure, keeping the
- * original extension (sprites are always .png in practice) for sanity.
+ * original extension (.png for the PokeAPI/sprites hotlink, .gif for
+ * Showdown's animated sprite CDN - see utils/spriteUrl.ts::getAnimatedSpriteUrl)
+ * for sanity.
  */
 function getSpriteCacheFilename(remoteUrl: string): string {
   const hash = crypto.createHash('sha1').update(remoteUrl).digest('hex');

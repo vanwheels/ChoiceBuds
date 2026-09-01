@@ -165,6 +165,11 @@ export interface AppSettings {
   lastPushedAt: number | null; // Unix timestamp of this device's last successful Push
   lastPulledAt: number | null; // Unix timestamp of this device's last successful Pull
   lastSeasonDataCheckedAt: number | null; // Unix timestamp config/seasons.ts was last manually verified against Bulbapedia/Serebii
+  // Swaps PokemonCard.tsx's main 96px sprite (base + Mega-form) from static
+  // PNG to Showdown's animated GIF CDN - see CLAUDE.md's hotlink exception #5
+  // and utils/spriteUrl.ts::getAnimatedSpriteUrl. Scoped to that one render
+  // site only; every other sprite in the app stays static PNG regardless.
+  showAnimatedSprites: boolean;
   playerProfile: PlayerProfile;
   lastModified: number; // Unix timestamp
 }

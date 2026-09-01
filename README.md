@@ -16,5 +16,6 @@ ChoiceBuds is built on top of incredible open-source datasets, asset pipelines, 
 ### 🖼️ Visual Assets & Sprites
 * **[PokeAPI/sprites](https://github.com/PokeAPI/sprites)** - The actual hotlink source for every pixel-art Pokémon sprite in the app (normal and shiny). This repo's own README credits the Smogon community for permission to serve their modern (Gen 6+) sprite set through it.
 * **[msikma / PokéSprite Repository](https://github.com/msikma/pokesprite)** - MIT-licensed. Powers our clean, compact Shiny star indicator badges and interactive gender symbols.
+* **[Pokémon Showdown Sprite CDN](https://play.pokemonshowdown.com/sprites/)** - Hotlinked directly for the animated (GIF) Pokémon sprites shown when the Settings page's "Show Animated Sprites" toggle is on, chosen for its Gen 6+/Mega coverage over PokeAPI's own animated sprite field. Falls back to the static PokeAPI/sprites image above for any species/form Showdown hasn't added a sprite for yet.
 
 ---

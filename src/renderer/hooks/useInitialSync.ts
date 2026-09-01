@@ -30,6 +30,14 @@
  * future regulation adding a Mega Stone to an already-synced species with no
  * other roster change in the same update, which wouldn't re-trigger this
  * pass; not worth a dedicated cache flag for until that actually happens.
+ *
+ * Both sprite passes also queue Showdown's animated (+shiny) GIF alongside
+ * the static PNG for every unsynced species/Mega form, unconditional on the
+ * "Show Animated Sprites" setting's current state - same reasoning as shiny
+ * variants already being bulk-cached regardless of the shiny toggle, so
+ * flipping the setting on later never needs a network call. See
+ * utils/spriteUrl.ts::getAnimatedSpriteUrl and CLAUDE.md's hotlink exception
+ * #5.
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -42,6 +50,7 @@ import { VGC_ITEMS } from '../config/vgcData';
 import { fetchPokemonData, normalizeSpeciesForAPI } from '../services/pokeapi';
 import { MEGA_STONE_TO_SPECIES } from '../config/megaEvolution';
 import { fetchMegaSprite } from './useMegaSprite';
+import { getAnimatedSpriteUrl } from '../utils/spriteUrl';
 
 const CONCURRENCY = 8;
 
@@ -128,7 +137,12 @@ export function useInitialSync(
 
     isSyncing.current = true;
 
-    const spriteUrls = unsyncedSpecies.flatMap(entry => [entry.spriteUrl, entry.shinySpriteUrl]);
+    const spriteUrls = unsyncedSpecies.flatMap(entry => [
+      entry.spriteUrl,
+      entry.shinySpriteUrl,
+      getAnimatedSpriteUrl(entry.name, 'M', false),
+      getAnimatedSpriteUrl(entry.name, 'M', true),
+    ]);
 
     (async () => {
       // A prior sync in this same session may have already set this true -
@@ -169,8 +183,19 @@ export function useInitialSync(
         () => setProgress({ label: 'Downloading Mega Sprites', current: ++completed, total: MEGA_API_SLUGS.length }),
         async apiSlug => {
           // A 404 here just means "no Mega sprite yet" (see useMegaSprite.ts) - skipped, not fatal.
+          // The animated pair is downloaded unconditionally alongside it, even
+          // though Showdown's own roster (unlike PokeAPI's) has no reliable
+          // existence check ahead of time - a failed animated download just
+          // means PokemonCard's onError fallback does real work later, not a
+          // sync failure here (downloadSprite already treats a failed fetch
+          // as non-fatal per runWithConcurrency's per-item try/catch).
           const mega = await fetchMegaSprite(apiSlug);
-          if (mega) await Promise.all([downloadSprite(mega.spriteUrl), downloadSprite(mega.shinySpriteUrl)]);
+          await Promise.all([
+            mega ? downloadSprite(mega.spriteUrl) : null,
+            mega ? downloadSprite(mega.shinySpriteUrl) : null,
+            downloadSprite(getAnimatedSpriteUrl(apiSlug, 'M', false)),
+            downloadSprite(getAnimatedSpriteUrl(apiSlug, 'M', true)),
+          ]);
         }
       );
 
