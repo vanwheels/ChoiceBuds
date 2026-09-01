@@ -15,6 +15,25 @@ in:
   (the 50 oldest entries as of the 2026-08-31 split)
 
 - **Champions Data: Adopt Showdown's `champions` Mod as Primary Reference -
+  Leg 4a** (2026-09-01). Expanded `GLOBALLY_REMOVED_MOVES` from 3 to 189
+  entries using Showdown's 194 Past-only moves as the candidate source. A
+  same-day earlier pass had found this unsafe, assuming the list applies to
+  every species; it doesn't - it only ever reaches species PokeAPI hasn't
+  "champions"-tagged yet, and a full live roster audit (235 slugs) found
+  that's just Floette today (PokeAPI has since back-filled all 22 Reg M-B
+  species). Checked the 194 candidates against Floette's own SV learnset
+  directly and excluded the 5 it actually gets by level-up
+  (vine-whip/tackle/razor-leaf/fairy-wind/magical-leaf); the other 189 are
+  a no-op for Floette either way. Also dropped double-shock/
+  revival-blessing per Bulbapedia's per-move pages. Victini/`v-create`
+  turned out to be moot - Victini isn't on this app's legal roster at all.
+  Deferred: the other 22 species' movepool-correction entries are very
+  likely dead code now but weren't pruned (cache-staleness risk for
+  pre-backfill users) - see TODO.md's new backlog item. See commit
+  `a648958` and `docs/investigations/champions-showdown-mod-audit.md`'s
+  "Leg 4a resolution" section for the full trail.
+
+- **Champions Data: Adopt Showdown's `champions` Mod as Primary Reference -
   Leg 3** (2026-09-01). `championsAbilityOverrides.ts` audit against
   Showdown's `champions` mod (13 total ability entries) - `healer`/
   `unseen-fist` already matched; the other 11 turned out to need no new
