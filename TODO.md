@@ -16,17 +16,42 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
 ## In progress / up next
 
 - **[Team Gap Analysis] — Leg 2** *(Last touched: 2026-09-01 · Re-checks: 0)*
-  Leg 1 (see COMPLETED.md) landed a background batched sync that keeps
-  `ChampionsUsageEntry.columnPosition` (championsbattledata.com's own
-  ladder-wide usage rank, lower = more used) populated for the whole legal
-  roster. This leg is the actual differentiated feature it was built for: a
-  ranked "threats your team can't answer" list on the Type Matchup page,
-  replacing/supplementing `CoverageTable.tsx`'s raw 18-row multiplier grid
-  with something weighted by real usage instead of showing every type
-  equally. Not yet scoped - design once picked up as its own session (which
-  usage threshold counts as "a real threat," how it reads alongside the
-  existing coverage table, whether it replaces or supplements it). Not
-  started.
+  Scoped 2026-09-01 via `AskUserQuestion` (see chat) - ready to implement as
+  its own session. Leg 1 (see COMPLETED.md) landed a background batched sync
+  that keeps `ChampionsUsageEntry.columnPosition` (championsbattledata.com's
+  own ladder-wide usage rank, lower = more used) populated for the whole
+  legal roster; this leg spends it. Resolved design:
+  1. **Species-level, not a type-row reshuffle.** A ranked list of real
+     Pokémon (from `GameDataCache.usage`, sorted by `columnPosition`
+     ascending), each using its actual 1-2 real types - not another pass
+     over `CoverageTable.tsx`'s 18 mono-type rows. Species types come from
+     `useDatabase`'s `getCachedEntry(species).types`, already warm for the
+     whole legal roster via `useInitialSync` - no new fetch needed.
+  2. **Eligibility cutoff:** `columnPosition <= 50` (top 50 ladder usage).
+     Hand-picked default, not measured against real distribution yet -
+     revisit once the list is live and populated with real numbers if 50
+     feels too sparse/noisy.
+  3. **"Can't answer" = strict, zero resists.** For each usage-eligible
+     species, compute the best (max) effectiveness its own 1-2 types would
+     achieve attacking each team slot's defending types (same
+     `Math.max(...)` pattern `computeOffensiveCoverage` already uses in
+     `utils/typeCoverage.ts`, just driven by the threat's real types instead
+     of a move list). A species only makes the list if **no** team slot
+     resists/is immune to it. Typing-only, matching the existing Defensive
+     Coverage table's scope - deliberately does not factor in the threat's
+     actual likely moveset/coverage (that stays "unconfirmed suggestion"
+     territory per `ChampionsUsageEntry`'s own doc comment, not blended into
+     a typing-fact list).
+  4. **Placement: additive, not a replacement.** New panel on
+     `TypeMatchupPage.tsx` alongside the existing Offensive/Defensive
+     `CoverageTable`s - both stay as-is.
+  Implementation sketch: a new pure `utils/usageThreats.ts` (mirrors
+  `typeCoverage.ts`'s shape - team defending-types-by-slot in, ranked/filtered
+  threat list out) with a paired `usageThreats.test.ts`; a new
+  `components/typematchup/UsageThreatsList.tsx` panel; wire both into
+  `TypeMatchupPage.tsx` pulling from `gameDataState.usage`/`getCachedEntry`.
+  No new sync/gating needed - Leg 1's `useUsageSync` already keeps the data
+  warm in the background.
 
 - **[Regulation M-C Prep] — Leg 1** *(Last touched: 2026-08-31 · Re-checks:
   0)*
