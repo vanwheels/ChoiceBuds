@@ -254,6 +254,70 @@ Pyroar, and Scovillain are removed from that file's "deliberately
 incomplete" list and from the "Remaining Champions Mega Ability Audit"
 backlog item's open list (see TODO.md/COMPLETED.md).
 
+## Leg 4a update (2026-09-01): the "Past-only" premise is unsafe as-is
+
+Started building the `GLOBALLY_REMOVED_MOVES` list per the Leg 4 heads-up
+above. Extracted the actual candidate set first (raw-parsed, not
+summarized): of `moves.ts`'s 259 entries, **194** have a body that is
+*only* `inherit: true` + `isNonstandard: "Past"` (no other field changed) -
+the earlier "~200" estimate was directionally right. `metalclaw` is
+correctly excluded from this set (it also gets a `flags.slicing` addition,
+per the original heads-up caution), and diffing against the base
+(non-modded) `data/moves.ts` confirmed all 194 are genuinely *new* Past
+flags added by the Champions mod, not flags simply inherited from an
+already-Past mainline entry.
+
+**Cross-checked against Bulbapedia's [List of moves by availability in
+Pokémon Champions](https://bulbapedia.bulbagarden.net/wiki/List_of_moves_by_availability_in_Pok%C3%A9mon_Champions)**
+(raw-parsed its ✔/✘ table, 921 rows, not summarized) as a second source,
+per CLAUDE.md's cross-check discipline for a big/consequential config
+change. Strong agreement - 192/194 match; the two disagreements
+(`double-shock`, `revival-blessing`) both lean "available" on Bulbapedia's
+individual move pages, so those two would be dropped either way. Bulbapedia
+also has a *bigger* list - 422 moves marked unavailable total, not just
+194 - because Showdown's mod file only lists deltas from the mainline dex,
+so a move already unobtainable in mainline SV doesn't get a redundant
+re-flag in the Champions mod even though Champions still lacks it.
+
+**But the flag itself doesn't mean what the heads-up assumed.** Cross-
+referencing the 422-move "unavailable" list against our own
+`championsMoveOverrides.ts` found **16 moves already carrying verified,
+in-use Champions balance overrides** that Bulbapedia/Showdown both flag as
+unavailable: `anchor-shot`, `astral-barrage`, `blood-moon`, `bolt-beak`,
+`dragon-hammer`, `fishious-rend`, `gear-grind`, `hyper-drill`, `nihil-light`,
+`obstruct`, `purify`, `revelation-dance`, `shell-trap`, `snipe-shot`,
+`spin-out`, `triple-dive`. Most of these are **signature moves** (Shell
+Trap/Turtonator, Anchor Shot/Copperajah, Bolt Beak/Regieleki,
+Obstruct/Grimmsnarl, etc.), and Leg 2 already confirmed via Showdown's own
+`moves.ts` that these have live Champions-specific PP/power values - i.e.
+they're actively used, not removed. The most likely real meaning of
+`isNonstandard: "Past"` (and Bulbapedia's matching ✘) in this context is
+**"not freely teachable via TM/Tutor,"** not "absent from the game." A
+signature move is never TM-teachable anywhere, so it gets flagged
+unavailable/Past even when its one owning species still has it baked into
+their fixed learnset.
+
+This invalidates treating either source's flagged-move set as a safe direct
+source for `GLOBALLY_REMOVED_MOVES`, which strips a move from *every*
+species unconditionally with no per-species exception mechanism. The
+16-move collision above is only the subset catchable by cross-referencing
+`championsMoveOverrides.ts` (moves that happened to also need a stat
+override); it doesn't catch a signature move with *unchanged* stats, which
+would never have gotten an override entry and so isn't caught by that
+filter. `v-create` (Victini's signature move) is a concrete example still
+sitting unflagged in the 194/422 lists with no override entry to catch it.
+
+**Not resolved this session** (decision made 2026-09-01 to stop rather than
+resolve under time pressure - see TODO.md): identifying which of the
+~406 remaining flagged moves are single/few-species signature moves (would
+need a systematic check, e.g. cross-referencing PokeAPI's SV level-up
+learnsets for the current legal roster against the flagged-move list) so
+they can be excluded before the rest is safely usable as
+`GLOBALLY_REMOVED_MOVES`. Scratchpad working files (raw-downloaded
+`moves.ts`/`data/moves.ts`/Bulbapedia HTML, extracted id/name/slug/
+availability TSVs) were session-local and not preserved - re-fetch if
+picking this back up.
+
 ## Recommended Leg 2+ breakdown
 
 Per the "smaller working slice per leg" convention, splitting rather than

@@ -54,18 +54,30 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
   known). Purely additive — no known removals this reg.
 
 - **[Champions Data: Adopt Showdown's `champions` Mod as Primary Reference] —
-  Leg 4** *(Last touched: 2026-09-01 · Re-checks: 0)*
+  Leg 4a** *(Last touched: 2026-09-01 · Re-checks: 0)*
   Leg 2 (`championsMoveOverrides.ts` audit) and Leg 3
   (`championsAbilityOverrides.ts` audit + the Mega-ability cross-reference)
-  are both done — see COMPLETED.md. Leg 4 scope:
-  `championsMovepoolChanges.ts`/`learnsets.ts` audit — larger scope than a
-  learnset-only pass, see
-  `docs/investigations/champions-showdown-mod-audit.md`'s "Leg 4 heads-up"
-  section: roughly 200 of `moves.ts`'s 259 entries are
-  `isNonstandard: "Past"`-only, a candidate source for a much bigger
-  `GLOBALLY_REMOVED_MOVES` list than our current 3-move one. Leg 5 (evaluate
-  `formats-data.ts`/`items.ts` as a roster/tier source, likely its own
-  scoping pass) follows. Not started.
+  are both done — see COMPLETED.md. Leg 4 was split into 4a (this item,
+  `GLOBALLY_REMOVED_MOVES` expansion) and 4b (`championsMovepoolChanges.ts`
+  additions/removals audit against `learnsets.ts`, not yet started).
+  2026-09-01 session investigated 4a and found the original "~200
+  Past-only moves → GLOBALLY_REMOVED_MOVES" premise from Leg 1's heads-up is
+  **unsafe as a direct source** — see
+  `docs/investigations/champions-showdown-mod-audit.md`'s "Leg 4a update"
+  section for the full trail. Short version: both Showdown's `Past` flag and
+  Bulbapedia's matching ✘ column most likely mean "not TM/Tutor-teachable,"
+  not "absent from the game" — 16 of the flagged moves are signature moves
+  already confirmed actively used in Champions via existing
+  `championsMoveOverrides.ts` entries (Shell Trap/Turtonator, Anchor
+  Shot/Copperajah, Bolt Beak/Regieleki, etc.), and at least one more
+  (`v-create`/Victini) has no override entry to catch it, meaning the
+  16-move cross-reference filter is necessary but not sufficient. Needs a
+  systematic signature-move exclusion pass (e.g. cross-referencing PokeAPI's
+  SV level-up learnsets for the current legal roster against the ~406
+  remaining flagged moves) before any list is safe to write as
+  `GLOBALLY_REMOVED_MOVES`. No config files were touched this session.
+  Leg 5 (evaluate `formats-data.ts`/`items.ts` as a roster/tier source,
+  likely its own scoping pass) still follows 4a/4b. Not started.
 
 - **[2026-07-07 Review-Pass Leftovers] — Leg 2** *(Last touched: 2026-08-31 ·
   Re-checks: 0)*
