@@ -14,6 +14,13 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **Fix `npm run build`/`type-check` Break in `championsMoveOverrides.test.ts` -
+  Leg 1** (2026-09-01). `makeMove`'s fixture now sets `cachedAt`/`expiresAt`
+  defaults before the `...overrides` spread, matching the sibling `makeMove`
+  fixtures in `useGameData.test.ts`/`cacheManager.test.ts`. `tsc --noEmit`,
+  `npm run build`, and the full test suite (455 tests) all pass again. See
+  commit `1f74ff4`.
+
 - **Champions Data: Adopt Showdown's `champions` Mod as Primary Reference -
   Leg 6** (2026-09-01). The actual fix for Leg 5's Floette roster bug:
   `utils/pokemonRules.ts`'s `REG_MA_SPECIES` now lists `'floette-eternal'`
