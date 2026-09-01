@@ -100,6 +100,10 @@ interface ChampionsBattleDataRow {
   sp_atk_points?: number | '';
   sp_def_points?: number | '';
   speed_points?: number | '';
+  // The site's own ladder-wide usage-ordering rank (lower = more used) -
+  // constant across every row of a given species' response. See
+  // ChampionsUsageEntry.columnPosition's doc comment in types/pokemon.ts.
+  column_position?: number;
 }
 
 interface ChampionsBattleDataResponse {
@@ -264,6 +268,9 @@ function groupRowsByCategory(species: string, data: ChampionsBattleDataResponse)
     abilities: rowsFor('ability').map(toRankedEntry),
     natures: rowsFor('stat_alignment').map(toNatureEntry),
     statSpreads: rowsFor('stat_points').map(toStatPoints),
+    // Constant across every row for a given species - any row's value works;
+    // the first one is as good as any. See the field's doc comment.
+    columnPosition: data.rows[0]?.column_position ?? Number.MAX_SAFE_INTEGER,
     cachedAt: now,
     expiresAt: now + USAGE_CACHE_DURATION_MS,
   };

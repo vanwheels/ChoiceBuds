@@ -611,6 +611,13 @@ export interface ChampionsUsageEntry {
   abilities: ChampionsUsageRankedEntry[];
   natures: ChampionsUsageNatureEntry[];
   statSpreads: ChampionsUsageStatSpreadEntry[];
+  // The site's own ladder-wide usage ordering (lower = more used) - every row
+  // in a /api/battle/:format/:name response carries this, constant per
+  // species (confirmed live, sourced from the site's underlying wide-format
+  // usage CSV). Falls back to Number.MAX_SAFE_INTEGER (sorts last) on the
+  // theoretical zero-row response. Powers Team Gap Analysis's ranked-gap-list
+  // feature (see TODO.md) - unused by anything yet in this leg.
+  columnPosition: number;
   cachedAt: number; // Unix timestamp
   expiresAt: number; // Unix timestamp
 }

@@ -69,6 +69,7 @@ function makeUsage(overrides: Partial<ChampionsUsageEntry> = {}): ChampionsUsage
     abilities: [],
     natures: [],
     statSpreads: [],
+    columnPosition: 1,
     cachedAt: NOW,
     expiresAt: NOW + 100_000,
     ...overrides,

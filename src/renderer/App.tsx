@@ -14,6 +14,7 @@ import { useGameData } from './hooks/useGameData';
 import { useSpeciesRoster } from './hooks/useSpeciesRoster';
 import { useSpriteCache } from './hooks/useSpriteCache';
 import { useInitialSync } from './hooks/useInitialSync';
+import { useUsageSync } from './hooks/useUsageSync';
 import { useBattles } from './hooks/useBattles';
 import { useSettings } from './hooks/useSettings';
 import { useUpdateCheck } from './hooks/useUpdateCheck';
@@ -74,6 +75,10 @@ export default function App() {
   const settingsState = useSettings();
   const updateCheckState = useUpdateCheck();
   const { isDone: isInitialSyncDone, progress: initialSyncProgress } = useInitialSync(gameDataState, speciesRosterState, spriteCacheState, databaseState);
+  // Background batched sync of Champions ranked-usage data (Team Gap
+  // Analysis Leg 1, see TODO.md) - never gates the LoadingScreen, see
+  // useUsageSync.ts's own header comment.
+  useUsageSync(gameDataState, speciesRosterState);
 
   if (!isInitialSyncDone) {
     return <LoadingScreen progress={initialSyncProgress} />;

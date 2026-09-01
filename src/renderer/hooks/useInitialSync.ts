@@ -51,6 +51,7 @@ import { fetchPokemonData, normalizeSpeciesForAPI } from '../services/pokeapi';
 import { MEGA_STONE_TO_SPECIES } from '../config/megaEvolution';
 import { fetchMegaSprite } from './useMegaSprite';
 import { getAnimatedSpriteUrl } from '../utils/spriteUrl';
+import { runWithConcurrency } from '../utils/concurrency';
 
 const CONCURRENCY = 8;
 
@@ -65,28 +66,6 @@ export interface SyncProgress {
 export interface UseInitialSyncReturn {
   isDone: boolean;
   progress: SyncProgress;
-}
-
-async function runWithConcurrency<T>(
-  items: readonly T[],
-  concurrency: number,
-  onTick: () => void,
-  worker: (item: T) => Promise<unknown>
-): Promise<void> {
-  let index = 0;
-  async function runNext(): Promise<void> {
-    const current = index++;
-    if (current >= items.length) return;
-    try {
-      await worker(items[current]);
-    } catch {
-      // Per-item failures are skipped, not fatal to the overall sync
-    } finally {
-      onTick();
-    }
-    return runNext();
-  }
-  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, runNext));
 }
 
 /** Populates pokeapi-cache.json's species stats/types entry, skipping species already cached from a prior partial sync */
