@@ -10,17 +10,20 @@
  * mixes real mainline Mega Evolutions with Mega forms Pokemon Champions
  * itself invented (Raichu X/Y, Meowstic, Barbaracle, Chimecho, Golurk,
  * Falinks, Scovillain, Crabominable, Feraligatr, Meganium, Emboar, Drampa,
- * Dragalge, Eelektross, Audino, Glimmora, Malamar, Skarmory, Starmie,
- * Chandelure, Delphox, Greninja, Hawlucha, Clefable, Dragonite, Excadrill,
- * Floette, Froslass, Pyroar, Scolipede, Scrafty, Staraptor, Victreebel,
- * Chesnaught) - none of those have a real-game post-Mega ability to verify
- * against, so they're intentionally left out rather than guessed. Only the
- * standard, long-stable mainline Mega Evolutions below are encoded - this
- * project's own earlier Champions audit already confirmed core mechanics
- * like the type chart are unchanged from mainline, so this general
- * Pokemon knowledge is safe to hand-author without a Champions-specific
- * source. For every species below with no listed entry, Mega-ing still
- * swaps the sprite (see hooks/useMegaSprite.ts) - just not the ability.
+ * Dragalge, Audino, Glimmora, Malamar, Skarmory, Starmie, Chandelure,
+ * Delphox, Greninja, Hawlucha, Clefable, Dragonite, Excadrill, Floette,
+ * Froslass, Pyroar, Scolipede, Scrafty, Staraptor, Victreebel, Chesnaught)
+ * - none of those have a real-game post-Mega ability to verify against, so
+ * they're intentionally left out rather than guessed. Only the standard,
+ * long-stable mainline Mega Evolutions plus Champions-invented Megas whose
+ * ability has actually been confirmed (Regulation M-B's Eelektross so far -
+ * cross-checked against Serebii's Champions Pokedex and the reveal itself)
+ * are encoded - this project's own earlier Champions audit already
+ * confirmed core mechanics like the type chart are unchanged from
+ * mainline, so this general Pokemon knowledge is safe to hand-author
+ * without a Champions-specific source for the mainline entries. For every
+ * species below with no listed entry, Mega-ing still swaps the sprite (see
+ * hooks/useMegaSprite.ts) - just not the ability.
  */
 export const MEGA_ABILITIES: Record<string, string> = {
   'abomasnow-mega': 'Snow Warning',
@@ -37,6 +40,7 @@ export const MEGA_ABILITIES: Record<string, string> = {
   'camerupt-mega': 'Sheer Force',
   'charizard-mega-x': 'Tough Claws',
   'charizard-mega-y': 'Drought',
+  'eelektross-mega': 'Eelevate',
   'gallade-mega': 'Inner Focus',
   'garchomp-mega': 'Sand Force',
   'gardevoir-mega': 'Pixilate',

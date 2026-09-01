@@ -14,6 +14,20 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **Eelektross Mega Ability (Eelevate) - Leg 1** (2026-08-31). Eelektross-Mega
+  was previously in `megaAbilities.ts`'s deliberately-excluded list ("no
+  real-game post-Mega ability to verify against") - user confirmed Serebii's
+  Champions Pokedex and the official reveal (Regulation M-B) now document
+  the ability. Cross-checked directly against Serebii's own page rather than
+  trusting a summarized search result, per this project's
+  more-than-one-effect spot-check rule - Eelevate has two (Levitate-style
+  Ground/hazard immunity + a guaranteed +1 highest-stat boost on KO).
+  Added `'eelektross-mega': 'Eelevate'` to `MEGA_ABILITIES`; no engine
+  changes needed since the Calc panel's ability field is free-text
+  (`CalcAutocomplete.tsx`) and not restricted to `@smogon/calc`'s bundled
+  ability list, so a Champions-only ability name displays and persists fine
+  once set via the Mega toggle. See commit `<pending>`.
+
 - **Animated Sprite Toggle - Leg 2** (2026-08-31). Built the Leg 1 scope
   (`docs/investigations/animated-sprite-toggle-scope.md`): a Settings
   "Show Animated Sprites" toggle swapping `PokemonCard.tsx`'s main sprite

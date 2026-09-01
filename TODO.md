@@ -119,6 +119,21 @@ unblocked.
 
 ## Backlog / ideas (not yet scoped, highest-to-lowest priority)
 
+- **[Remaining Champions Mega Ability Audit] — Leg 1** *(Last touched:
+  2026-08-31 · Re-checks: 0)*
+  `config/megaAbilities.ts` still deliberately excludes ~30 Champions-
+  invented Mega forms (Raichu X/Y, Meowstic, Barbaracle, Chimecho, Golurk,
+  Falinks, Scovillain, Crabominable, Feraligatr, Meganium, Emboar, Drampa,
+  Dragalge, Audino, Glimmora, Malamar, Skarmory, Starmie, Chandelure,
+  Delphox, Greninja, Hawlucha, Clefable, Dragonite, Excadrill, Floette,
+  Froslass, Pyroar, Scolipede, Scrafty, Staraptor, Victreebel, Chesnaught)
+  pending a verified post-Mega ability, same as Eelektross was until this
+  session (see COMPLETED.md - now has `Eelevate`). Insider Gaming's
+  "All New Mega Pokémon & Abilities in Pokémon Champions Regulation M-B"
+  article looks like it may cover several of these at once - worth checking
+  against Serebii's Champions Pokedex (per this project's cross-check rule)
+  before bulk-filling the table. Not started.
+
 - **[set-state-in-effect Lint Rule Fix] — Leg 1** *(Last touched: not
   recorded · Re-checks: 0)*
   The rule is disabled on `useTeams.ts`/`useSettings.ts`/
