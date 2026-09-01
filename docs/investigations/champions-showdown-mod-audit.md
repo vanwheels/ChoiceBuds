@@ -318,6 +318,69 @@ they can be excluded before the rest is safely usable as
 availability TSVs) were session-local and not preserved - re-fetch if
 picking this back up.
 
+## Leg 4a resolution (2026-09-01, same day)
+
+Picked back up in a later session the same day. The "systematic
+signature-move exclusion pass" scoped above turned out to rest on an
+unverified premise: it assumed `GLOBALLY_REMOVED_MOVES` strips a move from
+*every* species. It doesn't - `useGameData.ts::applyMovepoolChangesIfNeeded`
+only ever calls into `championsMovepoolChanges.ts` (and therefore
+`GLOBALLY_REMOVED_MOVES`) for a species when
+`SpeciesLearnsetEntry.hasChampionsMoveData` is `false`, i.e. PokeAPI hasn't
+"champions"-tagged that species's moves yet - see that file's own 2026-07-19
+header comment, which this pass had re-read but not connected back to the
+Leg 1 heads-up's "~200 moves removed from every species" framing. That
+single missed connection is what made the problem look far bigger than it
+actually is.
+
+**Re-ran the file's own documented follow-up check** ("re-run the same live
+coverage check... once PokeAPI back-fills those too") against the *full*
+current legal roster this time, not just the previously-known 23 species -
+235 unique species/form slugs pulled directly from
+`utils/pokemonRules.ts`'s `REG_MA_SPECIES`/`REG_MB_ADDED_SPECIES` (several
+needed resolving to their real PokeAPI slug first, e.g. `gourgeist` ->
+`gourgeist-average`, `pyroar` -> `pyroar-male`, the `-breed`-suffixed Tauros
+forms). Queried each for `champions`-tagged `version_group_details`
+presence. Result: **PokeAPI has since back-filled all 22 of the Reg M-B
+species - Floette is the only species left with zero champions-tagged move
+data**, i.e. the only species this file's corrections (including
+`GLOBALLY_REMOVED_MOVES`) currently reach at all.
+
+This also resolves the `v-create`/Victini worry from the original heads-up
+without needing a signature-move exclusion mechanism: Victini isn't on this
+app's legal roster in the first place (absent from both
+`REG_MA_SPECIES`/`REG_MB_ADDED_SPECIES`), so it was never at risk regardless
+of `GLOBALLY_REMOVED_MOVES`'s contents.
+
+**Actual safety check performed**: fetched Floette's own PokeAPI
+`scarlet-violet`-version-group learnset (method-tagged: level-up/egg/
+tutor/machine) and intersected it against the 194 Showdown Past-only
+candidates. 5 hits were real level-up moves Floette would lose if
+blanket-removed (`vine-whip`, `tackle`, `razor-leaf`, `fairy-wind`, and
+`magical-leaf` which it gets via both level-up and machine) - excluded from
+the final list. The other 189 aren't in Floette's SV learnset by any
+method, so removing them changes nothing for the one species this table
+actually affects. Also dropped `double-shock`/`revival-blessing` from the
+candidate set (Bulbapedia's individual move pages, cross-checked earlier in
+this doc, list both as available, disagreeing with the Past flag) purely
+for data accuracy - neither touches Floette either way, so this costs
+nothing today.
+
+**Applied**: `GLOBALLY_REMOVED_MOVES` expanded from 3 to 189 entries (net
++186, after excluding the 5 Floette blockers and the 2 accuracy
+corrections) - see
+[championsMovepoolChanges.ts](../../src/renderer/config/championsMovepoolChanges.ts)
+for the final list and full derivation comment.
+
+**Deferred, not done this session**: `CHAMPIONS_MOVEPOOL_ADDITIONS`/
+`CHAMPIONS_MOVEPOOL_REMOVALS`'s per-species entries for the other 22
+species are very likely dead code now (their `hasChampionsMoveData` is
+confirmed `true` live), but weren't pruned - a user with an already-cached
+(`NEVER_EXPIRES`) `hasChampionsMoveData: false` entry from before their
+species's backfill would still be relying on those corrections until that
+cache entry is invalidated some other way, and no such invalidation path
+exists today. See TODO.md's new backlog entry.
+
 ## Recommended Leg 2+ breakdown
 
 Per the "smaller working slice per leg" convention, splitting rather than

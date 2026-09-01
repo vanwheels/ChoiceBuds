@@ -54,30 +54,19 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
   known). Purely additive — no known removals this reg.
 
 - **[Champions Data: Adopt Showdown's `champions` Mod as Primary Reference] —
-  Leg 4a** *(Last touched: 2026-09-01 · Re-checks: 0)*
-  Leg 2 (`championsMoveOverrides.ts` audit) and Leg 3
-  (`championsAbilityOverrides.ts` audit + the Mega-ability cross-reference)
-  are both done — see COMPLETED.md. Leg 4 was split into 4a (this item,
-  `GLOBALLY_REMOVED_MOVES` expansion) and 4b (`championsMovepoolChanges.ts`
-  additions/removals audit against `learnsets.ts`, not yet started).
-  2026-09-01 session investigated 4a and found the original "~200
-  Past-only moves → GLOBALLY_REMOVED_MOVES" premise from Leg 1's heads-up is
-  **unsafe as a direct source** — see
-  `docs/investigations/champions-showdown-mod-audit.md`'s "Leg 4a update"
-  section for the full trail. Short version: both Showdown's `Past` flag and
-  Bulbapedia's matching ✘ column most likely mean "not TM/Tutor-teachable,"
-  not "absent from the game" — 16 of the flagged moves are signature moves
-  already confirmed actively used in Champions via existing
-  `championsMoveOverrides.ts` entries (Shell Trap/Turtonator, Anchor
-  Shot/Copperajah, Bolt Beak/Regieleki, etc.), and at least one more
-  (`v-create`/Victini) has no override entry to catch it, meaning the
-  16-move cross-reference filter is necessary but not sufficient. Needs a
-  systematic signature-move exclusion pass (e.g. cross-referencing PokeAPI's
-  SV level-up learnsets for the current legal roster against the ~406
-  remaining flagged moves) before any list is safe to write as
-  `GLOBALLY_REMOVED_MOVES`. No config files were touched this session.
+  Leg 4b** *(Last touched: 2026-09-01 · Re-checks: 0)*
+  Leg 2, Leg 3, and now Leg 4a are all done — see COMPLETED.md. Leg 4a's
+  investigation found the original "~200 Past-only moves →
+  `GLOBALLY_REMOVED_MOVES`" premise rested on a wrong assumption (that the
+  list applies to every species) - it only ever applies to species PokeAPI
+  hasn't "champions"-tagged yet, confirmed via a full live roster audit to
+  be just Floette today. Resolved and applied same day - see
+  `docs/investigations/champions-showdown-mod-audit.md`'s "Leg 4a
+  resolution" section.
+  Leg 4b (`championsMovepoolChanges.ts`'s `CHAMPIONS_MOVEPOOL_ADDITIONS`/
+  `REMOVALS` audit against Showdown's `learnsets.ts`) is next, not started.
   Leg 5 (evaluate `formats-data.ts`/`items.ts` as a roster/tier source,
-  likely its own scoping pass) still follows 4a/4b. Not started.
+  likely its own scoping pass) still follows.
 
 - **[2026-07-07 Review-Pass Leftovers] — Leg 2** *(Last touched: 2026-08-31 ·
   Re-checks: 0)*
@@ -168,6 +157,22 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Backlog / ideas (not yet scoped, highest-to-lowest priority)
+
+- **[Prune Dead `championsMovepoolChanges.ts` Per-Species Entries] — Leg 1**
+  *(Last touched: 2026-09-01 · Re-checks: 0)*
+  Leg 4a's live audit confirmed PokeAPI has back-filled "champions"-tagged
+  move data for all 22 of the Reg M-B species this file's
+  `CHAMPIONS_MOVEPOOL_ADDITIONS`/`REMOVALS` maps still hold entries for -
+  only Floette (which has no entries in either map) still lacks it. That
+  makes those 22 species' entries dead code under
+  `useGameData.ts::applyMovepoolChangesIfNeeded`'s `hasChampionsMoveData`
+  gate. Not pruned in Leg 4a because a user with an already-cached
+  (`NEVER_EXPIRES`) `hasChampionsMoveData: false` entry from before their
+  species's backfill would still be relying on those corrections, and there
+  is no cache-invalidation path that would self-heal that. Needs a decision
+  on how to safely retire them (a cache-version bump? a one-time forced
+  re-fetch for affected species? just accept the small residual-user risk
+  and delete?) before doing the prune. Not started.
 
 - **[Calc Auto Ability-Effect Application] — Leg 1** *(Last touched:
   2026-08-31 · Re-checks: 0)*
