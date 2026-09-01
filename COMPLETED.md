@@ -25,7 +25,7 @@ in:
   `megaAbilities.ts` now has a guaranteed-ability entry for every Mega form
   in `megaEvolution.ts`'s `MEGA_STONE_TO_SPECIES`, verified by a new coverage
   test (`megaAbilities.test.ts`, didn't exist before this leg). See commit
-  `<pending>` and `docs/investigations/champions-showdown-mod-audit.md`'s
+  `2144273` and `docs/investigations/champions-showdown-mod-audit.md`'s
   Leg 7 update for the full source trail.
 
 - **[Calc Auto Ability-Effect Application] - Leg 2** (2026-09-01). Fixed the
