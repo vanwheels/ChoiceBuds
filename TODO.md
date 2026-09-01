@@ -15,6 +15,30 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
 
 ## In progress / up next
 
+- **[Team Gap Analysis] — Leg 1** *(Last touched: 2026-08-31 · Re-checks: 0)*
+  Came out of a 2026-08-31 strategic discussion on differentiation vs.
+  Showdown/calc.pokemonshowdown.com/PokeDD (see chat — worth writing up in
+  a design doc if this becomes a real multi-leg push): the Type Matchup
+  page's existing offensive/defensive coverage tables (`CoverageTable.tsx`)
+  are a raw 18-row multiplier grid the user has to interpret themselves,
+  identical in spirit to vgcmulticalc.com's own tool. The differentiated
+  version is one ranked "threats your team can't answer" list, weighted by
+  actual Champions ladder usage rather than showing every type equally.
+  Researched championsbattledata.com's API live: no bulk usage-ranking
+  endpoint exists (`/api/index` is name-normalization only, `/api/metadata`
+  is base stats/typing only). Every row returned by the existing
+  `/api/battle/:format/:name` endpoint (already called by
+  `fetchChampionsUsage`) carries a `column_position` field, constant per
+  species - confirmed by user to be the site's own usage ordering (lower =
+  more used), sourced from its underlying wide-format usage CSV.
+  Leg 1 scope: a batched sync (shape of `useInitialSync`) that fetches
+  `column_position` for every species in the legal roster and caches it,
+  refreshed on a cadence - reuse `ChampionsUsageEntry`'s existing 5-day TTL
+  rather than inventing a new one. No UI change in this leg. Leg 2 (not yet
+  scoped) is the actual ranked-gap-list feature on the Type Matchup page,
+  consuming this leg's data - design that once the ranking data is actually
+  in hand rather than speculating now. Not started.
+
 - **[Regulation M-C Prep] — Leg 1** *(Last touched: 2026-08-31 · Re-checks:
   0)*
   Reg M-C announced, drops 2026-09-08 6pm PST — the nearest hard deadline on
@@ -28,6 +52,29 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
   `championsAbilityOverrides.ts` for Aura Break, `useInitialSync`'s
   legal-roster diff, `seasons.ts`'s M-6+ rows once M-C's season dates are
   known). Purely additive — no known removals this reg.
+
+- **[Champions Data: Adopt Showdown's `champions` Mod as Primary Reference] —
+  Leg 2** *(Last touched: 2026-09-01 · Re-checks: 0)*
+  Scoped 2026-09-01 (moved from Backlog now that it has a concrete plan —
+  see `docs/investigations/champions-showdown-mod-audit.md` for the full
+  file-by-file findings). Confirmed `smogon/pokemon-showdown`'s `champions`
+  mod (`data/mods/champions/`) is a stronger, code-level/ladder-verified
+  source than what our override files currently cite. Leg 2 scope:
+  `championsMoveOverrides.ts` only. Resolve the one concrete discrepancy
+  found — our `CHAMPIONS_PP_EXCEPTIONS` table doesn't match Showdown's raw
+  `pp` values (mostly 8 vs. Showdown's 5, and 12 vs. Showdown's 10) — with
+  one cross-check before overwriting, since neither number is self-evidently
+  right. Also promote the 11 "lower confidence" entries (all confirmed
+  present in Showdown's source), drop the redundant `crabhammer` power
+  field, diff the other direction for balance changes Showdown has that
+  we're missing, and add the CLAUDE.md project-policy exception for citing
+  Showdown as a source (this is the first leg that actually adopts it).
+  Leg 3 (`championsAbilityOverrides.ts` + Mega-ability cross-reference for
+  the "Remaining Champions Mega Ability Audit" item below), Leg 4
+  (`championsMovepoolChanges.ts`), and Leg 5 (evaluate
+  `formats-data.ts`/`items.ts` as a roster/tier source, likely its own
+  scoping pass) follow — see the investigation doc for why they're split
+  this way. Not started.
 
 - **[2026-07-07 Review-Pass Leftovers] — Leg 2** *(Last touched: 2026-08-31 ·
   Re-checks: 0)*
@@ -156,7 +203,15 @@ unblocked.
   "All New Mega Pokémon & Abilities in Pokémon Champions Regulation M-B"
   article looks like it may cover several of these at once - worth checking
   against Serebii's Champions Pokedex (per this project's cross-check rule)
-  before bulk-filling the table. Not started.
+  before bulk-filling the table.
+  2026-09-01: the Showdown-mod scoping pass above confirmed all ~30 species
+  here have a real Mega Stone in Showdown's `items.ts`, and found 5
+  candidate never-before-legal ability keys in `abilities.ts` (`dragonize`,
+  `firemane`, `megasol`, `piercingdrill`, `spicyspray`) of the same shape as
+  Eelektross's confirmed `Eelevate` - see
+  `docs/investigations/champions-showdown-mod-audit.md`. Likely resolves
+  most of this list once each stone is matched to its ability; picked up as
+  Leg 3 of that item rather than duplicated here. Not started.
 
 - **[set-state-in-effect Lint Rule Fix] — Leg 1** *(Last touched: not
   recorded · Re-checks: 0)*
