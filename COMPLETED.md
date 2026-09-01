@@ -14,6 +14,23 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **Champions Data: Adopt Showdown's `champions` Mod as Primary Reference -
+  Leg 2** (2026-09-01). `championsMoveOverrides.ts` audit against
+  Showdown's ladder-verified `champions` mod. The one "concrete discrepancy"
+  Leg 1's scoping pass flagged (`CHAMPIONS_PP_EXCEPTIONS` vs. Showdown's raw
+  `pp` field) turned out to be a misreading, not a bug — Showdown's own
+  `scripts.ts` runs that raw field through a `calculatePP` formula before
+  it's the final displayed PP, and running it reproduces every one of our
+  existing values exactly, cross-confirmed against Serebii for one entry.
+  No PP values changed. Also promoted the 11 "lower confidence" move
+  overrides, dropped `crabhammer`'s redundant `power` field, confirmed via a
+  reverse diff that no Champions balance changes are missing from this
+  file, and added CLAUDE.md's sixth external-source exception for citing
+  Showdown. See commit `2e9db43` and
+  `docs/investigations/champions-showdown-mod-audit.md` for the full trail,
+  including a Leg 4 heads-up on a much larger `GLOBALLY_REMOVED_MOVES` gap
+  surfaced but not acted on this leg.
+
 - **Eelektross Mega Ability (Eelevate) - Leg 1** (2026-08-31). Eelektross-Mega
   was previously in `megaAbilities.ts`'s deliberately-excluded list ("no
   real-game post-Mega ability to verify against") - user confirmed Serebii's

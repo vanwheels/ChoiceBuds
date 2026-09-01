@@ -54,27 +54,23 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
   known). Purely additive — no known removals this reg.
 
 - **[Champions Data: Adopt Showdown's `champions` Mod as Primary Reference] —
-  Leg 2** *(Last touched: 2026-09-01 · Re-checks: 0)*
-  Scoped 2026-09-01 (moved from Backlog now that it has a concrete plan —
-  see `docs/investigations/champions-showdown-mod-audit.md` for the full
-  file-by-file findings). Confirmed `smogon/pokemon-showdown`'s `champions`
-  mod (`data/mods/champions/`) is a stronger, code-level/ladder-verified
-  source than what our override files currently cite. Leg 2 scope:
-  `championsMoveOverrides.ts` only. Resolve the one concrete discrepancy
-  found — our `CHAMPIONS_PP_EXCEPTIONS` table doesn't match Showdown's raw
-  `pp` values (mostly 8 vs. Showdown's 5, and 12 vs. Showdown's 10) — with
-  one cross-check before overwriting, since neither number is self-evidently
-  right. Also promote the 11 "lower confidence" entries (all confirmed
-  present in Showdown's source), drop the redundant `crabhammer` power
-  field, diff the other direction for balance changes Showdown has that
-  we're missing, and add the CLAUDE.md project-policy exception for citing
-  Showdown as a source (this is the first leg that actually adopts it).
-  Leg 3 (`championsAbilityOverrides.ts` + Mega-ability cross-reference for
-  the "Remaining Champions Mega Ability Audit" item below), Leg 4
-  (`championsMovepoolChanges.ts`), and Leg 5 (evaluate
-  `formats-data.ts`/`items.ts` as a roster/tier source, likely its own
-  scoping pass) follow — see the investigation doc for why they're split
-  this way. Not started.
+  Leg 3** *(Last touched: 2026-09-01 · Re-checks: 0)*
+  Leg 2 (`championsMoveOverrides.ts` audit) is done — see COMPLETED.md.
+  Leg 3 scope: `championsAbilityOverrides.ts` audit against Showdown's
+  `abilities.ts` (13 entries total — `healer`/`unseenfist` already verified
+  matching; the other 11, including the 5 candidate Mega-only abilities
+  below, still need a pass) + the Mega-ability cross-reference that feeds
+  the "Remaining Champions Mega Ability Audit" item below: `items.ts`
+  confirmed all ~30 excluded Mega species have a real Champions Mega Stone,
+  and `abilities.ts` has 5 candidate never-before-legal ability keys
+  (`dragonize`, `firemane`, `megasol`, `piercingdrill`, `spicyspray`) of the
+  same shape as Eelektross's confirmed `Eelevate` — matching each stone to
+  its ability would resolve most of that item's open list. See
+  `docs/investigations/champions-showdown-mod-audit.md` for the full
+  file-by-file findings. Leg 4 (`championsMovepoolChanges.ts` —
+  larger scope than originally estimated, see that doc's "Leg 4 heads-up"
+  section) and Leg 5 (evaluate `formats-data.ts`/`items.ts` as a
+  roster/tier source, likely its own scoping pass) follow. Not started.
 
 - **[2026-07-07 Review-Pass Leftovers] — Leg 2** *(Last touched: 2026-08-31 ·
   Re-checks: 0)*
