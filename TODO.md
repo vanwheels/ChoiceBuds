@@ -117,26 +117,64 @@ unblocked.
   peer-range rejection + real runtime crash reports). Currently on
   TypeScript ^6.0.3.
 
-## Backlog / ideas (not yet scoped, highest-to-lowest priority)
-
-- **[Animated Sprite Toggle] — Leg 1** *(Last touched: 2026-08-31 ·
+- **[Animated Sprite Toggle] — Leg 2** *(Last touched: 2026-08-31 ·
   Re-checks: 0)*
-  Settings toggle ("Show Animated Sprites") to switch rendered sprites
-  between static PNG and animated. Decided against PokeAPI's own animated
-  field (`sprites.versions.generation-v.black-white.animated` — Gen 5
-  B/W-era only, no Gen 6+ coverage and no Megas at all) in favor of
-  Showdown's animated GIF CDN (`play.pokemonshowdown.com/sprites/ani/` etc.),
-  which covers the full current roster including Megas. Needs, in order:
-  (1) a new CLAUDE.md hotlink exception for Showdown's sprite CDN (image-only,
-  same shape as the existing serebii/bulbapedia exception) + a matching
-  README Credits entry; (2) a Showdown-sprite-filename normalization map,
-  since Showdown's naming convention for gender-divergent species/regional
-  forms/Megas doesn't match PokeAPI slugs; (3) threading the toggle through
-  every sprite render site touched by the 2026-08-31 offline-cache fix
+  Scoped (see `docs/investigations/animated-sprite-toggle-scope.md` for the
+  full research trail) — Leg 1 was scoping only, this is the build. Settings
+  toggle ("Show Animated Sprites") swaps the main Pokémon card's sprite
+  (`PokemonCard.tsx`'s 96px image, `w-24 h-24` — including its Mega-form
+  swap) between static PNG and Showdown's animated GIF CDN
+  (`play.pokemonshowdown.com/sprites/ani/` + `ani-shiny/`), chosen over
+  PokeAPI's own animated field for Gen 6+/Mega coverage. **Scope is
+  deliberately narrow: `PokemonCard` only.** Every other sprite render site
+  (`TeamCoverflow` 38px, `SpeciesPickerCard` 32px, all of Calc, coverage
+  table, stats panels, tooltips, poster/export tiles) stays static PNG
+  always — user confirmed live during scoping that those are icon-scale, not
+  worth animating. The Leg-1 backlog note's original render-site list
   (`PokemonCard`, `EditOverlays`, `ItemSpriteBox`, `ItemPickerPanel`,
-  `BattlefieldSlot`, `RosterRow`); (4) extending `useSpriteCache`/
-  `useInitialSync`'s bulk-download pass to also cache animated GIFs offline,
-  roughly doubling first-launch sprite download size. Not started.
+  `BattlefieldSlot`, `RosterRow`) was stale/wrong: the last two are archived
+  dead code post-Battle-Logger-Retirement, and `ItemSpriteBox`/
+  `ItemPickerPanel` render item sprites, not Pokémon ones — that list had
+  been copy-pasted from the 2026-08-31 offline-cache-fix commit's file list,
+  not an actual sprite-site audit.
+  Build order:
+  1. CLAUDE.md: add a fifth hotlink exception for Showdown's animated sprite
+     CDN (image-only `<img>` hotlink, same shape as the existing
+     serebii/bulbapedia exception #1) + a matching README Credits entry
+     (model on the existing `PokeAPI/sprites` entry).
+  2. `getAnimatedSpriteUrl(name, gender, shiny)` — new function alongside
+     `getPixelSpriteUrl` in `utils/spriteUrl.ts` (or split out if the file
+     grows past a natural single-purpose size). Unlike `getPixelSpriteUrl`,
+     Showdown's CDN is species-*name*-keyed for every form (not just the 4
+     gender-divergent species PokeAPI needs special-cased) — regional forms,
+     Megas, and a handful of punctuation/apostrophe cases (Farfetch'd,
+     Mr. Mime, Ho-Oh, Nidoran♀/♂) all need name-mangling. Default rule is
+     mechanical (lowercase, strip hyphens/apostrophes/periods/spaces); build
+     the exception table by cross-checking Showdown's own sprite list/source
+     against Bulbapedia per CLAUDE.md's "complete set of X" research rule
+     rather than guessing. Gender suffix differs from PokeAPI's
+     (`-f` vs. PokeAPI's `-female`) — reuse `normalizeSpeciesForAPI`'s
+     species list as the starting point, don't re-derive it.
+  3. `AppSettings.showAnimatedSprites: boolean` (types/pokemon.ts,
+     `DEFAULT_SETTINGS` in `useSettings.ts`) — no new setter needed, goes
+     through the existing generic `updateSettings()` partial-update. Add a
+     checkbox to the Settings page UI.
+  4. Wire into `PokemonCard.tsx`: swap `getPixelSpriteUrl(...)` for
+     `getAnimatedSpriteUrl(...)` (base and Mega-form paths both) when the
+     setting is on, still routed through `resolveSprite()` for offline
+     caching — it's URL-keyed already, no `useSpriteCache` changes needed.
+     Add an `onError` fallback to the static PNG URL for species/forms
+     Showdown's roster hasn't added yet (matters for Reg M-C's incoming new
+     Megas — see the Regulation M-C Prep item above).
+  5. Extend `useInitialSync`'s existing "Downloading Sprites" and
+     "Downloading Mega Sprites" phases to also queue the animated (+ shiny)
+     URL alongside the static one for every unsynced species/Mega form —
+     unconditional on the toggle's current state, matching how shiny
+     variants are already bulk-cached regardless of the shiny toggle, so
+     flipping the setting on later never needs a network call. Roughly
+     doubles first-launch sprite download size for the phases it touches.
+
+## Backlog / ideas (not yet scoped, highest-to-lowest priority)
 
 - **[set-state-in-effect Lint Rule Fix] — Leg 1** *(Last touched: not
   recorded · Re-checks: 0)*
