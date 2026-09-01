@@ -247,14 +247,32 @@ describe('useGameData', () => {
       expect(learnset?.moves).toEqual(['shadow-ball', 'tera-blast']);
     });
 
-    it('applies the globally-removed-moves correction when PokeAPI has no champions move data yet', async () => {
+    it('applies the globally-removed-moves correction on a fresh fetch when PokeAPI has no champions move data yet', async () => {
+      const { result } = renderHook(() => useGameData());
+      await waitFor(() => expect(result.current.isInitialized).toBe(true));
+      vi.mocked(fetchSpeciesLearnset).mockResolvedValueOnce(makeLearnset({ moves: ['shadow-ball', 'tera-blast'], hasChampionsMoveData: false }));
+
+      const learnset = await result.current.getSpeciesLearnset('gengar');
+      expect(learnset?.moves).toEqual(['shadow-ball']); // tera-blast stripped
+    });
+
+    it('treats a cached hasChampionsMoveData: false entry as a forced miss and self-heals it on re-fetch', async () => {
+      // A NEVER_EXPIRES entry cached before PokeAPI back-filled this
+      // species' champions move data would otherwise stay `false` forever
+      // with no TTL to force a re-check - see useGameData.ts's
+      // getCachedSpeciesLearnset and the "Prune Dead
+      // championsMovepoolChanges.ts Entries" TODO item.
       const cache = makeCache({ learnsets: { gengar: makeLearnset({ moves: ['shadow-ball', 'tera-blast'], hasChampionsMoveData: false }) } });
       vi.mocked(window.electron.readGameDataCache).mockResolvedValueOnce(cache);
+      vi.mocked(fetchSpeciesLearnset).mockResolvedValueOnce(makeLearnset({ hasChampionsMoveData: true, moves: ['shadow-ball', 'tera-blast'] }));
+
       const { result } = renderHook(() => useGameData());
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
 
       const learnset = await result.current.getSpeciesLearnset('gengar');
-      expect(learnset?.moves).toEqual(['shadow-ball']); // tera-blast stripped
+      expect(fetchSpeciesLearnset).toHaveBeenCalledWith('gengar', undefined);
+      expect(learnset?.hasChampionsMoveData).toBe(true);
+      expect(learnset?.moves).toEqual(['shadow-ball', 'tera-blast']); // no hand-table correction now that PokeAPI has real data
     });
 
     it('treats a cache entry predating hasChampionsMoveData as a miss and re-fetches', async () => {

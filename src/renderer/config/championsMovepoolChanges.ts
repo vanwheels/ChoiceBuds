@@ -168,15 +168,24 @@
  * That means `hasChampionsMoveData` resolves `true` for the species this
  * app actually uses now, so `useGameData.ts::applyMovepoolChangesIfNeeded`
  * never calls into this file for it - same as the 22 Reg M-B species Leg 4a
- * already found. **This file's per-species scope is now empty**: every
- * entry below (`GLOBALLY_REMOVED_MOVES` included, not just the
- * `ADDITIONS`/`REMOVALS` maps) is unreachable dead code for the current
- * legal roster. Not pruned here for the same reason the 22 species weren't
- * in Leg 4a/4b - an already-cached (`NEVER_EXPIRES`) `hasChampionsMoveData:
- * false` learnset entry from before a user's PokeAPI backfill would still
- * rely on these corrections until invalidated some other way. See TODO.md's
- * "Prune Dead `championsMovepoolChanges.ts` Per-Species Entries" item,
- * whose scope now covers this whole file rather than just the 22 species.
+ * already found.
+ *
+ * PRUNE (2026-09-01, "Prune Dead championsMovepoolChanges.ts Entries" Leg
+ * 1): with every current-roster species confirmed above to already have
+ * real PokeAPI champions move data, `CHAMPIONS_MOVEPOOL_ADDITIONS`/
+ * `CHAMPIONS_MOVEPOOL_REMOVALS`'s per-species rows (the 22 Reg M-B species;
+ * Floette had none) were confirmed-dead code and are removed below - both
+ * maps are now empty. `GLOBALLY_REMOVED_MOVES` and the
+ * `applyChampionsMovepoolChanges`/`applyMovepoolChangesIfNeeded` gate
+ * mechanism are kept alive as-is despite being unreachable for today's
+ * roster too: Regulation M-C (drops 2026-09-08) adds new species that will
+ * very likely hit this same "PokeAPI hasn't back-filled its champions tag
+ * yet" gap the 22 M-B species originally did, so the fallback path itself
+ * still needs to exist for whoever populates its per-species maps next -
+ * it's the M-B-specific data that was dead, not the mechanism. See
+ * `useGameData.ts::getCachedSpeciesLearnset`'s companion self-heal fix from
+ * the same leg: a cached `hasChampionsMoveData: false` entry now forces a
+ * re-fetch instead of trusting a stale `NEVER_EXPIRES` false forever.
  */
 
 const GLOBALLY_REMOVED_MOVES = [
@@ -222,45 +231,13 @@ const GLOBALLY_REMOVED_MOVES = [
   'zing-zap',
 ];
 
-export const CHAMPIONS_MOVEPOOL_ADDITIONS: Record<string, string[]> = {
-  'annihilape': ['dynamic-punch'],
-  'barbaracle': ['aqua-cutter', 'close-combat', 'waterfall'],
-  'blaziken': ['high-jump-kick', 'superpower'],
-  'dragalge': ['iron-tail', 'poison-jab'],
-  'eelektross': ['iron-tail', 'psychic-fangs', 'rising-voltage', 'superpower', 'waterfall'],
-  'falinks': ['beat-up', 'payback', 'seed-bomb', 'superpower'],
-  'gholdengo': ['surf'],
-  'grimmsnarl': ['power-whip', 'superpower'],
-  'houndstone': ['swagger', 'zen-headbutt'],
-  'malamar': ['poison-jab', 'zen-headbutt'],
-  'metagross': ['cosmic-power', 'psycho-cut', 'self-destruct', 'steel-roller', 'swagger'],
-  'pyroar-male': ['iron-tail', 'payback', 'scorching-sands'],
-  'qwilfish': ['payback', 'steel-roller'],
-  'sceptile': ['cross-poison', 'dragon-rush', 'earth-power', 'iron-tail'],
-  'scolipede': ['gunk-shot', 'leech-life', 'trailblaze'],
-  'scrafty': ['dynamic-punch', 'iron-tail'],
-  'staraptor': ['blaze-kick', 'brick-break', 'bulk-up', 'focus-blast', 'roost', 'sky-attack', 'swagger'],
-  'swampert': ['iron-tail', 'sludge-bomb', 'superpower', 'wave-crash'],
-  'vileplume': ['attract', 'corrosive-gas'],
-};
+// Both maps are empty as of the 2026-09-01 prune - see the header comment's
+// PRUNE section for why. Populate per-species here again if a future
+// regulation (M-C's new species are the likely next case) adds a species
+// PokeAPI hasn't yet back-filled real "champions"-tagged move data for.
+export const CHAMPIONS_MOVEPOOL_ADDITIONS: Record<string, string[]> = {};
 
-export const CHAMPIONS_MOVEPOOL_REMOVALS: Record<string, string[]> = {
-  'annihilape': ['covet', 'final-gambit'],
-  'barbaracle': ['aerial-ace', 'endeavor', 'hone-claws', 'infestation', 'laser-focus', 'nature-power', 'power-up-punch', 'smack-down', 'swagger', 'toxic', 'water-pulse'],
-  'blaziken': ['fire-pledge'],
-  'dragalge': ['poison-tail'],
-  'gholdengo': ['thunder-wave'],
-  'grimmsnarl': ['thunder-wave'],
-  'mawile': ['charge-beam', 'counter', 'focus-punch', 'laser-focus', 'magnet-rise', 'metal-burst', 'pain-split', 'power-up-punch', 'psych-up', 'sing', 'super-fang', 'toxic'],
-  'metagross': ['heavy-slam', 'hone-claws', 'knock-off'],
-  'musharna': ['after-you', 'baton-pass', 'gravity', 'heal-bell', 'magic-coat', 'pain-split', 'psych-up', 'swagger', 'toxic'],
-  'overqwil': ['brine', 'poison-tail'],
-  'pyroar-male': ['work-up'],
-  'qwilfish': ['brine', 'poison-tail'],
-  'sceptile': ['grass-pledge'],
-  'scolipede': ['aqua-tail', 'endeavor', 'infestation', 'poison-tail', 'swagger', 'venom-drench'],
-  'swampert': ['water-pledge'],
-};
+export const CHAMPIONS_MOVEPOOL_REMOVALS: Record<string, string[]> = {};
 
 export function applyChampionsMovepoolChanges(speciesSlug: string, moves: string[]): string[] {
   const additions = CHAMPIONS_MOVEPOOL_ADDITIONS[speciesSlug];

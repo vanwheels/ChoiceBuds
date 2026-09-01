@@ -29,76 +29,65 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
   legal-roster diff, `seasons.ts`'s M-6+ rows once M-C's season dates are
   known). Purely additive — no known removals this reg.
 
-- **[Export Team to Pokepaste] — Leg 1** *(Last touched: 2026-09-01 ·
-  Re-checks: 0)*
-  Split out of Leg 2 item 3 above once research resolved its "does a write
-  API even exist" blocker — scoped 2026-09-01, not started. Confirmed via
-  `felixphew/pokepaste`'s `server.go` (the actual pokepast.es source, per
-  its GitHub repo) that a write endpoint exists: `POST /create`,
-  form-urlencoded body (`paste` required, `title`/`author`/`notes`
-  optional), responds `303` with a `Location: /<id>` header on success, `400`
-  on a missing/unparseable `paste` field. Three real pieces of work, not one:
-  1. **Unverified risk:** the site is a traditional server-rendered form
-     target, not a fetch-oriented API — untested whether pokepast.es sends
-     CORS headers permitting a cross-origin `fetch()` POST (with
-     `redirect: 'manual'` needed to read the `Location` header) from the
-     renderer's origin. The existing read path (`GET /<id>/json`) already
-     works live, but that doesn't guarantee the write path does — needs a
-     throwaway live test before any UI work.
-  2. No Showdown-export-text serializer exists anywhere in the codebase
-     today (`services/parser.ts` only goes text→`ShowdownPokemon[]`, never
-     the reverse) — this needs a new `ImportedPokemonInfo[]`→Showdown-text
-     function first, which is its own small design (item/move/EV/IV
-     formatting, Tera Type line, etc.) before there's anything to POST.
-  3. CLAUDE.md's pokepast.es exception (#2 in the external-integration list)
-     currently only sanctions the read direction
-     (`GET /<id>/json`, user-paste-triggered import) — a write call needs its
-     own explicit exception added there, not an assumed extension of the
-     existing one.
-  Next session should start with (1), the CORS spike, since a negative
-  result there closes the item outright before (2)/(3) are worth doing.
-
-- **[Original Roadmap Leftovers] — Leg 1** *(Last touched: not recorded,
-  predates leg-tracking · Re-checks: 0)*
-  Remaining items from the original 9-item roadmap (Statistics page,
-  Settings shell, cross-device sync, Teams/Battle Log list-row redesign,
-  team-notes/image export are all done — see COMPLETED.md):
-  1. Further Calc UI cleanup (#3) — overlaps with Calc work already in
-     flight elsewhere in this file.
-  2. General UI polish (#1) — nothing further scoped beyond what's shipped.
-  3. Limitless usage data (#7) — blocked externally on API key approval.
-     Blocked: waiting on Limitless API key approval.
-
-- **[Prune Dead `championsMovepoolChanges.ts` Entries] — Leg 1**
-  *(Last touched: 2026-09-01 · Re-checks: 0)*
-  Scoped 2026-09-01 (see chat) — decision resolved, ready to implement as its
-  own session. Two-part fix, not a full delete:
-  1. Self-heal the stale-cache bug: extend `useGameData.ts`'s
-     `getCachedSpeciesLearnset` to treat `hasChampionsMoveData === false` as
-     a forced cache miss too, same pattern already used there for
-     `=== undefined`. Any `NEVER_EXPIRES`-cached false-entry then self-heals
-     to `true` on its next read, since Champions Data Leg 4a/6's audits
-     confirmed every current-roster species already has real PokeAPI
-     champions move data.
-  2. Prune only the confirmed-dead per-species rows — the 22 Reg M-B
-     species' + Floette's `CHAMPIONS_MOVEPOOL_ADDITIONS`/
-     `CHAMPIONS_MOVEPOOL_REMOVALS` entries in `config/championsMovepoolChanges.ts`
-     — but keep `GLOBALLY_REMOVED_MOVES` and the whole
-     `applyMovepoolChangesIfNeeded` gate mechanism alive as-is. Reasoning:
-     Reg M-C (drops 2026-09-08, see its own TODO item) adds new species that
-     will very likely hit this exact "PokeAPI hasn't backfilled its champions
-     tag yet" gap the same way the 22 M-B species originally did, so the
-     mechanism itself still needs to stay live — it's the per-species M-B
-     data specifically that's dead, not the fallback path.
-  Add/update `useGameData.test.ts` coverage for the new forced-miss branch
-  alongside the prune.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
 outside this project — a person, a dependency, or an external decision.
 Exempt from the re-check counter; they move back to "In progress" once
 unblocked.
+
+- **[Export Team to Pokepaste] — Leg 1** *(Last touched: 2026-09-01 ·
+  Re-checks: 0)*
+  Blocked: needs a decision from the user on the IPC-detour approach below
+  before (2)/(3) are worth doing.
+  Item 1's CORS spike is resolved, and it's a negative for the scoped
+  approach: live-tested `POST https://pokepast.es/create` with an
+  `Origin: http://localhost:5173` header via curl — the write itself
+  succeeds server-side (got back `303` + `Location: /cedd41c926b6d61e`, a
+  real throwaway paste), but the response carries **no CORS headers at
+  all** (no `Access-Control-Allow-Origin`/`-Expose-Headers`). A renderer-side
+  `fetch()` POST would be blocked from ever reading that response, so the
+  app could never learn the new paste's ID even though the write went
+  through. Confirmed this is endpoint-specific, not a site-wide CORS
+  block: `GET /<id>/json` (the existing working read path) sends
+  `Access-Control-Allow-Origin: *`, which is why that one already works
+  live from the renderer today — `/create` just doesn't have the same
+  header.
+  This doesn't close the item outright, though: Node's own network calls
+  (i.e. a main-process `ipcMain.handle`, same pattern as the existing
+  `file:*` filesystem-IO handlers in `main.ts`) aren't subject to browser
+  CORS at all, so proxying the write through a new IPC call would sidestep
+  this cleanly. That's a real architecture decision, not an assumed
+  extension of the current renderer-only pokepast.es pattern — needs the
+  user to sign off on adding a new IPC surface + a CLAUDE.md exception
+  covering a main-process-initiated external call (a new category
+  alongside the existing on-demand/user-initiated/automatic-poll ones)
+  before it's built. If the user doesn't want that, the item closes here.
+  Item 2 (Showdown-export serializer) and item 3 (CLAUDE.md exception
+  wording) are unchanged and still open, now contingent on that decision.
+  Complexity check on the detour itself (2026-09-01, see chat): small.
+  `sprite:download` (`main.ts:584`) already does main-process outbound
+  `fetch()`, so this isn't a new idiom, just a new handler — one
+  `ipcMain.handle`, one preload method, one renderer service function
+  (~30-40 lines total). One implementation snag to remember: use Node's
+  raw `https.request()` (or Electron's `net.request()`) for the handler,
+  not `fetch()` — WHATWG fetch's `redirect: 'manual'` returns an
+  opaque-redirect response with headers hidden by spec (not a CORS thing,
+  applies in Node too via undici), so `fetch()` would hit the same
+  can't-read-Location problem as the renderer did. A raw `https.request()`
+  has no such filtering; `res.headers.location` is directly readable. The
+  real cost is still item 2 (the serializer) either way — the detour just
+  decides where the POST originates, not how much work this item is
+  overall. Still waiting on the user's sign-off on the new external-call
+  category (see above) before starting.
+
+- **[Limitless Usage Data] — Leg 1** *(Last touched: 2026-09-01 · Re-checks:
+  0)*
+  Blocked: waiting on Limitless API key approval.
+  Spun off from the now-closed "Original Roadmap Leftovers" item (see
+  COMPLETED.md) — the one sub-item of that roadmap leftover with real
+  remaining scope rather than nothing left to build. No further detail
+  beyond the original roadmap ask; needs scoping once the key comes through.
 
 - **[Team Card Grid Layout Re-check] — Leg 1** *(Last touched: 2026-08-31 ·
   Re-checks: 0)*
@@ -143,28 +132,11 @@ unblocked.
 
 ## Backlog / ideas (not yet scoped, highest-to-lowest priority)
 
-- **[Prune Dead `championsMovepoolChanges.ts` Entries] — Leg 1**
-  *(Last touched: 2026-09-01 · Re-checks: 0)*
-  Scope widened by Champions Data Leg 6 (see COMPLETED.md): Leg 4a's live
-  audit found PokeAPI had back-filled "champions"-tagged move data for all 22
-  Reg M-B species, leaving only Floette (then still keyed to the wrong
-  `'floette'` slug) out of coverage; Leg 6 fixed the roster to
-  `'floette-eternal'` and found PokeAPI already covers that slug too (41
-  champions-tagged moves). That means **every** entry in this file -
-  `GLOBALLY_REMOVED_MOVES` included, not just the 22 species'
-  `CHAMPIONS_MOVEPOOL_ADDITIONS`/`REMOVALS` entries - is now dead code under
-  `useGameData.ts::applyMovepoolChangesIfNeeded`'s `hasChampionsMoveData`
-  gate; no species in the current legal roster reaches this file at all.
-  Not pruned yet because a user with an already-cached (`NEVER_EXPIRES`)
-  `hasChampionsMoveData: false` entry from before their species's backfill
-  would still be relying on those corrections, and there is no
-  cache-invalidation path that would self-heal that. Needs a decision on how
-  to safely retire it (a cache-version bump? a one-time forced re-fetch for
-  affected species? just accept the small residual-user risk and delete?)
-  before doing the prune. Not started.
-
 - **[Calc Auto Ability-Effect Application] — Leg 1** *(Last touched:
   2026-08-31 · Re-checks: 0)*
+  Also folds in "Further Calc UI cleanup," the one sub-item of the now-closed
+  "Original Roadmap Leftovers" item (see COMPLETED.md) with real overlap here
+  — no separate scope, just tracked under this item going forward.
   Today the Calc page's ability-based outcomes (e.g. a move blocked by
   Levitate/Bulletproof/Wonder Guard/etc.) are manual - the user has to pick
   `blocked-ability` on the outcome dropdown themselves; nothing in

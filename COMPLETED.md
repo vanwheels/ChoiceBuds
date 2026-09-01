@@ -14,6 +14,29 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[Prune Dead `championsMovepoolChanges.ts` Entries] - Leg 1** (2026-09-01).
+  Two-part fix: `useGameData.ts::getCachedSpeciesLearnset` now treats
+  `hasChampionsMoveData === false` as a forced cache miss (same pattern as
+  its existing `=== undefined` check), so a `NEVER_EXPIRES`-cached
+  false-entry self-heals to `true` on next read instead of relying on the
+  hand-curated table forever; and `championsMovepoolChanges.ts`'s
+  `CHAMPIONS_MOVEPOOL_ADDITIONS`/`CHAMPIONS_MOVEPOOL_REMOVALS` per-species
+  rows (the 22 Reg M-B species + Floette) are pruned to empty maps, since
+  Champions Data Leg 4a/6 confirmed PokeAPI now has real champions move data
+  for all of them. `GLOBALLY_REMOVED_MOVES` and the whole
+  `applyMovepoolChangesIfNeeded` gate mechanism stay alive as-is for
+  Regulation M-C's incoming species to populate next. See commit `8ed35e8`.
+
+- **[Original Roadmap Leftovers] - Leg 1** (2026-09-01). Closed by user
+  decision, no code changes: of the item's three remaining sub-items, #1
+  (further Calc UI cleanup) had real overlap with the existing "Calc Auto
+  Ability-Effect Application" backlog item and was folded into it there; #2
+  (general UI polish) had nothing further scoped beyond what's already
+  shipped; #3 (Limitless usage data, blocked on API key approval) had genuine
+  remaining scope and was spun off into its own TODO.md item ("Limitless
+  Usage Data") rather than dropped. The original 9-item roadmap is now fully
+  accounted for.
+
 - **[2026-07-07 Review-Pass Leftovers] - Leg 2** (2026-09-01). Both remaining
   sub-items closed by user decision, no code changes: (1) the Calc page's
   1280x720 scroll gap (re-measured 144px) stays as-is — user chose to bank

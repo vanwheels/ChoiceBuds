@@ -167,7 +167,15 @@ export function useGameData(): UseGameDataReturn {
     // target/meta check above: treat it as a cache miss so users get the
     // corrected trust-PokeAPI-first behavior on next fetch rather than
     // silently defaulting to "apply the hand table" for up to 30 days.
-    if (!learnset || learnset.hasChampionsMoveData === undefined) return null;
+    //
+    // `=== false` gets the same forced-miss treatment (added 2026-09-01,
+    // Prune Dead championsMovepoolChanges.ts Entries Leg 1): a NEVER_EXPIRES
+    // entry cached back when PokeAPI hadn't yet back-filled a species'
+    // "champions"-tagged moves would otherwise stay false forever with no
+    // TTL to force a re-check. Champions Data Leg 4a/6's audits confirmed
+    // every current-roster species now has real PokeAPI champions move data,
+    // so the one live re-fetch this forces self-heals the entry to true.
+    if (!learnset || learnset.hasChampionsMoveData !== true) return null;
     return applyMovepoolChangesIfNeeded(learnset);
   }, [cache]);
 
