@@ -29,13 +29,22 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
   legal-roster diff, `seasons.ts`'s M-6+ rows once M-C's season dates are
   known). Purely additive — no known removals this reg.
 
-- **[2026-07-07 Review-Pass Leftovers] — Leg 1** *(Last touched: 2026-08-31 ·
+- **[2026-07-07 Review-Pass Leftovers] — Leg 2** *(Last touched: 2026-08-31 ·
   Re-checks: 0)*
   Three items outstanding from three earlier review-pass batches (everything
   else from them is done — see COMPLETED.md):
   1. Calc page still scrolls slightly at 1280x720 after the 2026-07-14
-     tightening pass (~209px short) — stopped deliberately to protect
-     legibility/click comfort. Fits fine at 1920x1080. Revisit if wanted.
+     tightening pass. **Re-measured 2026-08-31 with the now-fixed
+     `run-desktop` `resize` command (sets Electron content size directly,
+     per the Team Card Grid Layout fix) — actual gap is 144px** (main's
+     `scrollHeight` 864 vs. a full 720px `clientHeight`/`innerHeight`, no
+     title-bar chrome eating into it), not the previously recorded ~209px,
+     which was measured against an outer-window-frame size before that fix
+     existed. Fits fine at 1920x1080. Options to close it further (reversing
+     `CalcSideConditions.tsx`'s deliberate one-row-per-condition layout, or
+     trimming padding/gaps further toward a click-comfort/legibility risk)
+     were presented again; user chose to stop here and just bank the
+     corrected number. Revisit if wanted.
   2. Battle Logger's move-stat-effects table: waiting on the user to name a
      move with a weather-conditional stage *amount* like Growth's — no
      second example found in research so far. This table lives in
