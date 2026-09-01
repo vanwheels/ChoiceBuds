@@ -199,6 +199,39 @@ function errorEntry(moveName: string, err: unknown): CalcMoveResultEntry {
   };
 }
 
+/**
+ * `@smogon/calc`'s own `result.desc()`/`result.kochance()` throw
+ * ("damage[damage.length - 1] === 0.") whenever a damage-category move's
+ * range comes back fully [0, 0] - true for every ability-block case its
+ * bundled Gen 9 mechanics already zero out (Levitate, Wonder Guard, Flash
+ * Fire, etc. - see gen789.js) and also plain type immunity with no ability
+ * involved. Status moves never hit this (desc.js short-circuits on
+ * move.category === 'Status' before the throwing path), so this only needs
+ * to guard damage-category moves. Building the message from `rawDesc`
+ * (populated even when `desc()` itself would throw) avoids a second config
+ * table - `defenderAbility` is only set when an ability caused the block, so
+ * a plain type immunity falls back to a type-immunity phrasing instead.
+ */
+function isFullyBlocked(range: [number, number], category: string): boolean {
+  return category !== 'Status' && range[0] === 0 && range[1] === 0;
+}
+
+function blockedEntry(
+  moveName: string,
+  range: [number, number],
+  attackerName: string,
+  defenderName: string,
+  defenderAbility: string | undefined,
+): CalcMoveResultEntry {
+  const desc = defenderAbility
+    ? `${attackerName}'s ${moveName} is blocked by ${defenderName}'s ${defenderAbility}`
+    : `${attackerName}'s ${moveName} does not affect ${defenderName}`;
+  return {
+    moveName, percent: '0.0 - 0.0%', desc, range, kochanceText: null, possibleDamages: [0],
+    errorMessage: null, multihitRange: null, effectiveHits: null,
+  };
+}
+
 function flattenDamage(damage: number | number[] | number[][]): number[] {
   if (typeof damage === 'number') return [damage];
   if (damage.length > 0 && Array.isArray(damage[0])) return (damage as number[][]).flat();
@@ -342,6 +375,9 @@ function computeSideResults(
       });
       const result = calculate(gen, atkPokemon, defPokemon, move, field);
       const range = result.range();
+      if (isFullyBlocked(range, move.category)) {
+        return blockedEntry(slot.name, range, attacker.species, defender.species, result.rawDesc.defenderAbility);
+      }
       const maxHP = defPokemon.maxHP();
       const percent = `${((range[0] / maxHP) * 100).toFixed(1)} - ${((range[1] / maxHP) * 100).toFixed(1)}%`;
       return {

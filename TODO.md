@@ -36,6 +36,26 @@ outside this project — a person, a dependency, or an external decision.
 Exempt from the re-check counter; they move back to "In progress" once
 unblocked.
 
+- **[Calc Auto Ability-Effect Application] — Leg 3** *(Last touched:
+  2026-09-01 · Re-checks: 0)*
+  Blocked: waiting on Aura Break's exact mechanic to be confirmed (tracked
+  under "Regulation M-C Prep").
+  Also folds in "Further Calc UI cleanup," the one sub-item of the now-closed
+  "Original Roadmap Leftovers" item (see COMPLETED.md) with real overlap
+  here. Leg 1 (rescoping) and Leg 2 (crash-on-zero-damage bug fix) both
+  shipped — see COMPLETED.md. Remaining scope is Champions ability
+  balance-patch damage math: `@smogon/calc` only knows mainline Scarlet/
+  Violet ability mechanics, and `championsAbilityOverrides.ts` today only
+  corrects display text, not damage math — its header already flags this gap
+  for Unseen Fist's 25%-through-Protect interaction (the one Champions
+  ability override with a live damage-math consequence per
+  `docs/investigations/champions-showdown-mod-audit.md`). Aura Break will be
+  a second case once confirmed. Scoping this leg means deciding how a
+  mechanical override reaches `computeSideResults` — most likely via `Move`'s
+  existing `overrides` param, the same pattern `championsMoveOverrides.ts`
+  uses for moves. One case (Unseen Fist) alone isn't enough to design the
+  override shape against with confidence, hence the block on Aura Break.
+
 - **[Export Team to Pokepaste] — Leg 1** *(Last touched: 2026-09-01 ·
   Re-checks: 0)*
   Blocked: needs a decision from the user on the IPC-detour approach below
@@ -131,83 +151,6 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Backlog / ideas (not yet scoped, highest-to-lowest priority)
-
-- **[Calc Auto Ability-Effect Application] — Leg 1** *(Last touched:
-  2026-09-01 · Re-checks: 0)*
-  Also folds in "Further Calc UI cleanup," the one sub-item of the now-closed
-  "Original Roadmap Leftovers" item (see COMPLETED.md) with real overlap here
-  — no separate scope, just tracked under this item going forward.
-
-  Scoped 2026-09-01 (see chat) - the original framing above was wrong on two
-  counts, which changes this item's real shape a lot. (1) The
-  `blocked-ability` manual outcome dropdown it describes lives entirely in
-  the retired `_archived/battle-logger/` tree (`MoveOutcomePrompt.tsx` et
-  al.) - the live Calc page (`CalcPage.tsx` and friends) has no outcome
-  picker at all today. (2) `useDamageCalc.ts` doesn't actually need to
-  "inspect the defender's ability" itself - `@smogon/calc`'s own bundled Gen
-  9 mechanics (`node_modules/@smogon/calc/dist/mechanics/gen789.js:324-337`,
-  confirmed by reading the installed package) already natively zero damage
-  for Levitate/Wonder Guard/Flash Fire/Water Absorb/Volt Absorb/Storm Drain/
-  Sap Sipper/Lightning Rod/Motor Drive/Bulletproof/Soundproof/Earth Eater/
-  Wind Rider/priority-blocking abilities (Queenly Majesty/Dazzling/Armor
-  Tail), as long as `ability` is populated on the constructed `Pokemon` -
-  which the Calc UI's existing ability dropdown already provides as input.
-  `moveBlockingAbilities.ts`/`reactiveAbilities.ts`/`hitReactiveAbilities.ts`/
-  `onSwitchInAbilities.ts` (the curated tables this item originally pointed
-  at) are consumed exclusively by the archived Battle Logger tree today (one
-  `grep` across all consumers confirmed this) - not real input for this item
-  as originally framed, since that tree models manual turn-by-turn outcome
-  logging, not a live damage calculation.
-
-  Two real, narrower gaps turned up instead and are what this item covers
-  going forward:
-
-  - **Leg 2 - crash-on-zero-damage bug (a bug fix, not new ability-coverage
-    scope):** live-confirmed via `node -e` against the installed
-    `@smogon/calc` - `result.desc()`/`result.kochance()` both throw
-    (`"damage[damage.length - 1] === 0."`) whenever a *damage-category*
-    move's range comes back fully `[0, 0]` - true for every ability-block
-    case above, and also plain type immunity with no ability involved (e.g.
-    a Normal move into a Ghost-type). Status moves don't hit this path
-    (`move.category === 'Status'` short-circuits it,
-    `node_modules/@smogon/calc/dist/desc.js:31`), so only damage moves are
-    affected. `computeSideResults` (`useDamageCalc.ts:331-361`) doesn't
-    special-case this - it lands in the generic `catch`, and `errorEntry`
-    surfaces the raw library assertion string as `errorMessage`, which
-    `CalcResultPanel.tsx` renders as a red "error." Live-confirmed this is
-    what a user sees today for e.g. Landorus-T Earthquake into a Levitate
-    Rotom-Wash - not a helpful "blocked," a scary internal assertion string.
-    Fix belongs in `computeSideResults`: detect a fully-blocked/immune
-    result before calling `desc()`/`kochance()` (range is `[0,0]` and
-    category isn't Status) and build a clean result entry instead of routing
-    it through `errorEntry` - the ability name is already present on the
-    constructed `Move`/`Pokemon` inputs (`@smogon/calc` even embeds it in its
-    own `desc` text via `description.defenderAbility` once it doesn't
-    throw), so no new lookup or config table is needed to fix this leg.
-
-  - **Leg 3 - Champions ability balance-patch damage math:** `@smogon/calc`
-    only knows mainline Scarlet/Violet ability text/mechanics, and
-    `championsAbilityOverrides.ts` today only corrects *display* text
-    (tooltips), not damage math - its own header already flags this exact
-    gap for Unseen Fist's 25%-through-Protect interaction. Per
-    `docs/investigations/champions-showdown-mod-audit.md`, only 13 abilities
-    are Champions-modified total, of which Unseen Fist is the one with a
-    live damage-math consequence today (Healer's isn't damage-related). Reg
-    M-C's incoming Aura Break (see "Regulation M-C Prep") will be a second,
-    brand-new one once its exact mechanic is confirmed - neither PokeAPI nor
-    `@smogon/calc` will ever model it, being Champions-exclusive. Scoping
-    this leg means deciding how a mechanical override actually reaches
-    `computeSideResults` - most likely via `Move`'s existing `overrides`
-    param, the same pattern `championsMoveOverrides.ts` already uses for
-    moves (an ability-side equivalent feeding `calculate()`'s own inputs
-    would keep the correction inside `@smogon/calc`'s modeling, rather than
-    layering a separate post-hoc damage-multiplier pass on top of it).
-    Practically blocked on Aura Break's mechanic being confirmed first
-    (tracked under "Regulation M-C Prep") - one real case (Unseen Fist) isn't
-    enough to design the override shape against with confidence.
-
-  Not started. Leg 2 is small and self-contained - can be picked up
-  independent of Leg 3.
 
 - **[Remaining Champions Mega Ability Audit] — Leg 1** *(Last touched:
   2026-09-01 · Re-checks: 0)*

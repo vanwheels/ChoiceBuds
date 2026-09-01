@@ -291,6 +291,38 @@ describe('useDamageCalc', () => {
     expect(result.current.p1Results[0].effectiveHits).toBe(3);
   });
 
+  it('a move fully blocked by the defender\'s ability produces a clean blocked entry, not an error', () => {
+    const { result } = setup();
+    act(() => {
+      result.current.setPokemon1({ species: 'Garchomp' });
+      result.current.setPokemon2({ species: 'Rotom-Wash', ability: 'Levitate' });
+    });
+    act(() => result.current.setPokemon1Move(0, { name: 'Earthquake' }));
+
+    const entry = result.current.p1Results[0];
+    expect(entry.errorMessage).toBe(null);
+    expect(entry.range).toEqual([0, 0]);
+    expect(entry.percent).toBe('0.0 - 0.0%');
+    expect(entry.desc).toContain('Levitate');
+    expect(entry.possibleDamages).toEqual([0]);
+    expect(entry.kochanceText).toBe(null);
+  });
+
+  it('a move blocked by plain type immunity (no ability involved) also produces a clean blocked entry', () => {
+    const { result } = setup();
+    act(() => {
+      result.current.setPokemon1({ species: 'Pikachu' });
+      result.current.setPokemon2({ species: 'Gengar' });
+    });
+    act(() => result.current.setPokemon1Move(0, { name: 'Tackle' }));
+
+    const entry = result.current.p1Results[0];
+    expect(entry.errorMessage).toBe(null);
+    expect(entry.range).toEqual([0, 0]);
+    expect(entry.desc).toContain('Tackle');
+    expect(entry.possibleDamages).toEqual([0]);
+  });
+
   it('an unresolvable species produces an error entry for every move slot on that side', () => {
     const { result } = setup();
     act(() => {

@@ -14,6 +14,18 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[Calc Auto Ability-Effect Application] - Leg 2** (2026-09-01). Fixed the
+  crash-on-zero-damage bug: `@smogon/calc`'s `result.desc()`/`kochance()`
+  throw whenever a damage-category move's range is fully `[0, 0]` (an
+  ability block like Levitate, or plain type immunity), and
+  `computeSideResults` was routing that throw into `errorEntry`, surfacing
+  the raw library assertion string to the user instead of a "blocked"
+  result. `useDamageCalc.ts` now detects a fully-blocked non-Status result
+  before calling `desc()`/`kochance()` and builds a clean entry from
+  `result.rawDesc` instead (naming the blocking ability when present, a
+  generic immunity phrasing otherwise). See commit
+  (pending push - see chat).
+
 - **[Prune Dead `championsMovepoolChanges.ts` Entries] - Leg 1** (2026-09-01).
   Two-part fix: `useGameData.ts::getCachedSpeciesLearnset` now treats
   `hasChampionsMoveData === false` as a forced cache miss (same pattern as
