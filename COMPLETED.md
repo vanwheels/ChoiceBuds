@@ -23,8 +23,7 @@ in:
   result. `useDamageCalc.ts` now detects a fully-blocked non-Status result
   before calling `desc()`/`kochance()` and builds a clean entry from
   `result.rawDesc` instead (naming the blocking ability when present, a
-  generic immunity phrasing otherwise). See commit
-  (pending push - see chat).
+  generic immunity phrasing otherwise). See commit `f608ae3`.
 
 - **[Prune Dead `championsMovepoolChanges.ts` Entries] - Leg 1** (2026-09-01).
   Two-part fix: `useGameData.ts::getCachedSpeciesLearnset` now treats
