@@ -14,6 +14,14 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[Team Gap Analysis] - Leg 2** (2026-09-01). New pure
+  `utils/usageThreats.ts` pairs Leg 1's `columnPosition` usage rank with
+  each species' real types (from `useDatabase`'s already-warm cache) and
+  filters to top-50-usage species no team slot resists/is immune to; a new
+  `UsageThreatsList.tsx` panel renders the ranked result additively on
+  `TypeMatchupPage.tsx` alongside the existing coverage tables. See commit
+  `d1787bf`.
+
 - **[Team Gap Analysis] - Leg 1** (2026-09-01). Added a background
   `useUsageSync` hook (same batched-concurrency shape as `useInitialSync`,
   shared `runWithConcurrency` extracted to `utils/concurrency.ts`) that
