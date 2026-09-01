@@ -14,6 +14,19 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **Animated Sprite Toggle - Leg 2** (2026-08-31). Built the Leg 1 scope
+  (`docs/investigations/animated-sprite-toggle-scope.md`): a Settings
+  "Show Animated Sprites" toggle swapping `PokemonCard.tsx`'s main sprite
+  (base + Mega-form) between the static PokeAPI PNG and Showdown's animated
+  GIF CDN, with an `onError` fallback to static for any species/form
+  Showdown's roster doesn't have yet. `getAnimatedSpriteUrl()`
+  (`utils/spriteUrl.ts`) needed only one mechanical species-name-mangling
+  rule plus a single real exception (the 4 gender-divergent species) -
+  narrower than the scoping pass's "build a comprehensive exception table"
+  expectation. `useInitialSync` now bulk-prefetches the animated pair
+  unconditionally alongside the existing static sprite downloads. See
+  commit `096e15a`.
+
 - **Battle Logger Retirement - Leg 1** (2026-08-31). Scoped and built in one
   pass (research confirmed `battles.json` was still empty, so no data
   migration to plan around) rather than splitting scoping from execution.
