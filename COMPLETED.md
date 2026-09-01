@@ -14,6 +14,16 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **Battle Logger Retirement - Leg 1** (2026-08-31). Scoped and built in one
+  pass (research confirmed `battles.json` was still empty, so no data
+  migration to plan around) rather than splitting scoping from execution.
+  Retired live turn-by-turn logging + its stat-inference popover to
+  `src/renderer/_archived/battle-logger/` (kept, not deleted, in case
+  Champions ever exposes real match data/replays) and replaced it with
+  `RecordMatchForm.tsx`, a single post-match record feeding the Statistics
+  page exactly as before - `types/pokemon.ts`'s `Battle` shape, `useBattles.ts`,
+  and `battleStats.ts` needed zero changes. See commit `d5cf96e`.
+
 - **Config-Table Audit Script Coverage Extension - Leg 2** (2026-08-31).
   Extended `scripts/auditConfigTables.ts`'s referential-integrity check from
   Leg 1's 7 files to the remaining 9 move/ability-keyed config tables
