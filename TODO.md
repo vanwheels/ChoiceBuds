@@ -15,18 +15,6 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
 
 ## In progress / up next
 
-- **[Fix `npm run build`/`type-check` Break in `championsMoveOverrides.test.ts`]
-  — Leg 1** *(Last touched: 2026-09-01 · Re-checks: 0)*
-  Discovered incidentally while verifying Champions Data Leg 6 (unrelated to
-  that leg's actual changes - confirmed pre-existing via `git stash`).
-  `tsc --noEmit` (and therefore `npm run build`, which runs `tsc` first)
-  fails: `championsMoveOverrides.test.ts`'s `makeMove` fixture builds a
-  `MoveData` object without a `cachedAt` field, which the type now requires
-  as `number` (not optional). `npm run test`/`npm run lint` are both
-  unaffected (Vitest doesn't type-check, ESLint doesn't catch this). Not
-  fixed here - out of this leg's scope - but flagged since it currently
-  blocks a real production build on `main`. Not started.
-
 - **[Team Gap Analysis] — Leg 1** *(Last touched: 2026-08-31 · Re-checks: 0)*
   Came out of a 2026-08-31 strategic discussion on differentiation vs.
   Showdown/calc.pokemonshowdown.com/PokeDD (see chat — worth writing up in

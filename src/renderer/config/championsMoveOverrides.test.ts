@@ -21,6 +21,8 @@ function makeMove(overrides: Partial<MoveData> = {}): MoveData {
     description: 'A physical attack.',
     flags: [],
     target: 'selected-pokemon',
+    cachedAt: Date.now(),
+    expiresAt: Date.now() + 100_000,
     ...overrides,
   };
 }
