@@ -29,37 +29,25 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
   legal-roster diff, `seasons.ts`'s M-6+ rows once M-C's season dates are
   known). Purely additive — no known removals this reg.
 
-- **[Battle Logger Retirement] — Leg 1** *(Last touched: 2026-08-29 ·
+- **[2026-07-07 Review-Pass Leftovers] — Leg 1** *(Last touched: 2026-08-31 ·
   Re-checks: 0)*
-  Decision made: drop live turn-by-turn logging + stat-inference
-  (`BattlefieldSlot`, `TurnLog`, `LikelySetsPopover`, `useBattleLogActions`,
-  the championsbattledata.com inference layer) from active use but archive
-  rather than delete it, in case Champions ever exposes real match
-  data/replays. Replace it with a ~30-second post-match record (final
-  teams, result, freeform notes) feeding only the Statistics page, not
-  in-battle assistance. Not yet scoped — needs its own planning pass to
-  define (a) what "archive" means concretely and stays recoverable, and (b)
-  the new record feature's design (placement, fields, what happens to
-  existing Battle Log data under the old shape).
-
-- **[2026-07-07 Review-Pass Leftovers] — Leg 1** *(Last touched: 2026-07-14 ·
-  Re-checks: 0)*
-  Four items outstanding from three earlier review-pass batches (everything
+  Three items outstanding from three earlier review-pass batches (everything
   else from them is done — see COMPLETED.md):
-  1. Battle Log page still scrolls at the 1280x720 minimum window size —
-     `Battlefield.tsx` + turn controls + turn log total 808.5px, taller
-     than the roster column. Needs its own sizing pass; may become moot if
-     the Battle Logger retirement above replaces this UI — check first.
-  2. Calc page still scrolls slightly at 1280x720 after the 2026-07-14
+  1. Calc page still scrolls slightly at 1280x720 after the 2026-07-14
      tightening pass (~209px short) — stopped deliberately to protect
      legibility/click comfort. Fits fine at 1920x1080. Revisit if wanted.
-  3. Battle Logger's move-stat-effects table: waiting on the user to name a
+  2. Battle Logger's move-stat-effects table: waiting on the user to name a
      move with a weather-conditional stage *amount* like Growth's — no
-     second example found in research so far.
+     second example found in research so far. This table lives in
+     `config/moveStatEffects.ts`, which is unaffected by the Battle Logger
+     Retirement (see COMPLETED.md) — still active, just no longer consumed
+     by an in-battle UI.
      Blocked: needs the user to name a candidate move.
-  4. Stretch/uncertain: export a team *to* a new Pokepaste via its write
+  3. Stretch/uncertain: export a team *to* a new Pokepaste via its write
      API — unconfirmed whether pokepast.es exposes one; needs research
      before scoping.
+  (The former item 1, Battle Log page scrolling at 1280x720, is moot — the
+  live-battle view it was about no longer exists, see COMPLETED.md.)
 
 - **[Original Roadmap Leftovers] — Leg 1** *(Last touched: not recorded,
   predates leg-tracking · Re-checks: 0)*

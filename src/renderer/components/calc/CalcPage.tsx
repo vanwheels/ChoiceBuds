@@ -11,7 +11,7 @@
  * Teams-only session never has to parse/load the calc engine.
  */
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { useDamageCalc, ALL_REGULATION_IDS } from '../../hooks/useDamageCalc';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
@@ -20,7 +20,6 @@ import type { UseDatabaseReturn } from '../../hooks/useDatabase';
 import type { UseSavedPokemonReturn } from '../../hooks/useSavedPokemon';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import type { UseSettingsReturn } from '../../hooks/useSettings';
-import type { CalcReviewPayload } from '../../utils/battleCalcReview';
 import { getRegulationLabel, toRegulationId } from '../../utils/pokemonRules';
 import CalcPokemonPanel from './CalcPokemonPanel';
 import CalcMoveGrid from './CalcMoveGrid';
@@ -35,13 +34,10 @@ interface CalcPageProps {
   savedPokemonState: UseSavedPokemonReturn;
   spriteCacheState: UseSpriteCacheReturn;
   settingsState: UseSettingsReturn;
-  pendingCalcReview: CalcReviewPayload | null;
-  onConsumePendingCalcReview: () => void;
 }
 
 export default function CalcPage({
   gameDataState, teamsState, databaseState, savedPokemonState, spriteCacheState, settingsState,
-  pendingCalcReview, onConsumePendingCalcReview,
 }: CalcPageProps) {
   const [isSavedSetsOpen, setIsSavedSetsOpen] = useState(false);
   const calcState = useDamageCalc(gameDataState, toRegulationId(settingsState.settings.defaultRegulation));
@@ -55,19 +51,6 @@ export default function CalcPage({
     pokemon1NatureEffect, pokemon2NatureEffect, pokemon1Speed, pokemon2Speed,
     p1Results, p2Results, selectedResult, setSelectedResult, selectedEntry,
   } = calcState;
-
-  // Consume a pending Battle Log "Show Calc" hand-off exactly once - see
-  // App.tsx's pendingCalcReview/onConsumePendingCalcReview. Applied through
-  // the same merge-update setters (setPokemon1/setPokemon2/setField) the
-  // "Load from Team" tray already uses, so nothing new is needed here beyond
-  // wiring the payload through.
-  useEffect(() => {
-    if (!pendingCalcReview) return;
-    setPokemon1(pendingCalcReview.pokemon1);
-    setPokemon2(pendingCalcReview.pokemon2);
-    setField(pendingCalcReview.field);
-    onConsumePendingCalcReview();
-  }, [pendingCalcReview, setPokemon1, setPokemon2, setField, onConsumePendingCalcReview]);
 
   return (
     <div className="flex flex-col gap-2">

@@ -1,7 +1,9 @@
 /**
  * BattleLogPage.tsx - Battle Log Tab Root
- * No open battle -> StartBattleFlow + PastBattlesList. Open battle ->
- * ActiveBattleView. Mirrors CalcPage.tsx's role as the lazy-loaded tab root.
+ * No form open -> RecordMatchForm entry point + PastBattlesList. Replaced
+ * the old StartBattleFlow -> ActiveBattleView live-logging flow with a
+ * single post-match record form (see RecordMatchForm.tsx and
+ * src/renderer/_archived/battle-logger/README.md for why).
  */
 
 import { useState } from 'react';
@@ -9,51 +11,28 @@ import type { UseBattlesReturn } from '../../hooks/useBattles';
 import type { UseTeamsReturn } from '../../hooks/useTeams';
 import type { UseSpeciesRosterReturn } from '../../hooks/useSpeciesRoster';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
-import type { UseGameDataReturn } from '../../hooks/useGameData';
-import type { CalcReviewPayload } from '../../utils/battleCalcReview';
-import { useBattleLogActions } from '../../hooks/useBattleLogActions';
-import StartBattleFlow from './StartBattleFlow';
+import RecordMatchForm from './RecordMatchForm';
 import PastBattlesList from './PastBattlesList';
-import ActiveBattleView from './ActiveBattleView';
 
 interface BattleLogPageProps {
   battlesState: UseBattlesReturn;
   teamsState: UseTeamsReturn;
   speciesRosterState: UseSpeciesRosterReturn;
   spriteCacheState: UseSpriteCacheReturn;
-  gameDataState: UseGameDataReturn;
-  onReviewInCalc: (payload: CalcReviewPayload) => void;
 }
 
-export default function BattleLogPage({ battlesState, teamsState, speciesRosterState, spriteCacheState, gameDataState, onReviewInCalc }: BattleLogPageProps) {
-  const [openBattleId, setOpenBattleId] = useState<string | null>(null);
-  const [isStarting, setIsStarting] = useState(false);
-  const battleLogActions = useBattleLogActions(battlesState.addBattle, battlesState.updateBattle, battlesState.battles);
+export default function BattleLogPage({ battlesState, teamsState, speciesRosterState, spriteCacheState }: BattleLogPageProps) {
+  const [isRecording, setIsRecording] = useState(false);
 
-  const openBattle = openBattleId ? battlesState.getBattleById(openBattleId) : undefined;
-
-  if (openBattle) {
+  if (isRecording) {
     return (
-      <ActiveBattleView
-        battle={openBattle}
-        battleLogActions={battleLogActions}
-        roster={speciesRosterState.roster}
-        resolveSprite={spriteCacheState.resolveSprite}
-        gameDataState={gameDataState}
-        onClose={() => setOpenBattleId(null)}
-        onReviewInCalc={onReviewInCalc}
-      />
-    );
-  }
-
-  if (isStarting) {
-    return (
-      <StartBattleFlow
+      <RecordMatchForm
         teamsState={teamsState}
         battlesState={battlesState}
-        battleLogActions={battleLogActions}
-        onBattleStarted={battleId => { setIsStarting(false); setOpenBattleId(battleId); }}
-        onCancel={() => setIsStarting(false)}
+        speciesRosterState={speciesRosterState}
+        spriteCacheState={spriteCacheState}
+        onRecorded={() => setIsRecording(false)}
+        onCancel={() => setIsRecording(false)}
       />
     );
   }
@@ -63,16 +42,15 @@ export default function BattleLogPage({ battlesState, teamsState, speciesRosterS
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-accent-gold">Battle Log</h1>
         <button
-          onClick={() => setIsStarting(true)}
+          onClick={() => setIsRecording(true)}
           className="px-4 py-2 rounded-lg bg-accent-gold hover:bg-accent-gold-deep text-zinc-900 font-semibold transition-colors cursor-pointer"
         >
-          + New Battle
+          + Record a Match
         </button>
       </div>
 
       <PastBattlesList
         battles={battlesState.battles}
-        onOpen={setOpenBattleId}
         onDelete={battlesState.deleteBattle}
       />
     </div>

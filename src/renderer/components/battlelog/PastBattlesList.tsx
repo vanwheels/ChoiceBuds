@@ -1,7 +1,9 @@
 /**
  * PastBattlesList.tsx - Logged Battle History
  * Reverse-chronological (battlesState.battles is already newest-first, since
- * addBattle prepends). Click a row to resume/review it; delete removes it.
+ * addBattle prepends). Read-only besides delete - the row already shows
+ * everything a post-match record holds (see RecordMatchForm.tsx), so there's
+ * no separate detail view to click through to.
  * Grouped by Bo3 set (see utils/battleSets.ts) - a set of 1 (the common
  * case for anyone not using the Opponent Name field) renders exactly like a
  * plain row always did, no visual change; a set of 2-3 renders as a
@@ -13,7 +15,6 @@ import { groupBattlesBySet, getSetOutcome } from '../../utils/battleSets';
 
 interface PastBattlesListProps {
   battles: Battle[];
-  onOpen: (battleId: string) => void;
   onDelete: (battleId: string) => void;
 }
 
@@ -36,33 +37,31 @@ const RESULT_LABELS: Record<Battle['result'], string> = {
 };
 
 /** Shows the team name unless `gameLabel` is set - a Bo3 set always uses one team for all 3 games, so grouped rows show the team name once in the set header instead (see the group render below). */
-function BattleRow({ battle, gameLabel, onOpen, onDelete }: {
+function BattleRow({ battle, gameLabel, onDelete }: {
   battle: Battle;
   gameLabel?: string;
-  onOpen: (battleId: string) => void;
   onDelete: (battleId: string) => void;
 }) {
-  const turnCount = battle.turns.filter(t => t.actions.length > 0).length;
-
   return (
     <div
-      className={`flex items-center justify-between px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 border-l-4 ${RESULT_ACCENT_BORDER[battle.result]} hover:border-accent-gold transition-colors cursor-pointer`}
-      onClick={() => onOpen(battle.id)}
+      className={`flex items-center justify-between px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 border-l-4 ${RESULT_ACCENT_BORDER[battle.result]}`}
     >
       <div>
         <div className="font-semibold text-zinc-100">
           {gameLabel || battle.teamName}
         </div>
         <div className="text-xs text-zinc-400">
-          {battle.format} - {new Date(battle.date).toLocaleDateString()} - {turnCount} turn{turnCount === 1 ? '' : 's'}
+          {battle.format} - {new Date(battle.date).toLocaleDateString()}
+          {battle.opponentName ? ` - vs ${battle.opponentName}` : ''}
         </div>
+        {battle.notes && <div className="text-xs text-zinc-500 mt-1 max-w-md">{battle.notes}</div>}
       </div>
       <div className="flex items-center gap-3">
         <span className={`px-2 py-0.5 text-xs font-bold rounded ${RESULT_STYLES[battle.result]}`}>
           {RESULT_LABELS[battle.result]}
         </span>
         <button
-          onClick={e => { e.stopPropagation(); onDelete(battle.id); }}
+          onClick={() => onDelete(battle.id)}
           title="Delete"
           className="w-6 h-6 flex items-center justify-center rounded text-zinc-500 hover:text-red-400 hover:bg-zinc-700 cursor-pointer"
         >
@@ -73,7 +72,7 @@ function BattleRow({ battle, gameLabel, onOpen, onDelete }: {
   );
 }
 
-export default function PastBattlesList({ battles, onOpen, onDelete }: PastBattlesListProps) {
+export default function PastBattlesList({ battles, onDelete }: PastBattlesListProps) {
   if (battles.length === 0) {
     return <p className="text-sm text-zinc-400">No battles logged yet.</p>;
   }
@@ -86,7 +85,7 @@ export default function PastBattlesList({ battles, onOpen, onDelete }: PastBattl
       <div className="grid items-start gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))' }}>
         {groups.map(group => {
           if (group.battles.length === 1) {
-            return <BattleRow key={group.setId} battle={group.battles[0]} onOpen={onOpen} onDelete={onDelete} />;
+            return <BattleRow key={group.setId} battle={group.battles[0]} onDelete={onDelete} />;
           }
 
           const outcome = getSetOutcome(group.battles);
@@ -104,7 +103,7 @@ export default function PastBattlesList({ battles, onOpen, onDelete }: PastBattl
               </span>
               <div className="grid gap-1.5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))' }}>
                 {group.battles.map((battle, i) => (
-                  <BattleRow key={battle.id} battle={battle} gameLabel={`Game ${i + 1}`} onOpen={onOpen} onDelete={onDelete} />
+                  <BattleRow key={battle.id} battle={battle} gameLabel={`Game ${i + 1}`} onDelete={onDelete} />
                 ))}
               </div>
             </div>

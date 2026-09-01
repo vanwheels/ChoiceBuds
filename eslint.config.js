@@ -4,7 +4,10 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 
 export default tseslint.config(
-  { ignores: ['dist/**', 'dist-electron/**', 'release/**', 'node_modules/**'] },
+  // src/renderer/_archived/** holds retired code kept for reference only
+  // (see its README.md) - nothing imports from it, so it's excluded from
+  // lint/type-check the same way dist/release output is.
+  { ignores: ['dist/**', 'dist-electron/**', 'release/**', 'node_modules/**', 'src/renderer/_archived/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

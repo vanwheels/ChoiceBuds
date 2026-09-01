@@ -1,7 +1,7 @@
 /**
  * battleSets.ts - Bo3 Set Grouping
- * Shared by PastBattlesList.tsx (display), useBattleLogActions.ts::startBattle
- * (deciding whether a new battle continues an existing set), and
+ * Shared by PastBattlesList.tsx (display), RecordMatchForm.tsx::resolveSetId
+ * (deciding whether a new record continues an existing set), and
  * battleStats.ts (the Statistics page's set-level record) - see
  * types/pokemon.ts's Battle.setId/opponentName doc for the data model.
  */
