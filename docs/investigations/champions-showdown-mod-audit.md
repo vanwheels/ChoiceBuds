@@ -14,7 +14,7 @@ below, `master` branch, fetched 2026-09-01):
 
 | File | Shape | Relevant to |
 |---|---|---|
-| `moves.ts` | ~439 entries, mostly `isNonstandard: "Past"` flags + a smaller set of real balance overrides (`basePower`/`accuracy`/`type`/`pp`) | `championsMoveOverrides.ts` |
+| `moves.ts` | 259 entries (corrected 2026-09-01, see Leg 2 update below - originally estimated ~439), mostly `isNonstandard: "Past"` flags + a smaller set of real balance overrides (`basePower`/`accuracy`/`type`/`pp`) | `championsMoveOverrides.ts` |
 | `abilities.ts` | 13 entries only | `championsAbilityOverrides.ts`, and cross-cuts the separate "Remaining Champions Mega Ability Audit" backlog item |
 | `items.ts` | 288 entries — Mega Stone legality (`isNonstandard: null`) + banned-item flags (`isNonstandard: "Past"`) | Not directly mapped to an existing config file today; candidate source for Mega roster / item-legality data |
 | `formats-data.ts` | ~1,000+ species/form entries, `tier` + `isNonstandard` fields | Candidate cross-check for the legal-roster list `useInitialSync` diffs against |
@@ -150,6 +150,55 @@ looked internally inconsistent) — Leg 2 should re-verify with a raw
 (non-summarized) read the same way the PP table above was double-checked,
 not trust the first-pass summary.
 
+## Leg 2 update (2026-09-01)
+
+Corrections to this doc's own findings, made while actually building Leg 2 -
+recorded here rather than silently rewritten, since the original framing
+turned out to be wrong in one case:
+
+- **The PP-exceptions "discrepancy" above was a misreading, not a real bug.**
+  This doc's `moves.ts` spot-check compared our `CHAMPIONS_PP_EXCEPTIONS`
+  values directly against Showdown's raw `pp` field and called the mismatch
+  (8 vs. 5, 12 vs. 10) the pass's most concrete finding. It isn't one:
+  `data/mods/champions/scripts.ts` overrides `calculatePP(move, ppUps)` to
+  `(move.pp / 5 + 1) * 4` (ignoring `ppUps` entirely - Champions has no
+  per-Pokemon partial PP Up scaling, one final number per move), and that
+  formula run over Showdown's raw values reproduces every one of our
+  existing 13 exception values exactly (`5 -> 8`, `10 -> 12`, `20 -> 20`).
+  It also reproduces the game-wide 5→8/10→12/15→16/20+→20 bucket formula
+  for every move without an exception. Independently confirmed for one entry
+  via Serebii's own updated-attacks page, which states Beak Blast is 8 PP in
+  Champions - matching our pre-existing value, not Showdown's raw `5`.
+  **No values in `CHAMPIONS_PP_EXCEPTIONS` needed to change** - the file's
+  header/PP comments were expanded instead to record the derivation, so a
+  future reader doesn't have to re-discover this.
+- The moves.ts entry-count estimate above ("~439 entries") was off - a
+  parse of the actual raw file counts 259 top-level move entries.
+
+## Leg 4 heads-up: `isNonstandard: "Past"` is a much bigger list than our current `GLOBALLY_REMOVED_MOVES`
+
+Found while diffing Showdown's `moves.ts` the other direction (checking for
+balance changes we're missing, per Leg 2's scope) - not acted on here since
+it belongs to Leg 4, but flagging clearly since it reframes that leg's size.
+Of the 259 total entries in `data/mods/champions/moves.ts`, roughly 200 are
+*only* an `isNonstandard: "Past"` flag with no other field changed. Since a
+Showdown mod file only lists deltas from its parent dex (mainline SV), every
+one of those ~200 moves is being flagged as **removed from Champions
+relative to mainline** - the same meaning our own `GLOBALLY_REMOVED_MOVES`
+(`championsMovepoolChanges.ts`) uses it for, which currently holds only 3
+moves (`tera-blast`, `hidden-power`, `secret-power`). That's a large gap
+between what our config currently encodes as "not usable in Champions" and
+what Showdown's mod says is actually removed. Leg 4 should treat the
+`isNonstandard: "Past"`-only subset of `moves.ts` as the candidate source
+for a much larger `GLOBALLY_REMOVED_MOVES`, not just a movepool/learnset
+audit. One example already spotted in passing: `metalclaw` is both
+`isNonstandard: "Past"` (removed) and separately gets a `slicing` flag added
+in the mod - same shape as our existing crush-claw/shadow-claw/dragon-claw
+"considered a slicing move" entries in `championsMoveOverrides.ts` - but
+adding that description here in Leg 2 would be wrong if the move isn't
+actually legal/selectable in Champions at all, which is exactly the
+open question Leg 4 needs to resolve first.
+
 ## Recommended Leg 2+ breakdown
 
 Per the "smaller working slice per leg" convention, splitting rather than
@@ -166,7 +215,10 @@ doing all four config files + both evaluation targets in one pass:
   actually adopts it.
 - **Leg 3**: `championsAbilityOverrides.ts` audit + the Mega-ability
   cross-reference feeding "Remaining Champions Mega Ability Audit".
-- **Leg 4**: `championsMovepoolChanges.ts` / `learnsets.ts` audit.
+- **Leg 4**: `championsMovepoolChanges.ts` / `learnsets.ts` audit - see the
+  "Leg 4 heads-up" section above first, since it's a bigger scope than a
+  learnset-only audit (a ~200-move `GLOBALLY_REMOVED_MOVES` candidate list,
+  not just movepool deltas).
 - **Leg 5** (separate, open-ended): evaluate `formats-data.ts`/`items.ts`
   as a roster/tier source — needs the ruleset-alignment question above
   answered first, likely its own scoping pass rather than a straight build

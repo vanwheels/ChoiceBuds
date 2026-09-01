@@ -4,6 +4,16 @@
  * Scarlet/Violet - it has no concept of Pokemon Champions as a distinct
  * game with its own balance patches. This file hand-corrects the moves
  * Champions has actually changed, verified against:
+ *   smogon/pokemon-showdown's code-level `champions` mod
+ *     (data/mods/champions/{moves,scripts}.ts on GitHub, `master` branch) -
+ *     the primary reference as of 2026-09-01 (see CLAUDE.md's sixth
+ *     external-source exception). Ladder-verified simulator code,
+ *     not a summarized reference page or a screenshot-relayed spreadsheet -
+ *     every entry below was cross-checked against it and every override
+ *     confirmed to match (see docs/investigations/champions-showdown-mod-audit.md
+ *     for the full pass). Its raw per-move `pp` field is a PRE-transform
+ *     value, not the final displayed PP - see the CHAMPIONS_PP_EXCEPTIONS
+ *     comment below for how that reconciles with our own numbers.
  *   https://www.serebii.net/pokemonchampions/updatedattacks.shtml
  *   https://bulbapedia.bulbagarden.net/wiki/Pokémon_Champions
  *     ("Changes from Scarlet and Violet and Generation VIII")
@@ -12,7 +22,10 @@
  *     Kaphotics and Anubis plus battle-mechanics research from DaWoblefet.
  *     Provided directly by the user via screenshots (last updated by its
  *     author 2026-06-16) - not fetched live, same as the Reddit movepool
- *     thread in championsMovepoolChanges.ts.
+ *     thread in championsMovepoolChanges.ts. Superseded by the Showdown mod
+ *     above wherever the two would conflict, but still useful for entries
+ *     Showdown's mod doesn't cover in a directly-portable form (e.g. the
+ *     hand-written descriptions below).
  * Applied at the READ boundary (useGameData.ts's getCachedMove/getMoveData),
  * not at fetch time - so it's self-healing against move data already sitting
  * in a user's 30-day game-data-cache.json, and any future correction here
@@ -40,7 +53,7 @@ const CHAMPIONS_MOVE_OVERRIDES: Record<string, ChampionsMoveOverride> = {
     type: 'grass',
     description: "Boosts the user's Attack and Sp. Atk by 1 stage (2 in harsh sunlight).",
   },
-  'crabhammer': { power: 100, accuracy: 95, description: 'Has a high critical-hit ratio.' },
+  'crabhammer': { accuracy: 95, description: 'Has a high critical-hit ratio.' },
   'bone-rush': { power: 30 },
   'iron-head': { description: "Has a 20% chance to make the target flinch." },
   'night-daze': { power: 90 },
@@ -72,20 +85,16 @@ const CHAMPIONS_MOVE_OVERRIDES: Record<string, ChampionsMoveOverride> = {
   'dragon-claw': { description: 'Considered a slicing move.' },
 
   /**
-   * LOWER CONFIDENCE - the following 11 entries come only from the
-   * spreadsheet's "Move Ch." tab, with no Serebii/Bulbapedia corroboration
-   * (unlike everything above). The user has since found the same
-   * spreadsheet's "Moves Deleted" tab unreliable - it flagged these same
-   * moves (plus several others we know are real, like Rage Fist and Make
-   * It Rain) as "not in Champions," which turned out to conflate "no
-   * current Pokemon has access to this move" (a roster gap - many of
-   * these are signature moves for species not yet in the game, e.g.
-   * Blood Moon/Ursaluna, Dragon Hammer/Zygarde) with the move itself not
-   * existing. That means these 11 values are currently unverifiable in
-   * practice (no Pokemon can use them yet to check against), not
-   * necessarily wrong - keep them since they're harmless if unused and
-   * ready for whenever the roster gap closes, but don't treat them with
-   * the same confidence as the corroborated entries above.
+   * These 11 entries originally came only from the spreadsheet's "Move Ch."
+   * tab, with no Serebii/Bulbapedia corroboration and no Champions Pokemon
+   * yet able to use most of them in practice (several are signature moves
+   * for species not yet in the game, e.g. Blood Moon/Ursaluna, Dragon
+   * Hammer/Zygarde) - so they were carried as lower-confidence. All 11 are
+   * now confirmed present with matching values in Showdown's
+   * ladder-verified `champions` mod (see the header comment above), so
+   * that framing no longer applies; kept as their own block only because
+   * they were already grouped this way, not because they're still
+   * considered less trustworthy than the entries above.
    */
   'gear-grind': { power: 60, accuracy: 90 },
   'anchor-shot': { power: 90 },
@@ -106,8 +115,24 @@ const CHAMPIONS_MOVE_OVERRIDES: Record<string, ChampionsMoveOverride> = {
 
 /**
  * PP is retiered game-wide (not just for the moves above): 5->8, 10->12,
- * 15->16, and anything 20+ collapses to a flat 20 - except for 8 moves
- * that got a different value than the formula would predict.
+ * 15->16, and anything 20+ collapses to a flat 20 - except for the 13 moves
+ * below, which got a different value than the formula would predict.
+ *
+ * Both the game-wide formula and every value below are confirmed against
+ * Showdown's `champions` mod (see the header comment above):
+ * `scripts.ts`'s `calculatePP(move, ppUps)` is `(move.pp / 5 + 1) * 4`,
+ * always - `ppUps` is ignored, so Champions has no per-Pokemon partial PP
+ * Up scaling, just one final number per move. Its own `moves.ts` `pp`
+ * field is the PRE-transform input to that formula, not the number to
+ * copy directly - e.g. Beak Blast's raw `pp: 5` runs through the formula
+ * to 8, matching both our existing value here and Serebii's directly-
+ * stated "8 PP" for it. An earlier pass (see the investigation doc) read
+ * the raw field as if it were the final value and flagged a false
+ * discrepancy against these numbers; running it through calculatePP
+ * instead reproduces every value below exactly, including the game-wide
+ * formula's own 5->8/10->12/15->16 buckets (raw PP >20 gets capped to 20
+ * before the formula runs too, per `scripts.ts`'s `init()`, landing on the
+ * same flat 20 our ">=20" bucket already produces).
  */
 const CHAMPIONS_PP_EXCEPTIONS: Record<string, number> = {
   'baneful-bunker': 8,
