@@ -28,7 +28,7 @@ in:
   `championsMovepoolChanges.test.ts` (previously untested). The 22 species'
   own remaining per-species discrepancies were documented but not applied -
   still confirmed dead code per Leg 4a, so left for the "Prune Dead" backlog
-  item to resolve first. See commit `<pending>` and
+  item to resolve first. See commit `f894126` and
   `docs/investigations/champions-showdown-mod-audit.md`'s "Leg 4b" section
   for the full trail and per-species discrepancy table.
 
