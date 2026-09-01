@@ -15,6 +15,25 @@ in:
   (the 50 oldest entries as of the 2026-08-31 split)
 
 - **Champions Data: Adopt Showdown's `champions` Mod as Primary Reference -
+  Leg 3** (2026-09-01). `championsAbilityOverrides.ts` audit against
+  Showdown's `champions` mod (13 total ability entries) - `healer`/
+  `unseen-fist` already matched; the other 11 turned out to need no new
+  overrides (5 are internal engine-behavior fixes with no description-text
+  impact, 6 are Future-flagged abilities with no PokeAPI resource for the
+  override function to reach at all). Resolved the Mega-ability
+  cross-reference for those 6 Future-only abilities by reading each Mega
+  forme's real `abilities.0` field out of Showdown's `pokedex.ts` rather
+  than guessing from name-theming (which would have missed 2 of 6 -
+  Feraligatr's Dragonize, Meganium's Mega Sol - since neither telegraphs
+  from the species name or type). Added 5 new entries to `megaAbilities.ts`
+  (Eelektross's Eelevate was already there): Excadrill/Piercing Drill,
+  Feraligatr/Dragonize, Meganium/Mega Sol, Pyroar/Fire Mane,
+  Scovillain/Spicy Spray - resolving those 5 species out of the "Remaining
+  Champions Mega Ability Audit" backlog item's exclusion list. See commit
+  `4418847` and `docs/investigations/champions-showdown-mod-audit.md`'s
+  Leg 3 update section for the full source table.
+
+- **Champions Data: Adopt Showdown's `champions` Mod as Primary Reference -
   Leg 2** (2026-09-01). `championsMoveOverrides.ts` audit against
   Showdown's ladder-verified `champions` mod. The one "concrete discrepancy"
   Leg 1's scoping pass flagged (`CHAMPIONS_PP_EXCEPTIONS` vs. Showdown's raw

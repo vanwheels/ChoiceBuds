@@ -199,6 +199,61 @@ adding that description here in Leg 2 would be wrong if the move isn't
 actually legal/selectable in Champions at all, which is exactly the
 open question Leg 4 needs to resolve first.
 
+## Leg 3 update (2026-09-01)
+
+Fetched the raw `data/mods/champions/abilities.ts` (13 entries, already listed
+above) plus the main `data/abilities.ts` and `data/pokedex.ts` for
+cross-reference (not summarized fetches - saved to disk and read/grepped
+directly, per the same discipline as Leg 2's PP re-check).
+
+**`championsAbilityOverrides.ts` audit**: of the 13 abilities.ts entries,
+only `healer`/`unseen-fist` needed (and already have) description overrides.
+The other 11 split into two groups:
+- `angershell`, `berserk`, `disguise`, `naturalcure`, `regenerator` are
+  internal engine-behavior fixes (multi-hit-move edge cases, a Team-Preview
+  info-leak fix for Natural Cure, Mimikyu/Disguise's substitute
+  interaction) - none change the ability's user-facing description vs.
+  mainline, so no override needed.
+- `dragonize`, `eelevate`, `firemane`, `megasol`, `piercingdrill`,
+  `spicyspray` are Future-flagged abilities Champions un-bans
+  (`isNonstandard: null` in the mod, `isNonstandard: "Future"` in the base
+  dex) that don't exist as a PokeAPI resource at all - PokeAPI only models
+  released mainline games, and these are abilities from an unreleased
+  future game reused early by Champions. `applyChampionsAbilityOverride`
+  only runs on ability data PokeAPI actually returned, so these can't reach
+  it regardless. They're Mega-only fixed abilities instead - see next
+  section.
+
+**Mega-ability cross-reference resolved**: read each of the six Future-only
+abilities' full definition in the base `data/abilities.ts` (name, num,
+mechanic), then grepped `data/pokedex.ts` for which Mega forme's
+`abilities: { 0: ... }` field actually uses each one - the authoritative
+answer, not name-theming guesswork (which would have gotten 2 of 6 wrong -
+see below). Confirmed:
+
+| Ability | num | Mechanic | Mega forme |
+|---|---|---|---|
+| Eelevate | 313 | Boosts best stat by hit count when a move faints the target (already confirmed pre-Leg 3) | Eelektross-Mega |
+| Piercing Drill | 311 | Contact moves bypass Protect (same `onHitProtect` shape as Unseen Fist) | Excadrill-Mega |
+| Dragonize | 312 | Normal -> Dragon type conversion + 1.2x power, i.e. Pixilate/Aerilate's exact mechanic for Dragon | Feraligatr-Mega (Water/**Dragon**, hence the added secondary type) |
+| Mega Sol | 315 | Hooks `onWeatherModifyDamage` to always apply Sunny Day's own damage modifier regardless of actual weather | Meganium-Mega (Grass/Fairy - no obvious name-theme link to "sun") |
+| Fire Mane | 316 | 1.5x Atk/SpA boost to Fire-type moves (Dragon's Maw's exact mechanic for Fire) | Pyroar-Mega |
+| Spicy Spray | 318 | Guaranteed-burn the attacker on any damaging hit (no contact requirement, no chance roll) | Scovillain-Mega |
+
+Piercing Drill/Fire Mane/Spicy Spray matched their obvious name-theme
+(drill -> mole, mane -> lion, spicy -> chili plant). Dragonize and Mega Sol
+would *not* have been guessed correctly from theming alone (Feraligatr
+isn't obviously "Dragon," Meganium has no sun connection) - worth noting as
+a caution against trusting thematic inference over reading the actual data
+for the remaining ~25-species list.
+
+Applied to `megaAbilities.ts` (5 new entries; Eelevate/Eelektross was
+already present) and `championsAbilityOverrides.ts` (header comment only,
+no new override entries - see above). Feraligatr, Meganium, Excadrill,
+Pyroar, and Scovillain are removed from that file's "deliberately
+incomplete" list and from the "Remaining Champions Mega Ability Audit"
+backlog item's open list (see TODO.md/COMPLETED.md).
+
 ## Recommended Leg 2+ breakdown
 
 Per the "smaller working slice per leg" convention, splitting rather than

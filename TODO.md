@@ -54,23 +54,18 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
   known). Purely additive — no known removals this reg.
 
 - **[Champions Data: Adopt Showdown's `champions` Mod as Primary Reference] —
-  Leg 3** *(Last touched: 2026-09-01 · Re-checks: 0)*
-  Leg 2 (`championsMoveOverrides.ts` audit) is done — see COMPLETED.md.
-  Leg 3 scope: `championsAbilityOverrides.ts` audit against Showdown's
-  `abilities.ts` (13 entries total — `healer`/`unseenfist` already verified
-  matching; the other 11, including the 5 candidate Mega-only abilities
-  below, still need a pass) + the Mega-ability cross-reference that feeds
-  the "Remaining Champions Mega Ability Audit" item below: `items.ts`
-  confirmed all ~30 excluded Mega species have a real Champions Mega Stone,
-  and `abilities.ts` has 5 candidate never-before-legal ability keys
-  (`dragonize`, `firemane`, `megasol`, `piercingdrill`, `spicyspray`) of the
-  same shape as Eelektross's confirmed `Eelevate` — matching each stone to
-  its ability would resolve most of that item's open list. See
-  `docs/investigations/champions-showdown-mod-audit.md` for the full
-  file-by-file findings. Leg 4 (`championsMovepoolChanges.ts` —
-  larger scope than originally estimated, see that doc's "Leg 4 heads-up"
-  section) and Leg 5 (evaluate `formats-data.ts`/`items.ts` as a
-  roster/tier source, likely its own scoping pass) follow. Not started.
+  Leg 4** *(Last touched: 2026-09-01 · Re-checks: 0)*
+  Leg 2 (`championsMoveOverrides.ts` audit) and Leg 3
+  (`championsAbilityOverrides.ts` audit + the Mega-ability cross-reference)
+  are both done — see COMPLETED.md. Leg 4 scope:
+  `championsMovepoolChanges.ts`/`learnsets.ts` audit — larger scope than a
+  learnset-only pass, see
+  `docs/investigations/champions-showdown-mod-audit.md`'s "Leg 4 heads-up"
+  section: roughly 200 of `moves.ts`'s 259 entries are
+  `isNonstandard: "Past"`-only, a candidate source for a much bigger
+  `GLOBALLY_REMOVED_MOVES` list than our current 3-move one. Leg 5 (evaluate
+  `formats-data.ts`/`items.ts` as a roster/tier source, likely its own
+  scoping pass) follows. Not started.
 
 - **[2026-07-07 Review-Pass Leftovers] — Leg 2** *(Last touched: 2026-08-31 ·
   Re-checks: 0)*
@@ -187,27 +182,25 @@ unblocked.
   Not started.
 
 - **[Remaining Champions Mega Ability Audit] — Leg 1** *(Last touched:
-  2026-08-31 · Re-checks: 0)*
-  `config/megaAbilities.ts` still deliberately excludes ~30 Champions-
+  2026-09-01 · Re-checks: 0)*
+  `config/megaAbilities.ts` still deliberately excludes ~25 Champions-
   invented Mega forms (Raichu X/Y, Meowstic, Barbaracle, Chimecho, Golurk,
-  Falinks, Scovillain, Crabominable, Feraligatr, Meganium, Emboar, Drampa,
-  Dragalge, Audino, Glimmora, Malamar, Skarmory, Starmie, Chandelure,
-  Delphox, Greninja, Hawlucha, Clefable, Dragonite, Excadrill, Floette,
-  Froslass, Pyroar, Scolipede, Scrafty, Staraptor, Victreebel, Chesnaught)
-  pending a verified post-Mega ability, same as Eelektross was until this
-  session (see COMPLETED.md - now has `Eelevate`). Insider Gaming's
-  "All New Mega Pokémon & Abilities in Pokémon Champions Regulation M-B"
-  article looks like it may cover several of these at once - worth checking
-  against Serebii's Champions Pokedex (per this project's cross-check rule)
-  before bulk-filling the table.
-  2026-09-01: the Showdown-mod scoping pass above confirmed all ~30 species
-  here have a real Mega Stone in Showdown's `items.ts`, and found 5
-  candidate never-before-legal ability keys in `abilities.ts` (`dragonize`,
-  `firemane`, `megasol`, `piercingdrill`, `spicyspray`) of the same shape as
-  Eelektross's confirmed `Eelevate` - see
-  `docs/investigations/champions-showdown-mod-audit.md`. Likely resolves
-  most of this list once each stone is matched to its ability; picked up as
-  Leg 3 of that item rather than duplicated here. Not started.
+  Falinks, Crabominable, Emboar, Drampa, Dragalge, Audino, Glimmora,
+  Malamar, Skarmory, Starmie, Chandelure, Delphox, Greninja, Hawlucha,
+  Clefable, Dragonite, Floette, Froslass, Scolipede, Scrafty, Staraptor,
+  Victreebel, Chesnaught) pending a verified post-Mega ability. 2026-09-01:
+  the "Champions Data" item's Leg 3 resolved 5 species by reading each Mega
+  forme's `abilities.0` field directly out of Showdown's `pokedex.ts`
+  (Excadrill/Piercing Drill, Feraligatr/Dragonize, Meganium/Mega Sol,
+  Pyroar/Fire Mane, Scovillain/Spicy Spray — see
+  `docs/investigations/champions-showdown-mod-audit.md`'s Leg 3 update and
+  COMPLETED.md), on top of Eelektross/Eelevate confirmed the prior session.
+  That leaves ~25 species with no Showdown-mod ability entry at all (the mod
+  only lists 13 ability overrides total, all already accounted for) — for
+  those, Showdown's data has nothing further to check, so this item now
+  needs Insider Gaming's "All New Mega Pokémon & Abilities in Pokémon
+  Champions Regulation M-B" article or Serebii's Champions Pokedex
+  (per this project's cross-check rule) instead. Not started.
 
 - **[set-state-in-effect Lint Rule Fix] — Leg 1** *(Last touched: not
   recorded · Re-checks: 0)*
