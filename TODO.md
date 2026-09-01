@@ -157,18 +157,3 @@ unblocked.
   (`championsMoveOverrides.ts`/`championsAbilityOverrides.ts`/etc.) if
   useful later. No concrete driver yet beyond the original season/regulation
   use case. Not started.
-
-- **[Config-Table Audit Script Coverage Extension] — Leg 2** *(Last touched:
-  2026-08-31 · Re-checks: 0)*
-  Leg 1 (see COMPLETED.md) scoped `scripts/auditConfigTables.ts`'s
-  referential-integrity check to 7 files — the 4 tables CLAUDE.md's
-  "Curated effect tables" rule names plus the 3 Champions-override files
-  TODO's own item body named. Not yet covered: `moveBlockingAbilities.ts`,
-  `megaAbilities.ts`, `moveFieldEffects.ts`, `moveWeatherEffects.ts`,
-  `moveTargeting.ts`, `typeChangingAbilities.ts`, `protectMoves.ts`,
-  `switchOutMoves.ts`, `moveFlags.ts` — several of these nest move-name
-  arrays inside object values (e.g. `moveBlockingAbilities.ts`'s
-  `move-list`/`SOUND_BASED_MOVES`) rather than being flat
-  `Record<string, X>`/`string[]`, so extending the script's TS-AST walker to
-  reach them isn't just copy-pasting the existing per-file blocks. Not
-  started.

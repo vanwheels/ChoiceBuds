@@ -14,6 +14,19 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **Config-Table Audit Script Coverage Extension - Leg 2** (2026-08-31).
+  Extended `scripts/auditConfigTables.ts`'s referential-integrity check from
+  Leg 1's 7 files to the remaining 9 move/ability-keyed config tables
+  (`moveBlockingAbilities.ts`, `megaAbilities.ts`, `moveFieldEffects.ts`,
+  `moveWeatherEffects.ts`, `moveTargeting.ts`, `typeChangingAbilities.ts`,
+  `protectMoves.ts`, `switchOutMoves.ts`, `moveFlags.ts`) - 16 total. Several
+  didn't fit the flat `Record<string, X>`/`string[]` shape Leg 1's helpers
+  assumed, so this pass added three narrowly-scoped helpers plus one bespoke
+  block for `moveBlockingAbilities.ts`'s nested `moves`-array shape, rather
+  than one fully generic walker. Verified the new detection logic against
+  injected fake move/ability slugs in 3 of the new files before confirming
+  the real run comes back clean (0 hits). See commit `9441e42`.
+
 - **Config-Table Audit Script - Leg 1** (2026-08-31). Standalone
   `scripts/auditConfigTables.ts`, in the mold of GW2 Squaded's
   `scripts/audit-data-completeness.ts`: a local, no-network, console-report
