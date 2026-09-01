@@ -26,7 +26,7 @@ in:
   changes needed since the Calc panel's ability field is free-text
   (`CalcAutocomplete.tsx`) and not restricted to `@smogon/calc`'s bundled
   ability list, so a Champions-only ability name displays and persists fine
-  once set via the Mega toggle. See commit `<pending>`.
+  once set via the Mega toggle. See commit `d2294c0`.
 
 - **Animated Sprite Toggle - Leg 2** (2026-08-31). Built the Leg 1 scope
   (`docs/investigations/animated-sprite-toggle-scope.md`): a Settings
