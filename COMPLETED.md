@@ -14,6 +14,14 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **Add Pokemon Box Width Match - Leg 1** (2026-08-31). The "+ Add Pokémon"
+  placeholder button filled its entire grid cell width with no cap, while
+  `PokemonCard`/`SpeciesPickerCard` both cap at `max-w-[280px]` - in the
+  3-column layout (grid cells wider than 280px) that made the empty add-slot
+  visibly wider than any actual roster card. Added the same `max-w-[280px]`
+  to the button in `TeamCard.tsx`. Split out of the former "Manual-Testing
+  Batch Fixes" item. See commit `<pending>`.
+
 - **Pokemon Picker Multi-Filter Search - Leg 1** (2026-08-31). The species
   picker's `#tag` search only ever took one tag at a time. Now multiple
   space-separated `#tag`s in one search (e.g. `#fire #shadowclaw

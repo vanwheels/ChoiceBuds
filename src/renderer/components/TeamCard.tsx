@@ -363,7 +363,7 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
                   ) : (
                     <button
                       onClick={() => setIsAddPickerOpen(true)}
-                      className="w-full h-full min-h-[280px] flex items-center justify-center rounded-lg border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer"
+                      className="w-full max-w-[280px] h-full min-h-[280px] flex items-center justify-center rounded-lg border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer"
                     >
                       <span className="text-sm font-semibold">+ Add Pokémon</span>
                     </button>

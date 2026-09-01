@@ -29,12 +29,6 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
   legal-roster diff, `seasons.ts`'s M-6+ rows once M-C's season dates are
   known). Purely additive — no known removals this reg.
 
-- **[Add Pokemon Box Width Match] — Leg 1** *(Last touched: 2026-08-28 ·
-  Re-checks: 0)*
-  "Add Pokemon" box is wider than an actual Pokemon card once one's added —
-  should match card width. Split out of the former "Manual-Testing Batch
-  Fixes" item.
-
 - **[Config-Table Audit Script] — Leg 1** *(Last touched: 2026-08-29 ·
   Re-checks: 0)*
   Everything else from the GW2-Squaded testing-workflow adoption is done —
