@@ -152,27 +152,6 @@ unblocked.
 
 ## Backlog / ideas (not yet scoped, highest-to-lowest priority)
 
-- **[Remaining Champions Mega Ability Audit] — Leg 1** *(Last touched:
-  2026-09-01 · Re-checks: 0)*
-  `config/megaAbilities.ts` still deliberately excludes ~25 Champions-
-  invented Mega forms (Raichu X/Y, Meowstic, Barbaracle, Chimecho, Golurk,
-  Falinks, Crabominable, Emboar, Drampa, Dragalge, Audino, Glimmora,
-  Malamar, Skarmory, Starmie, Chandelure, Delphox, Greninja, Hawlucha,
-  Clefable, Dragonite, Floette, Froslass, Scolipede, Scrafty, Staraptor,
-  Victreebel, Chesnaught) pending a verified post-Mega ability. 2026-09-01:
-  the "Champions Data" item's Leg 3 resolved 5 species by reading each Mega
-  forme's `abilities.0` field directly out of Showdown's `pokedex.ts`
-  (Excadrill/Piercing Drill, Feraligatr/Dragonize, Meganium/Mega Sol,
-  Pyroar/Fire Mane, Scovillain/Spicy Spray — see
-  `docs/investigations/champions-showdown-mod-audit.md`'s Leg 3 update and
-  COMPLETED.md), on top of Eelektross/Eelevate confirmed the prior session.
-  That leaves ~25 species with no Showdown-mod ability entry at all (the mod
-  only lists 13 ability overrides total, all already accounted for) — for
-  those, Showdown's data has nothing further to check, so this item now
-  needs Insider Gaming's "All New Mega Pokémon & Abilities in Pokémon
-  Champions Regulation M-B" article or Serebii's Champions Pokedex
-  (per this project's cross-check rule) instead. Not started.
-
 - **[set-state-in-effect Lint Rule Fix] — Leg 1** *(Last touched: not
   recorded · Re-checks: 0)*
   The rule is disabled on `useTeams.ts`/`useSettings.ts`/

@@ -14,6 +14,20 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[Remaining Champions Mega Ability Audit] - Leg 1** (2026-09-01). Resolved
+  all 29 remaining Champions-invented Mega forms (Raichu X/Y, Meowstic,
+  Barbaracle, Chimecho, Golurk, Falinks, Crabominable, Emboar, Drampa,
+  Dragalge, Audino, Glimmora, Malamar, Skarmory, Starmie, Chandelure,
+  Delphox, Greninja, Hawlucha, Clefable, Dragonite, Floette, Froslass,
+  Scolipede, Scrafty, Staraptor, Victreebel, Chesnaught) once Showdown's mod
+  ran dry per Leg 3 - cross-checked a Kotaku reveal-article listing against
+  Serebii's per-species Champions Pokedex pages, all 29 agreeing.
+  `megaAbilities.ts` now has a guaranteed-ability entry for every Mega form
+  in `megaEvolution.ts`'s `MEGA_STONE_TO_SPECIES`, verified by a new coverage
+  test (`megaAbilities.test.ts`, didn't exist before this leg). See commit
+  `<pending>` and `docs/investigations/champions-showdown-mod-audit.md`'s
+  Leg 7 update for the full source trail.
+
 - **[Calc Auto Ability-Effect Application] - Leg 2** (2026-09-01). Fixed the
   crash-on-zero-damage bug: `@smogon/calc`'s `result.desc()`/`kochance()`
   throw whenever a damage-category move's range is fully `[0, 0]` (an

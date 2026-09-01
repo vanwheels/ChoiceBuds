@@ -651,6 +651,65 @@ This also means Leg 4a's original 5-move learn-by-level-up safety check
 ("is it safe for `GLOBALLY_REMOVED_MOVES` to apply to Floette") is moot once
 `hasChampionsMoveData` gates the whole file out for Floette regardless.
 
+## Leg 7 (2026-09-01): Remaining Champions Mega Ability Audit resolved
+
+Leg 3 exhausted Showdown's mod as a source (13 ability overrides total, all
+already accounted for) - the ~25/29-species gap it left (`megaAbilities.ts`'s
+header list) needed the external sources CLAUDE.md's `abilities.ts`/
+`items.ts` table flagged instead: an Insider Gaming/Kotaku-style reveal
+article, cross-checked against Serebii's Champions Pokedex per this
+project's cross-check rule.
+
+**Source 1**: Insider Gaming's "All New Mega Pokémon & Abilities in Pokémon
+Champions Regulation M-B" article covered only 11 of the 29 (the Regulation
+M-B-specific reveal batch) - Eelektross/Pyroar were already confirmed, so it
+gave 9 new: Raichu X/Y, Staraptor, Scolipede, Scrafty, Malamar, Barbaracle,
+Dragalge, Falinks.
+
+**Source 2**: a Kotaku article ("Pokémon Champions Guide: All The New
+Legends: Z-A Mega Evolution Abilities") turned up covering all 34 Champions-
+invented Mega forms in one list, including the remaining 20 the Insider
+Gaming article didn't have (Meowstic, Chimecho, Golurk, Crabominable,
+Emboar, Drampa, Glimmora, Skarmory, Starmie, Chandelure, Delphox, Greninja,
+Hawlucha, Clefable, Dragonite, Floette, Froslass, Victreebel, Chesnaught) -
+missing only Audino.
+
+**Cross-check**: fetched Serebii's per-species Champions Pokedex page
+(`serebii.net/pokedex-champions/<species>/`) for all 29 species individually
+rather than trusting either article's summary alone, per CLAUDE.md's
+caution against a condensed reference page silently dropping or
+mislabeling effects. Every one of the 29 matched exactly between the
+article source and Serebii, including several with no name-theming to
+guess from the way Leg 3's Dragonize/Mega Sol weren't guessable either
+(Golurk -> Unseen Fist, Chandelure -> Infiltrator, Meowstic -> Trace,
+Drampa -> Berserk, Victreebel -> Innards Out). Audino (missing from the
+Kotaku list) was confirmed by Serebii alone: Mega Audino -> Healer.
+
+One mechanical note worth recording: a web search surfaced a Pikalytics
+usage-stat page showing Mega Dragonite splitting between Multiscale
+(~82%) and Inner Focus (~18%), which looked like it might mean Dragonite's
+Mega doesn't force a single ability the way the others do. Checked
+directly against Serebii's own page text (not just the raw ability list) -
+it explicitly describes Mega Dragonite's ability as a single fixed entry,
+matching Kotaku. Treating the Pikalytics split as stale/pre-reveal usage
+data rather than evidence of a real exception; if a live-game check ever
+contradicts this, this note is the place to update.
+
+**Applied**: all 29 entries added to `megaAbilities.ts` (`emboar-mega` was
+initially dropped from the edit despite being in the header list - caught
+by a coverage script diffing `MEGA_ABILITIES`'s keys against every slug
+`megaEvolution.ts`'s `MEGA_STONE_TO_SPECIES` derives, added, and the script
+re-run clean). Floette keyed `floette-mega` (not `floette-eternal-mega`) to
+match `@smogon/calc`'s own forme name, same substitution
+`CURATED_MEGA_FORM_SLUGS` already makes for the Calc tab. Added
+`megaAbilities.test.ts` (didn't exist before this leg) with a coverage
+assertion using the same stone-list diff, so a future new Mega Stone added
+to `megaEvolution.ts` without a matching ability entry fails CI rather than
+silently falling through to "sprite swaps, ability doesn't." This closes
+the "Remaining Champions Mega Ability Audit" backlog item - `megaAbilities.ts`
+now has a guaranteed-ability entry for every Mega form in
+`MEGA_STONE_TO_SPECIES`, mainline and Champions-invented alike.
+
 ## Recommended Leg 2+ breakdown
 
 Per the "smaller working slice per leg" convention, splitting rather than
