@@ -54,10 +54,21 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
   known). Purely additive — no known removals this reg.
 
 - **[Champions Data: Adopt Showdown's `champions` Mod as Primary Reference] —
-  Leg 5** *(Last touched: 2026-09-01 · Re-checks: 0)*
-  Leg 2, Leg 3, Leg 4a, and now Leg 4b are all done — see COMPLETED.md. Leg 5
-  (evaluate `formats-data.ts`/`items.ts` as a roster/tier source) is next,
-  not started — likely its own scoping pass rather than a straight build leg.
+  Leg 6** *(Last touched: 2026-09-01 · Re-checks: 0)*
+  Leg 5 (scoping only, see COMPLETED.md) confirmed `formats-data.ts` is a
+  reliable species-roster cross-check (232/233 agree with our REG-M-B list)
+  and surfaced a real bug: our roster's `'floette'` should be
+  `'floette-eternal'` — Champions' mod flips mainline's legal/Illegal status
+  for the two forms, and `learnsets.ts`/PokeAPI both back that up (see
+  `docs/investigations/champions-showdown-mod-audit.md`'s Leg 5 section for
+  the full evidence chain). Leg 6 is the actual fix: swap the slug in
+  `utils/pokemonRules.ts` (`REG_MA_SPECIES`), check whether
+  `config/pokemonRules.ts`'s gendered-form entry still applies the same way
+  to a static-gift form, update `config/megaEvolution.ts`'s `floettite`
+  mapping, and re-run `championsMovepoolChanges.ts`'s Floette-specific
+  `hasChampionsMoveData` audit (including Leg 4a's 5-move learn-by-level-up
+  exclusion check) against `floette-eternal` instead of plain `floette`.
+  Not started.
 
 - **[2026-07-07 Review-Pass Leftovers] — Leg 2** *(Last touched: 2026-08-31 ·
   Re-checks: 0)*

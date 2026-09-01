@@ -15,6 +15,18 @@ in:
   (the 50 oldest entries as of the 2026-08-31 split)
 
 - **Champions Data: Adopt Showdown's `champions` Mod as Primary Reference -
+  Leg 5** (2026-09-01). Scoping-only pass (per project convention): evaluated
+  `formats-data.ts`/`items.ts` as a roster/item source, resolving the
+  ruleset-alignment question the original Leg 5 recommendation left open.
+  Both check out - 232/233 species and 72/72 sampled items agree with our
+  existing config - and the one disagreement is real: our roster's
+  `'floette'` should be `'floette-eternal'` (Champions' mod flips which
+  Floette form is legal relative to mainline; `learnsets.ts` and PokeAPI
+  both corroborate). See
+  `docs/investigations/champions-showdown-mod-audit.md`'s Leg 5 section for
+  the full evidence and TODO.md's new Leg 6 for the fix.
+
+- **Champions Data: Adopt Showdown's `champions` Mod as Primary Reference -
   Leg 4b** (2026-09-01). Cross-checked `championsMovepoolChanges.ts` against
   a second, stronger Showdown source than Leg 4a's blanket move-flag list:
   `learnsets.ts`'s per-species complete Champions movepools (232 species).

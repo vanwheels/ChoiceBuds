@@ -465,6 +465,129 @@ data instead of re-deriving it:
 Showdown's own raw move keys, for easy re-searching in
 `champions-learnsets.ts` if this table needs re-deriving.)
 
+## Leg 5 (2026-09-01): `formats-data.ts`/`items.ts` evaluated as a roster/item source
+
+Scoping-only session per project convention (scoping and building stay
+separate) — no config files touched. Answers the open question this doc's
+original Leg 5 recommendation left hanging: does Showdown's tier/
+`isNonstandard` data for species actually line up with Champions' real
+in-game legal pool, or does it share `moves.ts`'s "the flag doesn't mean
+what it looks like" trap (Leg 4a)?
+
+**Method**: raw-fetched `data/mods/champions/formats-data.ts` (5,086 lines,
+~2,281 species/form entries) and `data/mods/champions/items.ts` (1,046
+lines), both parsed programmatically (regex entry-extraction script,
+scratchpad-local, not preserved) rather than summarized-fetched, per the
+same discipline as every prior leg in this doc.
+
+### `formats-data.ts` — species roster: **safe to use, ruleset-alignment question resolved**
+
+Unlike `moves.ts`'s Past flag (Leg 4a), species-level `isNonstandard: "Past"`
++ `tier: "Illegal"` in this mod file really does mean "not in Champions'
+obtainable pool" — confirmed by spot-checking known-good cases: Legendaries/
+Mythicals (`mewtwo`, `mew`, `rayquaza`) are Illegal (matches our roster's
+total Legendary exclusion), un-evolved base stages (`bulbasaur`, `eevee`)
+are Illegal (matches Champions' "must be a caught, fully-evolved Pokémon"
+mechanic - our roster has no pre-evolutions either), and all 22 Reg M-B
+species plus every REG_MA_SPECIES entry checked have a real (non-Illegal)
+tier.
+
+**Full diff, both directions**, of every non-Mega/Gmax species with a
+legal tier (233 entries) against `utils/pokemonRules.ts`'s
+`REG_MA_SPECIES`/`REG_MB_ADDED_SPECIES` (235 normalized slugs, after
+resolving known naming differences - `mrrime`→`mr-rime`, `kommoo`→
+`kommo-o`, regional-form suffixes, the two `-breed`/no-`-breed` Tauros
+spellings, etc.): **232/233 agree exactly.** The one disagreement is a real
+finding, not a parsing artifact - see below.
+
+### Floette: our roster likely has the wrong form entirely
+
+Both diff directions point at the same root cause. Showdown-legal-but-
+missing-from-our-roster: `floetteeternal` (tier UU). Our-roster-but-
+Illegal-in-Showdown: `floette`. Three independent pieces of evidence say
+this isn't a Showdown quirk - **Champions' actual legal Floette is the
+Eternal Flower form, not the ordinary color-variant form our roster
+currently lists**:
+
+1. **`formats-data.ts` flips the mainline (non-Champions) relationship
+   exactly.** Base (non-modded) `data/formats-data.ts`: `floette` is legal
+   (`tier: "NFE"`, no flag), `floetteeternal` is `isNonstandard: "Past"` /
+   Illegal (matches its real mainline status - Eternal Flower is an
+   unobtainable, event/gift-only cosmetic form). The Champions mod
+   overrides *both* in the opposite direction: `floette` →
+   `isNonstandard: "Past"` / Illegal, `floetteeternal` → no flag / `tier:
+   "UU"`. A mod file only lists deltas, so both entries being explicitly
+   touched (not just one) means this is a deliberate swap, not a stray
+   flag.
+2. **`learnsets.ts`'s only `inherit: true` entry in the entire file is
+   `floetteeternal`'s** (already noted in Leg 4b's table as "an unrelated
+   Eternal Flower form override" - it isn't unrelated). It carries a full,
+   explicit 41-move TM/Tutor learnset, which is exactly what a species
+   would need if it's the one actually meant to be played but has almost no
+   moves in mainline data to inherit from (Eternal Flower Floette's real SV
+   learnset is minimal - it's normally a static gift Pokémon, not one raised
+   from an egg/level-up chain).
+3. **PokeAPI has a `floette-eternal` resource** (`pokemon-species/
+   floette-eternal` returns the variety; `pokemon/floette-eternal` is a
+   live 200) - the roster fix is a straight slug swap, not blocked on a
+   missing PokeAPI resource.
+
+This also means Leg 4a's per-species safety check ("which of the 194
+Past-flagged moves does Floette actually learn by level-up, so they aren't
+blanket-removed") was run against the *wrong* species's SV learnset - it
+checked ordinary `floette`, not `floette-eternal`. Not re-litigated in this
+scoping pass; flagged for whoever picks up the fix leg (see TODO.md).
+
+**Touch points if this gets fixed** (not attempted here — scoping only):
+`utils/pokemonRules.ts` (`REG_MA_SPECIES`'s `'floette'` entry),
+`config/pokemonRules.ts` (`'Floette'` in the gendered-form list - gender
+rules may not even apply the same way to a static-gift form, needs
+checking), `config/megaEvolution.ts` (`'floettite': { species: 'floette',
+... }`), and `config/championsMovepoolChanges.ts`'s entire Floette-specific
+`hasChampionsMoveData` re-audit (needs re-running against `floette-eternal`,
+including re-deriving Leg 4a's 5-move learn-by-level-up exclusion list).
+
+### `items.ts` — also viable, same delta-only convention, no conflicts found
+
+Same shape as `formats-data.ts`: entries absent from the mod file inherit
+whatever the *base* (non-Champions) dex already says (verified against
+`data/items.ts` directly) - most ordinary items are legal-by-default in the
+base dex with no flag at all, so they never need a Champions-file entry.
+Only items whose legality *changes* relative to mainline get a flag here:
+181 entries explicitly `isNonstandard: "Past"` (newly banned - includes
+Choice Band/Specs, Assault Vest, Safety Goggles, confirming `vgcData.ts`'s
+header comment), and 76 explicitly `isNonstandard: null` (newly un-banned -
+74 Mega Stones plus, surprisingly, `spelltag` as the one standalone hold
+item Champions restores from a mainline ban).
+
+Spot-checked (slug-normalized) all 72 of `vgcData.ts`'s `VGC_HOLD_ITEMS` +
+`VGC_BERRIES` against the 181-entry ban list: **zero conflicts** - nothing
+our app treats as legal is actually banned per Showdown's data. Confirms
+Choice Scarf's presence in `VGC_HOLD_ITEMS` is correct (it has no entry in
+the Champions mod at all, meaning it inherits the base dex's already-legal
+default) despite the file's own header comment reading "no Choice items ...
+exist in this game" - a stale/overbroad comment, not a real data bug (Choice
+Band/Specs *are* banned, Choice Scarf isn't - the comment just didn't say
+so precisely). Minor doc nit, not worth its own leg.
+
+**Not done this pass** (lower priority - the direction that matters for
+correctness, "are we allowing something banned," came back clean): the
+reverse-direction check, enumerating Showdown's full ~700+ item dex for
+anything legal-by-default that's simply missing from our curated
+allowlist. Would need the same base-dex-inheritance logic as above applied
+exhaustively rather than spot-checked. No known driver for doing this beyond
+completeness.
+
+### Verdict
+
+Both `formats-data.ts` and `items.ts` are usable as a Showdown-sourced
+cross-check the same way `moves.ts`/`abilities.ts`/`learnsets.ts` already
+proved to be in Legs 2-4 - the ruleset-alignment risk flagged in the
+original Leg 5 recommendation didn't materialize for these two files.
+Net result of running the cross-check: 232/233 species agree, 72/72
+sampled items agree, and the one disagreement is a real, concrete, fixable
+roster bug rather than noise. See TODO.md's new Leg 6 for the fix.
+
 ## Recommended Leg 2+ breakdown
 
 Per the "smaller working slice per leg" convention, splitting rather than
