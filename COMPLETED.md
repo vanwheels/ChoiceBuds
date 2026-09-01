@@ -30,7 +30,7 @@ in:
   Feraligatr/Dragonize, Meganium/Mega Sol, Pyroar/Fire Mane,
   Scovillain/Spicy Spray - resolving those 5 species out of the "Remaining
   Champions Mega Ability Audit" backlog item's exclusion list. See commit
-  `4418847` and `docs/investigations/champions-showdown-mod-audit.md`'s
+  `b9a769f` and `docs/investigations/champions-showdown-mod-audit.md`'s
   Leg 3 update section for the full source table.
 
 - **Champions Data: Adopt Showdown's `champions` Mod as Primary Reference -
