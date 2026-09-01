@@ -155,7 +155,12 @@ export default function App() {
           {visitedTabs.has('typeMatchup') && (
             <div style={{ display: activeTab === 'typeMatchup' ? 'block' : 'none' }}>
               <Suspense fallback={<div className="text-zinc-400 text-sm">Loading type matchup...</div>}>
-                <TypeMatchupPage teamsState={teamsState} gameDataState={gameDataState} spriteCacheState={spriteCacheState} />
+                <TypeMatchupPage
+                  teamsState={teamsState}
+                  gameDataState={gameDataState}
+                  databaseState={databaseState}
+                  spriteCacheState={spriteCacheState}
+                />
               </Suspense>
             </div>
           )}
