@@ -56,14 +56,6 @@ unblocked.
   uses for moves. One case (Unseen Fist) alone isn't enough to design the
   override shape against with confidence, hence the block on Aura Break.
 
-- **[Limitless Usage Data] — Leg 1** *(Last touched: 2026-09-01 · Re-checks:
-  0)*
-  Blocked: waiting on Limitless API key approval.
-  Spun off from the now-closed "Original Roadmap Leftovers" item (see
-  COMPLETED.md) — the one sub-item of that roadmap leftover with real
-  remaining scope rather than nothing left to build. No further detail
-  beyond the original roadmap ask; needs scoping once the key comes through.
-
 - **[Team Card Grid Layout Re-check] — Leg 1** *(Last touched: 2026-08-31 ·
   Re-checks: 0)*
   Blocked: waiting on the user to verify live on their physical MacBook —
