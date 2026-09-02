@@ -18,7 +18,7 @@ in:
   lines) into `main/paths.ts` (userData path resolvers), `main/atomicWrite.ts`
   (crash-safe JSON writes), `main/windowState.ts` (window bounds persistence),
   and four `main/ipc/*Handlers.ts` modules by domain (file, shell, sprite
-  cache, pokepaste), leaving `main.ts` at 173 lines. See commit `<hash TBD>`.
+  cache, pokepaste), leaving `main.ts` at 173 lines. See commit `19734d0`.
 
 - **[Generalize Check-for-Updates Pattern] - Leg 2** (2026-09-01) - built the
   scoped plan from Leg 1: `AppSettings.championsDataChecks` (per-file
