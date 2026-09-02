@@ -62,6 +62,14 @@ ChoiceBuds — an Electron + React + TypeScript desktop app for importing and ma
 3. The resulting `ImportedPokemonInfo[]` is wrapped into a `Team` and persisted via `useTeams().addTeam()`, which writes the full `TeamsDatabase` to disk through the preload bridge.
 4. Editing an existing team's Pokémon goes through `useActiveEditor`: `enterEditMode` deep-clones the target `ImportedPokemonInfo` into a draft, all `update*` calls mutate only the draft, and `getCommittableData()`/`updateTeam()` is what actually persists.
 
+### Cross-device sync (Worker)
+
+- `worker/` — a standalone Cloudflare Worker (own `package.json`/`wrangler.toml`, not part of the Vite/Electron build), storing one JSON blob per pairing identifier in Workers KV via `PUT`/`GET /sync/:identifier`. No accounts, no auth beyond the identifier itself. This is infrastructure each user deploys and owns themselves — see `worker/README.md` for first-time deploy steps and free-tier limits.
+- `src/renderer/services/syncApi.ts` — the only renderer code that talks to the Worker's HTTP API (`SYNC_WORKER_URL`); pushes/pulls the app's `TeamsDatabase`/`BattlesDatabase` as one `SyncPayload`.
+- `src/renderer/hooks/useSync.ts` — orchestrates sync. Deliberately manual and one-directional-at-a-time (push *or* pull, user-triggered) rather than continuous background sync, since there's no backend arbitrating real conflicts. Status computation is factored into a pure, setState-free `computeSyncStatus()` so both the mount effect and `refreshStatus()` can share it without tripping the `set-state-in-effect` lint rule — see `docs/investigations/set-state-in-effect-lint-fix.md`.
+- `src/renderer/components/SyncSection.tsx` — the Settings-page UI for pairing an identifier and triggering push/pull.
+- Unrelated despite the similar name: `useUsageSync.ts` keeps `ChampionsUsageEntry` ladder-usage data fresh from championsbattledata.com (see `useGameData` above) — it has nothing to do with this cross-device Worker sync.
+
 ### Gender/form handling
 
 VGC-legal species have two gender concerns that must stay in sync across two files:
