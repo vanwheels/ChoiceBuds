@@ -19,7 +19,7 @@ in:
   types), `battle.ts` (Battle Logger domain), `settings.ts` (app
   settings/player profile/sync payload), and `gameData.ts` (cached PokeAPI/
   Champions-usage types), per the scoped plan from Leg 1. All 113+ importers
-  keep importing from `types/pokemon` unchanged. See commit `<hash>`.
+  keep importing from `types/pokemon` unchanged. See commit `66c4849`.
 
 - **[File Size Cap Cleanup] - Leg 1** (2026-09-01) - split `main.ts` (693
   lines) into `main/paths.ts` (userData path resolvers), `main/atomicWrite.ts`
