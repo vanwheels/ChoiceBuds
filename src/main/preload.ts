@@ -153,6 +153,15 @@ const electronAPI = {
   },
 
   /**
+   * Creates a new pokepast.es paste via a main-process POST (see main.ts's
+   * pokepaste:create handler for why this can't be done from the renderer).
+   * @returns Promise resolving to the new paste's URL, or null on failure
+   */
+  createPokepaste: async (payload: { paste: string; title?: string; author?: string; notes?: string }): Promise<string | null> => {
+    return ipcRenderer.invoke('pokepaste:create', payload);
+  },
+
+  /**
    * Subscribes to auto-updater status pushed from the main process
    * (Windows packaged builds only - see main.ts's registerAutoUpdater).
    * Returns an unsubscribe function.

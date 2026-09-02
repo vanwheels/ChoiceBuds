@@ -10,10 +10,17 @@
  * (config/pokemonTheme.ts::getStatLabelColor, same one used in StatsColumn.tsx/
  * CalcStatRows.tsx) - purely a display aid, since plain text can't carry color;
  * the copied text itself is the same plain string real Showdown expects.
+ *
+ * Also offers "Create Pokepaste Link", which posts the same Showdown text to
+ * pokepast.es/create (services/pokepaste.ts::createPokepaste) and surfaces
+ * the resulting URL. `pasteTitle`/`pasteAuthor`/`pasteNotes` feed that paste's
+ * own title/author/notes fields - separate from `title`, which is just this
+ * modal's on-screen heading (e.g. "Export Team" vs. a real team name).
  */
 
 import { useState } from 'react';
 import { formatPokemonLines, formatShowdownText } from '../services/parser';
+import { createPokepaste } from '../services/pokepaste';
 import { getStatLabelColor } from '../config/pokemonTheme';
 import type { ShowdownPokemon } from '../types/pokemon';
 import Modal from './Modal';
@@ -21,19 +28,45 @@ import Modal from './Modal';
 interface ExportTeamModalProps {
   pokemonList: ShowdownPokemon[];
   title: string;
+  pasteTitle?: string;
+  pasteAuthor?: string;
+  pasteNotes?: string;
   onClose: () => void;
 }
 
 const COPY_CONFIRMATION_MS = 2000;
 
-export default function ExportTeamModal({ pokemonList, title, onClose }: ExportTeamModalProps) {
+export default function ExportTeamModal({ pokemonList, title, pasteTitle, pasteAuthor, pasteNotes, onClose }: ExportTeamModalProps) {
   const [copied, setCopied] = useState(false);
+  const [isCreatingPaste, setIsCreatingPaste] = useState(false);
+  const [pokepasteUrl, setPokepasteUrl] = useState<string | null>(null);
+  const [pasteError, setPasteError] = useState<string | null>(null);
+  const [pasteUrlCopied, setPasteUrlCopied] = useState(false);
   const plainText = formatShowdownText(pokemonList);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(plainText);
     setCopied(true);
     window.setTimeout(() => setCopied(false), COPY_CONFIRMATION_MS);
+  };
+
+  const handleCreatePokepaste = async () => {
+    setIsCreatingPaste(true);
+    setPasteError(null);
+    const url = await createPokepaste(pokemonList, pasteTitle, pasteAuthor, pasteNotes);
+    setIsCreatingPaste(false);
+    if (url) {
+      setPokepasteUrl(url);
+    } else {
+      setPasteError('Could not create the Pokepaste link - try again.');
+    }
+  };
+
+  const handleCopyPasteUrl = async () => {
+    if (!pokepasteUrl) return;
+    await navigator.clipboard.writeText(pokepasteUrl);
+    setPasteUrlCopied(true);
+    window.setTimeout(() => setPasteUrlCopied(false), COPY_CONFIRMATION_MS);
   };
 
   return (
@@ -72,6 +105,27 @@ export default function ExportTeamModal({ pokemonList, title, onClose }: ExportT
             </div>
           ))}
         </div>
+
+        {pokepasteUrl && (
+          <div className="mt-4 flex items-center gap-2 px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg">
+            <a
+              href={pokepasteUrl}
+              onClick={(e) => { e.preventDefault(); window.electron.openExternal(pokepasteUrl); }}
+              className="flex-1 text-sm text-accent-gold hover:underline truncate"
+            >
+              {pokepasteUrl}
+            </a>
+            <button
+              onClick={handleCopyPasteUrl}
+              className="px-3 py-1 text-sm bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded-lg transition-colors shrink-0"
+            >
+              {pasteUrlCopied ? 'Copied!' : 'Copy Link'}
+            </button>
+          </div>
+        )}
+        {pasteError && (
+          <p className="mt-4 text-sm text-red-400">{pasteError}</p>
+        )}
       </div>
 
       <div className="px-6 py-4 border-t border-zinc-700 flex items-center justify-end gap-3">
@@ -80,6 +134,13 @@ export default function ExportTeamModal({ pokemonList, title, onClose }: ExportT
           className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded-lg transition-colors"
         >
           Close
+        </button>
+        <button
+          onClick={handleCreatePokepaste}
+          disabled={isCreatingPaste}
+          className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-200 rounded-lg transition-colors"
+        >
+          {isCreatingPaste ? 'Creating...' : 'Create Pokepaste Link'}
         </button>
         <button
           onClick={handleCopy}

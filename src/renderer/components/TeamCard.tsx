@@ -407,6 +407,9 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
           <ExportTeamModal
             pokemonList={team.pokemon.map(p => p.showdownData)}
             title="Export Team"
+            pasteTitle={team.name}
+            pasteAuthor={team.author}
+            pasteNotes={team.notes}
             onClose={() => setIsExportOpen(false)}
           />
         )}

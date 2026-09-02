@@ -56,51 +56,6 @@ unblocked.
   uses for moves. One case (Unseen Fist) alone isn't enough to design the
   override shape against with confidence, hence the block on Aura Break.
 
-- **[Export Team to Pokepaste] — Leg 1** *(Last touched: 2026-09-01 ·
-  Re-checks: 0)*
-  Blocked: needs a decision from the user on the IPC-detour approach below
-  before (2)/(3) are worth doing.
-  Item 1's CORS spike is resolved, and it's a negative for the scoped
-  approach: live-tested `POST https://pokepast.es/create` with an
-  `Origin: http://localhost:5173` header via curl — the write itself
-  succeeds server-side (got back `303` + `Location: /cedd41c926b6d61e`, a
-  real throwaway paste), but the response carries **no CORS headers at
-  all** (no `Access-Control-Allow-Origin`/`-Expose-Headers`). A renderer-side
-  `fetch()` POST would be blocked from ever reading that response, so the
-  app could never learn the new paste's ID even though the write went
-  through. Confirmed this is endpoint-specific, not a site-wide CORS
-  block: `GET /<id>/json` (the existing working read path) sends
-  `Access-Control-Allow-Origin: *`, which is why that one already works
-  live from the renderer today — `/create` just doesn't have the same
-  header.
-  This doesn't close the item outright, though: Node's own network calls
-  (i.e. a main-process `ipcMain.handle`, same pattern as the existing
-  `file:*` filesystem-IO handlers in `main.ts`) aren't subject to browser
-  CORS at all, so proxying the write through a new IPC call would sidestep
-  this cleanly. That's a real architecture decision, not an assumed
-  extension of the current renderer-only pokepast.es pattern — needs the
-  user to sign off on adding a new IPC surface + a CLAUDE.md exception
-  covering a main-process-initiated external call (a new category
-  alongside the existing on-demand/user-initiated/automatic-poll ones)
-  before it's built. If the user doesn't want that, the item closes here.
-  Item 2 (Showdown-export serializer) and item 3 (CLAUDE.md exception
-  wording) are unchanged and still open, now contingent on that decision.
-  Complexity check on the detour itself (2026-09-01, see chat): small.
-  `sprite:download` (`main.ts:584`) already does main-process outbound
-  `fetch()`, so this isn't a new idiom, just a new handler — one
-  `ipcMain.handle`, one preload method, one renderer service function
-  (~30-40 lines total). One implementation snag to remember: use Node's
-  raw `https.request()` (or Electron's `net.request()`) for the handler,
-  not `fetch()` — WHATWG fetch's `redirect: 'manual'` returns an
-  opaque-redirect response with headers hidden by spec (not a CORS thing,
-  applies in Node too via undici), so `fetch()` would hit the same
-  can't-read-Location problem as the renderer did. A raw `https.request()`
-  has no such filtering; `res.headers.location` is directly readable. The
-  real cost is still item 2 (the serializer) either way — the detour just
-  decides where the POST originates, not how much work this item is
-  overall. Still waiting on the user's sign-off on the new external-call
-  category (see above) before starting.
-
 - **[Limitless Usage Data] — Leg 1** *(Last touched: 2026-09-01 · Re-checks:
   0)*
   Blocked: waiting on Limitless API key approval.

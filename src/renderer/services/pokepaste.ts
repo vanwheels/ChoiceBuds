@@ -1,12 +1,23 @@
 /**
- * pokepaste.ts - Pokepast.es Link Import
+ * pokepaste.ts - Pokepast.es Link Import/Export
  * Fetches a pasted pokepast.es URL's own JSON API (title/author/notes/paste)
  * so ImportTeamModal.tsx can pull a team's name, author, and raw Showdown
  * text directly from a link instead of requiring pasted export text. See
  * CLAUDE.md's external-integration policy for why this live fetch (and only
  * this endpoint shape) is allowed here - a same-day addition alongside this
  * feature, not an existing blanket allowance.
+ *
+ * createPokepaste() is the reverse direction: posts a team's Showdown export
+ * text to pokepast.es/create and returns the new paste's URL. The POST
+ * itself is proxied through the main process (window.electron.createPokepaste)
+ * rather than called directly with fetch() here, because that endpoint's
+ * response carries no CORS headers - see main.ts's pokepaste:create handler
+ * for the full explanation and CLAUDE.md's external-integration policy for
+ * the exception this falls under.
  */
+
+import { formatShowdownText } from './parser';
+import type { ShowdownPokemon } from '../types/pokemon';
 
 export interface PokepasteData {
   title: string;
@@ -41,4 +52,19 @@ export function detectRegulationFromNotes(notes: string): 'Reg M-A' | 'Reg M-B' 
   const match = /reg\s*m[\s-]?([ab])/i.exec(notes);
   if (!match) return null;
   return match[1].toLowerCase() === 'a' ? 'Reg M-A' : 'Reg M-B';
+}
+
+/**
+ * Posts a team (or single Pokemon) to pokepast.es/create as Showdown export
+ * text and returns the new paste's URL, or null on failure.
+ */
+export async function createPokepaste(
+  pokemonList: ShowdownPokemon[],
+  title?: string,
+  author?: string,
+  notes?: string
+): Promise<string | null> {
+  const paste = formatShowdownText(pokemonList);
+  const result = await window.electron.createPokepaste({ paste, title, author, notes });
+  return result as string | null;
 }

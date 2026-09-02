@@ -30,6 +30,7 @@ function createElectronMock() {
     openExternal: vi.fn().mockResolvedValue(undefined),
     getSpritePath: vi.fn().mockResolvedValue(null),
     downloadSprite: vi.fn().mockResolvedValue(null),
+    createPokepaste: vi.fn().mockResolvedValue(null),
     onUpdateStatus: vi.fn().mockReturnValue(() => {}),
     installUpdate: vi.fn().mockResolvedValue(undefined),
   };

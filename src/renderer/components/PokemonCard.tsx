@@ -343,6 +343,7 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
             <ExportTeamModal
               pokemonList={[showdownData]}
               title={`Export ${showdownData.nickname || showdownData.species}`}
+              pasteTitle={showdownData.nickname || showdownData.species}
               onClose={() => setIsExportOpen(false)}
             />
           )}

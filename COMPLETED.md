@@ -14,6 +14,29 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[Export Team to Pokepaste] - Leg 1** (2026-09-01). Unblocked with the
+  user's sign-off on the main-process IPC detour, then built end-to-end in
+  the same session: `main.ts`'s new `pokepaste:create` handler POSTs to
+  `pokepast.es/create` via raw `https.request()` (not `fetch()`, whose
+  redirect handling can't expose the `Location` header) and returns the new
+  paste's URL; a matching preload method and `services/pokepaste.ts::
+  createPokepaste()` wire it to `ExportTeamModal.tsx`'s new "Create
+  Pokepaste Link" button (used from both `TeamCard.tsx`'s whole-team export
+  and `PokemonCard.tsx`'s single-Pokemon export, passing the team's own
+  name/author/notes as the paste's title/author/notes). Item 2's serializer
+  turned out to already exist (`parser.ts::formatShowdownText`, already used
+  by the modal's existing copy-to-clipboard) - no new work needed there.
+  Added CLAUDE.md's seventh external-integration exception and a README
+  Credits update for the new write path. Verified the exact handler logic
+  (form-urlencoded body, raw `https.request`, 303/Location parsing) against
+  the real endpoint with a standalone Node script before wiring it into
+  Electron - got back a real paste (`pokepast.es/f119aa4ecd8885ea`), same
+  live-verification shape as the earlier CORS spike. Added
+  `services/pokepaste.test.ts` covering `createPokepaste()` (the import-side
+  helpers in that file remain untested - pre-existing gap, not this leg's
+  scope). Full 487-test suite, lint, and type-check clean. See commit
+  `<pending>`.
+
 - **[set-state-in-effect Lint Rule Fix] - Leg 2** (2026-09-01). Fixed the
   last remaining file, `useSync.ts`, whose `refreshStatus` couldn't take
   Leg 1's inline-the-mount-copy fix since it's also reused by `push()`/
