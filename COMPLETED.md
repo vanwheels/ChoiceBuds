@@ -14,6 +14,17 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[Generalize Check-for-Updates Pattern] - Leg 1** (2026-09-01) - scoping
+  pass only, no code changes. Resolved three open design questions with the
+  user via `AskUserQuestion`: file scope (Move/Ability/Movepool overrides,
+  not the unused `championsMechanics.ts`), the staleness trigger (Champions
+  balance patches land at Regulation boundaries, not season boundaries
+  within a regulation - unlike `seasons.ts`'s date-window signal, this one
+  compares the last-verified regulation against `seasons.ts`'s current
+  latest), and UI shape (one shared Settings section with a row per file,
+  not three duplicated sections). Full scoped plan written to `TODO.md`
+  under Leg 2 rather than continuing into implementation in the same pass.
+
 - **[Export Team to Pokepaste] - Leg 1** (2026-09-01). Unblocked with the
   user's sign-off on the main-process IPC detour, then built end-to-end in
   the same session: `main.ts`'s new `pokepaste:create` handler POSTs to
