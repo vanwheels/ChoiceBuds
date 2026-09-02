@@ -98,3 +98,12 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Backlog / ideas (not yet scoped, highest-to-lowest priority)
+
+- **[Damage Calc Engine Test Coverage] — Leg 1** *(Last touched: 2026-09-01 ·
+  Re-checks: 0)*
+  Surfaced by the File Size Cap Cleanup post-mortem
+  ([docs/postmortems/file-size-cap-cleanup.md](docs/postmortems/file-size-cap-cleanup.md)):
+  `utils/damageCalcEngine.ts` (state factories, boost/stat-multiplier math,
+  `buildPokemon`, `computeSideResults`) was pulled out of `useDamageCalc.ts`
+  specifically because it's pure and "independently unit-testable," but no
+  test file was added in that leg. Still untested.
