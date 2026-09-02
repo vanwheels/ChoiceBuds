@@ -21,7 +21,7 @@ in:
   championsDataChecks.ts`'s file list, `useChampionsDataCheck.ts` (stale =
   stored regulation !== `seasons.ts`'s latest), and one shared
   `ChampionsDataCheckSection.tsx` wired into `SettingsPage`. See commit
-  `<pending>`.
+  `4bea90f`.
 
 - **[Generalize Check-for-Updates Pattern] - Leg 1** (2026-09-01) - scoping
   pass only, no code changes. Resolved three open design questions with the
