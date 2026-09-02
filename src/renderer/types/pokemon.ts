@@ -156,6 +156,13 @@ export interface PlayerProfile {
 }
 
 /**
+ * Identifies one of the hand-authored Champions balance-patch tables tracked
+ * by the "last verified against regulation X" reminder (see
+ * config/championsDataChecks.ts / hooks/useChampionsDataCheck.ts).
+ */
+export type ChampionsDataCheckId = 'moves' | 'abilities' | 'movepool';
+
+/**
  * Persisted user preferences, stored as settings.json in userData directory
  */
 export interface AppSettings {
@@ -165,6 +172,14 @@ export interface AppSettings {
   lastPushedAt: number | null; // Unix timestamp of this device's last successful Push
   lastPulledAt: number | null; // Unix timestamp of this device's last successful Pull
   lastSeasonDataCheckedAt: number | null; // Unix timestamp config/seasons.ts was last manually verified against Bulbapedia/Serebii
+  // Per-file "last verified against regulation X" state for the hand-authored
+  // Champions balance tables (championsMoveOverrides.ts/
+  // championsAbilityOverrides.ts/championsMovepoolChanges.ts). Unlike
+  // lastSeasonDataCheckedAt above, staleness here is regulation-change-driven
+  // rather than date-window-driven - see useChampionsDataCheck.ts. Missing
+  // entries fall back to DEFAULT_SETTINGS via useSettings.ts's existing
+  // spread-over-defaults pattern, so no migration was needed to add this.
+  championsDataChecks: Partial<Record<ChampionsDataCheckId, { regulation: string; checkedAt: number }>>;
   // Swaps PokemonCard.tsx's main 96px sprite (base + Mega-form) from static
   // PNG to Showdown's animated GIF CDN - see CLAUDE.md's hotlink exception #5
   // and utils/spriteUrl.ts::getAnimatedSpriteUrl. Scoped to that one render

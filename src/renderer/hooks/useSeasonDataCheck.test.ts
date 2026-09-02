@@ -14,6 +14,7 @@ function makeSettings(overrides: Partial<AppSettings> = {}): AppSettings {
     lastPushedAt: null,
     lastPulledAt: null,
     lastSeasonDataCheckedAt: null,
+    championsDataChecks: {},
     showAnimatedSprites: false,
     playerProfile: {
       playerName: '',

@@ -14,6 +14,15 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[Generalize Check-for-Updates Pattern] - Leg 2** (2026-09-01) - built the
+  scoped plan from Leg 1: `AppSettings.championsDataChecks` (per-file
+  `{regulation, checkedAt}`, seeded to Reg M-B/2026-09-01 for all three
+  tracked files to match their already-audited headers), `config/
+  championsDataChecks.ts`'s file list, `useChampionsDataCheck.ts` (stale =
+  stored regulation !== `seasons.ts`'s latest), and one shared
+  `ChampionsDataCheckSection.tsx` wired into `SettingsPage`. See commit
+  `<pending>`.
+
 - **[Generalize Check-for-Updates Pattern] - Leg 1** (2026-09-01) - scoping
   pass only, no code changes. Resolved three open design questions with the
   user via `AskUserQuestion`: file scope (Move/Ability/Movepool overrides,

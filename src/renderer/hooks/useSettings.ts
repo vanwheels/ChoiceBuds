@@ -16,6 +16,16 @@ const DEFAULT_PLAYER_PROFILE: PlayerProfile = {
   switchProfileName: '',
 };
 
+// All three tracked files' headers already record a real 2026-09-01 audit
+// against Reg M-B (docs/investigations/champions-showdown-mod-audit.md) -
+// seeding to that rather than "never checked" so a fresh install doesn't
+// misrepresent already-done work as stale.
+const CHAMPIONS_DATA_CHECKS_DEFAULT: AppSettings['championsDataChecks'] = {
+  moves: { regulation: 'Reg M-B', checkedAt: Date.parse('2026-09-01') },
+  abilities: { regulation: 'Reg M-B', checkedAt: Date.parse('2026-09-01') },
+  movepool: { regulation: 'Reg M-B', checkedAt: Date.parse('2026-09-01') },
+};
+
 const DEFAULT_SETTINGS: AppSettings = {
   version: 1,
   defaultRegulation: 'Reg M-A',
@@ -23,6 +33,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   lastPushedAt: null,
   lastPulledAt: null,
   lastSeasonDataCheckedAt: null,
+  championsDataChecks: CHAMPIONS_DATA_CHECKS_DEFAULT,
   showAnimatedSprites: false,
   playerProfile: DEFAULT_PLAYER_PROFILE,
   lastModified: Date.now(),

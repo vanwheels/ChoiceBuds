@@ -29,51 +29,6 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
   legal-roster diff, `seasons.ts`'s M-6+ rows once M-C's season dates are
   known). Purely additive — no known removals this reg.
 
-- **[Generalize Check-for-Updates Pattern] — Leg 2** *(Last touched:
-  2026-09-01 · Re-checks: 0)*
-  Leg 1 (scoping) done — this is the scoped build. Extends the Settings
-  "Season Data" reminder pattern (`useSeasonDataCheck.ts`/
-  `SeasonDataCheckSection.tsx`) to the three actively-consumed hand-authored
-  Champions balance tables: `championsMoveOverrides.ts`,
-  `championsAbilityOverrides.ts`, `championsMovepoolChanges.ts`.
-  `championsMechanics.ts` stays out of scope — nothing in the app reads
-  `CHAMPIONS_STATUS_CONDITIONS` yet, so there's nothing to flag stale.
-  **Staleness signal differs from seasons.ts** (per user 2026-09-01):
-  Champions only patches balance at a Regulation boundary (M-A→M-B→M-C),
-  not season-to-season within a regulation, so the trigger is "the latest
-  regulation in `seasons.ts` has changed since this file was last verified,"
-  not a date window. Concretely:
-  - New `AppSettings.championsDataChecks: Partial<Record<ChampionsDataCheckId,
-    { regulation: string; checkedAt: number }>>` (nested-object field,
-    following the existing `playerProfile` precedent — avoids a new
-    top-level `AppSettings` field per tracked file). Missing entries default
-    via the existing spread-over-`DEFAULT_SETTINGS` pattern in
-    `useSettings.ts`, no migration needed.
-  - Seed `DEFAULT_SETTINGS`'s three entries to `{ regulation: 'Reg M-B',
-    checkedAt: Date.parse('2026-09-01') }` rather than null/never-checked —
-    all three files' headers already record a real 2026-09-01 audit against
-    Reg M-B (`docs/investigations/champions-showdown-mod-audit.md`), so
-    defaulting to "never checked" would misrepresent already-done work.
-  - New `config/championsDataChecks.ts`: `ChampionsDataCheckDef[]` (id,
-    label, file path for display) listing the three tracked files.
-  - New `useChampionsDataCheck.ts` hook: `isStale` per file = stored
-    `regulation` !== `getLatestSeason().regulation`; `markChecked(id)` writes
-    `{ regulation: getLatestSeason().regulation, checkedAt: Date.now() }`
-    into the map via the existing generic `updateSettings()`. Mirror
-    `useSeasonDataCheck.test.ts`'s test shape.
-  - New `ChampionsDataCheckSection.tsx`: **one shared Settings section**
-    (not three separate ones — the generalization is the point), a row per
-    tracked file with its own last-checked date + regulation and per-row
-    "Mark as Checked" button, matching `SeasonDataCheckSection.tsx`'s visual
-    language. Wire into `SettingsPage` alongside the existing section.
-  - Note the interaction with "Regulation M-C Prep" above: once M-C's rows
-    land in `seasons.ts`, all three rows here go stale immediately by
-    design — that's the intended nudge to re-audit the balance tables
-    against M-C, not a bug.
-  - `SeasonDataCheckSection`/`useSeasonDataCheck` stay as-is, unchanged —
-    genuinely different signal (date-window vs. regulation-change), not
-    unified into one hook.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
