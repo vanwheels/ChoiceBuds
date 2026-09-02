@@ -29,6 +29,31 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
   legal-roster diff, `seasons.ts`'s M-6+ rows once M-C's season dates are
   known). Purely additive — no known removals this reg.
 
+- **[File Size Cap Cleanup] — Leg 2** *(Last touched: 2026-09-01 ·
+  Re-checks: 0)*
+  `types/pokemon.ts` (660 lines) exceeds the cap — it's a flat list of ~40
+  unrelated interfaces/types spanning core Pokémon/team data, Battle
+  Logger's turn-log shape, settings, cross-device sync, and game-data
+  caching. A domain split (e.g. `pokemon.ts` core + `battle.ts` +
+  `gameData.ts` + `settings.ts`, re-exported from one index) is the obvious
+  shape, but CLAUDE.md's Architecture section explicitly documents this
+  file as "the single source of truth for all data contracts... Add new
+  fields here first" — splitting it contradicts that stated convention, so
+  this leg needs a decision on whether to split (and update CLAUDE.md's
+  Architecture section to describe the new multi-file layout) or leave this
+  file as a documented, deliberate cap exception.
+
+- **[File Size Cap Cleanup] — Leg 3** *(Last touched: 2026-09-01 ·
+  Re-checks: 0)*
+  `useDamageCalc.ts` (604 lines) exceeds the cap. Lines 1-440 are all
+  module-scope pure functions (state factories, boost/stat-multiplier math,
+  `buildPokemon`, `computeSideResults` — the actual calc engine); the
+  exported `useDamageCalc` hook itself only starts at line 441 (~163 lines).
+  Extracting the pure engine functions into a new `utils/damageCalcEngine.ts`
+  (same pure-logic-out-of-hooks pattern `services/parser.ts` already
+  established) would drop the hook file under the cap and make the engine
+  independently unit-testable.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
