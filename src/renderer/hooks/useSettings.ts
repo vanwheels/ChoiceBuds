@@ -46,32 +46,44 @@ export function useSettings(): UseSettingsReturn {
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * Internal: Load settings from disk via preload bridge
-   */
-  const loadSettingsFromDisk = async (): Promise<void> => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const database = await window.electron.readSettings();
-      // Spread over DEFAULT_SETTINGS so a settings.json written before a
-      // field existed (e.g. sync fields, added after defaultRegulation)
-      // still loads with a valid value instead of undefined.
-      setSettings(database ? { ...DEFAULT_SETTINGS, ...database } : DEFAULT_SETTINGS);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load settings';
-      setError(errorMessage);
-      console.error('Error loading settings:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  /**
-   * Load settings from disk on mount
+   * Load settings from disk on mount. Inlined directly in the effect (rather
+   * than a separate outer-scope loader called by reference) to match React's
+   * own recognized fetch-in-effect idiom - see
+   * docs/investigations/set-state-in-effect-lint-fix.md for why the
+   * by-reference shape trips react-hooks/set-state-in-effect even though its
+   * behavior here would be identical. Unlike its sibling hooks
+   * (useTeams/useSavedPokemon/useBattles/useDatabase), useSettings exposes
+   * no refresh*() - this is its only load path, so there's no separate
+   * outer-scope copy to keep around.
    */
   useEffect(() => {
-    loadSettingsFromDisk();
+    let ignore = false;
+
+    (async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const database = await window.electron.readSettings();
+        if (ignore) return;
+
+        // Spread over DEFAULT_SETTINGS so a settings.json written before a
+        // field existed (e.g. sync fields, added after defaultRegulation)
+        // still loads with a valid value instead of undefined.
+        setSettings(database ? { ...DEFAULT_SETTINGS, ...database } : DEFAULT_SETTINGS);
+      } catch (err) {
+        if (ignore) return;
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load settings';
+        setError(errorMessage);
+        console.error('Error loading settings:', err);
+      } finally {
+        if (!ignore) setIsLoading(false);
+      }
+    })();
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   /**

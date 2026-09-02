@@ -109,6 +109,8 @@ export function useDatabase(): UseDatabaseReturn {
    * 1. Instantly read and serve cached data from disk (stale)
    * 2. Mark as initialized so app operates offline immediately
    * 3. Run background validation to check for updates (revalidate)
+   * Only called from refreshCache() now - the mount effect below inlines
+   * its own copy of this logic (see that effect's comment for why).
    */
   const initializeCacheWithSWR = useCallback(async (): Promise<void> => {
     try {
@@ -146,11 +148,105 @@ export function useDatabase(): UseDatabaseReturn {
   }, [performBackgroundRevalidation]);
 
   /**
-   * Initialize cache on mount with SWR pattern
+   * Initialize cache on mount with SWR pattern. Inlined (rather than calling
+   * initializeCacheWithSWR by reference) to match React's own recognized
+   * fetch-in-effect idiom - see docs/investigations/set-state-in-effect-lint-fix.md
+   * for why the outer-scope function trips react-hooks/set-state-in-effect
+   * even though its behavior here is identical. This duplicates the
+   * background-revalidation step's cache-cleaning logic inline too (rather
+   * than calling performBackgroundRevalidation/cleanExpiredEntriesInternal
+   * by reference), since those are themselves local functions whose bodies
+   * setState - same reason the top-level call had to be inlined.
+   * initializeCacheWithSWR itself is kept as the refreshCache-only path
+   * above; cleanExpiredEntriesInternal is kept as-is for the manual
+   * cleanExpiredEntries() path below.
    */
   useEffect(() => {
-    initializeCacheWithSWR();
-  }, [initializeCacheWithSWR]);
+    let ignore = false;
+
+    (async () => {
+      try {
+        // Step 1: Instantly serve stale cache from disk. Explicitly typed
+        // (per CLAUDE.md's window.electron-casting convention) rather than
+        // left as the preload bridge's `any` - needed here so the
+        // Object.entries(cachedData.entries) call below can infer
+        // PokeAPICacheEntry instead of unknown.
+        const cachedData: PokeAPICache | null = await window.electron.readPokeAPICache();
+        if (ignore) return;
+
+        if (cachedData) {
+          setCache(cachedData);
+          setIsInitialized(true);
+
+          // Step 2: Background revalidation - check if cleaning is needed
+          setIsRevalidating(true);
+          const now = Date.now();
+          const timeSinceLastClean = now - cachedData.lastCleaned;
+
+          if (timeSinceLastClean > CACHE_CLEAN_INTERVAL_MS) {
+            console.log('[useDatabase] Background revalidation: Cleaning expired entries');
+            try {
+              const cleanedEntries: Record<string, PokeAPICacheEntry> = {};
+              let removedCount = 0;
+
+              for (const [species, entry] of Object.entries(cachedData.entries)) {
+                if (entry.expiresAt > now) {
+                  cleanedEntries[species] = entry;
+                } else {
+                  removedCount++;
+                }
+              }
+
+              const updatedCache: PokeAPICache = {
+                ...cachedData,
+                entries: cleanedEntries,
+                lastCleaned: now,
+              };
+
+              const success = await window.electron.writePokeAPICache(updatedCache);
+              if (ignore) return;
+
+              if (success) {
+                setCache(updatedCache);
+                console.log(`[useDatabase] Cleaned ${removedCount} expired cache entries`);
+              }
+            } catch (cleanErr) {
+              console.error('[useDatabase] Background revalidation failed:', cleanErr);
+              // Don't set error state - this is a background operation
+            }
+          } else {
+            console.log('[useDatabase] Background revalidation: Cache is healthy');
+          }
+
+          if (!ignore) setIsRevalidating(false);
+        } else {
+          // Initialize empty cache if none exists
+          const emptyCache: PokeAPICache = {
+            version: 1,
+            entries: {},
+            lastCleaned: Date.now(),
+          };
+
+          await window.electron.writePokeAPICache(emptyCache);
+          if (ignore) return;
+          setCache(emptyCache);
+          setIsInitialized(true);
+        }
+
+        if (!ignore) setError(null);
+      } catch (err) {
+        if (ignore) return;
+        const errorMessage = err instanceof Error ? err.message : 'Failed to initialize cache';
+        setError(errorMessage);
+        console.error('Error initializing cache:', err);
+        setIsInitialized(true); // Still mark as initialized to allow app to function
+      }
+    })();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   /**
    * Get a cached entry for a specific species

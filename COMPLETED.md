@@ -14,6 +14,23 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[set-state-in-effect Lint Rule Fix] - Leg 1** (2026-09-01). Fixed the
+  5 uniform load-on-mount hooks (`useTeams`/`useSettings`/`useSavedPokemon`/
+  `useBattles`/`useDatabase`) by inlining each mount effect's fetch directly
+  in the `useEffect` callback (React's own recognized fetch-in-effect idiom,
+  with an `ignore`-flag unmount guard) instead of calling an outer-scope
+  loader by reference, which is what tripped the rule. The outer-scope
+  loader stays as each hook's `refresh*()`-only path (`useSettings` has no
+  refresh path, so its loader was removed outright instead of left dead).
+  Added the previously-missing `useBattles.test.ts`. Removed those 5
+  filenames from `eslint.config.js`'s override; only `useSync.ts` remains
+  disabled, pending Leg 2. `useDatabase.ts` grew past the ~300-line soft cap
+  (298 -> 394) from inlining its SWR revalidation step's cache-cleaning
+  logic too - flagged to the user rather than split, since a hook isn't
+  covered by the component-specific 250-line convention and it's well under
+  the 500-line hard cap. See commit `<pending>` and
+  [docs/investigations/set-state-in-effect-lint-fix.md](docs/investigations/set-state-in-effect-lint-fix.md).
+
 - **[Remaining Champions Mega Ability Audit] - Leg 1** (2026-09-01). Resolved
   all 29 remaining Champions-invented Mega forms (Raichu X/Y, Meowstic,
   Barbaracle, Chimecho, Golurk, Falinks, Crabominable, Emboar, Drampa,

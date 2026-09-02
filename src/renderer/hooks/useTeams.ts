@@ -57,7 +57,9 @@ export function useTeams(): UseTeamsReturn {
   const [expandedCardIds, setExpandedCardIds] = useState<Set<string>>(new Set());
 
   /**
-   * Internal: Load teams database from disk via preload bridge
+   * Internal: Load teams database from disk via preload bridge. Only called
+   * from refreshTeams() now - the mount path below inlines its own copy of
+   * this logic (see that effect's comment for why).
    */
   const loadTeamsFromDisk = async (): Promise<void> => {
     setIsLoading(true);
@@ -82,10 +84,43 @@ export function useTeams(): UseTeamsReturn {
   };
 
   /**
-   * Load teams from disk on mount
+   * Load teams from disk on mount. Inlined (rather than calling
+   * loadTeamsFromDisk by reference) to match React's own recognized
+   * fetch-in-effect idiom - see docs/investigations/set-state-in-effect-lint-fix.md
+   * for why the outer-scope function trips react-hooks/set-state-in-effect
+   * even though its behavior here is identical. loadTeamsFromDisk itself is
+   * kept as the refreshTeams-only path below.
    */
   useEffect(() => {
-    loadTeamsFromDisk();
+    let ignore = false;
+
+    (async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const database = await window.electron.readTeamsDatabase();
+        if (ignore) return;
+
+        if (database) {
+          setTeams(database.teams.map(normalizeTeam));
+        } else {
+          // Initialize empty database if none exists
+          setTeams([]);
+        }
+      } catch (err) {
+        if (ignore) return;
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load teams';
+        setError(errorMessage);
+        console.error('Error loading teams:', err);
+      } finally {
+        if (!ignore) setIsLoading(false);
+      }
+    })();
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   /**

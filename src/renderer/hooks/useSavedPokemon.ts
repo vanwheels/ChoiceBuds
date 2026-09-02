@@ -44,6 +44,11 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  /**
+   * Internal: Load saved Pokemon from disk via preload bridge. Only called
+   * from refreshSavedPokemon() now - the mount path below inlines its own
+   * copy of this logic (see that effect's comment for why).
+   */
   const loadSavedPokemonFromDisk = async (): Promise<void> => {
     setIsLoading(true);
     setError(null);
@@ -65,8 +70,42 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     }
   };
 
+  /**
+   * Load saved Pokemon from disk on mount. Inlined (rather than calling
+   * loadSavedPokemonFromDisk by reference) to match React's own recognized
+   * fetch-in-effect idiom - see docs/investigations/set-state-in-effect-lint-fix.md
+   * for why the outer-scope function trips react-hooks/set-state-in-effect
+   * even though its behavior here is identical.
+   */
   useEffect(() => {
-    loadSavedPokemonFromDisk();
+    let ignore = false;
+
+    (async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const database = await window.electron.readSavedPokemonDatabase();
+        if (ignore) return;
+
+        if (database) {
+          setSavedPokemon(database.savedPokemon);
+        } else {
+          setSavedPokemon([]);
+        }
+      } catch (err) {
+        if (ignore) return;
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load saved Pokemon sets';
+        setError(errorMessage);
+        console.error('Error loading saved Pokemon sets:', err);
+      } finally {
+        if (!ignore) setIsLoading(false);
+      }
+    })();
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const persistSavedPokemonToDisk = async (updated: SavedPokemonEntry[]): Promise<boolean> => {

@@ -98,6 +98,11 @@ export function useBattles(): UseBattlesReturn {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  /**
+   * Internal: Load battles from disk via preload bridge. Only called from
+   * refreshBattles() now - the mount path below inlines its own copy of
+   * this logic (see that effect's comment for why).
+   */
   const loadBattlesFromDisk = async (): Promise<void> => {
     setIsLoading(true);
     setError(null);
@@ -119,8 +124,42 @@ export function useBattles(): UseBattlesReturn {
     }
   };
 
+  /**
+   * Load battles from disk on mount. Inlined (rather than calling
+   * loadBattlesFromDisk by reference) to match React's own recognized
+   * fetch-in-effect idiom - see docs/investigations/set-state-in-effect-lint-fix.md
+   * for why the outer-scope function trips react-hooks/set-state-in-effect
+   * even though its behavior here is identical.
+   */
   useEffect(() => {
-    loadBattlesFromDisk();
+    let ignore = false;
+
+    (async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const database = await window.electron.readBattlesDatabase();
+        if (ignore) return;
+
+        if (database) {
+          setBattles(database.battles.map(normalizeBattle));
+        } else {
+          setBattles([]);
+        }
+      } catch (err) {
+        if (ignore) return;
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load battles';
+        setError(errorMessage);
+        console.error('Error loading battles:', err);
+      } finally {
+        if (!ignore) setIsLoading(false);
+      }
+    })();
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const persistBattlesToDisk = async (updatedBattles: Battle[]): Promise<boolean> => {

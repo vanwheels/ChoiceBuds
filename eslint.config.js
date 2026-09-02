@@ -18,28 +18,16 @@ export default tseslint.config(
     },
   },
   {
-    // Every data-loading hook shares one idiom: a `load*FromDisk`/
-    // `initializeCacheWithSWR` async function that synchronously sets
-    // isLoading/error at its own top (before its first await), called both
-    // from a mount useEffect AND reused later by a manually-triggered
-    // `refresh*()` (not itself called from an effect, so not flagged there).
-    // A real fix needs splitting each into an effect-safe silent variant and
-    // a refresh variant that resets loading state - a bigger, riskier change
-    // to the core data-loading pattern of nearly every hook in the app than
-    // fits a routine lint-rule cleanup pass (2026-07-14 investigation found
-    // 13 files affected in total, not the ~4 originally scoped - see
-    // TODO.md). The 7 simpler "reset derived state when a dependency
-    // changes" cases were fixed for real (render-time reset instead of an
-    // effect); these 5 load-on-mount hooks, plus useSync.ts's refreshStatus
-    // (same shape - synchronously sets status in an early-return branch
-    // before any await), are deliberately left disabled pending that bigger
-    // dedicated pass.
+    // useSync.ts's refreshStatus is reused by both a mount effect AND
+    // push()/pull() (with an `overrides` param neither of the other 5
+    // load-on-mount hooks needed), so it couldn't take the same
+    // inline-the-mount-copy fix those 5 got (see
+    // docs/investigations/set-state-in-effect-lint-fix.md Leg 1 for that
+    // fix, applied 2026-09-01 to useTeams/useSettings/useSavedPokemon/
+    // useBattles/useDatabase - all five removed from this override then).
+    // useSync.ts remains disabled pending Leg 2's computeSyncStatus
+    // extraction (same doc).
     files: [
-      'src/renderer/hooks/useTeams.ts',
-      'src/renderer/hooks/useSettings.ts',
-      'src/renderer/hooks/useSavedPokemon.ts',
-      'src/renderer/hooks/useBattles.ts',
-      'src/renderer/hooks/useDatabase.ts',
       'src/renderer/hooks/useSync.ts',
     ],
     rules: {

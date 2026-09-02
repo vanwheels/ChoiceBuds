@@ -29,6 +29,15 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
   legal-roster diff, `seasons.ts`'s M-6+ rows once M-C's season dates are
   known). Purely additive — no known removals this reg.
 
+- **[set-state-in-effect Lint Rule Fix] — Leg 2** *(Last touched:
+  2026-09-01 · Re-checks: 0)*
+  `useSync.ts`'s `refreshStatus` is a different shape (reused by
+  `push`/`pull` with an `overrides` param, not just mount) — extract a
+  setState-free `computeSyncStatus(...)` helper the mount effect and
+  `refreshStatus` both call, each doing their own `setStatus(...)`. See
+  the investigation doc linked in Leg 1. Remove the `eslint.config.js`
+  override entirely once done.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -151,15 +160,6 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Backlog / ideas (not yet scoped, highest-to-lowest priority)
-
-- **[set-state-in-effect Lint Rule Fix] — Leg 1** *(Last touched: not
-  recorded · Re-checks: 0)*
-  The rule is disabled on `useTeams.ts`/`useSettings.ts`/
-  `useSavedPokemon.ts`/`useBattles.ts`/`useDatabase.ts`'s shared
-  load-on-mount-and-reused-by-refresh idiom, plus `useSync.ts`'s
-  `refreshStatus`. A real fix means splitting each into an effect-safe
-  silent variant and a refresh variant — bigger than a routine cleanup
-  pass. Not started.
 
 - **[Generalize Check-for-Updates Pattern] — Leg 1** *(Last touched: not
   recorded · Re-checks: 0)*
