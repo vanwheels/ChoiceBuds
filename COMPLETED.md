@@ -14,6 +14,13 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[File Size Cap Cleanup] - Leg 2** (2026-09-01) - split `types/pokemon.ts`
+  (660 lines, ~40 types) into `pokemon.ts` (barrel + core team/Pokémon-set
+  types), `battle.ts` (Battle Logger domain), `settings.ts` (app
+  settings/player profile/sync payload), and `gameData.ts` (cached PokeAPI/
+  Champions-usage types), per the scoped plan from Leg 1. All 113+ importers
+  keep importing from `types/pokemon` unchanged. See commit `<hash>`.
+
 - **[File Size Cap Cleanup] - Leg 1** (2026-09-01) - split `main.ts` (693
   lines) into `main/paths.ts` (userData path resolvers), `main/atomicWrite.ts`
   (crash-safe JSON writes), `main/windowState.ts` (window bounds persistence),

@@ -37,7 +37,13 @@ ChoiceBuds — an Electron + React + TypeScript desktop app for importing and ma
 
 ### Renderer layers
 
-- `src/renderer/types/pokemon.ts` — single source of truth for all data contracts (`ShowdownPokemon`, `ImportedPokemonInfo`, `Team`, `TeamsDatabase`, `PokeAPICache`, `GameDataCache`, etc.). Add new fields here first.
+- `src/renderer/types/` — single source of truth for all data contracts, split into four domain files (113+ files import from `types/pokemon` regardless of which one actually defines a given type — not worth a mass path rewrite):
+  - `pokemon.ts` — the barrel; every other file's import path. Holds the core team/Pokémon-set types itself (`PokemonStats`, `EVSpread`, `ShowdownPokemon`, `ImportedPokemonInfo`, `Team`, `TeamsDatabase`, `SavedPokemonEntry`, `SavedPokemonDatabase`, `EditorState`, `ValidationError`, `ParseResult`, `StatKey`, `StatStages`) and re-exports the other three.
+  - `battle.ts` — Battle Logger domain types (`Battle`, `BattlesDatabase`, `Turn`, `BattleAction`, `BroughtPokemonSnapshot`, `OpponentPokemonEntry`, `FieldState`, `SideConditions`, `StatusCondition`, `WeatherType`, `TerrainType`, `BattleSide`). Battle Logger's UI is archived, but `Battle`/`BattlesDatabase` are still live (`useBattles.ts` persists them, `useSync.ts` syncs them).
+  - `settings.ts` — persisted app-settings/player-profile types (`AppSettings`, `PlayerProfile`, `ChampionsDataCheckId`, `SyncPayload`).
+  - `gameData.ts` — cached PokeAPI/Champions-usage types (`PokeAPICache`, `PokeAPICacheEntry`, `MoveData`, `ItemData`, `AbilityData`, `SpeciesLearnsetEntry`, `SpeciesRosterEntry`, `ChampionsUsageEntry` and its ranked-entry sub-types, `GameDataCache`).
+
+  Add new fields to whichever domain file actually owns the type — team/roster shapes in `pokemon.ts`, battle-log shapes in `battle.ts`, settings/sync-payload shapes in `settings.ts`, cached game-data shapes in `gameData.ts` — never import from anything but `types/pokemon` at call sites.
 - `src/renderer/hooks/` — all state lives here; components stay presentational. Notable hooks:
   - `useTeams` — CRUD over the teams array, persists to disk through `window.electron` on every mutation, also owns UI-only expanded-card-id state.
   - `useDatabase` — persisted cache of PokeAPI species data (`pokeapi-cache.json`). Entries never expire once cached (`utils/cacheExpiry.ts`'s `NEVER_EXPIRES`) — see `useInitialSync` below for how the app stays offline-capable without periodic re-validation.
