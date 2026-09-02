@@ -29,17 +29,6 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
   legal-roster diff, `seasons.ts`'s M-6+ rows once M-C's season dates are
   known). Purely additive — no known removals this reg.
 
-- **[File Size Cap Cleanup] — Leg 3** *(Last touched: 2026-09-01 ·
-  Re-checks: 0)*
-  `useDamageCalc.ts` (604 lines) exceeds the cap. Lines 1-440 are all
-  module-scope pure functions (state factories, boost/stat-multiplier math,
-  `buildPokemon`, `computeSideResults` — the actual calc engine); the
-  exported `useDamageCalc` hook itself only starts at line 441 (~163 lines).
-  Extracting the pure engine functions into a new `utils/damageCalcEngine.ts`
-  (same pure-logic-out-of-hooks pattern `services/parser.ts` already
-  established) would drop the hook file under the cap and make the engine
-  independently unit-testable.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something

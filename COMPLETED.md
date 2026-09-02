@@ -14,6 +14,14 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[File Size Cap Cleanup] - Leg 3** (2026-09-01) - split `useDamageCalc.ts`
+  (604 lines) into `utils/damageCalcEngine.ts` (the pure calc engine - state
+  factories, boost/stat-multiplier math, `buildPokemon`/`computeSideResults`)
+  and a slimmed-down hook (273 lines) that re-exports the engine's types/
+  constants so existing component imports from the hook keep working
+  unchanged. Engine file is now 388 lines and independently unit-testable.
+  See commit `3dd94e2`.
+
 - **[File Size Cap Cleanup] - Leg 2** (2026-09-01) - split `types/pokemon.ts`
   (660 lines, ~40 types) into `pokemon.ts` (barrel + core team/Pokémon-set
   types), `battle.ts` (Battle Logger domain), `settings.ts` (app
