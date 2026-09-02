@@ -26,7 +26,7 @@ in:
   status logic itself. Removed `eslint.config.js`'s override block entirely
   now that all 6 files are fixed. All 26 existing `useSync.test.ts` tests
   and the full 485-test suite pass unmodified; `npm run lint`/`type-check`
-  clean. See commit `<pending>` and
+  clean. See commit `6deba93` and
   [docs/investigations/set-state-in-effect-lint-fix.md](docs/investigations/set-state-in-effect-lint-fix.md).
 
 - **[set-state-in-effect Lint Rule Fix] - Leg 1** (2026-09-01). Fixed the
