@@ -14,6 +14,21 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[set-state-in-effect Lint Rule Fix] - Leg 2** (2026-09-01). Fixed the
+  last remaining file, `useSync.ts`, whose `refreshStatus` couldn't take
+  Leg 1's inline-the-mount-copy fix since it's also reused by `push()`/
+  `pull()` with an `overrides` param. Extracted a setState-free
+  `computeSyncStatus(...)` module-scope function holding the branching/
+  fetch/compare logic; the mount effect now inlines a small async callback
+  (with an `ignore`-flag guard) that calls it and does its own
+  `setStatus(...)`, and `refreshStatus` does the same for the `push`/`pull`
+  paths - only the thin call-then-setStatus wiring is duplicated, not the
+  status logic itself. Removed `eslint.config.js`'s override block entirely
+  now that all 6 files are fixed. All 26 existing `useSync.test.ts` tests
+  and the full 485-test suite pass unmodified; `npm run lint`/`type-check`
+  clean. See commit `<pending>` and
+  [docs/investigations/set-state-in-effect-lint-fix.md](docs/investigations/set-state-in-effect-lint-fix.md).
+
 - **[set-state-in-effect Lint Rule Fix] - Leg 1** (2026-09-01). Fixed the
   5 uniform load-on-mount hooks (`useTeams`/`useSettings`/`useSavedPokemon`/
   `useBattles`/`useDatabase`) by inlining each mount effect's fetch directly

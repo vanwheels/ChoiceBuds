@@ -50,6 +50,51 @@ function generateDiscriminator(): string {
 /** Only the discriminator is retried on collision - usernames are shared by design (many people can be "ethan"). */
 const MAX_DISCRIMINATOR_ATTEMPTS = 5;
 
+/**
+ * Pure status computation, no setState - lets both the mount effect and
+ * refreshStatus() call the same logic without either tripping
+ * react-hooks/set-state-in-effect (which flags an effect calling a
+ * component-scope function that itself calls setState, even indirectly).
+ * See docs/investigations/set-state-in-effect-lint-fix.md.
+ */
+async function computeSyncStatus({
+  identifier,
+  effectivePushedAt,
+  effectivePulledAt,
+}: {
+  identifier: string | null;
+  effectivePushedAt: number | null;
+  effectivePulledAt: number | null;
+}): Promise<SyncStatus> {
+  if (!identifier) {
+    return 'never-synced';
+  }
+
+  if (effectivePushedAt === null && effectivePulledAt === null) {
+    return 'never-synced';
+  }
+
+  try {
+    const [teamsDb, battlesDb, remote] = await Promise.all([
+      window.electron.readTeamsDatabase() as Promise<TeamsDatabase | null>,
+      window.electron.readBattlesDatabase() as Promise<BattlesDatabase | null>,
+      pullSyncData(identifier).catch(() => null),
+    ]);
+
+    const localModifiedAt = Math.max(teamsDb?.lastModified ?? 0, battlesDb?.lastModified ?? 0);
+
+    if (remote && remote.savedAt > (effectivePulledAt ?? 0)) {
+      return 'unpulled-changes';
+    }
+    if (localModifiedAt > (effectivePushedAt ?? 0)) {
+      return 'unpushed-changes';
+    }
+    return 'up-to-date';
+  } catch {
+    return 'unknown';
+  }
+}
+
 export function useSync(
   settingsState: UseSettingsReturn,
   teamsState: UseTeamsReturn,
@@ -80,40 +125,32 @@ export function useSync(
     // (e.g. "Never synced" right after a successful first Push).
     const effectivePushedAt = overrides?.lastPushedAt !== undefined ? overrides.lastPushedAt : lastPushedAt;
     const effectivePulledAt = overrides?.lastPulledAt !== undefined ? overrides.lastPulledAt : lastPulledAt;
-
-    if (!syncIdentifier) {
-      setStatus('never-synced');
-      return;
-    }
-
-    if (effectivePushedAt === null && effectivePulledAt === null) {
-      setStatus('never-synced');
-      return;
-    }
-
-    try {
-      const [teamsDb, battlesDb, remote] = await Promise.all([
-        window.electron.readTeamsDatabase() as Promise<TeamsDatabase | null>,
-        window.electron.readBattlesDatabase() as Promise<BattlesDatabase | null>,
-        pullSyncData(syncIdentifier).catch(() => null),
-      ]);
-
-      const localModifiedAt = Math.max(teamsDb?.lastModified ?? 0, battlesDb?.lastModified ?? 0);
-
-      if (remote && remote.savedAt > (effectivePulledAt ?? 0)) {
-        setStatus('unpulled-changes');
-      } else if (localModifiedAt > (effectivePushedAt ?? 0)) {
-        setStatus('unpushed-changes');
-      } else {
-        setStatus('up-to-date');
-      }
-    } catch {
-      setStatus('unknown');
-    }
+    const result = await computeSyncStatus({ identifier: syncIdentifier, effectivePushedAt, effectivePulledAt });
+    setStatus(result);
   }, [syncIdentifier, lastPushedAt, lastPulledAt]);
 
+  // Mount-only refresh, inlined (rather than calling refreshStatus by
+  // reference) to match React's accepted fetch-in-effect shape - an effect
+  // calling out to a named function that (transitively) calls setState
+  // trips react-hooks/set-state-in-effect even when computeSyncStatus
+  // itself never does. The ignore-flag guard also closes a real (if
+  // unconfirmed) gap the old code had: a fast unmount before this resolves
+  // could otherwise warn-log a setState-after-unmount.
   useEffect(() => {
-    refreshStatus();
+    let ignore = false;
+    (async () => {
+      const result = await computeSyncStatus({
+        identifier: syncIdentifier,
+        effectivePushedAt: lastPushedAt,
+        effectivePulledAt: lastPulledAt,
+      });
+      if (!ignore) {
+        setStatus(result);
+      }
+    })();
+    return () => {
+      ignore = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [syncIdentifier]);
 

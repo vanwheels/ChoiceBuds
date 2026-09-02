@@ -18,23 +18,6 @@ export default tseslint.config(
     },
   },
   {
-    // useSync.ts's refreshStatus is reused by both a mount effect AND
-    // push()/pull() (with an `overrides` param neither of the other 5
-    // load-on-mount hooks needed), so it couldn't take the same
-    // inline-the-mount-copy fix those 5 got (see
-    // docs/investigations/set-state-in-effect-lint-fix.md Leg 1 for that
-    // fix, applied 2026-09-01 to useTeams/useSettings/useSavedPokemon/
-    // useBattles/useDatabase - all five removed from this override then).
-    // useSync.ts remains disabled pending Leg 2's computeSyncStatus
-    // extraction (same doc).
-    files: [
-      'src/renderer/hooks/useSync.ts',
-    ],
-    rules: {
-      'react-hooks/set-state-in-effect': 'off',
-    },
-  },
-  {
     files: ['src/renderer/**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2022,
