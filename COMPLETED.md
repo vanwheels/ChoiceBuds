@@ -28,7 +28,7 @@ in:
   (298 -> 394) from inlining its SWR revalidation step's cache-cleaning
   logic too - flagged to the user rather than split, since a hook isn't
   covered by the component-specific 250-line convention and it's well under
-  the 500-line hard cap. See commit `<pending>` and
+  the 500-line hard cap. See commit `0120958` and
   [docs/investigations/set-state-in-effect-lint-fix.md](docs/investigations/set-state-in-effect-lint-fix.md).
 
 - **[Remaining Champions Mega Ability Audit] - Leg 1** (2026-09-01). Resolved
