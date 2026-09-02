@@ -35,7 +35,7 @@ in:
   `services/pokepaste.test.ts` covering `createPokepaste()` (the import-side
   helpers in that file remain untested - pre-existing gap, not this leg's
   scope). Full 487-test suite, lint, and type-check clean. See commit
-  `<pending>`.
+  `fa3154a`.
 
 - **[set-state-in-effect Lint Rule Fix] - Leg 2** (2026-09-01). Fixed the
   last remaining file, `useSync.ts`, whose `refreshStatus` couldn't take
