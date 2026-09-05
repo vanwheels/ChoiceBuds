@@ -28,6 +28,8 @@ import type {
   StatID,
 } from '@smogon/calc/dist/data/interface';
 import { getChampionsCalcMoveOverride } from '../config/championsMoveOverrides';
+import { getChampionsAbilityDamageEffect } from '../config/championsAbilityDamageEffects';
+import { normalizeNameForAPI } from '../services/pokeapiService';
 import { MAX_IVS, spsToEvs, resolveCalcSpecies } from './championsStats';
 
 const MOVE_SLOT_COUNT = 4;
@@ -222,6 +224,30 @@ function blockedEntry(
   };
 }
 
+/**
+ * `result.desc()`/`result.kochance()` compute their text from
+ * `@smogon/calc`'s own internal (un-scaled) numbers, so once a Champions
+ * ability damage effect (see championsAbilityDamageEffects.ts) scales
+ * `range`/`possibleDamages` ourselves, those two strings would describe the
+ * wrong number if left alone. Same fix shape as `blockedEntry()` above -
+ * hand-written `desc`, `kochanceText` dropped rather than left stale.
+ */
+function adjustedEntry(
+  moveName: string,
+  range: [number, number],
+  possibleDamages: number[],
+  maxHP: number,
+  multihitRange: [number, number] | null,
+  effectiveHits: number | null,
+  desc: string,
+): CalcMoveResultEntry {
+  const percent = `${((range[0] / maxHP) * 100).toFixed(1)} - ${((range[1] / maxHP) * 100).toFixed(1)}%`;
+  return {
+    moveName, percent, desc, range, kochanceText: null, possibleDamages,
+    errorMessage: null, multihitRange, effectiveHits,
+  };
+}
+
 function flattenDamage(damage: number | number[] | number[][]): number[] {
   if (typeof damage === 'number') return [damage];
   if (damage.length > 0 && Array.isArray(damage[0])) return (damage as number[][]).flat();
@@ -369,6 +395,36 @@ export function computeSideResults(
         return blockedEntry(slot.name, range, attacker.species, defender.species, result.rawDesc.defenderAbility);
       }
       const maxHP = defPokemon.maxHP();
+
+      const isContact = !!gen.moves.get(toID(slot.name))?.flags?.contact;
+      const attackerEffect = getChampionsAbilityDamageEffect(normalizeNameForAPI(attacker.ability));
+      const defenderEffect = getChampionsAbilityDamageEffect(normalizeNameForAPI(defender.ability));
+      let multiplier = 1;
+      const descParts: string[] = [];
+      if (defenderSide.isProtected && isContact && attackerEffect?.throughProtectMultiplier != null) {
+        multiplier *= attackerEffect.throughProtectMultiplier;
+        descParts.push(
+          `${attacker.species}'s ${slot.name} hits through ${defender.species}'s Protect for ` +
+          `${Math.round(attackerEffect.throughProtectMultiplier * 100)}% damage (${attacker.ability})`
+        );
+      }
+      if (isContact && defenderEffect?.contactDamageTakenMultiplier != null) {
+        multiplier *= defenderEffect.contactDamageTakenMultiplier;
+        descParts.push(
+          `${defender.species}'s ${defender.ability} reduces the damage from ${slot.name} to ` +
+          `${Math.round(defenderEffect.contactDamageTakenMultiplier * 100)}%`
+        );
+      }
+      if (descParts.length > 0) {
+        const adjustedRange: [number, number] = [Math.floor(range[0] * multiplier), Math.floor(range[1] * multiplier)];
+        const adjustedDamages = [...new Set(flattenDamage(result.damage).map(d => Math.floor(d * multiplier)))].sort((a, b) => a - b);
+        return adjustedEntry(
+          slot.name, adjustedRange, adjustedDamages, maxHP,
+          multihitRange, multihitRange ? move.hits : null,
+          descParts.join(' ')
+        );
+      }
+
       const percent = `${((range[0] / maxHP) * 100).toFixed(1)} - ${((range[1] / maxHP) * 100).toFixed(1)}%`;
       return {
         moveName: slot.name,
