@@ -92,12 +92,21 @@ export interface ImportedPokemonInfo {
 }
 
 /**
+ * Every Pokémon Champions regulation this app knows about, by its
+ * human-readable label (the app's existing `Team.format`/`AppSettings.
+ * defaultRegulation` convention) - see utils/pokemonRules.ts's `RegulationId`
+ * for the internal 'REG-MA'/'REG-MB'/'REG-MC' form and `toRegulationId`/
+ * `getRegulationLabel` for converting between the two.
+ */
+export type RegulationLabel = 'Reg M-A' | 'Reg M-B' | 'Reg M-C';
+
+/**
  * Represents a complete VGC team with metadata
  */
 export interface Team {
   id: string; // UUID
   name: string;
-  format: 'Reg M-A' | 'Reg M-B';
+  format: RegulationLabel;
   pokemon: ImportedPokemonInfo[];
   createdAt: number; // Unix timestamp
   updatedAt: number; // Unix timestamp

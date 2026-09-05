@@ -9,7 +9,7 @@ import { parseShowdownText } from '../services/parser';
 import { enrichPokemonWithAPI } from '../services/pokeapi';
 import { extractPokepasteId, fetchPokepaste, detectRegulationFromNotes } from '../services/pokepaste';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
-import type { Team, ImportedPokemonInfo } from '../types/pokemon';
+import type { Team, ImportedPokemonInfo, RegulationLabel } from '../types/pokemon';
 import Modal from './Modal';
 
 interface ImportTeamModalProps {
@@ -17,7 +17,7 @@ interface ImportTeamModalProps {
   onImport: (team: Team) => Promise<boolean>;
   databaseState: UseDatabaseReturn;
   existingTeamNames: string[];
-  defaultRegulation: 'Reg M-A' | 'Reg M-B';
+  defaultRegulation: RegulationLabel;
 }
 
 /** Smallest-unused "Team N" - keeps working after teams are renamed/deleted, not just a running count. */
@@ -41,7 +41,7 @@ export default function ImportTeamModal({
   const [pastedText, setPastedText] = useState('');
   const [teamName, setTeamName] = useState('');
   const [author, setAuthor] = useState('');
-  const [teamFormat, setTeamFormat] = useState<'Reg M-A' | 'Reg M-B'>(defaultRegulation);
+  const [teamFormat, setTeamFormat] = useState<RegulationLabel>(defaultRegulation);
   const [isImporting, setIsImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [importProgress, setImportProgress] = useState<string>('');
@@ -232,6 +232,7 @@ export default function ImportTeamModal({
           >
             <option value="Reg M-A">Reg M-A</option>
             <option value="Reg M-B">Reg M-B</option>
+            <option value="Reg M-C">Reg M-C</option>
           </select>
         </div>
 

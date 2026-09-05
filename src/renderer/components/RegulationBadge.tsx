@@ -37,7 +37,7 @@ export default function RegulationBadge({ team, onChange }: RegulationBadgeProps
             <button
               key={id}
               onClick={() => {
-                onChange(getRegulationLabel(id) as Team['format']);
+                onChange(getRegulationLabel(id));
                 setIsOpen(false);
               }}
               className={`w-full text-left px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${

@@ -11,8 +11,15 @@
  * (not a banlist over the full dex) - REG_MA_SPECIES below is that full M-A
  * table; REG_MB_ADDED_SPECIES is the 22 species M-B adds on top of it. Every
  * species absent from both tables (all Legendaries/Mythicals, plus ordinary
- * species not yet unlocked, e.g. Salamence) is simply not on the list - there
- * is no separate ban mechanism to maintain.
+ * species not yet unlocked, e.g. Salamence pre-Reg M-C) is simply not on the
+ * list - there is no separate ban mechanism to maintain.
+ *
+ * REG_MC_ADDED_SPECIES has no equivalent official-source page yet - Reg M-C
+ * was announced ahead of its 2026-09-08 6pm PST release, hand-curated from
+ * confirmed reveals as of 2026-09-05 (see TODO.md's Regulation M-C Prep
+ * entry) rather than Serebii's own regulation page, which doesn't exist yet.
+ * Re-verify REG_MC_ADDED_SPECIES against Serebii's regulationm-c.shtml once
+ * it's up and replace this note with a real citation, same as M-A/M-B above.
  *
  * Mega Evolution forms are excluded entirely (not just deduplicated) - Mega
  * access is meant to be item-driven (holding the matching Mega Stone on the
@@ -33,10 +40,21 @@
  * separate rather than overloaded into the same file.
  */
 
-export type RegulationId = 'REG-MA' | 'REG-MB';
+import type { RegulationLabel } from '../types/pokemon';
+
+export type RegulationId = 'REG-MA' | 'REG-MB' | 'REG-MC';
 
 /** Every regulation the app knows about, in display order - drives the regulation-picker dropdown */
-export const ALL_REGULATION_IDS: RegulationId[] = ['REG-MA', 'REG-MB'];
+export const ALL_REGULATION_IDS: RegulationId[] = ['REG-MA', 'REG-MB', 'REG-MC'];
+
+/**
+ * The most recently added regulation - the roster useInitialSync.ts/
+ * useUsageSync.ts bulk-sync against, since both want "everything currently
+ * legal," not one specific regulation. Derived from ALL_REGULATION_IDS
+ * (rather than a second hardcoded literal) so there's exactly one place to
+ * touch when the next regulation ships.
+ */
+export const LATEST_REGULATION_ID: RegulationId = ALL_REGULATION_IDS[ALL_REGULATION_IDS.length - 1];
 
 export interface ChampionsRuleset {
   id: RegulationId;
@@ -98,6 +116,17 @@ const REG_MB_ADDED_SPECIES: string[] = [
   'grimmsnarl', 'falinks', 'overqwil', 'houndstone', 'annihilape', 'gholdengo',
 ];
 
+/**
+ * The species Regulation M-C adds on top of everything in REG_MB_ADDED_SPECIES,
+ * confirmed ahead of release (see file header). Absol/Garchomp/Lucario's new
+ * "Mega Z" formes are NOT a roster addition here, same convention as every
+ * other Mega form - all three base species are already legal via
+ * REG_MA_SPECIES, and the Mega Z form itself is item-driven (holding the
+ * matching "-ite Z" stone), not a separate pick. See config/megaEvolution.ts/
+ * config/megaAbilities.ts for that half of Reg M-C's additions.
+ */
+const REG_MC_ADDED_SPECIES: string[] = ['rillaboom', 'baxcalibur', 'salamence', 'golisopod'];
+
 export function normalizeSlug(value: string): string {
   return value
     .toLowerCase()
@@ -126,6 +155,7 @@ function canonicalizeGenderDivergentSlug(slug: string): string {
 
 const REG_MA_SPECIES_SET = new Set(REG_MA_SPECIES.map(normalizeSlug));
 const REG_MB_SPECIES_SET = new Set([...REG_MA_SPECIES, ...REG_MB_ADDED_SPECIES].map(normalizeSlug));
+const REG_MC_SPECIES_SET = new Set([...REG_MA_SPECIES, ...REG_MB_ADDED_SPECIES, ...REG_MC_ADDED_SPECIES].map(normalizeSlug));
 
 export const CHAMPIONS_RULESETS: Record<RegulationId, ChampionsRuleset> = {
   'REG-MA': {
@@ -140,35 +170,54 @@ export const CHAMPIONS_RULESETS: Record<RegulationId, ChampionsRuleset> = {
     allowedMoves: [],
     allowedItems: [],
   },
+  'REG-MC': {
+    id: 'REG-MC',
+    allowedSpecies: [...REG_MC_SPECIES_SET],
+    allowedMoves: [],
+    allowedItems: [],
+  },
 };
 
 /** Human-readable label matching the app's existing `Team.format` convention */
-const REGULATION_LABEL: Record<RegulationId, string> = {
+const REGULATION_LABEL: Record<RegulationId, RegulationLabel> = {
   'REG-MA': 'Reg M-A',
   'REG-MB': 'Reg M-B',
+  'REG-MC': 'Reg M-C',
 };
 
-export function getRegulationLabel(rulesetId: RegulationId): string {
+export function getRegulationLabel(rulesetId: RegulationId): RegulationLabel {
   return REGULATION_LABEL[rulesetId];
 }
 
+const LABEL_TO_REGULATION_ID: Record<RegulationLabel, RegulationId> = {
+  'Reg M-A': 'REG-MA',
+  'Reg M-B': 'REG-MB',
+  'Reg M-C': 'REG-MC',
+};
+
 /** Bridges the app's existing `Team.format` field to a RegulationId */
-export function toRegulationId(format: 'Reg M-A' | 'Reg M-B'): RegulationId {
-  return format === 'Reg M-A' ? 'REG-MA' : 'REG-MB';
+export function toRegulationId(format: RegulationLabel): RegulationId {
+  return LABEL_TO_REGULATION_ID[format];
 }
 
 export function getRuleset(rulesetId: RegulationId): ChampionsRuleset {
   return CHAMPIONS_RULESETS[rulesetId];
 }
 
+const SPECIES_SET_BY_REGULATION: Record<RegulationId, Set<string>> = {
+  'REG-MA': REG_MA_SPECIES_SET,
+  'REG-MB': REG_MB_SPECIES_SET,
+  'REG-MC': REG_MC_SPECIES_SET,
+};
+
 /**
  * Real species-legality check against the sourced "Newly Useable Pokémon"
- * allowlist for the given regulation (REG-MB is a superset of REG-MA).
+ * allowlist for the given regulation (each later regulation is a superset of
+ * the previous one - REG-MB adds to REG-MA, REG-MC adds to REG-MB).
  */
 export function validateSpeciesLegality(speciesId: string, rulesetId: RegulationId): boolean {
   const normalized = canonicalizeGenderDivergentSlug(normalizeSlug(speciesId));
-  const legalSet = rulesetId === 'REG-MA' ? REG_MA_SPECIES_SET : REG_MB_SPECIES_SET;
-  return legalSet.has(normalized);
+  return SPECIES_SET_BY_REGULATION[rulesetId].has(normalized);
 }
 
 /**

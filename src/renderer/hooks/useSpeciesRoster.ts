@@ -36,8 +36,14 @@ interface CachedRoster {
 
 const CACHE_KEY = 'choicebuds:speciesRoster:v3';
 
-/** Mega Evolution is item-driven (holding the right Mega Stone), not a roster pick */
-const MEGA_FORM_PATTERN = /-mega(-x|-y)?$/;
+/**
+ * Mega Evolution is item-driven (holding the right Mega Stone), not a roster
+ * pick. Any single-letter suffix (not just -x/-y) so this also excludes Reg
+ * M-C's "-mega-z" form (Absol/Garchomp/Lucario, see config/megaEvolution.ts)
+ * if PokeAPI ever adds a resource for it - same pattern as
+ * utils/calcFormes.ts's MEGA_SUFFIX_RE.
+ */
+const MEGA_FORM_PATTERN = /-mega(-[a-z])?$/i;
 
 function extractIdFromUrl(url: string): number {
   const match = url.match(/\/(\d+)\/?$/);

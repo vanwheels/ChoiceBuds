@@ -10,6 +10,13 @@
  * a smaller/different pool than mainline VGC (no Choice items, Assault Vest,
  * Safety Goggles, terrain seeds, etc. exist in this game):
  * https://www.serebii.net/pokemonchampions/items.shtml
+ *
+ * The 6 Reg M-C Mega Stones (Absolite Z/Garchompite Z/Lucarionite Z/
+ * Baxcalibrite/Golisopite/Salamencite) are the exception - added ahead of
+ * Serebii's own page for a regulation that doesn't exist yet (see TODO.md's
+ * Regulation M-C Prep entry), spelled to match @smogon/calc's own bundled
+ * item names (0.11.0's `MEGA_STONES`/`ZA_MEGA_STONES`) rather than guessed -
+ * re-verify against Serebii once Reg M-C's own items page goes up.
  */
 export const VGC_HOLD_ITEMS = [
   'Big Root',
@@ -62,6 +69,7 @@ export const VGC_HOLD_ITEMS = [
 export const VGC_MEGA_STONES = [
   'Abomasite',
   'Absolite',
+  'Absolite Z',
   'Aerodactylite',
   'Aggronite',
   'Alakazite',
@@ -70,6 +78,7 @@ export const VGC_MEGA_STONES = [
   'Audinite',
   'Banettite',
   'Barbaracite',
+  'Baxcalibrite',
   'Beedrillite',
   'Blastoisinite',
   'Blazikenite',
@@ -94,10 +103,12 @@ export const VGC_MEGA_STONES = [
   'Froslassite',
   'Galladite',
   'Garchompite',
+  'Garchompite Z',
   'Gardevoirite',
   'Gengarite',
   'Glalitite',
   'Glimmoranite',
+  'Golisopite',
   'Golurkite',
   'Greninjite',
   'Gyaradosite',
@@ -107,6 +118,7 @@ export const VGC_MEGA_STONES = [
   'Kangaskhanite',
   'Lopunnite',
   'Lucarionite',
+  'Lucarionite Z',
   'Malamarite',
   'Manectite',
   'Mawilite',
@@ -120,6 +132,7 @@ export const VGC_MEGA_STONES = [
   'Raichunite X',
   'Raichunite Y',
   'Sablenite',
+  'Salamencite',
   'Sceptilite',
   'Scizorite',
   'Scolipite',

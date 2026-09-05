@@ -25,6 +25,11 @@ describe('getMegaAbility', () => {
   it('resolves a known slug to its guaranteed ability', () => {
     expect(getMegaAbility('charizard-mega-y')).toBe('Drought');
   });
+
+  it("resolves Reg M-C's Mega Z slugs to their own (not their ordinary Mega's) ability", () => {
+    expect(getMegaAbility('lucario-mega-z')).toBe('Aura Guard');
+    expect(getMegaAbility('lucario-mega')).toBe('Adaptability');
+  });
 });
 
 describe('MEGA_ABILITIES coverage', () => {

@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import type { AppSettings, PlayerProfile } from '../types/pokemon';
+import type { AppSettings, PlayerProfile, RegulationLabel } from '../types/pokemon';
 
 const DEFAULT_PLAYER_PROFILE: PlayerProfile = {
   playerName: '',
@@ -43,7 +43,7 @@ export interface UseSettingsReturn {
   settings: AppSettings;
   isLoading: boolean;
   error: string | null;
-  setDefaultRegulation: (format: 'Reg M-A' | 'Reg M-B') => Promise<boolean>;
+  setDefaultRegulation: (format: RegulationLabel) => Promise<boolean>;
   updateSettings: (partial: Partial<Omit<AppSettings, 'version' | 'lastModified'>>) => Promise<boolean>;
 }
 
@@ -120,7 +120,7 @@ export function useSettings(): UseSettingsReturn {
   /**
    * Set the default regulation used when importing new teams
    */
-  const setDefaultRegulation = useCallback(async (format: 'Reg M-A' | 'Reg M-B'): Promise<boolean> => {
+  const setDefaultRegulation = useCallback(async (format: RegulationLabel): Promise<boolean> => {
     const updated: AppSettings = {
       ...settings,
       defaultRegulation: format,

@@ -17,7 +17,7 @@
  */
 
 import { formatShowdownText } from './parser';
-import type { ShowdownPokemon } from '../types/pokemon';
+import type { ShowdownPokemon, RegulationLabel } from '../types/pokemon';
 
 export interface PokepasteData {
   title: string;
@@ -43,15 +43,17 @@ export async function fetchPokepaste(id: string): Promise<PokepasteData> {
 }
 
 /**
- * Best-effort Reg M-A/Reg M-B detection from the paste's own `notes` field
- * (commonly a "Format: gen9championsvgc2026regmb"-style string) - pokepast.es
- * doesn't guarantee a parseable convention here, so callers should keep
- * whatever format they already have selected when this returns null.
+ * Best-effort Reg M-A/Reg M-B/Reg M-C detection from the paste's own `notes`
+ * field (commonly a "Format: gen9championsvgc2026regmb"-style string) -
+ * pokepast.es doesn't guarantee a parseable convention here, so callers
+ * should keep whatever format they already have selected when this returns
+ * null.
  */
-export function detectRegulationFromNotes(notes: string): 'Reg M-A' | 'Reg M-B' | null {
-  const match = /reg\s*m[\s-]?([ab])/i.exec(notes);
+export function detectRegulationFromNotes(notes: string): RegulationLabel | null {
+  const match = /reg\s*m[\s-]?([abc])/i.exec(notes);
   if (!match) return null;
-  return match[1].toLowerCase() === 'a' ? 'Reg M-A' : 'Reg M-B';
+  const label: Record<string, RegulationLabel> = { a: 'Reg M-A', b: 'Reg M-B', c: 'Reg M-C' };
+  return label[match[1].toLowerCase()];
 }
 
 /**

@@ -211,12 +211,13 @@ export function getStatLabelColor(label: string): string {
 /**
  * Per-regulation accent color (Teams list row accent stripe + RegulationBadge)
  * - keyed by the `RegulationId` type in utils/pokemonRules.ts. Purely a
- * visual distinction between Reg M-A/M-B at a glance; carries no legality
- * meaning of its own.
+ * visual distinction between Reg M-A/M-B/M-C at a glance; carries no
+ * legality meaning of its own.
  */
 export const REGULATION_THEMES: Record<string, { accentBorder: string; badgeBg: string }> = {
   'REG-MA': { accentBorder: 'border-l-blue-500', badgeBg: 'bg-blue-600 hover:bg-blue-500' },
   'REG-MB': { accentBorder: 'border-l-purple-500', badgeBg: 'bg-purple-600 hover:bg-purple-500' },
+  'REG-MC': { accentBorder: 'border-l-emerald-500', badgeBg: 'bg-emerald-600 hover:bg-emerald-500' },
 };
 
 export function getRegulationTheme(regulationId: string): { accentBorder: string; badgeBg: string } {

@@ -24,7 +24,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { UseGameDataReturn } from './useGameData';
 import type { UseSpeciesRosterReturn } from './useSpeciesRoster';
-import { validateSpeciesLegality } from '../utils/pokemonRules';
+import { validateSpeciesLegality, LATEST_REGULATION_ID } from '../utils/pokemonRules';
 import { runWithConcurrency } from '../utils/concurrency';
 
 const CONCURRENCY = 8;
@@ -47,7 +47,7 @@ export function useUsageSync(
   const { roster, isLoading: isRosterLoading } = speciesRosterState;
 
   const legalRoster = useMemo(
-    () => roster.filter(entry => validateSpeciesLegality(entry.name, 'REG-MB')),
+    () => roster.filter(entry => validateSpeciesLegality(entry.name, LATEST_REGULATION_ID)),
     [roster]
   );
   const staleSpecies = useMemo(

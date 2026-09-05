@@ -10,6 +10,7 @@ import { VGC_ITEMS } from '../config/vgcData';
 
 vi.mock('../utils/pokemonRules', () => ({
   validateSpeciesLegality: vi.fn(),
+  LATEST_REGULATION_ID: 'REG-MC',
 }));
 
 vi.mock('../services/pokeapi', async (importOriginal) => {
@@ -156,7 +157,7 @@ describe('useInitialSync', () => {
     expect(mockedFetchPokemonData).not.toHaveBeenCalled();
   });
 
-  it('filters the roster to the legal REG-MB set before asking what is unsynced', () => {
+  it('filters the roster to the latest regulation\'s legal set before asking what is unsynced', () => {
     const illegal = makeRosterEntry({ name: 'Not-A-Real-Mon', id: 9999 });
     const legal = makeRosterEntry();
     mockedValidateLegality.mockImplementation(name => name === 'Gengar');

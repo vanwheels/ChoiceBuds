@@ -2,8 +2,9 @@
  * useInitialSync Hook - First-Launch / Regulation-Delta Bulk Data Sync
  * Drives the LoadingScreen: whenever the legal species roster contains
  * species not yet in GameDataCache.lastSyncedSpeciesNames (see
- * useGameData.ts) - which on a fresh install is the entire Reg M-B legal
- * roster, and after that is only species a future regulation update adds -
+ * useGameData.ts) - which on a fresh install is the entire legal roster of
+ * the latest regulation (utils/pokemonRules.ts's LATEST_REGULATION_ID), and
+ * after that is only species a future regulation update adds -
  * eagerly downloads sprites (normal + shiny), move/ability/learnset data,
  * and PokeAPICache species stats/types for those species, plus every
  * VGC-legal item's sprite, so every later launch is fully offline and
@@ -45,7 +46,7 @@ import type { UseGameDataReturn } from './useGameData';
 import type { UseSpeciesRosterReturn } from './useSpeciesRoster';
 import type { UseSpriteCacheReturn } from './useSpriteCache';
 import type { UseDatabaseReturn } from './useDatabase';
-import { validateSpeciesLegality } from '../utils/pokemonRules';
+import { validateSpeciesLegality, LATEST_REGULATION_ID } from '../utils/pokemonRules';
 import { VGC_ITEMS } from '../config/vgcData';
 import { fetchPokemonData, normalizeSpeciesForAPI } from '../services/pokeapi';
 import { MEGA_STONE_TO_SPECIES } from '../config/megaEvolution';
@@ -96,7 +97,7 @@ export function useInitialSync(
   const { isInitialized: isDatabaseInitialized } = databaseState;
 
   const legalRoster = useMemo(
-    () => roster.filter(entry => validateSpeciesLegality(entry.name, 'REG-MB')),
+    () => roster.filter(entry => validateSpeciesLegality(entry.name, LATEST_REGULATION_ID)),
     [roster]
   );
   const unsyncedSpecies = useMemo(() => getUnsyncedSpecies(legalRoster), [legalRoster, getUnsyncedSpecies]);

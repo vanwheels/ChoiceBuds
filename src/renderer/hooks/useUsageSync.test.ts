@@ -7,6 +7,7 @@ import type { ChampionsUsageEntry, SpeciesRosterEntry } from '../types/pokemon';
 
 vi.mock('../utils/pokemonRules', () => ({
   validateSpeciesLegality: vi.fn(),
+  LATEST_REGULATION_ID: 'REG-MC',
 }));
 
 import { validateSpeciesLegality } from '../utils/pokemonRules';
@@ -99,7 +100,7 @@ describe('useUsageSync', () => {
     expect(getChampionsUsage).not.toHaveBeenCalled();
   });
 
-  it('filters the roster to the legal REG-MB set before checking for stale usage', () => {
+  it('filters the roster to the latest regulation\'s legal set before checking for stale usage', () => {
     const illegal = makeRosterEntry({ name: 'Not-A-Real-Mon', id: 9999 });
     const legal = makeRosterEntry();
     mockedValidateLegality.mockImplementation(name => name === 'Gengar');

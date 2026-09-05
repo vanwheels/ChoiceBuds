@@ -6,6 +6,7 @@
 
 import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
+import type { RegulationLabel } from '../types/pokemon';
 import type { UseTeamsReturn } from '../hooks/useTeams';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
 import type { UseActiveEditorReturn } from '../hooks/useActiveEditor';
@@ -27,7 +28,7 @@ interface TeamsPageProps {
   settingsState: UseSettingsReturn;
 }
 
-type FormatFilter = 'All' | 'Reg M-A' | 'Reg M-B';
+type FormatFilter = 'All' | RegulationLabel;
 
 /**
  * Main teams page component
@@ -50,7 +51,7 @@ export default function TeamsPage({
     : teamsState.teams.filter(team => team.format === activeFilter);
 
   // Format filter buttons configuration
-  const filterButtons: FormatFilter[] = ['All', 'Reg M-A', 'Reg M-B'];
+  const filterButtons: FormatFilter[] = ['All', 'Reg M-A', 'Reg M-B', 'Reg M-C'];
 
   return (
     <div className="h-full flex flex-col">

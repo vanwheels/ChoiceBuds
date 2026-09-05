@@ -52,7 +52,7 @@ export default function SettingsPage({ settingsState, teamsState, battlesState, 
           {ALL_REGULATION_IDS.map(id => (
             <button
               key={id}
-              onClick={() => setDefaultRegulation(getRegulationLabel(id) as 'Reg M-A' | 'Reg M-B')}
+              onClick={() => setDefaultRegulation(getRegulationLabel(id))}
               className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded transition-colors cursor-pointer ${
                 id === currentId
                   ? 'bg-accent-gold text-zinc-900'

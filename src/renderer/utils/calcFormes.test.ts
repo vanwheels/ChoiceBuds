@@ -30,9 +30,12 @@ const UNCURATED_MEGA_FAMILY: CalcSpeciesRef[] = [
   { name: 'Mewtwo-Mega-Y', baseSpecies: 'Mewtwo' },
 ];
 
-// Absol has a real curated Mega ("Absol-Mega", from Absolite) but @smogon/calc
-// also ships a spurious "-Mega-Z" duplicate with no matching Champions stone -
-// only the curated one should survive.
+// Absol has two real curated Megas as of Reg M-C: its ordinary Mega
+// ("Absol-Mega", from Absolite) and its new second "Mega Z" form
+// ("Absol-Mega-Z", from Absolite Z) - see config/megaEvolution.ts. Both
+// should survive; this used to be the one @smogon/calc-shaped "-Mega-Z" name
+// this file treated as an uncurated duplicate to drop, before Reg M-C made
+// it real.
 const ABSOL_FAMILY: CalcSpeciesRef[] = [
   { name: 'Absol' },
   { name: 'Absol-Mega', baseSpecies: 'Absol' },
@@ -94,9 +97,9 @@ describe('getFormeFamily', () => {
     expect(family.statFormes).toEqual(['Mewtwo']);
   });
 
-  it('keeps a curated Mega forme but drops an uncurated "-Mega-Z" duplicate for the same species', () => {
+  it('lists both of Reg M-C\'s curated Mega formes for the same species (ordinary Mega + Mega Z)', () => {
     const family = getFormeFamily(ALL_SPECIES, 'Absol');
-    expect(family.megaFormes).toEqual(['Absol-Mega']);
+    expect(family.megaFormes).toEqual(['Absol-Mega', 'Absol-Mega-Z']);
   });
 });
 

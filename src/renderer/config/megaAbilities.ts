@@ -47,10 +47,32 @@
  * to match `@smogon/calc`'s own forme name, the same Floette/Floette-
  * Eternal substitution `megaEvolution.ts`'s CURATED_MEGA_FORM_SLUGS already
  * makes for the Calc tab - see that file's comment for why.
+ *
+ * Group 3 - Reg M-C (announced ahead of its 2026-09-08 6pm PST release, see
+ * TODO.md's Regulation M-C Prep entry - pre-release, no Serebii/Kotaku
+ * source exists yet the way Groups 1/2 have):
+ * - `baxcalibur-mega`/`golisopod-mega`/`salamence-mega` are sourced from
+ *   `@smogon/calc` 0.11.0's bundled species dex (`ZA_PATCH`'s `abilities.0`
+ *   field) - the same trust level Group 1 gives that library elsewhere, but
+ *   unlike Group 1 this hasn't been independently cross-checked against a
+ *   second source yet, since none exists pre-release. Salamence-Mega
+ *   (Aerilate) is the one already-known mainline value of the three.
+ * - `absol-mega-z`/`garchomp-mega-z`/`lucario-mega-z` are Absol/Garchomp/
+ *   Lucario's new confirmed "Mega Z" forms - a genuine second Mega for each,
+ *   not a Mega-then-something-else. Their abilities (Sharpness/Levitate/
+ *   Aura Guard respectively) are user-confirmed reveals, deliberately NOT
+ *   taken from `@smogon/calc`'s own bundled `abilities.0` for these 3
+ *   entries - that field just duplicates each species' *ordinary* Mega
+ *   ability (Magic Bounce/Sand Force/Adaptability), stale placeholder data
+ *   from before Reg M-C's real abilities were revealed (see
+ *   `config/megaEvolution.ts`'s CURATED_MEGA_FORM_SLUGS comment). Re-verify
+ *   all 6 of this group's abilities once Reg M-C ships and a second source
+ *   exists to cross-check against.
  */
 export const MEGA_ABILITIES: Record<string, string> = {
   'abomasnow-mega': 'Snow Warning',
   'absol-mega': 'Magic Bounce',
+  'absol-mega-z': 'Sharpness',
   'aerodactyl-mega': 'Tough Claws',
   'aggron-mega': 'Filter',
   'alakazam-mega': 'Trace',
@@ -59,6 +81,7 @@ export const MEGA_ABILITIES: Record<string, string> = {
   'audino-mega': 'Healer',
   'banette-mega': 'Prankster',
   'barbaracle-mega': 'Tough Claws',
+  'baxcalibur-mega': 'Thermal Exchange',
   'beedrill-mega': 'Adaptability',
   'blastoise-mega': 'Mega Launcher',
   'blaziken-mega': 'Speed Boost',
@@ -83,10 +106,12 @@ export const MEGA_ABILITIES: Record<string, string> = {
   'froslass-mega': 'Snow Warning',
   'gallade-mega': 'Inner Focus',
   'garchomp-mega': 'Sand Force',
+  'garchomp-mega-z': 'Levitate',
   'gardevoir-mega': 'Pixilate',
   'gengar-mega': 'Shadow Tag',
   'glalie-mega': 'Refrigerate',
   'glimmora-mega': 'Adaptability',
+  'golisopod-mega': 'Emergency Exit',
   'golurk-mega': 'Unseen Fist',
   'greninja-mega': 'Protean',
   'gyarados-mega': 'Mold Breaker',
@@ -96,6 +121,7 @@ export const MEGA_ABILITIES: Record<string, string> = {
   'kangaskhan-mega': 'Parental Bond',
   'lopunny-mega': 'Scrappy',
   'lucario-mega': 'Adaptability',
+  'lucario-mega-z': 'Aura Guard',
   'malamar-mega': 'Contrary',
   'manectric-mega': 'Intimidate',
   'mawile-mega': 'Huge Power',
@@ -109,6 +135,7 @@ export const MEGA_ABILITIES: Record<string, string> = {
   'raichu-mega-x': 'Electric Surge',
   'raichu-mega-y': 'No Guard',
   'sableye-mega': 'Magic Bounce',
+  'salamence-mega': 'Aerilate',
   'sceptile-mega': 'Lightning Rod',
   'scizor-mega': 'Technician',
   'scolipede-mega': 'Shell Armor',

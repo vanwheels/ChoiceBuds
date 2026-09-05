@@ -4,7 +4,7 @@
  * Architecture section).
  */
 
-import type { Team } from './pokemon';
+import type { Team, RegulationLabel } from './pokemon';
 import type { Battle } from './battle';
 
 /**
@@ -37,7 +37,7 @@ export type ChampionsDataCheckId = 'moves' | 'abilities' | 'movepool';
  */
 export interface AppSettings {
   version: number;
-  defaultRegulation: 'Reg M-A' | 'Reg M-B';
+  defaultRegulation: RegulationLabel;
   syncIdentifier: string | null; // "username#XXXX" pairing identifier, once set up
   lastPushedAt: number | null; // Unix timestamp of this device's last successful Push
   lastPulledAt: number | null; // Unix timestamp of this device's last successful Pull

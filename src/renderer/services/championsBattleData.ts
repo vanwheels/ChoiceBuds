@@ -13,7 +13,7 @@
  *    wants) - a hand-rolled slug transform would silently break on
  *    multi-word/regional-form species (e.g. "Alolan Ninetales").
  *  - The opponent species picker (SpeciesPickerCard) only ever offers
- *    species this app's own Reg M-A/M-B legality table
+ *    species this app's own Reg M-A/M-B/M-C legality table
  *    (utils/pokemonRules.ts) allows - Iron Hands, every Paradox, Ogerpon,
  *    Landorus/Tornadus, every Tapu, Ursaluna, Mr. Mime, Indeedee, Oinkologne
  *    etc. can never actually reach this code at all (they're not "missing

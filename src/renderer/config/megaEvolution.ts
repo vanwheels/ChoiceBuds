@@ -16,10 +16,25 @@
  * knowledge cutoff) mostly have no PokeAPI resource yet; useMegaSprite
  * handles that as a plain fetch miss and falls back to the normal sprite
  * rather than this file asserting which ones currently resolve.
+ *
+ * Reg M-C addition (pre-release, see TODO.md's Regulation M-C Prep entry -
+ * no Serebii page for it yet, so these 6 entries are sourced from
+ * @smogon/calc 0.11.0's bundled `ZA_MEGA_STONES` table instead, re-verify
+ * once Serebii's own Reg M-C items page ships): 3 brand-new Mega-capable
+ * species (Baxcalibur, Golisopod, Salamence - `suffix: 'mega'` same as any
+ * other single-form Mega), plus a genuinely new *third* Mega form ("Mega Z",
+ * `suffix: 'mega-z'`) for 3 species that already have an ordinary Mega -
+ * Absol, Garchomp, Lucario. This is what utils/calcFormes.ts's comment used
+ * to call a "spurious" @smogon/calc entry (confirmed live 2026-08-31, before
+ * Reg M-C was announced) - it's real now, just gated behind its own stone
+ * like any other Mega form.
  */
 export const MEGA_STONE_TO_SPECIES: Record<string, { species: string; suffix: string }> = {
   'abomasite': { species: 'abomasnow', suffix: 'mega' },
   'absolite': { species: 'absol', suffix: 'mega' },
+  // Reg M-C's second Mega form for the same 3 species (Absol/Garchomp/
+  // Lucario) - see the file header's "Mega Z" note.
+  'absolite z': { species: 'absol', suffix: 'mega-z' },
   'aerodactylite': { species: 'aerodactyl', suffix: 'mega' },
   'aggronite': { species: 'aggron', suffix: 'mega' },
   'alakazite': { species: 'alakazam', suffix: 'mega' },
@@ -28,6 +43,7 @@ export const MEGA_STONE_TO_SPECIES: Record<string, { species: string; suffix: st
   'audinite': { species: 'audino', suffix: 'mega' },
   'banettite': { species: 'banette', suffix: 'mega' },
   'barbaracite': { species: 'barbaracle', suffix: 'mega' },
+  'baxcalibrite': { species: 'baxcalibur', suffix: 'mega' },
   'beedrillite': { species: 'beedrill', suffix: 'mega' },
   'blastoisinite': { species: 'blastoise', suffix: 'mega' },
   'blazikenite': { species: 'blaziken', suffix: 'mega' },
@@ -54,10 +70,12 @@ export const MEGA_STONE_TO_SPECIES: Record<string, { species: string; suffix: st
   'froslassite': { species: 'froslass', suffix: 'mega' },
   'galladite': { species: 'gallade', suffix: 'mega' },
   'garchompite': { species: 'garchomp', suffix: 'mega' },
+  'garchompite z': { species: 'garchomp', suffix: 'mega-z' },
   'gardevoirite': { species: 'gardevoir', suffix: 'mega' },
   'gengarite': { species: 'gengar', suffix: 'mega' },
   'glalitite': { species: 'glalie', suffix: 'mega' },
   'glimmoranite': { species: 'glimmora', suffix: 'mega' },
+  'golisopite': { species: 'golisopod', suffix: 'mega' },
   'golurkite': { species: 'golurk', suffix: 'mega' },
   'greninjite': { species: 'greninja', suffix: 'mega' },
   'gyaradosite': { species: 'gyarados', suffix: 'mega' },
@@ -67,6 +85,7 @@ export const MEGA_STONE_TO_SPECIES: Record<string, { species: string; suffix: st
   'kangaskhanite': { species: 'kangaskhan', suffix: 'mega' },
   'lopunnite': { species: 'lopunny', suffix: 'mega' },
   'lucarionite': { species: 'lucario', suffix: 'mega' },
+  'lucarionite z': { species: 'lucario', suffix: 'mega-z' },
   'malamarite': { species: 'malamar', suffix: 'mega' },
   'manectite': { species: 'manectric', suffix: 'mega' },
   'mawilite': { species: 'mawile', suffix: 'mega' },
@@ -80,6 +99,7 @@ export const MEGA_STONE_TO_SPECIES: Record<string, { species: string; suffix: st
   'raichunite x': { species: 'raichu', suffix: 'mega-x' },
   'raichunite y': { species: 'raichu', suffix: 'mega-y' },
   'sablenite': { species: 'sableye', suffix: 'mega' },
+  'salamencite': { species: 'salamence', suffix: 'mega' },
   'sceptilite': { species: 'sceptile', suffix: 'mega' },
   'scizorite': { species: 'scizor', suffix: 'mega' },
   'scolipite': { species: 'scolipede', suffix: 'mega' },
@@ -103,11 +123,17 @@ export const MEGA_STONE_TO_SPECIES: Record<string, { species: string; suffix: st
  * the Calc tab's Mega toggle to this same Champions-verified roster instead of
  * trusting @smogon/calc's own bundled species dex at face value - that dex
  * models a broader mainline/Legends Z-A roster and, as of @smogon/calc 0.11.0,
- * includes ~15 species (Mewtwo, Rayquaza, Latias/Latios, Salamence, etc.) with
- * no Mega Stone anywhere in Champions' real item pool (see vgcData.ts), plus a
- * spurious second "-Mega-Z" entry for Absol/Garchomp/Lucario duplicating their
- * real Mega's ability data. Confirmed via live diff 2026-08-31 - see TODO.md's
- * "Mega Eligibility Team Builder vs Calc Mismatch" entry.
+ * still includes ~14 species (Mewtwo, Rayquaza, Latias/Latios, etc.) with no
+ * Mega Stone anywhere in Champions' real item pool (see vgcData.ts). Confirmed
+ * via live diff 2026-08-31 - see TODO.md's "Mega Eligibility Team Builder vs
+ * Calc Mismatch" entry. That same diff also flagged @smogon/calc's second
+ * "-Mega-Z" entry for Absol/Garchomp/Lucario as spurious (duplicating the
+ * real Mega's ability data) - Reg M-C (announced after that diff) confirmed
+ * it's real after all, just with different abilities than the ability field
+ * on @smogon/calc's own bundled "-Mega-Z" entries shows; see
+ * config/megaAbilities.ts for the corrected values. Salamence is the one
+ * species that moved out of the "no stone" list above: its mainline Mega was
+ * already in @smogon/calc's dex, just newly legal as of Reg M-C.
  */
 export const CURATED_MEGA_FORM_SLUGS = new Set(
   Object.values(MEGA_STONE_TO_SPECIES).map(entry => `${entry.species}-${entry.suffix}`)

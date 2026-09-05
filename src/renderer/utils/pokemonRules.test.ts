@@ -76,6 +76,22 @@ describe('validateSpeciesLegality', () => {
   it('accepts the non-"-breed" @smogon/calc spelling of the Paldean Tauros forms too', () => {
     expect(validateSpeciesLegality('tauros-paldea-combat', 'REG-MA')).toBe(true);
   });
+
+  it('rejects a Reg M-C-only species under REG-MB', () => {
+    expect(validateSpeciesLegality('rillaboom', 'REG-MB')).toBe(false);
+  });
+
+  it('accepts a Reg M-C-only species under REG-MC (superset of M-B)', () => {
+    expect(validateSpeciesLegality('rillaboom', 'REG-MC')).toBe(true);
+    expect(validateSpeciesLegality('baxcalibur', 'REG-MC')).toBe(true);
+    expect(validateSpeciesLegality('salamence', 'REG-MC')).toBe(true);
+    expect(validateSpeciesLegality('golisopod', 'REG-MC')).toBe(true);
+  });
+
+  it('still accepts a Reg M-A/M-B species under REG-MC', () => {
+    expect(validateSpeciesLegality('gengar', 'REG-MC')).toBe(true);
+    expect(validateSpeciesLegality('gholdengo', 'REG-MC')).toBe(true);
+  });
 });
 
 describe('validateMoveLegality', () => {
@@ -119,8 +135,13 @@ describe('getRegulationLabel / toRegulationId', () => {
     expect(getRegulationLabel('REG-MB')).toBe('Reg M-B');
   });
 
+  it('labels REG-MC as "Reg M-C"', () => {
+    expect(getRegulationLabel('REG-MC')).toBe('Reg M-C');
+  });
+
   it('round-trips Team.format -> RegulationId -> label', () => {
     expect(getRegulationLabel(toRegulationId('Reg M-B'))).toBe('Reg M-B');
+    expect(getRegulationLabel(toRegulationId('Reg M-C'))).toBe('Reg M-C');
   });
 });
 
@@ -131,7 +152,13 @@ describe('getRuleset', () => {
     expect(ma.allowedSpecies.every(s => mb.allowedSpecies.includes(s))).toBe(true);
   });
 
-  it('ALL_REGULATION_IDS lists both regulations in display order', () => {
-    expect(ALL_REGULATION_IDS).toEqual(['REG-MA', 'REG-MB']);
+  it('REG-MC ruleset is a superset of REG-MB (every M-B species included)', () => {
+    const mb = getRuleset('REG-MB');
+    const mc = getRuleset('REG-MC');
+    expect(mb.allowedSpecies.every(s => mc.allowedSpecies.includes(s))).toBe(true);
+  });
+
+  it('ALL_REGULATION_IDS lists every regulation in display order', () => {
+    expect(ALL_REGULATION_IDS).toEqual(['REG-MA', 'REG-MB', 'REG-MC']);
   });
 });

@@ -28,6 +28,10 @@ describe('useSpeciesRoster', () => {
         { name: 'charizard', url: 'https://pokeapi.co/api/v2/pokemon/6/' },
         { name: 'charizard-mega-x', url: 'https://pokeapi.co/api/v2/pokemon/10034/' },
         { name: 'charizard-mega-y', url: 'https://pokeapi.co/api/v2/pokemon/10035/' },
+        // Reg M-C's "Mega Z" form (Absol/Garchomp/Lucario) - not a real
+        // PokeAPI resource yet, but exercises the regex's single-letter
+        // suffix match rather than the old hardcoded -x/-y-only version.
+        { name: 'absol-mega-z', url: 'https://pokeapi.co/api/v2/pokemon/99999/' },
         { name: 'ninetales-alola', url: 'https://pokeapi.co/api/v2/pokemon/10103/' },
       ],
     });

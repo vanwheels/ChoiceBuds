@@ -27,9 +27,10 @@ import { CURATED_MEGA_FORM_SLUGS } from '../config/megaEvolution';
 
 const REGIONAL_SUFFIXES = ['-alola', '-galar', '-hisui', '-paldea'];
 const GENDER_SUFFIX = '-f';
-/** Matches -Mega, -Mega-X/-Y (Charizard/Mewtwo/Raichu) and -Mega-Z (a
- * non-standard third variant @smogon/calc includes for Absol/Garchomp/
- * Lucario) - any single-letter suffix, so it keeps matching if more show up. */
+/** Matches -Mega, -Mega-X/-Y (Charizard/Mewtwo/Raichu) and -Mega-Z (Reg
+ * M-C's third Mega form for Absol/Garchomp/Lucario, see
+ * config/megaEvolution.ts) - any single-letter suffix, so it keeps matching
+ * if more show up. */
 const MEGA_SUFFIX_RE = /-mega(-[a-z])?$/i;
 const GMAX_SUFFIX_RE = /-gmax$/i;
 /** "Aegislash-Both" etc. - a synthetic combined-stats entry the engine uses
