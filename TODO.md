@@ -15,19 +15,6 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
 
 ## In progress / up next
 
-- **[Card Popup Consistency] — Leg 2** *(Last touched: 2026-09-05 · Re-checks:
-  0)*
-  Depends on Leg 1's primitive. Migrate `ItemPickerPanel.tsx`/
-  `AbilityPickerPanel.tsx`/`EditOverlays.tsx`'s move picker off their current
-  "fill the slot" pattern (replaces the item/ability/moves region in-place
-  while picking) onto Leg 1's card-width-locked float instead — same
-  internal `maxHeight` + scroll for long lists, but floating over the card's
-  existing content rather than temporarily replacing it. This intentionally
-  reintroduces the shape of the older floating `ShowdownPopover` pattern a
-  past fix moved away from (see that fix's own comment in
-  `AbilityPickerPanel.tsx`), but with the width discipline that pattern
-  never had, so its original overflow bug doesn't come back.
-
 - **[Card Popup Consistency] — Leg 3** *(Last touched: 2026-09-05 · Re-checks:
   0)*
   Depends on Leg 1's primitive. Replace `StatsColumn.tsx`'s native

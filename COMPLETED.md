@@ -14,6 +14,13 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[Card Popup Consistency] - Leg 2** (2026-09-05) - migrated
+  `ItemPickerPanel.tsx`/`AbilityPickerPanel.tsx`/`EditOverlays.tsx`'s move
+  picker off their "fills the slot in place" pattern onto Leg 1's
+  card-width-locked float (new `FloatingCardPanel.tsx` +
+  `utils/floatingCardPanel.ts`, shared with `Tooltip.tsx`). See commit
+  `80b9303`.
+
 - **[Card Popup Consistency] - Leg 1** (2026-09-05) - built the shared
   floating-popup primitive Legs 2/3 migrate onto: `Tooltip.tsx` now locks its
   width to the hovered trigger's closest `[data-pokemon-card]` ancestor
