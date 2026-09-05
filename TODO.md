@@ -19,27 +19,25 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
   0)*
   Reg M-C announced, drops 2026-09-08 6pm PST — the nearest hard deadline on
   this list. Confirmed so far: three new Z-Megas — Absol (Sharpness),
-  Lucario (Aura Break — new ability, halves incoming damage from
-  contact-tagged moves), Garchomp (Levitate) — plus two new non-Mega
-  additions, Rillaboom and Baxcaliber (no word yet on a Baxcaliber Mega).
-  User is feeding more details as they land; nothing to implement yet — this
-  item exists to hold the info until it's complete enough to scope
-  config-table/species-roster updates against (Mega eligibility lists,
-  `championsAbilityOverrides.ts` for Aura Break, `useInitialSync`'s
-  legal-roster diff, `seasons.ts`'s M-6+ rows once M-C's season dates are
-  known). Purely additive — no known removals this reg.
-
-## Blocked
-
-Items where the whole item (not just a sub-part) is stalled on something
-outside this project — a person, a dependency, or an external decision.
-Exempt from the re-check counter; they move back to "In progress" once
-unblocked.
+  Lucario (Aura Guard — new ability, halves incoming damage from
+  contact-tagged moves; corrects the earlier "Aura Break" placeholder name),
+  Garchomp (Levitate) — plus two new non-Mega additions, Rillaboom and
+  Baxcaliber (no word yet on a Baxcaliber Mega). User is feeding more
+  details as they land; nothing to implement yet — this item exists to hold
+  the info until it's complete enough to scope config-table/species-roster
+  updates against (Mega eligibility lists, `megaAbilities.ts` for Aura
+  Guard, `useInitialSync`'s legal-roster diff, `seasons.ts`'s M-6+ rows once
+  M-C's season dates are known). Purely additive — no known removals this
+  reg. Aura Guard's damage-math side (not just its display text) is now
+  designed under [Calc Auto Ability-Effect Application] — Leg 3 below; this
+  item still owns the roster/config registration itself once M-C ships.
 
 - **[Calc Auto Ability-Effect Application] — Leg 3** *(Last touched:
-  2026-09-01 · Re-checks: 0)*
-  Blocked: waiting on Aura Break's exact mechanic to be confirmed (tracked
-  under "Regulation M-C Prep").
+  2026-09-05 · Re-checks: 0)*
+  Unblocked 2026-09-05: second case confirmed as Mega Lucario Z's Aura Guard
+  (halves damage taken from contact moves) — the design below was waiting on
+  this to have two real cases to design the override shape against, not just
+  Unseen Fist alone.
   Also folds in "Further Calc UI cleanup," the one sub-item of the now-closed
   "Original Roadmap Leftovers" item (see COMPLETED.md) with real overlap
   here. Leg 1 (rescoping) and Leg 2 (crash-on-zero-damage bug fix) both
@@ -49,12 +47,71 @@ unblocked.
   corrects display text, not damage math — its header already flags this gap
   for Unseen Fist's 25%-through-Protect interaction (the one Champions
   ability override with a live damage-math consequence per
-  `docs/investigations/champions-showdown-mod-audit.md`). Aura Break will be
-  a second case once confirmed. Scoping this leg means deciding how a
-  mechanical override reaches `computeSideResults` — most likely via `Move`'s
-  existing `overrides` param, the same pattern `championsMoveOverrides.ts`
-  uses for moves. One case (Unseen Fist) alone isn't enough to design the
-  override shape against with confidence, hence the block on Aura Break.
+  `docs/investigations/champions-showdown-mod-audit.md`).
+
+  Design decided, ready to build next session:
+  - New `config/championsAbilityDamageEffects.ts` (sibling to
+    `championsAbilityOverrides.ts`, which its own header scopes to
+    display-text-only) — `Record<string, { throughProtectMultiplier?:
+    number; contactDamageTakenMultiplier?: number }>` keyed by ability slug:
+    `'unseen-fist': { throughProtectMultiplier: 0.25 }`, `'aura-guard': {
+    contactDamageTakenMultiplier: 0.5 }`.
+  - Applied in `damageCalcEngine.ts::computeSideResults`, after
+    `calculate()` returns and after the existing `isFullyBlocked` check (an
+    immunity/full Protect block still short-circuits to `blockedEntry`
+    first, unchanged):
+    - Attacker-side: `defenderSide.isProtected && move.flags.contact &&`
+      attacker's ability slug is `unseen-fist` → scale the resulting
+      range/possibleDamages by `throughProtectMultiplier`. Mirrors
+      `@smogon/calc`'s own bundled `breaksProtect` condition
+      (`gen789.js`'s `attacker.hasAbility('Unseen Fist') &&
+      move.flags.contact`, confirmed live in `node_modules`) that already
+      lets Unseen Fist through Protect at mainline's un-nerfed 100% — we
+      only need to correct the multiplier, not the pass-through itself.
+    - Defender-side: `move.flags.contact &&` defender's ability slug is
+      `aura-guard` → scale by `contactDamageTakenMultiplier`. Same shape as
+      `@smogon/calc`'s own bundled Fluffy handling (`gen789.js`), just for
+      an ability the bundled Gen 9 data has no idea exists.
+    - Both checks are independent and compose multiplicatively if they were
+      ever both true at once (not a real matchup today — just means the
+      code doesn't need to special-case it away).
+    - `move.flags.contact` read via `gen.moves.get(toID(slot.name))
+      ?.flags?.contact` — same `gen.moves.get` shape `getMultihitRange`
+      already uses.
+  - **Known limitation, accepted rather than solved**: `result.desc()`/
+    `result.kochance()` compute their text from `@smogon/calc`'s own
+    internal (un-scaled) numbers, so once we scale `range`/
+    `possibleDamages` ourselves those two strings would describe the wrong
+    number if left alone. Same fix shape as the existing `blockedEntry()`
+    helper (hand-written `desc`, no call to `result.desc()`): add a sibling
+    `adjustedEntry()` that builds its own short desc from the scaled
+    percent (e.g. "hits through Registeel's Protect for 25% damage (Unseen
+    Fist)" / "Lucario-Mega-Z's Aura Guard halves the damage from Close
+    Combat") and sets `kochanceText: null`. `percent`/`range`/
+    `possibleDamages` stay numerically correct either way since those are
+    already computed by us, not read from calc's strings — only the two
+    calc-native prose strings lose their normal narration for these two
+    abilities.
+  - Scaled values are floored per-element, matching how the real games
+    truncate fractional HP and how calc's own internal reductions round.
+  - Getting "Aura Guard" selectable at all needs no new work:
+    `CalcPokemonState.ability` is a plain `string` (not constrained to
+    `gen.abilities`), and `CalcPokemonPanel.tsx`'s Mega-evolve flow already
+    sets it directly from `megaAbilities.ts::getMegaAbility()` for other
+    Champions-invented, calc-unknown ability strings (Eelevate, Dragonize,
+    Mega Sol, etc.) — Aura Guard reaches `state.ability` the same way once
+    Mega Lucario Z gets a `megaAbilities.ts` entry (that entry is
+    [Regulation M-C Prep]'s job, not this leg's).
+  Next session: implement the above (new config file +
+  `computeSideResults`/`adjustedEntry` changes + a `damageCalcEngine` unit
+  test covering both cases) and commit.
+
+## Blocked
+
+Items where the whole item (not just a sub-part) is stalled on something
+outside this project — a person, a dependency, or an external decision.
+Exempt from the re-check counter; they move back to "In progress" once
+unblocked.
 
 - **[Team Card Grid Layout Re-check] — Leg 1** *(Last touched: 2026-08-31 ·
   Re-checks: 0)*
