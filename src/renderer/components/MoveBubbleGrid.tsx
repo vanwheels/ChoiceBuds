@@ -1,8 +1,8 @@
 /**
  * MoveBubbleGrid.tsx - 2x2 Move Slot Grid
  * Renders the 4 type-themed move bubbles (fixed-width grid columns, wraps
- * long names). Picking a new move swaps in MovePickerPanel in this
- * component's place (see EditOverlays.tsx) rather than this component
+ * long names). Picking a new move floats MovePickerPanel over this grid via
+ * FloatingCardPanel (see EditOverlays.tsx) rather than this component
  * managing its own popover. Extracted from EditOverlays.tsx to keep it
  * under the project's 250-line component cap.
  */

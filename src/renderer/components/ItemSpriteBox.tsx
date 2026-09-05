@@ -2,10 +2,10 @@
  * ItemSpriteBox.tsx - Held Item Sprite Tile
  * Presentational only: renders the equipped item's sprite (with a
  * Fairy-Feather-specific Serebii fallback, then an emoji fallback). Clicking
- * it (edit mode) just calls onToggleMenu - EditOverlays swaps in
- * ItemPickerPanel in this component's place while picking, rather than this
- * component managing its own popover. Extracted from EditOverlays.tsx to
- * keep it under the project's 250-line component cap.
+ * it (edit mode) just calls onToggleMenu - EditOverlays floats
+ * ItemPickerPanel over this component via FloatingCardPanel while picking,
+ * rather than this component managing its own popover. Extracted from
+ * EditOverlays.tsx to keep it under the project's 250-line component cap.
  */
 
 import type { MouseEvent } from 'react';

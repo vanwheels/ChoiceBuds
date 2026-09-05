@@ -1,10 +1,13 @@
 /**
- * AbilityPickerPanel.tsx - In-Slot Ability Picker
- * Same "fills the slot instead of floating a dropdown" pattern as
- * ItemPickerPanel/SpeciesPickerCard: replaces EditOverlays' entire
- * item/ability/move region (not just the Ability pill) while picking, so it
- * always sits solely inside the PokemonCard's own width rather than
- * overflowing past its edges like the old floating ShowdownPopover did.
+ * AbilityPickerPanel.tsx - Ability Picker
+ * Pure content - EditOverlays.tsx wraps this in FloatingCardPanel, which
+ * floats it over the card (card-width-locked, positioned near the Ability
+ * capsule that opened it) rather than this panel replacing anything in
+ * place. This reintroduces the shape of the older floating ShowdownPopover a
+ * past fix moved away from (that fix replaced the whole item/ability/move
+ * region in place instead, specifically to avoid ShowdownPopover's overflow
+ * bug) - FloatingCardPanel's card-width lock is what keeps that bug from
+ * coming back this time.
  */
 
 import { useState } from 'react';

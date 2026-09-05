@@ -1,6 +1,6 @@
 /**
  * EditOverlays.tsx - Orchestrates ItemSpriteBox, AbilityCapsule, and MoveBubbleGrid.
- * Owns the shared selection/tooltip state; each child is presentational only.
+ * Owns the shared selection/tooltip/picker state; each child is presentational only.
  *
  * Hover state is lifted to a single `hoveredKey` + `hoveredRect` (the trigger's
  * own getBoundingClientRect(), captured once on hover-enter) + `hoveredCardRect`
@@ -8,6 +8,14 @@
  * card-width lock - see measureDropdownHeight.ts for the same lookup pattern);
  * one shared <Tooltip> renders `position: fixed` next to whatever was actually
  * hovered.
+ *
+ * The active item/ability/move picker panel works the same way: `activeMenu`
+ * pairs with `activeMenuAnchorRect`/`activeMenuCardRect` (captured once on
+ * open, same rect lookups as the tooltip) plus the existing
+ * `activeMenuMaxHeight`, and renders via FloatingCardPanel - floating over
+ * this component's existing item/ability/move content instead of replacing
+ * it in place (Card Popup Consistency Leg 2 - see TODO.md). Opening a picker
+ * clears any open tooltip so the two floats never stack.
  */
 
 import { useState, useEffect, useId, useMemo } from 'react';
@@ -26,6 +34,7 @@ import AbilityPickerPanel from './AbilityPickerPanel';
 import MovePickerPanel from './MovePickerPanel';
 import Tooltip from './Tooltip';
 import TooltipContent from './TooltipContent';
+import FloatingCardPanel from './FloatingCardPanel';
 
 interface EditOverlaysProps {
   pokemon: ImportedPokemonInfo;
@@ -42,6 +51,8 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
   const moveDragOwnerId = useId();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [activeMenuMaxHeight, setActiveMenuMaxHeight] = useState(400);
+  const [activeMenuAnchorRect, setActiveMenuAnchorRect] = useState<DOMRect | null>(null);
+  const [activeMenuCardRect, setActiveMenuCardRect] = useState<DOMRect | null>(null);
   const [hoveredKey, setHoveredKey] = useState<HoverKey>(null);
   const [hoveredRect, setHoveredRect] = useState<DOMRect | null>(null);
   const [hoveredCardRect, setHoveredCardRect] = useState<DOMRect | null>(null);
@@ -63,15 +74,20 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
   const [abilityData, setAbilityData] = useState<AbilityData | null>(null);
   const [moveDataSlots, setMoveDataSlots] = useState<Array<MoveData | null>>([null, null, null, null]);
 
-  // Caps the dropdown/panel at whatever room is left between the trigger and
-  // the bottom of this PokemonCard, not a fixed height - see measureDropdownHeight.ts
+  // Caps the panel at whatever room is left between the trigger and the
+  // bottom of this PokemonCard, not a fixed height - see
+  // measureDropdownHeight.ts. anchorRect/cardRect are captured the same way
+  // as the tooltip's hoverEnter below, for FloatingCardPanel's card-width lock.
   const toggleMenu = (menuName: string, e: MouseEvent<HTMLElement>) => {
     if (activeMenu === menuName) {
       setActiveMenu(null);
       return;
     }
     setActiveMenuMaxHeight(measureDropdownMaxHeight(e.currentTarget));
+    setActiveMenuAnchorRect(e.currentTarget.getBoundingClientRect());
+    setActiveMenuCardRect(e.currentTarget.closest<HTMLElement>('[data-pokemon-card]')?.getBoundingClientRect() ?? null);
     setActiveMenu(menuName);
+    setHoveredKey(null); // don't let the tooltip float over the same content as the picker
   };
   const closeMenu = () => setActiveMenu(null);
 
@@ -234,37 +250,9 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
     return () => { cancelled = true; };
   }, [selectedMoves, getMoveData]);
 
-  // Picking an item/ability/move replaces this whole region in place (not
-  // the card's top - that's species swap's job), so the picker always sits
-  // solely inside the PokemonCard's own width instead of floating past it.
-  if (activeMenu === 'item') {
-    return <ItemPickerPanel items={items} maxHeight={activeMenuMaxHeight} resolveSprite={resolveSprite} onSelect={handleItemClick} onClose={closeMenu} />;
-  }
-  if (activeMenu === 'ability') {
-    return (
-      <AbilityPickerPanel
-        abilities={sortedLegalAbilities}
-        usagePercentByName={abilityPercentByName}
-        maxHeight={activeMenuMaxHeight}
-        onSelect={handleAbilityClick}
-        onClose={closeMenu}
-      />
-    );
-  }
-  if (activeMenu?.startsWith('move')) {
-    const moveIndex = Number(activeMenu.slice(4));
-    return (
-      <MovePickerPanel
-        moveIndex={moveIndex}
-        moves={sortedLegalMoves}
-        usagePercentByName={movePercentByName}
-        rulesetId={rulesetId}
-        maxHeight={activeMenuMaxHeight}
-        onSelect={(move) => handleMoveClick(moveIndex, move)}
-        onClose={closeMenu}
-      />
-    );
-  }
+  // Parsed once for the floating move picker below rather than re-parsing
+  // activeMenu's "move{index}" suffix in both moveIndex and onSelect.
+  const activeMoveIndex = activeMenu?.startsWith('move') ? Number(activeMenu.slice(4)) : null;
 
   return (
     <div className="flex flex-col items-center gap-2.5">
@@ -303,6 +291,37 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
         onHoverLeave={hoverLeave}
         onReorderMoves={handleMoveReorder}
       />
+
+      {/* Active item/ability/move picker, floated over this region rather than replacing it - see FloatingCardPanel.tsx */}
+      {activeMenu === 'item' && activeMenuAnchorRect && (
+        <FloatingCardPanel anchorRect={activeMenuAnchorRect} cardRect={activeMenuCardRect}>
+          <ItemPickerPanel items={items} maxHeight={activeMenuMaxHeight} resolveSprite={resolveSprite} onSelect={handleItemClick} onClose={closeMenu} />
+        </FloatingCardPanel>
+      )}
+      {activeMenu === 'ability' && activeMenuAnchorRect && (
+        <FloatingCardPanel anchorRect={activeMenuAnchorRect} cardRect={activeMenuCardRect}>
+          <AbilityPickerPanel
+            abilities={sortedLegalAbilities}
+            usagePercentByName={abilityPercentByName}
+            maxHeight={activeMenuMaxHeight}
+            onSelect={handleAbilityClick}
+            onClose={closeMenu}
+          />
+        </FloatingCardPanel>
+      )}
+      {activeMoveIndex !== null && activeMenuAnchorRect && (
+        <FloatingCardPanel anchorRect={activeMenuAnchorRect} cardRect={activeMenuCardRect}>
+          <MovePickerPanel
+            moveIndex={activeMoveIndex}
+            moves={sortedLegalMoves}
+            usagePercentByName={movePercentByName}
+            rulesetId={rulesetId}
+            maxHeight={activeMenuMaxHeight}
+            onSelect={(move) => handleMoveClick(activeMoveIndex, move)}
+            onClose={closeMenu}
+          />
+        </FloatingCardPanel>
+      )}
 
       {/* Single shared tooltip, fixed-positioned next to whatever was actually hovered */}
       {hoveredKey && hoveredRect && (

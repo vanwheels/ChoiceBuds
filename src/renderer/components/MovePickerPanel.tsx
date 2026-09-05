@@ -1,11 +1,10 @@
 /**
- * MovePickerPanel.tsx - In-Slot Move Picker
- * Same "fills the slot instead of floating a dropdown" pattern as
- * ItemPickerPanel/SpeciesPickerCard/AbilityPickerPanel - replaces
- * EditOverlays' entire item/ability/move region while picking a move, so it
- * always sits solely inside the PokemonCard's own width. Shows which move
- * slot is being edited since the other 3 move bubbles are hidden while this
- * is open.
+ * MovePickerPanel.tsx - Move Picker
+ * Pure content - EditOverlays.tsx wraps this in FloatingCardPanel, which
+ * floats it over the card (card-width-locked, positioned near the move
+ * bubble that opened it) rather than this panel replacing anything in
+ * place. Shows which move slot is being edited since the picker floats over
+ * (and can obscure) the other 3 move bubbles while open.
  */
 
 import { useState } from 'react';

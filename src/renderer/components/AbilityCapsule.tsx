@@ -1,10 +1,10 @@
 /**
  * AbilityCapsule.tsx - Held Ability Pill
  * Presentational only: renders the equipped ability name in a capsule.
- * Picking a new one swaps in AbilityPickerPanel in this component's place
- * (see EditOverlays.tsx) rather than this component managing its own
- * popover. Extracted from EditOverlays.tsx to keep it under the project's
- * 250-line component cap.
+ * Picking a new one floats AbilityPickerPanel over this component via
+ * FloatingCardPanel (see EditOverlays.tsx) rather than this component
+ * managing its own popover. Extracted from EditOverlays.tsx to keep it
+ * under the project's 250-line component cap.
  */
 
 import type { MouseEvent } from 'react';

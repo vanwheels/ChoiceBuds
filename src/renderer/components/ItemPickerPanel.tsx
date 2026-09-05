@@ -1,10 +1,9 @@
 /**
- * ItemPickerPanel.tsx - In-Slot Item Picker
- * Same "fills the slot instead of floating a dropdown" idea as
- * SpeciesPickerCard, but scoped to just the Item box's own position in
- * EditOverlays rather than the whole card - the rest of the card (nickname,
- * sprite, type badges, ability/moves, EVs, footer) stays exactly where it is.
- * Each row shows the item's sprite next to its name and description.
+ * ItemPickerPanel.tsx - Item Picker
+ * Pure content - EditOverlays.tsx wraps this in FloatingCardPanel, which
+ * floats it over the card (card-width-locked, positioned near the Item box
+ * that opened it) rather than this panel replacing anything in place. Each
+ * row shows the item's sprite next to its name and description.
  */
 
 import { useState } from 'react';
