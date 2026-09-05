@@ -29,7 +29,7 @@ in:
   selectable instead of disappearing") to confirm the comment reflected the
   real intent and the code/test didn't. Fixed by reading the raw cache entry
   for the `items` list instead of going through `getCachedItem`. See commit
-  `<hash>`.
+  `4d0e44a`.
 
 - **[Regulation M-C Prep] - Leg 1** (2026-09-05) - hand-curated Reg M-C's
   roster ahead of its 2026-09-08 release: 4 new species (Rillaboom,
