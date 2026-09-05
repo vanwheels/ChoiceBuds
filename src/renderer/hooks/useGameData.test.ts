@@ -206,13 +206,18 @@ describe('useGameData', () => {
       expect(fetchItemData).not.toHaveBeenCalled();
     });
 
-    it('synthesizes a placeholder for every VGC-legal item PokeAPI has no data for, excluding them from the live items list', async () => {
+    it('synthesizes a placeholder for every VGC-legal item PokeAPI has no data for, keeping them selectable in the live items list', async () => {
       const { result } = renderHook(() => useGameData());
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
       // fetchItemData is unmocked here, so every call resolves undefined - the "PokeAPI doesn't have this item" case
       await waitFor(() => expect(Object.keys(result.current.cache?.items ?? {}).length).toBe(VGC_ITEMS.length));
 
-      expect(result.current.items).toEqual([]);
+      // Every placeholder has an empty spriteUrl (getCachedItem's forced-miss
+      // marker, so a later launch keeps retrying it against PokeAPI) but
+      // still belongs in the picker's item list - see the background-load
+      // effect's "still shows up and is selectable" comment.
+      expect(result.current.items.length).toBe(VGC_ITEMS.length);
+      expect(result.current.items.every(item => item.spriteUrl === '')).toBe(true);
     });
   });
 

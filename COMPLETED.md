@@ -14,6 +14,23 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[Item Picker Sprite-less Item Bug] - Leg 1** (2026-09-05) - the Teambuilder's
+  item search was silently dropping any item with no PokeAPI sprite,
+  surfaced by testing Reg M-C's new Mega Stones (PokeAPI has pre-release
+  entries for them already, but with `sprites.default: null`). `useGameData`'s
+  `items` list was built via `getCachedItem`, which deliberately treats a
+  spriteUrl-less cache entry as a miss so it keeps retrying against PokeAPI -
+  but that meant the placeholder entries the background-load effect
+  synthesizes for exactly this case (see that effect's own "still shows up
+  and is selectable" comment) were excluded from the list they were meant to
+  populate, not just from individual lookups. A prior test
+  (`useGameData.test.ts`) had encoded the exclusion as intended behavior;
+  git-blame traced the original commit's own message ("so those items remain
+  selectable instead of disappearing") to confirm the comment reflected the
+  real intent and the code/test didn't. Fixed by reading the raw cache entry
+  for the `items` list instead of going through `getCachedItem`. See commit
+  `<hash>`.
+
 - **[Regulation M-C Prep] - Leg 1** (2026-09-05) - hand-curated Reg M-C's
   roster ahead of its 2026-09-08 release: 4 new species (Rillaboom,
   Baxcalibur, Salamence, Golisopod), 6 new Mega Stones (3 ordinary Megas for

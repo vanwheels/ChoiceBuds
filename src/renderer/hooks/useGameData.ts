@@ -270,14 +270,23 @@ export function useGameData(): UseGameDataReturn {
 
   /**
    * The true global items collection: every VGC-legal item (config/vgcData.ts),
-   * enriched with live PokeAPI metadata as each entry is fetched and cached
+   * enriched with live PokeAPI metadata as each entry is fetched and cached.
+   *
+   * Reads the raw cache entry directly rather than through getCachedItem -
+   * that helper deliberately treats a spriteUrl-less entry (including the
+   * synthesized placeholders the background-load effect below writes for
+   * items PokeAPI has no sprite for yet) as a miss, so it keeps retrying
+   * them. Building this list through getCachedItem meant every placeholder
+   * item silently never appeared in the picker at all, contradicting that
+   * effect's own "still shows up and is selectable, just without a sprite"
+   * comment - any cached entry, placeholder or not, belongs in this list.
    */
   const items = useMemo((): ItemData[] => {
     if (!cache) return [];
     return VGC_ITEMS
-      .map(itemName => getCachedItem(itemName))
+      .map(itemName => readCacheEntry(cache.items, normalizeNameForAPI(itemName)))
       .filter((item): item is ItemData => item !== null);
-  }, [cache, getCachedItem]);
+  }, [cache]);
 
   /**
    * Background-load every VGC-legal item once the cache is ready, so the
