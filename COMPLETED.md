@@ -14,6 +14,15 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[Calc Auto Ability-Effect Application] - Leg 3** (2026-09-05) - added
+  `config/championsAbilityDamageEffects.ts` and applied it in
+  `damageCalcEngine.ts::computeSideResults` so the calc engine now corrects
+  Champions' actual damage math for the two live cases (Unseen Fist's
+  25%-through-Protect nerf, Mega Lucario Z's Aura Guard halving contact
+  damage taken), not just their display text. Closes out this item - Legs 1
+  and 2 (rescoping, crash-on-zero-damage fix) shipped earlier. See commit
+  `8f03c83`.
+
 - **[File Size Cap Cleanup] - Leg 3** (2026-09-01) - split `useDamageCalc.ts`
   (604 lines) into `utils/damageCalcEngine.ts` (the pure calc engine - state
   factories, boost/stat-multiplier math, `buildPokemon`/`computeSideResults`)
