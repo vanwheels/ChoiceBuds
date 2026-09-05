@@ -231,11 +231,28 @@ const GLOBALLY_REMOVED_MOVES = [
   'zing-zap',
 ];
 
-// Both maps are empty as of the 2026-09-01 prune - see the header comment's
+// Both maps were empty as of the 2026-09-01 prune - see the header comment's
 // PRUNE section for why. Populate per-species here again if a future
 // regulation (M-C's new species are the likely next case) adds a species
 // PokeAPI hasn't yet back-filled real "champions"-tagged move data for.
-export const CHAMPIONS_MOVEPOOL_ADDITIONS: Record<string, string[]> = {};
+//
+// baxcalibur ADDED 2026-09-05 (Reg M-C roster addition, pre-release - see
+// TODO.md's "Regulation M-C Prep" Leg 2): PokeAPI has zero "champions"-tagged
+// moves for baxcalibur (confirmed live), so `applyMovepoolChangesIfNeeded`
+// falls into this file's fallback path and applies `GLOBALLY_REMOVED_MOVES`
+// wholesale - which includes 'glaive-rush', Baxcalibur's own signature move
+// (confirmed live via Showdown's `data/mods/champions/moves.ts`: `glaiverush`
+// carries `isNonstandard: "Past"`, same as most of that globally-removed
+// list). Per this file's own header (Leg 4a's Shell Trap/Turtonator
+// counter-example), a "Past" flag means "not TM/Tutor-teachable elsewhere,"
+// not "absent from the game" - a species keeps its own signature move
+// regardless. Re-check when Leg 2 resolves: once PokeAPI back-fills
+// baxcalibur's champions tag, `hasChampionsMoveData` flips true and this
+// entry stops being consulted (same as the 22 Reg M-B species already did) -
+// safe to leave in place rather than remove at that point.
+export const CHAMPIONS_MOVEPOOL_ADDITIONS: Record<string, string[]> = {
+  baxcalibur: ['glaive-rush'],
+};
 
 export const CHAMPIONS_MOVEPOOL_REMOVALS: Record<string, string[]> = {};
 

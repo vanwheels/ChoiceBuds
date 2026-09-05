@@ -1,16 +1,14 @@
 /**
  * Test suite for the Champions movepool corrections applied on top of a
- * species' PokeAPI all-time movepool (see file header - as of the 2026-09-01
- * prune, `CHAMPIONS_MOVEPOOL_ADDITIONS`/`CHAMPIONS_MOVEPOOL_REMOVALS` are
- * empty; no species in the current legal roster reaches this table at all).
- * Still tests the pure `applyChampionsMovepoolChanges` function directly,
- * independent of that gating - `GLOBALLY_REMOVED_MOVES` stays real data
- * (covers the Leg 4b findings: the game-wide removal list and the moves it
- * strips that used to be carved out for Floette, see
+ * species' PokeAPI all-time movepool (see file header). Tests the pure
+ * `applyChampionsMovepoolChanges` function directly, independent of the
+ * `hasChampionsMoveData` gating in useGameData.ts - `GLOBALLY_REMOVED_MOVES`
+ * stays real data (covers the Leg 4b findings: the game-wide removal list
+ * and the moves it strips that used to be carved out for Floette, see
  * docs/investigations/champions-showdown-mod-audit.md's Leg 4b section),
- * while the per-species addition/removal mechanism is exercised generically
- * against the two exported maps directly, since they no longer hold any
- * real species data to test against.
+ * and `CHAMPIONS_MOVEPOOL_ADDITIONS` now holds one real entry (baxcalibur,
+ * added 2026-09-05 - see file header) alongside the generic per-species
+ * mechanism test exercised against a throwaway 'test-species' key.
  */
 
 import { afterEach, describe, expect, it } from 'vitest';
@@ -38,7 +36,12 @@ describe('applyChampionsMovepoolChanges', () => {
     expect(result).toEqual(['moonblast']);
   });
 
-  describe('per-species addition/removal mechanism (both maps are empty until a future regulation needs them)', () => {
+  it("adds back Baxcalibur's own signature move despite it being globally removed", () => {
+    const result = applyChampionsMovepoolChanges('baxcalibur', ['glaive-rush', 'icicle-spear', 'dragon-dance']);
+    expect(result).toEqual(expect.arrayContaining(['glaive-rush', 'icicle-spear', 'dragon-dance']));
+  });
+
+  describe('per-species addition/removal mechanism (generic cases beyond the real baxcalibur entry above)', () => {
     afterEach(() => {
       delete CHAMPIONS_MOVEPOOL_ADDITIONS['test-species'];
       delete CHAMPIONS_MOVEPOOL_REMOVALS['test-species'];
