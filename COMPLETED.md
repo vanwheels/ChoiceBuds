@@ -14,6 +14,12 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[Card Popup Consistency] - Leg 1** (2026-09-05) - built the shared
+  floating-popup primitive Legs 2/3 migrate onto: `Tooltip.tsx` now locks its
+  width to the hovered trigger's closest `[data-pokemon-card]` ancestor
+  instead of centering a fixed 256px box on the cursor, so it can no longer
+  spill past a card's left/right edge. See commit `f081584`.
+
 - **[Item Picker Sprite-less Item Bug] - Leg 1** (2026-09-05) - the Teambuilder's
   item search was silently dropping any item with no PokeAPI sprite,
   surfaced by testing Reg M-C's new Mega Stones (PokeAPI has pre-release
