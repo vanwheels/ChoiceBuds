@@ -3,8 +3,11 @@
  * Owns the shared selection/tooltip state; each child is presentational only.
  *
  * Hover state is lifted to a single `hoveredKey` + `hoveredRect` (the trigger's
- * own getBoundingClientRect(), captured once on hover-enter); one shared
- * <Tooltip> renders `position: fixed` next to whatever was actually hovered.
+ * own getBoundingClientRect(), captured once on hover-enter) + `hoveredCardRect`
+ * (the same trigger's closest `[data-pokemon-card]` ancestor, for Tooltip's
+ * card-width lock - see measureDropdownHeight.ts for the same lookup pattern);
+ * one shared <Tooltip> renders `position: fixed` next to whatever was actually
+ * hovered.
  */
 
 import { useState, useEffect, useId, useMemo } from 'react';
@@ -41,6 +44,7 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
   const [activeMenuMaxHeight, setActiveMenuMaxHeight] = useState(400);
   const [hoveredKey, setHoveredKey] = useState<HoverKey>(null);
   const [hoveredRect, setHoveredRect] = useState<DOMRect | null>(null);
+  const [hoveredCardRect, setHoveredCardRect] = useState<DOMRect | null>(null);
   const [selectedItem, setSelectedItem] = useState<string>(pokemon.showdownData.item || '');
   const [selectedAbility, setSelectedAbility] = useState<string>(pokemon.showdownData.ability || '');
   const [selectedMoves, setSelectedMoves] = useState<string[]>([
@@ -71,9 +75,10 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
   };
   const closeMenu = () => setActiveMenu(null);
 
-  const hoverEnter = (key: HoverKey, rect: DOMRect) => {
+  const hoverEnter = (key: HoverKey, triggerEl: HTMLElement) => {
     setHoveredKey(key);
-    setHoveredRect(rect);
+    setHoveredRect(triggerEl.getBoundingClientRect());
+    setHoveredCardRect(triggerEl.closest<HTMLElement>('[data-pokemon-card]')?.getBoundingClientRect() ?? null);
   };
   const hoverLeave = (key: HoverKey) => setHoveredKey(prev => (prev === key ? null : prev));
 
@@ -273,7 +278,7 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
         resolveSprite={resolveSprite}
         onSpriteError={() => setItemSpriteFailed(true)}
         onFallbackSpriteError={() => setItemFallbackSpriteFailed(true)}
-        onHoverEnter={(e) => hoverEnter('item', e.currentTarget.getBoundingClientRect())}
+        onHoverEnter={(e) => hoverEnter('item', e.currentTarget)}
         onHoverLeave={() => hoverLeave('item')}
         onToggleMenu={(e) => toggleMenu('item', e)}
       />
@@ -282,7 +287,7 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
       <AbilityCapsule
         selectedAbility={selectedAbility}
         isEditing={isEditing}
-        onHoverEnter={(e) => hoverEnter('ability', e.currentTarget.getBoundingClientRect())}
+        onHoverEnter={(e) => hoverEnter('ability', e.currentTarget)}
         onHoverLeave={() => hoverLeave('ability')}
         onToggleMenu={(e) => toggleMenu('ability', e)}
       />
@@ -314,6 +319,7 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
             />
           }
           anchorRect={hoveredRect}
+          cardRect={hoveredCardRect}
         />
       )}
     </div>

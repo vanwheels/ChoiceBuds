@@ -23,7 +23,7 @@ interface MoveBubbleGridProps {
   isEditing: boolean;
   ownerId: string;
   onToggleMenu: (key: string, e: MouseEvent<HTMLDivElement>) => void;
-  onHoverEnter: (key: HoverKey, rect: DOMRect) => void;
+  onHoverEnter: (key: HoverKey, triggerEl: HTMLElement) => void;
   onHoverLeave: (key: HoverKey) => void;
   onReorderMoves: (fromIndex: number, toIndex: number) => void;
 }
@@ -101,7 +101,7 @@ export default function MoveBubbleGrid({
             onDragOver={isEditing ? handleDragOver(index) : undefined}
             onDragLeave={isEditing ? handleDragLeave : undefined}
             onDrop={isEditing ? handleDrop(index) : undefined}
-            onMouseEnter={(e) => onHoverEnter(key, e.currentTarget.getBoundingClientRect())}
+            onMouseEnter={(e) => onHoverEnter(key, e.currentTarget)}
             onMouseLeave={() => onHoverLeave(key)}
             onClick={isEditing ? (e) => onToggleMenu(key, e) : undefined}
             className={`w-full min-h-[2.75rem] flex items-center justify-center text-center whitespace-normal break-words p-1 rounded-xl text-xs font-bold transition-colors ${theme.bg} ${theme.text} ${isEditing ? 'cursor-grab hover:opacity-80' : ''} ${dragOverIndex === index ? 'ring-2 ring-accent-gold' : ''}`}
