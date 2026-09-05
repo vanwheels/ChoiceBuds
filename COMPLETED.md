@@ -14,6 +14,25 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[Regulation M-C Prep] - Leg 1** (2026-09-05) - hand-curated Reg M-C's
+  roster ahead of its 2026-09-08 release: 4 new species (Rillaboom,
+  Baxcalibur, Salamence, Golisopod), 6 new Mega Stones (3 ordinary Megas for
+  the first 3, plus a confirmed brand-new second "Mega Z" form for
+  Absol/Garchomp/Lucario - Absolite Z/Garchompite Z/Lucarionite Z), and
+  widened the app's `RegulationId`/`Team.format`/`AppSettings.
+  defaultRegulation` unions (11 call sites) to a 3rd regulation end to end -
+  Import modal, Settings/Teams-page pickers, and RegulationBadge already
+  looped over `ALL_REGULATION_IDS` so no UI rework was needed beyond that.
+  Also corrected `megaEvolution.ts`/`calcFormes.ts`'s prior "spurious
+  -Mega-Z duplicate" comments (from the 2026-08-31 Mega Eligibility audit,
+  before Reg M-C existed) now that it's real, and fixed a
+  `useSpeciesRoster.ts` Mega-form-filter regex that only matched -x/-y
+  suffixes. Movepools for the 4 new species aren't hand-curated - PokeAPI's
+  existing Gen 9 SV learnset pipeline covers them automatically once legal;
+  Legends Z-A-exclusive move/ability accuracy and official-source
+  re-verification are deferred to Leg 2 (see TODO.md's Blocked section) once
+  Reg M-C actually ships. See commit `6a46613`.
+
 - **[Calc Auto Ability-Effect Application] - Leg 3** (2026-09-05) - added
   `config/championsAbilityDamageEffects.ts` and applied it in
   `damageCalcEngine.ts::computeSideResults` so the calc engine now corrects

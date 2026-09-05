@@ -15,22 +15,7 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
 
 ## In progress / up next
 
-- **[Regulation M-C Prep] — Leg 1** *(Last touched: 2026-08-31 · Re-checks:
-  0)*
-  Reg M-C announced, drops 2026-09-08 6pm PST — the nearest hard deadline on
-  this list. Confirmed so far: three new Z-Megas — Absol (Sharpness),
-  Lucario (Aura Guard — new ability, halves incoming damage from
-  contact-tagged moves; corrects the earlier "Aura Break" placeholder name),
-  Garchomp (Levitate) — plus two new non-Mega additions, Rillaboom and
-  Baxcaliber (no word yet on a Baxcaliber Mega). User is feeding more
-  details as they land; nothing to implement yet — this item exists to hold
-  the info until it's complete enough to scope config-table/species-roster
-  updates against (Mega eligibility lists, `megaAbilities.ts` for Aura
-  Guard, `useInitialSync`'s legal-roster diff, `seasons.ts`'s M-6+ rows once
-  M-C's season dates are known). Purely additive — no known removals this
-  reg. Aura Guard's damage-math side (not just its display text) is now
-  designed under [Calc Auto Ability-Effect Application] — Leg 3 below; this
-  item still owns the roster/config registration itself once M-C ships.
+*(nothing in progress right now)*
 
 ## Blocked
 
@@ -38,6 +23,26 @@ Items where the whole item (not just a sub-part) is stalled on something
 outside this project — a person, a dependency, or an external decision.
 Exempt from the re-check counter; they move back to "In progress" once
 unblocked.
+
+- **[Regulation M-C Prep] — Leg 2** *(Last touched: 2026-09-05 · Re-checks:
+  0)*
+  Blocked: waiting on Reg M-C's actual 2026-09-08 6pm PST release and
+  Serebii publishing its regulation/items pages — Leg 1 (roster/mega-stone/
+  regulation-selector registration, see COMPLETED.md) was hand-curated
+  ahead of release with no official source to check against yet.
+  Once live: re-verify `utils/pokemonRules.ts`'s `REG_MC_ADDED_SPECIES` and
+  `config/vgcData.ts`'s 6 new Mega Stones against Serebii's own Reg M-C
+  pages (replacing the pre-release provenance notes in both files' headers
+  with real citations, same as M-A/M-B); spot-check the 3 new ordinary Mega
+  abilities (Baxcalibur/Golisopod/Salamence, currently sourced only from
+  `@smogon/calc`'s bundled data with no second source) and the 3 Mega Z
+  abilities (Absol/Garchomp/Lucario, user-confirmed but not yet
+  cross-checked against a published source) in `config/megaAbilities.ts`;
+  check whether Rillaboom/Baxcalibur/Salamence/Golisopod gained any Legends
+  Z-A-exclusive moves PokeAPI's Gen 9 SV learnset pipeline wouldn't surface
+  on its own (Leg 1 deliberately didn't chase this pre-release - see its
+  COMPLETED.md entry); add `seasons.ts`'s M-6+ rows once M-C's season dates
+  are known.
 
 - **[Team Card Grid Layout Re-check] — Leg 1** *(Last touched: 2026-08-31 ·
   Re-checks: 0)*
