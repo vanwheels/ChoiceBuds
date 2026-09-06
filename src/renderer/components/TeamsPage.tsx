@@ -133,16 +133,22 @@ export default function TeamsPage({
                 1360px, capped at 2 no matter how wide the window gets
                 (explicit user call, see the Window-sizing entry in TODO.md) -
                 no 3rd-column tier for ultrawide monitors. 1360px (not the
-                mockup's own placeholder ~1160px) is picked from the collapsed
-                header's actual hard-minimum content width: the identity
+                mockup's own placeholder ~1160px) was picked from the collapsed
+                header's hard-minimum content width at the time: the identity
                 column (max-w-[190px]) + the coverflow's fixed 240px box
                 (flex-shrink:0, never compresses) + the controls pill (~124px)
-                + header padding add up to a real ~574px floor per card
-                (measured live) that a too-low breakpoint leaves no room for -
-                confirmed live at 1160px each column lands at ~570px, clipping
-                the coverflow/controls together. 1360px keeps a comfortable
-                ~50px+ buffer above that floor once 2 columns activate. Note
-                this halves the width available to each TeamCard's own Pokemon
+                + header padding added up to a real ~574px floor per card
+                (measured live) that a too-low breakpoint left no room for -
+                confirmed live at 1160px each column landed at ~570px, clipping
+                the coverflow/controls together. 1360px kept a comfortable
+                ~50px+ buffer above that floor. STALE as of Team Header Sprite
+                Strip leg 1 (see TODO.md): the coverflow was reverted to a flat
+                strip whose own shrink-0 content is ~376px wide (6 * 56px
+                sprites + 5 * 8px gaps), well past the 240px this floor was
+                measured against - the ~574px floor and the 1360px breakpoint
+                itself have NOT been re-verified live against that new width
+                and may need retuning. Note this halves the width available to
+                each TeamCard's own Pokemon
                 grid once 2 columns activate - TeamCard.tsx's 3-vs-6-column
                 snap (see its own comment) is tuned against realistic
                 single-column widths, not this 2-column state, so 2 teams

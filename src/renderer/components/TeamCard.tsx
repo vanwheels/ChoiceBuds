@@ -11,11 +11,11 @@ import type { UseSettingsReturn } from '../hooks/useSettings';
 import { useRosterActions } from '../hooks/useRosterActions';
 import { toRegulationId } from '../utils/pokemonRules';
 import { getRegulationTheme } from '../config/pokemonTheme';
+import { getPixelSpriteUrl } from '../utils/spriteUrl';
 import { TEAMS_LIST_DRAG_TYPE, type TeamsListDragPayload } from '../utils/teamsListDragTypes';
 import { CARD_EXPAND_ENTER_TRANSITION, CARD_EXPAND_EXIT_TRANSITION, DRAG_REORDER_TRANSITION } from '../config/motion';
 import PokemonCard from './PokemonCard';
 import SpeciesPickerCard from './SpeciesPickerCard';
-import TeamCoverflow from './TeamCoverflow';
 import TeamOverflowMenu from './TeamOverflowMenu';
 import RegulationBadge from './RegulationBadge';
 import ExportTeamModal from './ExportTeamModal';
@@ -229,12 +229,37 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
           ) : null}
         </div>
 
-        {/* 3D coverflow (design-approved 2026-08-29, see TODO.md) - replaces the
-            old flat mini-sprite-strip; a fixed 240x84px box regardless of roster
-            size, centered in the remaining space between the identity column and
-            the controls pill. */}
+        {/* Mini sprite strip (Team Header Sprite Strip leg 1, see TODO.md) -
+            flat, non-animated row of species sprites, reverted from the 3D
+            coverflow (design-approved 2026-08-29, see TeamCoverflow.tsx's
+            history): the perspective/scaling on off-center sprites actively
+            hurt the quick species recognition this strip exists for. Always
+            reserves 6 slots (empty ones padded) so the strip's width - and
+            therefore its centered position between the identity column and
+            the controls pill - stays fixed regardless of roster size, same
+            as the original pre-coverflow strip. Sprites sized up from that
+            strip's 32px to 56px since the 2-column layout's taller header
+            (min-h-[116px] above, grown to fit the coverflow) affords more
+            room than the strip needs at its old size. Note this strip's
+            content width (6 * 56px + 5 * 8px gaps = 376px) is well past the
+            coverflow's old fixed 240px box that TeamsPage.tsx's 2-column
+            breakpoint comment measured its floor against - that breakpoint
+            hasn't been re-verified live against this new width. */}
         <div className="flex-1 flex items-center justify-center">
-          <TeamCoverflow pokemon={team.pokemon} resolveSprite={spriteCacheState.resolveSprite} />
+          <div className="flex flex-row items-center gap-2">
+            {Array.from({ length: 6 }, (_, idx) => team.pokemon?.[idx]).map((p, idx) => (
+              p ? (
+                <img
+                  key={idx}
+                  src={spriteCacheState.resolveSprite(getPixelSpriteUrl(p.pokedexNumber, p.showdownData.species, p.showdownData.gender || 'M', p.showdownData.shiny))}
+                  alt={p.showdownData.species}
+                  className="w-14 h-14 object-contain [image-rendering:pixelated] shrink-0"
+                />
+              ) : (
+                <div key={idx} className="w-14 h-14 shrink-0" />
+              )
+            ))}
+          </div>
         </div>
 
         {/* Pill-shaped controls cluster (header/controls rework leg 2, see
