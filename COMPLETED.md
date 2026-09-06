@@ -14,6 +14,20 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[Always-On Editing] - Leg 2** (2026-09-05) - gave the structural actions
+  Leg 1 left without a trigger their own always-visible affordances: a
+  dedicated grip-handle button (team header's controls pill, each
+  PokemonCard's top-left icon) is now the sole drag source for team-level and
+  Pokémon-slot reorder, instead of the whole header/card - the ambiguous
+  whole-card-draggable version Leg 1's commit message mentions reverting.
+  Delete-slot and the swap-picker click are unconditionally on now; the
+  Add-Pokémon dashed-box button is back, gated on roster room (<6) instead of
+  edit-mode. Move-slot drag-to-reorder inside `MoveBubbleGrid.tsx` stays
+  deliberately unwired - a move bubble is both the click target and the
+  would-be drag source, so it needs its own design rather than this leg's
+  pattern; logged as a new backlog item (Move-Slot Drag Handle) in
+  `TODO.md`. See commit `cb0cc98`.
+
 - **[Always-On Editing] - Leg 1** (2026-09-05) - removed the
   `isEditingTeam`/`isEditing` edit-mode toggle (and TeamCard's Edit button)
   for field-level edits: team name/author/notes and per-Pokemon

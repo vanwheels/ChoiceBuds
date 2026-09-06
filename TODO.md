@@ -15,17 +15,7 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
 
 ## In progress / up next
 
-- **[Always-On Editing] — Leg 2** *(Last touched: 2026-09-05 · Re-checks:
-  0)*
-  Leg 1 done (see COMPLETED.md) - the `isEditingTeam`/`isEditing` mode toggle
-  is gone entirely. Structural actions it used to gate - team-level and
-  Pokémon-slot-level drag-to-reorder, delete-slot, the swap picker, and the
-  Add-Pokémon button - are left with no trigger at all in the meantime (see
-  `TeamCard.tsx`'s `canReorder` comment and `PokemonCard.tsx`'s `isEditing`
-  prop comment) and need their own lightweight always-visible affordance
-  (e.g. a drag-handle icon). An ungated always-draggable card/header was
-  already tried once and reverted for making every click/expand ambiguous
-  with a drag-start - this leg needs to avoid reintroducing that.
+Nothing currently in progress - see Backlog below for what's next up.
 
 ## Blocked
 
@@ -108,6 +98,18 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Backlog / ideas (not yet scoped, highest-to-lowest priority)
+
+- **[Move-Slot Drag Handle] — Leg 1** *(Last touched: 2026-09-05 · Re-checks:
+  0)*
+  Surfaced by Always-On Editing Leg 2 (see COMPLETED.md): that leg gave
+  team-level reorder, Pokémon-slot reorder, delete-slot, the swap picker, and
+  the Add-Pokémon button their own always-visible triggers, but deliberately
+  left `MoveBubbleGrid.tsx`'s move-slot drag-to-reorder disabled
+  (`isEditing` still defaults false there, unwired). Unlike those, a move
+  bubble is both the click target that opens its move picker AND the thing
+  that would need to become a drag source - reusing Leg 2's separate
+  grip-handle pattern isn't a drop-in fit at that bubble's small size, so
+  this needs its own scoped design rather than a mechanical copy.
 
 - **[Damage Calc Engine Test Coverage] — Leg 1** *(Last touched: 2026-09-01 ·
   Re-checks: 0)*
