@@ -93,26 +93,19 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
     await rosterActions.addSlot(team, species.name);
   };
 
-  // Teams-list reorder via drag-and-drop - disabled for now (Always-On
-  // Editing Leg 1, see TODO.md): this used to gate behind expanded +
-  // edit-mode, but edit-mode is gone and structural actions like this one
-  // are deliberately left without a trigger until Leg 2 designs their own
-  // always-visible affordance (an always-draggable collapsed header was
-  // already tried once and reverted for making every header click/drag
-  // ambiguous - see PokemonCard.tsx's matching per-slot comment). Same
-  // MIME-type-payload pattern as the Pokemon-within-a-team reorder
-  // (utils/teamRosterDragTypes.ts). reorderTeam itself resolves the drop
-  // against the full unfiltered teams array, so this will work the same
-  // whether TeamsPage.tsx is showing "All" or a filtered subset once Leg 2
-  // re-enables it. Only the drag *source* was ever gated - any card can
-  // still be dropped onto as a target regardless of its own state.
-  const canReorder = false;
-
+  // Teams-list reorder via drag-and-drop (Always-On Editing Leg 2, see
+  // TODO.md) - re-enabled, but scoped to a dedicated grip-handle button in
+  // the controls pill rather than the whole header the way Leg 1 found it
+  // (an always-draggable collapsed header was tried once and reverted for
+  // making every header click/drag ambiguous). Only the handle itself is
+  // `draggable`; this handler doesn't need its own gate since nothing else
+  // triggers it. Same MIME-type-payload pattern as the Pokemon-within-a-team
+  // reorder (utils/teamRosterDragTypes.ts). reorderTeam itself resolves the
+  // drop against the full unfiltered teams array, so this works the same
+  // whether TeamsPage.tsx is showing "All" or a filtered subset. Only the
+  // drag *source* is gated to the handle - any card can still be dropped
+  // onto as a target regardless of where the drag started.
   const handleDragStart = (e: DragEvent<HTMLDivElement>) => {
-    if (!canReorder) {
-      e.preventDefault();
-      return;
-    }
     const payload: TeamsListDragPayload = { draggedTeamId: team.id };
     e.dataTransfer.setData(TEAMS_LIST_DRAG_TYPE, JSON.stringify(payload));
     e.dataTransfer.effectAllowed = 'move';
@@ -158,15 +151,12 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
       {/* rounded-t-xl replaces the parent's old overflow-hidden clip (removed so
           tooltips/popovers from expanded cards below are never cut off) */}
       <div
-        draggable={canReorder}
-        onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragLeave={() => setIsDragOver(false)}
         onDrop={handleDrop}
-        title={canReorder ? 'Drag to reorder' : undefined}
         className={`w-full flex flex-row items-center min-h-[116px] py-4 px-6 bg-zinc-950/40 rounded-t-xl transition-colors ${
-          canReorder ? 'cursor-grab' : ''
-        } ${isDragOver ? 'ring-2 ring-inset ring-accent-gold' : ''}`}
+          isDragOver ? 'ring-2 ring-inset ring-accent-gold' : ''
+        }`}
         style={{ paddingLeft: '1.25rem', paddingRight: '1.25rem' }}
       >
         {/* Identity column (header/controls rework leg 2, see TODO.md) - regulation
@@ -266,13 +256,39 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
         {/* Pill-shaped controls cluster (header/controls rework leg 2, see
             TODO.md) - the Edit button that used to live here is gone
             (Always-On Editing Leg 1, see TODO.md): field-level edits no
-            longer need a mode toggle to unlock, and structural actions it
-            also used to gate (drag-reorder, delete-slot, swap, add-Pokemon)
-            have no replacement trigger yet either, pending Leg 2's own
-            affordance. Only Expand stays always-visible here; everything
-            else (Validate/Export/Export Image/Export PDF/Delete) lives in
-            TeamOverflowMenu.tsx's "⋮" dropdown. */}
+            longer need a mode toggle to unlock. The Drag handle re-adds Leg
+            1's other structural gate (drag-reorder) with its own
+            always-visible trigger (Always-On Editing Leg 2); delete-slot,
+            swap, and add-Pokemon get theirs down in the roster grid instead,
+            since they're per-Pokemon/per-slot rather than team-level.
+            Everything else (Validate/Export/Export Image/Export PDF/Delete)
+            still lives in TeamOverflowMenu.tsx's "⋮" dropdown. */}
         <div className="flex items-center gap-0.5 bg-zinc-800 border border-zinc-700 rounded-full p-1 shrink-0">
+          {/* Drag handle (Always-On Editing Leg 2, see TODO.md) - draggable
+              is scoped to just this button, not the whole header, so
+              dragging can't fight with clicking the name/author inputs or
+              the Expand/overflow buttons (an always-draggable header was
+              tried and reverted for exactly that ambiguity - see Leg 1's
+              COMPLETED.md entry). Same grip-icon glyph as PokemonCard.tsx's
+              per-slot handle. */}
+          <div
+            draggable
+            onDragStart={handleDragStart}
+            title="Drag to reorder"
+            className="w-8 h-8 flex items-center justify-center rounded-full text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 transition-colors cursor-grab"
+          >
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+              <circle cx="9" cy="6" r="1.4" />
+              <circle cx="15" cy="6" r="1.4" />
+              <circle cx="9" cy="12" r="1.4" />
+              <circle cx="15" cy="12" r="1.4" />
+              <circle cx="9" cy="18" r="1.4" />
+              <circle cx="15" cy="18" r="1.4" />
+            </svg>
+          </div>
+
+          <span className="w-px h-[18px] bg-zinc-700 mx-0.5" />
+
           {/* Expand/Collapse Toggle Button */}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
@@ -350,21 +366,27 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
                   />
                 ))}
 
-                {/* Add-Pokémon trigger - no longer has a way to appear (Always-On
-                    Editing Leg 1, see TODO.md): it used to only show while
-                    isEditingTeam was on, and adding a slot is a structural action
-                    Leg 2 still owes its own affordance, so this stays disabled
-                    rather than becoming unconditionally visible. rosterActions.addSlot
-                    and handleAddSpecies below are untouched - Leg 2 only needs a new
-                    UI entrypoint for them. */}
-                {isAddPickerOpen && (
-                  <SpeciesPickerCard
-                    roster={speciesRosterState.roster}
-                    rulesetId={toRegulationId(team.format)}
-                    resolveSprite={spriteCacheState.resolveSprite}
-                    onSelect={handleAddSpecies}
-                    onClose={() => setIsAddPickerOpen(false)}
-                  />
+                {/* Add-Pokémon trigger (Always-On Editing Leg 2, see TODO.md) -
+                    restores the same dashed-box button Leg 1 left disabled, just
+                    gated on roster room instead of isEditingTeam now that there's
+                    no edit mode to gate behind. */}
+                {team.pokemon.length < 6 && (
+                  isAddPickerOpen ? (
+                    <SpeciesPickerCard
+                      roster={speciesRosterState.roster}
+                      rulesetId={toRegulationId(team.format)}
+                      resolveSprite={spriteCacheState.resolveSprite}
+                      onSelect={handleAddSpecies}
+                      onClose={() => setIsAddPickerOpen(false)}
+                    />
+                  ) : (
+                    <button
+                      onClick={() => setIsAddPickerOpen(true)}
+                      className="w-full max-w-[280px] h-full min-h-[280px] flex items-center justify-center rounded-lg border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer"
+                    >
+                      <span className="text-sm font-semibold">+ Add Pokémon</span>
+                    </button>
+                  )
                 )}
               </div>
 

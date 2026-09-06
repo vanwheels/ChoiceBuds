@@ -39,9 +39,12 @@ import FloatingCardPanel from './FloatingCardPanel';
 interface EditOverlaysProps {
   pokemon: ImportedPokemonInfo;
   // Narrowed to MoveBubbleGrid's drag-to-reorder affordance only (Always-On
-  // Editing Leg 1, see TODO.md) - see PokemonCard.tsx's isEditing comment.
-  // Item/ability/move click-to-pick below is unconditionally on regardless
-  // of this prop's value.
+  // Editing Leg 1, see TODO.md). Item/ability/move click-to-pick below is
+  // unconditionally on regardless of this prop's value. Deliberately not
+  // wired to a trigger by Leg 2 (PokemonCard.tsx doesn't pass it, so this
+  // still defaults false) - see the Move-Slot Drag Handle backlog item in
+  // TODO.md for why a move bubble needs its own design, not this leg's
+  // grip-handle pattern.
   isEditing?: boolean;
   gameDataState: UseGameDataReturn;
   rulesetId: RegulationId;

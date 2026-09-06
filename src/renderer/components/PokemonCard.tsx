@@ -35,17 +35,6 @@ interface PokemonCardProps {
   pokemon: ImportedPokemonInfo;
   team: Team;
   pokemonIndex: number;
-  // Narrowed to structural affordances only (Always-On Editing Leg 1, see
-  // TODO.md): field-level edits (nickname, item/ability/move picking,
-  // nature/EVs) are unconditionally on now and don't read this prop. This
-  // still gates the whole-card drag/delete-slot/swap-picker-click below and
-  // MoveBubbleGrid's move-slot drag-reorder (via EditOverlays), none of
-  // which have a caller passing true anymore - Leg 2 owes them a real
-  // affordance, so they're left disabled rather than always-on (an
-  // always-draggable card was already tried and reverted for making every
-  // click/expand ambiguous with a drag-start - see the drag-handle comment
-  // below).
-  isEditing?: boolean;
   updateTeam: (teamId: string, updates: Partial<Team>) => Promise<boolean>;
   gameDataState: UseGameDataReturn;
   speciesRosterState: UseSpeciesRosterReturn;
@@ -56,7 +45,7 @@ interface PokemonCardProps {
 
 const FORM_DIVERGENT: Record<string, boolean> = { 'basculegion': true, 'indeedee': true, 'meowstic': true, 'oinkologne': true };
 
-export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = false, updateTeam, gameDataState, speciesRosterState, spriteCacheState, rosterActions, showAnimatedSprites }: PokemonCardProps) {
+export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, gameDataState, speciesRosterState, spriteCacheState, rosterActions, showAnimatedSprites }: PokemonCardProps) {
   const { showdownData, types, pokedexNumber } = pokemon;
   const [isLocalShiny, setIsLocalShiny] = useState(showdownData.shiny);
   const [localGender, setLocalGender] = useState<'M' | 'F' | 'N' | '' | undefined>(showdownData.gender);
@@ -154,12 +143,17 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
     await rosterActions.removeSlot(team, pokemonIndex);
   };
 
-  // Roster reorder via drag-and-drop - same MIME-type-payload pattern as the
-  // Battle Logger roster drag (utils/dragTypes.ts) and Calc team tray drag
-  // (utils/calcDragTypes.ts). teamId travels in the payload (not the type
-  // string itself) since a mismatched-team drop is checked on `drop`, not
-  // shown live during `dragover` - unlike those two, dragging between two
-  // different teams' cards has no valid outcome to preview either way.
+  // Roster reorder via drag-and-drop (Always-On Editing Leg 2, see TODO.md) -
+  // draggable is scoped to the grip-handle icon below, not this whole card,
+  // so dragging can't fight with clicking the nickname input, sprite/swap
+  // box, or item/ability/move pickers (an always-draggable card was tried
+  // and reverted for exactly that ambiguity - see Leg 1's COMPLETED.md
+  // entry). Same MIME-type-payload pattern as the Battle Logger roster drag
+  // (utils/dragTypes.ts) and Calc team tray drag (utils/calcDragTypes.ts).
+  // teamId travels in the payload (not the type string itself) since a
+  // mismatched-team drop is checked on `drop`, not shown live during
+  // `dragover` - unlike those two, dragging between two different teams'
+  // cards has no valid outcome to preview either way.
   const handleDragStart = (e: DragEvent<HTMLDivElement>) => {
     const payload: TeamRosterDragPayload = { teamId: team.id, fromIndex: pokemonIndex };
     e.dataTransfer.setData(TEAM_ROSTER_DRAG_TYPE, JSON.stringify(payload));
@@ -221,53 +215,52 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
     <motion.div layout="position" transition={DRAG_REORDER_TRANSITION} className="type-glow-ring max-w-[280px]" style={glowRingStyle}>
       <div
         data-pokemon-card
-        draggable={isEditing}
-        onDragStart={isEditing ? handleDragStart : undefined}
-        onDragOver={isEditing ? handleDragOver : undefined}
-        onDragLeave={isEditing ? () => setIsDragOver(false) : undefined}
-        onDrop={isEditing ? handleDrop : undefined}
-        className={`relative bg-zinc-700 rounded-[11px] p-3 flex flex-col gap-3 transition-colors ${
-          isEditing ? 'cursor-grab' : ''
-        } ${isDragOver ? 'ring-2 ring-accent-gold' : ''}`}
+        onDragOver={handleDragOver}
+        onDragLeave={() => setIsDragOver(false)}
+        onDrop={handleDrop}
+        className={`relative bg-zinc-700 rounded-[11px] p-3 flex flex-col gap-3 transition-colors ${isDragOver ? 'ring-2 ring-accent-gold' : ''}`}
       >
-        {/* Drag-handle affordance icon (carousel rework leg 3, see TODO.md) - purely
-            visual, matching the approved mockup's `.grip` element exactly (top-left
-            22x22px rounded box, 6-dot grid icon); the whole card is already
-            draggable/cursor-grab while editing (handleDragStart etc. above), this
-            just gives that affordance a visible anchor instead of an invisible
-            whole-card drag zone. */}
-        {isEditing && (
-          <div className="absolute top-2 left-2 z-10 w-[22px] h-[22px] flex items-center justify-center rounded-md bg-zinc-900/55 border border-zinc-600/60 text-zinc-400">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-              <circle cx="9" cy="6" r="1.4" />
-              <circle cx="15" cy="6" r="1.4" />
-              <circle cx="9" cy="12" r="1.4" />
-              <circle cx="15" cy="12" r="1.4" />
-              <circle cx="9" cy="18" r="1.4" />
-              <circle cx="15" cy="18" r="1.4" />
-            </svg>
-          </div>
-        )}
+        {/* Drag-handle affordance icon (carousel rework leg 3, permanently on since
+            Always-On Editing Leg 2, see TODO.md) - matches the approved mockup's
+            `.grip` element (top-left 22x22px rounded box, 6-dot grid icon). This is
+            now the actual drag source too (draggable/onDragStart live here, not on
+            the card div above) rather than just a visual anchor for a whole-card
+            drag - keeping the draggable surface this small is what avoids the
+            click/expand ambiguity a whole-card-draggable version was reverted for. */}
+        <div
+          draggable
+          onDragStart={handleDragStart}
+          title="Drag to reorder"
+          className="absolute top-2 left-2 z-10 w-[22px] h-[22px] flex items-center justify-center rounded-md bg-zinc-900/55 border border-zinc-600/60 text-zinc-400 cursor-grab"
+        >
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+            <circle cx="9" cy="6" r="1.4" />
+            <circle cx="15" cy="6" r="1.4" />
+            <circle cx="9" cy="12" r="1.4" />
+            <circle cx="15" cy="12" r="1.4" />
+            <circle cx="9" cy="18" r="1.4" />
+            <circle cx="15" cy="18" r="1.4" />
+          </svg>
+        </div>
 
-        {/* Left-Shifting Slot Deletion */}
-        {isEditing && (
-          <button
-            onClick={handleDelete}
-            title="Remove from roster"
-            className="absolute top-2 right-2 z-10 w-6 h-6 flex items-center justify-center rounded-full bg-zinc-800 border border-zinc-600 text-zinc-500 hover:text-red-400 hover:border-red-500 transition-colors cursor-pointer text-sm"
-          >
-            ×
-          </button>
-        )}
+        {/* Left-Shifting Slot Deletion - permanently on (Always-On Editing Leg 2,
+            see TODO.md) */}
+        <button
+          onClick={handleDelete}
+          title="Remove from roster"
+          className="absolute top-2 right-2 z-10 w-6 h-6 flex items-center justify-center rounded-full bg-zinc-800 border border-zinc-600 text-zinc-500 hover:text-red-400 hover:border-red-500 transition-colors cursor-pointer text-sm"
+        >
+          ×
+        </button>
 
         {/* Single-Pokemon Export - same Showdown-format modal as TeamCard's whole-team
             export, just given a one-element list. Shifts left of the Delete button
-            (which also lives in this corner) while editing, otherwise sits in the
-            bare top-right corner. */}
+            (which also lives in this corner and is permanently visible now too, see
+            above) rather than sitting in the bare top-right corner. */}
         <button
           onClick={() => setIsExportOpen(true)}
           title="Export Pokémon (Showdown format)"
-          className={`absolute top-2 z-10 w-6 h-6 flex items-center justify-center rounded-full bg-zinc-800 border border-zinc-600 text-zinc-500 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer text-sm ${isEditing ? 'right-9' : 'right-2'}`}
+          className="absolute top-2 right-9 z-10 w-6 h-6 flex items-center justify-center rounded-full bg-zinc-800 border border-zinc-600 text-zinc-500 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer text-sm"
         >
           ⇩
         </button>
@@ -288,15 +281,16 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
           <p className="text-xs text-zinc-300 truncate">{showdownData.species} #{pokedexNumber}</p>
         </div>
 
-        {/* Sprite Container - clickable in edit mode to open the Roster Swap picker.
-            Width matches the span from the left edge of the first Type Badge to
-            the right edge of the second (134px = 64px badge + 6px gap + 64px badge),
-            same target width as the Ability pill below. */}
+        {/* Sprite Container - clickable to open the Roster Swap picker, permanently
+            on (Always-On Editing Leg 2, see TODO.md). Width matches the span from
+            the left edge of the first Type Badge to the right edge of the second
+            (134px = 64px badge + 6px gap + 64px badge), same target width as the
+            Ability pill below. */}
         <div className="flex justify-center">
           <div
-            onClick={isEditing ? () => setIsSwapPickerOpen(true) : undefined}
-            className={`w-[134px] mx-auto h-24 bg-zinc-800 rounded-lg border border-zinc-600 flex items-center justify-center overflow-hidden ${isEditing ? 'cursor-pointer hover:border-accent-gold transition-colors' : ''}`}
-            title={isEditing ? 'Click to swap this Pokémon' : undefined}
+            onClick={() => setIsSwapPickerOpen(true)}
+            className="w-[134px] mx-auto h-24 bg-zinc-800 rounded-lg border border-zinc-600 flex items-center justify-center overflow-hidden cursor-pointer hover:border-accent-gold transition-colors"
+            title="Click to swap this Pokémon"
           >
             {displaySpriteUrl ? (
               <img
@@ -321,11 +315,14 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
         </div>
 
         {/* Item Sprite Box / Ability Capsule / Move Bubbles - clicking to pick is
-            permanently on now (Always-On Editing Leg 1, see TODO.md); `isEditing`
-            here only still gates the move-slot drag-to-reorder inside
-            MoveBubbleGrid, a structural action left without a trigger pending
-            Leg 2 (same as the drag/delete/swap affordances below). */}
-        <EditOverlays pokemon={pokemon} isEditing={isEditing} gameDataState={gameDataState} rulesetId={rulesetId} resolveSprite={spriteCacheState.resolveSprite} onUpdatePokemon={updateShowdownData} />
+            permanently on (Always-On Editing Leg 1, see TODO.md). `isEditing` isn't
+            passed here (defaults false) - it still only gates MoveBubbleGrid's
+            move-slot drag-to-reorder, which Leg 2 deliberately left alone: unlike
+            the affordances above, a move bubble is both the click target that opens
+            its picker AND the thing that would need to become a drag source, so it
+            needs its own handle design rather than reusing this leg's pattern -
+            see the new Move-Slot Drag Handle backlog item in TODO.md. */}
+        <EditOverlays pokemon={pokemon} gameDataState={gameDataState} rulesetId={rulesetId} resolveSprite={spriteCacheState.resolveSprite} onUpdatePokemon={updateShowdownData} />
 
         {/* EVs Grid Block - permanently editable (Always-On Editing Leg 1, see TODO.md) */}
         <StatsColumn evs={showdownData.evs} nature={showdownData.nature} onUpdatePokemon={updateShowdownData} />

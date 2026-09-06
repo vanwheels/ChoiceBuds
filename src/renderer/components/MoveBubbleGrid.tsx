@@ -23,8 +23,11 @@ interface MoveBubbleGridProps {
   // Narrowed to the drag-to-reorder affordance only (Always-On Editing Leg
   // 1, see TODO.md): clicking a bubble to open the move picker is
   // unconditionally on now. Reordering moves by dragging is a structural
-  // action with no caller passing true anymore - Leg 2 owes it a real
-  // affordance (see PokemonCard.tsx's isEditing comment).
+  // action with no caller passing true anymore - Always-On Editing Leg 2
+  // deliberately left this one alone (a bubble is both the click-to-open
+  // target and the would-be drag source, unlike the affordances Leg 2 did
+  // add its own handle for) - see the Move-Slot Drag Handle backlog item in
+  // TODO.md.
   isEditing: boolean;
   ownerId: string;
   onToggleMenu: (key: string, e: MouseEvent<HTMLDivElement>) => void;
