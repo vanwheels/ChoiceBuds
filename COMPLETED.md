@@ -14,6 +14,14 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[Card Popup Consistency] - Leg 3** (2026-09-05) - replaced
+  `StatsColumn.tsx`'s native `<select>` nature control (the one popup with
+  zero positioning/styling control, and the confirmed worst offender - it
+  spilled over the notes textarea and bottom toolbar) with a new
+  `NaturePickerPanel.tsx`, floated via Leg 1/2's `FloatingCardPanel`
+  primitive, same shape as `AbilityPickerPanel.tsx`. See commit `4135707`.
+  Completes this item - all three legs done, nothing left unscheduled for it.
+
 - **[Card Popup Consistency] - Leg 2** (2026-09-05) - migrated
   `ItemPickerPanel.tsx`/`AbilityPickerPanel.tsx`/`EditOverlays.tsx`'s move
   picker off their "fills the slot in place" pattern onto Leg 1's

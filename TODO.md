@@ -15,15 +15,7 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
 
 ## In progress / up next
 
-- **[Card Popup Consistency] — Leg 3** *(Last touched: 2026-09-05 · Re-checks:
-  0)*
-  Depends on Leg 1's primitive. Replace `StatsColumn.tsx`'s native
-  `<select>` nature control with a custom list on the same popup primitive,
-  same shape as `AbilityPickerPanel.tsx` (name + its ±stat effect shown
-  inline, scrollable within a bounded height). The native select is the one
-  popup with zero styling/positioning control and the confirmed worst
-  offender — it currently spills over the notes textarea and bottom
-  toolbar.
+Nothing currently in progress — see Backlog below for what's next up.
 
 ## Blocked
 
