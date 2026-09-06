@@ -13,7 +13,6 @@ import { getStatLabelColor } from '../config/pokemonTheme';
 interface EVStatCellProps {
   label: string;
   value: number;
-  isEditing: boolean;
   isActive: boolean;
   exceedsMax: boolean;
   canIncrement: boolean;
@@ -28,10 +27,12 @@ const valueClassName = (exceedsMax: boolean, editableBorder: boolean) =>
     exceedsMax ? 'border-red-500 text-red-400 bg-red-950/20' : editableBorder ? 'border-zinc-600 bg-zinc-900 text-zinc-100' : 'border-transparent text-zinc-100'
   }`;
 
+// Permanently editable (Always-On Editing Leg 1, see TODO.md) - no more
+// isEditing gate; every cell is always at least the clickable
+// label+value button below, activating into the hold-to-repeat editor on click.
 export default function EVStatCell({
   label,
   value,
-  isEditing,
   isActive,
   exceedsMax,
   canIncrement,
@@ -42,15 +43,6 @@ export default function EVStatCell({
 }: EVStatCellProps) {
   const incRepeat = useHoldRepeat(onIncrement);
   const decRepeat = useHoldRepeat(onDecrement);
-
-  if (!isEditing) {
-    return (
-      <div className="flex flex-col items-center">
-        <span className={`text-[10px] font-bold uppercase ${getStatLabelColor(label)}`}>{label}</span>
-        <span className={`${valueClassName(exceedsMax, false)} px-1.5 py-0.5`}>{value}</span>
-      </div>
-    );
-  }
 
   if (!isActive) {
     return (

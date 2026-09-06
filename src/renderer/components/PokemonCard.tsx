@@ -35,6 +35,16 @@ interface PokemonCardProps {
   pokemon: ImportedPokemonInfo;
   team: Team;
   pokemonIndex: number;
+  // Narrowed to structural affordances only (Always-On Editing Leg 1, see
+  // TODO.md): field-level edits (nickname, item/ability/move picking,
+  // nature/EVs) are unconditionally on now and don't read this prop. This
+  // still gates the whole-card drag/delete-slot/swap-picker-click below and
+  // MoveBubbleGrid's move-slot drag-reorder (via EditOverlays), none of
+  // which have a caller passing true anymore - Leg 2 owes them a real
+  // affordance, so they're left disabled rather than always-on (an
+  // always-draggable card was already tried and reverted for making every
+  // click/expand ambiguous with a drag-start - see the drag-handle comment
+  // below).
   isEditing?: boolean;
   updateTeam: (teamId: string, updates: Partial<Team>) => Promise<boolean>;
   gameDataState: UseGameDataReturn;
@@ -262,21 +272,19 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
           ⇩
         </button>
 
-        {/* Nickname Input - falls back to the species name when there's no nickname set */}
+        {/* Nickname Input - permanently editable (Always-On Editing Leg 1, see
+            TODO.md), no more isEditing gate. Falls back to the species name
+            as the placeholder when there's no nickname set. */}
         <div className="text-center">
-          {isEditing ? (
-            <input
-              type="text"
-              value={localNickname}
-              onChange={(e) => setLocalNickname(e.target.value)}
-              onBlur={handleNicknameBlur}
-              maxLength={12}
-              placeholder={showdownData.species}
-              className="w-full px-2 py-1 text-sm font-bold text-white bg-zinc-800 border border-zinc-600 rounded text-center outline-none"
-            />
-          ) : (
-            <h4 className="text-sm font-bold text-zinc-100 truncate">{showdownData.nickname || showdownData.species}</h4>
-          )}
+          <input
+            type="text"
+            value={localNickname}
+            onChange={(e) => setLocalNickname(e.target.value)}
+            onBlur={handleNicknameBlur}
+            maxLength={12}
+            placeholder={showdownData.species}
+            className="w-full px-2 py-1 text-sm font-bold text-white bg-zinc-800 border border-zinc-600 rounded text-center outline-none"
+          />
           <p className="text-xs text-zinc-300 truncate">{showdownData.species} #{pokedexNumber}</p>
         </div>
 
@@ -312,11 +320,15 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, isEditing = f
           </div>
         </div>
 
-        {/* Item Sprite Box / Ability Capsule / Move Bubbles */}
+        {/* Item Sprite Box / Ability Capsule / Move Bubbles - clicking to pick is
+            permanently on now (Always-On Editing Leg 1, see TODO.md); `isEditing`
+            here only still gates the move-slot drag-to-reorder inside
+            MoveBubbleGrid, a structural action left without a trigger pending
+            Leg 2 (same as the drag/delete/swap affordances below). */}
         <EditOverlays pokemon={pokemon} isEditing={isEditing} gameDataState={gameDataState} rulesetId={rulesetId} resolveSprite={spriteCacheState.resolveSprite} onUpdatePokemon={updateShowdownData} />
 
-        {/* EVs Grid Block */}
-        <StatsColumn evs={showdownData.evs} nature={showdownData.nature} isEditing={isEditing} onUpdatePokemon={updateShowdownData} />
+        {/* EVs Grid Block - permanently editable (Always-On Editing Leg 1, see TODO.md) */}
+        <StatsColumn evs={showdownData.evs} nature={showdownData.nature} onUpdatePokemon={updateShowdownData} />
 
         {/* Footer: Gender and Shiny Indicators - each in its own item-sprite-style box, side by side */}
         <div className="flex flex-row items-center justify-center gap-3 pt-2 mt-1 border-t border-zinc-800/60 w-full">

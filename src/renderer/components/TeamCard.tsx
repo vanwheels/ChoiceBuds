@@ -25,7 +25,6 @@ import TeamSheetPdfModal from './TeamSheetPdfModal';
 interface TeamCardProps {
   team: Team;
   onDelete?: () => void;
-  onEdit?: () => void;
   teamsState: UseTeamsReturn;
   databaseState: UseDatabaseReturn;
   gameDataState: UseGameDataReturn;
@@ -70,9 +69,8 @@ const cardExpandVariants = {
   },
 };
 
-export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseState, gameDataState, speciesRosterState, spriteCacheState, settingsState }: TeamCardProps) {
+export default function TeamCard({ team, onDelete, teamsState, databaseState, gameDataState, speciesRosterState, spriteCacheState, settingsState }: TeamCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isEditingTeam, setIsEditingTeam] = useState(false);
   const [localTeamName, setLocalTeamName] = useState(team.name);
   const [localAuthor, setLocalAuthor] = useState(team.author || '');
   const [localNotes, setLocalNotes] = useState(team.notes || '');
@@ -95,17 +93,20 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
     await rosterActions.addSlot(team, species.name);
   };
 
-  // Teams-list reorder via drag-and-drop, gated behind both expanded AND
-  // edit-mode (carousel/grid rework leg 4, see TODO.md) - changed from the
-  // original "always active on the collapsed header regardless of state"
-  // behavior, since an always-draggable collapsed header made every header
-  // click/drag ambiguous. Same MIME-type-payload pattern as the
-  // Pokemon-within-a-team reorder (utils/teamRosterDragTypes.ts).
-  // reorderTeam itself resolves the drop against the full unfiltered teams
-  // array, so this works the same whether TeamsPage.tsx is showing "All"
-  // or a filtered subset. Only the drag *source* is gated - any card can
+  // Teams-list reorder via drag-and-drop - disabled for now (Always-On
+  // Editing Leg 1, see TODO.md): this used to gate behind expanded +
+  // edit-mode, but edit-mode is gone and structural actions like this one
+  // are deliberately left without a trigger until Leg 2 designs their own
+  // always-visible affordance (an always-draggable collapsed header was
+  // already tried once and reverted for making every header click/drag
+  // ambiguous - see PokemonCard.tsx's matching per-slot comment). Same
+  // MIME-type-payload pattern as the Pokemon-within-a-team reorder
+  // (utils/teamRosterDragTypes.ts). reorderTeam itself resolves the drop
+  // against the full unfiltered teams array, so this will work the same
+  // whether TeamsPage.tsx is showing "All" or a filtered subset once Leg 2
+  // re-enables it. Only the drag *source* was ever gated - any card can
   // still be dropped onto as a target regardless of its own state.
-  const canReorder = isExpanded && isEditingTeam;
+  const canReorder = false;
 
   const handleDragStart = (e: DragEvent<HTMLDivElement>) => {
     if (!canReorder) {
@@ -174,59 +175,59 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
         <div className="flex flex-col gap-1 min-w-[190px] max-w-[190px] shrink-0">
           <RegulationBadge team={team} onChange={(format) => updateTeam(team.id, { format })} />
 
-          {isEditingTeam ? (
-            <input
-              type="text"
-              value={localTeamName}
-              onChange={(e) => setLocalTeamName(e.target.value)}
-              onBlur={async () => {
-                // Save team name on blur
-                if (localTeamName !== team.name) {
-                  await updateTeam(team.id, { name: localTeamName });
-                }
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.currentTarget.blur();
-                }
-              }}
-              className="text-left font-bold text-base text-zinc-100 truncate tracking-wide mt-0.5"
-              style={{
-                backgroundColor: 'transparent',
-                borderBottom: '1px dashed #4b5563',
-                color: '#ffffff',
-                fontWeight: 'bold',
-                outline: 'none',
-                padding: '0.125rem 0.25rem',
-              }}
-            />
-          ) : (
-            <h2 className="text-left font-bold text-base text-zinc-100 truncate tracking-wide mt-0.5">
-              {team.name.replace(/^(Reg\s*M-[AB]\s*)+/i, '').trim() || 'Untitled Team'}
-            </h2>
-          )}
+          {/* Team name - permanently editable (Always-On Editing Leg 1, see
+              TODO.md), no more isEditingTeam gate. Shows the raw stored
+              team.name (same as the old edit-mode input always did) rather
+              than the read-only view's Reg M-A/M-B auto-prefix-stripped
+              display - a team carrying that stale prefix will now show it
+              in the input permanently instead of only while toggled into
+              edit mode. Flagged as a backlog polish item in TODO.md rather
+              than fixed here, since stripping it here risks silently
+              renaming the team on first blur even with no user edit. */}
+          <input
+            type="text"
+            value={localTeamName}
+            onChange={(e) => setLocalTeamName(e.target.value)}
+            onBlur={async () => {
+              if (localTeamName !== team.name) {
+                await updateTeam(team.id, { name: localTeamName });
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.currentTarget.blur();
+              }
+            }}
+            placeholder="Untitled Team"
+            className="text-left font-bold text-base text-zinc-100 truncate tracking-wide mt-0.5"
+            style={{
+              backgroundColor: 'transparent',
+              borderBottom: '1px dashed #4b5563',
+              color: '#ffffff',
+              fontWeight: 'bold',
+              outline: 'none',
+              padding: '0.125rem 0.25rem',
+            }}
+          />
 
           {/* Author - team-level metadata, not per-Pokemon. Pokepaste pages carry one; a plain
-              Showdown export doesn't, so this stays manually editable either way. Hidden entirely
-              when not editing and no author is set, so teams without one show no empty chrome. */}
-          {isEditingTeam ? (
-            <input
-              type="text"
-              value={localAuthor}
-              onChange={(e) => setLocalAuthor(e.target.value)}
-              onBlur={async () => {
-                if (localAuthor !== (team.author || '')) {
-                  await updateTeam(team.id, { author: localAuthor.trim() || undefined });
-                }
-              }}
-              onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
-              placeholder="Author"
-              title="Author"
-              className="w-24 px-1.5 py-0.5 text-[10px] bg-zinc-800 border border-zinc-700 rounded text-zinc-100 placeholder-zinc-600 outline-none focus:border-accent-gold"
-            />
-          ) : team.author ? (
-            <span className="text-[11px] text-zinc-500 truncate block" title={`by ${team.author}`}>by {team.author}</span>
-          ) : null}
+              Showdown export doesn't, so this stays manually editable either way. Permanently
+              editable (Always-On Editing Leg 1, see TODO.md) - the placeholder covers the
+              empty-chrome case the old hide-when-empty behavior used to handle. */}
+          <input
+            type="text"
+            value={localAuthor}
+            onChange={(e) => setLocalAuthor(e.target.value)}
+            onBlur={async () => {
+              if (localAuthor !== (team.author || '')) {
+                await updateTeam(team.id, { author: localAuthor.trim() || undefined });
+              }
+            }}
+            onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+            placeholder="Author"
+            title="Author"
+            className="w-24 px-1.5 py-0.5 text-[10px] bg-zinc-800 border border-zinc-700 rounded text-zinc-100 placeholder-zinc-600 outline-none focus:border-accent-gold"
+          />
         </div>
 
         {/* Mini sprite strip (Team Header Sprite Strip leg 1, see TODO.md) -
@@ -263,44 +264,18 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
         </div>
 
         {/* Pill-shaped controls cluster (header/controls rework leg 2, see
-            TODO.md) - only Edit and Expand stay always-visible; everything else
-            (Validate/Export/Export Image/Export PDF/Delete) moved into
-            TeamOverflowMenu.tsx's "⋮" dropdown. Icons/layout pulled verbatim
-            from the approved mockup's Main.dc.html/Overflow.dc.html artboards. */}
+            TODO.md) - the Edit button that used to live here is gone
+            (Always-On Editing Leg 1, see TODO.md): field-level edits no
+            longer need a mode toggle to unlock, and structural actions it
+            also used to gate (drag-reorder, delete-slot, swap, add-Pokemon)
+            have no replacement trigger yet either, pending Leg 2's own
+            affordance. Only Expand stays always-visible here; everything
+            else (Validate/Export/Export Image/Export PDF/Delete) lives in
+            TeamOverflowMenu.tsx's "⋮" dropdown. */}
         <div className="flex items-center gap-0.5 bg-zinc-800 border border-zinc-700 rounded-full p-1 shrink-0">
-          {/* Edit Button */}
-          <button
-            onClick={() => {
-              setIsEditingTeam(!isEditingTeam);
-              if (!isExpanded) {
-                setIsExpanded(true);
-              }
-              if (onEdit) {
-                onEdit();
-              }
-            }}
-            title="Edit Team"
-            className={`w-8 h-8 flex items-center justify-center rounded-full text-zinc-400 hover:text-accent-gold hover:bg-zinc-700 transition-colors cursor-pointer ${
-              isEditingTeam ? 'bg-zinc-700 text-accent-gold' : ''
-            }`}
-          >
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 20h9" />
-              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
-            </svg>
-          </button>
-
-          <span className="w-px h-[18px] bg-zinc-700 mx-0.5" />
-
           {/* Expand/Collapse Toggle Button */}
           <button
-            onClick={() => {
-              const nextExpanded = !isExpanded;
-              setIsExpanded(nextExpanded);
-              if (!nextExpanded) {
-                setIsEditingTeam(false);
-              }
-            }}
+            onClick={() => setIsExpanded(!isExpanded)}
             className={`w-8 h-8 flex items-center justify-center rounded-full text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 transition-colors cursor-pointer ${
               isExpanded ? 'bg-zinc-700 text-zinc-200' : ''
             }`}
@@ -366,7 +341,6 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
                     pokemon={p}
                     team={team}
                     pokemonIndex={idx}
-                    isEditing={isEditingTeam}
                     updateTeam={updateTeam}
                     gameDataState={gameDataState}
                     speciesRosterState={speciesRosterState}
@@ -376,52 +350,44 @@ export default function TeamCard({ team, onDelete, onEdit, teamsState, databaseS
                   />
                 ))}
 
-                {/* Append Add Button - only while editing and roster has room */}
-                {isEditingTeam && team.pokemon.length < 6 && (
-                  isAddPickerOpen ? (
-                    <SpeciesPickerCard
-                      roster={speciesRosterState.roster}
-                      rulesetId={toRegulationId(team.format)}
-                      resolveSprite={spriteCacheState.resolveSprite}
-                      onSelect={handleAddSpecies}
-                      onClose={() => setIsAddPickerOpen(false)}
-                    />
-                  ) : (
-                    <button
-                      onClick={() => setIsAddPickerOpen(true)}
-                      className="w-full max-w-[280px] h-full min-h-[280px] flex items-center justify-center rounded-lg border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer"
-                    >
-                      <span className="text-sm font-semibold">+ Add Pokémon</span>
-                    </button>
-                  )
+                {/* Add-Pokémon trigger - no longer has a way to appear (Always-On
+                    Editing Leg 1, see TODO.md): it used to only show while
+                    isEditingTeam was on, and adding a slot is a structural action
+                    Leg 2 still owes its own affordance, so this stays disabled
+                    rather than becoming unconditionally visible. rosterActions.addSlot
+                    and handleAddSpecies below are untouched - Leg 2 only needs a new
+                    UI entrypoint for them. */}
+                {isAddPickerOpen && (
+                  <SpeciesPickerCard
+                    roster={speciesRosterState.roster}
+                    rulesetId={toRegulationId(team.format)}
+                    resolveSprite={spriteCacheState.resolveSprite}
+                    onSelect={handleAddSpecies}
+                    onClose={() => setIsAddPickerOpen(false)}
+                  />
                 )}
               </div>
 
               {/* Strategy Notes - team-level free text (Team.notes), same "local state + save
-                  on blur" pattern as the name/author fields above. Hidden entirely when not
-                  editing and no notes are set, same as the author field's empty-chrome rule.
+                  on blur" pattern as the name/author fields above. Permanently editable
+                  (Always-On Editing Leg 1, see TODO.md) - the placeholder covers the
+                  empty-chrome case the old hide-when-empty behavior used to handle.
                   Placed after the roster grid (not before) so the team's visual composition
                   is always the first thing seen when expanding a card. */}
-              {(isEditingTeam || team.notes) && (
-                <div className="mt-4">
-                  {isEditingTeam ? (
-                    <textarea
-                      value={localNotes}
-                      onChange={(e) => setLocalNotes(e.target.value)}
-                      onBlur={async () => {
-                        if (localNotes !== (team.notes || '')) {
-                          await updateTeam(team.id, { notes: localNotes.trim() || undefined });
-                        }
-                      }}
-                      placeholder="Strategy notes, game plan, matchup tips..."
-                      rows={3}
-                      className="w-full px-3 py-2 text-sm bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-600 outline-none focus:border-accent-gold resize-y"
-                    />
-                  ) : (
-                    <p className="text-sm text-zinc-400 whitespace-pre-wrap border-l-2 border-zinc-700 pl-3">{team.notes}</p>
-                  )}
-                </div>
-              )}
+              <div className="mt-4">
+                <textarea
+                  value={localNotes}
+                  onChange={(e) => setLocalNotes(e.target.value)}
+                  onBlur={async () => {
+                    if (localNotes !== (team.notes || '')) {
+                      await updateTeam(team.id, { notes: localNotes.trim() || undefined });
+                    }
+                  }}
+                  placeholder="Strategy notes, game plan, matchup tips..."
+                  rows={3}
+                  className="w-full px-3 py-2 text-sm bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-600 outline-none focus:border-accent-gold resize-y"
+                />
+              </div>
             </div>
           </motion.div>
         )}

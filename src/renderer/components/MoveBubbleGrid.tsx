@@ -20,6 +20,11 @@ export type HoverKey = 'item' | 'ability' | `move${0 | 1 | 2 | 3}` | null;
 interface MoveBubbleGridProps {
   moveDataSlots: Array<MoveData | null>;
   selectedMoves: string[];
+  // Narrowed to the drag-to-reorder affordance only (Always-On Editing Leg
+  // 1, see TODO.md): clicking a bubble to open the move picker is
+  // unconditionally on now. Reordering moves by dragging is a structural
+  // action with no caller passing true anymore - Leg 2 owes it a real
+  // affordance (see PokemonCard.tsx's isEditing comment).
   isEditing: boolean;
   ownerId: string;
   onToggleMenu: (key: string, e: MouseEvent<HTMLDivElement>) => void;
@@ -103,8 +108,8 @@ export default function MoveBubbleGrid({
             onDrop={isEditing ? handleDrop(index) : undefined}
             onMouseEnter={(e) => onHoverEnter(key, e.currentTarget)}
             onMouseLeave={() => onHoverLeave(key)}
-            onClick={isEditing ? (e) => onToggleMenu(key, e) : undefined}
-            className={`w-full min-h-[2.75rem] flex items-center justify-center text-center whitespace-normal break-words p-1 rounded-xl text-xs font-bold transition-colors ${theme.bg} ${theme.text} ${isEditing ? 'cursor-grab hover:opacity-80' : ''} ${dragOverIndex === index ? 'ring-2 ring-accent-gold' : ''}`}
+            onClick={(e) => onToggleMenu(key, e)}
+            className={`w-full min-h-[2.75rem] flex items-center justify-center text-center whitespace-normal break-words p-1 rounded-xl text-xs font-bold transition-colors ${theme.bg} ${theme.text} hover:opacity-80 ${isEditing ? 'cursor-grab' : 'cursor-pointer'} ${dragOverIndex === index ? 'ring-2 ring-accent-gold' : ''}`}
           >
             {selectedMoves[index] || `Move ${index + 1}`}
           </div>

@@ -25,7 +25,6 @@ import FloatingCardPanel from './FloatingCardPanel';
 interface StatsColumnProps {
   evs: EVSpread;
   nature?: string;
-  isEditing?: boolean;
   onUpdatePokemon: (updates: Partial<ShowdownPokemon>) => void;
 }
 
@@ -38,7 +37,10 @@ const STATS: Array<{ label: string; key: keyof EVSpread }> = [
   { label: 'Spe', key: 'speed' },
 ];
 
-export default function StatsColumn({ evs, nature, isEditing = false, onUpdatePokemon }: StatsColumnProps) {
+// Permanently editable (Always-On Editing Leg 1, see TODO.md) - no more
+// isEditing gate; the total-EV badge, nature picker, and stat cells below
+// are all unconditionally interactive now.
+export default function StatsColumn({ evs, nature, onUpdatePokemon }: StatsColumnProps) {
   const [localEVs, setLocalEVs] = useState(evs);
   const [activeStat, setActiveStat] = useState<keyof EVSpread | null>(null);
   const [natureMenuOpen, setNatureMenuOpen] = useState(false);
@@ -110,48 +112,39 @@ export default function StatsColumn({ evs, nature, isEditing = false, onUpdatePo
       <div className="mb-1">
         <div className="flex justify-between items-center">
           <p className="text-xs text-zinc-400 uppercase tracking-wide shrink-0">SP</p>
-          {isEditing && (
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-              totalEVs > 66
-                ? 'bg-red-600 text-white border border-red-400'
-                : totalEVs === 66
-                  ? 'bg-emerald-500 text-white'
-                  : 'bg-zinc-700 text-zinc-400'
-            }`}>{totalEVs > 66 ? '⚠ ' : ''}{totalEVs}/66</span>
+          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+            totalEVs > 66
+              ? 'bg-red-600 text-white border border-red-400'
+              : totalEVs === 66
+                ? 'bg-emerald-500 text-white'
+                : 'bg-zinc-700 text-zinc-400'
+          }`}>{totalEVs > 66 ? '⚠ ' : ''}{totalEVs}/66</span>
+        </div>
+        <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
+          <div
+            onClick={toggleNatureMenu}
+            title="Nature"
+            className="min-w-0 text-[10px] bg-zinc-900 border border-zinc-600 rounded px-1 py-0 text-zinc-200 truncate cursor-pointer hover:border-accent-gold transition-colors"
+          >
+            {nature || 'Nature'}
+          </div>
+          {natureEffect && (
+            <span className="text-[10px] whitespace-nowrap shrink-0">
+              (<span className={getStatLabelColor(natureEffect.plus)}>+{natureEffect.plus}</span>
+              {', '}
+              <span className={getStatLabelColor(natureEffect.minus)}>-{natureEffect.minus}</span>)
+            </span>
           )}
         </div>
-        {(isEditing || nature) && (
-          <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
-            {isEditing ? (
-              <div
-                onClick={toggleNatureMenu}
-                title="Nature"
-                className="min-w-0 text-[10px] bg-zinc-900 border border-zinc-600 rounded px-1 py-0 text-zinc-200 truncate cursor-pointer hover:border-accent-gold transition-colors"
-              >
-                {nature || 'Nature'}
-              </div>
-            ) : (
-              <span className="text-[10px] text-zinc-500 truncate">{nature}</span>
-            )}
-            {natureEffect && (
-              <span className="text-[10px] whitespace-nowrap shrink-0">
-                (<span className={getStatLabelColor(natureEffect.plus)}>+{natureEffect.plus}</span>
-                {', '}
-                <span className={getStatLabelColor(natureEffect.minus)}>-{natureEffect.minus}</span>)
-              </span>
-            )}
-          </div>
-        )}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginTop: '0.5rem' }}>
         {STATS.map(stat => {
-          const val = isEditing ? localEVs[stat.key] : evs[stat.key];
+          const val = localEVs[stat.key];
           return (
             <EVStatCell
               key={stat.label}
               label={stat.label}
               value={val}
-              isEditing={isEditing}
               isActive={activeStat === stat.key}
               exceedsMax={val > 32}
               canIncrement={val < 32 && totalEVs < 66}

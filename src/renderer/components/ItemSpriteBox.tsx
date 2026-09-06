@@ -16,7 +16,6 @@ const FAIRY_FEATHER_FALLBACK_SPRITE = 'https://www.serebii.net/itemdex/sprites/f
 interface ItemSpriteBoxProps {
   selectedItem: string;
   itemData: ItemData | null;
-  isEditing: boolean;
   spriteFailed: boolean;
   fallbackSpriteFailed: boolean;
   resolveSprite: (remoteUrl: string) => string;
@@ -27,10 +26,11 @@ interface ItemSpriteBoxProps {
   onToggleMenu: (e: MouseEvent<HTMLDivElement>) => void;
 }
 
+// Permanently editable (Always-On Editing Leg 1, see TODO.md) - no more
+// isEditing gate; clicking always opens the item picker.
 export default function ItemSpriteBox({
   selectedItem,
   itemData,
-  isEditing,
   spriteFailed,
   fallbackSpriteFailed,
   resolveSprite,
@@ -46,8 +46,8 @@ export default function ItemSpriteBox({
     <div
       onMouseEnter={onHoverEnter}
       onMouseLeave={onHoverLeave}
-      onClick={isEditing ? onToggleMenu : undefined}
-      className={`w-14 h-14 bg-zinc-800 rounded-lg border border-zinc-600 flex items-center justify-center overflow-hidden transition-colors ${isEditing ? 'cursor-pointer hover:border-accent-gold' : ''}`}
+      onClick={onToggleMenu}
+      className="w-14 h-14 bg-zinc-800 rounded-lg border border-zinc-600 flex items-center justify-center overflow-hidden transition-colors cursor-pointer hover:border-accent-gold"
     >
       {itemData?.spriteUrl && !spriteFailed ? (
         <img

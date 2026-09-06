@@ -38,6 +38,10 @@ import FloatingCardPanel from './FloatingCardPanel';
 
 interface EditOverlaysProps {
   pokemon: ImportedPokemonInfo;
+  // Narrowed to MoveBubbleGrid's drag-to-reorder affordance only (Always-On
+  // Editing Leg 1, see TODO.md) - see PokemonCard.tsx's isEditing comment.
+  // Item/ability/move click-to-pick below is unconditionally on regardless
+  // of this prop's value.
   isEditing?: boolean;
   gameDataState: UseGameDataReturn;
   rulesetId: RegulationId;
@@ -260,7 +264,6 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
       <ItemSpriteBox
         selectedItem={selectedItem}
         itemData={itemData}
-        isEditing={isEditing}
         spriteFailed={itemSpriteFailed}
         fallbackSpriteFailed={itemFallbackSpriteFailed}
         resolveSprite={resolveSprite}
@@ -274,7 +277,6 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
       {/* Ability Capsule */}
       <AbilityCapsule
         selectedAbility={selectedAbility}
-        isEditing={isEditing}
         onHoverEnter={(e) => hoverEnter('ability', e.currentTarget)}
         onHoverLeave={() => hoverLeave('ability')}
         onToggleMenu={(e) => toggleMenu('ability', e)}

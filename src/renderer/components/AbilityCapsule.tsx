@@ -11,15 +11,15 @@ import type { MouseEvent } from 'react';
 
 interface AbilityCapsuleProps {
   selectedAbility: string;
-  isEditing: boolean;
   onHoverEnter: (e: MouseEvent<HTMLDivElement>) => void;
   onHoverLeave: () => void;
   onToggleMenu: (e: MouseEvent<HTMLDivElement>) => void;
 }
 
+// Permanently editable (Always-On Editing Leg 1, see TODO.md) - no more
+// isEditing gate; clicking always opens the ability picker.
 export default function AbilityCapsule({
   selectedAbility,
-  isEditing,
   onHoverEnter,
   onHoverLeave,
   onToggleMenu,
@@ -28,8 +28,8 @@ export default function AbilityCapsule({
     <div
       onMouseEnter={onHoverEnter}
       onMouseLeave={onHoverLeave}
-      onClick={isEditing ? onToggleMenu : undefined}
-      className={`px-4 py-1.5 rounded-full border border-zinc-600 bg-zinc-800 text-xs font-semibold text-white truncate w-[134px] text-center transition-colors ${isEditing ? 'cursor-pointer hover:border-accent-gold' : ''}`}
+      onClick={onToggleMenu}
+      className="px-4 py-1.5 rounded-full border border-zinc-600 bg-zinc-800 text-xs font-semibold text-white truncate w-[134px] text-center transition-colors cursor-pointer hover:border-accent-gold"
     >
       {selectedAbility || 'Select Ability'}
     </div>
