@@ -15,7 +15,25 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
 
 ## In progress / up next
 
-Nothing currently in progress — see Backlog below for what's next up.
+- **[Always-On Editing] — Leg 1** *(Last touched: 2026-09-05 · Re-checks:
+  0)*
+  Remove the Edit-mode toggle for field-level edits — name, author, item,
+  ability, moves, nature, and EVs become permanently editable (Showdown-
+  style), no `isEditingTeam`/`isEditing` gate needed for these fields.
+  Exports already render through a separate `TeamPosterTile` decoupled from
+  the live card tree (confirmed in `TeamExportImageModal.tsx`, matching how
+  GW2-Squaded's `CaptureHost` works), so removing edit-mode chrome from the
+  live UI carries no export risk.
+
+- **[Always-On Editing] — Leg 2** *(Last touched: 2026-09-05 · Re-checks:
+  0)*
+  Depends on Leg 1. Structural actions — drag-to-reorder (both team-level
+  and Pokémon-slot-level), delete-slot, and the swap picker — need their own
+  lightweight always-visible affordance (e.g. a drag-handle icon) rather
+  than the removed mode toggle. An ungated always-draggable card/header was
+  already tried once and reverted for making every click/expand ambiguous
+  with a drag-start (see `TeamCard.tsx`'s `canReorder` comment) — this leg
+  needs to avoid reintroducing that.
 
 ## Blocked
 
@@ -23,6 +41,18 @@ Items where the whole item (not just a sub-part) is stalled on something
 outside this project — a person, a dependency, or an external decision.
 Exempt from the re-check counter; they move back to "In progress" once
 unblocked.
+
+- **[Sprite Corner Badges] — Leg 1** *(Last touched: 2026-09-05 · Re-checks:
+  0)*
+  Blocked: needs a decision from Vanny before scoping further.
+  Idea: move the shiny toggle to the sprite box's top-right corner and
+  gender to its top-left, freeing the footer row PokemonCard currently
+  spends on them and shrinking the card. Open question is whether the
+  compaction is worth the trade-off — shrinking the icons down to
+  corner-badge size shrinks their visual click target too, though a
+  proposed mitigation (a padded invisible hit zone larger than the visual
+  icon, ~32-36px, with a hover state) would preserve clickability without
+  keeping the icons full-size. Not yet scoped past this idea.
 
 - **[Regulation M-C Prep] — Leg 2** *(Last touched: 2026-09-05 · Re-checks:
   0)*

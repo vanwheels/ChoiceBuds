@@ -14,6 +14,11 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[Team Header Sprite Strip] - Leg 1** (2026-09-05) - reverted the
+  collapsed team card's 3D coverflow mini-sprite row back to a flat,
+  non-animated strip and sized its sprites up from 32px to 56px. See
+  commit `b29196f`.
+
 - **[Card Popup Consistency] - Leg 3** (2026-09-05) - replaced
   `StatsColumn.tsx`'s native `<select>` nature control (the one popup with
   zero positioning/styling control, and the confirmed worst offender - it
