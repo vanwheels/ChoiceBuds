@@ -3,14 +3,24 @@
  * 3x2 CSS grid; only one cell (`activeStat`) is ever expanded into its
  * hold-to-repeat +/- editor at a time - see EVStatCell.tsx. Clicking outside
  * the grid (or Escape) collapses back to the compact label+value buttons.
+ *
+ * The Nature control floats NaturePickerPanel over the card via
+ * FloatingCardPanel (same pattern as EditOverlays.tsx's item/ability/move
+ * pickers - see NaturePickerPanel.tsx) rather than a native <select>, which
+ * had no positioning control and spilled over the notes textarea/toolbar
+ * below it (Card Popup Consistency Leg 3 - see TODO.md).
  */
 
 import { useState } from 'react';
+import type { MouseEvent } from 'react';
 import type { EVSpread, ShowdownPokemon } from '../types/pokemon';
 import { useDismissable } from '../hooks/useDismissable';
-import { NATURES, getNatureEffect } from '../config/vgcData';
+import { getNatureEffect } from '../config/vgcData';
 import { getStatLabelColor } from '../config/pokemonTheme';
+import { measureDropdownMaxHeight } from '../utils/measureDropdownHeight';
 import EVStatCell from './EVStatCell';
+import NaturePickerPanel from './NaturePickerPanel';
+import FloatingCardPanel from './FloatingCardPanel';
 
 interface StatsColumnProps {
   evs: EVSpread;
@@ -31,6 +41,10 @@ const STATS: Array<{ label: string; key: keyof EVSpread }> = [
 export default function StatsColumn({ evs, nature, isEditing = false, onUpdatePokemon }: StatsColumnProps) {
   const [localEVs, setLocalEVs] = useState(evs);
   const [activeStat, setActiveStat] = useState<keyof EVSpread | null>(null);
+  const [natureMenuOpen, setNatureMenuOpen] = useState(false);
+  const [natureMenuMaxHeight, setNatureMenuMaxHeight] = useState(400);
+  const [natureMenuAnchorRect, setNatureMenuAnchorRect] = useState<DOMRect | null>(null);
+  const [natureMenuCardRect, setNatureMenuCardRect] = useState<DOMRect | null>(null);
   const ref = useDismissable<HTMLDivElement>(() => setActiveStat(null));
 
   const totalEVs = Object.values(localEVs).reduce((sum, val) => sum + val, 0);
@@ -58,6 +72,22 @@ export default function StatsColumn({ evs, nature, isEditing = false, onUpdatePo
       onUpdatePokemon({ evs: next });
       return next;
     });
+  };
+
+  const toggleNatureMenu = (e: MouseEvent<HTMLElement>) => {
+    if (natureMenuOpen) {
+      setNatureMenuOpen(false);
+      return;
+    }
+    setNatureMenuMaxHeight(measureDropdownMaxHeight(e.currentTarget));
+    setNatureMenuAnchorRect(e.currentTarget.getBoundingClientRect());
+    setNatureMenuCardRect(e.currentTarget.closest<HTMLElement>('[data-pokemon-card]')?.getBoundingClientRect() ?? null);
+    setNatureMenuOpen(true);
+  };
+
+  const handleNatureSelect = (nature: string) => {
+    onUpdatePokemon({ nature });
+    setNatureMenuOpen(false);
   };
 
   const handleDirectInput = (key: keyof EVSpread, rawValue: number) => {
@@ -93,15 +123,13 @@ export default function StatsColumn({ evs, nature, isEditing = false, onUpdatePo
         {(isEditing || nature) && (
           <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
             {isEditing ? (
-              <select
-                value={nature || ''}
-                onChange={(e) => onUpdatePokemon({ nature: e.target.value || undefined })}
+              <div
+                onClick={toggleNatureMenu}
                 title="Nature"
-                className="min-w-0 text-[10px] bg-zinc-900 border border-zinc-600 rounded px-1 py-0 text-zinc-200 outline-none focus:border-accent-gold"
+                className="min-w-0 text-[10px] bg-zinc-900 border border-zinc-600 rounded px-1 py-0 text-zinc-200 truncate cursor-pointer hover:border-accent-gold transition-colors"
               >
-                <option value="">Nature</option>
-                {NATURES.map(n => <option key={n} value={n}>{n}</option>)}
-              </select>
+                {nature || 'Nature'}
+              </div>
             ) : (
               <span className="text-[10px] text-zinc-500 truncate">{nature}</span>
             )}
@@ -135,6 +163,11 @@ export default function StatsColumn({ evs, nature, isEditing = false, onUpdatePo
           );
         })}
       </div>
+      {natureMenuOpen && natureMenuAnchorRect && (
+        <FloatingCardPanel anchorRect={natureMenuAnchorRect} cardRect={natureMenuCardRect}>
+          <NaturePickerPanel maxHeight={natureMenuMaxHeight} onSelect={handleNatureSelect} onClose={() => setNatureMenuOpen(false)} />
+        </FloatingCardPanel>
+      )}
     </div>
   );
 }
