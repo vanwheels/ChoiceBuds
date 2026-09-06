@@ -15,25 +15,17 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
 
 ## In progress / up next
 
-- **[Always-On Editing] — Leg 1** *(Last touched: 2026-09-05 · Re-checks:
-  0)*
-  Remove the Edit-mode toggle for field-level edits — name, author, item,
-  ability, moves, nature, and EVs become permanently editable (Showdown-
-  style), no `isEditingTeam`/`isEditing` gate needed for these fields.
-  Exports already render through a separate `TeamPosterTile` decoupled from
-  the live card tree (confirmed in `TeamExportImageModal.tsx`, matching how
-  GW2-Squaded's `CaptureHost` works), so removing edit-mode chrome from the
-  live UI carries no export risk.
-
 - **[Always-On Editing] — Leg 2** *(Last touched: 2026-09-05 · Re-checks:
   0)*
-  Depends on Leg 1. Structural actions — drag-to-reorder (both team-level
-  and Pokémon-slot-level), delete-slot, and the swap picker — need their own
-  lightweight always-visible affordance (e.g. a drag-handle icon) rather
-  than the removed mode toggle. An ungated always-draggable card/header was
+  Leg 1 done (see COMPLETED.md) - the `isEditingTeam`/`isEditing` mode toggle
+  is gone entirely. Structural actions it used to gate - team-level and
+  Pokémon-slot-level drag-to-reorder, delete-slot, the swap picker, and the
+  Add-Pokémon button - are left with no trigger at all in the meantime (see
+  `TeamCard.tsx`'s `canReorder` comment and `PokemonCard.tsx`'s `isEditing`
+  prop comment) and need their own lightweight always-visible affordance
+  (e.g. a drag-handle icon). An ungated always-draggable card/header was
   already tried once and reverted for making every click/expand ambiguous
-  with a drag-start (see `TeamCard.tsx`'s `canReorder` comment) — this leg
-  needs to avoid reintroducing that.
+  with a drag-start - this leg needs to avoid reintroducing that.
 
 ## Blocked
 
@@ -125,3 +117,15 @@ unblocked.
   `buildPokemon`, `computeSideResults`) was pulled out of `useDamageCalc.ts`
   specifically because it's pure and "independently unit-testable," but no
   test file was added in that leg. Still untested.
+
+- **[Team Name Field Reg-Prefix Display] — Leg 1** *(Last touched: 2026-09-05 ·
+  Re-checks: 0)*
+  Surfaced by Always-On Editing Leg 1 (see COMPLETED.md): the team-name field
+  is now a permanently-visible input showing the raw stored `team.name`,
+  whereas the old read-only header view stripped a leading `Reg M-A `/`Reg
+  M-B ` auto-prefix before display. A team carrying that stale prefix now
+  shows it in the input all the time instead of only while toggled into edit
+  mode. Needs a fix that doesn't risk silently renaming the team on first
+  blur with no user edit (comparing a stripped `localTeamName` against the
+  unstripped `team.name` would trigger an autosave the moment the field is
+  blurred, even untouched) - see `TeamCard.tsx`'s team-name input comment.

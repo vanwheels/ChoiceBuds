@@ -14,6 +14,16 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[Always-On Editing] - Leg 1** (2026-09-05) - removed the
+  `isEditingTeam`/`isEditing` edit-mode toggle (and TeamCard's Edit button)
+  for field-level edits: team name/author/notes and per-Pokemon
+  nickname/item/ability/moves/nature/EVs are all permanently interactive now,
+  Showdown-style, since every one of them already committed on blur/click
+  with no separate save step. Structural actions the same toggle used to
+  gate (drag-reorder, delete-slot, swap picker, Add-Pokemon button) are left
+  without a trigger pending Leg 2's own affordance rather than made
+  always-on. See commit `91235ab`.
+
 - **[Team Header Sprite Strip] - Leg 1** (2026-09-05) - reverted the
   collapsed team card's 3D coverflow mini-sprite row back to a flat,
   non-animated strip and sized its sprites up from 32px to 56px. See
