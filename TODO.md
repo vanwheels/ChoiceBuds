@@ -10,10 +10,105 @@ items are exempt from the re-check counter and live in their own tier below
 rather than mixed into the active list. This file adopted that format as of
 2026-08-31 — all re-check counters started at 0 then regardless of how long
 an item had been sitting. Reordered into priority order 2026-08-31; within
-"In progress / up next" and "Backlog / ideas", items are listed
-highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
+the current milestone and "Unscheduled", items are listed highest-to-lowest
+priority. Only one milestone is "current" at a time — see root `CLAUDE.md`'s
+Task Tracking rules for the full section-lifecycle (`## Current Milestone:
+<name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
+[COMPLETED.md](COMPLETED.md).
 
-## In progress / up next
+## Current Milestone: Card UI Polish
+
+- **[Damage Calc Engine Test Coverage] — Leg 1** *(Last touched: 2026-09-08 ·
+  Re-checks: 0)*
+  Scoped: `utils/damageCalcEngine.ts` is already pure and side-effect-free,
+  so no mocking needed — `Generations.get(9)` (same call `useDamageCalc.ts`
+  makes) gives a real Gen 9 data object synchronously in a plain Vitest
+  test, first time this suite exercises `@smogon/calc`'s Generation object
+  directly rather than through `calcFormes.ts`/`championsStats.ts`'s
+  plain-object helpers. New `damageCalcEngine.test.ts` covers:
+  `normalizeMoveSlug` (mixed case, punctuation, leading/trailing dashes),
+  `getNatureStatEffect` (a boosting nature, a neutral one asserting the
+  plus===minus filter), `computeBoostedStats`/`computeEffectiveSpeed` (base
+  stats, a stage boost, a weather-boosting-ability match/non-match,
+  paralysis halving, `null` on an empty species), and `computeSideResults`
+  as the main surface — a normal move, a fully-blocked immunity case
+  (`isFullyBlocked`/`blockedEntry`), a Champions ability damage-effect case
+  (`adjustedEntry`'s scaled range/desc), and a multi-hit move
+  (`getMultihitRange`/`flattenDamage`). Private helpers (`buildPokemon`,
+  `boostMultiplier`, `weatherSpeedMultiplier`, etc.) stay covered indirectly
+  through those exported entry points rather than exported just for
+  testing.
+
+- **[Team Name Field Reg-Prefix Display] — Leg 1** *(Last touched:
+  2026-09-08 · Re-checks: 0)*
+  Scoped (per user decision): one-time migration, dropping the
+  stored/display distinction entirely rather than tracking it as an ongoing
+  concern. `useTeams.ts`'s `normalizeTeam` (already the read-boundary
+  backfill spot, same pattern as the per-Pokemon `id` backfill) gets a new
+  step: strip a leading `Reg M-A `/`Reg M-B `/`Reg M-C ` from `team.name` if
+  present. Nothing in the app re-adds this prefix anymore, so the stripped
+  name is safe to treat as canonical going forward and doesn't need to be
+  written back proactively — same "picks up the fix the next time it's
+  saved through any normal mutation" behavior the id-backfill already
+  relies on. `TeamCard.tsx`'s team-name input (and its
+  `localTeamName`/`team.name` blur-diff logic) needs no special-casing once
+  this lands — the stale prefix simply won't be in `team.name` by the time
+  the input reads it.
+
+- **[Card Content Overflow at Mid Widths] — Leg 1** *(Last touched:
+  2026-09-08 · Re-checks: 0)*
+  Scoped: likely cause is the classic CSS grid/flex "child won't shrink
+  below its content's min-content width without an explicit `min-w-0`"
+  gotcha — `TeamCard.tsx`'s `grid-cols-3` track can be narrower than
+  `PokemonCard`'s `max-w-[280px]` cap in the container-width range below the
+  `@[1040px]:grid-cols-6` breakpoint (confirmed narrower via the Team Card
+  Grid Layout Re-check item's live measurements), so the card itself shrinks
+  to fit its track, but `StatsColumn.tsx`'s SP-investment row (`min-w-0` is
+  only applied to its inner nature-pill row today, not consistently up the
+  tree) and the type-badge row don't shrink to match, spilling past the
+  card's now-narrower rendered width. Fix direction: audit both rows for
+  missing `min-w-0`/`flex-wrap`/`truncate` up their full ancestor chain, not
+  a single-point patch. Needs a live `run-desktop` resize pass through the
+  exact width range to pin down the real breakpoint and confirm the fix,
+  same method the Team Card Grid Layout Re-check item used.
+
+- **[Card Action Button Placement] — Leg 1** *(Last touched: 2026-09-08 ·
+  Re-checks: 0)*
+  Scoped: design already fully specified, nothing left to resolve there.
+  Delete moves from its current `absolute top-2 right-2` position to sit
+  centered exactly on the card's top-right corner (negative offset, e.g.
+  `-top-2.5 -right-2.5`, extending outside the card's rounded border rather
+  than inset). Export moves out of the corner entirely into a right-click
+  context menu on the card — no existing context-menu component in the
+  codebase to reuse, so this needs a small new one (custom-positioned at the
+  click coordinates, dismisses on outside-click/Escape, single "Export"
+  entry for now) rather than pulling in a menu library for one item.
+  `onContextMenu` goes on the card's outer `data-pokemon-card` div,
+  `preventDefault()`'d to suppress the OS/browser native menu.
+
+- **[Pokémon Card Drag Without Handle] — Leg 1** *(Last touched: 2026-09-08 ·
+  Re-checks: 0)*
+  Scoped (per user decision): native HTML5 drag on the whole card, excluding
+  interactive descendants, rather than a pointer-threshold approach. Root
+  cause of the prior whole-card attempt's ambiguity (per its revert,
+  `cb0cc98`) wasn't HTML5's click-vs-drag disambiguation itself — that
+  already works cleanly for `MoveBubbleGrid.tsx`'s move-bubble drag, which
+  is simultaneously a click target and a drag source — it was `draggable`
+  on a container whose descendants include natively-draggable elements (the
+  sprite `<img>`) and text-selectable inputs with no exclusion logic at
+  all. Fix: move `draggable`/`onDragStart` from the grip-handle icon
+  (removed entirely) to the card's outer `data-pokemon-card` div;
+  `handleDragStart` bails out (`e.preventDefault()`, no payload set) when
+  `e.target` is inside an `input`, `button`, or an element carrying a new
+  `data-no-drag` attribute — tag the sprite/swap box and the gender/shiny
+  corner badges, and `EditOverlays`' item/ability/move-picker pills with it
+  (EV number inputs and Nickname are already native `input`s, covered by
+  the selector alone); also set `draggable={false}` explicitly on the
+  sprite `<img>` itself as a second guard against the browser's native
+  image-drag. `MoveBubbleGrid.tsx`'s own drag handlers already call
+  `e.stopPropagation()` on `dragstart` specifically so a move-bubble drag
+  won't also fire the card-level one now that it's a real descendant —
+  verify that still holds, no new code needed there.
 
 ## Blocked
 
@@ -83,53 +178,6 @@ unblocked.
   peer-range rejection + real runtime crash reports). Currently on
   TypeScript ^6.0.3.
 
-## Backlog / ideas (not yet scoped, highest-to-lowest priority)
+## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-- **[Damage Calc Engine Test Coverage] — Leg 1** *(Last touched: 2026-09-01 ·
-  Re-checks: 0)*
-  Surfaced by the File Size Cap Cleanup post-mortem
-  ([docs/postmortems/file-size-cap-cleanup.md](docs/postmortems/file-size-cap-cleanup.md)):
-  `utils/damageCalcEngine.ts` (state factories, boost/stat-multiplier math,
-  `buildPokemon`, `computeSideResults`) was pulled out of `useDamageCalc.ts`
-  specifically because it's pure and "independently unit-testable," but no
-  test file was added in that leg. Still untested.
-
-- **[Team Name Field Reg-Prefix Display] — Leg 1** *(Last touched: 2026-09-05 ·
-  Re-checks: 0)*
-  Surfaced by Always-On Editing Leg 1 (see COMPLETED.md): the team-name field
-  is now a permanently-visible input showing the raw stored `team.name`,
-  whereas the old read-only header view stripped a leading `Reg M-A `/`Reg
-  M-B ` auto-prefix before display. A team carrying that stale prefix now
-  shows it in the input all the time instead of only while toggled into edit
-  mode. Needs a fix that doesn't risk silently renaming the team on first
-  blur with no user edit (comparing a stripped `localTeamName` against the
-  unstripped `team.name` would trigger an autosave the moment the field is
-  blurred, even untouched) - see `TeamCard.tsx`'s team-name input comment.
-
-- **[Card Content Overflow at Mid Widths] — Leg 1** *(Last touched:
-  2026-09-08 · Re-checks: 0)*
-  There's a window-width range where a `PokemonCard`'s SP-investment box and
-  typing badges extend past the card's own width before the grid drops from
-  3-column down to 2x3. Needs a responsive fix so those elements wrap/shrink
-  at that width instead of overflowing.
-
-- **[Card Action Button Placement] — Leg 1** *(Last touched: 2026-09-08 ·
-  Re-checks: 0)*
-  The Export and Delete buttons on individual `PokemonCard`s visually clutter
-  the card. Move Delete to a small button whose center sits exactly on the
-  card's top-right corner (extending outside the card's bounding box, not
-  inset within it). Move Export out of the card entirely into a right-click
-  context menu.
-
-- **[Pokémon Card Drag Without Handle] — Leg 1** *(Last touched: 2026-09-08 ·
-  Re-checks: 0)*
-  Revisits Always-On Editing Leg 2's drag source for team-slot reorder (see
-  COMPLETED.md): user wants Pokémon cards draggable from anywhere on the
-  card again, not gated behind the dedicated top-left grip-handle icon,
-  which reads as visually out of place. Leg 2 deliberately moved off
-  whole-card-dragging specifically because Leg 1 found it ambiguous (drag
-  source competing with the card's other click targets) - this leg needs to
-  resolve that ambiguity some other way rather than just reverting to it.
-  Separate from the still-open Move-Slot Drag Handle item below, which is
-  about drag-reordering moves within a Pokémon's set (`MoveBubbleGrid.tsx`),
-  not team-slot cards.
+(nothing currently unscheduled)
