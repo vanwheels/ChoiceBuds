@@ -16,8 +16,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Card UI Polish
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
