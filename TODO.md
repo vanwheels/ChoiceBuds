@@ -18,23 +18,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 
 ## Current Milestone: Card UI Polish
 
-- **[Card Content Overflow at Mid Widths] — Leg 1** *(Last touched:
-  2026-09-08 · Re-checks: 0)*
-  Scoped: likely cause is the classic CSS grid/flex "child won't shrink
-  below its content's min-content width without an explicit `min-w-0`"
-  gotcha — `TeamCard.tsx`'s `grid-cols-3` track can be narrower than
-  `PokemonCard`'s `max-w-[280px]` cap in the container-width range below the
-  `@[1040px]:grid-cols-6` breakpoint (confirmed narrower via the Team Card
-  Grid Layout Re-check item's live measurements), so the card itself shrinks
-  to fit its track, but `StatsColumn.tsx`'s SP-investment row (`min-w-0` is
-  only applied to its inner nature-pill row today, not consistently up the
-  tree) and the type-badge row don't shrink to match, spilling past the
-  card's now-narrower rendered width. Fix direction: audit both rows for
-  missing `min-w-0`/`flex-wrap`/`truncate` up their full ancestor chain, not
-  a single-point patch. Needs a live `run-desktop` resize pass through the
-  exact width range to pin down the real breakpoint and confirm the fix,
-  same method the Team Card Grid Layout Re-check item used.
-
 - **[Card Action Button Placement] — Leg 1** *(Last touched: 2026-09-08 ·
   Re-checks: 0)*
   Scoped: design already fully specified, nothing left to resolve there.
@@ -143,4 +126,22 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-(nothing currently unscheduled)
+- **[EV Grid / Move Bubble Overflow at Extreme Narrow Widths] — Leg 1**
+  *(Last touched: 2026-09-08 · Re-checks: 0)*
+  Surfaced while `run-desktop`-verifying [Card Content Overflow at Mid
+  Widths] (see COMPLETED.md): forcing a `PokemonCard`'s `@container` width
+  down to ~550px (3-col track, ~183px/card) showed `StatsColumn.tsx`'s
+  bottom EV stat grid (`repeat(3, 1fr)` in the component's inline style,
+  around `StatsColumn.tsx:140`) and `EditOverlays.tsx`'s move-bubble grid
+  bleeding into the neighboring card - same root gotcha (grid items'
+  default `min-w-0` missing up the chain) as the two rows just fixed, just
+  a different pair of rows, not scoped/audited in that leg. Not yet
+  confirmed reachable through any real window-size/layout combination
+  today (`main.ts`'s enforced `minWidth: 1280` plus `TeamsPage.tsx`'s own
+  `@[1360px]:grid-cols-2` breakpoint put the realistic floor for a single
+  team card's container around ~670-1000px, comfortably above 550px) - the
+  precedent Team Card Grid Layout Re-check item did measure narrower reals
+  numbers on macOS (818px on a 13" MacBook) than this Windows dev machine
+  can reach, so treat "not reachable" as unconfirmed rather than settled.
+  Needs the same live resize-pass treatment before deciding whether it's
+  worth fixing.

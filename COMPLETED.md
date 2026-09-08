@@ -14,6 +14,16 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[Card Content Overflow at Mid Widths] - Leg 1** (2026-09-08) - added
+  `min-w-0` up `PokemonCard.tsx`'s grid-item/card-shell/type-badge-row chain
+  and `StatsColumn.tsx`'s root/header-block chain, plus `flex-wrap` on the
+  type-badge row, so both rows shrink/wrap with the card instead of
+  spilling past it. Live-verified via a `run-desktop` pass forcing the
+  expanded grid's `@container` width down to 300px; surfaced a separate,
+  not-yet-scoped overflow in the EV stat grid/move-bubble grid at even
+  narrower widths, filed as its own TODO.md item rather than fixed here.
+  See commit `bf03624`.
+
 - **[Team Name Field Reg-Prefix Display] - Leg 1** (2026-09-08) - one-time
   migration: `useTeams.ts`'s `normalizeTeam` now strips a stale leading
   `Reg M-A `/`Reg M-B `/`Reg M-C ` from `team.name` at the read boundary,
