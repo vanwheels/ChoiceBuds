@@ -14,6 +14,13 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[Pokémon Card Drag Without Handle] - Leg 1** (2026-09-08) - Replaced the
+  dedicated grip-handle icon with `draggable` on the whole `PokemonCard.tsx`
+  card div, gated by a target check in `handleDragStart` that bails when the
+  drag started on an `input`, `button`, or a new `data-no-drag`-tagged
+  element (sprite/swap box, gender/shiny corner badges, `ItemSpriteBox`,
+  `AbilityCapsule`). See commit `6ecedd2`.
+
 - **[Card Action Button Placement] - Leg 1** (2026-09-08) - Delete now
   centers on `PokemonCard.tsx`'s top-right corner with a negative offset
   (`-top-2.5 -right-2.5`), extending outside the card's rounded border.

@@ -18,30 +18,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 
 ## Current Milestone: Card UI Polish
 
-- **[Pokémon Card Drag Without Handle] — Leg 1** *(Last touched: 2026-09-08 ·
-  Re-checks: 0)*
-  Scoped (per user decision): native HTML5 drag on the whole card, excluding
-  interactive descendants, rather than a pointer-threshold approach. Root
-  cause of the prior whole-card attempt's ambiguity (per its revert,
-  `cb0cc98`) wasn't HTML5's click-vs-drag disambiguation itself — that
-  already works cleanly for `MoveBubbleGrid.tsx`'s move-bubble drag, which
-  is simultaneously a click target and a drag source — it was `draggable`
-  on a container whose descendants include natively-draggable elements (the
-  sprite `<img>`) and text-selectable inputs with no exclusion logic at
-  all. Fix: move `draggable`/`onDragStart` from the grip-handle icon
-  (removed entirely) to the card's outer `data-pokemon-card` div;
-  `handleDragStart` bails out (`e.preventDefault()`, no payload set) when
-  `e.target` is inside an `input`, `button`, or an element carrying a new
-  `data-no-drag` attribute — tag the sprite/swap box and the gender/shiny
-  corner badges, and `EditOverlays`' item/ability/move-picker pills with it
-  (EV number inputs and Nickname are already native `input`s, covered by
-  the selector alone); also set `draggable={false}` explicitly on the
-  sprite `<img>` itself as a second guard against the browser's native
-  image-drag. `MoveBubbleGrid.tsx`'s own drag handlers already call
-  `e.stopPropagation()` on `dragstart` specifically so a move-bubble drag
-  won't also fire the card-level one now that it's a real descendant —
-  verify that still holds, no new code needed there.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
