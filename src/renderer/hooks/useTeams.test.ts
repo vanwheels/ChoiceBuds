@@ -33,6 +33,32 @@ describe('useTeams', () => {
     expect(result.current.teams).toEqual([makeTeam()]);
   });
 
+  it('strips a stale "Reg M-A/B/C " prefix from a team name on load', async () => {
+    const database: TeamsDatabase = {
+      version: 1,
+      teams: [
+        makeTeam({ id: 'a', name: 'Reg M-A Rain Team' }),
+        makeTeam({ id: 'b', name: 'Reg M-B Sun Team' }),
+        makeTeam({ id: 'c', name: 'Reg M-C Sand Team' }),
+        makeTeam({ id: 'd', name: 'Reg M-D Trick Room' }),
+        makeTeam({ id: 'e', name: 'My Reg M-A Team' }),
+      ],
+      lastModified: 0,
+    };
+    vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce(database);
+
+    const { result } = renderHook(() => useTeams());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.teams.map(t => t.name)).toEqual([
+      'Rain Team',
+      'Sun Team',
+      'Sand Team',
+      'Reg M-D Trick Room',
+      'My Reg M-A Team',
+    ]);
+  });
+
   it('reports an error when loading throws', async () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.mocked(window.electron.readTeamsDatabase).mockRejectedValueOnce(new Error('disk error'));

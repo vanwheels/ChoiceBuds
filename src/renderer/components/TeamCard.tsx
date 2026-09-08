@@ -167,13 +167,11 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
 
           {/* Team name - permanently editable (Always-On Editing Leg 1, see
               TODO.md), no more isEditingTeam gate. Shows the raw stored
-              team.name (same as the old edit-mode input always did) rather
-              than the read-only view's Reg M-A/M-B auto-prefix-stripped
-              display - a team carrying that stale prefix will now show it
-              in the input permanently instead of only while toggled into
-              edit mode. Flagged as a backlog polish item in TODO.md rather
-              than fixed here, since stripping it here risks silently
-              renaming the team on first blur even with no user edit. */}
+              team.name; no special-casing needed for the old Reg M-A/M-B/M-C
+              display prefix (see Team Name Field Reg-Prefix Display in
+              COMPLETED.md) - useTeams.ts's normalizeTeam strips it from
+              team.name at the read boundary, so it's never present by the
+              time this input reads it. */}
           <input
             type="text"
             value={localTeamName}

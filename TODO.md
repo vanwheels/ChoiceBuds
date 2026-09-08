@@ -18,22 +18,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 
 ## Current Milestone: Card UI Polish
 
-- **[Team Name Field Reg-Prefix Display] — Leg 1** *(Last touched:
-  2026-09-08 · Re-checks: 0)*
-  Scoped (per user decision): one-time migration, dropping the
-  stored/display distinction entirely rather than tracking it as an ongoing
-  concern. `useTeams.ts`'s `normalizeTeam` (already the read-boundary
-  backfill spot, same pattern as the per-Pokemon `id` backfill) gets a new
-  step: strip a leading `Reg M-A `/`Reg M-B `/`Reg M-C ` from `team.name` if
-  present. Nothing in the app re-adds this prefix anymore, so the stripped
-  name is safe to treat as canonical going forward and doesn't need to be
-  written back proactively — same "picks up the fix the next time it's
-  saved through any normal mutation" behavior the id-backfill already
-  relies on. `TeamCard.tsx`'s team-name input (and its
-  `localTeamName`/`team.name` blur-diff logic) needs no special-casing once
-  this lands — the stale prefix simply won't be in `team.name` by the time
-  the input reads it.
-
 - **[Card Content Overflow at Mid Widths] — Leg 1** *(Last touched:
   2026-09-08 · Re-checks: 0)*
   Scoped: likely cause is the classic CSS grid/flex "child won't shrink

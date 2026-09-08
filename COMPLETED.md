@@ -14,6 +14,16 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[Team Name Field Reg-Prefix Display] - Leg 1** (2026-09-08) - one-time
+  migration: `useTeams.ts`'s `normalizeTeam` now strips a stale leading
+  `Reg M-A `/`Reg M-B `/`Reg M-C ` from `team.name` at the read boundary,
+  same pattern as its per-Pokemon `id` backfill. Nothing in the app re-adds
+  the prefix, so it's never written back proactively - a team just drops it
+  the next time it's saved through any normal mutation. `TeamCard.tsx`'s
+  stale comment about the read-only view's separate prefix-stripped display
+  (from before this change) updated to reflect that the input just reads
+  `team.name` directly now. See commit `<pending>`.
+
 - **[Damage Calc Engine Test Coverage] - Leg 1** (2026-09-08) - added direct
   engine-level tests for `damageCalcEngine.ts`'s remaining pure-logic
   surface (`normalizeMoveSlug`, `getNatureStatEffect`,

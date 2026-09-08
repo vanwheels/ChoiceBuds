@@ -8,6 +8,15 @@ import { useState, useCallback, useEffect } from 'react';
 import type { ImportedPokemonInfo, Team, TeamsDatabase } from '../types/pokemon';
 
 /**
+ * Leading "Reg M-A "/"Reg M-B "/"Reg M-C " prefix this app used to stamp
+ * onto a team's display name. Nothing writes this prefix anymore, so a
+ * team.name still carrying it is stale data from before the change - see
+ * TODO.md's "Team Name Field Reg-Prefix Display" item. One-time migration:
+ * stripped at the read boundary below, not tracked as an ongoing concern.
+ */
+const REG_PREFIX_PATTERN = /^Reg M-[ABC] /;
+
+/**
  * Backfills a per-Pokemon `id` for teams persisted before that field existed
  * (added for the roster drag-reorder animation, leg 4 - see TODO.md and
  * ImportedPokemonInfo's own doc comment), at the read boundary - same
@@ -19,6 +28,7 @@ import type { ImportedPokemonInfo, Team, TeamsDatabase } from '../types/pokemon'
 function normalizeTeam(team: Team & { pokemon: (ImportedPokemonInfo & { id?: string })[] }): Team {
   return {
     ...team,
+    name: team.name.replace(REG_PREFIX_PATTERN, ''),
     pokemon: team.pokemon.map(p => ({ ...p, id: p.id ?? crypto.randomUUID() })),
   };
 }
