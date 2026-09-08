@@ -22,7 +22,7 @@ in:
   the next time it's saved through any normal mutation. `TeamCard.tsx`'s
   stale comment about the read-only view's separate prefix-stripped display
   (from before this change) updated to reflect that the input just reads
-  `team.name` directly now. See commit `<pending>`.
+  `team.name` directly now. See commit `af65402`.
 
 - **[Damage Calc Engine Test Coverage] - Leg 1** (2026-09-08) - added direct
   engine-level tests for `damageCalcEngine.ts`'s remaining pure-logic
