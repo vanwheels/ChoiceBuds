@@ -26,6 +26,7 @@ export default function AbilityCapsule({
 }: AbilityCapsuleProps) {
   return (
     <div
+      data-no-drag
       onMouseEnter={onHoverEnter}
       onMouseLeave={onHoverLeave}
       onClick={onToggleMenu}

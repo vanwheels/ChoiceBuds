@@ -44,6 +44,7 @@ export default function ItemSpriteBox({
 
   return (
     <div
+      data-no-drag
       onMouseEnter={onHoverEnter}
       onMouseLeave={onHoverLeave}
       onClick={onToggleMenu}

@@ -157,17 +157,29 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
   };
 
   // Roster reorder via drag-and-drop (Always-On Editing Leg 2, see TODO.md) -
-  // draggable is scoped to the grip-handle icon below, not this whole card,
-  // so dragging can't fight with clicking the nickname input, sprite/swap
-  // box, or item/ability/move pickers (an always-draggable card was tried
-  // and reverted for exactly that ambiguity - see Leg 1's COMPLETED.md
-  // entry). Same MIME-type-payload pattern as the Battle Logger roster drag
-  // (utils/dragTypes.ts) and Calc team tray drag (utils/calcDragTypes.ts).
-  // teamId travels in the payload (not the type string itself) since a
-  // mismatched-team drop is checked on `drop`, not shown live during
-  // `dragover` - unlike those two, dragging between two different teams'
-  // cards has no valid outcome to preview either way.
+  // draggable now lives on the whole card div below rather than a dedicated
+  // grip-handle icon (Pokémon Card Drag Without Handle Leg 1, see TODO.md).
+  // The prior whole-card attempt was reverted for click/drag ambiguity, but
+  // the actual cause wasn't HTML5's own click-vs-drag disambiguation (that
+  // already works cleanly for MoveBubbleGrid.tsx's move-bubble drag, which
+  // is simultaneously a click target and a drag source) - it was `draggable`
+  // on a container with no exclusion logic for its natively-draggable/
+  // text-selectable descendants. Bailing out here when the drag actually
+  // started on an input/button/[data-no-drag] element is what fixes that:
+  // nickname input and the delete button are native `input`/`button`
+  // elements already covered by the selector; the sprite/swap box and
+  // gender/shiny corner badges and EditOverlays' item/ability pills carry
+  // `data-no-drag` explicitly. Same MIME-type-payload pattern as the Battle
+  // Logger roster drag (utils/dragTypes.ts) and Calc team tray drag
+  // (utils/calcDragTypes.ts). teamId travels in the payload (not the type
+  // string itself) since a mismatched-team drop is checked on `drop`, not
+  // shown live during `dragover` - unlike those two, dragging between two
+  // different teams' cards has no valid outcome to preview either way.
   const handleDragStart = (e: DragEvent<HTMLDivElement>) => {
+    if ((e.target as HTMLElement).closest('input, button, [data-no-drag]')) {
+      e.preventDefault();
+      return;
+    }
     const payload: TeamRosterDragPayload = { teamId: team.id, fromIndex: pokemonIndex };
     e.dataTransfer.setData(TEAM_ROSTER_DRAG_TYPE, JSON.stringify(payload));
     e.dataTransfer.effectAllowed = 'move';
@@ -228,35 +240,14 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
     <motion.div layout="position" transition={DRAG_REORDER_TRANSITION} className="type-glow-ring max-w-[280px] min-w-0" style={glowRingStyle}>
       <div
         data-pokemon-card
+        draggable
+        onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragLeave={() => setIsDragOver(false)}
         onDrop={handleDrop}
         onContextMenu={handleContextMenu}
-        className={`relative bg-zinc-700 rounded-[11px] p-3 flex flex-col gap-3 min-w-0 transition-colors ${isDragOver ? 'ring-2 ring-accent-gold' : ''}`}
+        className={`relative bg-zinc-700 rounded-[11px] p-3 flex flex-col gap-3 min-w-0 transition-colors cursor-grab ${isDragOver ? 'ring-2 ring-accent-gold' : ''}`}
       >
-        {/* Drag-handle affordance icon (carousel rework leg 3, permanently on since
-            Always-On Editing Leg 2, see TODO.md) - matches the approved mockup's
-            `.grip` element (top-left 22x22px rounded box, 6-dot grid icon). This is
-            now the actual drag source too (draggable/onDragStart live here, not on
-            the card div above) rather than just a visual anchor for a whole-card
-            drag - keeping the draggable surface this small is what avoids the
-            click/expand ambiguity a whole-card-draggable version was reverted for. */}
-        <div
-          draggable
-          onDragStart={handleDragStart}
-          title="Drag to reorder"
-          className="absolute top-2 left-2 z-10 w-[22px] h-[22px] flex items-center justify-center rounded-md bg-zinc-900/55 border border-zinc-600/60 text-zinc-400 cursor-grab"
-        >
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-            <circle cx="9" cy="6" r="1.4" />
-            <circle cx="15" cy="6" r="1.4" />
-            <circle cx="9" cy="12" r="1.4" />
-            <circle cx="15" cy="12" r="1.4" />
-            <circle cx="9" cy="18" r="1.4" />
-            <circle cx="15" cy="18" r="1.4" />
-          </svg>
-        </div>
-
         {/* Left-Shifting Slot Deletion - permanently on (Always-On Editing Leg 2,
             see TODO.md). Centered on the card's top-right corner with a negative
             offset (Card Action Button Placement Leg 1, see TODO.md) - sits outside
@@ -293,6 +284,7 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
             Ability pill below. */}
         <div className="flex justify-center">
           <div
+            data-no-drag
             onClick={() => setIsSwapPickerOpen(true)}
             className="relative w-[134px] mx-auto h-24 bg-zinc-800 rounded-lg border border-zinc-600 flex items-center justify-center overflow-hidden cursor-pointer hover:border-accent-gold transition-colors"
             title="Click to swap this Pokémon"
@@ -301,6 +293,7 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
               <img
                 src={spriteCacheState.resolveSprite(displaySpriteUrl)}
                 alt={showdownData.species}
+                draggable={false}
                 onError={useAnimated ? () => setFailedAnimatedUrl(animatedCandidateUrl) : undefined}
                 className={`w-24 h-24 object-contain mx-auto transition-transform duration-150 ${useAnimated ? '' : '[image-rendering:pixelated]'}`}
               />
@@ -315,6 +308,7 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
                 stopPropagation keeps a badge click from also bubbling into this
                 sprite box's own onClick (which would re-open the swap picker). */}
             <div
+              data-no-drag
               className={`group absolute top-0.5 left-0.5 z-10 w-[34px] h-[34px] flex items-center justify-center ${isGenderClickable() ? 'cursor-pointer' : 'cursor-not-allowed'}`}
               onClick={(e) => {
                 e.stopPropagation();
@@ -329,6 +323,7 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
               </div>
             </div>
             <div
+              data-no-drag
               className="group absolute top-0.5 right-0.5 z-10 w-[34px] h-[34px] flex items-center justify-center cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
