@@ -15,25 +15,6 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
 
 ## In progress / up next
 
-- **[Move-Slot Drag Handle] — Leg 1** *(Last touched: 2026-09-08 · Re-checks:
-  0)*
-  Scoped (design question resolved via `AskUserQuestion`): re-enable
-  `MoveBubbleGrid.tsx`'s existing drag-to-reorder machinery (drag start/over/
-  drop handlers, `onReorderMoves` - all already built, just gated off since
-  Always-On Editing Leg 2) by making `isEditing` unconditionally true through
-  the `PokemonCard` → `EditOverlays` → `MoveBubbleGrid` chain, no new
-  grip-handle UI. This reuses the exact mechanism that already worked
-  pre-2026-09-05 under the old global edit-mode toggle: a move bubble is
-  simultaneously the click target (opens its move picker) and the drag
-  source, disambiguated natively since HTML5 only fires `dragstart` after
-  real pointer movement and suppresses the `click` event when a drag
-  actually occurred - confirmed this isn't a new mechanism, just re-exposing
-  one that already shipped once. Cursor will show grab-hand on hover instead
-  of the pointer-hand click hint (accepted as part of picking this option).
-  Implementation should also decide whether to keep `isEditing` as a prop
-  (now always `true`, no caller ever passing `false`) or drop the plumbing
-  entirely now that it's not conditional.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
