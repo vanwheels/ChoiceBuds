@@ -1,7 +1,7 @@
 /**
  * PokemonCard.tsx - Lightweight Pokemon Card Shell
- * Layout order: Nickname -> Name/Number -> Sprite -> Type Badges ->
- * Item/Ability/Moves (EditOverlays) -> EVs (StatsColumn) -> Gender/Shiny footer
+ * Layout order: Nickname -> Name/Number -> Sprite (with Gender/Shiny corner
+ * badges) -> Type Badges -> Item/Ability/Moves (EditOverlays) -> EVs (StatsColumn)
  *
  * Receives `team`/`updateTeam`/`gameDataState`/`speciesRosterState`/`rosterActions`
  * as props from TeamCard rather than calling useTeams()/useGameData() itself -
@@ -289,7 +289,7 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
         <div className="flex justify-center">
           <div
             onClick={() => setIsSwapPickerOpen(true)}
-            className="w-[134px] mx-auto h-24 bg-zinc-800 rounded-lg border border-zinc-600 flex items-center justify-center overflow-hidden cursor-pointer hover:border-accent-gold transition-colors"
+            className="relative w-[134px] mx-auto h-24 bg-zinc-800 rounded-lg border border-zinc-600 flex items-center justify-center overflow-hidden cursor-pointer hover:border-accent-gold transition-colors"
             title="Click to swap this Pokémon"
           >
             {displaySpriteUrl ? (
@@ -302,6 +302,39 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
             ) : (
               <span className="text-xs text-zinc-400">No sprite</span>
             )}
+
+            {/* Gender/Shiny corner badges (Sprite Corner Badges Leg 1, see TODO.md) -
+                replaces the old footer row below the card. Each is a ~34px padded
+                hit zone (invisible by default) wrapping a ~22px visual icon, matching
+                the drag-handle/delete-button icon scale elsewhere on this card.
+                stopPropagation keeps a badge click from also bubbling into this
+                sprite box's own onClick (which would re-open the swap picker). */}
+            <div
+              className={`group absolute top-0.5 left-0.5 z-10 w-[34px] h-[34px] flex items-center justify-center ${isGenderClickable() ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (isGenderClickable()) handleGenderToggle();
+              }}
+              title={isGenderless(showdownData.species) ? 'Genderless species' : isFemaleLocked(showdownData.species) ? 'Female-only species' : 'Click to toggle gender'}
+            >
+              <div className={`w-[22px] h-[22px] flex items-center justify-center rounded-md border border-transparent transition-colors ${isGenderClickable() ? 'group-hover:bg-zinc-900/55 group-hover:border-zinc-600/60' : 'opacity-60'}`}>
+                {localGender === 'M' && <span className="text-sm font-bold text-blue-400">♂</span>}
+                {localGender === 'F' && <span className="text-sm font-bold text-pink-400">♀</span>}
+                {localGender !== 'M' && localGender !== 'F' && <span className="text-sm font-bold text-zinc-400">⌀</span>}
+              </div>
+            </div>
+            <div
+              className="group absolute top-0.5 right-0.5 z-10 w-[34px] h-[34px] flex items-center justify-center cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleShinyToggle();
+              }}
+              title="Click to toggle shiny status"
+            >
+              <div className="w-[22px] h-[22px] flex items-center justify-center rounded-md border border-transparent transition-colors group-hover:bg-zinc-900/55 group-hover:border-zinc-600/60">
+                <span className={isLocalShiny ? 'text-sm select-none filter-none opacity-100' : 'text-sm select-none grayscale opacity-30'}>✨</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -326,26 +359,6 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
 
         {/* EVs Grid Block - permanently editable (Always-On Editing Leg 1, see TODO.md) */}
         <StatsColumn evs={showdownData.evs} nature={showdownData.nature} onUpdatePokemon={updateShowdownData} />
-
-        {/* Footer: Gender and Shiny Indicators - each in its own item-sprite-style box, side by side */}
-        <div className="flex flex-row items-center justify-center gap-3 pt-2 mt-1 border-t border-zinc-800/60 w-full">
-          <div
-            className={`w-14 h-14 bg-zinc-800 rounded-lg border border-zinc-600 flex items-center justify-center overflow-hidden transition-colors ${isGenderClickable() ? 'cursor-pointer hover:border-accent-gold' : 'cursor-not-allowed opacity-60'}`}
-            onClick={isGenderClickable() ? handleGenderToggle : undefined}
-            title={isGenderless(showdownData.species) ? 'Genderless species' : isFemaleLocked(showdownData.species) ? 'Female-only species' : 'Click to toggle gender'}
-          >
-            {localGender === 'M' && <span className="text-2xl font-bold text-blue-400">♂</span>}
-            {localGender === 'F' && <span className="text-2xl font-bold text-pink-400">♀</span>}
-            {localGender !== 'M' && localGender !== 'F' && <span className="text-2xl font-bold text-zinc-400">⌀</span>}
-          </div>
-          <div
-            className="w-14 h-14 bg-zinc-800 rounded-lg border border-zinc-600 flex items-center justify-center overflow-hidden cursor-pointer hover:border-accent-gold transition-colors"
-            onClick={handleShinyToggle}
-            title="Click to toggle shiny status"
-          >
-            <span className={isLocalShiny ? 'text-2xl select-none filter-none opacity-100' : 'text-2xl select-none grayscale opacity-30'}>✨</span>
-          </div>
-        </div>
 
         <AnimatePresence>
           {isExportOpen && (
