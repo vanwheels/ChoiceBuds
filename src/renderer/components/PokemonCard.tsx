@@ -348,13 +348,12 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
         </div>
 
         {/* Item Sprite Box / Ability Capsule / Move Bubbles - clicking to pick is
-            permanently on (Always-On Editing Leg 1, see TODO.md). `isEditing` isn't
-            passed here (defaults false) - it still only gates MoveBubbleGrid's
-            move-slot drag-to-reorder, which Leg 2 deliberately left alone: unlike
-            the affordances above, a move bubble is both the click target that opens
-            its picker AND the thing that would need to become a drag source, so it
-            needs its own handle design rather than reusing this leg's pattern -
-            see the new Move-Slot Drag Handle backlog item in TODO.md. */}
+            permanently on (Always-On Editing Leg 1, see TODO.md), and so is
+            MoveBubbleGrid's move-slot drag-to-reorder (Move-Slot Drag Handle
+            Leg 1, see TODO.md) - a move bubble is simultaneously the click
+            target that opens its picker and the drag source, disambiguated
+            natively since HTML5 only fires dragstart after real pointer
+            movement and suppresses click when a drag actually occurred. */}
         <EditOverlays pokemon={pokemon} gameDataState={gameDataState} rulesetId={rulesetId} resolveSprite={spriteCacheState.resolveSprite} onUpdatePokemon={updateShowdownData} />
 
         {/* EVs Grid Block - permanently editable (Always-On Editing Leg 1, see TODO.md) */}

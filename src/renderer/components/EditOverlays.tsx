@@ -38,21 +38,13 @@ import FloatingCardPanel from './FloatingCardPanel';
 
 interface EditOverlaysProps {
   pokemon: ImportedPokemonInfo;
-  // Narrowed to MoveBubbleGrid's drag-to-reorder affordance only (Always-On
-  // Editing Leg 1, see TODO.md). Item/ability/move click-to-pick below is
-  // unconditionally on regardless of this prop's value. Deliberately not
-  // wired to a trigger by Leg 2 (PokemonCard.tsx doesn't pass it, so this
-  // still defaults false) - see the Move-Slot Drag Handle backlog item in
-  // TODO.md for why a move bubble needs its own design, not this leg's
-  // grip-handle pattern.
-  isEditing?: boolean;
   gameDataState: UseGameDataReturn;
   rulesetId: RegulationId;
   resolveSprite: (remoteUrl: string) => string;
   onUpdatePokemon: (updates: Partial<ShowdownPokemon>) => void;
 }
 
-export default function EditOverlays({ pokemon, isEditing = false, gameDataState, rulesetId, resolveSprite, onUpdatePokemon }: EditOverlaysProps) {
+export default function EditOverlays({ pokemon, gameDataState, rulesetId, resolveSprite, onUpdatePokemon }: EditOverlaysProps) {
   const { items, getItemData, getAbilityData, getMoveData, getEnrichedSpeciesOptions, getChampionsUsage } = gameDataState;
   // Scopes a move-slot drag to this specific card's own MoveBubbleGrid - see moveReorderDragTypes.ts
   const moveDragOwnerId = useId();
@@ -289,7 +281,6 @@ export default function EditOverlays({ pokemon, isEditing = false, gameDataState
       <MoveBubbleGrid
         moveDataSlots={moveDataSlots}
         selectedMoves={selectedMoves}
-        isEditing={isEditing}
         ownerId={moveDragOwnerId}
         onToggleMenu={toggleMenu}
         onHoverEnter={hoverEnter}

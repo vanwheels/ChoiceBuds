@@ -20,15 +20,13 @@ export type HoverKey = 'item' | 'ability' | `move${0 | 1 | 2 | 3}` | null;
 interface MoveBubbleGridProps {
   moveDataSlots: Array<MoveData | null>;
   selectedMoves: string[];
-  // Narrowed to the drag-to-reorder affordance only (Always-On Editing Leg
-  // 1, see TODO.md): clicking a bubble to open the move picker is
-  // unconditionally on now. Reordering moves by dragging is a structural
-  // action with no caller passing true anymore - Always-On Editing Leg 2
-  // deliberately left this one alone (a bubble is both the click-to-open
-  // target and the would-be drag source, unlike the affordances Leg 2 did
-  // add its own handle for) - see the Move-Slot Drag Handle backlog item in
-  // TODO.md.
-  isEditing: boolean;
+  // Drag-to-reorder is permanently on (Move-Slot Drag Handle Leg 1, see
+  // TODO.md) - reuses the mechanism that already shipped once under the old
+  // global edit-mode toggle. A bubble is simultaneously the click target
+  // (opens its move picker) and the drag source, disambiguated natively
+  // since HTML5 only fires dragstart after real pointer movement and
+  // suppresses the click event when a drag actually occurred. No isEditing
+  // prop anymore - it was always true with no caller ever passing false.
   ownerId: string;
   onToggleMenu: (key: string, e: MouseEvent<HTMLDivElement>) => void;
   onHoverEnter: (key: HoverKey, triggerEl: HTMLElement) => void;
@@ -39,7 +37,6 @@ interface MoveBubbleGridProps {
 export default function MoveBubbleGrid({
   moveDataSlots,
   selectedMoves,
-  isEditing,
   ownerId,
   onToggleMenu,
   onHoverEnter,
@@ -104,15 +101,15 @@ export default function MoveBubbleGrid({
         return (
           <div
             key={index}
-            draggable={isEditing}
-            onDragStart={isEditing ? handleDragStart(index) : undefined}
-            onDragOver={isEditing ? handleDragOver(index) : undefined}
-            onDragLeave={isEditing ? handleDragLeave : undefined}
-            onDrop={isEditing ? handleDrop(index) : undefined}
+            draggable
+            onDragStart={handleDragStart(index)}
+            onDragOver={handleDragOver(index)}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop(index)}
             onMouseEnter={(e) => onHoverEnter(key, e.currentTarget)}
             onMouseLeave={() => onHoverLeave(key)}
             onClick={(e) => onToggleMenu(key, e)}
-            className={`w-full min-h-[2.75rem] flex items-center justify-center text-center whitespace-normal break-words p-1 rounded-xl text-xs font-bold transition-colors ${theme.bg} ${theme.text} hover:opacity-80 ${isEditing ? 'cursor-grab' : 'cursor-pointer'} ${dragOverIndex === index ? 'ring-2 ring-accent-gold' : ''}`}
+            className={`w-full min-h-[2.75rem] flex items-center justify-center text-center whitespace-normal break-words p-1 rounded-xl text-xs font-bold transition-colors ${theme.bg} ${theme.text} hover:opacity-80 cursor-grab ${dragOverIndex === index ? 'ring-2 ring-accent-gold' : ''}`}
           >
             {selectedMoves[index] || `Move ${index + 1}`}
           </div>
