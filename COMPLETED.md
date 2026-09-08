@@ -14,6 +14,15 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[Card Action Button Placement] - Leg 1** (2026-09-08) - Delete now
+  centers on `PokemonCard.tsx`'s top-right corner with a negative offset
+  (`-top-2.5 -right-2.5`), extending outside the card's rounded border.
+  Export moved out of that corner entirely into a right-click context menu
+  on the card, built as a new small reusable `ContextMenu.tsx` (portaled,
+  click-coordinate-positioned, viewport-clamped, outside-click/Escape
+  dismiss) since nothing like it existed in the codebase yet. See commit
+  `b8865f6`.
+
 - **[Card Content Overflow at Mid Widths] - Leg 1** (2026-09-08) - added
   `min-w-0` up `PokemonCard.tsx`'s grid-item/card-shell/type-badge-row chain
   and `StatsColumn.tsx`'s root/header-block chain, plus `flex-wrap` on the

@@ -18,20 +18,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 
 ## Current Milestone: Card UI Polish
 
-- **[Card Action Button Placement] — Leg 1** *(Last touched: 2026-09-08 ·
-  Re-checks: 0)*
-  Scoped: design already fully specified, nothing left to resolve there.
-  Delete moves from its current `absolute top-2 right-2` position to sit
-  centered exactly on the card's top-right corner (negative offset, e.g.
-  `-top-2.5 -right-2.5`, extending outside the card's rounded border rather
-  than inset). Export moves out of the corner entirely into a right-click
-  context menu on the card — no existing context-menu component in the
-  codebase to reuse, so this needs a small new one (custom-positioned at the
-  click coordinates, dismisses on outside-click/Escape, single "Export"
-  entry for now) rather than pulling in a menu library for one item.
-  `onContextMenu` goes on the card's outer `data-pokemon-card` div,
-  `preventDefault()`'d to suppress the OS/browser native menu.
-
 - **[Pokémon Card Drag Without Handle] — Leg 1** *(Last touched: 2026-09-08 ·
   Re-checks: 0)*
   Scoped (per user decision): native HTML5 drag on the whole card, excluding
