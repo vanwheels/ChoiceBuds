@@ -15,7 +15,15 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
 
 ## In progress / up next
 
-(nothing currently in progress)
+- **[Release Notes Popup] — Leg 2** *(Last touched: 2026-09-08 · Re-checks:
+  0)*
+  Scoped ([docs/investigations/release-notes-popup-scope.md](docs/investigations/release-notes-popup-scope.md)):
+  a startup popup plus a full-history section in Settings, both sourced from
+  GitHub Release bodies (extending the existing `services/github.ts`
+  update-check infra) rather than a separate hand-maintained changelog.
+  Fresh installs skip the popup silently. Needs a new `react-markdown`
+  dependency (none exists yet) to render Release-body markdown. Ready to
+  build.
 
 ## Blocked
 
@@ -119,12 +127,6 @@ unblocked.
   blur with no user edit (comparing a stripped `localTeamName` against the
   unstripped `team.name` would trigger an autosave the moment the field is
   blurred, even untouched) - see `TeamCard.tsx`'s team-name input comment.
-
-- **[Release Notes Popup] — Leg 1** *(Last touched: 2026-09-08 · Re-checks:
-  0)*
-  Add a release-notes popup on startup plus a matching section in Settings,
-  same shape as GW2 Squaded already has, so a new version surfaces its patch
-  notes to the user instead of shipping silently.
 
 - **[Card Content Overflow at Mid Widths] — Leg 1** *(Last touched:
   2026-09-08 · Re-checks: 0)*
