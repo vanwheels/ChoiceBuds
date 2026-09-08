@@ -212,13 +212,13 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
     // new grid slot when reorderSlot changes roster order (position delta only -
     // NOT plain `layout`, which would also try to FLIP-animate this card's own
     // size if its content ever changes height).
-    <motion.div layout="position" transition={DRAG_REORDER_TRANSITION} className="type-glow-ring max-w-[280px]" style={glowRingStyle}>
+    <motion.div layout="position" transition={DRAG_REORDER_TRANSITION} className="type-glow-ring max-w-[280px] min-w-0" style={glowRingStyle}>
       <div
         data-pokemon-card
         onDragOver={handleDragOver}
         onDragLeave={() => setIsDragOver(false)}
         onDrop={handleDrop}
-        className={`relative bg-zinc-700 rounded-[11px] p-3 flex flex-col gap-3 transition-colors ${isDragOver ? 'ring-2 ring-accent-gold' : ''}`}
+        className={`relative bg-zinc-700 rounded-[11px] p-3 flex flex-col gap-3 min-w-0 transition-colors ${isDragOver ? 'ring-2 ring-accent-gold' : ''}`}
       >
         {/* Drag-handle affordance icon (carousel rework leg 3, permanently on since
             Always-On Editing Leg 2, see TODO.md) - matches the approved mockup's
@@ -338,9 +338,14 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
           </div>
         </div>
 
-        {/* Type Badges */}
-        <div className="w-full flex justify-center items-center my-1.5 px-2">
-          <div className="flex flex-row items-center justify-center gap-1.5 w-full">
+        {/* Type Badges - min-w-0 on the outer row lets it shrink with the card
+            (Card Content Overflow at Mid Widths Leg 1, see TODO.md); flex-wrap
+            on the inner row is the actual overflow guard, since TypeBadge's
+            fixed w-20/shrink-0 badges (deliberately not truncated - "GRASS"
+            clipped to "GRA" reads worse than wrapping) don't shrink to fit a
+            track narrower than their combined width. */}
+        <div className="w-full flex justify-center items-center my-1.5 px-2 min-w-0">
+          <div className="flex flex-row flex-wrap items-center justify-center gap-1.5 w-full">
             {types.map((type, index) => (
               <TypeBadge key={index} type={type} />
             ))}

@@ -108,9 +108,9 @@ export default function StatsColumn({ evs, nature, onUpdatePokemon }: StatsColum
   };
 
   return (
-    <div ref={ref} className="bg-zinc-800 rounded px-2 py-1.5 border border-zinc-600">
-      <div className="mb-1">
-        <div className="flex justify-between items-center">
+    <div ref={ref} className="bg-zinc-800 rounded px-2 py-1.5 border border-zinc-600 min-w-0">
+      <div className="mb-1 min-w-0">
+        <div className="flex justify-between items-center min-w-0">
           <p className="text-xs text-zinc-400 uppercase tracking-wide shrink-0">SP</p>
           <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
             totalEVs > 66
