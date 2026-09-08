@@ -14,6 +14,15 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[Release Notes Popup] - Leg 2** (2026-09-08) - added a startup "What's
+  New" popup plus a full-history section in Settings, both sourced from
+  GitHub Release bodies via a new `fetchReleaseHistory()` in
+  `services/github.ts` rather than a second hand-maintained changelog. Fresh
+  installs mark the current version seen with no popup. New
+  `react-markdown`/`remark-gfm` deps render the Release-body markdown. See
+  commit `a178503` (Leg 1 scoping: commit `6280abf`,
+  [docs/investigations/release-notes-popup-scope.md](docs/investigations/release-notes-popup-scope.md)).
+
 - **[Sprite Corner Badges] - Leg 1** (2026-09-08) - removed
   `PokemonCard.tsx`'s footer gender/shiny row and repositioned both as
   absolute corner badges on the sprite box itself (gender top-left, shiny

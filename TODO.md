@@ -15,15 +15,7 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
 
 ## In progress / up next
 
-- **[Release Notes Popup] — Leg 2** *(Last touched: 2026-09-08 · Re-checks:
-  0)*
-  Scoped ([docs/investigations/release-notes-popup-scope.md](docs/investigations/release-notes-popup-scope.md)):
-  a startup popup plus a full-history section in Settings, both sourced from
-  GitHub Release bodies (extending the existing `services/github.ts`
-  update-check infra) rather than a separate hand-maintained changelog.
-  Fresh installs skip the popup silently. Needs a new `react-markdown`
-  dependency (none exists yet) to render Release-body markdown. Ready to
-  build.
+(nothing currently in progress)
 
 ## Blocked
 
