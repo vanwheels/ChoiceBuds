@@ -56,9 +56,9 @@ export function useUpdateCheck(): UseUpdateCheckReturn {
           return;
         }
 
-        setLatestVersion(release.latestVersion);
+        setLatestVersion(release.version);
         setReleaseUrl(release.releaseUrl);
-        setStatus(isNewerVersion(CURRENT_APP_VERSION, release.latestVersion) ? 'update-available' : 'up-to-date');
+        setStatus(isNewerVersion(CURRENT_APP_VERSION, release.version) ? 'update-available' : 'up-to-date');
       } catch (err) {
         if (!cancelled) {
           console.error('Error checking for updates:', err);

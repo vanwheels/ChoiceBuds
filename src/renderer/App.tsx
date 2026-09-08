@@ -5,7 +5,7 @@
  */
 
 import { lazy, Suspense, useState } from 'react';
-import { MotionConfig } from 'framer-motion';
+import { AnimatePresence, MotionConfig } from 'framer-motion';
 import { useTeams } from './hooks/useTeams';
 import { useDatabase } from './hooks/useDatabase';
 import { useSavedPokemon } from './hooks/useSavedPokemon';
@@ -18,9 +18,11 @@ import { useUsageSync } from './hooks/useUsageSync';
 import { useBattles } from './hooks/useBattles';
 import { useSettings } from './hooks/useSettings';
 import { useUpdateCheck } from './hooks/useUpdateCheck';
+import { useReleaseNotes } from './hooks/useReleaseNotes';
 import TeamsPage from './components/TeamsPage';
 import LoadingScreen from './components/LoadingScreen';
 import Sidebar from './components/Sidebar';
+import ReleaseNotesModal from './components/ReleaseNotesModal';
 
 // Lazy-loaded so each tab's code is only fetched/parsed once a user actually
 // opens it, not on every app startup - CalcPage in particular pulls in
@@ -74,6 +76,7 @@ export default function App() {
   const battlesState = useBattles();
   const settingsState = useSettings();
   const updateCheckState = useUpdateCheck();
+  const releaseNotesState = useReleaseNotes(settingsState.settings, settingsState.isLoading, settingsState.updateSettings);
   const { isDone: isInitialSyncDone, progress: initialSyncProgress } = useInitialSync(gameDataState, speciesRosterState, spriteCacheState, databaseState);
   // Background batched sync of Champions ranked-usage data (Team Gap
   // Analysis Leg 1, see TODO.md) - never gates the LoadingScreen, see
@@ -91,6 +94,10 @@ export default function App() {
     // setting is on, rather than each component having to check for it itself.
     <MotionConfig reducedMotion="user">
       <div className="flex h-screen bg-zinc-900 text-zinc-100">
+        <AnimatePresence>
+          {releaseNotesState.showPopup && <ReleaseNotesModal releaseNotesState={releaseNotesState} />}
+        </AnimatePresence>
+
         <Sidebar activeTab={activeTab} onTabChange={goToTab} />
 
         {/* Primary Content Viewport - Right Side */}
@@ -167,7 +174,7 @@ export default function App() {
           {visitedTabs.has('settings') && (
             <div style={{ display: activeTab === 'settings' ? 'block' : 'none' }}>
               <Suspense fallback={<div className="text-zinc-400 text-sm">Loading settings...</div>}>
-                <SettingsPage settingsState={settingsState} teamsState={teamsState} battlesState={battlesState} updateCheckState={updateCheckState} databaseState={databaseState} gameDataState={gameDataState} />
+                <SettingsPage settingsState={settingsState} teamsState={teamsState} battlesState={battlesState} updateCheckState={updateCheckState} releaseNotesState={releaseNotesState} databaseState={databaseState} gameDataState={gameDataState} />
               </Suspense>
             </div>
           )}

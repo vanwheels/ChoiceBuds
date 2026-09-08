@@ -33,7 +33,7 @@ describe('useUpdateCheck', () => {
   });
 
   it('reports up-to-date and stores the release info when the latest release matches', async () => {
-    mockedFetchLatestRelease.mockResolvedValueOnce({ latestVersion: CURRENT_APP_VERSION, releaseUrl: 'https://example.com/r' });
+    mockedFetchLatestRelease.mockResolvedValueOnce({ version: CURRENT_APP_VERSION, releaseUrl: 'https://example.com/r', body: '', publishedAt: '2026-01-01T00:00:00Z' });
     const { result } = renderHook(() => useUpdateCheck());
     await waitFor(() => expect(result.current.status).toBe('up-to-date'));
     expect(result.current.latestVersion).toBe(CURRENT_APP_VERSION);
@@ -41,7 +41,7 @@ describe('useUpdateCheck', () => {
   });
 
   it('reports update-available for a newer release', async () => {
-    mockedFetchLatestRelease.mockResolvedValueOnce({ latestVersion: '999.0.0', releaseUrl: 'https://example.com/r2' });
+    mockedFetchLatestRelease.mockResolvedValueOnce({ version: '999.0.0', releaseUrl: 'https://example.com/r2', body: '', publishedAt: '2026-01-01T00:00:00Z' });
     const { result } = renderHook(() => useUpdateCheck());
     await waitFor(() => expect(result.current.status).toBe('update-available'));
   });

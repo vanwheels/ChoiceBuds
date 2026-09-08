@@ -56,6 +56,12 @@ export interface AppSettings {
   // site only; every other sprite in the app stays static PNG regardless.
   showAnimatedSprites: boolean;
   playerProfile: PlayerProfile;
+  // Version last shown in the Release Notes startup popup (hooks/useReleaseNotes.ts).
+  // null means "never shown" - on a fresh install this is used to silently mark
+  // the current version seen with no popup (nothing reads as "new" to a
+  // first-time user), only surfacing notes starting with the next update
+  // after that. See docs/investigations/release-notes-popup-scope.md.
+  lastSeenReleaseNotesVersion: string | null;
   lastModified: number; // Unix timestamp
 }
 

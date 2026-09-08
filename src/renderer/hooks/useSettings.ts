@@ -36,6 +36,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   championsDataChecks: CHAMPIONS_DATA_CHECKS_DEFAULT,
   showAnimatedSprites: false,
   playerProfile: DEFAULT_PLAYER_PROFILE,
+  lastSeenReleaseNotesVersion: null,
   lastModified: Date.now(),
 };
 
