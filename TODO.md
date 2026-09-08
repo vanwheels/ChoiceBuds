@@ -15,7 +15,7 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
 
 ## In progress / up next
 
-Nothing currently in progress - see Backlog below for what's next up.
+(nothing currently in progress)
 
 ## Blocked
 
@@ -23,18 +23,6 @@ Items where the whole item (not just a sub-part) is stalled on something
 outside this project — a person, a dependency, or an external decision.
 Exempt from the re-check counter; they move back to "In progress" once
 unblocked.
-
-- **[Sprite Corner Badges] — Leg 1** *(Last touched: 2026-09-05 · Re-checks:
-  0)*
-  Blocked: needs a decision from Vanny before scoping further.
-  Idea: move the shiny toggle to the sprite box's top-right corner and
-  gender to its top-left, freeing the footer row PokemonCard currently
-  spends on them and shrinking the card. Open question is whether the
-  compaction is worth the trade-off — shrinking the icons down to
-  corner-badge size shrinks their visual click target too, though a
-  proposed mitigation (a padded invisible hit zone larger than the visual
-  icon, ~32-36px, with a hover state) would preserve clickability without
-  keeping the icons full-size. Not yet scoped past this idea.
 
 - **[Regulation M-C Prep] — Leg 2** *(Last touched: 2026-09-05 · Re-checks:
   0)*

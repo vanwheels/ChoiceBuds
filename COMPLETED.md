@@ -14,6 +14,12 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[Sprite Corner Badges] - Leg 1** (2026-09-08) - removed
+  `PokemonCard.tsx`'s footer gender/shiny row and repositioned both as
+  absolute corner badges on the sprite box itself (gender top-left, shiny
+  top-right), each a ~22px icon inside a ~34px padded hit zone, transparent
+  by default. See commit `4f0b026`.
+
 - **[Always-On Editing] - Leg 2** (2026-09-05) - gave the structural actions
   Leg 1 left without a trigger their own always-visible affordances: a
   dedicated grip-handle button (team header's controls pill, each
