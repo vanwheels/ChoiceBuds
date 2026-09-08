@@ -15,7 +15,24 @@ highest-to-lowest priority. Finished work moves to [COMPLETED.md](COMPLETED.md).
 
 ## In progress / up next
 
-(nothing currently in progress)
+- **[Move-Slot Drag Handle] — Leg 1** *(Last touched: 2026-09-08 · Re-checks:
+  0)*
+  Scoped (design question resolved via `AskUserQuestion`): re-enable
+  `MoveBubbleGrid.tsx`'s existing drag-to-reorder machinery (drag start/over/
+  drop handlers, `onReorderMoves` - all already built, just gated off since
+  Always-On Editing Leg 2) by making `isEditing` unconditionally true through
+  the `PokemonCard` → `EditOverlays` → `MoveBubbleGrid` chain, no new
+  grip-handle UI. This reuses the exact mechanism that already worked
+  pre-2026-09-05 under the old global edit-mode toggle: a move bubble is
+  simultaneously the click target (opens its move picker) and the drag
+  source, disambiguated natively since HTML5 only fires `dragstart` after
+  real pointer movement and suppresses the `click` event when a drag
+  actually occurred - confirmed this isn't a new mechanism, just re-exposing
+  one that already shipped once. Cursor will show grab-hand on hover instead
+  of the pointer-hand click hint (accepted as part of picking this option).
+  Implementation should also decide whether to keep `isEditing` as a prop
+  (now always `true`, no caller ever passing `false`) or drop the plumbing
+  entirely now that it's not conditional.
 
 ## Blocked
 
@@ -86,18 +103,6 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Backlog / ideas (not yet scoped, highest-to-lowest priority)
-
-- **[Move-Slot Drag Handle] — Leg 1** *(Last touched: 2026-09-05 · Re-checks:
-  0)*
-  Surfaced by Always-On Editing Leg 2 (see COMPLETED.md): that leg gave
-  team-level reorder, Pokémon-slot reorder, delete-slot, the swap picker, and
-  the Add-Pokémon button their own always-visible triggers, but deliberately
-  left `MoveBubbleGrid.tsx`'s move-slot drag-to-reorder disabled
-  (`isEditing` still defaults false there, unwired). Unlike those, a move
-  bubble is both the click target that opens its move picker AND the thing
-  that would need to become a drag source - reusing Leg 2's separate
-  grip-handle pattern isn't a drop-in fit at that bubble's small size, so
-  this needs its own scoped design rather than a mechanical copy.
 
 - **[Damage Calc Engine Test Coverage] — Leg 1** *(Last touched: 2026-09-01 ·
   Re-checks: 0)*
