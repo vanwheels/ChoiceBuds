@@ -18,27 +18,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 
 ## Current Milestone: Card UI Polish
 
-- **[Damage Calc Engine Test Coverage] — Leg 1** *(Last touched: 2026-09-08 ·
-  Re-checks: 0)*
-  Scoped: `utils/damageCalcEngine.ts` is already pure and side-effect-free,
-  so no mocking needed — `Generations.get(9)` (same call `useDamageCalc.ts`
-  makes) gives a real Gen 9 data object synchronously in a plain Vitest
-  test, first time this suite exercises `@smogon/calc`'s Generation object
-  directly rather than through `calcFormes.ts`/`championsStats.ts`'s
-  plain-object helpers. New `damageCalcEngine.test.ts` covers:
-  `normalizeMoveSlug` (mixed case, punctuation, leading/trailing dashes),
-  `getNatureStatEffect` (a boosting nature, a neutral one asserting the
-  plus===minus filter), `computeBoostedStats`/`computeEffectiveSpeed` (base
-  stats, a stage boost, a weather-boosting-ability match/non-match,
-  paralysis halving, `null` on an empty species), and `computeSideResults`
-  as the main surface — a normal move, a fully-blocked immunity case
-  (`isFullyBlocked`/`blockedEntry`), a Champions ability damage-effect case
-  (`adjustedEntry`'s scaled range/desc), and a multi-hit move
-  (`getMultihitRange`/`flattenDamage`). Private helpers (`buildPokemon`,
-  `boostMultiplier`, `weatherSpeedMultiplier`, etc.) stay covered indirectly
-  through those exported entry points rather than exported just for
-  testing.
-
 - **[Team Name Field Reg-Prefix Display] — Leg 1** *(Last touched:
   2026-09-08 · Re-checks: 0)*
   Scoped (per user decision): one-time migration, dropping the

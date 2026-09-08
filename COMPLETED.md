@@ -14,6 +14,14 @@ in:
 - [docs/archive/completed-2026-06-17-to-2026-07-09.md](docs/archive/completed-2026-06-17-to-2026-07-09.md)
   (the 50 oldest entries as of the 2026-08-31 split)
 
+- **[Damage Calc Engine Test Coverage] - Leg 1** (2026-09-08) - added direct
+  engine-level tests for `damageCalcEngine.ts`'s remaining pure-logic
+  surface (`normalizeMoveSlug`, `getNatureStatEffect`,
+  `computeBoostedStats`/`computeEffectiveSpeed`, and `computeSideResults`'s
+  normal-move/blocked/multi-hit paths), merged into the file's existing
+  Champions ability damage-effect tests rather than replacing them. See
+  commit `6d6700d`.
+
 - **[Move-Slot Drag Handle] - Leg 1** (2026-09-08) - re-enabled
   `MoveBubbleGrid.tsx`'s drag-to-reorder machinery by making the drag
   affordance unconditional through the `PokemonCard` -> `EditOverlays` ->
