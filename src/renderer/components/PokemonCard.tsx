@@ -11,7 +11,7 @@
 
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import type { CSSProperties, DragEvent } from 'react';
+import type { CSSProperties, DragEvent, MouseEvent as ReactMouseEvent } from 'react';
 import type { ImportedPokemonInfo, ShowdownPokemon, Team, SpeciesRosterEntry } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
@@ -23,6 +23,7 @@ import StatsColumn from './StatsColumn';
 import EditOverlays from './EditOverlays';
 import SpeciesPickerCard from './SpeciesPickerCard';
 import ExportTeamModal from './ExportTeamModal';
+import ContextMenu from './ContextMenu';
 import { isGenderless, isFemaleLocked } from '../config/pokemonRules';
 import { toRegulationId } from '../utils/pokemonRules';
 import { getMegaApiSlug } from '../config/megaEvolution';
@@ -53,6 +54,11 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
   const [isSwapPickerOpen, setIsSwapPickerOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  // Export moved out of the corner into a right-click context menu (Card
+  // Action Button Placement Leg 1, see TODO.md) - null when closed, the
+  // click's own coordinates (not the card's rect) while open, since
+  // ContextMenu positions itself at literal click coordinates.
+  const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
   // Tracks the specific animated URL that last failed to load, not just a
   // bare "give up" flag - so a subsequent gender/shiny/Mega-state change
   // (which produces a different candidate URL) gets a fresh chance rather
@@ -143,6 +149,13 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
     await rosterActions.removeSlot(team, pokemonIndex);
   };
 
+  // Right-click opens the Export context menu instead of the OS/browser's
+  // native one (Card Action Button Placement Leg 1, see TODO.md).
+  const handleContextMenu = (e: ReactMouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setContextMenuPos({ x: e.clientX, y: e.clientY });
+  };
+
   // Roster reorder via drag-and-drop (Always-On Editing Leg 2, see TODO.md) -
   // draggable is scoped to the grip-handle icon below, not this whole card,
   // so dragging can't fight with clicking the nickname input, sprite/swap
@@ -218,6 +231,7 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
         onDragOver={handleDragOver}
         onDragLeave={() => setIsDragOver(false)}
         onDrop={handleDrop}
+        onContextMenu={handleContextMenu}
         className={`relative bg-zinc-700 rounded-[11px] p-3 flex flex-col gap-3 min-w-0 transition-colors ${isDragOver ? 'ring-2 ring-accent-gold' : ''}`}
       >
         {/* Drag-handle affordance icon (carousel rework leg 3, permanently on since
@@ -244,25 +258,16 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
         </div>
 
         {/* Left-Shifting Slot Deletion - permanently on (Always-On Editing Leg 2,
-            see TODO.md) */}
+            see TODO.md). Centered on the card's top-right corner with a negative
+            offset (Card Action Button Placement Leg 1, see TODO.md) - sits outside
+            the card's rounded border rather than inset from it, now that Export
+            (below) has moved out of this corner entirely and left it free. */}
         <button
           onClick={handleDelete}
           title="Remove from roster"
-          className="absolute top-2 right-2 z-10 w-6 h-6 flex items-center justify-center rounded-full bg-zinc-800 border border-zinc-600 text-zinc-500 hover:text-red-400 hover:border-red-500 transition-colors cursor-pointer text-sm"
+          className="absolute -top-2.5 -right-2.5 z-10 w-6 h-6 flex items-center justify-center rounded-full bg-zinc-800 border border-zinc-600 text-zinc-500 hover:text-red-400 hover:border-red-500 transition-colors cursor-pointer text-sm"
         >
           ×
-        </button>
-
-        {/* Single-Pokemon Export - same Showdown-format modal as TeamCard's whole-team
-            export, just given a one-element list. Shifts left of the Delete button
-            (which also lives in this corner and is permanently visible now too, see
-            above) rather than sitting in the bare top-right corner. */}
-        <button
-          onClick={() => setIsExportOpen(true)}
-          title="Export Pokémon (Showdown format)"
-          className="absolute top-2 right-9 z-10 w-6 h-6 flex items-center justify-center rounded-full bg-zinc-800 border border-zinc-600 text-zinc-500 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer text-sm"
-        >
-          ⇩
         </button>
 
         {/* Nickname Input - permanently editable (Always-On Editing Leg 1, see
@@ -374,6 +379,27 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
             />
           )}
         </AnimatePresence>
+
+        {contextMenuPos && (
+          <ContextMenu
+            x={contextMenuPos.x}
+            y={contextMenuPos.y}
+            onClose={() => setContextMenuPos(null)}
+            items={[
+              {
+                label: 'Export',
+                onClick: () => setIsExportOpen(true),
+                icon: (
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 3v12" />
+                    <path d="m7 10 5 5 5-5" />
+                    <path d="M5 21h14" />
+                  </svg>
+                ),
+              },
+            ]}
+          />
+        )}
       </div>
     </motion.div>
   );
