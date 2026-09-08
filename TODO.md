@@ -119,3 +119,37 @@ unblocked.
   blur with no user edit (comparing a stripped `localTeamName` against the
   unstripped `team.name` would trigger an autosave the moment the field is
   blurred, even untouched) - see `TeamCard.tsx`'s team-name input comment.
+
+- **[Release Notes Popup] — Leg 1** *(Last touched: 2026-09-08 · Re-checks:
+  0)*
+  Add a release-notes popup on startup plus a matching section in Settings,
+  same shape as GW2 Squaded already has, so a new version surfaces its patch
+  notes to the user instead of shipping silently.
+
+- **[Card Content Overflow at Mid Widths] — Leg 1** *(Last touched:
+  2026-09-08 · Re-checks: 0)*
+  There's a window-width range where a `PokemonCard`'s SP-investment box and
+  typing badges extend past the card's own width before the grid drops from
+  3-column down to 2x3. Needs a responsive fix so those elements wrap/shrink
+  at that width instead of overflowing.
+
+- **[Card Action Button Placement] — Leg 1** *(Last touched: 2026-09-08 ·
+  Re-checks: 0)*
+  The Export and Delete buttons on individual `PokemonCard`s visually clutter
+  the card. Move Delete to a small button whose center sits exactly on the
+  card's top-right corner (extending outside the card's bounding box, not
+  inset within it). Move Export out of the card entirely into a right-click
+  context menu.
+
+- **[Pokémon Card Drag Without Handle] — Leg 1** *(Last touched: 2026-09-08 ·
+  Re-checks: 0)*
+  Revisits Always-On Editing Leg 2's drag source for team-slot reorder (see
+  COMPLETED.md): user wants Pokémon cards draggable from anywhere on the
+  card again, not gated behind the dedicated top-left grip-handle icon,
+  which reads as visually out of place. Leg 2 deliberately moved off
+  whole-card-dragging specifically because Leg 1 found it ambiguous (drag
+  source competing with the card's other click targets) - this leg needs to
+  resolve that ambiguity some other way rather than just reverting to it.
+  Separate from the still-open Move-Slot Drag Handle item below, which is
+  about drag-reordering moves within a Pokémon's set (`MoveBubbleGrid.tsx`),
+  not team-slot cards.
