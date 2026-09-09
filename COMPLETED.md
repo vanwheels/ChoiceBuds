@@ -18,6 +18,24 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Live Calc Engine] - Leg 1** (2026-09-08) - New `utils/liveCalcEngine.ts`:
+  pure, React-free heuristic inference engine narrowing a defender's unknown
+  nature/SP-spread/ability/item from observed damage-percent readings against
+  a fully-known attacker, no UI wiring yet. Settled the scope doc's open
+  design questions while building: HP SPs held at a documented midpoint
+  default (16) rather than solved jointly with the defensive stat; Doubles'
+  automatic 0.75x spread-move reduction cancelled via a Singles-field scan
+  when an observation's `targetsHit` is 1, instead of reimplementing the
+  modifier by hand; each unknown axis narrowed independently per observation
+  (not a joint brute-force) by scanning SP 0-32 per candidate with the other
+  axes held neutral. New `config/liveCalcDefensiveItems.ts` curates the item
+  candidate pool - turned out to be exactly the 18 type-resist berries
+  already in `vgcData.ts`'s `VGC_BERRIES`, since Champions has no Assault
+  Vest/Eviolite/Safety Goggles at all. Unit-tested (12 cases, structural
+  assertions rather than hardcoded SP numbers to avoid brittleness to
+  `@smogon/calc` data updates). See commit `efc23cd` for the full reasoning
+  (docs/scoping in `4bd6dc0`).
+
 - **[Team Gap Analysis: Speed Annotation] - Leg 1** (2026-09-08) - Every
   `UsageThreatsList` row (all three sections) now shows the threat's raw
   base Speed stat next to the team's own base-Speed range (min-max across
