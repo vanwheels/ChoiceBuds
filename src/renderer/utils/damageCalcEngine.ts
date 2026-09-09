@@ -332,7 +332,10 @@ export function computeEffectiveSpeed(gen: Generation, state: CalcPokemonState, 
   return computeBoostedStats(gen, state, weather)?.spe ?? null;
 }
 
-function buildPokemon(gen: Generation, state: CalcPokemonState): InstanceType<typeof Pokemon> {
+/** Exported for reuse by utils/liveCalcEngine.ts, which builds the same kind
+ * of fully-known attacker Pokemon from a CalcPokemonState for its own
+ * inference scans rather than duplicating this construction logic. */
+export function buildPokemon(gen: Generation, state: CalcPokemonState): InstanceType<typeof Pokemon> {
   return new Pokemon(gen, resolveCalcSpecies(state.species), {
     level: state.level,
     gender: state.gender || undefined,
