@@ -16,19 +16,30 @@
  * Team-anchored on purpose (same reasoning as TypeMatchupPage's Team Gap
  * Analysis panel): the threat set is derived from the selected team's own
  * defensive typing via computeUsageThreats, not a free-text opponent picker.
+ *
+ * Team Preview Strip (Leg 5, see docs/investigations/
+ * speed-tiers-preview-strip-scope.md): a session-only per-mon Speed SP/
+ * nature/form override, merged into computeTeamSpeed's input below via
+ * utils/speedTierOverrides.ts - none of it writes back to the team. The
+ * override Map lives here rather than a new hook (see TeamPreviewStrip.tsx's
+ * header), keyed by ImportedPokemonInfo.id, which is a crypto.randomUUID()
+ * unique across every team, so it's never cleared on a team switch.
  */
 import { useMemo, useState } from 'react';
 import { Generations } from '@smogon/calc';
+import type { NatureName } from '@smogon/calc/dist/data/interface';
 import type { UseTeamsReturn } from '../../hooks/useTeams';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseDatabaseReturn } from '../../hooks/useDatabase';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
-import type { ChampionsUsageEntry } from '../../types/pokemon';
+import type { ChampionsUsageEntry, ImportedPokemonInfo } from '../../types/pokemon';
 import { computeUsageThreats, type UsageThreat } from '../../utils/usageThreats';
 import { computeTeamSpeed, computeThreatSpeedProfile, defaultSpeedFieldContext, type SpeedFieldContext } from '../../utils/speedTiers';
 import { buildSpeedTierEntries, filterSpeedTierEntries, groupSpeedTiers, type ThreatTierInput } from '../../utils/speedTierList';
+import { applySpeedOverride, defaultSpeedOverride, type TeamSpeedOverride } from '../../utils/speedTierOverrides';
 import SpeedTierFieldPanel from './SpeedTierFieldPanel';
 import SpeedTierList from './SpeedTierList';
+import TeamPreviewStrip from './TeamPreviewStrip';
 
 const GEN_NUM = 9;
 
@@ -47,10 +58,24 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
   const [field, setField] = useState<SpeedFieldContext>(defaultSpeedFieldContext());
   const [trickRoom, setTrickRoom] = useState(false);
   const [speciesFilter, setSpeciesFilter] = useState('');
+  const [speedOverrides, setSpeedOverrides] = useState<Map<string, TeamSpeedOverride>>(new Map());
   const gen = useMemo(() => Generations.get(GEN_NUM), []);
+  // Same construction useDamageCalc.ts/useLiveCalc.ts use for their own
+  // Calc-tab forme toggles - see TeamPreviewCard.tsx's Mega/stat-forme rows.
+  const allSpecies = useMemo(() => [...gen.species].map(s => ({ name: s.name, baseSpecies: s.baseSpecies })), [gen]);
+  const natureOptions = useMemo(() => [...gen.natures].map(n => n.name).sort() as NatureName[], [gen]);
 
   const { cache: gameDataCache } = gameDataState;
   const { getCachedEntry } = databaseState;
+
+  const updateSpeedOverride = (pokemon: ImportedPokemonInfo, updates: Partial<TeamSpeedOverride>) => {
+    setSpeedOverrides(prev => {
+      const next = new Map(prev);
+      const current = prev.get(pokemon.id) ?? defaultSpeedOverride(pokemon);
+      next.set(pokemon.id, { ...current, ...updates });
+      return next;
+    });
+  };
 
   const defensiveSlots = useMemo(
     () => (selectedTeam?.pokemon ?? []).map(p => ({ types: p.types, ability: p.showdownData.ability })),
@@ -90,10 +115,10 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
 
   const teamSpeedEntries = useMemo(
     () => (selectedTeam?.pokemon ?? []).flatMap(p => {
-      const entry = computeTeamSpeed(gen, p, field);
+      const entry = computeTeamSpeed(gen, applySpeedOverride(p, speedOverrides.get(p.id)), field);
       return entry ? [entry] : [];
     }),
-    [selectedTeam, gen, field]
+    [selectedTeam, gen, field, speedOverrides]
   );
 
   const threatTierInputs = useMemo<ThreatTierInput[]>(
@@ -143,6 +168,14 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
         </p>
       ) : (
         <>
+          <TeamPreviewStrip
+            pokemon={selectedTeam.pokemon}
+            allSpecies={allSpecies}
+            natureOptions={natureOptions}
+            overrides={speedOverrides}
+            onChangeOverride={updateSpeedOverride}
+            spriteCacheState={spriteCacheState}
+          />
           <SpeedTierFieldPanel field={field} onChangeField={updates => setField(prev => ({ ...prev, ...updates }))} trickRoom={trickRoom} onChangeTrickRoom={setTrickRoom} />
           <div className="flex flex-col gap-1.5 max-w-xs">
             <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Filter by species</label>
