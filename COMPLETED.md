@@ -18,6 +18,22 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Speed Tiers Data Layer] - Leg 2** (2026-09-09) - Pure functions
+  (`utils/speedTiers.ts`) computing a roster Pokemon's or usage threat's
+  real, field-modified effective Speed. Settled two things the scope doc
+  had punted: field-effect handling reuses `@smogon/calc`'s own internal
+  `getFinalSpeed()` (its public API doesn't expose the real Tailwind/Choice
+  Scarf/weather-ability/paralysis chain) instead of hand-rolling a second,
+  subtly-different one, and Trick Room turned out to need no representation
+  here at all (it never changes a raw speed number, only turn order - a
+  Leg 3 sort-direction concern). Also resolved a modeling question the
+  scope doc hadn't reached: `ChampionsUsageEntry`'s stat spreads are a
+  genuine joint 6-stat distribution, but nature/item/ability are separate
+  marginal rankings with no joint data - so spreads stay an honest
+  distribution and nature/item surface only as diff-based "modifier notes"
+  (table-free: build with/without the modifier and compare) rather than
+  fabricating combinatorial joint percentages. See commit `<hash>`.
+
 - **[Speed Calc-like Feature: Scoping] - Leg 1** (2026-09-09) - Design-
   questions pass resolving how ChoiceBuds' version differs from
   vgcmulticalc's Speed Calc rather than reskinning it: team-anchored (Team

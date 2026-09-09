@@ -22,26 +22,18 @@ Scoping resolved 2026-09-09 — see
 [docs/investigations/speed-calc-scope.md](docs/investigations/speed-calc-scope.md)
 for the full design-questions pass (differentiation direction: team-anchored
 threat list + Champions-native usage data + Live Calc tie-in, not a
-vgcmulticalc reskin). Leg 1 (that scoping session) is done — see
-`COMPLETED.md`. Legs below are a tentative breakdown, not yet started;
-expect the nav-placement/field-effect open questions in the scope doc to
-adjust them once building starts.
-
-- **[Speed Tiers Data Layer] — Leg 2** *(Last touched: 2026-09-09 ·
-  Re-checks: 0)*
-  Pure functions: compute a team's own speed values (SPs/nature/item/
-  ability, mirroring existing `utils/championsStats.ts`/`@smogon/calc` SP
-  math) and merge with Team Gap Analysis's threat list
-  (`utils/usageThreats.ts`), resolving each threat's speed distribution from
-  `ChampionsUsageEntry.statSpreads`. No UI. Field-effect modifier handling
-  (Tailwind/Trick Room/weather/paralysis) still needs settling here - see
-  scope doc's open follow-ups.
+vgcmulticalc reskin). Legs 1-2 are done — see `COMPLETED.md`. Legs below are
+a tentative breakdown, not yet started; expect the nav-placement open
+question in the scope doc to adjust them once building starts.
 
 - **[Speed Tiers View Shell] — Leg 3** *(Last touched: 2026-09-09 ·
   Re-checks: 0)*
   New UI surface rendering the sorted tier list for a selected team against
-  its threats. Nav placement (own tab vs. nested under a team) not decided -
-  see scope doc.
+  its threats, consuming `utils/speedTiers.ts`'s `computeTeamSpeed`/
+  `computeThreatSpeedProfile` (see `COMPLETED.md`). Trick Room isn't a value
+  those functions touch (see that file's header) - this leg owns flipping
+  sort direction over their output. Nav placement (own tab vs. nested under
+  a team) not decided - see scope doc.
 
 - **[Live Calc → Speed Tiers Tie-in] — Leg 4** *(Last touched: 2026-09-09 ·
   Re-checks: 0)*
