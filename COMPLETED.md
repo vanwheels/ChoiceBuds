@@ -36,7 +36,7 @@ in:
   presentational UI, matching the project's existing test-coverage scope
   (services/utils/hooks only, no component-level tests anywhere in the
   codebase). Full suite (593 tests), lint, type-check, and build all green.
-  See commit `<hash>` for the full diff.
+  See commit `d4a60a6` for the full diff.
 
 - **[Live Calc Tab Shell] - Leg 2** (2026-09-08) - New `useLiveCalc` hook
   (transient, non-persisted state mirroring `useDamageCalc`'s pattern) plus a
