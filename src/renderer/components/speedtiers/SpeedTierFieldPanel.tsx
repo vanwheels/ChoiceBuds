@@ -6,10 +6,23 @@
  * SpeedFieldContext itself). Deliberately smaller than CalcFieldPanel: no
  * game type or full side-conditions group, since those don't feed
  * getFinalSpeed() the way weather/terrain/Tailwind do.
+ *
+ * Threats' Item is a global, page-level tri-state toggle (None/Choice
+ * Scarf/Iron Ball) - it replaced a per-species item-modifier-note scan (see
+ * docs/investigations/speed-tiers-layout-rework.md). Threats only, same as
+ * speedTiers.ts's SpeedFieldContext.threatItem doc comment explains - a
+ * team-side equivalent would be hypothetical speed adjustment for your own
+ * team, which is a separate, unscoped leg.
  */
 import type { ReactNode } from 'react';
 import { WEATHER_OPTIONS, TERRAIN_OPTIONS } from '../../hooks/useDamageCalc';
-import type { SpeedFieldContext } from '../../utils/speedTiers';
+import type { SpeedFieldContext, ThreatSpeedItem } from '../../utils/speedTiers';
+
+const THREAT_ITEM_OPTIONS: { value: ThreatSpeedItem; label: string }[] = [
+  { value: '', label: 'None' },
+  { value: 'Choice Scarf', label: 'Scarf' },
+  { value: 'Iron Ball', label: 'Iron Ball' },
+];
 
 interface SpeedTierFieldPanelProps {
   field: SpeedFieldContext;
@@ -68,6 +81,16 @@ export default function SpeedTierFieldPanel({ field, onChangeField, trickRoom, o
         <ToggleButton active={field.threatHasTailwind} onClick={() => onChangeField({ threatHasTailwind: !field.threatHasTailwind })}>
           {field.threatHasTailwind ? 'Active' : 'Off'}
         </ToggleButton>
+      </div>
+      <div className="flex flex-col gap-1 min-w-[180px]">
+        <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Threats' Item</label>
+        <div className="flex gap-1">
+          {THREAT_ITEM_OPTIONS.map(option => (
+            <ToggleButton key={option.value || 'none'} active={field.threatItem === option.value} onClick={() => onChangeField({ threatItem: option.value })}>
+              {option.label}
+            </ToggleButton>
+          ))}
+        </div>
       </div>
       <div className="flex flex-col gap-1 min-w-[140px]">
         <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Trick Room</label>

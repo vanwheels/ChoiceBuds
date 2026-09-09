@@ -1,5 +1,5 @@
 /**
- * speedTierList.ts - Speed Tiers View Shell (Leg 3, see TODO.md)
+ * speedTierList.ts - Speed Tiers View Shell
  * Pure functions merging speedTiers.ts's per-Pokemon output
  * (computeTeamSpeed/computeThreatSpeedProfile) into one sorted, tie-grouped
  * list - the actual "tier list" the view renders. Kept separate from
@@ -10,14 +10,23 @@
  * (project convention - see CLAUDE.md's Testing section).
  *
  * A threat contributes one tier-list row per ChampionsUsageEntry.statSpreads
- * entry (not just its top-ranked build) - each real, independently-usage-
- * ranked spread is its own honest speed value, same reasoning speedTiers.ts's
- * header gives for not crossing spreads with nature/item combinatorially.
- * modifierNotes (nature/item deltas, already anchored to the top-ranked
- * spread by computeThreatSpeedProfile) are only attached to that spread's
- * row - they're annotations on the "most likely" build, not separate rows.
+ * entry above SPREAD_USAGE_CUTOFF_PERCENT (not just its top-ranked build) -
+ * each real, independently-usage-ranked spread above the floor is its own
+ * honest speed value, same reasoning speedTiers.ts's header gives for not
+ * crossing spreads with nature/item combinatorially. It also contributes 3
+ * bound rows (min/neutral/max - see ThreatSpeedBounds), unfiltered by the
+ * cutoff since they aren't usage data to begin with.
  */
-import type { ThreatSpeedModifierNote, ThreatSpeedProfile, TeamSpeedEntry } from './speedTiers';
+import type { ThreatSpeedBounds, ThreatSpeedProfile, TeamSpeedEntry } from './speedTiers';
+
+/** Minimum real usage share (%) a ranked spread needs to get its own plotted row - see this file's header. Tunable; not derived from any measured distribution yet. */
+export const SPREAD_USAGE_CUTOFF_PERCENT = 10;
+
+const BOUND_LABELS: { key: keyof ThreatSpeedBounds; label: 'Min' | 'Neutral' | 'Max' }[] = [
+  { key: 'min', label: 'Min' },
+  { key: 'neutral', label: 'Neutral' },
+  { key: 'max', label: 'Max' },
+];
 
 export interface SpeedTierEntry {
   key: string;
@@ -25,10 +34,10 @@ export interface SpeedTierEntry {
   species: string;
   spriteUrl: string;
   speed: number;
-  /** Threat rows only - this spread's share of the species' real ranked usage. */
+  /** Threat spread rows only - this spread's share of the species' real ranked usage. */
   percentage?: number;
-  /** Threat rows only, and only on the top-ranked (index 0) spread row - see this file's header. */
-  modifierNotes?: ThreatSpeedModifierNote[];
+  /** Threat bound rows only - which of the 3 fixed min/neutral/max reference tiers this is. */
+  boundLabel?: 'Min' | 'Neutral' | 'Max';
 }
 
 export interface SpeedTierGroup {
@@ -41,7 +50,7 @@ export interface ThreatTierInput {
   profile: ThreatSpeedProfile;
 }
 
-/** Flattens a team's per-Pokemon speeds and every threat's per-spread speeds into one unsorted row list. */
+/** Flattens a team's per-Pokemon speeds and every threat's per-spread/bound speeds into one unsorted row list. */
 export function buildSpeedTierEntries(team: TeamSpeedEntry[], threats: ThreatTierInput[]): SpeedTierEntry[] {
   const teamRows: SpeedTierEntry[] = team.map(t => ({
     key: `team-${t.pokemonId}`,
@@ -51,19 +60,38 @@ export function buildSpeedTierEntries(team: TeamSpeedEntry[], threats: ThreatTie
     speed: t.speed,
   }));
 
-  const threatRows: SpeedTierEntry[] = threats.flatMap(({ spriteUrl, profile }) =>
-    profile.spreads.map((spread, i) => ({
-      key: `threat-${profile.species}-${i}`,
+  const threatRows: SpeedTierEntry[] = threats.flatMap(({ spriteUrl, profile }) => {
+    const spreadRows: SpeedTierEntry[] = profile.spreads
+      .filter(spread => spread.percentage >= SPREAD_USAGE_CUTOFF_PERCENT)
+      .map((spread, i) => ({
+        key: `threat-${profile.species}-spread-${i}`,
+        kind: 'threat' as const,
+        species: profile.species,
+        spriteUrl,
+        speed: spread.speed,
+        percentage: spread.percentage,
+      }));
+
+    const boundRows: SpeedTierEntry[] = BOUND_LABELS.map(({ key, label }) => ({
+      key: `threat-${profile.species}-bound-${key}`,
       kind: 'threat' as const,
       species: profile.species,
       spriteUrl,
-      speed: spread.speed,
-      percentage: spread.percentage,
-      modifierNotes: i === 0 ? profile.modifierNotes : undefined,
-    }))
-  );
+      speed: profile.bounds[key],
+      boundLabel: label,
+    }));
+
+    return [...spreadRows, ...boundRows];
+  });
 
   return [...teamRows, ...threatRows];
+}
+
+/** Case-insensitive species-name substring filter over already-built entries - the page's search box narrowing the icon grid. Blank query returns entries unchanged. */
+export function filterSpeedTierEntries(entries: SpeedTierEntry[], query: string): SpeedTierEntry[] {
+  const trimmed = query.trim().toLowerCase();
+  if (!trimmed) return entries;
+  return entries.filter(entry => entry.species.toLowerCase().includes(trimmed));
 }
 
 /**

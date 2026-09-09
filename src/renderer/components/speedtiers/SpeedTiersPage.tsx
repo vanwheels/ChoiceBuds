@@ -1,15 +1,17 @@
 /**
- * SpeedTiersPage.tsx - Speed Tiers (Speed Calc-like Feature, Leg 3 - see
- * TODO.md / docs/investigations/speed-calc-scope.md)
+ * SpeedTiersPage.tsx - Speed Tiers (Speed Calc-like Feature - see TODO.md /
+ * docs/investigations/speed-calc-scope.md)
  * Own top-level tab (nav-placement question resolved 2026-09-09). Pick a
  * saved team, see its members' real field-modified Speed plotted against
  * Team Gap Analysis's own ranked usage-threat list
  * (utils/usageThreats.ts::computeUsageThreats) - Champions-native usage data
  * (ChampionsUsageEntry.statSpreads), not a Showdown-ladder reskin. All Speed
- * math lives in utils/speedTiers.ts (Leg 2); this page's own
- * utils/speedTierList.ts merges/sorts/ties that output into the rendered
- * list. Live Calc → Speed Tiers tie-in (an inferred SP-Speed range
- * overriding a threat's generic entry) is Leg 4, not built here.
+ * math lives in utils/speedTiers.ts; this page's own utils/speedTierList.ts
+ * merges/sorts/ties/filters that output into the rendered icon grid (row
+ * list → icon grid rework: see docs/investigations/
+ * speed-tiers-layout-rework.md). Live Calc → Speed Tiers tie-in (an inferred
+ * SP-Speed range overriding a threat's generic entry) is a later leg, not
+ * built here.
  *
  * Team-anchored on purpose (same reasoning as TypeMatchupPage's Team Gap
  * Analysis panel): the threat set is derived from the selected team's own
@@ -24,7 +26,7 @@ import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import type { ChampionsUsageEntry } from '../../types/pokemon';
 import { computeUsageThreats, type UsageThreat } from '../../utils/usageThreats';
 import { computeTeamSpeed, computeThreatSpeedProfile, defaultSpeedFieldContext, type SpeedFieldContext } from '../../utils/speedTiers';
-import { buildSpeedTierEntries, groupSpeedTiers, type ThreatTierInput } from '../../utils/speedTierList';
+import { buildSpeedTierEntries, filterSpeedTierEntries, groupSpeedTiers, type ThreatTierInput } from '../../utils/speedTierList';
 import SpeedTierFieldPanel from './SpeedTierFieldPanel';
 import SpeedTierList from './SpeedTierList';
 
@@ -44,6 +46,7 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
 
   const [field, setField] = useState<SpeedFieldContext>(defaultSpeedFieldContext());
   const [trickRoom, setTrickRoom] = useState(false);
+  const [speciesFilter, setSpeciesFilter] = useState('');
   const gen = useMemo(() => Generations.get(GEN_NUM), []);
 
   const { cache: gameDataCache } = gameDataState;
@@ -103,10 +106,10 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
     [usageThreats, usageEntryBySpecies, gen, field]
   );
 
-  const tierGroups = useMemo(
-    () => groupSpeedTiers(buildSpeedTierEntries(teamSpeedEntries, threatTierInputs), trickRoom),
-    [teamSpeedEntries, threatTierInputs, trickRoom]
-  );
+  const tierGroups = useMemo(() => {
+    const entries = filterSpeedTierEntries(buildSpeedTierEntries(teamSpeedEntries, threatTierInputs), speciesFilter);
+    return groupSpeedTiers(entries, trickRoom);
+  }, [teamSpeedEntries, threatTierInputs, trickRoom, speciesFilter]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -141,6 +144,16 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
       ) : (
         <>
           <SpeedTierFieldPanel field={field} onChangeField={updates => setField(prev => ({ ...prev, ...updates }))} trickRoom={trickRoom} onChangeTrickRoom={setTrickRoom} />
+          <div className="flex flex-col gap-1.5 max-w-xs">
+            <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Filter by species</label>
+            <input
+              type="text"
+              value={speciesFilter}
+              onChange={e => setSpeciesFilter(e.target.value)}
+              placeholder="Pokémon name..."
+              className="px-3 py-2 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold placeholder:text-zinc-500"
+            />
+          </div>
           <div className="bg-zinc-800 rounded-lg p-4">
             <SpeedTierList groups={tierGroups} spriteCacheState={spriteCacheState} />
           </div>

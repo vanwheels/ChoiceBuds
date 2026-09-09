@@ -1,9 +1,9 @@
 /**
- * Speed Tiers Data Layer (Speed Calc-like Feature, Leg 2 - see TODO.md /
+ * Speed Tiers Data Layer (Speed Calc-like Feature - see TODO.md /
  * docs/investigations/speed-calc-scope.md). Pure functions turning a roster
  * Pokemon and a Team Gap Analysis usage threat (utils/usageThreats.ts) into
  * real, field-modified effective Speed numbers. No React, no UI - consumed
- * by the view shell (Leg 3) and the Live Calc tie-in (Leg 4).
+ * by the view shell (utils/speedTierList.ts + components/speedtiers/*).
  *
  * `@smogon/calc`'s own `Pokemon.rawStats` (what championsStats.ts/
  * damageCalcEngine.ts::computeBoostedStats reads) is base+nature+SP+IV only
@@ -30,40 +30,53 @@
  *
  * Modeling note: ChampionsUsageStatSpreadEntry.points is a genuine joint
  * 6-stat build (ranked by real usage %), safe to treat as its own honest
- * distribution. Nature/item/ability are separate, independently-ranked
- * marginal lists - the API never says which spread paired with which nature
- * or item in any real battle, so crossing them combinatorially would
- * fabricate joint percentages that don't exist in the data. Ability is
- * still baked into every spread's build (the closest thing to a fixed
- * species trait for a real threat, e.g. Chlorophyll Venusaur - and its
- * speed effect is already correctly gated by the caller's own field
- * context, so it can't silently inflate a number the caller didn't ask
- * for). Nature and item stay out of the base spread number and are instead
- * surfaced as diff-based "modifier notes" anchored to the single top-ranked
- * spread: build once with no item, again with the top-ranked nature (if
- * Speed-relevant) or a top-3-ranked item, and only keep the ones that
- * actually change the resulting number. This needs no hardcoded "which
- * items/abilities affect speed" table and stays correct automatically.
+ * distribution - each spread the caller keeps becomes its own row (which
+ * ones to keep, e.g. a usage-percentage floor, is a view-layer policy call -
+ * see utils/speedTierList.ts's SPREAD_USAGE_CUTOFF_PERCENT). Nature and item
+ * are deliberately NOT crossed with a spread's own points: the API never
+ * says which spread paired with which nature or item in any real battle, so
+ * combining them would fabricate joint percentages that don't exist in the
+ * data (same reasoning speedTierList.ts's header gives for not combining
+ * spreads with each other). Instead:
+ * - Item is a global, page-level field toggle (SpeedFieldContext.threatItem)
+ *   rather than per-species usage data - only Choice Scarf and Iron Ball
+ *   have a fixed, universal speed multiplier, so there's nothing
+ *   species-specific to look up (see docs/investigations/
+ *   speed-tiers-layout-rework.md).
+ * - Nature isn't binary, so rather than annotating one spread with a
+ *   top-ranked-nature delta, computeThreatSpeedProfile also returns 3 fixed
+ *   reference bounds per threat (min/neutral/max), independent of any
+ *   spread's own points - see computeThreatSpeedBounds below.
+ * Ability stays baked into every spread and bound (the closest thing to a
+ * fixed species trait for a real threat, e.g. Chlorophyll Venusaur), and its
+ * speed effect is already correctly gated by the caller's own field context.
  */
 import { Field } from '@smogon/calc';
-import type { Generation, NatureName, Terrain, Weather } from '@smogon/calc/dist/data/interface';
+import type { Generation, NatureName, StatsTable, Terrain, Weather } from '@smogon/calc/dist/data/interface';
 import { getFinalSpeed } from '@smogon/calc/dist/mechanics/util';
 import type { ChampionsUsageEntry, ImportedPokemonInfo } from '../types/pokemon';
 import { teamPokemonToCalcUpdates } from './calcTeamImport';
 import { buildPokemon, defaultPokemonState, type CalcPokemonState } from './damageCalcEngine';
 
-/** How many top-ranked items to scan for a speed-changing modifier note - see this file's header. */
-const ITEM_NOTE_SCAN_COUNT = 3;
+/** The only two items with a fixed, universal Speed multiplier - see this file's header. */
+export type ThreatSpeedItem = '' | 'Choice Scarf' | 'Iron Ball';
+
+/** Nature names used for the min/neutral/max bounds below - see computeThreatSpeedBounds. */
+const MIN_SPEED_NATURE: NatureName = 'Brave'; // lowers Speed
+const NEUTRAL_SPEED_NATURE: NatureName = 'Hardy'; // no Speed effect
+const MAX_SPEED_NATURE: NatureName = 'Timid'; // raises Speed
 
 export interface SpeedFieldContext {
   weather: Weather | '';
   terrain: Terrain | '';
   teamHasTailwind: boolean;
   threatHasTailwind: boolean;
+  /** Global, page-level toggle applied to every threat entry - see this file's header. Threats only, matching how the old per-species item scan was already threat-only; a team-side equivalent would be hypothetical speed adjustment for your own team, which is out of scope (see docs/investigations/speed-tiers-layout-rework.md). */
+  threatItem: ThreatSpeedItem;
 }
 
 export function defaultSpeedFieldContext(): SpeedFieldContext {
-  return { weather: '', terrain: '', teamHasTailwind: false, threatHasTailwind: false };
+  return { weather: '', terrain: '', teamHasTailwind: false, threatHasTailwind: false, threatItem: '' };
 }
 
 export interface TeamSpeedEntry {
@@ -78,19 +91,21 @@ export interface ThreatSpeedSpreadEntry {
   percentage: number;
 }
 
-export interface ThreatSpeedModifierNote {
-  kind: 'item' | 'nature';
-  label: string;
-  percentage: number;
-  speed: number;
+/** 3 fixed reference Speed values per threat, independent of any ranked spread's own points - see this file's header. */
+export interface ThreatSpeedBounds {
+  /** 0 SP + a Speed-lowering nature. */
+  min: number;
+  /** 0 SP + a nature with no Speed effect. */
+  neutral: number;
+  /** 32 SP (Champions' own 0-32 Stat Point scale - see utils/championsStats.ts) + a Speed-raising nature. */
+  max: number;
 }
 
 export interface ThreatSpeedProfile {
   species: string;
   /** One per ChampionsUsageEntry.statSpreads entry, sorted by percentage descending. */
   spreads: ThreatSpeedSpreadEntry[];
-  /** Only notes where the modifier actually changed the resulting speed - see this file's header. */
-  modifierNotes: ThreatSpeedModifierNote[];
+  bounds: ThreatSpeedBounds;
 }
 
 function buildField(field: SpeedFieldContext): InstanceType<typeof Field> {
@@ -128,15 +143,10 @@ export function computeTeamSpeed(gen: Generation, pokemon: ImportedPokemonInfo, 
   }
 }
 
-/** Whether a ChampionsUsageNatureEntry's statUp/statDown names Speed - see this file's header on why this is a runtime diff rather than a hardcoded nature table. */
-function isSpeedNature(statUp: string | undefined, statDown: string | undefined): boolean {
-  return !!(statUp?.toLowerCase().includes('speed') || statDown?.toLowerCase().includes('speed'));
-}
-
 /**
  * A Team Gap Analysis usage threat's speed profile under the given field
- * context - see this file's header for the spread-vs-modifier-note split.
- * Null on an unresolvable species.
+ * context - see this file's header for the spread-vs-bounds split. Null on
+ * an unresolvable species.
  */
 export function computeThreatSpeedProfile(gen: Generation, usage: ChampionsUsageEntry, field: SpeedFieldContext): ThreatSpeedProfile | null {
   try {
@@ -147,6 +157,7 @@ export function computeThreatSpeedProfile(gen: Generation, usage: ChampionsUsage
       ...defaultPokemonState(),
       species: usage.species,
       ability: topAbility,
+      item: field.threatItem,
     });
 
     const spreads: ThreatSpeedSpreadEntry[] = usage.statSpreads
@@ -156,28 +167,14 @@ export function computeThreatSpeedProfile(gen: Generation, usage: ChampionsUsage
       }))
       .sort((a, b) => b.percentage - a.percentage);
 
-    const topSpread = usage.statSpreads[0];
-    if (!topSpread) return { species: usage.species, spreads, modifierNotes: [] };
+    const maxSps: StatsTable = { ...baseState().sps, spe: 32 };
+    const bounds: ThreatSpeedBounds = {
+      min: finalSpeed(gen, { ...baseState(), nature: MIN_SPEED_NATURE }, calcField, calcField.defenderSide),
+      neutral: finalSpeed(gen, { ...baseState(), nature: NEUTRAL_SPEED_NATURE }, calcField, calcField.defenderSide),
+      max: finalSpeed(gen, { ...baseState(), nature: MAX_SPEED_NATURE, sps: maxSps }, calcField, calcField.defenderSide),
+    };
 
-    const baselineSpeed = finalSpeed(gen, { ...baseState(), sps: topSpread.points }, calcField, calcField.defenderSide);
-    const modifierNotes: ThreatSpeedModifierNote[] = [];
-
-    const topNature = usage.natures[0];
-    if (topNature && isSpeedNature(topNature.statUp, topNature.statDown)) {
-      const speed = finalSpeed(gen, { ...baseState(), sps: topSpread.points, nature: topNature.name as NatureName }, calcField, calcField.defenderSide);
-      if (speed !== baselineSpeed) {
-        modifierNotes.push({ kind: 'nature', label: topNature.name, percentage: topNature.percentage, speed });
-      }
-    }
-
-    for (const item of usage.items.slice(0, ITEM_NOTE_SCAN_COUNT)) {
-      const speed = finalSpeed(gen, { ...baseState(), sps: topSpread.points, item: item.name }, calcField, calcField.defenderSide);
-      if (speed !== baselineSpeed) {
-        modifierNotes.push({ kind: 'item', label: item.name, percentage: item.percentage, speed });
-      }
-    }
-
-    return { species: usage.species, spreads, modifierNotes };
+    return { species: usage.species, spreads, bounds };
   } catch {
     return null;
   }

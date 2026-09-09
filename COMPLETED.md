@@ -18,6 +18,25 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Speed Tiers Layout Rework] - Leg 4** (2026-09-09) - Reworked Leg 3's
+  row-list render into an icon grid grouped by speed value (`groupSpeedTiers`
+  itself unchanged - only the render shape and what feeds it). Dropped the
+  nature/item "modifier note" approach entirely rather than relocating it:
+  nature became 3 fixed min/neutral/max speed bounds per threat
+  (`speedTiers.ts::computeThreatSpeedProfile`'s `bounds`, independent of any
+  ranked spread's own points), and the per-species item-modifier-note scan
+  became a global, page-level Choice Scarf/Iron Ball toggle
+  (`SpeedFieldContext.threatItem`) in the same Tailwind-toggle shape already
+  used for weather/terrain - threats' side only, since a team-side
+  equivalent would be hypothetical speed adjustment for your own team
+  (explicitly deferred). Added a usage-% floor
+  (`speedTierList.ts::SPREAD_USAGE_CUTOFF_PERCENT`, currently 10) so only a
+  threat's real ranked spreads with meaningful usage get plotted, and a
+  species search filter (`filterSpeedTierEntries`) over the built entry list.
+  Full design in
+  [docs/investigations/speed-tiers-layout-rework.md](docs/investigations/speed-tiers-layout-rework.md).
+  See commit `pending`.
+
 - **[Speed Tiers View Shell] - Leg 3** (2026-09-09) - New top-level "Speed
   Tiers" tab (nav-placement question resolved live via AskUserQuestion,
   rather than guessed - own tab, not nested in Type Matchup or a team page).

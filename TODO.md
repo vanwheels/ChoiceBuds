@@ -22,23 +22,9 @@ Scoping resolved 2026-09-09 — see
 [docs/investigations/speed-calc-scope.md](docs/investigations/speed-calc-scope.md)
 for the full design-questions pass (differentiation direction: team-anchored
 threat list + Champions-native usage data + Live Calc tie-in, not a
-vgcmulticalc reskin). Legs 1-2 are done — see `COMPLETED.md`. Leg 3 (view
-shell) shipped but is being redone by Leg 4 below rather than carried
-forward as-is — see that doc for why. Legs below are a tentative breakdown,
-not yet started.
-
-- **[Speed Tiers Layout Rework] — Leg 4** *(Last touched: 2026-09-09 ·
-  Re-checks: 0)*
-  Redo Leg 3's row-list render as an icon grid grouped by speed value
-  (unchanged `groupSpeedTiers` logic, new render shape); add a usage-%
-  cutoff for which of a threat's ranked spreads get plotted; replace the
-  per-species item-modifier-note scan with global Choice Scarf/Iron Ball
-  toggles (Tailwind-toggle shape); replace the nature modifier-note with 3
-  fixed min/neutral/max speed tiers per threat; add a species search filter.
-  Full design in
-  [docs/investigations/speed-tiers-layout-rework.md](docs/investigations/speed-tiers-layout-rework.md).
-  Adjustable-speed-for-your-own-team is explicitly out of scope here (its
-  own future leg).
+vgcmulticalc reskin). Legs 1-3 are done — see `COMPLETED.md` (Leg 3's row-
+list shell was shipped, then redone by Leg 4). Legs below are a tentative
+breakdown, not yet started.
 
 - **[Live Calc → Speed Tiers Tie-in] — Leg 5** *(Last touched: 2026-09-09 ·
   Re-checks: 0)*

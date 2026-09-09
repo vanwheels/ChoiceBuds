@@ -108,22 +108,24 @@ describe('computeThreatSpeedProfile', () => {
     expect(sun?.spreads[0].speed).toBe(noWeather!.spreads[0].speed * 2);
   });
 
-  it('emits a nature modifier note only when the top nature is Speed-relevant and changes the number', () => {
-    const speedNature = usageEntry({ natures: [{ name: 'Timid', percentage: 50, statUp: 'Speed', statDown: 'Attack' }] });
-    const withNote = computeThreatSpeedProfile(gen, speedNature, defaultSpeedFieldContext());
-    expect(withNote?.modifierNotes).toEqual([expect.objectContaining({ kind: 'nature', label: 'Timid' })]);
-
-    const nonSpeedNature = usageEntry({ natures: [{ name: 'Modest', percentage: 50, statUp: 'Sp. Atk', statDown: 'Attack' }] });
-    const withoutNote = computeThreatSpeedProfile(gen, nonSpeedNature, defaultSpeedFieldContext());
-    expect(withoutNote?.modifierNotes).toEqual([]);
+  it('computes min/neutral/max bounds independent of any ranked spread, in ascending order', () => {
+    const profile = computeThreatSpeedProfile(gen, usageEntry(), defaultSpeedFieldContext());
+    expect(profile?.bounds.min).toBeLessThan(profile!.bounds.neutral);
+    expect(profile?.bounds.neutral).toBeLessThan(profile!.bounds.max);
   });
 
-  it('emits an item modifier note for a Choice Scarf-shaped item and none for a non-speed item', () => {
-    const usage = usageEntry({
-      items: [{ name: 'Sitrus Berry', percentage: 40 }, { name: 'Choice Scarf', percentage: 30 }],
-    });
-    const profile = computeThreatSpeedProfile(gen, usage, defaultSpeedFieldContext());
-    expect(profile?.modifierNotes).toEqual([expect.objectContaining({ kind: 'item', label: 'Choice Scarf' })]);
+  it('still computes bounds when a threat has no ranked stat spreads at all', () => {
+    const profile = computeThreatSpeedProfile(gen, usageEntry({ statSpreads: [] }), defaultSpeedFieldContext());
+    expect(profile?.spreads).toEqual([]);
+    expect(profile?.bounds.max).toBeGreaterThan(0);
+  });
+
+  it('boosts every spread and bound under the global Choice Scarf threat-item toggle', () => {
+    const usage = usageEntry();
+    const noItem = computeThreatSpeedProfile(gen, usage, defaultSpeedFieldContext());
+    const scarfed = computeThreatSpeedProfile(gen, usage, { ...defaultSpeedFieldContext(), threatItem: 'Choice Scarf' });
+    expect(scarfed?.spreads[0].speed).toBe(Math.floor(noItem!.spreads[0].speed * 1.5));
+    expect(scarfed?.bounds.max).toBe(Math.floor(noItem!.bounds.max * 1.5));
   });
 
   it('returns null for an unresolvable species', () => {
