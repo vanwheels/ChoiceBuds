@@ -22,21 +22,36 @@ Scoping resolved 2026-09-09 — see
 [docs/investigations/speed-calc-scope.md](docs/investigations/speed-calc-scope.md)
 for the full design-questions pass (differentiation direction: team-anchored
 threat list + Champions-native usage data + Live Calc tie-in, not a
-vgcmulticalc reskin). Legs 1-2 are done — see `COMPLETED.md`. Legs below are
-a tentative breakdown, not yet started; expect the nav-placement open
-question in the scope doc to adjust them once building starts.
+vgcmulticalc reskin). Legs 1-2 are done — see `COMPLETED.md`. Leg 3 (view
+shell) shipped but is being redone by Leg 4 below rather than carried
+forward as-is — see that doc for why. Legs below are a tentative breakdown,
+not yet started.
 
-- **[Live Calc → Speed Tiers Tie-in] — Leg 4** *(Last touched: 2026-09-09 ·
+- **[Speed Tiers Layout Rework] — Leg 4** *(Last touched: 2026-09-09 ·
+  Re-checks: 0)*
+  Redo Leg 3's row-list render as an icon grid grouped by speed value
+  (unchanged `groupSpeedTiers` logic, new render shape); add a usage-%
+  cutoff for which of a threat's ranked spreads get plotted; replace the
+  per-species item-modifier-note scan with global Choice Scarf/Iron Ball
+  toggles (Tailwind-toggle shape); replace the nature modifier-note with 3
+  fixed min/neutral/max speed tiers per threat; add a species search filter.
+  Full design in
+  [docs/investigations/speed-tiers-layout-rework.md](docs/investigations/speed-tiers-layout-rework.md).
+  Adjustable-speed-for-your-own-team is explicitly out of scope here (its
+  own future leg).
+
+- **[Live Calc → Speed Tiers Tie-in] — Leg 5** *(Last touched: 2026-09-09 ·
   Re-checks: 0)*
   Wire an inferred SP-Speed range from a Live Calc session
   (`hooks/useLiveCalc.ts`) to override/annotate the matching threat's
   generic usage-based speed entry in the tiers view. Wiring mechanism
   (shared state vs. explicit "send to Speed Tiers" action) still open.
+  Targets Leg 4's reworked render shape, not Leg 3's.
 
-- **[Speed Tiers Verification Pass] — Leg 5** *(Last touched: 2026-09-09 ·
+- **[Speed Tiers Verification Pass] — Leg 6** *(Last touched: 2026-09-09 ·
   Re-checks: 0)*
-  Live `run-desktop` pass once Legs 2-4 are built, same shape as the Live
-  Calc milestone's own verification leg.
+  Live `run-desktop` pass once Legs 2, 4, and 5 are built, same shape as the
+  Live Calc milestone's own verification leg.
 
 ## Blocked
 
