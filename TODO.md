@@ -16,26 +16,22 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Blocked
-
-Items where the whole item (not just a sub-part) is stalled on something
-outside this project — a person, a dependency, or an external decision.
-Exempt from the re-check counter; they move back to "In progress" once
-unblocked.
+## Current Milestone: Regulation M-C Prep
 
 - **[Regulation M-C Prep] — Leg 2** *(Last touched: 2026-09-08 · Re-checks:
   0)*
-  Blocked: Reg M-C shipped on schedule (2026-09-08 6pm PST), resolving the
-  release-date half of this wait, but Serebii's dedicated regulationm-c.shtml
-  page isn't confirmed up yet (only its per-species Champions Pokedex/
-  movepool pages are, per Vanny) — Leg 1 (roster/mega-stone/regulation-
-  selector registration, see COMPLETED.md) was hand-curated ahead of release
-  with no official source to check against yet.
-  Workflow once the patch drops: full datamined info won't be out until
-  end-of-week, so Vanny is feeding confirmed details in piecemeal as they
-  land (same running-tally pattern as Leg 1) rather than waiting for one
-  complete dump; treat each incoming batch as incremental manual
-  population of the config files below, not a single re-verification pass.
+  Reg M-C shipped on schedule (2026-09-08 6pm PST) — Leg 1 (roster/mega-
+  stone/regulation-selector registration, see COMPLETED.md) was hand-curated
+  ahead of release with no official source to check against yet; Serebii's
+  per-species Champions Pokedex/movepool pages are now up (per Vanny) and
+  are the source being used to verify it piecemeal, though Serebii's
+  dedicated regulationm-c.shtml roster/summary page specifically still
+  isn't confirmed up.
+  Workflow: full datamined info won't be out until end-of-week, so Vanny is
+  feeding confirmed details in piecemeal as they land (same running-tally
+  pattern as Leg 1) rather than waiting for one complete dump; treat each
+  incoming batch as incremental manual population of the config files below,
+  not a single re-verification pass.
   2026-09-08 update: Vanny confirmed the full non-Mega species roster
   (Wigglytuff, Persian +Alolan, Farfetch'd, Mr. Mime, Swalot, Gogoat,
   Golisopod, Rillaboom, Cinderace, Inteleon, Thievul, Toxtricity both
@@ -93,6 +89,13 @@ unblocked.
   on its own (Leg 1 deliberately didn't chase this pre-release - see its
   COMPLETED.md entry); add `seasons.ts`'s M-6+ rows once M-C's season dates
   are known.
+
+## Blocked
+
+Items where the whole item (not just a sub-part) is stalled on something
+outside this project — a person, a dependency, or an external decision.
+Exempt from the re-check counter; they move back to "In progress" once
+unblocked.
 
 - **[Team Card Grid Layout Re-check] — Leg 1** *(Last touched: 2026-08-31 ·
   Re-checks: 0)*
