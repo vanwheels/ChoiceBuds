@@ -35,7 +35,7 @@ in:
   in-file as Leg 3's to replace - no results polish this leg, per scope.
   11 new hook tests (`useLiveCalc.test.ts`) covering state wiring and one
   real end-to-end narrowing case; full suite (593 tests) and build both
-  green. See commit `<hash>` for the full diff.
+  green. See commit `8e68481` for the full diff.
 
 - **[Live Calc Engine] - Leg 1** (2026-09-08) - New `utils/liveCalcEngine.ts`:
   pure, React-free heuristic inference engine narrowing a defender's unknown
