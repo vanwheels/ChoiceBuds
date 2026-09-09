@@ -35,7 +35,7 @@ in:
   species search filter (`filterSpeedTierEntries`) over the built entry list.
   Full design in
   [docs/investigations/speed-tiers-layout-rework.md](docs/investigations/speed-tiers-layout-rework.md).
-  See commit `pending`.
+  See commit `0857937`.
 
 - **[Speed Tiers View Shell] - Leg 3** (2026-09-09) - New top-level "Speed
   Tiers" tab (nav-placement question resolved live via AskUserQuestion,
