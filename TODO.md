@@ -63,6 +63,35 @@ unblocked.
   land (same running-tally pattern as Leg 1) rather than waiting for one
   complete dump; treat each incoming batch as incremental manual
   population of the config files below, not a single re-verification pass.
+  2026-09-08 update: Vanny confirmed the full non-Mega species roster
+  (Wigglytuff, Persian +Alolan, Farfetch'd, Mr. Mime, Swalot, Gogoat,
+  Golisopod, Rillaboom, Cinderace, Inteleon, Thievul, Toxtricity both
+  forms, Grapploct, Perrserker, Sirfetch'd, Pincurchin, Indeedee M/F,
+  Arboliva, Squawkabilly all 4 forms, Mabosstiff, Baxcalibur) and the new
+  item list (Leek, Rocky Helmet, Air Balloon, Red Card, Binding Band,
+  Eject Button, Normal Gem, Terrain Extender, Grassy Seed, Psychic Seed,
+  Electric Seed, Misty Seed) — see `project_regulation_mc_prep` memory for
+  the full list. This also confirms Baxcalibur, Golisopod, and Salamence
+  all get ordinary (non-Z) Megas, matching the 6-Mega-Stone count already
+  scoped below. Vanny pasted source text in 3 dumps (items, move changes,
+  ability changes) — all 3 now received and transcribed verbatim, with
+  discrepancy notes, into `docs/investigations/regulation-mc-source-text.md`;
+  the piecemeal-gathering phase is done, this doc is the full source
+  material to implement from. (Dump 3's ability list gives the Mega
+  Lucario Z ability as "Aura Guard" — already correctly named that way in
+  `config/megaAbilities.ts`, fixed a few days before this dump landed; the
+  earlier "Aura Break" name flagged in-session was stale leftover memory,
+  not a real code discrepancy.) Also: a powder-move cluster (Poison Powder/Stun
+  Spore/Sleep Powder/Spore/Cotton Spore/Rage Powder/Magic Powder) plus
+  Thunder Wave and the Effect Spore ability all gained explicit
+  Grass-/Ground-type-immunity clauses — verify these against current
+  behavior, not just treat as wording; and a batch of moves/abilities with
+  no "Previous:" text read as newly relevant to Champions because they
+  belong to dump 1's new species (Libero→Cinderace, Grassy
+  Surge→Rillaboom, Psychic Surge→Indeedee-M, Punk Rock→Toxtricity,
+  Emergency Exit→Golisopod, Grass Pelt→Gogoat, etc.) rather than being
+  brand-new ability concepts — full details and remaining species↔ability
+  pairings to confirm are in the source-text doc.
   Once live: re-verify `utils/pokemonRules.ts`'s `REG_MC_ADDED_SPECIES` and
   `config/vgcData.ts`'s 6 new Mega Stones against Serebii's own Reg M-C
   pages (replacing the pre-release provenance notes in both files' headers
