@@ -16,6 +16,45 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
+## Current Milestone: Speed Calc-like Feature
+
+Scoping resolved 2026-09-09 — see
+[docs/investigations/speed-calc-scope.md](docs/investigations/speed-calc-scope.md)
+for the full design-questions pass (differentiation direction: team-anchored
+threat list + Champions-native usage data + Live Calc tie-in, not a
+vgcmulticalc reskin). Leg 1 (that scoping session) is done — see
+`COMPLETED.md`. Legs below are a tentative breakdown, not yet started;
+expect the nav-placement/field-effect open questions in the scope doc to
+adjust them once building starts.
+
+- **[Speed Tiers Data Layer] — Leg 2** *(Last touched: 2026-09-09 ·
+  Re-checks: 0)*
+  Pure functions: compute a team's own speed values (SPs/nature/item/
+  ability, mirroring existing `utils/championsStats.ts`/`@smogon/calc` SP
+  math) and merge with Team Gap Analysis's threat list
+  (`utils/usageThreats.ts`), resolving each threat's speed distribution from
+  `ChampionsUsageEntry.statSpreads`. No UI. Field-effect modifier handling
+  (Tailwind/Trick Room/weather/paralysis) still needs settling here - see
+  scope doc's open follow-ups.
+
+- **[Speed Tiers View Shell] — Leg 3** *(Last touched: 2026-09-09 ·
+  Re-checks: 0)*
+  New UI surface rendering the sorted tier list for a selected team against
+  its threats. Nav placement (own tab vs. nested under a team) not decided -
+  see scope doc.
+
+- **[Live Calc → Speed Tiers Tie-in] — Leg 4** *(Last touched: 2026-09-09 ·
+  Re-checks: 0)*
+  Wire an inferred SP-Speed range from a Live Calc session
+  (`hooks/useLiveCalc.ts`) to override/annotate the matching threat's
+  generic usage-based speed entry in the tiers view. Wiring mechanism
+  (shared state vs. explicit "send to Speed Tiers" action) still open.
+
+- **[Speed Tiers Verification Pass] — Leg 5** *(Last touched: 2026-09-09 ·
+  Re-checks: 0)*
+  Live `run-desktop` pass once Legs 2-4 are built, same shape as the Live
+  Calc milestone's own verification leg.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -98,16 +137,4 @@ unblocked.
   a schedule.
 
 ## Future Milestones (unscheduled)
-
-- **Speed Calc-like Feature** — concept only, surfaced 2026-09-08 alongside
-  the Team Gap Analysis redesign scoping above but deliberately not part of
-  it - this is a new comparative-speed-tiering calc surface, not a
-  gap-analysis extension. Per Vanny, the open design problem isn't the
-  mechanic itself (a Showdown-usage-backed speed-tier list, similar in
-  spirit to vgcmulticalc's own Speed Calc) but how to make it different/
-  unique enough to not read as a blatant copy of a feature that's fairly
-  distinctive to that site. Needs its own dedicated design-questions pass
-  (what makes ours meaningfully different in framing/data/interaction, not
-  just reskinned) before this turns into real legs - explicitly deferred
-  rather than answered here.
 

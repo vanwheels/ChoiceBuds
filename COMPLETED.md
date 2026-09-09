@@ -18,6 +18,19 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Speed Calc-like Feature: Scoping] - Leg 1** (2026-09-09) - Design-
+  questions pass resolving how ChoiceBuds' version differs from
+  vgcmulticalc's Speed Calc rather than reskinning it: team-anchored (Team
+  Gap Analysis's own threat list, not a free-text search box) +
+  Champions-native usage data (`ChampionsUsageEntry.statSpreads`, not
+  Showdown's Bo3 ladder) + a Live Calc tie-in (inferred SP-Speed ranges
+  overriding a threat's generic usage-based entry). Resolved via
+  `AskUserQuestion` after researching vgcmulticalc's actual feature set
+  first. Full writeup in
+  [docs/investigations/speed-calc-scope.md](docs/investigations/speed-calc-scope.md);
+  tentative Leg 2-5 breakdown now sitting in `TODO.md`'s Current Milestone
+  section.
+
 - **[Champions M-C Balance Patch Corrections] - Leg 1** (2026-09-09) - 5
   balance-patch facts provided directly by the user, applied where PokeAPI
   structurally can't reflect them yet. Added a new unconditional
