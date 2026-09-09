@@ -18,6 +18,15 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Team Gap Analysis: Partial/Scored Gaps] - Leg 1** (2026-09-08) - See
+  commit `8fd76cb`. Design check-in at leg start (resist-count threshold,
+  separate section) resolved before any code changed - see the commit body
+  for the resulting shape. `computePartiallyCoveredUsageThreats` now
+  surfaces usage threats resisted/immune-to by exactly one team slot in a
+  new "Partially Covered" section on `UsageThreatsList.tsx`, distinct from
+  the existing fully-unanswered list and from threats 2+ slots cover
+  (still excluded from both).
+
 - **[Team Gap Analysis: Defensive Ability-Awareness] - Leg 1** (2026-09-08) -
   See commit `a771f2e`. `computeUsageThreats`/`computeDefensiveCoverage` now
   check a team slot's equipped ability (new `config/typeImmunityAbilities.ts`)

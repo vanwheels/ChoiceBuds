@@ -25,19 +25,14 @@ entries - and moved straight there instead of becoming legs here). Not
 thematically unified beyond "small items to clear before Live Calc" - see
 Future Milestones below for that one.
 
-- **[Team Gap Analysis: Partial/Scored Gaps] — Leg 1** *(Last touched:
-  2026-09-08 · Re-checks: 0)*
-  Follow-on from Team Gap Analysis Re-evaluation's scoping pass (see
-  `COMPLETED.md`). `computeUsageThreats`'s "no slot resists or is immune"
-  check is all-or-nothing - a threat resisted by exactly one otherwise-weak
-  teammate is fully excluded from the list even if nothing else on the team
-  can actually handle it either. Needs a design decision before/at the start
-  of this leg on what "partially covered" means and how it renders in
-  `UsageThreatsList.tsx` (a separate section? a badge/score on existing
-  rows?) - resolve via a quick check-in when this leg starts rather than
-  guessing. Defensive Ability-Awareness (see `COMPLETED.md`) has landed, so
-  this now scores against ability-aware coverage rather than the raw
-  type-only version.
+No active legs remain scheduled here right now - Partial/Scored Gaps (this
+milestone's last scheduled leg) shipped, see `COMPLETED.md`. Flagging rather
+than closing the milestone myself: the remaining Team Gap Analysis
+Unscheduled items below (Re-confirm Typing-Only Scope, Usage Cutoff Tuning)
+and the Move-Blocking Abilities/UI Shift Assessment items were never
+explicitly pulled into this milestone's active legs, so whether this
+milestone is actually done (vs. one of those getting pulled in next) is a
+call for Vanny, not an assumption to make here.
 
 ## Blocked
 
