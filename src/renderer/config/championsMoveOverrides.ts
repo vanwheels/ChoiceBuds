@@ -148,6 +148,12 @@ const CHAMPIONS_PP_EXCEPTIONS: Record<string, number> = {
   'obstruct': 8,
   'spin-out': 12,
   'nihil-light': 8,
+  // strength-sap/wish: provided directly by the user 2026-09-09 (not yet on
+  // any of the sources cited in the file header - this project's own PokeAPI
+  // check confirms both have a raw base PP of 10, so the game-wide formula
+  // alone would predict 12; the real value is 8).
+  'strength-sap': 8,
+  'wish': 8,
 };
 
 export function getChampionsPP(moveName: string, basePP: number): number {

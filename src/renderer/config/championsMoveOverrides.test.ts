@@ -44,6 +44,8 @@ describe('getChampionsPP', () => {
     expect(getChampionsPP('protect', 10)).toBe(8); // formula alone would give 12
     expect(getChampionsPP('beak-blast', 15)).toBe(8); // formula alone would give 16
     expect(getChampionsPP('shell-trap', 5)).toBe(12); // formula alone would give 8
+    expect(getChampionsPP('strength-sap', 10)).toBe(8); // formula alone would give 12
+    expect(getChampionsPP('wish', 10)).toBe(8); // formula alone would give 12
   });
 
   it('normalizes the move name before checking exceptions', () => {

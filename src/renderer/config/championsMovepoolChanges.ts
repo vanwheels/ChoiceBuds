@@ -266,11 +266,22 @@ const GLOBALLY_REMOVED_MOVES = [
 // tag list. Octazooka, Milk Drink, Shift Gear, Jaw Lock, Court Change, and
 // Slash don't correspond to any signature move of a Reg M-C roster addition
 // and needed no action either way. See TODO.md's Leg 2 entry.
+// golisopod ADDED 2026-09-09 (provided directly by the user, confirmed live):
+// U-Turn/Gunk Shot/Night Slash/Superpower are all absent from Golisopod's
+// PokeAPI all-time movepool entirely (confirmed live - none of the 4 appear
+// in its `moves` list regardless of version group), so unlike the
+// baxcalibur/rillaboom/cinderace/pincurchin entries above (which restore a
+// move PokeAPI has but GLOBALLY_REMOVED_MOVES strips), these are moves
+// PokeAPI's Gen 9 SV learnset pipeline never had to begin with - likely
+// Legends Z-A-exclusive, per the "Reg M-C Z-A-Exclusive Movepool Audit"
+// TODO.md item this resolves for Golisopod specifically (Rillaboom/
+// Baxcalibur/Salamence remain unconfirmed there).
 export const CHAMPIONS_MOVEPOOL_ADDITIONS: Record<string, string[]> = {
   baxcalibur: ['glaive-rush'],
   rillaboom: ['drum-beating'],
   cinderace: ['pyro-ball'],
   pincurchin: ['zing-zap'],
+  golisopod: ['u-turn', 'gunk-shot', 'night-slash', 'superpower'],
 };
 
 export const CHAMPIONS_MOVEPOOL_REMOVALS: Record<string, string[]> = {};
@@ -284,4 +295,37 @@ export function applyChampionsMovepoolChanges(speciesSlug: string, moves: string
   additions?.forEach(move => merged.add(move));
   removals?.forEach(move => merged.delete(move));
   return [...merged];
+}
+
+/**
+ * Post-launch balance-patch move removals - a different kind of correction
+ * than CHAMPIONS_MOVEPOOL_ADDITIONS/REMOVALS above. Those two are gated
+ * behind `hasChampionsMoveData` in useGameData.ts (only consulted when
+ * PokeAPI has zero "champions"-tagged moves for a species) because they're
+ * sourced from a mixed-reliability community spreadsheet/Showdown mod that
+ * PokeAPI's own tag data is trusted to supersede once it exists (see this
+ * file's header, the Sharpedo/Thief case). A patch removal below is
+ * different in kind: it's a specific, dated fact the user confirmed
+ * directly (not a stale table PokeAPI might already have right), correcting
+ * for a balance change that landed *after* whatever snapshot PokeAPI's own
+ * champions-tag data reflects. PokeAPI has no mechanism to ever un-teach a
+ * post-launch patch removal on its own, tagged or not - so this is applied
+ * unconditionally in useGameData.ts's applyMovepoolChangesIfNeeded,
+ * regardless of hasChampionsMoveData.
+ *
+ * archaludon ADDED 2026-09-09 (provided directly by the user): lost access
+ * to Mirror Coat and Metal Burst in Champions. PokeAPI's champions-tagged
+ * data for Archaludon still includes both as of this writing (confirmed
+ * live) - expected, since PokeAPI has no way to know about a patch that
+ * postdates its own snapshot.
+ */
+export const CHAMPIONS_PATCH_MOVEPOOL_REMOVALS: Record<string, string[]> = {
+  archaludon: ['mirror-coat', 'metal-burst'],
+};
+
+export function applyChampionsPatchRemovals(speciesSlug: string, moves: string[]): string[] {
+  const removals = CHAMPIONS_PATCH_MOVEPOOL_REMOVALS[speciesSlug];
+  if (!removals || removals.length === 0) return moves;
+  const removeSet = new Set(removals);
+  return moves.filter(move => !removeSet.has(move));
 }

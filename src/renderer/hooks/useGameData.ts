@@ -22,7 +22,7 @@ import { NEVER_EXPIRES } from '../utils/cacheExpiry';
 import { applyChampionsMoveOverride } from '../config/championsMoveOverrides';
 import { applyMoveFlags } from '../config/moveFlags';
 import { applyChampionsAbilityOverride } from '../config/championsAbilityOverrides';
-import { applyChampionsMovepoolChanges } from '../config/championsMovepoolChanges';
+import { applyChampionsMovepoolChanges, applyChampionsPatchRemovals } from '../config/championsMovepoolChanges';
 
 type Gender = 'M' | 'F' | 'N' | '';
 
@@ -154,10 +154,16 @@ export function useGameData(): UseGameDataReturn {
   // hand table (sourced from a community spreadsheet of mixed reliability)
   // incorrectly had it removed - applying both unconditionally was actively
   // introducing errors on species PokeAPI already had right.
-  const applyMovepoolChangesIfNeeded = (learnset: SpeciesLearnsetEntry): SpeciesLearnsetEntry =>
-    learnset.hasChampionsMoveData
-      ? learnset
-      : { ...learnset, moves: applyChampionsMovepoolChanges(learnset.species, learnset.moves) };
+  // applyChampionsPatchRemovals runs unconditionally, before the
+  // hasChampionsMoveData gate below - see its own header comment in
+  // championsMovepoolChanges.ts for why a post-launch balance-patch removal
+  // is never superseded by PokeAPI's champions-tag data, tagged or not.
+  const applyMovepoolChangesIfNeeded = (learnset: SpeciesLearnsetEntry): SpeciesLearnsetEntry => {
+    const patched = applyChampionsPatchRemovals(learnset.species, learnset.moves);
+    return learnset.hasChampionsMoveData
+      ? { ...learnset, moves: patched }
+      : { ...learnset, moves: applyChampionsMovepoolChanges(learnset.species, patched) };
+  };
 
   const getCachedSpeciesLearnset = useCallback((species: string, gender?: Gender): SpeciesLearnsetEntry | null => {
     const learnset = readCacheEntry(cache?.learnsets, normalizeSpeciesForAPI(species, gender));

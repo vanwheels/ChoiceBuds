@@ -69,14 +69,16 @@ unblocked.
 - **[Reg M-C Z-A-Exclusive Movepool Audit] — Leg 1** *(Last touched:
   2026-09-09 · Re-checks: 0)*
   Deferred out of Regulation M-C Prep's Leg 2 (see COMPLETED.md/postmortem)
-  rather than forced into that pass. Whether Rillaboom/Baxcalibur/Salamence/
-  Golisopod gained any Legends Z-A-exclusive moves PokeAPI's Gen 9 SV
-  learnset pipeline wouldn't surface on its own is still unconfirmed — a
-  spot WebFetch against Serebii's per-species pages couldn't reliably tell
+  rather than forced into that pass. Whether Rillaboom/Baxcalibur/Salamence
+  gained any Legends Z-A-exclusive moves PokeAPI's Gen 9 SV learnset
+  pipeline wouldn't surface on its own is still unconfirmed — a spot
+  WebFetch against Serebii's per-species pages couldn't reliably tell
   genuinely-new moves apart from existing ones it just flagged as
   "unusual." Needs the app's own live-PokeAPI `hasChampionsMoveData` audit
   methodology (`config/championsMovepoolChanges.ts`'s header) applied to
-  these 4 species specifically, not a Serebii read.
+  these 3 species specifically, not a Serebii read. Golisopod (originally
+  the 4th) is resolved — see COMPLETED.md's Champions M-C Balance Patch
+  Corrections entry.
 
 - **[UI Shift Assessment Sweep — Post Card UI Polish] — Leg 1** *(Last
   touched: 2026-09-08 · Re-checks: 0)*

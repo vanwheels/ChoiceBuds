@@ -18,6 +18,27 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Champions M-C Balance Patch Corrections] - Leg 1** (2026-09-09) - 5
+  balance-patch facts provided directly by the user, applied where PokeAPI
+  structurally can't reflect them yet. Added a new unconditional
+  `applyChampionsPatchRemovals` mechanism to `championsMovepoolChanges.ts`
+  (Archaludon lost Mirror Coat/Metal Burst) - distinct from the existing
+  `hasChampionsMoveData`-gated additions/removals table, since a dated
+  patch fact is never superseded by PokeAPI's champions-tag data the way a
+  stale community-spreadsheet entry is; wired into `useGameData.ts` ahead
+  of that gate. Added Golisopod's `u-turn`/`gunk-shot`/`night-slash`/
+  `superpower` to the existing gated `CHAMPIONS_MOVEPOOL_ADDITIONS` table -
+  confirmed live these 4 are absent from Golisopod's PokeAPI all-time
+  movepool entirely (likely Legends Z-A-exclusive), resolving Golisopod's
+  share of the "Reg M-C Z-A-Exclusive Movepool Audit" TODO item
+  (Rillaboom/Baxcalibur/Salamence remain open there). Added `double-shock`
+  → `punch` to `moveFlags.ts`'s `CHAMPIONS_ADDED_FLAGS` (Iron Fist now
+  affects Pawmot's signature move). Added `strength-sap`/`wish` to
+  `championsMoveOverrides.ts`'s `CHAMPIONS_PP_EXCEPTIONS` (both now 8 PP;
+  confirmed live their raw PokeAPI base PP of 10 would otherwise formula-
+  compute to 12). Snipe Shot's reported 85 BP needed no change - already
+  correct in `CHAMPIONS_MOVE_OVERRIDES`. See commit `<hash>`.
+
 - **[Regulation M-C Prep] - Leg 2** (2026-09-08 to 2026-09-09) - piecemeal
   post-release verification of Leg 1's hand-curated Reg M-C data against
   official sources (Serebii's Champions Pokedex/movepool/item/mega-ability

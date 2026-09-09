@@ -15,6 +15,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   applyChampionsMovepoolChanges,
+  applyChampionsPatchRemovals,
   CHAMPIONS_MOVEPOOL_ADDITIONS,
   CHAMPIONS_MOVEPOOL_REMOVALS,
 } from './championsMovepoolChanges';
@@ -48,6 +49,11 @@ describe('applyChampionsMovepoolChanges', () => {
     expect(applyChampionsMovepoolChanges('pincurchin', ['zing-zap', 'spark'])).toContain('zing-zap');
   });
 
+  it('adds back Golisopod moves absent from its PokeAPI all-time movepool entirely (likely Legends Z-A-exclusive)', () => {
+    const result = applyChampionsMovepoolChanges('golisopod', ['first-impression', 'liquidation']);
+    expect(result).toEqual(expect.arrayContaining(['u-turn', 'gunk-shot', 'night-slash', 'superpower', 'first-impression', 'liquidation']));
+  });
+
   describe('per-species addition/removal mechanism (generic cases beyond the real baxcalibur entry above)', () => {
     afterEach(() => {
       delete CHAMPIONS_MOVEPOOL_ADDITIONS['test-species'];
@@ -69,5 +75,17 @@ describe('applyChampionsMovepoolChanges', () => {
       expect(result).not.toContain('final-gambit'); // per-species removal
       expect(result).toContain('thunderbolt'); // untouched
     });
+  });
+});
+
+describe('applyChampionsPatchRemovals', () => {
+  it("strips Archaludon's post-launch removals (Mirror Coat, Metal Burst)", () => {
+    const result = applyChampionsPatchRemovals('archaludon', ['mirror-coat', 'metal-burst', 'flash-cannon']);
+    expect(result).toEqual(['flash-cannon']);
+  });
+
+  it('leaves a species with no patch-removal entry unaffected', () => {
+    const result = applyChampionsPatchRemovals('unlisted-species', ['tackle', 'moonblast']);
+    expect(result).toEqual(['tackle', 'moonblast']);
   });
 });

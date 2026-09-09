@@ -48,6 +48,10 @@ const CHAMPIONS_ADDED_FLAGS: Record<string, MoveFlagKey[]> = {
   'crush-claw': ['slicing'],
   'shadow-claw': ['slicing'],
   'dragon-claw': ['slicing'],
+  // double-shock: provided directly by the user 2026-09-09 - Champions
+  // considers Pawmot's signature move a punching move (Iron Fist-boostable),
+  // unlike mainline @smogon/calc's bundled data.
+  'double-shock': ['punch'],
 };
 
 /** All flags a move has (normalized move name -> flag key list), not just the visible subset. */
