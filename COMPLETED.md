@@ -32,7 +32,7 @@ in:
   `speedTiers.ts` itself, matching that file's own note that sort direction
   is "whatever consumes its output"'s concern - Trick Room is a plain
   boolean flip on that sort, not a field the data layer touches. See commit
-  `<pending>`.
+  `f733635`.
 
 - **[Speed Tiers Data Layer] - Leg 2** (2026-09-09) - Pure functions
   (`utils/speedTiers.ts`) computing a roster Pokemon's or usage threat's
