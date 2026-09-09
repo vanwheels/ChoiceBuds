@@ -37,7 +37,7 @@ in:
   `championsMoveOverrides.ts`'s `CHAMPIONS_PP_EXCEPTIONS` (both now 8 PP;
   confirmed live their raw PokeAPI base PP of 10 would otherwise formula-
   compute to 12). Snipe Shot's reported 85 BP needed no change - already
-  correct in `CHAMPIONS_MOVE_OVERRIDES`. See commit `<hash>`.
+  correct in `CHAMPIONS_MOVE_OVERRIDES`. See commit `4cf29e8`.
 
 - **[Regulation M-C Prep] - Leg 2** (2026-09-08 to 2026-09-09) - piecemeal
   post-release verification of Leg 1's hand-curated Reg M-C data against
