@@ -36,7 +36,7 @@ in:
   `usageCoverageGaps.test.ts`, including a case demonstrating the gap this
   section exists to catch: a species whose raw typing reads as fully
   resisted/immune but whose actual top move's effective type is not. See
-  commit `TBD`.
+  commit `fd9a29a`.
 
 - **[Team Gap Analysis: Ability/Moveset/Speed-Aware Redesign] - Leg 1**
   (2026-09-08) - Scoping-only, no code change. Resolved the three open
