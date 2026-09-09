@@ -38,11 +38,14 @@ Leg 8). Legs below are a tentative breakdown, not yet started.
 
 - **[Speed Tiers Verification Pass] — Leg 7** *(Last touched: 2026-09-09 ·
   Re-checks: 0)*
-  Live `run-desktop` pass once Legs 2, 6, and 8 are built (Leg 5 shipped —
-  see `COMPLETED.md`), same shape as the Live Calc milestone's own
-  verification leg. Should specifically confirm the icon grid now produces
-  real horizontal tie groups against a full regulation roster (Leg 8's
-  fix for the "vertical mess" complaint), not just that it renders.
+  Live `run-desktop` pass once Legs 2 and 6 are built (Leg 5 shipped — see
+  `COMPLETED.md`), same shape as the Live Calc milestone's own verification
+  leg. Leg 8's own scope (full-regulation roster + Mega forms + dense grid,
+  including its same-day follow-up fixes) is already manually verified live
+  by Vanny — not via `run-desktop`, but confirmed working after the
+  self-healing initial-sync fix backfilled the roster. This leg is about
+  Legs 2/6 specifically, plus a from-scratch `run-desktop` pass over the
+  whole page once Leg 6 exists, not re-verifying Leg 8 again.
 
 - **[Speed Tiers "Threats Only" Toggle] — Leg 9** *(Last touched: 2026-09-09
   · Re-checks: 0)*
