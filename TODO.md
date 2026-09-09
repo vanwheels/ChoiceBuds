@@ -20,11 +20,13 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 
 Scoping resolved 2026-09-09 — see
 [docs/investigations/speed-calc-scope.md](docs/investigations/speed-calc-scope.md)
-for the full design-questions pass (differentiation direction: team-anchored
-threat list + Champions-native usage data + Live Calc tie-in, not a
-vgcmulticalc reskin). Legs 1-3 are done — see `COMPLETED.md` (Leg 3's row-
-list shell was shipped, then redone by Leg 4). Legs below are a tentative
-breakdown, not yet started.
+for the full design-questions pass. Its "team-anchored threat list, not a
+vgcmulticalc reskin" differentiation call was itself reversed the same day
+by Leg 8 — see
+[docs/investigations/speed-tiers-full-roster-pivot.md](docs/investigations/speed-tiers-full-roster-pivot.md).
+Legs 1-5 and 8 are done — see `COMPLETED.md` (Leg 3's row-list shell was
+shipped, then redone by Leg 4, then Leg 4's own data source superseded by
+Leg 8). Legs below are a tentative breakdown, not yet started.
 
 - **[Live Calc → Speed Tiers Tie-in] — Leg 6** *(Last touched: 2026-09-09 ·
   Re-checks: 0)*
@@ -32,13 +34,23 @@ breakdown, not yet started.
   (`hooks/useLiveCalc.ts`) to override/annotate the matching threat's
   generic usage-based speed entry in the tiers view. Wiring mechanism
   (shared state vs. explicit "send to Speed Tiers" action) still open.
-  Targets Leg 4's reworked render shape, not Leg 3's.
+  Targets Leg 8's full-regulation-roster data shape, not Leg 3/4's.
 
 - **[Speed Tiers Verification Pass] — Leg 7** *(Last touched: 2026-09-09 ·
   Re-checks: 0)*
-  Live `run-desktop` pass once Legs 2 and 6 are built (Leg 5 shipped — see
-  `COMPLETED.md`), same shape as the Live Calc milestone's own verification
-  leg.
+  Live `run-desktop` pass once Legs 2, 6, and 8 are built (Leg 5 shipped —
+  see `COMPLETED.md`), same shape as the Live Calc milestone's own
+  verification leg. Should specifically confirm the icon grid now produces
+  real horizontal tie groups against a full regulation roster (Leg 8's
+  fix for the "vertical mess" complaint), not just that it renders.
+
+- **[Speed Tiers "Threats Only" Toggle] — Leg 9** *(Last touched: 2026-09-09
+  · Re-checks: 0)*
+  Deferred out of Leg 8's full-regulation-roster pivot at Vanny's own call —
+  a future optional toggle to narrow the default all-regulation view down to
+  Team Gap Analysis-style typing threats (`usageThreats.ts::computeUsageThreats`),
+  alongside the All/Top 60/Top 120 usage-rank toggle Leg 8 already built.
+  Theoretical/deferred, so explicitly not the default. Unscoped beyond that.
 
 ## Blocked
 

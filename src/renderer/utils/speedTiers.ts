@@ -1,9 +1,11 @@
 /**
  * Speed Tiers Data Layer (Speed Calc-like Feature - see TODO.md /
  * docs/investigations/speed-calc-scope.md). Pure functions turning a roster
- * Pokemon and a Team Gap Analysis usage threat (utils/usageThreats.ts) into
- * real, field-modified effective Speed numbers. No React, no UI - consumed
- * by the view shell (utils/speedTierList.ts + components/speedtiers/*).
+ * Pokemon or a regulation-legal species (see docs/investigations/
+ * speed-tiers-full-roster-pivot.md - no longer limited to Team Gap
+ * Analysis's usage-threat list) into real, field-modified effective Speed
+ * numbers. No React, no UI - consumed by the view shell (utils/
+ * speedTierList.ts + components/speedtiers/*).
  *
  * `@smogon/calc`'s own `Pokemon.rawStats` (what championsStats.ts/
  * damageCalcEngine.ts::computeBoostedStats reads) is base+nature+SP+IV only
@@ -103,9 +105,24 @@ export interface ThreatSpeedBounds {
 
 export interface ThreatSpeedProfile {
   species: string;
-  /** One per ChampionsUsageEntry.statSpreads entry, sorted by percentage descending. */
+  /** One per ChampionsUsageEntry.statSpreads entry, sorted by percentage descending. Empty when the species has no usage data - see ThreatSpeedInput.usage. */
   spreads: ThreatSpeedSpreadEntry[];
   bounds: ThreatSpeedBounds;
+}
+
+/**
+ * Input for computeThreatSpeedProfile, decoupled from requiring a real
+ * ChampionsUsageEntry - the Speed Tiers view plots every regulation-legal
+ * species (see docs/investigations/speed-tiers-full-roster-pivot.md), most
+ * of which have no ranked usage data at all. `usage` stays optional (spreads
+ * only); `ability` is resolved by the caller - the usage entry's own
+ * top-ranked ability when one exists, otherwise the species' default ability
+ * from the roster cache (see SpeedTiersPage.tsx).
+ */
+export interface ThreatSpeedInput {
+  species: string;
+  ability: string;
+  usage: ChampionsUsageEntry | null;
 }
 
 function buildField(field: SpeedFieldContext): InstanceType<typeof Field> {
@@ -144,23 +161,24 @@ export function computeTeamSpeed(gen: Generation, pokemon: ImportedPokemonInfo, 
 }
 
 /**
- * A Team Gap Analysis usage threat's speed profile under the given field
- * context - see this file's header for the spread-vs-bounds split. Null on
- * an unresolvable species.
+ * A regulation-legal species' speed profile under the given field context -
+ * see this file's header for the spread-vs-bounds split, and
+ * ThreatSpeedInput's doc comment for why usage is optional. Null on an
+ * unresolvable species.
  */
-export function computeThreatSpeedProfile(gen: Generation, usage: ChampionsUsageEntry, field: SpeedFieldContext): ThreatSpeedProfile | null {
+export function computeThreatSpeedProfile(gen: Generation, input: ThreatSpeedInput, field: SpeedFieldContext): ThreatSpeedProfile | null {
   try {
     const calcField = buildField(field);
-    const topAbility = usage.abilities[0]?.name ?? '';
+    const { species, ability, usage } = input;
 
     const baseState = (): CalcPokemonState => ({
       ...defaultPokemonState(),
-      species: usage.species,
-      ability: topAbility,
+      species,
+      ability,
       item: field.threatItem,
     });
 
-    const spreads: ThreatSpeedSpreadEntry[] = usage.statSpreads
+    const spreads: ThreatSpeedSpreadEntry[] = (usage?.statSpreads ?? [])
       .map(spread => ({
         speed: finalSpeed(gen, { ...baseState(), sps: spread.points }, calcField, calcField.defenderSide),
         percentage: spread.percentage,
@@ -174,7 +192,7 @@ export function computeThreatSpeedProfile(gen: Generation, usage: ChampionsUsage
       max: finalSpeed(gen, { ...baseState(), nature: MAX_SPEED_NATURE, sps: maxSps }, calcField, calcField.defenderSide),
     };
 
-    return { species: usage.species, spreads, bounds };
+    return { species, spreads, bounds };
   } catch {
     return null;
   }

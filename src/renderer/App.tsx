@@ -195,6 +195,7 @@ export default function App() {
                   gameDataState={gameDataState}
                   databaseState={databaseState}
                   spriteCacheState={spriteCacheState}
+                  speciesRosterState={speciesRosterState}
                 />
               </Suspense>
             </div>

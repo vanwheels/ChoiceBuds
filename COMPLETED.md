@@ -18,6 +18,29 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Speed Tiers Full-Regulation Roster Rework] - Leg 8** (2026-09-09) -
+  Reversed Leg 3/4's team-anchored threat list (Team Gap Analysis's
+  `computeUsageThreats`, typing-filtered) in favor of plotting every species
+  legal in the selected team's own regulation
+  (`validateSpeciesLegality`/`toRegulationId`, same mechanism
+  `useInitialSync`/`SpeciesPickerCard` already use) - theoretical "still
+  standing" information isn't the right default for teambuilding, where a
+  specific team member needs to answer a specific matchup's speed, not the
+  team's overall weaknesses. Champions ranked-ladder usage
+  (`ChampionsUsageEntry.columnPosition`) now folds in only as an optional
+  page-level All/Top 60/Top 120 toggle (default All), not the defining data
+  source. Also root-caused and fixed the "vertical mess" layout complaint
+  (raised twice) as a side effect: Leg 4's icon grid never had enough real
+  Speed ties to render meaningfully against a small team-anchored threat
+  list, but a full regulation roster's shared base-Speed bound values tie
+  naturally, matching vgcmulticalc's own clustering. `computeThreatSpeedProfile`
+  decoupled from requiring a real `ChampionsUsageEntry` (new `ThreatSpeedInput`)
+  so species with no usage data still get bound-only entries, falling back to
+  their own default ability (`PokeAPICacheEntry.abilities[0]`, converted via
+  `toReadableName`) when no usage-ranked ability exists. Full design in
+  [docs/investigations/speed-tiers-full-roster-pivot.md](docs/investigations/speed-tiers-full-roster-pivot.md).
+  See commit `<pending>`.
+
 - **[Speed Tiers Team Preview Strip] - Leg 5** (2026-09-09) - A strip below
   the team selector, one card per team member: a session-only Speed-SP +/-
   editor (same hold-to-repeat interaction as Team Builder's EV cells,

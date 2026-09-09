@@ -6,7 +6,7 @@
 import { describe, expect, it } from 'vitest';
 import { Generations } from '@smogon/calc';
 import type { ChampionsUsageEntry, ImportedPokemonInfo } from '../types/pokemon';
-import { computeTeamSpeed, computeThreatSpeedProfile, defaultSpeedFieldContext, type SpeedFieldContext } from './speedTiers';
+import { computeTeamSpeed, computeThreatSpeedProfile, defaultSpeedFieldContext, type SpeedFieldContext, type ThreatSpeedInput } from './speedTiers';
 
 const gen = Generations.get(9);
 
@@ -48,6 +48,11 @@ function usageEntry(overrides: Partial<ChampionsUsageEntry> = {}): ChampionsUsag
     expiresAt: 0,
     ...overrides,
   };
+}
+
+/** Builds a ThreatSpeedInput from a usage entry - the shape most of these tests still exercise, now decoupled from computeThreatSpeedProfile's own signature (see speedTiers.ts's ThreatSpeedInput doc comment). */
+function threatInput(usage: ChampionsUsageEntry): ThreatSpeedInput {
+  return { species: usage.species, ability: usage.abilities[0]?.name ?? '', usage };
 }
 
 describe('computeTeamSpeed', () => {
@@ -97,39 +102,45 @@ describe('computeThreatSpeedProfile', () => {
         { percentage: 60, points: { hp: 20, atk: 0, def: 4, spa: 20, spd: 4, spe: 10 } },
       ],
     });
-    const profile = computeThreatSpeedProfile(gen, usage, defaultSpeedFieldContext());
+    const profile = computeThreatSpeedProfile(gen, threatInput(usage), defaultSpeedFieldContext());
     expect(profile?.spreads.map(s => s.percentage)).toEqual([60, 20]);
   });
 
   it('only boosts a weather-keyed ability when the field context supplies matching weather', () => {
     const usage = usageEntry({ abilities: [{ name: 'Chlorophyll', percentage: 90 }] });
-    const noWeather = computeThreatSpeedProfile(gen, usage, defaultSpeedFieldContext());
-    const sun = computeThreatSpeedProfile(gen, usage, { ...defaultSpeedFieldContext(), weather: 'Sun' });
+    const noWeather = computeThreatSpeedProfile(gen, threatInput(usage), defaultSpeedFieldContext());
+    const sun = computeThreatSpeedProfile(gen, threatInput(usage), { ...defaultSpeedFieldContext(), weather: 'Sun' });
     expect(sun?.spreads[0].speed).toBe(noWeather!.spreads[0].speed * 2);
   });
 
   it('computes min/neutral/max bounds independent of any ranked spread, in ascending order', () => {
-    const profile = computeThreatSpeedProfile(gen, usageEntry(), defaultSpeedFieldContext());
+    const profile = computeThreatSpeedProfile(gen, threatInput(usageEntry()), defaultSpeedFieldContext());
     expect(profile?.bounds.min).toBeLessThan(profile!.bounds.neutral);
     expect(profile?.bounds.neutral).toBeLessThan(profile!.bounds.max);
   });
 
   it('still computes bounds when a threat has no ranked stat spreads at all', () => {
-    const profile = computeThreatSpeedProfile(gen, usageEntry({ statSpreads: [] }), defaultSpeedFieldContext());
+    const profile = computeThreatSpeedProfile(gen, threatInput(usageEntry({ statSpreads: [] })), defaultSpeedFieldContext());
     expect(profile?.spreads).toEqual([]);
     expect(profile?.bounds.max).toBeGreaterThan(0);
   });
 
   it('boosts every spread and bound under the global Choice Scarf threat-item toggle', () => {
     const usage = usageEntry();
-    const noItem = computeThreatSpeedProfile(gen, usage, defaultSpeedFieldContext());
-    const scarfed = computeThreatSpeedProfile(gen, usage, { ...defaultSpeedFieldContext(), threatItem: 'Choice Scarf' });
+    const noItem = computeThreatSpeedProfile(gen, threatInput(usage), defaultSpeedFieldContext());
+    const scarfed = computeThreatSpeedProfile(gen, threatInput(usage), { ...defaultSpeedFieldContext(), threatItem: 'Choice Scarf' });
     expect(scarfed?.spreads[0].speed).toBe(Math.floor(noItem!.spreads[0].speed * 1.5));
     expect(scarfed?.bounds.max).toBe(Math.floor(noItem!.bounds.max * 1.5));
   });
 
+  it('still computes bounds (but no spreads) for a species with no usage data at all', () => {
+    const profile = computeThreatSpeedProfile(gen, { species: 'Incineroar', ability: 'Intimidate', usage: null }, defaultSpeedFieldContext());
+    expect(profile?.spreads).toEqual([]);
+    expect(profile?.bounds.min).toBeLessThan(profile!.bounds.max);
+  });
+
   it('returns null for an unresolvable species', () => {
-    const result = computeThreatSpeedProfile(gen, usageEntry({ species: 'Not A Real Species' }), defaultSpeedFieldContext());
+    const result = computeThreatSpeedProfile(gen, { species: 'Not A Real Species', ability: '', usage: null }, defaultSpeedFieldContext());
     expect(result).toBeNull();
   });
 });

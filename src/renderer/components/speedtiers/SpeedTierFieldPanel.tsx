@@ -31,7 +31,8 @@ interface SpeedTierFieldPanelProps {
   onChangeTrickRoom: (value: boolean) => void;
 }
 
-function ToggleButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
+/** Exported for reuse by SpeedTiersPage.tsx's own roster-scope toggle - same Tailwind-toggle shape, not a field-condition concern of this panel. */
+export function ToggleButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
   return (
     <button
       type="button"
