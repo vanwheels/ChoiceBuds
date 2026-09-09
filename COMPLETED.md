@@ -61,7 +61,7 @@ in:
   (each tile now carries its own speed number, a tied entry gets a subtle
   ring instead of a separate header/label), so a group's size no longer
   costs a fixed row height regardless of how many entries it holds.
-  See commit `<pending>`.
+  See commit `ea92727`.
 
 - **[Speed Tiers Team Preview Strip] - Leg 5** (2026-09-09) - A strip below
   the team selector, one card per team member: a session-only Speed-SP +/-
