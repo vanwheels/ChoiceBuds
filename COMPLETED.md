@@ -18,6 +18,30 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[In-App Auto-Update: Windows Not Triggering] - Leg 1** (2026-09-09) -
+  Pure investigation, no shipped code change (the diagnostic logging added
+  mid-leg was reverted once its job was done - see below). Reproduced live
+  with a locally-built, unpublished NSIS installer (temporarily versioned
+  below the real latest release so `checkForUpdates()` would see 0.3.0 as
+  newer, same as the original report) plus file-based diagnostic logging
+  added to `main.ts`'s `registerAutoUpdater()` (`console.log` doesn't
+  reliably surface for a packaged Windows GUI-subsystem exe even with
+  stdio redirected - confirmed live when a first attempt produced a
+  totally empty log file). Two live runs gave different outcomes with
+  identical code: one showed the GitHub-API fallback's "View Release"
+  link-out (matching the original report), the other showed the native
+  "Restart & Update" flow working correctly end-to-end. The diagnostic log
+  from the successful run captured the native flow's full timeline
+  (`registerAutoUpdater` start to `update-downloaded`/ready-to-install in
+  ~1.15s). Root cause: `useUpdateCheck.ts` runs the plain GitHub-API check
+  and the native `autoUpdater` IPC status as two independent,
+  unsynchronized status sources - the GitHub-API check is a single small
+  HTTPS call that often resolves first, and if the user clicks its
+  "View Release" button before the native flow's `ready-to-install` status
+  arrives, they're sent to the browser instead of getting the working
+  in-app install. Not a broken updater - a UI race. Fix scoped separately
+  as [In-App Auto-Update: Windows Race Condition] - Leg 2 in `TODO.md`.
+
 - **[EV Grid / Move Bubble Overflow at Extreme Narrow Widths] - Leg 1**
   (2026-09-08) - Resolved during scoping itself, no code change. Live
   `run-desktop` resize pass confirmed the ~550px/~183px-per-card danger
