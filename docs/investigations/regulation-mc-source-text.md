@@ -105,6 +105,17 @@ Notes/discrepancies to check at implementation time:
   in with the genuinely new ones (Leek, the 6 Mega Stones, Terrain Extender,
   the 4 Seeds) — confirm which are actually new-to-Champions vs. already
   implemented before treating this whole list as additions.
+  **Resolved 2026-09-09:** all 6 flagged items genuinely are new-to-Champions,
+  not already-implemented items being redundantly re-added. `vgcData.ts`'s
+  git history was walked back to the 2026-07-05 refactor (`0e8b6c5`) that
+  first sourced `VGC_ITEMS` live from Serebii's Champions items page (and
+  explicitly noted the accurate pool excludes items like these, replacing a
+  prior generic-mainline-VGC placeholder list that did happen to include a
+  few of them); all 6 were absent from every commit between that refactor
+  and the Reg M-C addition, with no evidence any were quietly re-added
+  in between. The uniform flavor-text formatting in Vanny's dump was just
+  presentation, not a signal of pre-existing status. No code change needed —
+  `VGC_HOLD_ITEMS`'s current 12-item Reg M-C addition is correct as-is.
 
 ## Dump 2: New + changed moves (received 2026-09-08)
 

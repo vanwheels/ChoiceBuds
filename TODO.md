@@ -104,6 +104,14 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
   M-C's overall date range (Sept 9 - Dec 2 2026) published so far, no
   individual season breakdown on either source yet. Type-check/lint/full
   test suite (593 tests) all pass.
+  2026-09-09 item audit: Dump 1's flagged discrepancy (Air Balloon/Red
+  Card/Eject Button/Normal Gem/Binding Band/Rocky Helmet reading as
+  "reprinted flavor text for existing items" rather than genuinely new)
+  is resolved — walked `vgcData.ts`'s git history back to the 2026-07-05
+  Serebii-sourced accurate-Champions-pool refactor and confirmed all 6 were
+  absent from the app continuously from that point until yesterday's Reg
+  M-C addition, so they're genuinely new-to-Champions, not duplicate
+  re-adds. No code change needed. Full reasoning in the source-text doc.
   Still open: whether Rillaboom/Baxcalibur/Salamence/Golisopod gained any
   Legends Z-A-exclusive moves PokeAPI's Gen 9 SV learnset pipeline wouldn't
   surface on its own - a spot WebFetch against Serebii's per-species page
