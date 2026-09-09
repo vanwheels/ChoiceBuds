@@ -73,8 +73,9 @@ unblocked.
   ability leaking in as stale placeholder data, the same failure mode
   already known from the Z-Mega abilities); corrected in
   `config/megaAbilities.ts` and its Group 3 provenance comment.
-  Salamence-Mega (Aerilate) remains unconfirmed post-release. Pawmot was
-  also added as a new species — added to `REG_MC_ADDED_SPECIES` in
+  Salamence-Mega is user-confirmed as Aerilate, unchanged from previous
+  gens — matching the pre-release `@smogon/calc` value, already correct.
+  Pawmot was also added as a new species — added to `REG_MC_ADDED_SPECIES` in
   `utils/pokemonRules.ts` alongside the pre-existing 4. Serebii's
   per-species Champions Pokedex/movepool pages are now up (per Vanny) — a
   source for the still-outstanding items below and for the ~20-species
@@ -83,9 +84,8 @@ unblocked.
   Once live: re-verify `utils/pokemonRules.ts`'s `REG_MC_ADDED_SPECIES` and
   `config/vgcData.ts`'s 6 new Mega Stones against Serebii's own Reg M-C
   pages (replacing the pre-release provenance notes in both files' headers
-  with real citations, same as M-A/M-B); spot-check Baxcalibur/Golisopod's
-  now-confirmed Mega abilities and Salamence-Mega's still-unconfirmed one
-  (currently only `@smogon/calc`'s bundled data) and the 3 Mega Z
+  with real citations, same as M-A/M-B); spot-check Baxcalibur/Golisopod/
+  Salamence's now-confirmed Mega abilities and the 3 Mega Z
   abilities (Absol/Garchomp/Lucario, user-confirmed but not yet
   cross-checked against a published source) in `config/megaAbilities.ts`;
   check whether Rillaboom/Baxcalibur/Salamence/Golisopod gained any Legends

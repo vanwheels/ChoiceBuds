@@ -61,10 +61,9 @@
  *   2026-09-08 post-release, matching the pre-release `@smogon/calc` value -
  *   that source was correct for this one. Still not cross-checked against a
  *   second source.
- * - `salamence-mega` (Aerilate) remains sourced only from pre-release
- *   `@smogon/calc` data, not yet independently confirmed post-release -
- *   Aerilate is at least the already-known mainline value, unlike Golisopod's
- *   miss above.
+ * - `salamence-mega` (Aerilate) was independently user-confirmed 2026-09-08
+ *   post-release, matching the pre-release `@smogon/calc` value and the
+ *   already-known mainline ability - unchanged from previous gens.
  * - `absol-mega-z`/`garchomp-mega-z`/`lucario-mega-z` are Absol/Garchomp/
  *   Lucario's new confirmed "Mega Z" forms - a genuine second Mega for each,
  *   not a Mega-then-something-else. Their abilities (Sharpness/Levitate/
