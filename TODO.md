@@ -117,23 +117,35 @@ unblocked.
   screens/components haven't had a UI-focused pass yet before it turns
   into concrete legs.
 
-- **[Team Gap Analysis: Ability/Moveset/Speed-Aware Redesign] — Leg 1**
+- **[Team Gap Analysis: Moveset+Threat-Ability-Aware Coverage] — Leg 1**
   *(Last touched: 2026-09-08 · Re-checks: 0)*
-  Supersedes the now-closed Re-confirm Typing-Only Scope item (see
-  `COMPLETED.md`) - per Vanny, `usageThreats.ts`/`computeDefensiveCoverage`'s
-  typing-only boundary is no longer the right call. Open-ended, needs a real
-  scoping pass before it turns into concrete legs: how moveset-derived
-  "likely coverage" (a threat's plausible attacking moves actually landing
-  vs. its raw typing) differs from today's typing-fact-only list without
-  drifting into "unconfirmed suggestion" territory (`ChampionsUsageEntry`'s
-  own doc comment draws that line deliberately); how ability-awareness
-  (already landed for defensive overrides, see Defensive Ability-Awareness
-  in `COMPLETED.md`) extends to abilities that affect a threat's own
-  offensive output; how/whether speed factors into a "team has no answer for
-  X" verdict at all, given speed is contextual (Tailwind, Trick Room, item/
-  ability speed control) in a way typing isn't. Does not include the Speed
-  Calc-like feature idea below - that's a separate concept, not gap-analysis
-  scope.
+  Scoped in Ability/Moveset/Speed-Aware Redesign's Leg 1 (see
+  `COMPLETED.md`). New "Likely Coverage Gaps" section on
+  `UsageThreatsList.tsx`, additive to (not replacing) the existing
+  typing-only list: for each usage-eligible threat, take its top-N ranked
+  moves from `GameDataCache.usage[species].moves` (N is a hand-picked
+  constant, same pattern as `USAGE_THREAT_RANK_CUTOFF` - start at 2,
+  unmeasured, flag as tunable), resolve each move's effective type through
+  the threat's own top-ranked ability via `config/typeChangingAbilities.ts`
+  (mirrors `useTeamMoveTypes.ts`'s existing type-shift logic, just applied to
+  a threat instead of the player's own team), then check team resistance
+  against those effective types the same way `slotResistsThreat` does today.
+  Needs only the move name -> base type lookup (`GameDataCache.moves`)
+  already cached by `useGameData` - no new fetching, purely a new
+  computation over already-cached data.
+
+- **[Team Gap Analysis: Speed Annotation] — Leg 1** *(Last touched:
+  2026-09-08 · Re-checks: 0)*
+  Scoped in Ability/Moveset/Speed-Aware Redesign's Leg 1 (see
+  `COMPLETED.md`). Informational only, never gates a threat's "covered"/"no
+  answer" status: annotate each `UsageThreatsList` row with a raw base-Speed
+  comparison (e.g. threat's base Speed vs. the team's own slowest/fastest
+  relevant slot) sourced from `GameDataCache.usage[species].statSpreads` or
+  the cached PokeAPI base stat. Exact display shape (single number vs.
+  min/max range across spreads, which comparison point) still needs a quick
+  decision at implementation time - the "informational, non-gating" boundary
+  itself is already settled. Does not include the Speed Calc-like feature
+  idea below - that's a separate concept, not gap-analysis scope.
 
 - **[Team Gap Analysis: Usage Cutoff Tuning] — Leg 1** *(Last touched:
   2026-09-08 · Re-checks: 0)*

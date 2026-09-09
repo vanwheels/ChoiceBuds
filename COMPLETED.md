@@ -18,6 +18,23 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Team Gap Analysis: Ability/Moveset/Speed-Aware Redesign] - Leg 1**
+  (2026-09-08) - Scoping-only, no code change. Resolved the three open
+  design questions the item was left with: moveset-derived coverage
+  supplements (not replaces) the existing typing-only list as a new,
+  separately-labeled section; the threshold is top-N ranked moves (not a %
+  cutoff) per species from `ChampionsUsageEntry.moves`; a threat's own
+  commonly-used ability is applied symmetrically via
+  `config/typeChangingAbilities.ts` (the same table the player's own
+  offensive coverage already uses) rather than deferred to a later leg;
+  speed stays purely informational (a raw base-Speed annotation) and never
+  gates the "no answer" verdict, given how contextual real speed control
+  (Tailwind/Trick Room/Scarf/paralysis) is. Split into two follow-up legs
+  rather than one (see `TODO.md`): Moveset+Threat-Ability-Aware Coverage
+  bundles the two together since computing a threat's likely-move effective
+  type requires knowing its likely ability first; Speed Annotation is a
+  separate, smaller slice.
+
 - **[Team Gap Analysis: Re-confirm Typing-Only Scope] - Leg 1** (2026-09-08) -
   Scoping-only, no code change. Verdict: no, typing-only is no longer the
   right boundary - per Vanny, ability/moveset/defensive-coverage/speed
