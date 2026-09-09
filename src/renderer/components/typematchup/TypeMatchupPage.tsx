@@ -18,7 +18,9 @@
  * Team Gap Analysis (UsageThreatsList) is a third, additive panel below the
  * two coverage tables - real ranked-ladder-usage Pokemon (GameDataCache.usage,
  * kept warm in the background by hooks/useUsageSync.ts) the team has no
- * typing answer for at all. See utils/usageThreats.ts for the computation.
+ * typing answer for at all, plus a second, separate section for threats only
+ * one team slot resists/is immune to (a fragile single answer). See
+ * utils/usageThreats.ts for both computations.
  */
 
 import { useMemo, useState } from 'react';
@@ -28,7 +30,7 @@ import type { UseDatabaseReturn } from '../../hooks/useDatabase';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import { useTeamMoveTypes } from '../../hooks/useTeamMoveTypes';
 import { computeOffensiveCoverage, computeDefensiveCoverage } from '../../utils/typeCoverage';
-import { computeUsageThreats, type UsageThreat } from '../../utils/usageThreats';
+import { computeUsageThreats, computePartiallyCoveredUsageThreats, type UsageThreat } from '../../utils/usageThreats';
 import CoverageTable from './CoverageTable';
 import UsageThreatsList from './UsageThreatsList';
 
@@ -67,6 +69,10 @@ export default function TypeMatchupPage({ teamsState, gameDataState, databaseSta
   }, [gameDataCache, getCachedEntry]);
   const usageThreats = useMemo(
     () => computeUsageThreats(defensiveSlots, usageCandidates),
+    [defensiveSlots, usageCandidates]
+  );
+  const partiallyCoveredUsageThreats = useMemo(
+    () => computePartiallyCoveredUsageThreats(defensiveSlots, usageCandidates),
     [defensiveSlots, usageCandidates]
   );
 
@@ -123,7 +129,11 @@ export default function TypeMatchupPage({ teamsState, gameDataState, databaseSta
               spriteCacheState={spriteCacheState}
             />
           </div>
-          <UsageThreatsList threats={usageThreats} spriteCacheState={spriteCacheState} />
+          <UsageThreatsList
+            threats={usageThreats}
+            partiallyCoveredThreats={partiallyCoveredUsageThreats}
+            spriteCacheState={spriteCacheState}
+          />
         </>
       )}
     </div>

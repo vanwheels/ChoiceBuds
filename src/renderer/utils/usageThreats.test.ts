@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeUsageThreats, USAGE_THREAT_RANK_CUTOFF, type UsageThreat } from './usageThreats';
+import { computeUsageThreats, computePartiallyCoveredUsageThreats, USAGE_THREAT_RANK_CUTOFF, type UsageThreat } from './usageThreats';
 import type { DefendingSlot } from './typeCoverage';
 
 function makeThreat(overrides: Partial<UsageThreat> = {}): UsageThreat {
@@ -84,5 +84,55 @@ describe('computeUsageThreats', () => {
     // Water is 2x super-effective vs Ground, but Water Absorb fully no-sells it
     const water = makeThreat({ types: ['water'] });
     expect(computeUsageThreats([slot(['ground'], 'Water Absorb')], [water])).toEqual([]);
+  });
+});
+
+describe('computePartiallyCoveredUsageThreats', () => {
+  it('excludes a candidate past the usage rank cutoff', () => {
+    const overCutoff = makeThreat({ types: ['electric'], columnPosition: USAGE_THREAT_RANK_CUTOFF + 1 });
+    expect(computePartiallyCoveredUsageThreats([slot(['ground'])], [overCutoff])).toEqual([]);
+  });
+
+  it('excludes a fully-unanswered candidate (0 resisting slots)', () => {
+    // Ground vs Water is neutral - no slot resists
+    const neutral = makeThreat({ types: ['ground'] });
+    expect(computePartiallyCoveredUsageThreats([slot(['water'])], [neutral])).toEqual([]);
+  });
+
+  it('excludes a candidate resisted by 2+ slots', () => {
+    // Electric is resisted by both Ground slots
+    const electric = makeThreat({ types: ['electric'] });
+    expect(computePartiallyCoveredUsageThreats([slot(['ground']), slot(['ground'])], [electric])).toEqual([]);
+  });
+
+  it('includes a candidate resisted by exactly one slot, with resistCount 1', () => {
+    // Electric is resisted by Ground (immune) but neutral vs Normal
+    const electric = makeThreat({ types: ['electric'] });
+    expect(computePartiallyCoveredUsageThreats([slot(['ground']), slot(['normal'])], [electric])).toEqual([
+      { ...electric, resistCount: 1 },
+    ]);
+  });
+
+  it('treats an ability-based immunity as a resist toward the count', () => {
+    // Motor Drive fully no-sells Electric on this one slot; the other is neutral
+    const electric = makeThreat({ types: ['electric'] });
+    expect(
+      computePartiallyCoveredUsageThreats([slot(['flying'], 'Motor Drive'), slot(['normal'])], [electric])
+    ).toEqual([{ ...electric, resistCount: 1 }]);
+  });
+
+  it('sorts surviving candidates by columnPosition ascending', () => {
+    const third = makeThreat({ species: 'C', types: ['electric'], columnPosition: 30 });
+    const first = makeThreat({ species: 'A', types: ['electric'], columnPosition: 5 });
+    const second = makeThreat({ species: 'B', types: ['electric'], columnPosition: 15 });
+    expect(
+      computePartiallyCoveredUsageThreats([slot(['ground']), slot(['normal'])], [third, first, second]).map(
+        t => t.species
+      )
+    ).toEqual(['A', 'B', 'C']);
+  });
+
+  it('returns an empty list for empty candidates', () => {
+    expect(computePartiallyCoveredUsageThreats([slot(['ground']), slot(['normal'])], [])).toEqual([]);
   });
 });
