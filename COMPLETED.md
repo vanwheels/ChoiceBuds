@@ -18,6 +18,21 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Speed Tiers Team Preview Strip] - Leg 5** (2026-09-09) - A strip below
+  the team selector, one card per team member: a session-only Speed-SP +/-
+  editor (same hold-to-repeat interaction as Team Builder's EV cells,
+  `EVStatCell.tsx`, scoped to just Speed), a nature selector, and a form/
+  Mega toggle (reuses `utils/calcFormes.ts`'s forme-family detection, same
+  as the Calc tab's own toggle) - all merged into `computeTeamSpeed`'s input
+  at read time via the new `utils/speedTierOverrides.ts`, none writing back
+  to the team's saved data. A Mega forme toggle also swaps in that forme's
+  fixed ability (several Champions Mega abilities are weather/terrain
+  speed-doublers, so this is load-bearing for the numbers plotted). Sprite
+  is deliberately left unswapped on a form toggle - documented scope cut,
+  see `speedTierOverrides.ts`'s header. Full design in
+  [docs/investigations/speed-tiers-preview-strip-scope.md](docs/investigations/speed-tiers-preview-strip-scope.md).
+  See commit `5b038aa`.
+
 - **[Speed Tiers Layout Rework] - Leg 4** (2026-09-09) - Reworked Leg 3's
   row-list render into an icon grid grouped by speed value (`groupSpeedTiers`
   itself unchanged - only the render shape and what feeds it). Dropped the
