@@ -24,7 +24,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Generations, toID } from '@smogon/calc';
-import type { NatureName, StatsTable } from '@smogon/calc/dist/data/interface';
+import type { Generation, NatureName, StatsTable } from '@smogon/calc/dist/data/interface';
 import { validateSpeciesLegality, type RegulationId } from '../utils/pokemonRules';
 import { getFormeFamily, type FormeFamily } from '../utils/calcFormes';
 import type { UseGameDataReturn } from './useGameData';
@@ -60,6 +60,11 @@ function defaultObservation(): LiveCalcObservationEntry {
 }
 
 export interface UseLiveCalcReturn {
+  /** Exposed for Live Calc Results Display (Leg 3), which needs to compute
+   * `inferDefenderStats()`'s own pre-narrowing baseline (via the engine's
+   * exported `defaultInference()`) to show how much an observation has
+   * actually narrowed things - not something this hook's plumbing itself needs. */
+  gen: Generation;
   attacker: CalcPokemonState;
   setAttacker: (updates: Partial<CalcPokemonState>) => void;
   speciesOptions: string[];
@@ -150,6 +155,7 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
   );
 
   return {
+    gen,
     attacker,
     setAttacker,
     speciesOptions,

@@ -27,13 +27,6 @@ for the resolved design questions, stated v1 assumptions
 and the open math/list-content questions Leg 1 settled while building (see
 `COMPLETED.md`).
 
-- **[Live Calc Results Display] — Leg 3** *(Last touched: 2026-09-08 ·
-  Re-checks: 0)*
-  Surface Leg 1's narrowed output in the new tab: per-defensive-stat SP
-  range, narrowed ability/item/nature candidates, and some confidence/
-  certainty indication as observations accumulate. Depends on Legs 1-2
-  landing first.
-
 - **[Live Calc Verification Pass] — Leg 4** *(Last touched: 2026-09-08 ·
   Re-checks: 0)*
   Manual + `run-desktop` verification once Legs 1-3 are live: multi-

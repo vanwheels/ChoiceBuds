@@ -121,7 +121,11 @@ function dedupeStrings(values: (string | undefined)[]): string[] {
   return [...new Set(values.filter((v): v is string => !!v))];
 }
 
-function defaultInference(gen: Generation, species: string): LiveCalcInference {
+/** Exported for Live Calc Results Display (Leg 3): the UI needs this same
+ * "everything still possible" baseline to compute how much an observation
+ * has actually narrowed things (e.g. "3 of 11 abilities remain"), not just
+ * the post-narrowing candidate lists on their own. */
+export function defaultInference(gen: Generation, species: string): LiveCalcInference {
   const speciesData = species ? gen.species.get(toID(species)) : undefined;
   return {
     defBound: { min: SP_MIN, max: SP_MAX },

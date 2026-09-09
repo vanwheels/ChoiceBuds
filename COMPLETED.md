@@ -18,6 +18,26 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Live Calc Results Display] - Leg 3** (2026-09-08) - Replaced Leg 2's raw
+  plumbing-confirmation preview with the real result surface: new
+  `LiveCalcResultPanel` (a 0-32 SP range bar per defensive stat, each also
+  showing its own physical/special observation count) and `LiveCalcCandidateGroup`
+  (a shared narrowed-candidates chip list + fraction bar, reused for nature/
+  ability/item). `liveCalcEngine.ts`'s `defaultInference()` was exported so
+  the panel can compute each candidate group's own "possible" denominator
+  (species' full ability pool, full nature list, full curated item list)
+  rather than just showing the post-narrowing list on its own; `useLiveCalc`
+  now also exposes `gen` for that. Deliberately doesn't compute one blended
+  confidence score across nature/ability/item/both SP stats - the axes
+  narrow independently per the engine's own documented per-variable-heuristic
+  approximation (see `liveCalcEngine.ts`'s header), so a single number would
+  imply a joint precision the engine doesn't have; each axis's own fraction
+  bar is the "certainty indication" instead. No new tests - this leg is pure
+  presentational UI, matching the project's existing test-coverage scope
+  (services/utils/hooks only, no component-level tests anywhere in the
+  codebase). Full suite (593 tests), lint, type-check, and build all green.
+  See commit `<hash>` for the full diff.
+
 - **[Live Calc Tab Shell] - Leg 2** (2026-09-08) - New `useLiveCalc` hook
   (transient, non-persisted state mirroring `useDamageCalc`'s pattern) plus a
   new "Live Calc" tab wired into `App.tsx`/`Sidebar.tsx` navigation
