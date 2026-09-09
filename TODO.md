@@ -117,14 +117,23 @@ unblocked.
   screens/components haven't had a UI-focused pass yet before it turns
   into concrete legs.
 
-- **[Team Gap Analysis: Re-confirm Typing-Only Scope] — Leg 1** *(Last
-  touched: 2026-09-08 · Re-checks: 0)*
-  From Team Gap Analysis Re-evaluation's scoping pass (see `COMPLETED.md`).
-  `usageThreats.ts`'s typing-only scope (no speed/power/actual-offensive-
-  answer consideration) is a deliberate, documented boundary in its own
-  header comment, not an oversight - quick judgment call to re-confirm it's
-  still the right call, not a code change. Not picked for the current
-  milestone's active legs.
+- **[Team Gap Analysis: Ability/Moveset/Speed-Aware Redesign] — Leg 1**
+  *(Last touched: 2026-09-08 · Re-checks: 0)*
+  Supersedes the now-closed Re-confirm Typing-Only Scope item (see
+  `COMPLETED.md`) - per Vanny, `usageThreats.ts`/`computeDefensiveCoverage`'s
+  typing-only boundary is no longer the right call. Open-ended, needs a real
+  scoping pass before it turns into concrete legs: how moveset-derived
+  "likely coverage" (a threat's plausible attacking moves actually landing
+  vs. its raw typing) differs from today's typing-fact-only list without
+  drifting into "unconfirmed suggestion" territory (`ChampionsUsageEntry`'s
+  own doc comment draws that line deliberately); how ability-awareness
+  (already landed for defensive overrides, see Defensive Ability-Awareness
+  in `COMPLETED.md`) extends to abilities that affect a threat's own
+  offensive output; how/whether speed factors into a "team has no answer for
+  X" verdict at all, given speed is contextual (Tailwind, Trick Room, item/
+  ability speed control) in a way typing isn't. Does not include the Speed
+  Calc-like feature idea below - that's a separate concept, not gap-analysis
+  scope.
 
 - **[Team Gap Analysis: Usage Cutoff Tuning] — Leg 1** *(Last touched:
   2026-09-08 · Re-checks: 0)*
@@ -136,6 +145,18 @@ unblocked.
   a schedule.
 
 ## Future Milestones (unscheduled)
+
+- **Speed Calc-like Feature** — concept only, surfaced 2026-09-08 alongside
+  the Team Gap Analysis redesign scoping above but deliberately not part of
+  it - this is a new comparative-speed-tiering calc surface, not a
+  gap-analysis extension. Per Vanny, the open design problem isn't the
+  mechanic itself (a Showdown-usage-backed speed-tier list, similar in
+  spirit to vgcmulticalc's own Speed Calc) but how to make it different/
+  unique enough to not read as a blatant copy of a feature that's fairly
+  distinctive to that site. Needs its own dedicated design-questions pass
+  (what makes ours meaningfully different in framing/data/interaction, not
+  just reskinned) before this turns into real legs - explicitly deferred
+  rather than answered here.
 
 - **Live Calc: Damage-Based Stat Inference Tab** — queued next, after
   Maintenance & Investigation Sweep ships. New "Live Calc" tab blending the

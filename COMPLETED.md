@@ -18,6 +18,19 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Team Gap Analysis: Re-confirm Typing-Only Scope] - Leg 1** (2026-09-08) -
+  Scoping-only, no code change. Verdict: no, typing-only is no longer the
+  right boundary - per Vanny, ability/moveset/defensive-coverage/speed
+  should factor into gap analysis going forward. Superseded by a new,
+  separately-scoped leg (see `TODO.md`) rather than reopened as-is, since
+  the actual redesign (how moveset-derived "likely coverage" differs from
+  today's typing-fact-only list, how speed factors in) is real design work
+  this quick re-confirm wasn't scoped to do. A related but distinct idea
+  surfaced in the same conversation - a comparative Speed Calc-like feature,
+  intentionally differentiated from vgcmulticalc's own Speed Calc rather
+  than a clone of it - was split out to its own Future Milestones entry
+  instead of folded into gap analysis; it isn't gap-analysis scope at all.
+
 - **[Move-Blocking Abilities: Consolidate Type-Immunity List] - Leg 1**
   (2026-09-08) - See commit `4d30fc7`. `config/moveBlockingAbilities.ts`'s
   'type' BlockRules are now built from `config/typeImmunityAbilities.ts`'s
