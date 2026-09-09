@@ -32,9 +32,10 @@ const LiveCalcPage = lazy(() => import('./components/livecalc/LiveCalcPage'));
 const BattleLogPage = lazy(() => import('./components/battlelog/BattleLogPage'));
 const StatisticsPage = lazy(() => import('./components/statistics/StatisticsPage'));
 const TypeMatchupPage = lazy(() => import('./components/typematchup/TypeMatchupPage'));
+const SpeedTiersPage = lazy(() => import('./components/speedtiers/SpeedTiersPage'));
 const SettingsPage = lazy(() => import('./components/SettingsPage'));
 
-export type ActiveTab = 'teams' | 'calc' | 'liveCalc' | 'battles' | 'statistics' | 'typeMatchup' | 'settings';
+export type ActiveTab = 'teams' | 'calc' | 'liveCalc' | 'battles' | 'statistics' | 'typeMatchup' | 'speedTiers' | 'settings';
 
 /**
  * Main application shell component
@@ -178,6 +179,18 @@ export default function App() {
             <div style={{ display: activeTab === 'typeMatchup' ? 'block' : 'none' }}>
               <Suspense fallback={<div className="text-zinc-400 text-sm">Loading type matchup...</div>}>
                 <TypeMatchupPage
+                  teamsState={teamsState}
+                  gameDataState={gameDataState}
+                  databaseState={databaseState}
+                  spriteCacheState={spriteCacheState}
+                />
+              </Suspense>
+            </div>
+          )}
+          {visitedTabs.has('speedTiers') && (
+            <div style={{ display: activeTab === 'speedTiers' ? 'block' : 'none' }}>
+              <Suspense fallback={<div className="text-zinc-400 text-sm">Loading speed tiers...</div>}>
+                <SpeedTiersPage
                   teamsState={teamsState}
                   gameDataState={gameDataState}
                   databaseState={databaseState}

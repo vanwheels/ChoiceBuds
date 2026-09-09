@@ -18,6 +18,22 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Speed Tiers View Shell] - Leg 3** (2026-09-09) - New top-level "Speed
+  Tiers" tab (nav-placement question resolved live via AskUserQuestion,
+  rather than guessed - own tab, not nested in Type Matchup or a team page).
+  Renders a selected team's members' real field-modified Speed
+  (`utils/speedTiers.ts::computeTeamSpeed`, Leg 2) merged into one sorted,
+  tie-grouped list against Team Gap Analysis's own ranked usage-threat list
+  (`utils/usageThreats.ts::computeUsageThreats`) - each threat contributes
+  one row per `ChampionsUsageEntry` stat spread (not just its top-ranked
+  build), with nature/item modifier notes attached to the top-ranked
+  spread's row only. The merge/sort/tie-group logic is its own pure,
+  unit-tested layer (`utils/speedTierList.ts`) separate from
+  `speedTiers.ts` itself, matching that file's own note that sort direction
+  is "whatever consumes its output"'s concern - Trick Room is a plain
+  boolean flip on that sort, not a field the data layer touches. See commit
+  `<pending>`.
+
 - **[Speed Tiers Data Layer] - Leg 2** (2026-09-09) - Pure functions
   (`utils/speedTiers.ts`) computing a roster Pokemon's or usage threat's
   real, field-modified effective Speed. Settled two things the scope doc

@@ -26,15 +26,6 @@ vgcmulticalc reskin). Legs 1-2 are done — see `COMPLETED.md`. Legs below are
 a tentative breakdown, not yet started; expect the nav-placement open
 question in the scope doc to adjust them once building starts.
 
-- **[Speed Tiers View Shell] — Leg 3** *(Last touched: 2026-09-09 ·
-  Re-checks: 0)*
-  New UI surface rendering the sorted tier list for a selected team against
-  its threats, consuming `utils/speedTiers.ts`'s `computeTeamSpeed`/
-  `computeThreatSpeedProfile` (see `COMPLETED.md`). Trick Room isn't a value
-  those functions touch (see that file's header) - this leg owns flipping
-  sort direction over their output. Nav placement (own tab vs. nested under
-  a team) not decided - see scope doc.
-
 - **[Live Calc → Speed Tiers Tie-in] — Leg 4** *(Last touched: 2026-09-09 ·
   Re-checks: 0)*
   Wire an inferred SP-Speed range from a Live Calc session

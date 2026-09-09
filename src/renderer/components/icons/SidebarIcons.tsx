@@ -84,6 +84,16 @@ export function TypeMatchupIcon({ className }: IconProps) {
   );
 }
 
+export function SpeedTiersIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 15a8 8 0 0 1 16 0" />
+      <path d="M12 15 16 9" />
+      <circle cx="12" cy="15" r="1.2" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 export function SettingsIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">

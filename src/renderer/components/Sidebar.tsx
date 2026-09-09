@@ -40,6 +40,7 @@ import {
   BattleLogIcon,
   StatisticsIcon,
   TypeMatchupIcon,
+  SpeedTiersIcon,
   SettingsIcon,
   SidebarToggleIcon,
 } from './icons/SidebarIcons';
@@ -56,6 +57,7 @@ const MAIN_NAV_ITEMS: { tab: ActiveTab; label: string; Icon: typeof TeamsIcon }[
   { tab: 'battles', label: 'Battle Log', Icon: BattleLogIcon },
   { tab: 'statistics', label: 'Statistics', Icon: StatisticsIcon },
   { tab: 'typeMatchup', label: 'Type Matchup', Icon: TypeMatchupIcon },
+  { tab: 'speedTiers', label: 'Speed Tiers', Icon: SpeedTiersIcon },
 ];
 
 const BOTTOM_NAV_ITEMS: { tab: ActiveTab; label: string; Icon: typeof TeamsIcon }[] = [

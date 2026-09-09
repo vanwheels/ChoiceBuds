@@ -1,0 +1,151 @@
+/**
+ * SpeedTiersPage.tsx - Speed Tiers (Speed Calc-like Feature, Leg 3 - see
+ * TODO.md / docs/investigations/speed-calc-scope.md)
+ * Own top-level tab (nav-placement question resolved 2026-09-09). Pick a
+ * saved team, see its members' real field-modified Speed plotted against
+ * Team Gap Analysis's own ranked usage-threat list
+ * (utils/usageThreats.ts::computeUsageThreats) - Champions-native usage data
+ * (ChampionsUsageEntry.statSpreads), not a Showdown-ladder reskin. All Speed
+ * math lives in utils/speedTiers.ts (Leg 2); this page's own
+ * utils/speedTierList.ts merges/sorts/ties that output into the rendered
+ * list. Live Calc → Speed Tiers tie-in (an inferred SP-Speed range
+ * overriding a threat's generic entry) is Leg 4, not built here.
+ *
+ * Team-anchored on purpose (same reasoning as TypeMatchupPage's Team Gap
+ * Analysis panel): the threat set is derived from the selected team's own
+ * defensive typing via computeUsageThreats, not a free-text opponent picker.
+ */
+import { useMemo, useState } from 'react';
+import { Generations } from '@smogon/calc';
+import type { UseTeamsReturn } from '../../hooks/useTeams';
+import type { UseGameDataReturn } from '../../hooks/useGameData';
+import type { UseDatabaseReturn } from '../../hooks/useDatabase';
+import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
+import type { ChampionsUsageEntry } from '../../types/pokemon';
+import { computeUsageThreats, type UsageThreat } from '../../utils/usageThreats';
+import { computeTeamSpeed, computeThreatSpeedProfile, defaultSpeedFieldContext, type SpeedFieldContext } from '../../utils/speedTiers';
+import { buildSpeedTierEntries, groupSpeedTiers, type ThreatTierInput } from '../../utils/speedTierList';
+import SpeedTierFieldPanel from './SpeedTierFieldPanel';
+import SpeedTierList from './SpeedTierList';
+
+const GEN_NUM = 9;
+
+interface SpeedTiersPageProps {
+  teamsState: UseTeamsReturn;
+  gameDataState: UseGameDataReturn;
+  databaseState: UseDatabaseReturn;
+  spriteCacheState: UseSpriteCacheReturn;
+}
+
+export default function SpeedTiersPage({ teamsState, gameDataState, databaseState, spriteCacheState }: SpeedTiersPageProps) {
+  const { teams } = teamsState;
+  const [selectedTeamId, setSelectedTeamId] = useState('');
+  const selectedTeam = teams.find(t => t.id === selectedTeamId);
+
+  const [field, setField] = useState<SpeedFieldContext>(defaultSpeedFieldContext());
+  const [trickRoom, setTrickRoom] = useState(false);
+  const gen = useMemo(() => Generations.get(GEN_NUM), []);
+
+  const { cache: gameDataCache } = gameDataState;
+  const { getCachedEntry } = databaseState;
+
+  const defensiveSlots = useMemo(
+    () => (selectedTeam?.pokemon ?? []).map(p => ({ types: p.types, ability: p.showdownData.ability })),
+    [selectedTeam]
+  );
+
+  // Same construction TypeMatchupPage uses for its own usageCandidates -
+  // duplicated rather than shared, since the two pages' usage differs enough
+  // (this one also needs the full ChampionsUsageEntry per threat, below)
+  // that factoring it out isn't a clean win for this leg.
+  const usageCandidates = useMemo<UsageThreat[]>(() => {
+    if (!gameDataCache) return [];
+    return Object.values(gameDataCache.usage)
+      .map((entry): UsageThreat | null => {
+        const dbEntry = getCachedEntry(entry.species);
+        if (!dbEntry) return null;
+        return {
+          species: entry.species,
+          types: dbEntry.types,
+          columnPosition: entry.columnPosition,
+          spriteUrl: dbEntry.spriteUrl,
+          speed: dbEntry.baseStats.speed,
+        };
+      })
+      .filter((c): c is UsageThreat => c !== null);
+  }, [gameDataCache, getCachedEntry]);
+
+  const usageThreats = useMemo(() => computeUsageThreats(defensiveSlots, usageCandidates), [defensiveSlots, usageCandidates]);
+
+  const usageEntryBySpecies = useMemo(() => {
+    const map = new Map<string, ChampionsUsageEntry>();
+    if (gameDataCache) {
+      for (const entry of Object.values(gameDataCache.usage)) map.set(entry.species.toLowerCase(), entry);
+    }
+    return map;
+  }, [gameDataCache]);
+
+  const teamSpeedEntries = useMemo(
+    () => (selectedTeam?.pokemon ?? []).flatMap(p => {
+      const entry = computeTeamSpeed(gen, p, field);
+      return entry ? [entry] : [];
+    }),
+    [selectedTeam, gen, field]
+  );
+
+  const threatTierInputs = useMemo<ThreatTierInput[]>(
+    () => usageThreats.flatMap((threat): ThreatTierInput[] => {
+      const usageEntry = usageEntryBySpecies.get(threat.species.toLowerCase());
+      if (!usageEntry) return [];
+      const profile = computeThreatSpeedProfile(gen, usageEntry, field);
+      return profile ? [{ spriteUrl: threat.spriteUrl, profile }] : [];
+    }),
+    [usageThreats, usageEntryBySpecies, gen, field]
+  );
+
+  const tierGroups = useMemo(
+    () => groupSpeedTiers(buildSpeedTierEntries(teamSpeedEntries, threatTierInputs), trickRoom),
+    [teamSpeedEntries, threatTierInputs, trickRoom]
+  );
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div>
+        <h1 className="text-xl font-bold text-zinc-100">Speed Tiers</h1>
+        <p className="text-sm text-zinc-400 mt-1">
+          See a team's real, field-modified Speed against the same ranked usage threats Team Gap Analysis checks
+          typing for.
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-1.5 max-w-xs">
+        <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Team</label>
+        <select
+          value={selectedTeamId}
+          onChange={e => setSelectedTeamId(e.target.value)}
+          className="px-3 py-2 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
+        >
+          <option value="">Select a team...</option>
+          {teams.map(t => (
+            <option key={t.id} value={t.id}>
+              {t.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {!selectedTeam ? (
+        <p className="text-sm text-zinc-400">
+          {teams.length === 0 ? 'Import or create a team first to see its speed tiers.' : 'Pick a team above to see its speed tiers.'}
+        </p>
+      ) : (
+        <>
+          <SpeedTierFieldPanel field={field} onChangeField={updates => setField(prev => ({ ...prev, ...updates }))} trickRoom={trickRoom} onChangeTrickRoom={setTrickRoom} />
+          <div className="bg-zinc-800 rounded-lg p-4">
+            <SpeedTierList groups={tierGroups} spriteCacheState={spriteCacheState} />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
