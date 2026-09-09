@@ -19,8 +19,21 @@
  * pure animation shell rather than adding new dismissal behavior alongside
  * it. Sizing (max-width/max-height) varies per modal, so it's the one thing
  * left to the caller via `panelClassName` rather than baked in here.
+ *
+ * Renders through a portal to document.body rather than in place (Export
+ * Modal Stacking Fix, see TODO.md): PokemonCard.tsx's root motion.div uses
+ * framer-motion's `layout` prop for drag-reorder animations, which keeps an
+ * inline CSS transform on that element even at rest. A `transform` on an
+ * ancestor makes it the containing block for this modal's `fixed inset-0`
+ * overlay per the CSS spec, so without the portal the "fixed" overlay was
+ * actually confined to that one card's box instead of the viewport - it
+ * rendered behind the other sibling cards instead of covering the screen.
+ * Portaling out from under any such ancestor is the general fix, since any
+ * future modal caller nested inside a `layout`-animated element would hit
+ * the same bug otherwise.
  */
 
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import type { ReactNode } from 'react';
 import {
@@ -41,7 +54,7 @@ const panelVariants = {
 };
 
 export default function Modal({ children, panelClassName = 'max-w-3xl max-h-[90vh]' }: ModalProps) {
-  return (
+  return createPortal(
     <motion.div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
       initial={{ opacity: 0 }}
@@ -58,6 +71,7 @@ export default function Modal({ children, panelClassName = 'max-w-3xl max-h-[90v
       >
         {children}
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }
