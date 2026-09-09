@@ -62,6 +62,13 @@ export default function TypeMatchupPage({ teamsState, gameDataState, databaseSta
     () => (selectedTeam?.pokemon ?? []).map(p => ({ types: p.types, ability: p.showdownData.ability })),
     [selectedTeam]
   );
+  // Team's own raw base-Speed range, for Speed Annotation (see
+  // utils/usageThreats.ts's UsageThreat.speed doc comment) - base stat only,
+  // same as the threat side, not each slot's actual EV'd speed.
+  const teamSpeedRange = useMemo(() => {
+    const speeds = (selectedTeam?.pokemon ?? []).map(p => p.baseStats.speed);
+    return speeds.length > 0 ? { min: Math.min(...speeds), max: Math.max(...speeds) } : null;
+  }, [selectedTeam]);
   const offensiveRows = useMemo(() => computeOffensiveCoverage(moveTypesByPokemon), [moveTypesByPokemon]);
   const defensiveRows = useMemo(() => computeDefensiveCoverage(defensiveSlots), [defensiveSlots]);
 
@@ -71,7 +78,13 @@ export default function TypeMatchupPage({ teamsState, gameDataState, databaseSta
       .map((entry): UsageThreat | null => {
         const dbEntry = getCachedEntry(entry.species);
         if (!dbEntry) return null;
-        return { species: entry.species, types: dbEntry.types, columnPosition: entry.columnPosition, spriteUrl: dbEntry.spriteUrl };
+        return {
+          species: entry.species,
+          types: dbEntry.types,
+          columnPosition: entry.columnPosition,
+          spriteUrl: dbEntry.spriteUrl,
+          speed: dbEntry.baseStats.speed,
+        };
       })
       .filter((c): c is UsageThreat => c !== null);
   }, [gameDataCache, getCachedEntry]);
@@ -103,6 +116,7 @@ export default function TypeMatchupPage({ teamsState, gameDataState, databaseSta
           columnPosition: entry.columnPosition,
           topAbility: entry.abilities[0]?.name,
           topMoves,
+          speed: dbEntry.baseStats.speed,
         };
       })
       .filter((c): c is MovesetGapCandidate => c !== null);
@@ -169,6 +183,7 @@ export default function TypeMatchupPage({ teamsState, gameDataState, databaseSta
             threats={usageThreats}
             partiallyCoveredThreats={partiallyCoveredUsageThreats}
             movesetCoverageGaps={movesetCoverageGaps}
+            teamSpeedRange={teamSpeedRange}
             spriteCacheState={spriteCacheState}
           />
         </>

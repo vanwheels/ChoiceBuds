@@ -8,6 +8,7 @@ function makeThreat(overrides: Partial<UsageThreat> = {}): UsageThreat {
     types: ['ghost', 'poison'],
     columnPosition: 1,
     spriteUrl: 'https://example.com/sprite.png',
+    speed: 100,
     ...overrides,
   };
 }
@@ -66,6 +67,11 @@ describe('computeUsageThreats', () => {
 
   it('returns an empty list for empty candidates', () => {
     expect(computeUsageThreats([slot(['water'])], [])).toEqual([]);
+  });
+
+  it('passes a candidate\'s speed through unchanged', () => {
+    const fast = makeThreat({ types: ['ground'], speed: 130 });
+    expect(computeUsageThreats([slot(['water'])], [fast])[0].speed).toBe(130);
   });
 
   it('excludes a candidate that would otherwise be super-effective, when a slot\'s ability immunizes it', () => {

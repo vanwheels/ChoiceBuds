@@ -43,6 +43,8 @@ export interface MovesetGapCandidate {
   topAbility?: string;
   /** Already sliced to COVERAGE_GAP_MOVE_CUTOFF and filtered to moves with cached move data - see TypeMatchupPage.tsx. */
   topMoves: RankedMoveWithType[];
+  /** Raw base Speed stat (cached PokeAPI entry) - see usageThreats.ts's UsageThreat.speed doc comment for the Speed Annotation leg. */
+  speed: number;
 }
 
 export interface MovesetCoverageGapThreat {
@@ -51,6 +53,8 @@ export interface MovesetCoverageGapThreat {
   types: string[];
   columnPosition: number;
   spriteUrl: string;
+  /** Raw base Speed stat - see UsageThreat.speed. */
+  speed: number;
 }
 
 /**
@@ -70,6 +74,7 @@ export function computeMovesetCoverageGaps(
       species: c.species,
       columnPosition: c.columnPosition,
       spriteUrl: c.spriteUrl,
+      speed: c.speed,
       types: [...new Set(c.topMoves.map(m => getEffectiveMoveType(m.name, m.type, c.topAbility)))],
     }))
     .filter(c => c.types.length > 0 && defenders.every(d => !slotResistsThreat(c.types, d)))

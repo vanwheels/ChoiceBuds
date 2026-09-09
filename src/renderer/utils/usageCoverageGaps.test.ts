@@ -10,6 +10,7 @@ function makeCandidate(overrides: Partial<MovesetGapCandidate> = {}): MovesetGap
     columnPosition: 1,
     topAbility: undefined,
     topMoves: [{ name: 'Shadow Ball', type: 'ghost' }],
+    speed: 100,
     ...overrides,
   };
 }
@@ -41,7 +42,7 @@ describe('computeMovesetCoverageGaps', () => {
   it('includes a candidate whose move type lands neutral or better on every slot', () => {
     const groundMove = makeCandidate({ topMoves: [{ name: 'Earthquake', type: 'ground' }] });
     expect(computeMovesetCoverageGaps([slot(['water'])], [groundMove])).toEqual([
-      { species: 'Gengar', types: ['ground'], columnPosition: 1, spriteUrl: 'https://example.com/sprite.png' },
+      { species: 'Gengar', types: ['ground'], columnPosition: 1, spriteUrl: 'https://example.com/sprite.png', speed: 100 },
     ]);
   });
 
@@ -52,7 +53,7 @@ describe('computeMovesetCoverageGaps', () => {
       topMoves: [{ name: 'Ice Beam', type: 'ice' }],
     });
     expect(computeMovesetCoverageGaps([slot(['flying'])], [iceCoverage])).toEqual([
-      { species: 'Ground Mon', types: ['ice'], columnPosition: 1, spriteUrl: 'https://example.com/sprite.png' },
+      { species: 'Ground Mon', types: ['ice'], columnPosition: 1, spriteUrl: 'https://example.com/sprite.png', speed: 100 },
     ]);
   });
 
@@ -63,7 +64,7 @@ describe('computeMovesetCoverageGaps', () => {
       topMoves: [{ name: 'Hyper Voice', type: 'normal' }],
     });
     expect(computeMovesetCoverageGaps([slot(['normal'])], [pixilateUser])).toEqual([
-      { species: 'Gengar', types: ['fairy'], columnPosition: 1, spriteUrl: 'https://example.com/sprite.png' },
+      { species: 'Gengar', types: ['fairy'], columnPosition: 1, spriteUrl: 'https://example.com/sprite.png', speed: 100 },
     ]);
   });
 
@@ -96,5 +97,13 @@ describe('computeMovesetCoverageGaps', () => {
 
   it('returns an empty list for empty candidates', () => {
     expect(computeMovesetCoverageGaps([slot(['water'])], [])).toEqual([]);
+  });
+
+  it('passes a candidate\'s speed through unchanged', () => {
+    const fast = makeCandidate({
+      topMoves: [{ name: 'Earthquake', type: 'ground' }],
+      speed: 130,
+    });
+    expect(computeMovesetCoverageGaps([slot(['water'])], [fast])[0].speed).toBe(130);
   });
 });

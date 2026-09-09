@@ -24,6 +24,14 @@
  * resist-count of exactly 1 is a fragile answer worth surfacing separately
  * (see TODO.md's Partial/Scored Gaps leg) rather than treated the same as a
  * threat 2+ slots shrug off.
+ *
+ * UsageThreat.speed carries the threat's raw base Speed stat (from the
+ * cached PokeAPI entry, not a computed/EV'd stat) for Speed Annotation - see
+ * TODO.md's Team Gap Analysis: Speed Annotation leg. Deliberately
+ * base-stat-only on both sides of the comparison (no nature/EV inference for
+ * either the threat or the team) to stay "informational, non-gating" -
+ * anything closer to a real speed-tier calc is the separate, deferred Speed
+ * Calc-like Feature idea (see TODO.md's Future Milestones), not this.
  */
 
 import { type DefendingSlot, getDefensiveMultiplier } from './typeCoverage';
@@ -41,6 +49,8 @@ export interface UsageThreat {
   types: string[];
   columnPosition: number;
   spriteUrl: string;
+  /** Raw base Speed stat (cached PokeAPI entry) - see this file's doc comment. */
+  speed: number;
 }
 
 /** UsageThreat resisted/immune-to by exactly one team slot - see computePartiallyCoveredUsageThreats. */

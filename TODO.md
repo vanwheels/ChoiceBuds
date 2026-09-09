@@ -30,20 +30,11 @@ shipped, see `COMPLETED.md`, but per Vanny (2026-09-08) the milestone isn't
 done - the two legs below were pulled in from Unscheduled once the
 Ability/Moveset/Speed-Aware Redesign scoping pass made them concrete. Usage
 Cutoff Tuning and UI Shift Assessment Sweep stay in Unscheduled - neither
-was pulled in.
-
-- **[Team Gap Analysis: Speed Annotation] — Leg 1** *(Last touched:
-  2026-09-08 · Re-checks: 0)*
-  Scoped in Ability/Moveset/Speed-Aware Redesign's Leg 1 (see
-  `COMPLETED.md`). Informational only, never gates a threat's "covered"/"no
-  answer" status: annotate each `UsageThreatsList` row with a raw base-Speed
-  comparison (e.g. threat's base Speed vs. the team's own slowest/fastest
-  relevant slot) sourced from `GameDataCache.usage[species].statSpreads` or
-  the cached PokeAPI base stat. Exact display shape (single number vs.
-  min/max range across spreads, which comparison point) still needs a quick
-  decision at implementation time - the "informational, non-gating" boundary
-  itself is already settled. Does not include the Speed Calc-like feature
-  idea below - that's a separate concept, not gap-analysis scope.
+was pulled in. Both pulled-in legs (Moveset+Threat-Ability-Aware Coverage,
+Speed Annotation) are now done - see `COMPLETED.md` - leaving this section
+with no scheduled legs. Flagged for Vanny to confirm whether that closes the
+milestone (MILESTONES.md entry + post-mortem) or whether more work is
+still intended here before Live Calc starts.
 
 ## Blocked
 

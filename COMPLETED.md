@@ -18,6 +18,24 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Team Gap Analysis: Speed Annotation] - Leg 1** (2026-09-08) - Every
+  `UsageThreatsList` row (all three sections) now shows the threat's raw
+  base Speed stat next to the team's own base-Speed range (min-max across
+  all slots), e.g. "Spe 100 vs 60-130" - informational only, doesn't affect
+  any section's threat/no-answer membership. Resolved the display-shape
+  decision the item was left with: base-stat-only comparison on both sides
+  (no nature/EV inference for the threat or the team), and a min-max team
+  range rather than a single slowest/fastest slot, so one annotation
+  captures the whole team's spread at a glance instead of picking one
+  comparison point. Deliberately doesn't touch `ChampionsUsageEntry.
+  statSpreads` (0-32 Stat Point scale, not a raw stat) - going further than
+  base stats is the separate, deferred Speed Calc-like Feature idea, not
+  this leg's scope. See `usageThreats.ts`'s `UsageThreat.speed` and
+  `usageCoverageGaps.ts`'s matching field for the plumbing;
+  `TypeMatchupPage.tsx` computes the team's speed range once via
+  `useMemo`. Test coverage added to both utils' existing suites (speed
+  passthrough).
+
 - **[Team Gap Analysis: Moveset+Threat-Ability-Aware Coverage] - Leg 1**
   (2026-09-08) - New "Likely Coverage Gaps" third section on
   `UsageThreatsList.tsx`/`TypeMatchupPage.tsx`, additive alongside (not

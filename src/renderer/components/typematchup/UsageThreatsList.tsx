@@ -13,6 +13,13 @@
  * typing-only sections above - see utils/usageCoverageGaps.ts. It doesn't
  * de-duplicate against the other two lists; a threat can legitimately appear
  * in more than one section.
+ *
+ * Every row also carries a Speed Annotation (Team Gap Analysis: Speed
+ * Annotation leg, see TODO.md/COMPLETED.md): the threat's raw base Speed
+ * stat next to the team's own base-Speed range (min-max across all slots).
+ * Informational only - never factors into any section's threat/no-answer
+ * membership, purely a "can I even out-speed this" gut-check alongside the
+ * typing verdict.
  */
 
 import type { UsageThreat, PartiallyCoveredUsageThreat } from '../../utils/usageThreats';
@@ -26,13 +33,25 @@ interface UsageThreatsListProps {
   threats: UsageThreat[];
   partiallyCoveredThreats: PartiallyCoveredUsageThreat[];
   movesetCoverageGaps: MovesetCoverageGapThreat[];
+  /** Team's own raw base-Speed range across all slots, for the Speed Annotation - null when no team is selected. */
+  teamSpeedRange: { min: number; max: number } | null;
   spriteCacheState: UseSpriteCacheReturn;
 }
 
 /** Common shape rendered by ThreatRow - UsageThreat, PartiallyCoveredUsageThreat, and MovesetCoverageGapThreat all satisfy it (the latter's `types` holds move-effective types rather than species types - see usageCoverageGaps.ts). */
-type ThreatRowData = Pick<UsageThreat, 'species' | 'types' | 'columnPosition' | 'spriteUrl'>;
+type ThreatRowData = Pick<UsageThreat, 'species' | 'types' | 'columnPosition' | 'spriteUrl' | 'speed'>;
 
-function ThreatRow({ threat, spriteCacheState, note }: { threat: ThreatRowData; spriteCacheState: UseSpriteCacheReturn; note?: string }) {
+function ThreatRow({
+  threat,
+  spriteCacheState,
+  teamSpeedRange,
+  note,
+}: {
+  threat: ThreatRowData;
+  spriteCacheState: UseSpriteCacheReturn;
+  teamSpeedRange: { min: number; max: number } | null;
+  note?: string;
+}) {
   return (
     <div className="flex items-center gap-3">
       <img
@@ -46,6 +65,11 @@ function ThreatRow({ threat, spriteCacheState, note }: { threat: ThreatRowData; 
           <TypeBadge key={t} type={t} />
         ))}
       </div>
+      {teamSpeedRange && (
+        <span className="text-[10px] text-zinc-500 shrink-0" title="Threat's base Speed vs. your team's own base-Speed range">
+          Spe {threat.speed} vs {teamSpeedRange.min}-{teamSpeedRange.max}
+        </span>
+      )}
       {note && <span className="text-[10px] text-zinc-500 shrink-0">{note}</span>}
       <span className="text-xs text-zinc-400 w-10 text-right shrink-0">#{threat.columnPosition}</span>
     </div>
@@ -56,6 +80,7 @@ export default function UsageThreatsList({
   threats,
   partiallyCoveredThreats,
   movesetCoverageGaps,
+  teamSpeedRange,
   spriteCacheState,
 }: UsageThreatsListProps) {
   return (
@@ -70,7 +95,7 @@ export default function UsageThreatsList({
       ) : (
         <div className="flex flex-col gap-2">
           {threats.map(threat => (
-            <ThreatRow key={threat.species} threat={threat} spriteCacheState={spriteCacheState} />
+            <ThreatRow key={threat.species} threat={threat} spriteCacheState={spriteCacheState} teamSpeedRange={teamSpeedRange} />
           ))}
         </div>
       )}
@@ -84,7 +109,13 @@ export default function UsageThreatsList({
       ) : (
         <div className="flex flex-col gap-2">
           {partiallyCoveredThreats.map(threat => (
-            <ThreatRow key={threat.species} threat={threat} spriteCacheState={spriteCacheState} note="1 resist" />
+            <ThreatRow
+              key={threat.species}
+              threat={threat}
+              spriteCacheState={spriteCacheState}
+              teamSpeedRange={teamSpeedRange}
+              note="1 resist"
+            />
           ))}
         </div>
       )}
@@ -99,7 +130,7 @@ export default function UsageThreatsList({
       ) : (
         <div className="flex flex-col gap-2">
           {movesetCoverageGaps.map(threat => (
-            <ThreatRow key={threat.species} threat={threat} spriteCacheState={spriteCacheState} />
+            <ThreatRow key={threat.species} threat={threat} spriteCacheState={spriteCacheState} teamSpeedRange={teamSpeedRange} />
           ))}
         </div>
       )}
