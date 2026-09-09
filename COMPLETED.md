@@ -18,6 +18,15 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Move-Blocking Abilities: Consolidate Type-Immunity List] - Leg 1**
+  (2026-09-08) - See commit `4d30fc7`. `config/moveBlockingAbilities.ts`'s
+  'type' BlockRules are now built from `config/typeImmunityAbilities.ts`'s
+  shared table instead of a second hand-typed copy, picking up Earth Eater
+  and Well-Baked Body it was missing. Also extended
+  `scripts/auditConfigTables.ts` to check `typeImmunityAbilities.ts`'s own
+  keys directly, since the spread-in entries are invisible to the audit
+  script's existing property-assignment parsing.
+
 - **[Team Gap Analysis: Partial/Scored Gaps] - Leg 1** (2026-09-08) - See
   commit `8fd76cb`. Design check-in at leg start (resist-count threshold,
   separate section) resolved before any code changed - see the commit body
@@ -35,7 +44,8 @@ in:
   "hit neutrally" by a threat it actually no-sells. Kept
   `config/moveBlockingAbilities.ts`'s own copy of this same ability list
   (Battle Logger, archived) separate rather than merging - flagged as a
-  follow-up in `TODO.md` instead.
+  follow-up in `TODO.md`, since consolidated by the Move-Blocking-
+  Abilities item below.
 
 - **[Team Gap Analysis Re-evaluation] - Leg 1** (2026-09-08) - Scoping-only,
   no code change. Reviewed the 5 candidate improvements logged in `TODO.md`

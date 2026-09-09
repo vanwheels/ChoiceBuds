@@ -109,19 +109,6 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-- **[Move-Blocking Abilities: Consolidate Type-Immunity List] — Leg 1**
-  *(Last touched: 2026-09-08 · Re-checks: 0)*
-  Discovered while building `config/typeImmunityAbilities.ts` for Defensive
-  Ability-Awareness (see `COMPLETED.md`): `config/moveBlockingAbilities.ts`
-  (Battle Logger's Blocked-outcome check, archived UI) carries its own
-  inline copy of the same ability → type mapping (Levitate/Water Absorb/
-  Flash Fire/etc.), and is missing Earth Eater and Well-Baked Body that the
-  new file has. Left as two separate lists rather than merged in that leg,
-  since Battle Logger is archived and unifying them would be an unplanned
-  behavior change (new abilities it didn't block before) outside that leg's
-  scope. Worth a quick pass to point `moveBlockingAbilities.ts`'s 'type'
-  rules at the new shared list once someone's touching either file again.
-
 - **[UI Shift Assessment Sweep — Post Card UI Polish] — Leg 1** *(Last
   touched: 2026-09-08 · Re-checks: 0)*
   Continue scoping/assessing UI shifts and changes to the rest of the app,
