@@ -32,7 +32,7 @@ in:
   marginal rankings with no joint data - so spreads stay an honest
   distribution and nature/item surface only as diff-based "modifier notes"
   (table-free: build with/without the modifier and compare) rather than
-  fabricating combinatorial joint percentages. See commit `<hash>`.
+  fabricating combinatorial joint percentages. See commit `3eb040e`.
 
 - **[Speed Calc-like Feature: Scoping] - Leg 1** (2026-09-09) - Design-
   questions pass resolving how ChoiceBuds' version differs from
