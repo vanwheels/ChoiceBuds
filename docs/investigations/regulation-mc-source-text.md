@@ -269,6 +269,19 @@ Notes/discrepancies to check at implementation time:
   them as no-ops. Substitute's before/after text is byte-identical except
   for the added "Sound-based moves will hit the user through the
   substitute" sentence — that's the one real addition there.
+  **Resolved 2026-09-09:** all no-ops, no code change needed. The powder/
+  Thunder Wave immunity clauses are pre-existing mainline mechanics (Gen 6+
+  Grass-powder immunity, type-chart Electric-vs-Ground immunity), not new
+  Champions patches, and this app's Battle Logger has no code path that
+  checks type-based status-move legality at all (the "Inflict Status?" chip
+  in `BattlefieldSlot.tsx` is a manual toggle — already flagged as a known
+  gap in `moveBlockingAbilities.ts`'s header), so there's nothing to
+  regress. Thunder/Hurricane's weather-accuracy is already modeled exactly
+  as reworded in `config/moveWeatherEffects.ts` (confirmed exact string
+  match: "Never misses in Rain" / "50% accuracy in Sun"). Substitute isn't
+  modeled anywhere in this app (no bypass-list, no HP-shield tracking) —
+  nothing to update for its one real addition either. See TODO.md's Leg 2
+  entry for the full rundown.
 - Entries with **no** `Previous:` block (Slash, Octazooka, Milk Drink,
   Shift Gear, Zing Zap, Snipe Shot, Jaw Lock, Octolock, Court Change, Drum
   Beating, Pyro Ball, Meteor Assault, Glaive Rush) read as moves newly
@@ -402,6 +415,14 @@ Notes/discrepancies to check at implementation time:
   gains the well-known "doesn't work on Dark-types" downside. Confirm these
   against whatever ability-effect config already models them before
   assuming a wording tidy-up.
+  **Resolved 2026-09-09:** no-ops, no code change needed. None of these 4
+  abilities' trigger shapes (end-of-turn passive, weather-conditional,
+  hit-reactive-with-a-type-carve-out, priority-modifying) are modeled by
+  any of this app's 3 curated ability tables
+  (`onSwitchInAbilities.ts`/`reactiveAbilities.ts`/`hitReactiveAbilities.ts`)
+  — a pre-existing scope gap (same "known gap, not oversight" category as
+  Anger Point/Anger Shell already documented in those files' headers), not
+  something Champions' added wording broke.
 - Entries with no `Previous:` block are mainline abilities newly relevant
   to Champions because they belong to species from dump 1's new-species
   roster (not brand-new ability concepts) — e.g. Libero→Cinderace, Grassy
@@ -411,3 +432,18 @@ Notes/discrepancies to check at implementation time:
   the rest (Rattled, Stakeout, Steely Spirit, Seed Sower, Thermal Exchange)
   needs confirming against PokeAPI/Bulbapedia at implementation time rather
   than assumed from memory here.
+  **Resolved 2026-09-09:** Thermal Exchange is Baxcalibur-Mega's own
+  already-confirmed Mega ability (`config/megaAbilities.ts`), not a
+  separate new-roster pairing — this dump entry is just its effect text.
+  Rattled→Thievul line/etc. is already correctly in
+  `hitReactiveAbilities.ts` (Bug/Ghost/Dark trigger). Stakeout→Thievul
+  (hidden ability), Steely Spirit→Perrserker (hidden ability), Seed
+  Sower→Arboliva (regular ability) are the real remaining pairings. All of
+  this app's curated ability tables are keyed by ability name, not species,
+  so no per-species wiring is needed for any of these regardless of which
+  species holds them — PokeAPI's own per-species ability list already
+  drives legality automatically. Stakeout/Steely Spirit/Seed Sower aren't in
+  any curated table today, but that's because their trigger shapes
+  (opponent-just-switched-in power-double; ally-Steel-move power-boost;
+  terrain-on-being-hit) don't fit any of the 3 existing table categories —
+  same pre-existing scope-gap category as above, not a new hole.

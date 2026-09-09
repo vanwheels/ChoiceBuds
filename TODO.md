@@ -120,13 +120,51 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
   existing signature moves Drum Beating/Grassy Glide), so this needs the
   app's own live-PokeAPI `hasChampionsMoveData` audit methodology
   (`config/championsMovepoolChanges.ts`'s header) instead of a Serebii read
-  - deferred as a separate task rather than forced into this pass. Also
-  still open from the 2026-09-08 note: verify the powder-move cluster/
-  Thunder Wave/Effect Spore Grass-/Ground-immunity clauses against current
-  behavior, and the remaining species↔ability pairings in
-  `docs/investigations/regulation-mc-source-text.md`. `seasons.ts` M-6+
-  rows remain blocked on Bulbapedia/Serebii publishing them (not a decision
-  point - just re-check both sources periodically until they land).
+  - deferred as a separate task rather than forced into this pass.
+  `seasons.ts` M-6+ rows remain blocked on Bulbapedia/Serebii publishing
+  them (not a decision point - just re-check both sources periodically
+  until they land).
+  2026-09-09 dump 2/3 verification (resolved, no code changes needed): went
+  through every code path that could be affected by dump 2/3's wording
+  changes and newly-relevant abilities.
+  - Powder-move cluster (Poison/Stun/Sleep/Cotton Spore, Spore, Rage/Magic
+    Powder) and Thunder Wave's new "Grass-/Ground-type Pokémon are
+    unaffected" clauses are pure pre-existing mainline mechanics (Gen 6+
+    powder immunity, type-chart-driven Electric-vs-Ground immunity), not
+    new Champions patches - and this app's Battle Logger has no code path
+    that checks type-based status-move legality at all (confirmed: the
+    "Inflict Status?" chip in `BattlefieldSlot.tsx` is a manual toggle, no
+    type check backs it - already flagged as a known gap in
+    `moveBlockingAbilities.ts`'s header). Nothing to regress.
+  - Thunder/Hurricane's reworded weather-accuracy clause ("never misses in
+    Rain," "50% accuracy in Sun") is already modeled exactly as described
+    in `config/moveWeatherEffects.ts` - confirmed exact match, no change.
+  - Substitute's new "sound-based moves hit through it" sentence: this app
+    doesn't model Substitute at all (no bypass-list, no HP-shield tracking
+    anywhere in `config/`) - nothing to update.
+  - Effect Spore/Speed Boost/Sand Veil/Prankster's added clauses (Grass-type
+    immunity, no-switch-turn-boost, sandstorm-immunity, doesn't-work-on-Dark)
+    all describe trigger shapes (end-of-turn, weather-conditional,
+    priority-based) none of this app's 3 curated ability tables
+    (`onSwitchInAbilities.ts`/`reactiveAbilities.ts`/`hitReactiveAbilities.ts`)
+    cover - consistent with pre-existing documented scope gaps, not
+    something Champions' wording broke.
+  - Newly-relevant-to-Champions abilities from dump 1's new species: every
+    curated table is keyed by ability name, not species, so any species that
+    legally has one of these abilities is automatically covered with no
+    per-species wiring needed. Grassy Surge/Psychic Surge (`onSwitchInAbilities.ts`)
+    and Rattled (`hitReactiveAbilities.ts`) were already present and correct.
+    Stakeout→Thievul, Steely Spirit→Perrserker, Seed Sower→Arboliva, Guard
+    Dog→Mabosstiff, Emergency Exit→Golisopod, Libero→Cinderace, Grass
+    Pelt→Gogoat, Liquid Ooze/Run Away→Swalot, Punk Rock→Toxtricity are real
+    species pairings but none of those abilities fit any existing curated
+    table's trigger shape (HP-threshold, Intimidate-block-specific,
+    type-change-on-move-select, etc.) - same "known gap, not an oversight"
+    category as Anger Shell/Berserk/Dazzling already documented in those
+    files' headers, not a new hole Reg M-C opened.
+  This closes out dump 2/3's remaining open verification items from the
+  2026-09-08/09-09 notes above - full source text and per-move/per-ability
+  reasoning already in `docs/investigations/regulation-mc-source-text.md`.
 
 ## Blocked
 
