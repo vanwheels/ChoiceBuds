@@ -16,6 +16,58 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
+## Current Milestone: Live Calc: Damage-Based Stat Inference Tab
+
+New "Live Calc" tab blending the existing damage calc with a fast inference
+mechanic: infer an opponent's likely stat spread/nature/ability/item from
+what percentage of damage your own moves land on it. Scoped 2026-09-08 - see
+[docs/investigations/live-calc-stat-inference-scope.md](docs/investigations/live-calc-stat-inference-scope.md)
+for the resolved design questions, stated v1 assumptions
+(singles-only, no crit/multi-hit, HP/defense-stat coupling approximation),
+and the open math/list-content questions Leg 1 still has to settle.
+
+- **[Live Calc Engine] — Leg 1** *(Last touched: 2026-09-08 · Re-checks: 0)*
+  Pure, React-free heuristic inference engine (new `utils/liveCalcEngine.ts`),
+  no UI wiring yet. Given a fully-known attacker (reuse `CalcPokemonState`), a
+  defender species+level, and a list of observations (move used + observed
+  damage as a % of max HP + whether a spread-capable move hit 1 or 2 targets
+  that turn, since Doubles' 0.75x spread modifier only applies when it
+  actually did), narrow the defender's unknown nature/SP-spread/ability/item
+  using the heuristic approach the scope doc settles on - start with, not
+  brute-force. Field `gameType` is fixed to Doubles - Champions' actual
+  competitive format, not singles. Ability candidates come from the species' own
+  real ability pool (existing `@smogon/calc` gen data, same source
+  `CalcPokemonPanel` already reads); item candidates come from a new curated
+  "damage-relevant defensive items" shortlist (new `config/` file - most
+  items don't affect damage taken at all). Unit-tested per this project's
+  testing convention (`services/parser.test.ts` pattern).
+
+- **[Live Calc Tab Shell] — Leg 2** *(Last touched: 2026-09-08 · Re-checks:
+  0)*
+  New `useLiveCalc` hook (transient state, same non-persisted pattern as
+  `useDamageCalc`) plus a new "Live Calc" tab/page wired into app navigation.
+  Attacker entry reuses `CalcPokemonPanel`-style input (fully known set).
+  Defender entry is species+level only, plus an add/remove observation list
+  (move + damage% + 1-or-2-targets-hit for spread moves). Plumbing only -
+  confirm state flows end-to-end into Leg 1's engine; no results polish yet.
+
+- **[Live Calc Results Display] — Leg 3** *(Last touched: 2026-09-08 ·
+  Re-checks: 0)*
+  Surface Leg 1's narrowed output in the new tab: per-defensive-stat SP
+  range, narrowed ability/item/nature candidates, and some confidence/
+  certainty indication as observations accumulate. Depends on Legs 1-2
+  landing first.
+
+- **[Live Calc Verification Pass] — Leg 4** *(Last touched: 2026-09-08 ·
+  Re-checks: 0)*
+  Manual + `run-desktop` verification once Legs 1-3 are live: multi-
+  observation narrowing behaves sensibly, zero/one-observation states,
+  contradictory/impossible observations degrade gracefully rather than
+  crashing, physical-vs-special observations only narrow their own side. Not
+  a visual-only check - this is verifying computed/derived correctness,
+  matching root `CLAUDE.md`'s Live UI Testing carve-out for cases manual
+  screen-checking doesn't reliably cover.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -151,19 +203,3 @@ unblocked.
   just reskinned) before this turns into real legs - explicitly deferred
   rather than answered here.
 
-- **Live Calc: Damage-Based Stat Inference Tab** — queued next, after
-  Maintenance & Investigation Sweep ships. New "Live Calc" tab blending the
-  existing damage calc with a fast inference mechanic: infer an opponent's
-  likely stat spread/nature from what percentage of damage your own moves
-  land on it. Deliberately not scoped past the concept yet — per Vanny
-  (2026-09-08), the full design-questions pass (data model for observed
-  damage rolls, how a "likely spread" narrows/displays as more data comes
-  in, how it relates to the existing Calc tab's code path) is deferred to
-  its own dedicated session when this milestone starts, rather than being
-  squeezed in after the Maintenance & Investigation Sweep's items. Relevant
-  prior art surfaced during that scoping pass: `_archived/battle-logger/
-  utils/battleCalcReview.ts` reconstructs a Calc-page payload from logged
-  battle state (the reverse direction from what Live Calc needs - known
-  state → damage estimate, not observed damage → inferred state) but is
-  useful reference for how field/side-condition state was modeled against
-  `@smogon/calc`.
