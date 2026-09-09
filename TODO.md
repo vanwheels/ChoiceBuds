@@ -18,7 +18,7 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 
 ## Current Milestone: Regulation M-C Prep
 
-- **[Regulation M-C Prep] — Leg 2** *(Last touched: 2026-09-08 · Re-checks:
+- **[Regulation M-C Prep] — Leg 2** *(Last touched: 2026-09-09 · Re-checks:
   0)*
   Reg M-C shipped on schedule (2026-09-08 6pm PST) — Leg 1 (roster/mega-
   stone/regulation-selector registration, see COMPLETED.md) was hand-curated
@@ -77,18 +77,48 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
   source for the still-outstanding items below and for the ~20-species
   non-Mega roster (see 2026-09-08 update above) not yet added to
   `REG_MC_ADDED_SPECIES`.
-  Once live: re-verify `utils/pokemonRules.ts`'s `REG_MC_ADDED_SPECIES` and
-  `config/vgcData.ts`'s 6 new Mega Stones against Serebii's own Reg M-C
-  pages (replacing the pre-release provenance notes in both files' headers
-  with real citations, same as M-A/M-B); spot-check Baxcalibur/Golisopod/
-  Salamence's now-confirmed Mega abilities and the 3 Mega Z
-  abilities (Absol/Garchomp/Lucario, user-confirmed but not yet
-  cross-checked against a published source) in `config/megaAbilities.ts`;
-  check whether Rillaboom/Baxcalibur/Salamence/Golisopod gained any Legends
-  Z-A-exclusive moves PokeAPI's Gen 9 SV learnset pipeline wouldn't surface
-  on its own (Leg 1 deliberately didn't chase this pre-release - see its
-  COMPLETED.md entry); add `seasons.ts`'s M-6+ rows once M-C's season dates
-  are known.
+  2026-09-09 update: Serebii's Reg M-C pages are now live (Vanny doesn't
+  fully trust the spreadsheet source and asked to verify against Serebii
+  specifically). Done this session, all via live Serebii fetches:
+  `utils/pokemonRules.ts`'s `REG_MC_ADDED_SPECIES` re-verified against
+  `rankedbattle/regulationm-c.shtml`'s own "Newly Useable Pokémon" list and
+  expanded from the 5 pre-release entries to the full confirmed roster (26
+  slugs, including Indeedee/Persian/Toxtricity form-splits - see the file's
+  own comment for the splitting rationale); found and fixed a real bug while
+  doing this - Indeedee wasn't in `GENDER_DIVERGENT_BASE_SPECIES`, which
+  would've made a bare "Indeedee"/"Indeedee-F" import silently fail
+  legality despite being roster-legal. `config/vgcData.ts`'s 6 Mega Stones
+  re-verified against `pokemonchampions/items.shtml` - exact match, no
+  changes needed; that same page also confirmed all 12 of Reg M-C's new
+  hold items (Leek, Rocky Helmet, Air Balloon, Red Card, Binding Band,
+  Eject Button, Normal Gem, Terrain Extender, 4 terrain Seeds), which
+  weren't in `VGC_HOLD_ITEMS` yet - added. `config/megaAbilities.ts`'s
+  Group 3 (Absol/Garchomp/Lucario Mega Z + Baxcalibur/Golisopod/Salamence
+  ordinary Mega) cross-checked against the dedicated
+  `pokemonchampions/megaabilities.shtml` page - all 5 listed entries
+  matched exactly (Salamence isn't listed there since its ability is
+  unchanged from mainline, consistent with the already-confirmed value, not
+  contradicting it). `config/seasons.ts`'s M-5 end date corrected from an
+  inferred placeholder to Bulbapedia's now-published real date
+  (2026-09-09); M-6+ confirmed still not addable - Serebii only has Reg
+  M-C's overall date range (Sept 9 - Dec 2 2026) published so far, no
+  individual season breakdown on either source yet. Type-check/lint/full
+  test suite (593 tests) all pass.
+  Still open: whether Rillaboom/Baxcalibur/Salamence/Golisopod gained any
+  Legends Z-A-exclusive moves PokeAPI's Gen 9 SV learnset pipeline wouldn't
+  surface on its own - a spot WebFetch against Serebii's per-species page
+  couldn't reliably distinguish genuinely-new moves from existing Gen 8/9
+  ones it just flagged as "unusual" (e.g. it mis-flagged Rillaboom's own
+  existing signature moves Drum Beating/Grassy Glide), so this needs the
+  app's own live-PokeAPI `hasChampionsMoveData` audit methodology
+  (`config/championsMovepoolChanges.ts`'s header) instead of a Serebii read
+  - deferred as a separate task rather than forced into this pass. Also
+  still open from the 2026-09-08 note: verify the powder-move cluster/
+  Thunder Wave/Effect Spore Grass-/Ground-immunity clauses against current
+  behavior, and the remaining species↔ability pairings in
+  `docs/investigations/regulation-mc-source-text.md`. `seasons.ts` M-6+
+  rows remain blocked on Bulbapedia/Serebii publishing them (not a decision
+  point - just re-check both sources periodically until they land).
 
 ## Blocked
 

@@ -7,24 +7,21 @@
  * regulation pages rather than guessed:
  *   https://www.serebii.net/pokemonchampions/rankedbattle/regulationm-a.shtml
  *   https://www.serebii.net/pokemonchampions/rankedbattle/regulationm-b.shtml
- * Both pages define legality as a positive "Newly Useable Pokémon" allowlist
- * (not a banlist over the full dex) - REG_MA_SPECIES below is that full M-A
- * table; REG_MB_ADDED_SPECIES is the 22 species M-B adds on top of it. Every
- * species absent from both tables (all Legendaries/Mythicals, plus ordinary
- * species not yet unlocked, e.g. Salamence pre-Reg M-C) is simply not on the
- * list - there is no separate ban mechanism to maintain.
+ *   https://www.serebii.net/pokemonchampions/rankedbattle/regulationm-c.shtml
+ * All three pages define legality as a positive "Newly Useable Pokémon"
+ * allowlist (not a banlist over the full dex) - REG_MA_SPECIES below is that
+ * full M-A table; REG_MB_ADDED_SPECIES/REG_MC_ADDED_SPECIES are the species
+ * each successive regulation adds on top of the one before it. Every species
+ * absent from all three tables (all Legendaries/Mythicals, plus ordinary
+ * species not yet unlocked) is simply not on the list - there is no separate
+ * ban mechanism to maintain.
  *
- * REG_MC_ADDED_SPECIES has no equivalent official-source page yet - Reg M-C
- * shipped 2026-09-08 6pm PST as announced, but this list is still hand-
- * curated incrementally from user-confirmed reveals (see TODO.md's
- * Regulation M-C Prep entry), not read off Serebii's own regulation page.
- * It currently only holds the 5 species confirmed and wired in so far
- * (rillaboom, baxcalibur, salamence, golisopod, pawmot) - the fuller ~20-
- * species non-Mega roster already confirmed in that TODO entry (Wigglytuff,
- * Persian, Cinderace, Rillaboom, Toxtricity, etc.) is not yet added here.
- * Re-verify/complete REG_MC_ADDED_SPECIES against Serebii's
- * regulationm-c.shtml once it's up and replace this note with a real
- * citation, same as M-A/M-B above.
+ * REG_MC_ADDED_SPECIES was re-verified 2026-09-09 against Serebii's
+ * regulationm-c.shtml page above, once it went up post-release (it didn't
+ * exist yet during Reg M-C Prep's pre-release/day-of hand-curation - see
+ * TODO.md's Regulation M-C Prep entry for that history) - see that entry's
+ * own comment below for form-splitting details (Indeedee/Persian/Toxtricity/
+ * Squawkabilly).
  *
  * Mega Evolution forms are excluded entirely (not just deduplicated) - Mega
  * access is meant to be item-driven (holding the matching Mega Stone on the
@@ -122,15 +119,31 @@ const REG_MB_ADDED_SPECIES: string[] = [
 ];
 
 /**
- * The species Regulation M-C adds on top of everything in REG_MB_ADDED_SPECIES,
- * confirmed ahead of release (see file header). Absol/Garchomp/Lucario's new
- * "Mega Z" formes are NOT a roster addition here, same convention as every
- * other Mega form - all three base species are already legal via
- * REG_MA_SPECIES, and the Mega Z form itself is item-driven (holding the
- * matching "-ite Z" stone), not a separate pick. See config/megaEvolution.ts/
- * config/megaAbilities.ts for that half of Reg M-C's additions.
+ * The species Regulation M-C adds on top of everything in REG_MB_ADDED_SPECIES -
+ * the full "Newly Useable Pokémon" list, read live 2026-09-09 from Serebii's
+ * now-published regulation page (same source/methodology as M-A/M-B above):
+ * https://www.serebii.net/pokemonchampions/rankedbattle/regulationm-c.shtml
+ * That page's own list also includes Mega Absol Z/Mega Garchomp Z/Mega
+ * Lucario Z/Mega Salamence/Mega Golisopod/Mega Baxcalibur entries, but those
+ * are NOT a roster addition here, same convention as every other Mega form -
+ * their base species are the actual roster entries, and the Mega form itself
+ * is item-driven (holding the matching Mega Stone), not a separate pick. See
+ * config/megaEvolution.ts/config/megaAbilities.ts for that half of Reg M-C's
+ * additions. Indeedee is split into indeedee-male/indeedee-female per this
+ * file's GENDER_DIVERGENT_BASE_SPECIES convention (Serebii lists "Indeedee"
+ * and "Indeedee (Female form)" as the 2 separate roster entries); Persian
+ * and Toxtricity's 2 listed forms (Alolan; Low Key) get their own slugs
+ * matching the Alolan/regional-form convention already used in REG_MA_SPECIES,
+ * while Squawkabilly's 4 plumage colors are purely cosmetic (no stat/ability
+ * difference) and so get a single slug, matching how Vivillon/Alcremie/
+ * Morpeko's own cosmetic formes are handled above.
  */
-const REG_MC_ADDED_SPECIES: string[] = ['rillaboom', 'baxcalibur', 'salamence', 'golisopod', 'pawmot'];
+const REG_MC_ADDED_SPECIES: string[] = [
+  'wigglytuff', 'persian', 'persian-alola', 'farfetchd', 'mr-mime', 'swalot', 'salamence', 'gogoat',
+  'golisopod', 'rillaboom', 'cinderace', 'inteleon', 'thievul', 'toxtricity', 'toxtricity-low-key',
+  'grapploct', 'perrserker', 'sirfetchd', 'pincurchin', 'indeedee-male', 'indeedee-female', 'pawmot',
+  'arboliva', 'squawkabilly', 'mabosstiff', 'baxcalibur',
+];
 
 export function normalizeSlug(value: string): string {
   return value
@@ -142,13 +155,20 @@ export function normalizeSlug(value: string): string {
 }
 
 /**
- * Meowstic/Basculegion are modeled as PokeAPI-style "-male"/"-female" slugs
- * in REG_MA_SPECIES (matching the species roster's naming), but Showdown
+ * Meowstic/Basculegion/Indeedee are modeled as PokeAPI-style "-male"/"-female"
+ * slugs in REG_MA_SPECIES/REG_MC_ADDED_SPECIES (matching the species roster's
+ * naming and services/pokeapi.ts's normalizeSpeciesForAPI), but Showdown
  * import text and manual entry use "-F"/"-M"/bare-name conventions instead
  * (see config/pokemonRules.ts's GENDERED_FORM_VARIANTS). Canonicalize both
- * spellings to the same slug before checking legality.
+ * spellings to the same slug before checking legality. Indeedee was added
+ * here alongside REG_MC_ADDED_SPECIES's own indeedee-male/indeedee-female
+ * entries (Reg M-C) - without it, a bare "Indeedee" or "Indeedee-F" import
+ * would silently fail legality despite the species being roster-legal.
+ * Oinkologne is the 4th species this same gender-divergence applies to per
+ * normalizeSpeciesForAPI, but isn't Champions-legal in any regulation yet,
+ * so it's left off this list until it is.
  */
-const GENDER_DIVERGENT_BASE_SPECIES = ['basculegion', 'meowstic'];
+const GENDER_DIVERGENT_BASE_SPECIES = ['basculegion', 'meowstic', 'indeedee'];
 
 function canonicalizeGenderDivergentSlug(slug: string): string {
   for (const base of GENDER_DIVERGENT_BASE_SPECIES) {

@@ -49,21 +49,29 @@
  * makes for the Calc tab - see that file's comment for why.
  *
  * Group 3 - Reg M-C (shipped 2026-09-08 6pm PST, see TODO.md's Regulation
- * M-C Prep entry):
+ * M-C Prep entry). All 5 entries below were cross-checked live 2026-09-09
+ * against Serebii's own dedicated page for this
+ * (serebii.net/pokemonchampions/megaabilities.shtml, which now covers Reg
+ * M-C's new Mega/Mega-Z abilities the same way Group 2's per-species
+ * Pokedex pages covered Reg M-B's) - all 5 values matched exactly, no
+ * corrections needed:
  * - `golisopod-mega` was corrected 2026-09-08 post-release: user-confirmed
  *   as Tough Claws, replacing the pre-release `@smogon/calc` 0.11.0 bundled
  *   value (Emergency Exit, which just duplicated Golisopod's own *ordinary*
  *   ability - stale placeholder data, same failure mode the Z-Mega bullet
- *   below already called out for Absol/Garchomp/Lucario). Not yet
- *   cross-checked against a second source (Serebii's Champions Pokedex
- *   pages, per Group 2's methodology) - do that once convenient.
+ *   below already called out for Absol/Garchomp/Lucario). Serebii confirms
+ *   Tough Claws.
  * - `baxcalibur-mega` (Thermal Exchange) was independently user-confirmed
  *   2026-09-08 post-release, matching the pre-release `@smogon/calc` value -
- *   that source was correct for this one. Still not cross-checked against a
- *   second source.
+ *   that source was correct for this one. Serebii confirms Thermal Exchange.
  * - `salamence-mega` (Aerilate) was independently user-confirmed 2026-09-08
  *   post-release, matching the pre-release `@smogon/calc` value and the
- *   already-known mainline ability - unchanged from previous gens.
+ *   already-known mainline ability - unchanged from previous gens. Not
+ *   listed on Serebii's megaabilities.shtml page (that page only covers
+ *   genuinely *new* Mega abilities Champions introduced, and Salamence's is
+ *   unchanged from mainline, so there's nothing "new" for it to list) -
+ *   Serebii's silence here is consistent with, not contrary to, the
+ *   user-confirmed value.
  * - `absol-mega-z`/`garchomp-mega-z`/`lucario-mega-z` are Absol/Garchomp/
  *   Lucario's new confirmed "Mega Z" forms - a genuine second Mega for each,
  *   not a Mega-then-something-else. Their abilities (Sharpness/Levitate/
@@ -72,8 +80,9 @@
  *   entries - that field just duplicates each species' *ordinary* Mega
  *   ability (Magic Bounce/Sand Force/Adaptability), stale placeholder data
  *   from before Reg M-C's real abilities were revealed (see
- *   `config/megaEvolution.ts`'s CURATED_MEGA_FORM_SLUGS comment). Still not
- *   cross-checked against a second source.
+ *   `config/megaEvolution.ts`'s CURATED_MEGA_FORM_SLUGS comment). Serebii
+ *   confirms all 3: Mega Absol Z -> Sharpness, Mega Garchomp Z -> Levitate,
+ *   Mega Lucario Z -> Aura Guard.
  */
 export const MEGA_ABILITIES: Record<string, string> = {
   'abomasnow-mega': 'Snow Warning',

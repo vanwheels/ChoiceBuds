@@ -8,18 +8,28 @@
  * The complete real Pokémon Champions item pool (hold items, Mega Stones,
  * berries) - sourced live from Serebii's dedicated items page, since this is
  * a smaller/different pool than mainline VGC (no Choice items, Assault Vest,
- * Safety Goggles, terrain seeds, etc. exist in this game):
+ * or Safety Goggles exist in this game):
  * https://www.serebii.net/pokemonchampions/items.shtml
  *
+ * Reg M-C (shipped 2026-09-08 6pm PST) added 12 new hold items, re-verified
+ * live against the Serebii page above 2026-09-09 (all 12 confirmed present,
+ * matching Vanny's pasted source dump - see `docs/investigations/
+ * regulation-mc-source-text.md`): Leek, Rocky Helmet, Air Balloon, Red Card,
+ * Binding Band, Eject Button, Normal Gem, Terrain Extender, and the 4 terrain
+ * Seeds (Grassy/Psychic/Electric/Misty) - the "no terrain seeds" note that
+ * used to be here is now stale, superseded by this addition.
+ *
  * The 6 Reg M-C Mega Stones (Absolite Z/Garchompite Z/Lucarionite Z/
- * Baxcalibrite/Golisopite/Salamencite) are the exception - added ahead of
- * Serebii's own page for a regulation that doesn't exist yet (see TODO.md's
- * Regulation M-C Prep entry), spelled to match @smogon/calc's own bundled
- * item names (0.11.0's `MEGA_STONES`/`ZA_MEGA_STONES`) rather than guessed -
- * re-verify against Serebii once Reg M-C's own items page goes up.
+ * Baxcalibrite/Golisopite/Salamencite) below in VGC_MEGA_STONES were also
+ * re-verified against the same Serebii page 2026-09-09 - all 6 confirmed
+ * present under their respective species, matching the pre-release
+ * @smogon/calc-sourced spelling already in this file exactly (no changes
+ * needed there).
  */
 export const VGC_HOLD_ITEMS = [
+  'Air Balloon',
   'Big Root',
+  'Binding Band',
   'Black Belt',
   'Black Glasses',
   'Bright Powder',
@@ -27,15 +37,19 @@ export const VGC_HOLD_ITEMS = [
   'Choice Scarf',
   'Damp Rock',
   'Dragon Fang',
+  'Eject Button',
+  'Electric Seed',
   'Expert Belt',
   'Fairy Feather',
   'Focus Band',
   'Focus Sash',
+  'Grassy Seed',
   'Hard Stone',
   'Heat Rock',
   'Icy Rock',
   'Iron Ball',
   'King\'s Rock',
+  'Leek',
   'Leftovers',
   'Life Orb',
   'Light Ball',
@@ -45,11 +59,16 @@ export const VGC_HOLD_ITEMS = [
   'Metal Coat',
   'Metronome',
   'Miracle Seed',
+  'Misty Seed',
   'Muscle Band',
   'Mystic Water',
   'Never-Melt Ice',
+  'Normal Gem',
   'Poison Barb',
+  'Psychic Seed',
   'Quick Claw',
+  'Red Card',
+  'Rocky Helmet',
   'Scope Lens',
   'Sharp Beak',
   'Shed Shell',
@@ -59,6 +78,7 @@ export const VGC_HOLD_ITEMS = [
   'Smooth Rock',
   'Soft Sand',
   'Spell Tag',
+  'Terrain Extender',
   'Twisted Spoon',
   'White Herb',
   'Wide Lens',
