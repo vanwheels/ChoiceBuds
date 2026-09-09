@@ -8,20 +8,31 @@
  * top-N usage cutoff computations this panel just renders. Additive
  * alongside the existing Offensive/Defensive CoverageTables, not a
  * replacement for either.
+ *
+ * A third section, Likely Coverage Gaps, is additive on top of the two
+ * typing-only sections above - see utils/usageCoverageGaps.ts. It doesn't
+ * de-duplicate against the other two lists; a threat can legitimately appear
+ * in more than one section.
  */
 
 import type { UsageThreat, PartiallyCoveredUsageThreat } from '../../utils/usageThreats';
 import { USAGE_THREAT_RANK_CUTOFF } from '../../utils/usageThreats';
+import type { MovesetCoverageGapThreat } from '../../utils/usageCoverageGaps';
+import { COVERAGE_GAP_MOVE_CUTOFF } from '../../utils/usageCoverageGaps';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import TypeBadge from '../TypeBadge';
 
 interface UsageThreatsListProps {
   threats: UsageThreat[];
   partiallyCoveredThreats: PartiallyCoveredUsageThreat[];
+  movesetCoverageGaps: MovesetCoverageGapThreat[];
   spriteCacheState: UseSpriteCacheReturn;
 }
 
-function ThreatRow({ threat, spriteCacheState, note }: { threat: UsageThreat; spriteCacheState: UseSpriteCacheReturn; note?: string }) {
+/** Common shape rendered by ThreatRow - UsageThreat, PartiallyCoveredUsageThreat, and MovesetCoverageGapThreat all satisfy it (the latter's `types` holds move-effective types rather than species types - see usageCoverageGaps.ts). */
+type ThreatRowData = Pick<UsageThreat, 'species' | 'types' | 'columnPosition' | 'spriteUrl'>;
+
+function ThreatRow({ threat, spriteCacheState, note }: { threat: ThreatRowData; spriteCacheState: UseSpriteCacheReturn; note?: string }) {
   return (
     <div className="flex items-center gap-3">
       <img
@@ -41,7 +52,12 @@ function ThreatRow({ threat, spriteCacheState, note }: { threat: UsageThreat; sp
   );
 }
 
-export default function UsageThreatsList({ threats, partiallyCoveredThreats, spriteCacheState }: UsageThreatsListProps) {
+export default function UsageThreatsList({
+  threats,
+  partiallyCoveredThreats,
+  movesetCoverageGaps,
+  spriteCacheState,
+}: UsageThreatsListProps) {
   return (
     <div className="bg-zinc-800 rounded-lg p-4">
       <h2 className="text-sm font-bold text-zinc-100 mb-1">Team Gap Analysis</h2>
@@ -69,6 +85,21 @@ export default function UsageThreatsList({ threats, partiallyCoveredThreats, spr
         <div className="flex flex-col gap-2">
           {partiallyCoveredThreats.map(threat => (
             <ThreatRow key={threat.species} threat={threat} spriteCacheState={spriteCacheState} note="1 resist" />
+          ))}
+        </div>
+      )}
+
+      <h3 className="text-xs font-bold text-zinc-100 mt-4 mb-1">Likely Coverage Gaps</h3>
+      <p className="text-xs text-zinc-400 mb-3">
+        Threats no team slot resists once their top {COVERAGE_GAP_MOVE_CUTOFF} ranked-usage moves' effective types
+        (through their own top-ranked ability) are checked instead of their raw typing.
+      </p>
+      {movesetCoverageGaps.length === 0 ? (
+        <p className="text-sm text-zinc-400">No moveset-based coverage gaps in the top {USAGE_THREAT_RANK_CUTOFF} usage.</p>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {movesetCoverageGaps.map(threat => (
+            <ThreatRow key={threat.species} threat={threat} spriteCacheState={spriteCacheState} />
           ))}
         </div>
       )}

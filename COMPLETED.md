@@ -18,6 +18,26 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Team Gap Analysis: Moveset+Threat-Ability-Aware Coverage] - Leg 1**
+  (2026-09-08) - New "Likely Coverage Gaps" third section on
+  `UsageThreatsList.tsx`/`TypeMatchupPage.tsx`, additive alongside (not
+  deduped against) the existing two typing-only sections - a threat can
+  legitimately appear in more than one. See `utils/usageCoverageGaps.ts`
+  (`computeMovesetCoverageGaps`, `COVERAGE_GAP_MOVE_CUTOFF = 2` - same
+  hand-picked/unmeasured/tunable status as `USAGE_THREAT_RANK_CUTOFF`) for
+  the computation: each usage-eligible threat's top-N ranked moves
+  (`ChampionsUsageEntry.moves`, base type resolved via already-cached
+  `GameDataCache.moves` - no new fetching) get their effective type resolved
+  through the threat's own top-ranked ability
+  (`config/typeChangingAbilities.ts`, the same table
+  `hooks/useTeamMoveTypes.ts` already uses for the player's own team), then
+  checked against team resistance via `usageThreats.ts`'s
+  `slotResistsThreat` (exported for this reuse). Full test coverage in
+  `usageCoverageGaps.test.ts`, including a case demonstrating the gap this
+  section exists to catch: a species whose raw typing reads as fully
+  resisted/immune but whose actual top move's effective type is not. See
+  commit `TBD`.
+
 - **[Team Gap Analysis: Ability/Moveset/Speed-Aware Redesign] - Leg 1**
   (2026-09-08) - Scoping-only, no code change. Resolved the three open
   design questions the item was left with: moveset-derived coverage

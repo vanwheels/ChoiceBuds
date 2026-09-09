@@ -49,8 +49,14 @@ export interface PartiallyCoveredUsageThreat extends UsageThreat {
   resistCount: number;
 }
 
-/** Whether one team slot resists or is immune to every one of a threat's (1-2) types - i.e. its best (max) effectiveness against that slot is < 1. Same Math.max(...) pattern computeOffensiveCoverage uses, just driven by a real species' own types instead of a move list. */
-function slotResistsThreat(threatTypes: string[], defender: DefendingSlot): boolean {
+/**
+ * Whether one team slot resists or is immune to every one of a threat's
+ * attacking types - i.e. its best (max) effectiveness against that slot is
+ * < 1. Same Math.max(...) pattern computeOffensiveCoverage uses. Exported
+ * for utils/usageCoverageGaps.ts, which runs the same check against a
+ * threat's likely moves' effective types rather than its raw species types.
+ */
+export function slotResistsThreat(threatTypes: string[], defender: DefendingSlot): boolean {
   return Math.max(...threatTypes.map(t => getDefensiveMultiplier(t, defender.types, defender.ability))) < 1;
 }
 
