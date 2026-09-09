@@ -25,20 +25,6 @@ entries - and moved straight there instead of becoming legs here). Not
 thematically unified beyond "small items to clear before Live Calc" - see
 Future Milestones below for that one.
 
-- **[Team Gap Analysis: Defensive Ability-Awareness] — Leg 1** *(Last
-  touched: 2026-09-08 · Re-checks: 0)*
-  Follow-on from Team Gap Analysis Re-evaluation's scoping pass (see
-  `COMPLETED.md`). `computeUsageThreats`/`computeDefensiveCoverage`
-  (`utils/usageThreats.ts`) work off raw `pokemon.types` only, so a teammate
-  with Levitate/Water Absorb/Flash Fire/etc. still counts as "hit neutrally"
-  by a threat it would actually no-sell. Offense already accounts for
-  type-changing abilities via `useTeamMoveTypes.ts` +
-  `config/typeChangingAbilities.ts` - defense needs the equivalent, most
-  likely a new `config/typeImmunityAbilities.ts` (ability → type(s) it
-  nullifies) consumed alongside `pokemon.types` in the coverage check. Do
-  this leg before Partial/Scored Gaps below - that one's scoring should run
-  against ability-aware coverage, not the raw type-only version.
-
 - **[Team Gap Analysis: Partial/Scored Gaps] — Leg 1** *(Last touched:
   2026-09-08 · Re-checks: 0)*
   Follow-on from Team Gap Analysis Re-evaluation's scoping pass (see
@@ -49,7 +35,9 @@ Future Milestones below for that one.
   of this leg on what "partially covered" means and how it renders in
   `UsageThreatsList.tsx` (a separate section? a badge/score on existing
   rows?) - resolve via a quick check-in when this leg starts rather than
-  guessing. Depends on Defensive Ability-Awareness above landing first.
+  guessing. Defensive Ability-Awareness (see `COMPLETED.md`) has landed, so
+  this now scores against ability-aware coverage rather than the raw
+  type-only version.
 
 ## Blocked
 
@@ -125,6 +113,19 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+- **[Move-Blocking Abilities: Consolidate Type-Immunity List] — Leg 1**
+  *(Last touched: 2026-09-08 · Re-checks: 0)*
+  Discovered while building `config/typeImmunityAbilities.ts` for Defensive
+  Ability-Awareness (see `COMPLETED.md`): `config/moveBlockingAbilities.ts`
+  (Battle Logger's Blocked-outcome check, archived UI) carries its own
+  inline copy of the same ability → type mapping (Levitate/Water Absorb/
+  Flash Fire/etc.), and is missing Earth Eater and Well-Baked Body that the
+  new file has. Left as two separate lists rather than merged in that leg,
+  since Battle Logger is archived and unifying them would be an unplanned
+  behavior change (new abilities it didn't block before) outside that leg's
+  scope. Worth a quick pass to point `moveBlockingAbilities.ts`'s 'type'
+  rules at the new shared list once someone's touching either file again.
 
 - **[UI Shift Assessment Sweep — Post Card UI Polish] — Leg 1** *(Last
   touched: 2026-09-08 · Re-checks: 0)*

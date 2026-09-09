@@ -18,6 +18,16 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Team Gap Analysis: Defensive Ability-Awareness] - Leg 1** (2026-09-08) -
+  See commit `a771f2e`. `computeUsageThreats`/`computeDefensiveCoverage` now
+  check a team slot's equipped ability (new `config/typeImmunityAbilities.ts`)
+  for a full-immunity override before falling back to raw typing - a
+  Levitate/Water Absorb/Flash Fire/etc. teammate no longer counts as merely
+  "hit neutrally" by a threat it actually no-sells. Kept
+  `config/moveBlockingAbilities.ts`'s own copy of this same ability list
+  (Battle Logger, archived) separate rather than merging - flagged as a
+  follow-up in `TODO.md` instead.
+
 - **[Team Gap Analysis Re-evaluation] - Leg 1** (2026-09-08) - Scoping-only,
   no code change. Reviewed the 5 candidate improvements logged in `TODO.md`
   against the current implementation and closed out two of them outright:
