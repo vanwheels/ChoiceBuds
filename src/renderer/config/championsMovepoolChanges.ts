@@ -250,8 +250,27 @@ const GLOBALLY_REMOVED_MOVES = [
 // baxcalibur's champions tag, `hasChampionsMoveData` flips true and this
 // entry stops being consulted (same as the 22 Reg M-B species already did) -
 // safe to leave in place rather than remove at that point.
+//
+// rillaboom/cinderace/pincurchin ADDED 2026-09-09 (Reg M-C Prep Leg 2, dump
+// 2's "no Previous: block" move list): live-checked all 26 of Reg M-C's
+// newly-added species against PokeAPI and found these 3, like baxcalibur,
+// have zero "champions"-tagged moves (confirmed live) - same fallback-path
+// exposure. Each of their own signature moves is in `GLOBALLY_REMOVED_MOVES`
+// (drum-beating, pyro-ball, zing-zap respectively) and would otherwise be
+// silently stripped, same failure mode as the baxcalibur/glaive-rush bug
+// above. The rest of dump 2's "no Previous:" move list was cross-checked
+// too: grapploct/octolock, inteleon/snipe-shot, and sirfetchd/meteor-assault
+// are also signature-move pairings among the new roster, but none of those
+// 3 moves are in `GLOBALLY_REMOVED_MOVES` to begin with, so no entry is
+// needed for them even though those species are also on the zero-champions-
+// tag list. Octazooka, Milk Drink, Shift Gear, Jaw Lock, Court Change, and
+// Slash don't correspond to any signature move of a Reg M-C roster addition
+// and needed no action either way. See TODO.md's Leg 2 entry.
 export const CHAMPIONS_MOVEPOOL_ADDITIONS: Record<string, string[]> = {
   baxcalibur: ['glaive-rush'],
+  rillaboom: ['drum-beating'],
+  cinderace: ['pyro-ball'],
+  pincurchin: ['zing-zap'],
 };
 
 export const CHAMPIONS_MOVEPOOL_REMOVALS: Record<string, string[]> = {};

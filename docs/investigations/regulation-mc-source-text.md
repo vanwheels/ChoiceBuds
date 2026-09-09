@@ -286,11 +286,31 @@ Notes/discrepancies to check at implementation time:
   Shift Gear, Zing Zap, Snipe Shot, Jaw Lock, Octolock, Court Change, Drum
   Beating, Pyro Ball, Meteor Assault, Glaive Rush) read as moves newly
   added to the Champions movepool rather than existing-move edits —
-  cross-check each against `config/championsMovepoolAdditions.ts` and the
+  cross-check each against `config/championsMovepoolChanges.ts` and the
   mainline PokeAPI move data before assuming "no Previous: line" always
   means "brand new to Champions." Upper Hand does have a `Previous:` block
   (listed above with the others) — its diff is only "priority attack" vs.
   "priority move" wording, likely a non-functional tidy-up, but confirm.
+  **Resolved 2026-09-09:** these 13 aren't newly-added moves — they're
+  existing moves whose flavor text was reprinted, several because they're
+  signature moves of Reg M-C's new-species roster (same pattern as dump 1's
+  6 flagged items). Live PokeAPI checks against all 26 newly-added species
+  found 4 with zero "champions"-tagged moves (baxcalibur, already handled;
+  plus rillaboom, cinderace, pincurchin), meaning
+  `applyChampionsMovepoolChanges` falls into `GLOBALLY_REMOVED_MOVES` for
+  each. Their own signature moves — Drum Beating, Pyro Ball, Zing Zap
+  respectively — are in that removal list and would've been silently
+  stripped, same bug shape as the already-fixed baxcalibur/glaive-rush case;
+  added `CHAMPIONS_MOVEPOOL_ADDITIONS` entries for all 3.
+  Grapploct/Octolock, Inteleon/Snipe Shot, and Sirfetch'd/Meteor Assault are
+  also new-roster signature-move pairings, but none of those 3 moves are in
+  `GLOBALLY_REMOVED_MOVES`, so no entry was needed despite those species
+  also having zero champions-tagged data. Octazooka, Milk Drink, Shift Gear,
+  Jaw Lock, Court Change, and Slash don't map to any new-roster species'
+  signature move — no action needed. Upper Hand's "priority attack"/
+  "priority move" diff is confirmed a non-functional wording tidy-up (no
+  code anywhere references either phrase). Type-check/lint/full test suite
+  (594 tests) all pass.
 
 ## Dump 3: New + changed abilities (received 2026-09-08)
 

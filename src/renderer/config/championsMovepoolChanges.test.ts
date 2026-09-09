@@ -6,9 +6,10 @@
  * stays real data (covers the Leg 4b findings: the game-wide removal list
  * and the moves it strips that used to be carved out for Floette, see
  * docs/investigations/champions-showdown-mod-audit.md's Leg 4b section),
- * and `CHAMPIONS_MOVEPOOL_ADDITIONS` now holds one real entry (baxcalibur,
- * added 2026-09-05 - see file header) alongside the generic per-species
- * mechanism test exercised against a throwaway 'test-species' key.
+ * and `CHAMPIONS_MOVEPOOL_ADDITIONS` now holds real entries (baxcalibur,
+ * added 2026-09-05; rillaboom/cinderace/pincurchin, added 2026-09-09 - see
+ * file header for both) alongside the generic per-species mechanism test
+ * exercised against a throwaway 'test-species' key.
  */
 
 import { afterEach, describe, expect, it } from 'vitest';
@@ -39,6 +40,12 @@ describe('applyChampionsMovepoolChanges', () => {
   it("adds back Baxcalibur's own signature move despite it being globally removed", () => {
     const result = applyChampionsMovepoolChanges('baxcalibur', ['glaive-rush', 'icicle-spear', 'dragon-dance']);
     expect(result).toEqual(expect.arrayContaining(['glaive-rush', 'icicle-spear', 'dragon-dance']));
+  });
+
+  it("adds back Rillaboom's, Cinderace's, and Pincurchin's own signature moves despite being globally removed", () => {
+    expect(applyChampionsMovepoolChanges('rillaboom', ['drum-beating', 'wood-hammer'])).toContain('drum-beating');
+    expect(applyChampionsMovepoolChanges('cinderace', ['pyro-ball', 'flamethrower'])).toContain('pyro-ball');
+    expect(applyChampionsMovepoolChanges('pincurchin', ['zing-zap', 'spark'])).toContain('zing-zap');
   });
 
   describe('per-species addition/removal mechanism (generic cases beyond the real baxcalibur entry above)', () => {

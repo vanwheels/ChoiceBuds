@@ -165,6 +165,31 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
   This closes out dump 2/3's remaining open verification items from the
   2026-09-08/09-09 notes above - full source text and per-move/per-ability
   reasoning already in `docs/investigations/regulation-mc-source-text.md`.
+  2026-09-09 movepool-additions audit (found and fixed a real bug): the one
+  item dump 2's notes hadn't actually closed out yet - its "no Previous:
+  block" move list (Slash, Octazooka, Milk Drink, Shift Gear, Zing Zap,
+  Snipe Shot, Jaw Lock, Octolock, Court Change, Drum Beating, Pyro Ball,
+  Meteor Assault, Glaive Rush) needed checking against
+  `config/championsMovepoolChanges.ts`, not assumed to be no-ops like the
+  rest of dump 2/3. Several are signature moves of Reg M-C's new-species
+  roster; live PokeAPI checks against all 26 new species found rillaboom,
+  cinderace, and pincurchin (like baxcalibur before them) have zero
+  "champions"-tagged moves, so their own signature moves (Drum Beating, Pyro
+  Ball, Zing Zap) were falling into `GLOBALLY_REMOVED_MOVES` and getting
+  silently stripped - same bug shape as the already-fixed
+  baxcalibur/glaive-rush case. Added `CHAMPIONS_MOVEPOOL_ADDITIONS` entries
+  for all 3 plus matching tests. Grapploct/Octolock, Inteleon/Snipe Shot,
+  Sirfetch'd/Meteor Assault are also new-roster signature pairings but
+  needed no entry (their moves aren't in the removed list); the remaining 6
+  moves don't map to any new-roster species and needed no action. Upper
+  Hand's wording diff confirmed non-functional. Type-check/lint/full test
+  suite (594 tests) all pass. Full reasoning in the source-text doc.
+  **Leg 2 is now effectively complete** modulo two open threads that are
+  deliberately out of this leg's scope rather than open sub-items: the
+  Z-A-exclusive-move audit (needs a separate live-PokeAPI methodology pass,
+  not a Serebii read) and `seasons.ts` M-6+ rows (blocked on
+  Bulbapedia/Serebii publishing them). Next incoming Vanny dump (if any) or
+  a decision to close the leg out are both live paths from here.
 
 ## Blocked
 
