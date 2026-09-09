@@ -16,26 +16,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Maintenance & Investigation Sweep
-
-Bundles the leftover items from the 2026-09-08 post-Card-UI-Polish scoping
-pass that didn't resolve outright during scoping itself (two of the five
-did - see COMPLETED.md's Mark-as-Checked-automation and EV-Grid-overflow
-entries - and moved straight there instead of becoming legs here). Not
-thematically unified beyond "small items to clear before Live Calc" - see
-Future Milestones below for that one.
-
-Partial/Scored Gaps (this milestone's previously-last scheduled leg)
-shipped, see `COMPLETED.md`, but per Vanny (2026-09-08) the milestone isn't
-done - the two legs below were pulled in from Unscheduled once the
-Ability/Moveset/Speed-Aware Redesign scoping pass made them concrete. Usage
-Cutoff Tuning and UI Shift Assessment Sweep stay in Unscheduled - neither
-was pulled in. Both pulled-in legs (Moveset+Threat-Ability-Aware Coverage,
-Speed Annotation) are now done - see `COMPLETED.md` - leaving this section
-with no scheduled legs. Flagged for Vanny to confirm whether that closes the
-milestone (MILESTONES.md entry + post-mortem) or whether more work is
-still intended here before Live Calc starts.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something

@@ -12,3 +12,5 @@ milestone.
   [post-mortem](docs/postmortems/battle-logger-reeval-data-process-cleanup.md)
 - **Card UI Polish** — 2026-09-05 to 2026-09-08 — Shipped —
   [post-mortem](docs/postmortems/card-ui-polish.md)
+- **Maintenance & Investigation Sweep** — 2026-09-08 — Shipped —
+  [post-mortem](docs/postmortems/maintenance-investigation-sweep.md)

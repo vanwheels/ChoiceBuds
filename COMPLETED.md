@@ -121,7 +121,7 @@ in:
   prioritized into their own concrete legs (see `TODO.md`); candidate 5
   (re-confirm the typing-only scope boundary) stays unscheduled, not dropped.
 
-- **[In-App Auto-Update: Windows Not Triggering] - Leg 1** (2026-09-09) -
+- **[In-App Auto-Update: Windows Not Triggering] - Leg 1** (2026-09-08) -
   Pure investigation, no shipped code change (the diagnostic logging added
   mid-leg was reverted once its job was done - see below). Reproduced live
   with a locally-built, unpublished NSIS installer (temporarily versioned
