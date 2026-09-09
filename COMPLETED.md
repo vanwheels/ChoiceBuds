@@ -39,7 +39,7 @@ in:
   their own default ability (`PokeAPICacheEntry.abilities[0]`, converted via
   `toReadableName`) when no usage-ranked ability exists. Full design in
   [docs/investigations/speed-tiers-full-roster-pivot.md](docs/investigations/speed-tiers-full-roster-pivot.md).
-  See commit `<pending>`.
+  See commit `59d61b9`.
 
 - **[Speed Tiers Team Preview Strip] - Leg 5** (2026-09-09) - A strip below
   the team selector, one card per team member: a session-only Speed-SP +/-
