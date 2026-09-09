@@ -18,6 +18,47 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Regulation M-C Prep] - Leg 2** (2026-09-08 to 2026-09-09) - piecemeal
+  post-release verification of Leg 1's hand-curated Reg M-C data against
+  official sources (Serebii's Champions Pokedex/movepool/item/mega-ability
+  pages, Bulbapedia's season list), fed in by Vanny across 3 source-text
+  dumps transcribed verbatim into
+  `docs/investigations/regulation-mc-source-text.md`. Confirmed
+  Baxcalibur/Golisopod/Salamence's ordinary-Mega abilities (fixing
+  Golisopod's, which `@smogon/calc`'s pre-release data had wrong - its own
+  ordinary ability leaking in as stale placeholder data); added Pawmot and
+  expanded `REG_MC_ADDED_SPECIES` from 5 pre-release entries to the full
+  26-slug confirmed roster, finding and fixing a real bug along the way
+  (Indeedee missing from `GENDER_DIVERGENT_BASE_SPECIES`, which would've
+  silently failed legality for a bare "Indeedee"/"Indeedee-F" import);
+  verified all 6 Mega Stones and added the 12 new hold items to
+  `VGC_HOLD_ITEMS`; verified Group 3's 5 Mega-ability entries in
+  `megaAbilities.ts` exact-match against Serebii's dedicated page; corrected
+  `seasons.ts`'s M-5 end date and added Season M-6 once each was actually
+  published. A full audit pass through dump 2/3's wording changes (powder-
+  move/Thunder Wave type-immunity clauses, Thunder/Hurricane's weather-
+  accuracy wording, Substitute's sound-move clause, newly-relevant
+  abilities from the new-species roster) found nothing needing a code
+  change - all either pre-existing mainline mechanics, already modeled
+  correctly, or outside this app's tracked scope. Found and fixed one real
+  bug in that pass: Rillaboom/Cinderace/Pincurchin's signature moves (Drum
+  Beating/Pyro Ball/Zing Zap) were being silently stripped by
+  `GLOBALLY_REMOVED_MOVES` because PokeAPI has no "champions"-tagged move
+  data for those 3 species yet (same failure shape as the already-fixed
+  Baxcalibur/Glaive Rush case) - added matching
+  `CHAMPIONS_MOVEPOOL_ADDITIONS` entries and tests. Closes out the
+  "Regulation M-C Prep" milestone - see `MILESTONES.md` and
+  `docs/postmortems/regulation-mc-prep.md`. One thread deliberately left
+  unresolved rather than force-closed: whether the 4 new-Mega species
+  gained any Legends Z-A-exclusive moves needs a live-PokeAPI audit
+  methodology, not a Serebii read - moved to its own TODO.md item
+  (`[Reg M-C Z-A-Exclusive Movepool Audit]`) rather than kept open here.
+  `seasons.ts` M-7+ rows remain unaddable until Bulbapedia/Serebii publish
+  them, and per Vanny that can simply be picked up whenever a future dump
+  lands rather than tracked as an open item now. Commits `6724a99`,
+  `a80dc85`, `ee5b8fe`, `290b11a`, `8a4a7a7`, `a5985e0`, `b7be888`,
+  `29b9edf`, `86d1fc0`.
+
 - **[Live Calc Verification Pass] - Leg 4** (2026-09-08) - Live `run-desktop`
   pass against the real UI (Legs 1-3), not just the pure-engine unit tests.
   Confirmed live: multi-observation narrowing shrinks/holds bounds sensibly

@@ -16,3 +16,5 @@ milestone.
   [post-mortem](docs/postmortems/maintenance-investigation-sweep.md)
 - **Live Calc: Damage-Based Stat Inference Tab** — 2026-09-08 — Shipped —
   [post-mortem](docs/postmortems/live-calc-stat-inference.md)
+- **Regulation M-C Prep** — 2026-09-05 to 2026-09-09 — Shipped —
+  [post-mortem](docs/postmortems/regulation-mc-prep.md)
