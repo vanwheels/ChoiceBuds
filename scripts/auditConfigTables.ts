@@ -273,6 +273,18 @@ const movepoolContradictions: MovepoolContradictionHit[] = [];
   }
 }
 
+// --- typeImmunityAbilities.ts ---
+// Checked here (rather than left to moveBlockingAbilities.ts's own block below) because that file's
+// MOVE_BLOCKING_ABILITIES now spreads this table's keys in via a computed TYPE_IMMUNITY_BLOCK_RULES
+// object rather than listing them as its own property assignments - objectEntries only sees plain
+// `key: value` properties, so a spread element is invisible to it and those keys would otherwise go
+// unchecked.
+{
+  const file = 'typeImmunityAbilities.ts';
+  const source = parseFile(file);
+  checkKeysAgainst(file, 'TYPE_IMMUNITY_ABILITIES', objectKeys(findConst(source, 'TYPE_IMMUNITY_ABILITIES')), KNOWN_ABILITIES, 'ability');
+}
+
 // --- moveBlockingAbilities.ts ---
 let soundBasedMoves: string[] = [];
 {
@@ -281,6 +293,8 @@ let soundBasedMoves: string[] = [];
   soundBasedMoves = stringArrayLiteral(findConst(source, 'SOUND_BASED_MOVES'));
   checkKeysAgainst(file, 'SOUND_BASED_MOVES', soundBasedMoves, KNOWN_MOVES, 'move');
 
+  // MOVE_BLOCKING_ABILITIES's type-immunity keys come in via a spread (see typeImmunityAbilities.ts
+  // block above) and are skipped here since objectEntries only sees property assignments.
   const abilityEntries = objectEntries(findConst(source, 'MOVE_BLOCKING_ABILITIES'));
   checkKeysAgainst(file, 'MOVE_BLOCKING_ABILITIES', abilityEntries.map(([key]) => key), KNOWN_ABILITIES, 'ability');
   // BlockRule's 'move-list' variant nests its move array one level down as a `moves` property -

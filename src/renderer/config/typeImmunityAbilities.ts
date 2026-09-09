@@ -18,8 +18,8 @@
  *
  * Deliberately excluded, real type/move immunities that don't fit an
  * ability -> type(s) shape (same exclusions config/moveBlockingAbilities.ts
- * already documents for its own, Battle-Logger-scoped copy of this same
- * ability family - kept separate rather than shared, see TODO.md):
+ * already documents for its own 'type' BlockRules, which are now built
+ * directly from this table rather than a separate hand-typed copy):
  * - Wonder Guard: immune to anything not super-effective, keyed off a
  *   computed multiplier rather than a fixed type list.
  * - Wind Rider, Overcoat, Bulletproof, Soundproof: immune to a move-flag

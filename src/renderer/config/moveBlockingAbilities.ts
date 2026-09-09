@@ -20,6 +20,12 @@
  * Darkness with no modern-game/Champions availability at all - dropped from
  * Soundproof's list below rather than carried in as dead weight.
  *
+ * Type-immunity 'type' rules are no longer a separate hand-typed copy - they're built below from
+ * config/typeImmunityAbilities.ts's shared TYPE_IMMUNITY_ABILITIES list (Team Gap Analysis's own
+ * ability -> type-immunity table), consolidated per TODO.md's Move-Blocking-Abilities item. Picks
+ * up Earth Eater and Well-Baked Body, which this table's prior hand-typed copy was missing - the
+ * intended effect of pointing this table at the shared list, not a side effect to flag.
+ *
  * Deliberately excluded, all real move-blocking abilities but each needing
  * data or mechanics this pass doesn't take on (documented, not silently
  * dropped, same convention as config/hitReactiveAbilities.ts's own header):
@@ -64,6 +70,8 @@
  *   faints is out of scope for a move-blocking table by definition.
  */
 
+import { TYPE_IMMUNITY_ABILITIES } from './typeImmunityAbilities';
+
 export type BlockRule =
   | { kind: 'type'; type: string }
   | { kind: 'category'; category: 'status' }
@@ -79,22 +87,26 @@ export const SOUND_BASED_MOVES = [
   'Torch Song', 'Uproar',
 ];
 
+// Type-immunity 'type' rules, built from config/typeImmunityAbilities.ts's shared
+// TYPE_IMMUNITY_ABILITIES table rather than a second hand-typed copy - see file header. Every
+// real type-immunity ability nullifies exactly one attacking type, so `types[0]` is safe; a future
+// ability immune to more than one type would need this table's BlockRule union widened first.
+// Volt Absorb/Water Absorb/Flash Fire/Earth Eater/Well-Baked Body/Dry Skin heal HP or buff move
+// power on the move they block - this app tracks no numeric/% HP and no move-power-buff concept
+// (only a boolean fainted flag and stat stages), so unlike Sap Sipper/Storm Drain/Lightning Rod/
+// Motor Drive below they can't also drive an auto-apply chip the way
+// config/hitReactiveAbilities.ts's stat-boost abilities do; a plain Blocked tag is the correct,
+// complete outcome for these, not a shortcut. Sap Sipper/Storm Drain/Lightning Rod/Motor Drive
+// also carry a stat-stage boost - see config/hitReactiveAbilities.ts for that half.
+const TYPE_IMMUNITY_BLOCK_RULES: Record<string, BlockRule> = Object.fromEntries(
+  Object.entries(TYPE_IMMUNITY_ABILITIES).map(([ability, types]): [string, BlockRule] => [
+    ability,
+    { kind: 'type', type: types[0] },
+  ]),
+);
+
 const MOVE_BLOCKING_ABILITIES: Record<string, BlockRule> = {
-  // Type-immunity abilities. Volt Absorb/Water Absorb/Flash Fire/Dry Skin heal HP or buff move
-  // power on the move they block - this app tracks no numeric/% HP and no move-power-buff concept
-  // (only a boolean fainted flag and stat stages), so unlike the 4 below they can't also drive an
-  // auto-apply chip the way config/hitReactiveAbilities.ts's stat-boost abilities do; a plain
-  // Blocked tag is the correct, complete outcome for these, not a shortcut.
-  'levitate': { kind: 'type', type: 'ground' },
-  'flash-fire': { kind: 'type', type: 'fire' },
-  'volt-absorb': { kind: 'type', type: 'electric' },
-  'water-absorb': { kind: 'type', type: 'water' },
-  'dry-skin': { kind: 'type', type: 'water' },
-  // These 4 also carry a stat-stage boost - see config/hitReactiveAbilities.ts for that half.
-  'sap-sipper': { kind: 'type', type: 'grass' },
-  'storm-drain': { kind: 'type', type: 'water' },
-  'lightning-rod': { kind: 'type', type: 'electric' },
-  'motor-drive': { kind: 'type', type: 'electric' },
+  ...TYPE_IMMUNITY_BLOCK_RULES,
 
   // Blocks (or, for Magic Bounce, reflects - a "no effect on this target" outcome either way from
   // the target's own side of the log) any directly-targeted status move. Real exceptions exist for
