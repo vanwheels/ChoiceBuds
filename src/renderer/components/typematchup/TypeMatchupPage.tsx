@@ -10,7 +10,10 @@
  *
  * Offensive Coverage accounts for type-changing abilities (Pixilate turning
  * Normal moves Fairy, etc.) via hooks/useTeamMoveTypes.ts - see
- * config/typeChangingAbilities.ts.
+ * config/typeChangingAbilities.ts. Defensive Coverage (and the Team Gap
+ * Analysis panel below it) accounts for type-immunity abilities (Levitate,
+ * Water Absorb, etc.) the same way - see config/typeImmunityAbilities.ts,
+ * consumed via utils/typeCoverage.ts's `getDefensiveMultiplier`.
  *
  * Team Gap Analysis (UsageThreatsList) is a third, additive panel below the
  * two coverage tables - real ranked-ladder-usage Pokemon (GameDataCache.usage,
@@ -45,9 +48,12 @@ export default function TypeMatchupPage({ teamsState, gameDataState, databaseSta
   const { cache: gameDataCache } = gameDataState;
   const { getCachedEntry } = databaseState;
 
-  const defensiveTypesByPokemon = useMemo(() => (selectedTeam?.pokemon ?? []).map(p => p.types), [selectedTeam]);
+  const defensiveSlots = useMemo(
+    () => (selectedTeam?.pokemon ?? []).map(p => ({ types: p.types, ability: p.showdownData.ability })),
+    [selectedTeam]
+  );
   const offensiveRows = useMemo(() => computeOffensiveCoverage(moveTypesByPokemon), [moveTypesByPokemon]);
-  const defensiveRows = useMemo(() => computeDefensiveCoverage(defensiveTypesByPokemon), [defensiveTypesByPokemon]);
+  const defensiveRows = useMemo(() => computeDefensiveCoverage(defensiveSlots), [defensiveSlots]);
 
   const usageCandidates = useMemo<UsageThreat[]>(() => {
     if (!gameDataCache) return [];
@@ -60,8 +66,8 @@ export default function TypeMatchupPage({ teamsState, gameDataState, databaseSta
       .filter((c): c is UsageThreat => c !== null);
   }, [gameDataCache, getCachedEntry]);
   const usageThreats = useMemo(
-    () => computeUsageThreats(defensiveTypesByPokemon, usageCandidates),
-    [defensiveTypesByPokemon, usageCandidates]
+    () => computeUsageThreats(defensiveSlots, usageCandidates),
+    [defensiveSlots, usageCandidates]
   );
 
   return (

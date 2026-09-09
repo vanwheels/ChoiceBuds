@@ -1,11 +1,22 @@
 /**
  * typeCoverage.ts - Team-Wide Offensive/Defensive Type Coverage Matrices
- * Pure functions over config/typeEffectiveness.ts's existing chart - no new
- * type-effectiveness data, just per-team aggregation for the Type Matchup
- * page's two coverage tables (components/typematchup/).
+ * Pure functions over config/typeEffectiveness.ts's existing chart - per-team
+ * aggregation for the Type Matchup page's two coverage tables
+ * (components/typematchup/). Defensive coverage additionally consults
+ * config/typeImmunityAbilities.ts (Levitate/Water Absorb/etc.) via
+ * `getDefensiveMultiplier`, mirroring how offensive coverage already
+ * accounts for type-changing abilities upstream in hooks/useTeamMoveTypes.ts
+ * before the move types it passes in here.
  */
 
 import { ALL_TYPES, getEffectivenessMultiplier } from '../config/typeEffectiveness';
+import { getImmuneTypes } from '../config/typeImmunityAbilities';
+
+export interface DefendingSlot {
+  types: string[];
+  /** Equipped ability (ShowdownPokemon.ability) - checked for a full-immunity override (Levitate/Water Absorb/etc - see config/typeImmunityAbilities.ts) before falling back to raw type effectiveness. */
+  ability?: string;
+}
 
 export interface CoverageRow {
   type: string;
@@ -40,12 +51,26 @@ export function computeOffensiveCoverage(moveTypesByPokemon: string[][]): Covera
 }
 
 /**
- * For each of the 18 attacking types, how each team member's own (1-2) types
- * take that hit - i.e. the team's shared weaknesses/resistances.
+ * The effectiveness of an attacking type against one defending slot, after
+ * checking the slot's own ability for a full-immunity override (Levitate
+ * vs. Ground, Water Absorb vs. Water, etc. - see
+ * config/typeImmunityAbilities.ts) - falls back to the raw type-chart
+ * multiplier when the ability grants no override for this specific
+ * attacking type.
  */
-export function computeDefensiveCoverage(defendingTypesByPokemon: string[][]): CoverageRow[] {
+export function getDefensiveMultiplier(attackingType: string, defendingTypes: string[], ability?: string): number {
+  if (getImmuneTypes(ability).includes(attackingType)) return 0;
+  return getEffectivenessMultiplier(attackingType, defendingTypes);
+}
+
+/**
+ * For each of the 18 attacking types, how each team member's own (1-2) types
+ * (and equipped ability, for a full-immunity override) take that hit - i.e.
+ * the team's shared weaknesses/resistances.
+ */
+export function computeDefensiveCoverage(defenders: DefendingSlot[]): CoverageRow[] {
   return ALL_TYPES.map(type => {
-    const cells = defendingTypesByPokemon.map(defTypes => getEffectivenessMultiplier(type, defTypes));
+    const cells = defenders.map(d => getDefensiveMultiplier(type, d.types, d.ability));
     return {
       type,
       cells,
