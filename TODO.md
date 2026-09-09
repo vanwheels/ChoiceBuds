@@ -25,10 +25,12 @@ unblocked.
 
 - **[Regulation M-C Prep] — Leg 2** *(Last touched: 2026-09-08 · Re-checks:
   0)*
-  Blocked: waiting on Reg M-C's actual 2026-09-08 6pm PST release and
-  Serebii publishing its regulation/items pages — Leg 1 (roster/mega-stone/
-  regulation-selector registration, see COMPLETED.md) was hand-curated
-  ahead of release with no official source to check against yet.
+  Blocked: Reg M-C shipped on schedule (2026-09-08 6pm PST), resolving the
+  release-date half of this wait, but Serebii's dedicated regulationm-c.shtml
+  page isn't confirmed up yet (only its per-species Champions Pokedex/
+  movepool pages are, per Vanny) — Leg 1 (roster/mega-stone/regulation-
+  selector registration, see COMPLETED.md) was hand-curated ahead of release
+  with no official source to check against yet.
   Workflow once the patch drops: full datamined info won't be out until
   end-of-week, so Vanny is feeding confirmed details in piecemeal as they
   land (same running-tally pattern as Leg 1) rather than waiting for one
@@ -63,12 +65,27 @@ unblocked.
   Emergency Exit→Golisopod, Grass Pelt→Gogoat, etc.) rather than being
   brand-new ability concepts — full details and remaining species↔ability
   pairings to confirm are in the source-text doc.
+  2026-09-08 post-release update: M-C is officially out. Baxcalibur-Mega is
+  user-confirmed as Thermal Exchange, matching the pre-release
+  `@smogon/calc` value (already correct, no change needed). Golisopod-Mega
+  is user-confirmed as Tough Claws — NOT Emergency Exit, which is what
+  `@smogon/calc`'s pre-release data had (that was Golisopod's own *ordinary*
+  ability leaking in as stale placeholder data, the same failure mode
+  already known from the Z-Mega abilities); corrected in
+  `config/megaAbilities.ts` and its Group 3 provenance comment.
+  Salamence-Mega (Aerilate) remains unconfirmed post-release. Pawmot was
+  also added as a new species — added to `REG_MC_ADDED_SPECIES` in
+  `utils/pokemonRules.ts` alongside the pre-existing 4. Serebii's
+  per-species Champions Pokedex/movepool pages are now up (per Vanny) — a
+  source for the still-outstanding items below and for the ~20-species
+  non-Mega roster (see 2026-09-08 update above) not yet added to
+  `REG_MC_ADDED_SPECIES`.
   Once live: re-verify `utils/pokemonRules.ts`'s `REG_MC_ADDED_SPECIES` and
   `config/vgcData.ts`'s 6 new Mega Stones against Serebii's own Reg M-C
   pages (replacing the pre-release provenance notes in both files' headers
-  with real citations, same as M-A/M-B); spot-check the 3 new ordinary Mega
-  abilities (Baxcalibur/Golisopod/Salamence, currently sourced only from
-  `@smogon/calc`'s bundled data with no second source) and the 3 Mega Z
+  with real citations, same as M-A/M-B); spot-check Baxcalibur/Golisopod's
+  now-confirmed Mega abilities and Salamence-Mega's still-unconfirmed one
+  (currently only `@smogon/calc`'s bundled data) and the 3 Mega Z
   abilities (Absol/Garchomp/Lucario, user-confirmed but not yet
   cross-checked against a published source) in `config/megaAbilities.ts`;
   check whether Rillaboom/Baxcalibur/Salamence/Golisopod gained any Legends

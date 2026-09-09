@@ -15,11 +15,16 @@
  * list - there is no separate ban mechanism to maintain.
  *
  * REG_MC_ADDED_SPECIES has no equivalent official-source page yet - Reg M-C
- * was announced ahead of its 2026-09-08 6pm PST release, hand-curated from
- * confirmed reveals as of 2026-09-05 (see TODO.md's Regulation M-C Prep
- * entry) rather than Serebii's own regulation page, which doesn't exist yet.
- * Re-verify REG_MC_ADDED_SPECIES against Serebii's regulationm-c.shtml once
- * it's up and replace this note with a real citation, same as M-A/M-B above.
+ * shipped 2026-09-08 6pm PST as announced, but this list is still hand-
+ * curated incrementally from user-confirmed reveals (see TODO.md's
+ * Regulation M-C Prep entry), not read off Serebii's own regulation page.
+ * It currently only holds the 5 species confirmed and wired in so far
+ * (rillaboom, baxcalibur, salamence, golisopod, pawmot) - the fuller ~20-
+ * species non-Mega roster already confirmed in that TODO entry (Wigglytuff,
+ * Persian, Cinderace, Rillaboom, Toxtricity, etc.) is not yet added here.
+ * Re-verify/complete REG_MC_ADDED_SPECIES against Serebii's
+ * regulationm-c.shtml once it's up and replace this note with a real
+ * citation, same as M-A/M-B above.
  *
  * Mega Evolution forms are excluded entirely (not just deduplicated) - Mega
  * access is meant to be item-driven (holding the matching Mega Stone on the
@@ -125,7 +130,7 @@ const REG_MB_ADDED_SPECIES: string[] = [
  * matching "-ite Z" stone), not a separate pick. See config/megaEvolution.ts/
  * config/megaAbilities.ts for that half of Reg M-C's additions.
  */
-const REG_MC_ADDED_SPECIES: string[] = ['rillaboom', 'baxcalibur', 'salamence', 'golisopod'];
+const REG_MC_ADDED_SPECIES: string[] = ['rillaboom', 'baxcalibur', 'salamence', 'golisopod', 'pawmot'];
 
 export function normalizeSlug(value: string): string {
   return value

@@ -48,15 +48,23 @@
  * Eternal substitution `megaEvolution.ts`'s CURATED_MEGA_FORM_SLUGS already
  * makes for the Calc tab - see that file's comment for why.
  *
- * Group 3 - Reg M-C (announced ahead of its 2026-09-08 6pm PST release, see
- * TODO.md's Regulation M-C Prep entry - pre-release, no Serebii/Kotaku
- * source exists yet the way Groups 1/2 have):
- * - `baxcalibur-mega`/`golisopod-mega`/`salamence-mega` are sourced from
- *   `@smogon/calc` 0.11.0's bundled species dex (`ZA_PATCH`'s `abilities.0`
- *   field) - the same trust level Group 1 gives that library elsewhere, but
- *   unlike Group 1 this hasn't been independently cross-checked against a
- *   second source yet, since none exists pre-release. Salamence-Mega
- *   (Aerilate) is the one already-known mainline value of the three.
+ * Group 3 - Reg M-C (shipped 2026-09-08 6pm PST, see TODO.md's Regulation
+ * M-C Prep entry):
+ * - `golisopod-mega` was corrected 2026-09-08 post-release: user-confirmed
+ *   as Tough Claws, replacing the pre-release `@smogon/calc` 0.11.0 bundled
+ *   value (Emergency Exit, which just duplicated Golisopod's own *ordinary*
+ *   ability - stale placeholder data, same failure mode the Z-Mega bullet
+ *   below already called out for Absol/Garchomp/Lucario). Not yet
+ *   cross-checked against a second source (Serebii's Champions Pokedex
+ *   pages, per Group 2's methodology) - do that once convenient.
+ * - `baxcalibur-mega` (Thermal Exchange) was independently user-confirmed
+ *   2026-09-08 post-release, matching the pre-release `@smogon/calc` value -
+ *   that source was correct for this one. Still not cross-checked against a
+ *   second source.
+ * - `salamence-mega` (Aerilate) remains sourced only from pre-release
+ *   `@smogon/calc` data, not yet independently confirmed post-release -
+ *   Aerilate is at least the already-known mainline value, unlike Golisopod's
+ *   miss above.
  * - `absol-mega-z`/`garchomp-mega-z`/`lucario-mega-z` are Absol/Garchomp/
  *   Lucario's new confirmed "Mega Z" forms - a genuine second Mega for each,
  *   not a Mega-then-something-else. Their abilities (Sharpness/Levitate/
@@ -65,9 +73,8 @@
  *   entries - that field just duplicates each species' *ordinary* Mega
  *   ability (Magic Bounce/Sand Force/Adaptability), stale placeholder data
  *   from before Reg M-C's real abilities were revealed (see
- *   `config/megaEvolution.ts`'s CURATED_MEGA_FORM_SLUGS comment). Re-verify
- *   all 6 of this group's abilities once Reg M-C ships and a second source
- *   exists to cross-check against.
+ *   `config/megaEvolution.ts`'s CURATED_MEGA_FORM_SLUGS comment). Still not
+ *   cross-checked against a second source.
  */
 export const MEGA_ABILITIES: Record<string, string> = {
   'abomasnow-mega': 'Snow Warning',
@@ -111,7 +118,7 @@ export const MEGA_ABILITIES: Record<string, string> = {
   'gengar-mega': 'Shadow Tag',
   'glalie-mega': 'Refrigerate',
   'glimmora-mega': 'Adaptability',
-  'golisopod-mega': 'Emergency Exit',
+  'golisopod-mega': 'Tough Claws',
   'golurk-mega': 'Unseen Fist',
   'greninja-mega': 'Protean',
   'gyarados-mega': 'Mold Breaker',
