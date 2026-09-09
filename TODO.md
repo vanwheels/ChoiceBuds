@@ -16,27 +16,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Live Calc: Damage-Based Stat Inference Tab
-
-New "Live Calc" tab blending the existing damage calc with a fast inference
-mechanic: infer an opponent's likely stat spread/nature/ability/item from
-what percentage of damage your own moves land on it. Scoped 2026-09-08 - see
-[docs/investigations/live-calc-stat-inference-scope.md](docs/investigations/live-calc-stat-inference-scope.md)
-for the resolved design questions, stated v1 assumptions
-(Doubles-only, no crit/multi-hit, HP/defense-stat coupling approximation),
-and the open math/list-content questions Leg 1 settled while building (see
-`COMPLETED.md`).
-
-- **[Live Calc Verification Pass] — Leg 4** *(Last touched: 2026-09-08 ·
-  Re-checks: 0)*
-  Manual + `run-desktop` verification once Legs 1-3 are live: multi-
-  observation narrowing behaves sensibly, zero/one-observation states,
-  contradictory/impossible observations degrade gracefully rather than
-  crashing, physical-vs-special observations only narrow their own side. Not
-  a visual-only check - this is verifying computed/derived correctness,
-  matching root `CLAUDE.md`'s Live UI Testing carve-out for cases manual
-  screen-checking doesn't reliably cover.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something

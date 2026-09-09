@@ -18,6 +18,37 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Live Calc Verification Pass] - Leg 4** (2026-09-08) - Live `run-desktop`
+  pass against the real UI (Legs 1-3), not just the pure-engine unit tests.
+  Confirmed live: multi-observation narrowing shrinks/holds bounds sensibly
+  (two Earthquake reads narrowed Defense SP from the full 0-32 down to
+  9-32 and nature candidates from 25 to 21), zero/one-observation states
+  render their own correct copy ("Add an observation..."), a Status move
+  and a damage% genuinely outside the feasible range both degrade to a
+  visible contradiction note with no crash and no state corruption, and a
+  physical observation never moves the Sp. Def bound (or vice versa).
+  Removing a contradicted observation correctly re-derives the result from
+  scratch (its note disappears, the bound doesn't drift) - confirms
+  `inference` is a pure recompute off current `observations`, not an
+  accumulating log. No product bug found; no code changed this leg. Two
+  real false leads worth recording: (1) typing a species name via a
+  synthetic DOM `input` event without real key events looked like a broken
+  dropdown at first - it wasn't, `CalcAutocomplete`'s dropdown just needs a
+  render tick real `page.keyboard.type()` gives for free; (2) Ferrothorn/
+  Landorus-Therian returning zero species-search results looked like a
+  Reg M-C legality regression - Pokémon Champions models a positive
+  species allowlist that simply hasn't added either mon yet (see
+  `utils/pokemonRules.ts`'s header), reproduced identically under Reg M-B,
+  so it's not regulation-specific and not a bug. Switched the live test to
+  Garchomp/Snorlax (both allowlisted) and computed real feasible damage%
+  windows via a throwaway `@smogon/calc` script first, since
+  `CalcPokemonPanel`'s species-select auto-fills a real Champions
+  ranked-ladder set (Life Orb/Rough Skin/Jolly/full Atk+Spe SPs here) -
+  guessed round-number damage% values against that real set are why the
+  first attempt's every observation looked like a contradiction. This
+  closes the "Live Calc: Damage-Based Stat Inference Tab" milestone - see
+  `MILESTONES.md` and `docs/postmortems/live-calc-stat-inference.md`.
+
 - **[Live Calc Results Display] - Leg 3** (2026-09-08) - Replaced Leg 2's raw
   plumbing-confirmation preview with the real result surface: new
   `LiveCalcResultPanel` (a 0-32 SP range bar per defensive stat, each also
