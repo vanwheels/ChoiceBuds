@@ -27,15 +27,6 @@ for the resolved design questions, stated v1 assumptions
 and the open math/list-content questions Leg 1 settled while building (see
 `COMPLETED.md`).
 
-- **[Live Calc Tab Shell] — Leg 2** *(Last touched: 2026-09-08 · Re-checks:
-  0)*
-  New `useLiveCalc` hook (transient state, same non-persisted pattern as
-  `useDamageCalc`) plus a new "Live Calc" tab/page wired into app navigation.
-  Attacker entry reuses `CalcPokemonPanel`-style input (fully known set).
-  Defender entry is species+level only, plus an add/remove observation list
-  (move + damage% + 1-or-2-targets-hit for spread moves). Plumbing only -
-  confirm state flows end-to-end into Leg 1's engine; no results polish yet.
-
 - **[Live Calc Results Display] — Leg 3** *(Last touched: 2026-09-08 ·
   Re-checks: 0)*
   Surface Leg 1's narrowed output in the new tab: per-defensive-stat SP

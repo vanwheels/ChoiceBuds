@@ -18,6 +18,25 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Live Calc Tab Shell] - Leg 2** (2026-09-08) - New `useLiveCalc` hook
+  (transient, non-persisted state mirroring `useDamageCalc`'s pattern) plus a
+  new "Live Calc" tab wired into `App.tsx`/`Sidebar.tsx` navigation
+  (lazy-loaded, same as the existing Calc tab). Attacker entry literally
+  reuses `CalcPokemonPanel` (fully known set - species/item/ability/nature/
+  SPs); the attacker's own `CalcPokemonState.moves` slots stay unused since
+  `buildPokemon()` never reads them - each observation instead carries its
+  own move name, autocompleted against the attacker's real learned moveset
+  (same `getEnrichedSpeciesOptions`-backed filtering `useDamageCalc` already
+  does for its own move grids). New `LiveCalcDefenderPanel`
+  (species+level only) and `LiveCalcObservationList` (add/remove rows: move
+  + damage% + 1-or-2-targets-hit) components under a new `components/
+  livecalc/` folder. Confirmed state flows end-to-end into Leg 1's
+  `inferDefenderStats()` via a raw/unstyled inference preview block, flagged
+  in-file as Leg 3's to replace - no results polish this leg, per scope.
+  11 new hook tests (`useLiveCalc.test.ts`) covering state wiring and one
+  real end-to-end narrowing case; full suite (593 tests) and build both
+  green. See commit `<hash>` for the full diff.
+
 - **[Live Calc Engine] - Leg 1** (2026-09-08) - New `utils/liveCalcEngine.ts`:
   pure, React-free heuristic inference engine narrowing a defender's unknown
   nature/SP-spread/ability/item from observed damage-percent readings against

@@ -28,12 +28,13 @@ import ReleaseNotesModal from './components/ReleaseNotesModal';
 // opens it, not on every app startup - CalcPage in particular pulls in
 // @smogon/calc, the app's heaviest dependency.
 const CalcPage = lazy(() => import('./components/calc/CalcPage'));
+const LiveCalcPage = lazy(() => import('./components/livecalc/LiveCalcPage'));
 const BattleLogPage = lazy(() => import('./components/battlelog/BattleLogPage'));
 const StatisticsPage = lazy(() => import('./components/statistics/StatisticsPage'));
 const TypeMatchupPage = lazy(() => import('./components/typematchup/TypeMatchupPage'));
 const SettingsPage = lazy(() => import('./components/SettingsPage'));
 
-export type ActiveTab = 'teams' | 'calc' | 'battles' | 'statistics' | 'typeMatchup' | 'settings';
+export type ActiveTab = 'teams' | 'calc' | 'liveCalc' | 'battles' | 'statistics' | 'typeMatchup' | 'settings';
 
 /**
  * Main application shell component
@@ -130,6 +131,20 @@ export default function App() {
             <div style={{ display: activeTab === 'calc' ? 'block' : 'none' }}>
               <Suspense fallback={<div className="text-zinc-400 text-sm">Loading calculator...</div>}>
                 <CalcPage
+                  gameDataState={gameDataState}
+                  teamsState={teamsState}
+                  databaseState={databaseState}
+                  savedPokemonState={savedPokemonState}
+                  spriteCacheState={spriteCacheState}
+                  settingsState={settingsState}
+                />
+              </Suspense>
+            </div>
+          )}
+          {visitedTabs.has('liveCalc') && (
+            <div style={{ display: activeTab === 'liveCalc' ? 'block' : 'none' }}>
+              <Suspense fallback={<div className="text-zinc-400 text-sm">Loading live calc...</div>}>
+                <LiveCalcPage
                   gameDataState={gameDataState}
                   teamsState={teamsState}
                   databaseState={databaseState}

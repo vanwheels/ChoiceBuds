@@ -36,6 +36,7 @@ import { useSidebarCollapsed } from '../hooks/useSidebarCollapsed';
 import {
   TeamsIcon,
   CalcIcon,
+  LiveCalcIcon,
   BattleLogIcon,
   StatisticsIcon,
   TypeMatchupIcon,
@@ -51,6 +52,7 @@ interface SidebarProps {
 const MAIN_NAV_ITEMS: { tab: ActiveTab; label: string; Icon: typeof TeamsIcon }[] = [
   { tab: 'teams', label: 'Teams', Icon: TeamsIcon },
   { tab: 'calc', label: 'Calc', Icon: CalcIcon },
+  { tab: 'liveCalc', label: 'Live Calc', Icon: LiveCalcIcon },
   { tab: 'battles', label: 'Battle Log', Icon: BattleLogIcon },
   { tab: 'statistics', label: 'Statistics', Icon: StatisticsIcon },
   { tab: 'typeMatchup', label: 'Type Matchup', Icon: TypeMatchupIcon },

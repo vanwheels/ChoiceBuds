@@ -42,6 +42,16 @@ export function CalcIcon({ className }: IconProps) {
   );
 }
 
+export function LiveCalcIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none" />
+      <path d="M12 3v3M12 18v3M3 12h3M18 12h3" />
+    </svg>
+  );
+}
+
 export function BattleLogIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
