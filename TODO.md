@@ -26,7 +26,20 @@ vgcmulticalc reskin). Legs 1-3 are done — see `COMPLETED.md` (Leg 3's row-
 list shell was shipped, then redone by Leg 4). Legs below are a tentative
 breakdown, not yet started.
 
-- **[Live Calc → Speed Tiers Tie-in] — Leg 5** *(Last touched: 2026-09-09 ·
+- **[Speed Tiers Team Preview Strip] — Leg 5** *(Last touched: 2026-09-09 ·
+  Re-checks: 0)*
+  Scoping resolved — see
+  [docs/investigations/speed-tiers-preview-strip-scope.md](docs/investigations/speed-tiers-preview-strip-scope.md).
+  Add a strip at the top of the page, next to team selection, showing all 6
+  team members with a sprite icon, a session-only Speed-SP modifier, a
+  session-only nature selector, and a local-preview-only form/mega toggle —
+  none of the three write back to the team's saved data (a "save to team"
+  action is a separate, unscheduled follow-up below). This is the
+  "adjustable speed control" item `speed-tiers-layout-rework.md` deferred.
+  Component structure, override-state shape, form-candidate source, and
+  nature-list scope are still open at build time per the scoping doc.
+
+- **[Live Calc → Speed Tiers Tie-in] — Leg 6** *(Last touched: 2026-09-09 ·
   Re-checks: 0)*
   Wire an inferred SP-Speed range from a Live Calc session
   (`hooks/useLiveCalc.ts`) to override/annotate the matching threat's
@@ -34,9 +47,9 @@ breakdown, not yet started.
   (shared state vs. explicit "send to Speed Tiers" action) still open.
   Targets Leg 4's reworked render shape, not Leg 3's.
 
-- **[Speed Tiers Verification Pass] — Leg 6** *(Last touched: 2026-09-09 ·
+- **[Speed Tiers Verification Pass] — Leg 7** *(Last touched: 2026-09-09 ·
   Re-checks: 0)*
-  Live `run-desktop` pass once Legs 2, 4, and 5 are built, same shape as the
+  Live `run-desktop` pass once Legs 2 and 5-6 are built, same shape as the
   Live Calc milestone's own verification leg.
 
 ## Blocked
@@ -88,6 +101,16 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+- **[Speed Tiers Preview Strip: Save Override to Team] — Leg 1** *(Last
+  touched: 2026-09-09 · Re-checks: 0)*
+  Follow-up to Speed Tiers Team Preview Strip (Leg 5, current milestone):
+  an explicit "save this edit to the team" action that would write a
+  session-only SP/nature/form override made in that strip back through the
+  real Team Builder commit path. Deliberately not built as part of Leg 5 —
+  Vanny flagged it as a future option only when scoping that leg. Needs its
+  own scoping pass once Leg 5 ships and the override UI shape actually
+  exists to hang a "save" action off of.
 
 - **[Reg M-C Z-A-Exclusive Movepool Audit] — Leg 1** *(Last touched:
   2026-09-09 · Re-checks: 0)*
