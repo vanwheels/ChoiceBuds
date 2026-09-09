@@ -135,7 +135,7 @@ describe('useLiveCalc', () => {
     act(() => result.current.addObservation());
     const [obs] = result.current.observations;
 
-    act(() => result.current.updateObservation(obs.id, { moveName: 'Shadow Ball', damagePercent: 40, targetsHit: 1 }));
+    act(() => result.current.updateObservation(obs.id, { moveName: 'Shadow Ball', damagePercent: 36, targetsHit: 1 }));
 
     expect(result.current.inference.spdBound).not.toEqual({ min: 0, max: 32 });
     expect(result.current.inference.specialObservationCount).toBe(1);

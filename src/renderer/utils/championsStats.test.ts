@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { spToEv, spsToEvs, resolveCalcSpecies, MAX_IVS } from './championsStats';
 
 describe('spToEv', () => {
-  it('multiplies Stat Points by 4 to get the equivalent traditional EV', () => {
-    expect(spToEv(32)).toBe(128);
+  it('multiplies Stat Points by 8 so each SP is worth 2 traditional effort points (floor(ev/4))', () => {
+    expect(spToEv(32)).toBe(256);
   });
 
   it('maps 0 SP to 0 EV', () => {
@@ -14,7 +14,7 @@ describe('spToEv', () => {
 describe('spsToEvs', () => {
   it('converts every stat in the table independently', () => {
     const sps = { hp: 32, atk: 0, def: 4, spa: 20, spd: 6, spe: 4 };
-    expect(spsToEvs(sps)).toEqual({ hp: 128, atk: 0, def: 16, spa: 80, spd: 24, spe: 16 });
+    expect(spsToEvs(sps)).toEqual({ hp: 256, atk: 0, def: 32, spa: 160, spd: 48, spe: 32 });
   });
 });
 
