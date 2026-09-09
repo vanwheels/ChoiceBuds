@@ -25,24 +25,6 @@ entries - and moved straight there instead of becoming legs here). Not
 thematically unified beyond "small items to clear before Live Calc" - see
 Future Milestones below for that one.
 
-- **[In-App Auto-Update: Windows Race Condition] — Leg 2** *(Last touched:
-  2026-09-09 · Re-checks: 0)*
-  Root cause confirmed (see COMPLETED.md's Leg 1 entry): `useUpdateCheck.ts`
-  runs the plain GitHub-API check and the native `autoUpdater` IPC status as
-  two independent, unsynchronized status sources. The GitHub-API check is a
-  single small HTTPS call and often resolves first, rendering
-  `UpdateCheckSection.tsx`'s "View Release" link-out button - if the user
-  clicks it before the native flow's `ready-to-install` IPC status arrives
-  (confirmed live at ~1.15s end-to-end for the native path), they get sent
-  to the browser instead of the working in-app install. Not yet scoped:
-  what `useUpdateCheck.ts` should show while the native check on Windows
-  packaged builds is still in flight (currently there's no "we don't know
-  yet" state - only the plain check's `update-available` or the native
-  status), whether to just delay showing `update-available`/its button
-  briefly on Windows packaged builds pending the native result, or another
-  approach. Needs a design pass before implementation - this is a fresh
-  leg, not a continuation of Leg 1's diagnosis work.
-
 - **[Team Gap Analysis Re-evaluation] — Leg 1** *(Last touched: 2026-09-08
   · Re-checks: 0)*
   Scoping update: audited the current implementation (`utils/usageThreats.ts`

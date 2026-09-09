@@ -173,6 +173,20 @@ const electronAPI = {
   },
 
   /**
+   * Fetches the most recent status main.ts's registerAutoUpdater has sent
+   * (or null if none yet / not applicable on this platform). A plain
+   * webContents.send() push has no queue - a status sent before the
+   * renderer's onUpdateStatus listener above is attached (e.g.
+   * 'checking-native', sent right as the window is created, well before
+   * this app's own JS has loaded) is simply dropped. This is the pull-side
+   * catch-up for exactly that gap - see useUpdateCheck.ts for how the two
+   * are combined.
+   */
+  getUpdateStatus: async (): Promise<any> => {
+    return ipcRenderer.invoke('update:getStatus');
+  },
+
+  /**
    * Quits and installs a downloaded update (only valid once status reports
    * 'ready-to-install').
    */

@@ -15,7 +15,7 @@ interface UpdateCheckSectionProps {
 const GITHUB_URL_PREFIX = 'https://github.com/';
 
 export default function UpdateCheckSection({ updateCheckState }: UpdateCheckSectionProps) {
-  const { status, currentVersion, latestVersion, releaseUrl, downloadPercent, installUpdate } = updateCheckState;
+  const { status, currentVersion, latestVersion, releaseUrl, downloadPercent, nativeCheckPending, installUpdate } = updateCheckState;
 
   const handleViewRelease = () => {
     if (releaseUrl && releaseUrl.startsWith(GITHUB_URL_PREFIX)) {
@@ -41,7 +41,12 @@ export default function UpdateCheckSection({ updateCheckState }: UpdateCheckSect
         {status === 'error' && (
           <p className="text-xs text-red-400">Couldn't check for updates - check your connection.</p>
         )}
-        {status === 'update-available' && (
+        {status === 'update-available' && nativeCheckPending && (
+          <p className="text-xs text-yellow-400">
+            Update available: {latestVersion} - checking for in-app installer...
+          </p>
+        )}
+        {status === 'update-available' && !nativeCheckPending && (
           <div className="flex items-center gap-2">
             <p className="text-xs text-yellow-400">Update available: {latestVersion}</p>
             <button

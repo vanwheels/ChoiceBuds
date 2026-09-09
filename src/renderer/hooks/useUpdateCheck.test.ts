@@ -96,6 +96,97 @@ describe('useUpdateCheck', () => {
     expect(unsubscribe).toHaveBeenCalledTimes(1);
   });
 
+  it('sets nativeCheckPending on checking-native and clears it on not-available, leaving status alone', async () => {
+    mockedFetchLatestRelease.mockResolvedValueOnce({ version: '999.0.0', releaseUrl: 'https://example.com/r2', body: '', publishedAt: '2026-01-01T00:00:00Z' });
+    let statusCallback: ((s: { state: string; version?: string; percent?: number }) => void) | undefined;
+    vi.mocked(window.electron.onUpdateStatus).mockImplementation(cb => {
+      statusCallback = cb;
+      return () => {};
+    });
+    const { result } = renderHook(() => useUpdateCheck());
+    await waitFor(() => expect(result.current.status).toBe('update-available'));
+
+    act(() => statusCallback!({ state: 'checking-native' }));
+    expect(result.current.nativeCheckPending).toBe(true);
+
+    act(() => statusCallback!({ state: 'not-available' }));
+    expect(result.current.nativeCheckPending).toBe(false);
+    expect(result.current.status).toBe('update-available'); // GitHub-API status untouched
+  });
+
+  it('clears nativeCheckPending on error without touching status', async () => {
+    mockedFetchLatestRelease.mockResolvedValueOnce(null);
+    let statusCallback: ((s: { state: string; version?: string; percent?: number }) => void) | undefined;
+    vi.mocked(window.electron.onUpdateStatus).mockImplementation(cb => {
+      statusCallback = cb;
+      return () => {};
+    });
+    const { result } = renderHook(() => useUpdateCheck());
+    await waitFor(() => expect(result.current.status).toBe('no-releases'));
+
+    act(() => statusCallback!({ state: 'checking-native' }));
+    expect(result.current.nativeCheckPending).toBe(true);
+
+    act(() => statusCallback!({ state: 'error' }));
+    expect(result.current.nativeCheckPending).toBe(false);
+    expect(result.current.status).toBe('no-releases');
+  });
+
+  it('clears nativeCheckPending when the native flow starts downloading', async () => {
+    mockedFetchLatestRelease.mockResolvedValueOnce(null);
+    let statusCallback: ((s: { state: string; version?: string; percent?: number }) => void) | undefined;
+    vi.mocked(window.electron.onUpdateStatus).mockImplementation(cb => {
+      statusCallback = cb;
+      return () => {};
+    });
+    const { result } = renderHook(() => useUpdateCheck());
+    await waitFor(() => expect(statusCallback).toBeDefined());
+
+    act(() => statusCallback!({ state: 'checking-native' }));
+    expect(result.current.nativeCheckPending).toBe(true);
+
+    act(() => statusCallback!({ state: 'downloading', percent: 10 }));
+    expect(result.current.nativeCheckPending).toBe(false);
+    expect(result.current.status).toBe('downloading');
+  });
+
+  it('picks up a status missed by the push (e.g. checking-native sent before this hook subscribed) via the getUpdateStatus pull', async () => {
+    mockedFetchLatestRelease.mockResolvedValueOnce({ version: '999.0.0', releaseUrl: 'https://example.com/r2', body: '', publishedAt: '2026-01-01T00:00:00Z' });
+    vi.mocked(window.electron.onUpdateStatus).mockReturnValue(() => {});
+    vi.mocked(window.electron.getUpdateStatus).mockResolvedValueOnce({ state: 'checking-native' });
+
+    const { result } = renderHook(() => useUpdateCheck());
+    await waitFor(() => expect(result.current.status).toBe('update-available'));
+    await waitFor(() => expect(result.current.nativeCheckPending).toBe(true));
+  });
+
+  it('does not let a stale getUpdateStatus pull override a live push that already arrived', async () => {
+    // Kept pending forever (same idiom as the very first test above) so the
+    // unrelated GitHub-check effect's own setStatus call can't interfere -
+    // this test is isolated to the push-vs-pull ordering guard specifically.
+    mockedFetchLatestRelease.mockReturnValue(new Promise(() => {}));
+    let statusCallback: ((s: { state: string; version?: string; percent?: number }) => void) | undefined;
+    vi.mocked(window.electron.onUpdateStatus).mockImplementation(cb => {
+      statusCallback = cb;
+      // Fire the push synchronously on subscription, before the pull's own
+      // promise below has a chance to resolve.
+      cb({ state: 'ready-to-install', version: '1.2.3' });
+      return () => {};
+    });
+    vi.mocked(window.electron.getUpdateStatus).mockResolvedValueOnce({ state: 'checking-native' });
+
+    const { result } = renderHook(() => useUpdateCheck());
+    await waitFor(() => expect(statusCallback).toBeDefined());
+    expect(result.current.status).toBe('ready-to-install');
+
+    // Give the pull's microtask a chance to run - it must not regress
+    // nativeCheckPending back to true over the push's already-resolved state.
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(result.current.nativeCheckPending).toBe(false);
+    expect(result.current.status).toBe('ready-to-install');
+  });
+
   it('installUpdate() calls through to window.electron.installUpdate', () => {
     mockedFetchLatestRelease.mockReturnValue(new Promise(() => {}));
     const { result } = renderHook(() => useUpdateCheck());

@@ -42,6 +42,112 @@ in:
   in-app install. Not a broken updater - a UI race. Fix scoped separately
   as [In-App Auto-Update: Windows Race Condition] - Leg 2 in `TODO.md`.
 
+- **[In-App Auto-Update: Windows Race Condition] - Leg 3** (2026-09-08) -
+  Implementation of Leg 2's design (see below), plus a real bug the
+  live-verify step itself caught mid-leg. `main.ts`: widened `sendStatus`'s
+  payload union with `'checking-native'`/`'not-available'`/`'error'`, sent
+  the first right before `checkForUpdates()` and the latter two from the
+  existing `update-not-available`/`error` handlers (alongside their
+  existing console output). `useUpdateCheck.ts` added a `nativeCheckPending`
+  boolean off those signals; `UpdateCheckSection.tsx` hides "View Release"
+  and shows "Update available: {version} - checking for in-app
+  installer..." while it's true. Live-verified with the same locally-built,
+  temporarily-downversioned NSIS installer technique as Leg 1's
+  investigation (0.2.9 install vs. the real 0.3.0 GitHub release, installed
+  via its silent one-click NSIS installer, driven with a one-off Playwright
+  script pointed at the *installed* exe directly rather than dev mode - see
+  `.claude/skills/run-desktop/SKILL.md`'s note on why packaged/production
+  behavior can only be exercised that way).
+  First live pass (fast happy path, no artificial delay) showed the native
+  flow resolving in well under 300ms with zero errors - correct, but too
+  fast to ever exercise the actual gating logic. Second pass added a
+  temporary 5s `setTimeout` around `checkForUpdates()` to force the
+  GitHub-API check to win the race deterministically, and caught a real bug
+  the unit tests couldn't: `sendStatus({ state: 'checking-native' })` fires
+  essentially at window-creation time, before the renderer's own JS has
+  even loaded, let alone before `useUpdateCheck.ts`'s effect has subscribed
+  - `webContents.send()` has no queue for a not-yet-attached listener, so
+  that signal was silently dropped on every run, `nativeCheckPending` never
+  actually went `true`, and the UI reproduced the exact original bug
+  (`"View Release"` showing unguarded). Root cause was the same shape as
+  the bug being fixed - an IPC ordering race - just one layer lower.
+  Fixed with a pull-then-subscribe pattern instead of a timing heuristic:
+  `main.ts` now keeps `latestUpdateStatus` and exposes it via a
+  `update:getStatus` handler registered unconditionally (module scope, not
+  gated behind the Windows/packaged check, since the renderer calls it on
+  every mount regardless of platform); `useUpdateCheck.ts` subscribes to
+  future pushes first, then pulls the current status and applies it only if
+  a live push hasn't already superseded it (a `livePushSeen` flag - status
+  transitions are one-directional, so a stale pull can only ever be behind
+  a push that beat it, never ahead). Re-verified live with the same forced-
+  delay build: the gated message now renders correctly and resolves to
+  "ready to install" once the delayed check completes, with the earlier
+  fast-path re-confirmed clean afterward. Added 4 new hook tests covering
+  `nativeCheckPending`'s full state matrix plus the pull/push ordering
+  guard specifically (14 total, up from 10). Test builds/installs were
+  disposable (temp version bump reverted, installer uninstalled, `release`/
+  `dist`/`dist-electron` deleted, scratch script removed) - no residue
+  beyond a window-state.json position reset on this dev machine (shared
+  `userData` dir with the app under test), noted rather than silently left.
+
+- **[In-App Auto-Update: Windows Race Condition] - Leg 2** (2026-09-08) -
+  Design pass only, no code change (per this item's own note that Leg 2
+  needed a design decision before implementation, kept as its own leg per
+  the scoping/building split). Root cause under this race: `main.ts`'s
+  `registerAutoUpdater()` sends IPC status on `update-available`/
+  `download-progress`/`update-downloaded`, but its `update-not-available`
+  and `error` handlers only `console.log`/`console.error` - the renderer
+  currently has no signal at all for "the native check finished and found
+  nothing" or "the native check failed," so it can't distinguish "native
+  check still running" from "native check will never report anything for
+  this launch." That gap is why the GitHub-API check's `update-available` +
+  "View Release" button has no way to defer to the native flow's outcome.
+  Resolved design (confirmed with Vanny via `AskUserQuestion`, over the
+  alternative of a fixed ~2-3s delay): explicit signal-based gating rather
+  than a guessed timeout, since it resolves on the real event instead of a
+  duration estimate that can't be tuned safely for both slow and fast
+  networks. Concrete plan for the implementation leg:
+  - `main.ts`: widen the `sendStatus` payload's `state` union to add
+    `'checking-native'`, `'not-available'`, `'error'`. Send
+    `'checking-native'` immediately before the existing
+    `autoUpdater.checkForUpdates()` call (this only runs when
+    `registerAutoUpdater` reaches that point at all, i.e. Windows packaged
+    builds only - the existing early-return guard is unchanged). Add
+    `sendStatus({ state: 'not-available' })` inside the existing
+    `update-not-available` handler and `sendStatus({ state: 'error' })`
+    inside the existing `error` handler, alongside their current
+    `console.log`/`console.error` calls (keep both - the console output
+    stays useful for diagnostics independent of this UI-facing signal).
+  - `useUpdateCheck.ts`: add a `nativeCheckPending` boolean to
+    `UseUpdateCheckReturn`, `false` initially. In the existing
+    `onUpdateStatus` subscription: `'checking-native'` sets it `true`;
+    `'downloading'`/`'ready-to-install'` (already-handled cases) and the
+    new `'not-available'`/`'error'` cases all set it back to `false` (the
+    first two also still drive `status` as today; the latter two only
+    clear the pending flag and otherwise leave `status` exactly as the
+    GitHub-API check already resolved it - matching the existing "GitHub
+    check remains the fallback for every case the native path doesn't
+    cover" framing in this file's own header comment). Non-Windows-
+    packaged builds never receive `'checking-native'` at all, so
+    `nativeCheckPending` simply stays `false` for them forever - zero
+    behavior change there.
+  - `UpdateCheckSection.tsx`: when `status === 'update-available' &&
+    nativeCheckPending`, render "Update available: {latestVersion} -
+    checking for in-app installer..." with no button, instead of today's
+    always-shown "View Release" button. Once `nativeCheckPending` clears
+    (native resolved either way), fall through to the existing
+    `update-available` branch (button enabled) if native came back
+    `not-available`/`error`, or to the existing `downloading`/
+    `ready-to-install` branches if native found a real update - both paths
+    already exist unchanged in this file today.
+  - Also worth a quick look during implementation: whether
+    `registerAutoUpdater`'s `checkForUpdates().catch(...)` failure path
+    should also emit `'error'` (it currently only logs), since that's a
+    second way the native check can end without ever firing the
+    `autoUpdater.on('error', ...)` listener.
+  Next leg (implementation) tracked as [In-App Auto-Update: Windows Race
+  Condition] - Leg 3 in `TODO.md`.
+
 - **[EV Grid / Move Bubble Overflow at Extreme Narrow Widths] - Leg 1**
   (2026-09-08) - Resolved during scoping itself, no code change. Live
   `run-desktop` resize pass confirmed the ~550px/~183px-per-card danger

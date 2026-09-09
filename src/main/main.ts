@@ -77,6 +77,19 @@ async function createWindow(): Promise<void> {
   });
 }
 
+type UpdateStatusPayload = { state: 'checking-native' | 'downloading' | 'ready-to-install' | 'not-available' | 'error'; version?: string; percent?: number };
+
+// Latest status registerAutoUpdater has sent, kept alongside the push below
+// so the renderer can pull it on mount instead of only relying on the push
+// arriving after its listener is attached - see the 'update:getStatus'
+// handler below for why the push alone isn't reliable. Declared at module
+// scope (not inside registerAutoUpdater) since the ipcMain.handle for it
+// must be registered unconditionally, on every platform - the renderer
+// calls it on every mount regardless of whether the native updater ever
+// runs, and would otherwise hit "no handler registered" on macOS/dev.
+let latestUpdateStatus: UpdateStatusPayload | null = null;
+ipcMain.handle('update:getStatus', () => latestUpdateStatus);
+
 /**
  * Real in-app auto-update, Windows-only for now - macOS's equivalent
  * (Squirrel.Mac) requires the app be code-signed and notarized, which needs
@@ -93,7 +106,8 @@ function registerAutoUpdater(): void {
 
   autoUpdater.autoDownload = true;
 
-  const sendStatus = (payload: { state: 'downloading' | 'ready-to-install'; version?: string; percent?: number }): void => {
+  const sendStatus = (payload: UpdateStatusPayload): void => {
+    latestUpdateStatus = payload;
     mainWindow?.webContents.send('update:status', payload);
   };
 
@@ -113,16 +127,28 @@ function registerAutoUpdater(): void {
 
   autoUpdater.on('update-not-available', () => {
     console.log('[autoUpdater] no update available, already on latest');
+    sendStatus({ state: 'not-available' });
   });
 
   autoUpdater.on('error', (err) => {
     // Swallowed deliberately - the renderer's GitHub-API-based check still
     // covers this case with its own "View Release" link-out fallback.
     console.error('[autoUpdater] error:', err);
+    sendStatus({ state: 'error' });
   });
+
+  // Sent right before the native check kicks off, so the renderer can gate
+  // the GitHub-API check's "View Release" button until this resolves one
+  // way or another (see the 'not-available'/'error' handlers above, and
+  // 'downloading'/'ready-to-install' below) - fixes the race where a
+  // fast-resolving GitHub-API check offers a link-out before the native
+  // in-app flow has had a chance to report back. See TODO.md's [In-App
+  // Auto-Update: Windows Race Condition] for the full history.
+  sendStatus({ state: 'checking-native' });
 
   autoUpdater.checkForUpdates().catch((err) => {
     console.error('[autoUpdater] checkForUpdates failed:', err);
+    sendStatus({ state: 'error' });
   });
 
   ipcMain.handle('update:install', () => {
