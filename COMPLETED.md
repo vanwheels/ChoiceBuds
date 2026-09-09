@@ -18,6 +18,31 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[EV Grid / Move Bubble Overflow at Extreme Narrow Widths] - Leg 1**
+  (2026-09-08) - Resolved during scoping itself, no code change. Live
+  `run-desktop` resize pass confirmed the ~550px/~183px-per-card danger
+  zone this item was worried about isn't reachable through any real
+  window-size/layout combination: at `main.ts`'s enforced `minWidth: 1280`
+  floor (sidebar expanded, single team expanded - the same reference
+  conditions as the Team Card Grid Layout Re-check fix), `TeamCard.tsx`'s
+  own `@container` measured 859px, landing in 3-column mode at ~276px per
+  card with no bleed in either the EV stat grid or the move-bubble grid.
+  Closing as a confirmed non-issue rather than carrying it forward as an
+  open item.
+
+- **[Automate 'Mark as Checked' for Champions Balance/Season Data] - Leg 1**
+  (2026-09-08) - Resolved during scoping itself, no code change. Auditing
+  `useChampionsDataCheck.ts` and `useSeasonDataCheck.ts` showed both
+  checks' staleness signals are already derived entirely from
+  locally-hand-maintained config (`config/seasons.ts`'s latest
+  regulation/season-end date), not from any live external feed in the
+  first place - there's nothing to poll against, unlike `useUpdateCheck.ts`'s
+  GitHub-Releases case this item was modeled on. `useSeasonDataCheck.ts`'s
+  own header comment already states season/regulation dates can't be
+  fetched live under the project's no-scrape policy (CLAUDE.md). Closing:
+  the "Mark as Checked" action itself is inherently manual (it represents a
+  human having done the Serebii-sourced research), not an automation gap.
+
 - **[Pokémon Card Drag Without Handle] - Leg 1** (2026-09-08) - Replaced the
   dedicated grip-handle icon with `draggable` on the whole `PokemonCard.tsx`
   card div, gated by a target check in `handleDragStart` that bails when the

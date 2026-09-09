@@ -16,6 +16,61 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
+## Current Milestone: Maintenance & Investigation Sweep
+
+Bundles the leftover items from the 2026-09-08 post-Card-UI-Polish scoping
+pass that didn't resolve outright during scoping itself (two of the five
+did - see COMPLETED.md's Mark-as-Checked-automation and EV-Grid-overflow
+entries - and moved straight there instead of becoming legs here). Not
+thematically unified beyond "small items to clear before Live Calc" - see
+Future Milestones below for that one.
+
+- **[In-App Auto-Update: Windows Not Triggering] — Leg 1** *(Last touched:
+  2026-09-08 · Re-checks: 0)*
+  Scoping update: confirmed via `gh release view` that `latest.yml` is
+  attached to both the 0.2.1 release being updated from and the current
+  (0.3.0) release being updated to, so the electron-updater feed itself
+  isn't the problem. Whether the reporting install was the NSIS build or
+  the portable `.exe` is no longer known (unconfirmed per Vanny) - that's
+  the leg's real starting point, not an assumption either way. First step:
+  install the NSIS build fresh from an older version and reproduce live
+  before touching any code - if a known-NSIS install still only links out,
+  main.ts's swallowed `autoUpdater.on('error', ...)` (`main.ts:118-122`) is
+  the first place to add real diagnostic logging, since it currently
+  discards whatever `checkForUpdates()` actually failed with. If it turns
+  out the original report was a portable install, this closes as
+  working-as-designed (per `main.ts:80-90`'s own header comment) with no
+  code change needed.
+
+- **[Team Gap Analysis Re-evaluation] — Leg 1** *(Last touched: 2026-09-08
+  · Re-checks: 0)*
+  Scoping update: audited the current implementation (`utils/usageThreats.ts`
+  + `components/typematchup/UsageThreatsList.tsx`, the "Team Gap Analysis"
+  panel on the Type Matchup page). Candidate improvements identified,
+  not yet prioritized - pick from these (or others) when this leg starts:
+  1. Defensive side has no ability-awareness at all - `computeUsageThreats`/
+     `computeDefensiveCoverage` work off raw `pokemon.types` only, so a
+     teammate with Levitate/Water Absorb/Flash Fire/etc. still counts as
+     "hit neutrally" by a threat it would actually no-sell. Offense already
+     accounts for type-changing abilities via `useTeamMoveTypes.ts` -
+     defense has no equivalent.
+  2. `computeUsageThreats`'s "no slot resists or is immune" check is
+     all-or-nothing - a threat resisted by exactly one otherwise-weak
+     teammate is fully excluded from the list even if nothing else on the
+     team can handle it either. No partial/scored gap concept.
+  3. `USAGE_THREAT_RANK_CUTOFF = 50` is a hand-picked constant, flagged as
+     unmeasured in its own code comment - worth revisiting once real
+     ladder-usage volume/distribution is visible live.
+  4. The ranked-usage list isn't scoped to the selected team's own
+     regulation - it's whatever single current-meta feed
+     championsbattledata.com exposes, so a Reg M-A team's gaps get checked
+     against Reg M-C's usage list regardless of which regulation the team
+     is actually built for.
+  5. Typing-only scope (no speed/power/actual-offensive-answer
+     consideration) is a deliberate, documented boundary in
+     `usageThreats.ts`'s own header comment, not an oversight - re-confirm
+     it's still the right call rather than assuming it needs to change.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -23,12 +78,17 @@ outside this project — a person, a dependency, or an external decision.
 Exempt from the re-check counter; they move back to "In progress" once
 unblocked.
 
-- **[Regulation M-C Prep] — Leg 2** *(Last touched: 2026-09-05 · Re-checks:
+- **[Regulation M-C Prep] — Leg 2** *(Last touched: 2026-09-08 · Re-checks:
   0)*
   Blocked: waiting on Reg M-C's actual 2026-09-08 6pm PST release and
   Serebii publishing its regulation/items pages — Leg 1 (roster/mega-stone/
   regulation-selector registration, see COMPLETED.md) was hand-curated
   ahead of release with no official source to check against yet.
+  Workflow once the patch drops: full datamined info won't be out until
+  end-of-week, so Vanny is feeding confirmed details in piecemeal as they
+  land (same running-tally pattern as Leg 1) rather than waiting for one
+  complete dump; treat each incoming batch as incremental manual
+  population of the config files below, not a single re-verification pass.
   Once live: re-verify `utils/pokemonRules.ts`'s `REG_MC_ADDED_SPECIES` and
   `config/vgcData.ts`'s 6 new Mega Stones against Serebii's own Reg M-C
   pages (replacing the pre-release provenance notes in both files' headers
@@ -86,22 +146,29 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-- **[EV Grid / Move Bubble Overflow at Extreme Narrow Widths] — Leg 1**
-  *(Last touched: 2026-09-08 · Re-checks: 0)*
-  Surfaced while `run-desktop`-verifying [Card Content Overflow at Mid
-  Widths] (see COMPLETED.md): forcing a `PokemonCard`'s `@container` width
-  down to ~550px (3-col track, ~183px/card) showed `StatsColumn.tsx`'s
-  bottom EV stat grid (`repeat(3, 1fr)` in the component's inline style,
-  around `StatsColumn.tsx:140`) and `EditOverlays.tsx`'s move-bubble grid
-  bleeding into the neighboring card - same root gotcha (grid items'
-  default `min-w-0` missing up the chain) as the two rows just fixed, just
-  a different pair of rows, not scoped/audited in that leg. Not yet
-  confirmed reachable through any real window-size/layout combination
-  today (`main.ts`'s enforced `minWidth: 1280` plus `TeamsPage.tsx`'s own
-  `@[1360px]:grid-cols-2` breakpoint put the realistic floor for a single
-  team card's container around ~670-1000px, comfortably above 550px) - the
-  precedent Team Card Grid Layout Re-check item did measure narrower reals
-  numbers on macOS (818px on a 13" MacBook) than this Windows dev machine
-  can reach, so treat "not reachable" as unconfirmed rather than settled.
-  Needs the same live resize-pass treatment before deciding whether it's
-  worth fixing.
+- **[UI Shift Assessment Sweep — Post Card UI Polish] — Leg 1** *(Last
+  touched: 2026-09-08 · Re-checks: 0)*
+  Continue scoping/assessing UI shifts and changes to the rest of the app,
+  following on from the UI/UX Overhaul and Card UI Polish milestones (see
+  `MILESTONES.md`). Open-ended — needs a pass identifying which
+  screens/components haven't had a UI-focused pass yet before it turns
+  into concrete legs.
+
+## Future Milestones (unscheduled)
+
+- **Live Calc: Damage-Based Stat Inference Tab** — queued next, after
+  Maintenance & Investigation Sweep ships. New "Live Calc" tab blending the
+  existing damage calc with a fast inference mechanic: infer an opponent's
+  likely stat spread/nature from what percentage of damage your own moves
+  land on it. Deliberately not scoped past the concept yet — per Vanny
+  (2026-09-08), the full design-questions pass (data model for observed
+  damage rolls, how a "likely spread" narrows/displays as more data comes
+  in, how it relates to the existing Calc tab's code path) is deferred to
+  its own dedicated session when this milestone starts, rather than being
+  squeezed in after the Maintenance & Investigation Sweep's items. Relevant
+  prior art surfaced during that scoping pass: `_archived/battle-logger/
+  utils/battleCalcReview.ts` reconstructs a Calc-page payload from logged
+  battle state (the reverse direction from what Live Calc needs - known
+  state → damage estimate, not observed damage → inferred state) but is
+  useful reference for how field/side-condition state was modeled against
+  `@smogon/calc`.
