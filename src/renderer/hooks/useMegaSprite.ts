@@ -50,6 +50,18 @@ export async function fetchMegaSprite(apiSlug: string): Promise<MegaSpriteResult
   return result;
 }
 
+/**
+ * Synchronous read of the same module-level cache, for a caller that can't
+ * use the `useMegaSprite` hook itself (e.g. mapping over a dynamic list of
+ * roster species, where the Rules of Hooks forbid calling a hook per item) -
+ * Speed Tiers' Mega-form rows (see SpeedTiersPage.tsx) rely on
+ * useInitialSync having already bulk-prefetched every legal Mega form's
+ * sprite into this cache, same as the hook above does per-component.
+ */
+export function getCachedMegaSprite(apiSlug: string): MegaSpriteResult | null {
+  return cache.get(apiSlug) ?? null;
+}
+
 /** `apiSlug` null means "not currently mega-eligible" - returns null immediately, no fetch */
 export function useMegaSprite(apiSlug: string | null): MegaSpriteResult | null {
   const [result, setResult] = useState<MegaSpriteResult | null>(apiSlug ? cache.get(apiSlug) ?? null : null);

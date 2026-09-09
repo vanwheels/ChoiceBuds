@@ -8,18 +8,23 @@
  * docs/investigations/speed-tiers-full-roster-pivot.md, which reverses
  * speed-calc-scope.md's original "team-anchored threat list" call). All
  * Speed math lives in utils/speedTiers.ts; this page's own
- * utils/speedTierList.ts merges/sorts/ties/filters that output into the
- * rendered icon grid (row list → icon grid rework: see docs/investigations/
- * speed-tiers-layout-rework.md). Live Calc → Speed Tiers tie-in (an inferred
- * SP-Speed range overriding a threat's generic entry) is a later leg, not
- * built here.
+ * utils/speedTierList.ts merges/sorts/ties/filters that output into
+ * SpeedTierList.tsx's continuous, densely-packed icon grid (row list → icon
+ * grid rework: docs/investigations/speed-tiers-layout-rework.md; that grid
+ * reworked again into one continuous flow rather than a block per speed
+ * value: docs/investigations/speed-tiers-full-roster-pivot.md). Live Calc →
+ * Speed Tiers tie-in (an inferred SP-Speed range overriding a threat's
+ * generic entry) is a later leg, not built here.
  *
  * Roster scope: every species in the selected team's own regulation
  * (validateSpeciesLegality against toRegulationId(selectedTeam.format)) is
- * plotted by default. A page-level toggle narrows that to the top 60/120 by
- * Champions ranked-ladder usage (ChampionsUsageEntry.columnPosition) - a
- * species with no usage data at all only shows under "All" (it has no
- * columnPosition to rank by). Typing-based threat filtering (Team Gap
+ * plotted by default, plus one extra candidate per Champions-legal Mega form
+ * each species has (see rosterCandidates below - Mega Evolution changes base
+ * stats/ability, so it needs its own Speed number). A page-level toggle
+ * narrows the base-species set to the top 60/120 by Champions ranked-ladder
+ * usage (ChampionsUsageEntry.columnPosition) - a species (or Mega form, which
+ * never has its own usage entry - see rosterCandidates) with no usage data
+ * at all only shows under "All". Typing-based threat filtering (Team Gap
  * Analysis's computeUsageThreats) is deliberately not used here anymore -
  * theoretical "still standing" information isn't the right default for
  * teambuilding, where a specific Pokemon needs to answer a specific
@@ -45,6 +50,9 @@ import type { UseSpeciesRosterReturn } from '../../hooks/useSpeciesRoster';
 import type { ChampionsUsageEntry, ImportedPokemonInfo } from '../../types/pokemon';
 import { validateSpeciesLegality, toRegulationId } from '../../utils/pokemonRules';
 import { toReadableName } from '../../utils/displayName';
+import { getFormeFamily } from '../../utils/calcFormes';
+import { getMegaAbility } from '../../config/megaAbilities';
+import { getCachedMegaSprite } from '../../hooks/useMegaSprite';
 import { computeTeamSpeed, computeThreatSpeedProfile, defaultSpeedFieldContext, type SpeedFieldContext } from '../../utils/speedTiers';
 import { buildSpeedTierEntries, filterSpeedTierEntries, groupSpeedTiers, type ThreatTierInput } from '../../utils/speedTierList';
 import { applySpeedOverride, defaultSpeedOverride, type TeamSpeedOverride } from '../../utils/speedTierOverrides';
@@ -61,6 +69,21 @@ const ROSTER_SCOPE_OPTIONS: { value: RosterScope; label: string }[] = [
   { value: 'top60', label: 'Top 60' },
   { value: 'top120', label: 'Top 120' },
 ];
+
+/**
+ * One candidate species (or Mega form) to compute a speed profile for - see
+ * the rosterCandidates memo below for how the list is built. `usage` is
+ * always null for a Mega candidate (Mega access is item-driven, not a
+ * roster/usage entry of its own - see pokemonRules.ts's header), so it only
+ * ever surfaces under the "All" roster scope, same rule as any other
+ * usage-less species.
+ */
+interface RosterCandidate {
+  species: string;
+  ability: string;
+  usage: ChampionsUsageEntry | null;
+  spriteUrl: string;
+}
 
 interface SpeedTiersPageProps {
   teamsState: UseTeamsReturn;
@@ -124,22 +147,46 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
     [selectedTeam, gen, field, speedOverrides]
   );
 
-  const threatTierInputs = useMemo<ThreatTierInput[]>(() => {
-    const cutoff = rosterScope === 'top60' ? 60 : rosterScope === 'top120' ? 120 : null;
-    return legalRoster.flatMap((rosterEntry): ThreatTierInput[] => {
+  // One candidate per legal roster species, plus one more per Champions-legal
+  // Mega form it has (getFormeFamily's own CURATED_MEGA_FORM_SLUGS gate,
+  // same one calcFormes.ts's Calc-tab toggle already trusts) - Mega
+  // Evolution changes base stats and forces a fixed ability (see
+  // speedTierOverrides.ts's header), both of which matter for Speed, so it
+  // needs its own row rather than folding into the base species' number.
+  const rosterCandidates = useMemo<RosterCandidate[]>(() => {
+    const candidates: RosterCandidate[] = [];
+    for (const rosterEntry of legalRoster) {
       const dbEntry = getCachedEntry(rosterEntry.name);
-      if (!dbEntry) return [];
+      if (!dbEntry) continue;
       const usage = usageEntryBySpecies.get(rosterEntry.name.toLowerCase()) ?? null;
-      if (cutoff !== null && (!usage || usage.columnPosition > cutoff)) return [];
       // Real observed top-ranked ability when usage data exists, otherwise
       // this species' own default ability (dbEntry.abilities is a lowercase
       // PokeAPI slug list - see gameData.ts's PokeAPICacheEntry - so it needs
       // the same slug->display conversion as PokemonCard/AbilityPickerPanel).
       const ability = usage?.abilities[0]?.name || (dbEntry.abilities[0] ? toReadableName(dbEntry.abilities[0]) : '');
-      const profile = computeThreatSpeedProfile(gen, { species: rosterEntry.name, ability, usage }, field);
-      return profile ? [{ spriteUrl: dbEntry.spriteUrl, profile }] : [];
+      candidates.push({ species: rosterEntry.name, ability, usage, spriteUrl: dbEntry.spriteUrl });
+
+      for (const megaName of getFormeFamily(allSpecies, rosterEntry.name).megaFormes) {
+        const megaSprite = getCachedMegaSprite(megaName.toLowerCase());
+        candidates.push({
+          species: megaName,
+          ability: getMegaAbility(megaName.toLowerCase()) ?? ability,
+          usage: null,
+          spriteUrl: megaSprite?.spriteUrl ?? dbEntry.spriteUrl,
+        });
+      }
+    }
+    return candidates;
+  }, [legalRoster, usageEntryBySpecies, getCachedEntry, allSpecies]);
+
+  const threatTierInputs = useMemo<ThreatTierInput[]>(() => {
+    const cutoff = rosterScope === 'top60' ? 60 : rosterScope === 'top120' ? 120 : null;
+    return rosterCandidates.flatMap((candidate): ThreatTierInput[] => {
+      if (cutoff !== null && (!candidate.usage || candidate.usage.columnPosition > cutoff)) return [];
+      const profile = computeThreatSpeedProfile(gen, { species: candidate.species, ability: candidate.ability, usage: candidate.usage }, field);
+      return profile ? [{ spriteUrl: candidate.spriteUrl, profile }] : [];
     });
-  }, [legalRoster, usageEntryBySpecies, getCachedEntry, gen, field, rosterScope]);
+  }, [rosterCandidates, gen, field, rosterScope]);
 
   const tierGroups = useMemo(() => {
     const entries = filterSpeedTierEntries(buildSpeedTierEntries(teamSpeedEntries, threatTierInputs), speciesFilter);

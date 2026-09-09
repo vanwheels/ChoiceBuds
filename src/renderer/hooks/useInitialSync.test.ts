@@ -150,6 +150,11 @@ describe('useInitialSync', () => {
     const { result } = setup({
       gameData: { getUnsyncedSpecies },
       spriteCache: { downloadSprite },
+      // A real cache entry already backing the roster's own species - the
+      // self-heal check (see useInitialSync.ts's unsyncedSpecies comment)
+      // would otherwise correctly treat "flagged synced but no real dbEntry"
+      // as still-unsynced, which isn't what this test is exercising.
+      database: { getCachedEntry: vi.fn().mockReturnValue(CACHE_ENTRY) },
     });
 
     expect(result.current.isDone).toBe(true);
@@ -163,7 +168,15 @@ describe('useInitialSync', () => {
     mockedValidateLegality.mockImplementation(name => name === 'Gengar');
     const getUnsyncedSpecies = vi.fn().mockReturnValue([]);
 
-    setup({ speciesRoster: { roster: [illegal, legal] }, gameData: { getUnsyncedSpecies } });
+    setup({
+      speciesRoster: { roster: [illegal, legal] },
+      gameData: { getUnsyncedSpecies },
+      // Same reasoning as the "immediately done" test above - without a real
+      // cache entry backing it, the self-heal check would otherwise start a
+      // real (unawaited) background sync this test never intended to
+      // exercise, whose calls would leak into whichever test runs next.
+      database: { getCachedEntry: vi.fn().mockReturnValue(CACHE_ENTRY) },
+    });
 
     expect(getUnsyncedSpecies).toHaveBeenCalledWith([legal]);
   });

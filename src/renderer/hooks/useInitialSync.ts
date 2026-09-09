@@ -4,14 +4,19 @@
  * species not yet in GameDataCache.lastSyncedSpeciesNames (see
  * useGameData.ts) - which on a fresh install is the entire legal roster of
  * the latest regulation (utils/pokemonRules.ts's LATEST_REGULATION_ID), and
- * after that is only species a future regulation update adds -
+ * after that is only species a future regulation update adds - OR a species
+ * that flag claims is already synced but has no real pokeapi-cache.json
+ * entry (see unsyncedSpecies below - a confirmed real gap, not theoretical:
+ * a 250-species burst against PokeAPI silently dropped ~90% of species-stats
+ * writes on one real install while still marking every name synced) -
  * eagerly downloads sprites (normal + shiny), move/ability/learnset data,
  * and PokeAPICache species stats/types for those species, plus every
  * VGC-legal item's sprite, so every later launch is fully offline and
  * instant - even for species/items never actually added to a team. Once
  * nothing is unsynced, this reports done immediately with no network calls
  * at all - the app never auto-revalidates already-synced data (see
- * utils/cacheExpiry.ts), it only ever syncs what's genuinely new.
+ * utils/cacheExpiry.ts), it only ever syncs what's genuinely new (or
+ * genuinely still missing).
  *
  * Move/ability de-duplication across species needs no special handling here:
  * getMoveData/getAbilityData (useGameData.ts) already check their own cache
@@ -94,13 +99,36 @@ export function useInitialSync(
   const { isInitialized, getUnsyncedSpecies, markSpeciesSynced, getEnrichedSpeciesOptions, getItemData } = gameDataState;
   const { roster, isLoading: isRosterLoading } = speciesRosterState;
   const { downloadSprite } = spriteCacheState;
-  const { isInitialized: isDatabaseInitialized } = databaseState;
+  const { isInitialized: isDatabaseInitialized, getCachedEntry } = databaseState;
 
   const legalRoster = useMemo(
     () => roster.filter(entry => validateSpeciesLegality(entry.name, LATEST_REGULATION_ID)),
     [roster]
   );
-  const unsyncedSpecies = useMemo(() => getUnsyncedSpecies(legalRoster), [legalRoster, getUnsyncedSpecies]);
+  // getUnsyncedSpecies alone trusts lastSyncedSpeciesNames, which a prior
+  // pass's silently-skipped per-item failure (runWithConcurrency swallows
+  // errors - a real one, e.g. PokeAPI rate-limiting a 250-species burst,
+  // already left ~90% of the legal roster's real pokeapi-cache.json entries
+  // missing despite every name being marked "synced") can make permanently
+  // wrong - the flag never gets re-checked once set, so that species would
+  // never be retried again. Unioned here with a real dbEntry-presence check
+  // over the legal roster so a species marked synced without ever getting a
+  // real cache entry self-heals on the very next launch instead of staying
+  // silently broken forever. markSpeciesSynced below still runs
+  // unconditionally over whatever this resolves to - harmless now that
+  // presence, not the flag, is the real source of truth for whether a
+  // species needs re-fetching.
+  const unsyncedSpecies = useMemo(() => {
+    const flagged = getUnsyncedSpecies(legalRoster);
+    const flaggedNames = new Set(flagged.map(entry => entry.name));
+    const staleCached = legalRoster.filter(entry => !flaggedNames.has(entry.name) && !getCachedEntry(normalizeSpeciesForAPI(entry.name)));
+    // Returns `flagged` itself, unmodified, in the common case (nothing to
+    // self-heal) - keeps the same reference stability getUnsyncedSpecies'
+    // own mocked/real result already had, rather than a fresh array literal
+    // on every recompute that would otherwise re-trigger the sync effect
+    // below (whose own dependency array includes this value).
+    return staleCached.length === 0 ? flagged : [...flagged, ...staleCached];
+  }, [legalRoster, getUnsyncedSpecies, getCachedEntry]);
 
   const ready = isInitialized && isDatabaseInitialized && !isRosterLoading && roster.length > 0;
 

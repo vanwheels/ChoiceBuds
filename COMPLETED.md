@@ -40,6 +40,28 @@ in:
   `toReadableName`) when no usage-ranked ability exists. Full design in
   [docs/investigations/speed-tiers-full-roster-pivot.md](docs/investigations/speed-tiers-full-roster-pivot.md).
   See commit `59d61b9`.
+  **Follow-up (same day, live-tested):** found still broken - only ~5
+  species rendered under "All," no Mega forms, still visually sparse. Root
+  causes and fixes, all in the same investigation doc's follow-up section:
+  (1) a real, confirmed data-integrity bug in `useInitialSync.ts` predating
+  this leg - a bulk sync burst against PokeAPI silently dropped ~90% of the
+  legal roster's `PokeAPICacheEntry` writes while still marking every
+  species "synced," so they were never retried; `unsyncedSpecies` is now
+  self-healing (unions in any flagged-synced species with no real
+  `getCachedEntry` hit), fixing this and any future recurrence automatically
+  on next launch; (2) Mega forms were never reachable through the
+  roster/usage pipeline at all (deliberately excluded from
+  `useSpeciesRoster`/`validateSpeciesLegality` - item-driven, not a roster
+  pick) despite changing base stats/ability - added as extra
+  `rosterCandidate`s per species' Champions-legal Mega forms
+  (`calcFormes.ts::getFormeFamily`'s `megaFormes`), resolved via
+  `getMegaAbility` and a new `useMegaSprite.ts::getCachedMegaSprite`
+  synchronous reader; (3) `SpeedTierList.tsx` reworked from one full-width
+  block per speed value into a single continuous `flex-wrap` of every entry
+  (each tile now carries its own speed number, a tied entry gets a subtle
+  ring instead of a separate header/label), so a group's size no longer
+  costs a fixed row height regardless of how many entries it holds.
+  See commit `<pending>`.
 
 - **[Speed Tiers Team Preview Strip] - Leg 5** (2026-09-09) - A strip below
   the team selector, one card per team member: a session-only Speed-SP +/-

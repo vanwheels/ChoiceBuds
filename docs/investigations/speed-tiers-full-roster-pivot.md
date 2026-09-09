@@ -77,6 +77,76 @@ Speed stat land on identical bound values.
   as an option alongside All/Top 60/Top 120) - explicitly a later,
   unscoped addition per Vanny's own note.
 
+## Follow-up: live-tested and found still broken (2026-09-09, same day)
+
+Live testing the shipped version above turned up two more problems -
+Vanny's own screenshots showed only ~5 distinct species total under "All"
+(nowhere near the full regulation), no Mega forms at all, and the grid was
+still visually a tall, sparse vertical list.
+
+### Root cause #1: a real, confirmed data-integrity bug, not this feature's logic
+
+`pokeapi-cache.json` (checked directly on Vanny's own install) had only 29
+real species entries, while `game-data-cache.json`'s
+`lastSyncedSpeciesNames` listed 250 - i.e. `useInitialSync.ts` had already
+marked essentially the entire legal roster "synced" despite ~90% of it
+never actually getting a `PokeAPICacheEntry` written. Cause:
+`runWithConcurrency` (by design) swallows a per-item failure silently, but
+`useInitialSync.ts` then called `markSpeciesSynced` unconditionally over the
+*entire* attempted batch regardless of which items actually succeeded - a
+single bulk sync burst against PokeAPI (250 species at concurrency 8, most
+likely rate-limited) got most of the batch silently dropped, and once a
+species' name lands in `lastSyncedSpeciesNames` it is never retried again by
+design (that flag is the hook's whole "don't re-check what's already synced"
+mechanism). This predates Leg 8 entirely - nothing before Speed Tiers' "All"
+scope needed a real `PokeAPICacheEntry` for the *entire* legal roster at
+once, only for whichever species were already imported into a team or
+already a usage threat, so the gap was invisible until now.
+
+Fixed by making `unsyncedSpecies` self-healing: still starts from
+`getUnsyncedSpecies`'s flag-based result, but unions in any legal-roster
+species that flag claims is synced yet has no real `getCachedEntry(...)`
+hit. `markSpeciesSynced` itself is untouched (still marks the whole
+attempted batch) - now provably harmless, since presence, not the flag, is
+what actually gates a re-fetch. Self-heals any existing broken install on
+its next launch with no manual cache surgery.
+
+### Root cause #2: Mega forms were never in scope for the roster/usage pipeline at all
+
+Mega forms are deliberately excluded from `useSpeciesRoster`'s roster and
+from `validateSpeciesLegality`'s allowlist (Mega access is item-driven, not
+a separate roster pick - see `pokemonRules.ts`'s header) - correct for the
+Team Builder roster picker, but that also meant Speed Tiers' new
+roster-driven data source had no path to plotting them at all, even though
+Mega Evolution changes base stats and forces a fixed ability (both
+load-bearing for Speed - see `speedTierOverrides.ts`'s header on the Team
+Preview Strip's own Mega toggle). Fixed by adding one extra
+`rosterCandidate` per legal-roster species' Champions-verified Mega forms
+(`calcFormes.ts::getFormeFamily`'s `megaFormes`, gated on the same
+`CURATED_MEGA_FORM_SLUGS` list the Calc tab's own Mega toggle trusts),
+resolving ability via `getMegaAbility` and sprite via a new synchronous
+`useMegaSprite.ts::getCachedMegaSprite` reader over the cache
+`useInitialSync` already bulk-populates. A Mega candidate's `usage` is
+always null (Champions usage data has no separate entry for a Mega form),
+so it only ever appears under "All" scope, same rule as any other
+usage-less species.
+
+### Root cause #3: the icon grid was still one full-width block per speed value
+
+Even once ties are properly common (root cause #1's fix), the visual block
+design (`SpeedTierList.tsx`'s prior render: a bold speed-value header,
+horizontal rule, and a wrapped icon row *underneath* it, one such block per
+distinct group) forces every group onto its own row-height regardless of
+how many entries it holds - a group of 1 costs the same header-row height
+as a group of 30, so the page reads tall and sparse even with real data.
+Reworked into one continuous `flex-wrap` of every entry across every group
+(no per-group block), each tile carrying its own speed number inline
+instead of relying on a shared header, with a subtle amber ring on a tied
+entry instead of a separate "Tie" label. This uses the full row width
+regardless of any one group's size and reads left-to-right/top-to-bottom,
+fastest first - matching what Vanny asked for structurally, independent of
+whether root cause #1's fix alone would have been enough.
+
 ## Prior art
 
 - [speed-calc-scope.md](speed-calc-scope.md) - the milestone's original

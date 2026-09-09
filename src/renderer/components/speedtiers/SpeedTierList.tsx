@@ -3,10 +3,19 @@
  * Renders utils/speedTierList.ts's pre-sorted, tie-grouped output - purely
  * presentational, no computation here. Each group is one distinct Speed
  * value; a group with more than one entry is a real speed tie (team members
- * and/or threat builds landing on the exact same number). Rendered as a
- * header per speed value with a horizontal wrap of compact icon+caption
- * units underneath (icon grid, not the old full-width row-per-entry list) -
- * see docs/investigations/speed-tiers-layout-rework.md for why. Bound rows
+ * and/or threat builds landing on the exact same number).
+ *
+ * One continuous flex-wrap of every entry, fastest (top-left) to slowest
+ * (bottom-right, or the reverse under Trick Room - groups arrive pre-sorted)
+ * - not a full-width header block per distinct speed value (that earlier
+ * design read as a tall, mostly-empty vertical list once real data made
+ * groups uneven in size: a group of 1 wasted just as much header space as a
+ * group of 30 - see docs/investigations/speed-tiers-grid-density-rework.md).
+ * Each tile carries its own speed number instead of a shared group header,
+ * so removing that header loses no information; a tied entry (its group has
+ * 2+ members) gets a subtle amber ring rather than a separate "Tie" label,
+ * since adjacent same-speed tiles already read as a visual cluster once
+ * they're not each forced onto their own full-width row. Bound rows
  * (min/neutral/max reference tiers) render dimmer than real usage-spread
  * rows since they're a hypothetical range, not an observed build.
  */
@@ -18,15 +27,16 @@ interface SpeedTierListProps {
   spriteCacheState: UseSpriteCacheReturn;
 }
 
-function EntryTile({ entry, spriteCacheState }: { entry: SpeedTierEntry; spriteCacheState: UseSpriteCacheReturn }) {
+function EntryTile({ entry, tied, spriteCacheState }: { entry: SpeedTierEntry; tied: boolean; spriteCacheState: UseSpriteCacheReturn }) {
   const isBound = !!entry.boundLabel;
   return (
     <div
       className={`flex flex-col items-center gap-0.5 w-16 shrink-0 px-1 py-1.5 rounded-lg ${
         entry.kind === 'team' ? 'bg-accent-gold/10 ring-1 ring-accent-gold/40' : isBound ? 'opacity-50' : 'bg-zinc-900/40'
-      }`}
+      } ${tied && entry.kind !== 'team' ? 'ring-1 ring-amber-500/40' : ''}`}
       title={entry.species}
     >
+      <span className="text-[10px] font-bold text-zinc-300 leading-none">{entry.speed}</span>
       <img
         src={spriteCacheState.resolveSprite(entry.spriteUrl)}
         alt={entry.species}
@@ -48,23 +58,12 @@ export default function SpeedTierList({ groups, spriteCacheState }: SpeedTierLis
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      {groups.map(group => (
-        <div key={group.speed} className="flex flex-col gap-1.5">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-zinc-100">{group.speed}</span>
-            {group.entries.length > 1 && (
-              <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wide">Tie</span>
-            )}
-            <div className="flex-1 h-px bg-zinc-800/60" />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {group.entries.map(entry => (
-              <EntryTile key={entry.key} entry={entry} spriteCacheState={spriteCacheState} />
-            ))}
-          </div>
-        </div>
-      ))}
+    <div className="flex flex-wrap gap-2">
+      {groups.flatMap(group =>
+        group.entries.map(entry => (
+          <EntryTile key={entry.key} entry={entry} tied={group.entries.length > 1} spriteCacheState={spriteCacheState} />
+        ))
+      )}
     </div>
   );
 }
