@@ -18,6 +18,21 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Team Gap Analysis Re-evaluation] - Leg 1** (2026-09-08) - Scoping-only,
+  no code change. Reviewed the 5 candidate improvements logged in `TODO.md`
+  against the current implementation and closed out two of them outright:
+  candidate 4 (scope the ranked-usage list to a team's own regulation) is
+  infeasible with the current data source - `services/championsBattleData.ts`
+  hits `/api/battle/Doubles/:battleName` with no regulation/format/season
+  param, and its own header notes there's no queryable per-season archive at
+  all, so there's no lever to scope by regulation until championsbattledata.com
+  exposes one. Candidate 3 (`USAGE_THREAT_RANK_CUTOFF = 50` tuning) isn't a
+  code task yet either - it's an observation task blocked on real ladder-usage
+  volume being visible live, which hasn't happened. Per Vanny, candidates 1
+  (defensive ability-awareness) and 2 (partial/scored gap concept) are
+  prioritized into their own concrete legs (see `TODO.md`); candidate 5
+  (re-confirm the typing-only scope boundary) stays unscheduled, not dropped.
+
 - **[In-App Auto-Update: Windows Not Triggering] - Leg 1** (2026-09-09) -
   Pure investigation, no shipped code change (the diagnostic logging added
   mid-leg was reverted once its job was done - see below). Reproduced live

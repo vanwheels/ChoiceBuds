@@ -25,34 +25,31 @@ entries - and moved straight there instead of becoming legs here). Not
 thematically unified beyond "small items to clear before Live Calc" - see
 Future Milestones below for that one.
 
-- **[Team Gap Analysis Re-evaluation] — Leg 1** *(Last touched: 2026-09-08
-  · Re-checks: 0)*
-  Scoping update: audited the current implementation (`utils/usageThreats.ts`
-  + `components/typematchup/UsageThreatsList.tsx`, the "Team Gap Analysis"
-  panel on the Type Matchup page). Candidate improvements identified,
-  not yet prioritized - pick from these (or others) when this leg starts:
-  1. Defensive side has no ability-awareness at all - `computeUsageThreats`/
-     `computeDefensiveCoverage` work off raw `pokemon.types` only, so a
-     teammate with Levitate/Water Absorb/Flash Fire/etc. still counts as
-     "hit neutrally" by a threat it would actually no-sell. Offense already
-     accounts for type-changing abilities via `useTeamMoveTypes.ts` -
-     defense has no equivalent.
-  2. `computeUsageThreats`'s "no slot resists or is immune" check is
-     all-or-nothing - a threat resisted by exactly one otherwise-weak
-     teammate is fully excluded from the list even if nothing else on the
-     team can handle it either. No partial/scored gap concept.
-  3. `USAGE_THREAT_RANK_CUTOFF = 50` is a hand-picked constant, flagged as
-     unmeasured in its own code comment - worth revisiting once real
-     ladder-usage volume/distribution is visible live.
-  4. The ranked-usage list isn't scoped to the selected team's own
-     regulation - it's whatever single current-meta feed
-     championsbattledata.com exposes, so a Reg M-A team's gaps get checked
-     against Reg M-C's usage list regardless of which regulation the team
-     is actually built for.
-  5. Typing-only scope (no speed/power/actual-offensive-answer
-     consideration) is a deliberate, documented boundary in
-     `usageThreats.ts`'s own header comment, not an oversight - re-confirm
-     it's still the right call rather than assuming it needs to change.
+- **[Team Gap Analysis: Defensive Ability-Awareness] — Leg 1** *(Last
+  touched: 2026-09-08 · Re-checks: 0)*
+  Follow-on from Team Gap Analysis Re-evaluation's scoping pass (see
+  `COMPLETED.md`). `computeUsageThreats`/`computeDefensiveCoverage`
+  (`utils/usageThreats.ts`) work off raw `pokemon.types` only, so a teammate
+  with Levitate/Water Absorb/Flash Fire/etc. still counts as "hit neutrally"
+  by a threat it would actually no-sell. Offense already accounts for
+  type-changing abilities via `useTeamMoveTypes.ts` +
+  `config/typeChangingAbilities.ts` - defense needs the equivalent, most
+  likely a new `config/typeImmunityAbilities.ts` (ability → type(s) it
+  nullifies) consumed alongside `pokemon.types` in the coverage check. Do
+  this leg before Partial/Scored Gaps below - that one's scoring should run
+  against ability-aware coverage, not the raw type-only version.
+
+- **[Team Gap Analysis: Partial/Scored Gaps] — Leg 1** *(Last touched:
+  2026-09-08 · Re-checks: 0)*
+  Follow-on from Team Gap Analysis Re-evaluation's scoping pass (see
+  `COMPLETED.md`). `computeUsageThreats`'s "no slot resists or is immune"
+  check is all-or-nothing - a threat resisted by exactly one otherwise-weak
+  teammate is fully excluded from the list even if nothing else on the team
+  can actually handle it either. Needs a design decision before/at the start
+  of this leg on what "partially covered" means and how it renders in
+  `UsageThreatsList.tsx` (a separate section? a badge/score on existing
+  rows?) - resolve via a quick check-in when this leg starts rather than
+  guessing. Depends on Defensive Ability-Awareness above landing first.
 
 ## Blocked
 
@@ -136,6 +133,24 @@ unblocked.
   `MILESTONES.md`). Open-ended — needs a pass identifying which
   screens/components haven't had a UI-focused pass yet before it turns
   into concrete legs.
+
+- **[Team Gap Analysis: Re-confirm Typing-Only Scope] — Leg 1** *(Last
+  touched: 2026-09-08 · Re-checks: 0)*
+  From Team Gap Analysis Re-evaluation's scoping pass (see `COMPLETED.md`).
+  `usageThreats.ts`'s typing-only scope (no speed/power/actual-offensive-
+  answer consideration) is a deliberate, documented boundary in its own
+  header comment, not an oversight - quick judgment call to re-confirm it's
+  still the right call, not a code change. Not picked for the current
+  milestone's active legs.
+
+- **[Team Gap Analysis: Usage Cutoff Tuning] — Leg 1** *(Last touched:
+  2026-09-08 · Re-checks: 0)*
+  From Team Gap Analysis Re-evaluation's scoping pass (see `COMPLETED.md`).
+  `USAGE_THREAT_RANK_CUTOFF = 50` (`utils/usageThreats.ts`) is a hand-picked
+  constant, flagged as unmeasured in its own code comment. Not actionable
+  yet - needs real ladder-usage volume/distribution to be visible live
+  first; revisit once that data exists rather than re-checking this item on
+  a schedule.
 
 ## Future Milestones (unscheduled)
 
