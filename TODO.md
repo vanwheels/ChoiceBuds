@@ -184,12 +184,23 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
   moves don't map to any new-roster species and needed no action. Upper
   Hand's wording diff confirmed non-functional. Type-check/lint/full test
   suite (594 tests) all pass. Full reasoning in the source-text doc.
+  2026-09-09 season re-check (~12hrs after M-5's re-verification, per
+  Vanny's prompt that post-patch data tends to settle in the following
+  hours): re-fetched both sources. Serebii's `regulationm-c.shtml`/
+  `seasonm-6.shtml` now publish Season M-6 ("September 9th 2026 - October
+  7th 2026") - added to `config/seasons.ts`. Bulbapedia's season-list page
+  still ends at M-5 with no M-6 row, so this entry is Serebii-only for now
+  (date-only granularity, no UTC time-of-day given). M-7+ still not
+  addable - neither source has rows past M-6 yet, only the regulation-level
+  overall range. Type-check and full test suite (594 tests) both pass, no
+  test file covers `seasons.ts` directly so nothing else needed updating.
   **Leg 2 is now effectively complete** modulo two open threads that are
   deliberately out of this leg's scope rather than open sub-items: the
   Z-A-exclusive-move audit (needs a separate live-PokeAPI methodology pass,
-  not a Serebii read) and `seasons.ts` M-6+ rows (blocked on
-  Bulbapedia/Serebii publishing them). Next incoming Vanny dump (if any) or
-  a decision to close the leg out are both live paths from here.
+  not a Serebii read) and `seasons.ts` M-7+ rows (blocked on
+  Bulbapedia/Serebii publishing them). Next incoming Vanny dump (if any), a
+  future M-7+ re-check, or a decision to close the leg out are all live
+  paths from here.
 
 ## Blocked
 
