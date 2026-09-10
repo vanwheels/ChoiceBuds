@@ -18,6 +18,18 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Live Calc Turn-Order Speed Stage Boosts] - Leg 16** (2026-09-10) - see
+  commit `c441d54`. Turn-order observations gain a per-observation
+  `defenderSpeedStage` (-6..+6, default 0), applied directly to each scanned
+  SP candidate's raw Speed via `boostMultiplier()` (newly exported from
+  `damageCalcEngine.ts`); the attacker side now compares on
+  `computeEffectiveSpeed()` (live boosts + status, weather always `''`)
+  instead of raw unboosted Speed, reversing Leg 15's "both sides unboosted
+  for symmetry" v1 call. New per-row stage input in
+  `LiveCalcTurnOrderList.tsx` mirrors `CalcStatRows.tsx`'s existing
+  boost-stage input. Defender status/Tailwind/weather-ability Speed changes
+  remain a documented out-of-scope gap, not this leg's job.
+
 - **[Speed Tiers Trick Room Sort-Order Bug] - Leg 14** (2026-09-10) - live
   re-check via `run-desktop` (team + species filter "Raichu", toggling Trick
   Room) confirms this doesn't reproduce anymore: normal order is a clean

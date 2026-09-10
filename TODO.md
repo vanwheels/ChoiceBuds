@@ -24,31 +24,11 @@ for the full design-questions pass. Its "team-anchored threat list, not a
 vgcmulticalc reskin" differentiation call was itself reversed the same day
 by Leg 8 — see
 [docs/investigations/speed-tiers-full-roster-pivot.md](docs/investigations/speed-tiers-full-roster-pivot.md).
-Legs 1-6, 8, 13, and 15 are done — see `COMPLETED.md` (Leg 3's row-list
+Legs 1-6, 8, and 13-16 are done — see `COMPLETED.md` (Leg 3's row-list
 shell was shipped, then redone by Leg 4, then Leg 4's own data source
 superseded by Leg 8; Leg 15 was Leg 6's own prerequisite, scoped and built
-out of numeric order). Legs below are a tentative breakdown, not yet
-started.
-
-- **[Live Calc Turn-Order Speed Stage Boosts] — Leg 16** *(Last touched:
-  2026-09-10 · Re-checks: 0)*
-  Requested live 2026-09-09; scoped 2026-09-10 — see
-  [docs/investigations/live-calc-turn-order-speed-stage-boosts-scope.md](docs/investigations/live-calc-turn-order-speed-stage-boosts-scope.md)
-  for the full design-questions pass. Resolved: a new `defenderSpeedStage`
-  field (-6..+6, default 0) on each turn-order observation — per-observation
-  (not per-Pokémon), and a known/fixed input the engine applies directly
-  (not a new scanned/narrowed axis alongside nature). The attacker side now
-  honors the existing panel's live boosts + status via
-  `computeEffectiveSpeed()` instead of raw unboosted `rawStats.spe`
-  (weather stays `''` — Live Calc tracks no field weather), dropping Leg
-  15's "both sides unboosted for symmetry" v1 call. Ready to build: touches
-  `liveCalcSpeedEngine.ts` (new field + `attackerSpeed` source +
-  `feasibleSpeedRange()`'s stage multiplier, needs `boostMultiplier()`
-  exported from `damageCalcEngine.ts`), `useLiveCalc.ts`'s
-  `defaultTurnOrderObservation()`, and a new per-row stage input in
-  `LiveCalcTurnOrderList.tsx` mirroring `CalcStatRows.tsx`'s existing
-  boost-stage input. Defender status/Tailwind/weather-ability Speed changes
-  stay out of scope (documented gap, not this leg's job — see scope doc).
+out of numeric order). No legs currently open — next up would need its own
+scoping pass.
 
 ## Blocked
 
