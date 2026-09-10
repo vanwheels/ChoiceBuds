@@ -16,7 +16,7 @@ function threatInput(overrides: Partial<ThreatSpeedProfile> = {}): ThreatTierInp
     bounds: { min: 90, neutral: 150, max: 300 },
     ...overrides,
   };
-  return { spriteUrl: 'chien-pao.png', profile };
+  return { spriteUrl: 'chien-pao.png', profile, types: ['Dark', 'Ice'] };
 }
 
 describe('buildSpeedTierEntries', () => {

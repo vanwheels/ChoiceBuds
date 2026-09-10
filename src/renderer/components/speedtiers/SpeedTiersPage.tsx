@@ -25,11 +25,18 @@
  * usage (ChampionsUsageEntry.columnPosition) - a species (or Mega form, which
  * never has its own usage entry - see rosterCandidates) with no usage data
  * at all only shows under "All". Typing-based threat filtering (Team Gap
- * Analysis's computeUsageThreats) is deliberately not used here anymore -
+ * Analysis's computeUsageThreats) is deliberately not the default here -
  * theoretical "still standing" information isn't the right default for
  * teambuilding, where a specific Pokemon needs to answer a specific
- * matchup's speed, not the team's overall weaknesses. A "threats only" mode
- * is a possible future toggle, not built here (see TODO.md).
+ * matchup's speed, not the team's overall weaknesses. A "Threats Only"
+ * checkbox (Leg 9, see TODO.md) narrows whichever roster scope is already
+ * selected down to species the selected team has no typing answer for at
+ * all - reuses utils/usageThreats.ts's slotResistsThreat (the resist check
+ * only, not computeUsageThreats itself, which carries its own hidden rank
+ * cutoff that would shadow the Top 60/Top 120 scope above) rather than
+ * replacing roster scope. A Live Calc pinned threat bypasses it too - same
+ * precedent as it already bypassing the usage-rank cutoff below, since a pin
+ * is a confirmed real opponent, not theoretical.
  *
  * Team Preview Strip (Leg 5, see docs/investigations/
  * speed-tiers-preview-strip-scope.md): a session-only per-mon Speed SP/
@@ -49,7 +56,7 @@
  * explicitly pinned this exact opponent Pokémon, so it should always show.
  */
 import { useMemo, useState } from 'react';
-import { Generations } from '@smogon/calc';
+import { Generations, toID } from '@smogon/calc';
 import type { NatureName } from '@smogon/calc/dist/data/interface';
 import type { UseTeamsReturn } from '../../hooks/useTeams';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
@@ -66,6 +73,7 @@ import { getCachedMegaSprite } from '../../hooks/useMegaSprite';
 import { computeTeamSpeed, computeThreatSpeedProfile, computeInferredThreatSpeedBound, defaultSpeedFieldContext, type SpeedFieldContext } from '../../utils/speedTiers';
 import { buildSpeedTierEntries, filterSpeedTierEntries, groupSpeedTiers, type ThreatTierInput } from '../../utils/speedTierList';
 import { applySpeedOverride, defaultSpeedOverride, type TeamSpeedOverride } from '../../utils/speedTierOverrides';
+import { slotResistsThreat } from '../../utils/usageThreats';
 import SpeedTierFieldPanel, { ToggleButton } from './SpeedTierFieldPanel';
 import SpeedTierList from './SpeedTierList';
 import TeamPreviewStrip from './TeamPreviewStrip';
@@ -93,6 +101,12 @@ interface RosterCandidate {
   ability: string;
   usage: ChampionsUsageEntry | null;
   spriteUrl: string;
+  /** This candidate's own defending types, for the "Threats Only" filter
+   * (Leg 9, see TODO.md). A Mega form gets its own - some change types on
+   * Mega Evolution (e.g. Altaria Dragon/Flying -> Mega Altaria Dragon/Fairy) -
+   * not its base species' types, so it's resolved separately per candidate
+   * below rather than inherited from the base species push. */
+  types: string[];
 }
 
 interface SpeedTiersPageProps {
@@ -132,6 +146,7 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
   };
 
   const [rosterScope, setRosterScope] = useState<RosterScope>('all');
+  const [threatsOnly, setThreatsOnly] = useState(false);
 
   const usageEntryBySpecies = useMemo(() => {
     const map = new Map<string, ChampionsUsageEntry>();
@@ -142,8 +157,9 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
   }, [gameDataCache]);
 
   // Every species in the selected team's own regulation - see this file's
-  // header. Not filtered by the team's defensive typing (that's Team Gap
-  // Analysis's own, deliberately different, concern).
+  // header. Not filtered by the team's defensive typing here - that's an
+  // opt-in narrowing via the "Threats Only" checkbox below (Leg 9), not this
+  // roster's own default shape.
   const legalRoster = useMemo(() => {
     if (!selectedTeam) return [];
     const rulesetId = toRegulationId(selectedTeam.format);
@@ -185,24 +201,38 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
       // PokeAPI slug list - see gameData.ts's PokeAPICacheEntry - so it needs
       // the same slug->display conversion as PokemonCard/AbilityPickerPanel).
       const ability = usage?.abilities[0]?.name || (dbEntry.abilities[0] ? toReadableName(dbEntry.abilities[0]) : '');
-      candidates.push({ species: rosterEntry.name, ability, usage, spriteUrl: dbEntry.spriteUrl });
+      candidates.push({ species: rosterEntry.name, ability, usage, spriteUrl: dbEntry.spriteUrl, types: dbEntry.types });
 
       for (const megaName of getFormeFamily(allSpecies, rosterEntry.name).megaFormes) {
         if (addedMegaFormes.has(megaName)) continue;
         addedMegaFormes.add(megaName);
         const megaSprite = getCachedMegaSprite(megaName.toLowerCase());
+        // @smogon/calc's own species dex, not the PokeAPI cache (which has no
+        // entry for Mega forms - see useMegaSprite.ts's header) - the only
+        // source in this codebase for a Mega form's own types. Some Mega
+        // forms change types on evolution (see this file's RosterCandidate
+        // doc comment), so this can't just inherit the base species' types.
+        const megaTypes = gen.species.get(toID(megaName))?.types;
         candidates.push({
           species: megaName,
           ability: getMegaAbility(megaName.toLowerCase()) ?? ability,
           usage: null,
           spriteUrl: megaSprite?.spriteUrl ?? dbEntry.spriteUrl,
+          types: megaTypes ? [...megaTypes] : dbEntry.types,
         });
       }
     }
     return candidates;
-  }, [legalRoster, usageEntryBySpecies, getCachedEntry, allSpecies]);
+  }, [legalRoster, usageEntryBySpecies, getCachedEntry, allSpecies, gen]);
 
   const { pins: liveCalcPins } = liveCalcThreatPinsState;
+
+  // "Threats Only" checkbox's own defending slots - same construction
+  // TypeMatchupPage.tsx already builds for its own usage-threat check.
+  const defensiveSlots = useMemo(
+    () => (selectedTeam?.pokemon ?? []).map(p => ({ types: p.types, ability: p.showdownData.ability })),
+    [selectedTeam]
+  );
 
   const threatTierInputs = useMemo<ThreatTierInput[]>(() => {
     const cutoff = rosterScope === 'top60' ? 60 : rosterScope === 'top120' ? 120 : null;
@@ -210,6 +240,10 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
       const pin = liveCalcPins.get(candidate.species.toLowerCase());
       // A pinned species bypasses the usage-rank cutoff - see this file's header.
       if (cutoff !== null && !pin && (!candidate.usage || candidate.usage.columnPosition > cutoff)) return [];
+      // "Threats Only": drop any candidate at least one team slot already
+      // resists/is immune to - see this file's header. Same pin bypass as
+      // the cutoff check above, for the same reason.
+      if (threatsOnly && !pin && defensiveSlots.some(d => slotResistsThreat(candidate.types, d))) return [];
       const profile = computeThreatSpeedProfile(gen, { species: candidate.species, ability: candidate.ability, usage: candidate.usage }, field);
       if (!profile) return [];
       const inferredBound = pin
@@ -219,9 +253,9 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
             field
           ) ?? undefined
         : undefined;
-      return [{ spriteUrl: candidate.spriteUrl, profile, inferredBound }];
+      return [{ spriteUrl: candidate.spriteUrl, profile, inferredBound, types: candidate.types }];
     });
-  }, [rosterCandidates, gen, field, rosterScope, liveCalcPins]);
+  }, [rosterCandidates, gen, field, rosterScope, liveCalcPins, threatsOnly, defensiveSlots]);
 
   const tierGroups = useMemo(() => {
     const entries = filterSpeedTierEntries(buildSpeedTierEntries(teamSpeedEntries, threatTierInputs), speciesFilter);
@@ -291,6 +325,15 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
                 ))}
               </div>
             </div>
+            <label className="flex items-center gap-2 text-xs text-zinc-300 cursor-pointer pb-1.5">
+              <input
+                type="checkbox"
+                checked={threatsOnly}
+                onChange={e => setThreatsOnly(e.target.checked)}
+                className="cursor-pointer accent-accent-gold"
+              />
+              Threats Only
+            </label>
           </div>
           <div className="bg-zinc-800 rounded-lg p-4">
             <SpeedTierList groups={tierGroups} spriteCacheState={spriteCacheState} />

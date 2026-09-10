@@ -66,6 +66,12 @@ export interface ThreatTierInput {
    * computeInferredThreatSpeedBound). Undefined when nothing's pinned for
    * this species - the common case. */
   inferredBound?: { min: number; max: number };
+  /** This candidate's own defending types (Mega forms get their own, not
+   * their base species' - see SpeedTiersPage.tsx's rosterCandidates). Carried
+   * through from RosterCandidate so the "Threats Only" filter (Leg 9, see
+   * TODO.md) can run utils/usageThreats.ts's slotResistsThreat here without
+   * SpeedTiersPage.tsx reaching back into RosterCandidate for it. */
+  types: string[];
 }
 
 /** Flattens a team's per-Pokemon speeds and every threat's per-spread/bound speeds into one unsorted row list. */
