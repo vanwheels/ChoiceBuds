@@ -33,12 +33,26 @@ numeric order). Legs below are a tentative breakdown, not yet started.
   · Re-checks: 0)*
   Reported live 2026-09-09: Mega-form rows render with the base species'
   sprite instead of the Mega form's own, hurting visual clarity in the dense
-  grid. `SpeedTiersPage.tsx`'s `rosterCandidates` builder falls back to
-  `dbEntry.spriteUrl` whenever `getCachedMegaSprite(megaName)` misses
-  (`spriteUrl: megaSprite?.spriteUrl ?? dbEntry.spriteUrl`) — needs checking
-  whether `useInitialSync`'s bulk Mega-sprite prefetch actually covers every
-  roster Mega candidate, or whether this needs its own on-demand fetch
-  (`useMegaSprite`) rather than relying purely on the prefetch cache.
+  grid. Root cause found: not a coverage gap in `useInitialSync`'s bulk
+  Mega-sprite prefetch, but a session-lifetime one — the id/URL mapping
+  `getCachedMegaSprite` reads lives only in `useMegaSprite.ts`'s in-memory
+  `cache` Map (wiped every app restart), and the pass that populates it is
+  gated behind `unsyncedSpecies.length === 0` in `useInitialSync.ts`, so it
+  never runs again after the first successful launch — every later session
+  found that cache empty and silently fell back to the base sprite. Fixed
+  with a new `useMegaSpritePrefetch` hook (`useMegaSprite.ts`) that
+  re-warms the cache once per session, called from `SpeedTiersPage.tsx` and
+  wired into `rosterCandidates`'s memo deps so it recomputes once real
+  sprites land. Also fixed a second, independent bug found during this
+  investigation: `useInitialSync.ts` derived its own Mega slug list straight
+  off `MEGA_STONE_TO_SPECIES` instead of reusing `megaEvolution.ts`'s
+  `CURATED_MEGA_FORM_SLUGS`, so it was pre-downloading Floette's sprite
+  under the wrong slug (`floette-eternal-mega` instead of the
+  `floette-mega` `getFormeFamily`/`SpeedTiersPage` actually look up) —
+  switched to the shared curated list so both passes agree. Type-check,
+  lint, and full test suite (654 tests) pass; new coverage in
+  `useMegaSprite.test.ts`. Not yet live-verified — ready for Vanny to check
+  a Mega roster row in the running app before moving to `COMPLETED.md`.
 
 - **[Speed Tiers Trick Room Sort-Order Bug] — Leg 14** *(Last touched:
   2026-09-09 · Re-checks: 0)*

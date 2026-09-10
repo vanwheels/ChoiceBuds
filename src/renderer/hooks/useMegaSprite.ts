@@ -14,6 +14,10 @@
 
 import { useState, useEffect } from 'react';
 import { fetchJSON } from '../services/pokeapiService';
+import { CURATED_MEGA_FORM_SLUGS } from '../config/megaEvolution';
+import { runWithConcurrency } from '../utils/concurrency';
+
+const PREFETCH_CONCURRENCY = 8;
 
 export interface MegaSpriteResult {
   id: number;
@@ -54,12 +58,53 @@ export async function fetchMegaSprite(apiSlug: string): Promise<MegaSpriteResult
  * Synchronous read of the same module-level cache, for a caller that can't
  * use the `useMegaSprite` hook itself (e.g. mapping over a dynamic list of
  * roster species, where the Rules of Hooks forbid calling a hook per item) -
- * Speed Tiers' Mega-form rows (see SpeedTiersPage.tsx) rely on
- * useInitialSync having already bulk-prefetched every legal Mega form's
- * sprite into this cache, same as the hook above does per-component.
+ * Speed Tiers' Mega-form rows (see SpeedTiersPage.tsx) call
+ * useMegaSpritePrefetch below to warm this cache before reading it this way.
  */
 export function getCachedMegaSprite(apiSlug: string): MegaSpriteResult | null {
   return cache.get(apiSlug) ?? null;
+}
+
+/**
+ * Bulk-warms the cache above for every Champions-legal Mega form slug
+ * (CURATED_MEGA_FORM_SLUGS), for a caller that reads it synchronously via
+ * getCachedMegaSprite over a dynamic roster list - Rules of Hooks forbids
+ * calling useMegaSprite itself once per item in a loop, which is why
+ * SpeedTiersPage's Mega roster rows need this instead.
+ *
+ * Deliberately independent of useInitialSync's own Mega-sprite bulk-download
+ * pass: that pass exists to warm the on-disk sprite *image* cache and only
+ * runs again once useInitialSync finds something genuinely unsynced (first
+ * launch, or a future regulation adding new species) - see its header. The
+ * id/URL mapping this hook populates, though, lives in the plain in-memory
+ * `cache` map above, which is wiped on every app restart. Without a fetch of
+ * its own, every session after the very first app launch would find that
+ * map empty and silently fall back to the base-species sprite for every Mega
+ * row shown here, even though useInitialSync "finished" syncing long ago -
+ * this was reported live 2026-09-09 as Mega rows always rendering with the
+ * base sprite (see TODO.md's Speed Tiers Mega Sprite Fallback entry).
+ *
+ * Returns a version counter (not a boolean) so a caller's derived data can
+ * depend on it and recompute once real data lands - a boolean flipping
+ * false->true only once wouldn't distinguish "still loading" from "nothing
+ * to load" the way a fresh number after each completed pass does. Cheap
+ * even on a fully cold cache: ~90 small JSON lookups run at bounded
+ * concurrency via runWithConcurrency, and any individual miss just means the
+ * existing base-sprite fallback keeps showing for that one row (non-fatal,
+ * same as a single fetchMegaSprite miss elsewhere).
+ */
+export function useMegaSpritePrefetch(): number {
+  const [version, setVersion] = useState(0);
+  useEffect(() => {
+    let cancelled = false;
+    const slugs = [...CURATED_MEGA_FORM_SLUGS].filter(slug => !cache.has(slug));
+    if (slugs.length === 0) return;
+    runWithConcurrency(slugs, PREFETCH_CONCURRENCY, () => {}, fetchMegaSprite).then(() => {
+      if (!cancelled) setVersion(v => v + 1);
+    });
+    return () => { cancelled = true; };
+  }, []);
+  return version;
 }
 
 /** `apiSlug` null means "not currently mega-eligible" - returns null immediately, no fetch */

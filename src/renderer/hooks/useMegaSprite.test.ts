@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
-import { useMegaSprite } from './useMegaSprite';
+import { useMegaSprite, useMegaSpritePrefetch, getCachedMegaSprite } from './useMegaSprite';
 import { fetchJSON } from '../services/pokeapiService';
+import { CURATED_MEGA_FORM_SLUGS } from '../config/megaEvolution';
 
 vi.mock('../services/pokeapiService', () => ({
   fetchJSON: vi.fn(),
@@ -65,5 +66,34 @@ describe('useMegaSprite', () => {
     rerender({ slug: 'charizard-mega-x-test-1' });
     expect(result.current?.id).toBe(30001);
     expect(mockedFetchJSON).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('useMegaSpritePrefetch', () => {
+  // Own reset (not covered by the describe block above's beforeEach, which
+  // is scoped to its own describe) - without it, mock.calls carries over
+  // calls recorded by the last 'useMegaSprite' test above, over-counting
+  // this test's own assertion below.
+  beforeEach(() => {
+    mockedFetchJSON.mockReset();
+  });
+
+  it('bulk-fetches every curated Mega form slug into the shared cache, then skips already-cached ones on a later mount', async () => {
+    mockedFetchJSON.mockResolvedValue({ id: 999 });
+    const { result } = renderHook(() => useMegaSpritePrefetch());
+    expect(result.current).toBe(0);
+    await waitFor(() => expect(result.current).toBe(1));
+    expect(mockedFetchJSON).toHaveBeenCalledTimes(CURATED_MEGA_FORM_SLUGS.size);
+
+    const [sampleSlug] = CURATED_MEGA_FORM_SLUGS;
+    expect(getCachedMegaSprite(sampleSlug)?.id).toBe(999);
+
+    // A second mount (e.g. revisiting Speed Tiers later the same session)
+    // finds everything already cached - no re-fetch, version stays at its
+    // initial 0 since there's no async work to bump it for.
+    mockedFetchJSON.mockClear();
+    const { result: second } = renderHook(() => useMegaSpritePrefetch());
+    expect(mockedFetchJSON).not.toHaveBeenCalled();
+    expect(second.current).toBe(0);
   });
 });

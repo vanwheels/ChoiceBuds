@@ -86,7 +86,7 @@ import { validateSpeciesLegality, toRegulationId } from '../../utils/pokemonRule
 import { toReadableName } from '../../utils/displayName';
 import { getFormeFamily } from '../../utils/calcFormes';
 import { getMegaAbility } from '../../config/megaAbilities';
-import { getCachedMegaSprite } from '../../hooks/useMegaSprite';
+import { getCachedMegaSprite, useMegaSpritePrefetch } from '../../hooks/useMegaSprite';
 import { computeTeamSpeed, computeThreatSpeedProfile, computeInferredThreatSpeedBound, defaultSpeedFieldContext, type SpeedFieldContext } from '../../utils/speedTiers';
 import { buildSpeedTierEntries, filterSpeedTierEntries, groupSpeedTiers, DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT, type ThreatTierInput } from '../../utils/speedTierList';
 import { applySpeedOverride, defaultSpeedOverride, type TeamSpeedOverride } from '../../utils/speedTierOverrides';
@@ -161,6 +161,14 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
 
   const { cache: gameDataCache } = gameDataState;
   const { getCachedEntry } = databaseState;
+  // Warms useMegaSprite.ts's in-memory id/URL cache for this session - see
+  // that hook's own doc comment for why useInitialSync's own Mega-sprite
+  // pass alone isn't enough (TODO.md's Speed Tiers Mega Sprite Fallback).
+  // rosterCandidates below reads that cache synchronously, so its own memo
+  // needs this version number as a dependency to recompute once real data
+  // lands instead of staying pinned to whatever was cached (or not) at first
+  // render.
+  const megaSpriteVersion = useMegaSpritePrefetch();
 
   const updateSpeedOverride = (pokemon: ImportedPokemonInfo, updates: Partial<TeamSpeedOverride>) => {
     setSpeedOverrides(prev => {
@@ -251,7 +259,14 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
       }
     }
     return candidates;
-  }, [legalRoster, usageEntryBySpecies, getCachedEntry, allSpecies, gen]);
+    // megaSpriteVersion isn't read in the body above - getCachedMegaSprite
+    // reads useMegaSprite.ts's module-level cache directly, invisible to the
+    // linter's static analysis - but it still needs to be a dependency so
+    // this recomputes once useMegaSpritePrefetch's fetch actually lands real
+    // sprite URLs into that cache, instead of staying pinned to whatever was
+    // (or wasn't) cached at first render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [legalRoster, usageEntryBySpecies, getCachedEntry, allSpecies, gen, megaSpriteVersion]);
 
   const { pins: liveCalcPins } = liveCalcThreatPinsState;
 

@@ -26,16 +26,24 @@
  * wait on getItemData per item to know each one's spriteUrl before it can
  * download the actual sprite image bytes.
  *
- * Mega form sprites are also bulk-downloaded here, off the full static
- * MEGA_STONE_TO_SPECIES table rather than the current legal roster - a Mega
- * form lives at its own distinct PokeAPI id (see useMegaSprite.ts), so it's
- * never covered by the species sprite pass above even for a species already
- * synced. Gated on the same "something is unsynced" trigger as the rest of
- * this pass rather than its own tracked flag, so it stays cheap (existing
- * downloads are a local file check, not a re-fetch) - the one known gap is a
- * future regulation adding a Mega Stone to an already-synced species with no
- * other roster change in the same update, which wouldn't re-trigger this
- * pass; not worth a dedicated cache flag for until that actually happens.
+ * Mega form sprites are also bulk-downloaded here, off the full curated
+ * Mega-form slug list (CURATED_MEGA_FORM_SLUGS) rather than the current legal
+ * roster - a Mega form lives at its own distinct PokeAPI id (see
+ * useMegaSprite.ts), so it's never covered by the species sprite pass above
+ * even for a species already synced. Gated on the same "something is
+ * unsynced" trigger as the rest of this pass rather than its own tracked
+ * flag, so it stays cheap (existing downloads are a local file check, not a
+ * re-fetch) - the one known gap is a future regulation adding a Mega Stone to
+ * an already-synced species with no other roster change in the same update,
+ * which wouldn't re-trigger this pass; not worth a dedicated cache flag for
+ * until that actually happens. This pass only warms the on-disk sprite
+ * *image* cache, though - it does NOT persist the id/URL lookup itself
+ * anywhere durable (that lives in useMegaSprite.ts's plain in-memory `cache`
+ * map, wiped on every restart), so a synchronous-only reader like
+ * SpeedTiersPage can't rely on this pass alone surviving past the session it
+ * ran in. See useMegaSprite.ts's useMegaSpritePrefetch for the fix - its own
+ * per-session re-fetch of the same slug list, independent of this pass's
+ * once-ever-per-sync gating.
  *
  * Both sprite passes also queue Showdown's animated (+shiny) GIF alongside
  * the static PNG for every unsynced species/Mega form, unconditional on the
@@ -54,14 +62,23 @@ import type { UseDatabaseReturn } from './useDatabase';
 import { validateSpeciesLegality, LATEST_REGULATION_ID } from '../utils/pokemonRules';
 import { VGC_ITEMS } from '../config/vgcData';
 import { fetchPokemonData, normalizeSpeciesForAPI } from '../services/pokeapi';
-import { MEGA_STONE_TO_SPECIES } from '../config/megaEvolution';
+import { CURATED_MEGA_FORM_SLUGS } from '../config/megaEvolution';
 import { fetchMegaSprite } from './useMegaSprite';
 import { getAnimatedSpriteUrl } from '../utils/spriteUrl';
 import { runWithConcurrency } from '../utils/concurrency';
 
 const CONCURRENCY = 8;
 
-const MEGA_API_SLUGS = [...new Set(Object.values(MEGA_STONE_TO_SPECIES).map(entry => `${entry.species}-${entry.suffix}`))];
+// Shared with useMegaSprite.ts's useMegaSpritePrefetch - CURATED_MEGA_FORM_SLUGS
+// (not a slug list re-derived locally from MEGA_STONE_TO_SPECIES) so both
+// passes warm the cache under the exact same keys SpeedTiersPage/calcFormes.ts
+// actually look up. A locally re-derived list previously used
+// "floette-eternal-mega" (MEGA_STONE_TO_SPECIES's real species key), which
+// never matched the "floette-mega" slug getFormeFamily/calcFormes.ts's own
+// CURATED_MEGA_FORM_SLUGS substitution actually produces (see
+// config/megaEvolution.ts's Floette exception) - so this pass was silently
+// pre-downloading a sprite key nothing ever reads.
+const MEGA_API_SLUGS = [...CURATED_MEGA_FORM_SLUGS];
 
 export interface SyncProgress {
   label: string;
