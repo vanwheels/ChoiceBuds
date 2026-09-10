@@ -112,6 +112,28 @@ Leg 8). Legs below are a tentative breakdown, not yet started.
   the grid — not investigated yet, explicitly deferred per Vanny at report
   time.
 
+- **[Live Calc Turn-Order Speed Stage Boosts] — Leg 16** *(Last touched:
+  2026-09-09 · Re-checks: 0)*
+  Requested live 2026-09-09. Leg 15's turn-order Speed engine
+  (`utils/liveCalcSpeedEngine.ts`) currently compares both sides' unboosted
+  base Speed only — no Speed stage boosts (e.g. a Speed Boost proc, an
+  Icy Wind drop, a Nasty Plot-style self-boost on a Speed-relevant set) for
+  either the attacker or the defender, a documented v1 gap called out in
+  that engine's own header and in
+  [docs/investigations/live-calc-speed-inference-scope.md](docs/investigations/live-calc-speed-inference-scope.md)'s
+  "Resolved during the build" section. Add a per-observation (or
+  per-Pokémon, TBD) stage input for both sides so a turn observed after a
+  boost/drop doesn't misnarrow. Attacker boosts are already known/editable
+  (`CalcPokemonState.boosts` on the existing panel) — the open design
+  question is whether the attacker's *existing* panel boosts should just be
+  honored as-is (dropping the "both sides unboosted for symmetry" v1 call)
+  or whether turn-order observations need their own explicit stage field
+  independent of the panel, and how a defender-side stage guess factors
+  into the nature/SP scan (a new axis alongside nature, or held fixed per
+  observation like the move name already is). Unscoped beyond the request
+  itself — needs a scoping pass before building, same shape as Leg 15's own
+  scope doc.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
