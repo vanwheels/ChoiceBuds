@@ -18,6 +18,13 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Battle Logger: Maushold Missing From Opponent Selection] - Leg 1**
+  (2026-09-10) - see commit `ca7eeac`. Root cause: PokeAPI has no bare
+  "maushold" resource, only maushold-family-of-four/-three varieties, but
+  `utils/pokemonRules.ts`'s legality list only had the bare slug -
+  `validateSpeciesLegality` rejected both real roster entries, filtering
+  Maushold out of `SpeciesPickerCard`'s opponent picker.
+
 - **[Skip Redundant Unchanged-Cache Rewrite On Launch] - Leg 1** (2026-09-10)
   - see commit `89718de`. `useGameData.ts`/`useDatabase.ts`'s debounced
   write-through effect fired on the very first cache value it saw (loaded
