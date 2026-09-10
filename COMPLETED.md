@@ -18,6 +18,20 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Speed Tiers Preview Strip: Save Override to Team] - Leg 17** (2026-09-10) -
+  see commit `453fa2e`. Added `patchPokemonWithOverride` (Speed SP + nature only,
+  species excluded) to `utils/speedTierOverrides.ts`, plus a per-card Save
+  button on `TeamPreviewCard.tsx` and a page-level "Save All" on
+  `TeamPreviewStrip.tsx`, both wired through new `saveOverride`/
+  `saveAllOverrides` actions in `SpeedTiersPage.tsx` that call
+  `teamsState.updateTeam` directly (not the `useActiveEditor` overlay flow).
+  Buttons are enabled only when the mon has an active entry in the strip's
+  override Map; a successful save clears that entry (or, for Save All, every
+  saved entry) since it now matches the team's real data. No confirmation
+  dialog, matching existing app precedent. See
+  [docs/investigations/speed-tiers-save-override-scope.md](docs/investigations/speed-tiers-save-override-scope.md)
+  for the scoping session.
+
 - **[Live Calc Turn-Order Speed Stage Boosts] - Leg 16** (2026-09-10) - see
   commit `c441d54`. Turn-order observations gain a per-observation
   `defenderSpeedStage` (-6..+6, default 0), applied directly to each scanned

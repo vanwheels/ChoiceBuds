@@ -29,20 +29,6 @@ shell was shipped, then redone by Leg 4, then Leg 4's own data source
 superseded by Leg 8; Leg 15 was Leg 6's own prerequisite, scoped and built
 out of numeric order).
 
-- **[Speed Tiers Preview Strip: Save Override to Team] — Leg 17** *(Last
-  touched: 2026-09-10 · Re-checks: 0)*
-  Scoped 2026-09-10 — see
-  [docs/investigations/speed-tiers-save-override-scope.md](docs/investigations/speed-tiers-save-override-scope.md).
-  A per-card Save action on `TeamPreviewCard.tsx` (plus a page-level "Save
-  All" on `TeamPreviewStrip.tsx`) that writes a team member's session-only
-  Speed-SP + nature override back through `useTeams().updateTeam` — a
-  direct targeted patch of that one Pokémon's `showdownData.evs.speed`/
-  `nature` in the team's `pokemon` array, not the `useActiveEditor` overlay
-  flow. Species/form stays preview-only, excluded from the write-back. No
-  confirmation dialog (matches existing no-confirm precedent app-wide). On
-  success, clears that mon's override in the strip's local Map since it now
-  matches the real saved data.
-
 - **[Speed Tiers Save Override: Over-Cap SP Warning] — Leg 18** *(Last
   touched: 2026-09-10 · Re-checks: 0)*
   Scoped alongside Leg 17 in the same session — see
