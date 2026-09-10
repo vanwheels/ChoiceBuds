@@ -166,6 +166,16 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
   // needs its own row rather than folding into the base species' number.
   const rosterCandidates = useMemo<RosterCandidate[]>(() => {
     const candidates: RosterCandidate[] = [];
+    // @smogon/calc's own species dex resolves a regional sibling's baseSpecies
+    // to the same root as its non-regional form (e.g. both "Raichu" and
+    // "Raichu-Alola" resolve to root "Raichu" - see calcFormes.ts's header),
+    // so getFormeFamily returns that root's same megaFormes list for every
+    // sibling. legalRoster lists each regional variant as its own legal
+    // entry, so without this guard the loop below would push a root's Mega
+    // forme(s) once per sibling present in the roster (confirmed live via
+    // React's duplicate-key warning on Raichu-Mega-X/-Y and Slowbro-Mega -
+    // see TODO.md's "Speed Tiers Duplicate Mega Roster Candidates" entry).
+    const addedMegaFormes = new Set<string>();
     for (const rosterEntry of legalRoster) {
       const dbEntry = getCachedEntry(rosterEntry.name);
       if (!dbEntry) continue;
@@ -178,6 +188,8 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
       candidates.push({ species: rosterEntry.name, ability, usage, spriteUrl: dbEntry.spriteUrl });
 
       for (const megaName of getFormeFamily(allSpecies, rosterEntry.name).megaFormes) {
+        if (addedMegaFormes.has(megaName)) continue;
+        addedMegaFormes.add(megaName);
         const megaSprite = getCachedMegaSprite(megaName.toLowerCase());
         candidates.push({
           species: megaName,
