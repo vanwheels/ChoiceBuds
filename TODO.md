@@ -24,31 +24,22 @@ for the full design-questions pass. Its "team-anchored threat list, not a
 vgcmulticalc reskin" differentiation call was itself reversed the same day
 by Leg 8 — see
 [docs/investigations/speed-tiers-full-roster-pivot.md](docs/investigations/speed-tiers-full-roster-pivot.md).
-Legs 1-5 and 8 are done — see `COMPLETED.md` (Leg 3's row-list shell was
-shipped, then redone by Leg 4, then Leg 4's own data source superseded by
-Leg 8). Legs below are a tentative breakdown, not yet started.
-
-- **[Live Calc → Speed Tiers Tie-in] — Leg 6** *(Last touched: 2026-09-09 ·
-  Re-checks: 0)*
-  Its prerequisite (Live Calc Speed Inference Engine) shipped — see
-  `COMPLETED.md` — so `useLiveCalc.ts`'s `inference.speedBound` now exists
-  and this leg is unblocked. Wire that `speedBound` to override/annotate the
-  matching threat's generic usage-based speed entry in the tiers view.
-  Wiring mechanism (shared state vs. explicit "send to Speed Tiers" action)
-  still open — not resolved by the prerequisite leg, deferred to this leg's
-  own build session same as originally scoped. Targets Leg 8's
-  full-regulation-roster data shape, not Leg 3/4's.
+Legs 1-6, 8, and 15 are done — see `COMPLETED.md` (Leg 3's row-list shell
+was shipped, then redone by Leg 4, then Leg 4's own data source superseded
+by Leg 8; Leg 15 was Leg 6's own prerequisite, scoped and built out of
+numeric order). Legs below are a tentative breakdown, not yet started.
 
 - **[Speed Tiers Verification Pass] — Leg 7** *(Last touched: 2026-09-09 ·
   Re-checks: 0)*
-  Live `run-desktop` pass once Legs 2 and 6 are built (Leg 5 shipped — see
+  Live `run-desktop` pass once Leg 2 is built (Legs 5 and 6 shipped — see
   `COMPLETED.md`), same shape as the Live Calc milestone's own verification
   leg. Leg 8's own scope (full-regulation roster + Mega forms + dense grid,
   including its same-day follow-up fixes) is already manually verified live
   by Vanny — not via `run-desktop`, but confirmed working after the
   self-healing initial-sync fix backfilled the roster. This leg is about
-  Legs 2/6 specifically, plus a from-scratch `run-desktop` pass over the
-  whole page once Leg 6 exists, not re-verifying Leg 8 again.
+  Leg 2 specifically, plus a from-scratch `run-desktop` pass over the whole
+  page (Leg 6's pin flow included) now that everything exists, not
+  re-verifying Leg 8 again.
 
 - **[Speed Tiers "Threats Only" Toggle] — Leg 9** *(Last touched: 2026-09-09
   · Re-checks: 0)*

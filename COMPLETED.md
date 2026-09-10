@@ -18,6 +18,26 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Live Calc → Speed Tiers Tie-in] - Leg 6** (2026-09-09) - wired Live
+  Calc's turn-order-narrowed Speed SP range/nature candidates (Leg 15, see
+  below) into Speed Tiers as an annotation on the matching threat, resolving
+  this leg's own "shared state vs. explicit action" wiring question in favor
+  of an explicit "Pin to Speed Tiers" action (`LiveCalcResultPanel.tsx`) -
+  a doubles opponent can have several mons needing independently-narrowed
+  pins at once, which automatic mirroring of Live Calc's single current
+  defender species couldn't support. New `hooks/useLiveCalcThreatPins.ts`
+  holds the shared cross-tab pin state at App.tsx level; new
+  `speedTiers.ts::computeInferredThreatSpeedBound` turns a pinned SP
+  range + nature candidates into a real field-modified min/max Speed bound
+  (checking only the two SP endpoints against every candidate nature, same
+  monotonicity reasoning the existing min/neutral/max bounds already use).
+  A matching roster candidate gets 1-2 extra rows in `speedTierList.ts`
+  (collapsing to one once the pin has narrowed to a single value), styled
+  with a cyan ring in `SpeedTierList.tsx` to read as real observed data
+  rather than a generic bound; a pinned species also bypasses the page's
+  usage-rank cutoff so an off-meta pick still shows once pinned. See commit
+  `951937c`.
+
 - **[Live Calc Speed Inference Engine] - Leg 15** (2026-09-09) - built the
   missing Speed-inference prerequisite for [Live Calc → Speed Tiers
   Tie-in] - Leg 6 (see `docs/investigations/live-calc-speed-inference-scope.md`
