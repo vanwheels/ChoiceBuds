@@ -16,6 +16,7 @@ import type { FormeFamily } from '../../utils/calcFormes';
 import { formeDisplayLabel } from '../../utils/calcFormes';
 import type { TeamSpeedOverride } from '../../utils/speedTierOverrides';
 import { useHoldRepeat } from '../../hooks/useHoldRepeat';
+import { resolveDisplaySpriteUrl } from '../../hooks/useMegaSprite';
 
 interface TeamPreviewCardProps {
   pokemon: ImportedPokemonInfo;
@@ -49,11 +50,17 @@ export default function TeamPreviewCard({ pokemon, override, formes, natureOptio
   const incRepeat = useHoldRepeat(() => onChange({ spSpeed: Math.min(32, override.spSpeed + 1) }));
   const decRepeat = useHoldRepeat(() => onChange({ spSpeed: Math.max(0, override.spSpeed - 1) }));
   const megaGroup = formes.megaFormes.length > 0 ? [formes.root, ...formes.megaFormes] : [];
+  // The Mega toggle below only ever changes `override.species` - `pokemon`
+  // itself stays the team's real, unmodified saved data (see
+  // speedTierOverrides.ts's header on why sprite swapping was originally cut
+  // from this leg) - so the sprite has to be resolved from the override's
+  // current species, not pokemon.showdownData.species.
+  const spriteUrl = resolveDisplaySpriteUrl(override.species, pokemon.showdownData.shiny, pokemon.spriteUrl);
 
   return (
     <div className="flex flex-col items-center gap-1 bg-zinc-900/40 border border-zinc-800/80 rounded-lg p-2 w-[108px] shrink-0">
       <img
-        src={spriteCacheState.resolveSprite(pokemon.spriteUrl)}
+        src={spriteCacheState.resolveSprite(spriteUrl)}
         alt={pokemon.showdownData.species}
         title={pokemon.showdownData.species}
         className="w-10 h-10 object-contain [image-rendering:pixelated]"

@@ -60,6 +60,7 @@ import { getFinalSpeed } from '@smogon/calc/dist/mechanics/util';
 import type { ChampionsUsageEntry, ImportedPokemonInfo } from '../types/pokemon';
 import { teamPokemonToCalcUpdates } from './calcTeamImport';
 import { buildPokemon, defaultPokemonState, type CalcPokemonState } from './damageCalcEngine';
+import { resolveDisplaySpriteUrl } from '../hooks/useMegaSprite';
 
 /** The only two items with a fixed, universal Speed multiplier - see this file's header. */
 export type ThreatSpeedItem = '' | 'Choice Scarf' | 'Iron Ball';
@@ -153,7 +154,12 @@ export function computeTeamSpeed(gen: Generation, pokemon: ImportedPokemonInfo, 
     return {
       pokemonId: pokemon.id,
       species: pokemon.showdownData.species,
-      spriteUrl: pokemon.spriteUrl,
+      // `pokemon` here has already run through speedTierOverrides.ts's
+      // applySpeedOverride when a Team Preview form toggle is active, so
+      // showdownData.species may already be a Mega form - pokemon.spriteUrl
+      // itself is never updated by that override (see its header), so it
+      // has to be resolved here instead.
+      spriteUrl: resolveDisplaySpriteUrl(pokemon.showdownData.species, pokemon.showdownData.shiny, pokemon.spriteUrl),
       speed: finalSpeed(gen, state, calcField, calcField.attackerSide),
     };
   } catch {

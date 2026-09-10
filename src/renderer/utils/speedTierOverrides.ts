@@ -19,12 +19,16 @@
  * Swift Swim via a Drizzle-adjacent forme - see megaAbilities.ts), so getting
  * the toggled ability right is load-bearing for what this page plots.
  *
- * Sprite is deliberately left unswapped on a form toggle (no useMegaSprite
- * wiring here) - this leg's ask was the computed Speed number reacting to a
- * toggle, not the icon; swapping the icon too would also need to decide
- * whether the tier list's own copy of the same icon (speedTierList.ts/
- * SpeedTierList.tsx) follows along, which is new scope beyond what the strip
- * itself asked for. Left as a documented cut, not an oversight.
+ * Sprite swapping on a form toggle was originally cut from this leg's scope
+ * (Speed number reacting to a toggle, not the icon) - added later as part of
+ * TODO.md's Speed Tiers Mega Sprite Fallback follow-up, once that leg's fix
+ * made a real cached Mega sprite reliably available each session. `pokemon`
+ * itself is left untouched here (species/ability/nature/SP only, as below) -
+ * TeamPreviewCard.tsx resolves its own displayed sprite straight from
+ * `override.species` via useMegaSprite.ts's resolveDisplaySpriteUrl, and
+ * utils/speedTiers.ts::computeTeamSpeed does the same for the tier list's own
+ * "You" tile, both reading the override-applied `showdownData.species` this
+ * function already produces rather than needing a fourth override field.
  */
 import type { NatureName } from '@smogon/calc/dist/data/interface';
 import type { ImportedPokemonInfo } from '../types/pokemon';

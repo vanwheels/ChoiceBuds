@@ -1,12 +1,21 @@
 /**
  * Test suite for the Speed Tiers data layer - real Generations.get(9) data,
  * no mocking, same convention as damageCalcEngine.test.ts (this module is
- * pure/side-effect-free, see speedTiers.ts's header).
+ * pure/side-effect-free, see speedTiers.ts's header) - except
+ * resolveDisplaySpriteUrl (useMegaSprite.ts), mocked below purely to keep
+ * computeTeamSpeed's own spriteUrl-forwarding tests from depending on that
+ * module's real network-backed cache.
  */
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { Generations } from '@smogon/calc';
 import type { ChampionsUsageEntry, ImportedPokemonInfo } from '../types/pokemon';
 import { computeTeamSpeed, computeThreatSpeedProfile, computeInferredThreatSpeedBound, defaultSpeedFieldContext, type SpeedFieldContext, type ThreatSpeedInput } from './speedTiers';
+import { resolveDisplaySpriteUrl } from '../hooks/useMegaSprite';
+
+vi.mock('../hooks/useMegaSprite', () => ({
+  resolveDisplaySpriteUrl: vi.fn((_species: string, _shiny: boolean, fallbackSpriteUrl: string) => fallbackSpriteUrl),
+}));
+const mockedResolveDisplaySpriteUrl = vi.mocked(resolveDisplaySpriteUrl);
 
 const gen = Generations.get(9);
 
@@ -91,6 +100,14 @@ describe('computeTeamSpeed', () => {
   it('returns null for an unresolvable species', () => {
     const result = computeTeamSpeed(gen, teamPokemon({ species: 'Not A Real Species' }), defaultSpeedFieldContext());
     expect(result).toBeNull();
+  });
+
+  it('resolves spriteUrl via resolveDisplaySpriteUrl, forwarding the (possibly Mega-overridden) species, shiny flag, and base sprite as its fallback', () => {
+    mockedResolveDisplaySpriteUrl.mockReturnValueOnce('https://example.com/garchomp-mega.png');
+    const mon = teamPokemon({ species: 'Garchomp-Mega', shiny: true });
+    const result = computeTeamSpeed(gen, mon, defaultSpeedFieldContext());
+    expect(mockedResolveDisplaySpriteUrl).toHaveBeenCalledWith('Garchomp-Mega', true, mon.spriteUrl);
+    expect(result?.spriteUrl).toBe('https://example.com/garchomp-mega.png');
   });
 });
 

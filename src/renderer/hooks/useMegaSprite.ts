@@ -66,6 +66,21 @@ export function getCachedMegaSprite(apiSlug: string): MegaSpriteResult | null {
 }
 
 /**
+ * Resolves the sprite to actually display for `species` (already-known,
+ * possibly Mega-form species name, e.g. from a Speed Tiers form toggle
+ * override) - the cached Mega sprite when `species` is a known Mega form,
+ * otherwise `fallbackSpriteUrl` (the base species' own sprite, already
+ * resolved by the caller) unchanged. Covers a base species, a stat-only
+ * forme (Aegislash-Shield), or a still-cold cache the same way: none of
+ * those have a cache entry, so this is just a no-op fallback for them.
+ */
+export function resolveDisplaySpriteUrl(species: string, shiny: boolean, fallbackSpriteUrl: string): string {
+  const megaSprite = getCachedMegaSprite(species.toLowerCase());
+  if (!megaSprite) return fallbackSpriteUrl;
+  return shiny ? megaSprite.shinySpriteUrl : megaSprite.spriteUrl;
+}
+
+/**
  * Bulk-warms the cache above for every Champions-legal Mega form slug
  * (CURATED_MEGA_FORM_SLUGS), for a caller that reads it synchronously via
  * getCachedMegaSprite over a dynamic roster list - Rules of Hooks forbids

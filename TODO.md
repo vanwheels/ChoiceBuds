@@ -66,8 +66,25 @@ numeric order). Legs below are a tentative breakdown, not yet started.
   falling back to the base sprite exactly as before when there's no Mega
   Stone match. Type-check/lint/full suite re-verified green; no new
   automated test (presentational glue in an untested component, per
-  CLAUDE.md's UI-verification default) - needs Vanny's live check of a
-  Mega-Stone-holding team member on the Teams overview page.
+  CLAUDE.md's UI-verification default). Live-verified by Vanny.
+
+  Second follow-up (2026-09-10, from a live screenshot): the Speed Tiers
+  page's own Team Preview Strip (`TeamPreviewCard.tsx`'s Base/Mega/Mega Z
+  toggle) and the tier list's own "You" tile (`speedTiers.ts::
+  computeTeamSpeed`) both still showed the base sprite after toggling a
+  team member to its Mega form - `speedTierOverrides.ts`'s
+  `applySpeedOverride` had always deliberately left `spriteUrl` unswapped
+  (documented cut in that file's header, from the original Team Preview
+  Strip leg). Added `resolveDisplaySpriteUrl` (`useMegaSprite.ts`) - reads
+  the same cache as `getCachedMegaSprite`, falling back to the caller's own
+  base sprite for anything that isn't a known Mega form (base species, a
+  stat-only forme, a still-cold cache) - and wired it into both read sites:
+  `TeamPreviewCard.tsx` (keyed off `override.species`, the toggle's current
+  selection) and `computeTeamSpeed` (keyed off `pokemon.showdownData.species`,
+  already override-applied by its caller). Type-check/lint/full suite green
+  (655 tests, +1 new covering `computeTeamSpeed`'s spriteUrl forwarding).
+  Not yet live-verified - needs Vanny's live check of the Team Preview
+  Strip's Mega toggle and the tier list's own "You" tile.
 
 - **[Speed Tiers Trick Room Sort-Order Bug] — Leg 14** *(Last touched:
   2026-09-09 · Re-checks: 0)*
