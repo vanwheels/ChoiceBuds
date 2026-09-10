@@ -24,67 +24,11 @@ for the full design-questions pass. Its "team-anchored threat list, not a
 vgcmulticalc reskin" differentiation call was itself reversed the same day
 by Leg 8 — see
 [docs/investigations/speed-tiers-full-roster-pivot.md](docs/investigations/speed-tiers-full-roster-pivot.md).
-Legs 1-6, 8, and 15 are done — see `COMPLETED.md` (Leg 3's row-list shell
-was shipped, then redone by Leg 4, then Leg 4's own data source superseded
-by Leg 8; Leg 15 was Leg 6's own prerequisite, scoped and built out of
-numeric order). Legs below are a tentative breakdown, not yet started.
-
-- **[Speed Tiers Mega Sprite Fallback] — Leg 13** *(Last touched: 2026-09-09
-  · Re-checks: 0)*
-  Reported live 2026-09-09: Mega-form rows render with the base species'
-  sprite instead of the Mega form's own, hurting visual clarity in the dense
-  grid. Root cause found: not a coverage gap in `useInitialSync`'s bulk
-  Mega-sprite prefetch, but a session-lifetime one — the id/URL mapping
-  `getCachedMegaSprite` reads lives only in `useMegaSprite.ts`'s in-memory
-  `cache` Map (wiped every app restart), and the pass that populates it is
-  gated behind `unsyncedSpecies.length === 0` in `useInitialSync.ts`, so it
-  never runs again after the first successful launch — every later session
-  found that cache empty and silently fell back to the base sprite. Fixed
-  with a new `useMegaSpritePrefetch` hook (`useMegaSprite.ts`) that
-  re-warms the cache once per session, called from `SpeedTiersPage.tsx` and
-  wired into `rosterCandidates`'s memo deps so it recomputes once real
-  sprites land. Also fixed a second, independent bug found during this
-  investigation: `useInitialSync.ts` derived its own Mega slug list straight
-  off `MEGA_STONE_TO_SPECIES` instead of reusing `megaEvolution.ts`'s
-  `CURATED_MEGA_FORM_SLUGS`, so it was pre-downloading Floette's sprite
-  under the wrong slug (`floette-eternal-mega` instead of the
-  `floette-mega` `getFormeFamily`/`SpeedTiersPage` actually look up) —
-  switched to the shared curated list so both passes agree. Type-check,
-  lint, and full test suite (654 tests) pass; new coverage in
-  `useMegaSprite.test.ts`. Live-verified by Vanny 2026-09-09.
-
-  Follow-up added same day: `TeamCard.tsx`'s header "Mini sprite strip"
-  (the flat roster-preview row on the Teams overview grid) never accounted
-  for Mega Evolution at all — always rendered `getPixelSpriteUrl` off the
-  base species, even when that Pokémon actually holds its own Mega Stone.
-  `PokemonCard.tsx`'s own full-detail sprite already handled this correctly
-  via `useMegaSprite`; the strip is a plain `.map()` over up to 6 team
-  members (not a per-item component), so it can't call that hook per item -
-  same Rules-of-Hooks shape as `SpeedTiersPage.tsx`'s roster rows. Fixed by
-  calling `useMegaSpritePrefetch()` once in `TeamCard.tsx` and reading
-  `getCachedMegaSprite(getMegaApiSlug(...))` synchronously per roster slot,
-  falling back to the base sprite exactly as before when there's no Mega
-  Stone match. Type-check/lint/full suite re-verified green; no new
-  automated test (presentational glue in an untested component, per
-  CLAUDE.md's UI-verification default). Live-verified by Vanny.
-
-  Second follow-up (2026-09-10, from a live screenshot): the Speed Tiers
-  page's own Team Preview Strip (`TeamPreviewCard.tsx`'s Base/Mega/Mega Z
-  toggle) and the tier list's own "You" tile (`speedTiers.ts::
-  computeTeamSpeed`) both still showed the base sprite after toggling a
-  team member to its Mega form - `speedTierOverrides.ts`'s
-  `applySpeedOverride` had always deliberately left `spriteUrl` unswapped
-  (documented cut in that file's header, from the original Team Preview
-  Strip leg). Added `resolveDisplaySpriteUrl` (`useMegaSprite.ts`) - reads
-  the same cache as `getCachedMegaSprite`, falling back to the caller's own
-  base sprite for anything that isn't a known Mega form (base species, a
-  stat-only forme, a still-cold cache) - and wired it into both read sites:
-  `TeamPreviewCard.tsx` (keyed off `override.species`, the toggle's current
-  selection) and `computeTeamSpeed` (keyed off `pokemon.showdownData.species`,
-  already override-applied by its caller). Type-check/lint/full suite green
-  (655 tests, +1 new covering `computeTeamSpeed`'s spriteUrl forwarding).
-  Not yet live-verified - needs Vanny's live check of the Team Preview
-  Strip's Mega toggle and the tier list's own "You" tile.
+Legs 1-6, 8, 13, and 15 are done — see `COMPLETED.md` (Leg 3's row-list
+shell was shipped, then redone by Leg 4, then Leg 4's own data source
+superseded by Leg 8; Leg 15 was Leg 6's own prerequisite, scoped and built
+out of numeric order). Legs below are a tentative breakdown, not yet
+started.
 
 - **[Speed Tiers Trick Room Sort-Order Bug] — Leg 14** *(Last touched:
   2026-09-09 · Re-checks: 0)*

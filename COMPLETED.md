@@ -18,6 +18,19 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Speed Tiers Mega Sprite Fallback] - Leg 13** (2026-09-09/10) - Mega-form
+  rows across the app (Speed Tiers roster/tier-list, Team Preview Strip,
+  Teams overview mini sprite strip) rendered the base species' sprite
+  instead of the Mega form's own. Root cause: the id/URL cache
+  `getCachedMegaSprite` reads is in-memory only and only ever got populated
+  by `useInitialSync`'s first-launch sync pass, which never runs again once
+  the roster is fully synced - every later session found it empty. Fixed
+  with a new per-session `useMegaSpritePrefetch` hook, then wired into every
+  read site that still had base-sprite fallback, including one
+  (`speedTierOverrides.ts`) that had left it as a documented, deliberate cut
+  from an earlier leg. See commits `9ef4c17`, `78acf45`, `bc572f2`. Fully
+  live-verified by Vanny across all three commits.
+
 - **[Speed Tiers "Bounds Only" Toggle] - Leg 12** (2026-09-09) - added the
   checkbox suppressing usage-based spread rows entirely, leaving just each
   threat's 3 fixed min/neutral/max bound rows (plus any Live Calc pins). See
