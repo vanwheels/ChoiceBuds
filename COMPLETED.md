@@ -19,7 +19,7 @@ in:
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
 - **[Speed Tiers Save Override: Over-Cap SP Warning] - Leg 18** (2026-09-10) -
-  see commit `<pending>`. Added `utils/evTotal.ts`'s `getTotalSP`/
+  see commit `65a7858`. Added `utils/evTotal.ts`'s `getTotalSP`/
   `MAX_TOTAL_SP` and used it to surface a non-blocking `⚠ total/66` badge
   (visually matching `StatsColumn.tsx:121`'s existing pill) wherever a team
   member's real SP total exceeds the cap: a per-sprite badge on `TeamCard
