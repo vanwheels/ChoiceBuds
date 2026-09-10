@@ -168,6 +168,15 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
     ? broughtIds.length > 0 && result !== null && !isSaving
     : !!team && broughtIds.length > 0 && result !== null && !isSaving;
 
+  // Species Clause: no legal team fields the same species twice, so once a
+  // species is on the opponent's observed roster it's removed from the
+  // picker's own candidate list entirely (rather than left pickable-again
+  // and disabled) - otherwise the same opponent Pokemon could be added a
+  // second time and both entries independently marked brought, double-
+  // counting one Pokemon in the opponent's brought-4.
+  const opponentSpeciesSeen = new Set(opponentRoster.map(o => o.species.toLowerCase()));
+  const opponentPickerRoster = speciesRosterState.roster.filter(s => !opponentSpeciesSeen.has(s.name.toLowerCase()));
+
   const handleSelectTeam = (nextTeamId: string) => {
     setTeamId(nextTeamId);
     setBroughtIds([]); // roster identity (crypto.randomUUID() ids) is re-rolled per snapshot, so a prior selection can't carry over
@@ -293,7 +302,7 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
           {opponentRoster.length < MAX_OPPONENT_ROSTER_SIZE && (
             isAddingOpponent ? (
               <SpeciesPickerCard
-                roster={speciesRosterState.roster}
+                roster={opponentPickerRoster}
                 rulesetId={toRegulationId(rulesetFormat ?? 'Reg M-B')}
                 resolveSprite={spriteCacheState.resolveSprite}
                 onSelect={handleAddOpponent}

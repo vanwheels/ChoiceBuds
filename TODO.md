@@ -18,11 +18,8 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 
 ## Current Milestone: Battle Logger Overhaul
 
-- **[Battle Logger: Duplicate Pokémon Selectable] — Leg 1** *(Last touched:
-  2026-09-10 · Re-checks: 0)*
-  Bug: the same Pokémon can currently be selected more than once for a
-  single side's brought-4. Needs a dedupe/disable-already-selected
-  constraint on the picker.
+(No items currently in progress - see `COMPLETED.md` for
+Battle Logger: Duplicate Pokémon Selectable.)
 
 ## Blocked
 
@@ -73,6 +70,17 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+- **[TeamCard Add-Pokémon: No Species-Clause Dedupe] — Leg 1** *(Last
+  touched: 2026-09-10 · Re-checks: 0)*
+  Found adjacent to Battle Logger: Duplicate Pokémon Selectable (see
+  `COMPLETED.md`) but out of that item's scope. `TeamCard.tsx`'s own
+  "+ Add Pokémon" flow (`handleAddSpecies` → `SpeciesPickerCard`) doesn't
+  filter out species already on the team, so a team can be built with the
+  same species twice - `teamValidation.ts`'s "Validate Team" button only
+  warns about this after the fact, it doesn't block it at add-time. Not
+  fixed here since the reported bug was scoped to the Battle Logger
+  brought-4 pickers specifically.
 
 - **[Reg M-C Z-A-Exclusive Movepool Audit] — Leg 1** *(Last touched:
   2026-09-09 · Re-checks: 0)*

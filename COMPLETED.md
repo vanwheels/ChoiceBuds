@@ -18,6 +18,20 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Battle Logger: Duplicate Pokémon Selectable] - Leg 1** (2026-09-10) -
+  see commit `TBD`. `RecordMatchForm`'s "+ Add Opponent Pokemon"
+  `SpeciesPickerCard` had no dedupe against `opponentRoster`, so the same
+  species could be added twice and both entries independently marked
+  brought - double-counting one Pokemon in the opponent's brought-4, which
+  no legal team (Species Clause) could actually field. Fixed by filtering
+  the roster passed to that picker down to species not already in
+  `opponentRoster` (case-insensitive), so an already-added species drops
+  out of the picker entirely rather than staying pickable-and-disabled.
+  Scoped to the opponent picker only - the player's own brought-4 comes
+  from a saved `Team`'s snapshot, which is a separate (and separately
+  imperfect) dedupe surface; see `TeamCard Add-Pokémon: No Species-Clause
+  Dedupe` in `TODO.md` for that adjacent gap, left unscoped.
+
 - **[Battle Logger: Selection UI Improvements] - Leg 1** (2026-09-10) - see
   commits `2b97738` and `0d9a3d1`. `RecordMatchForm`'s player brought-4
   picker only signaled selection via a subtle border/background color
