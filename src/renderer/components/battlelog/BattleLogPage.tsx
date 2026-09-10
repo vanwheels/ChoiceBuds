@@ -4,9 +4,13 @@
  * the old StartBattleFlow -> ActiveBattleView live-logging flow with a
  * single post-match record form (see RecordMatchForm.tsx and
  * src/renderer/_archived/battle-logger/README.md for why).
+ * `editingBattle` opens that same form in edit mode (see RecordMatchForm.tsx's
+ * header doc) instead of a separate screen - PastBattlesList's new Edit
+ * button feeds it.
  */
 
 import { useState } from 'react';
+import type { Battle } from '../../types/pokemon';
 import type { UseBattlesReturn } from '../../hooks/useBattles';
 import type { UseTeamsReturn } from '../../hooks/useTeams';
 import type { UseSpeciesRosterReturn } from '../../hooks/useSpeciesRoster';
@@ -23,16 +27,24 @@ interface BattleLogPageProps {
 
 export default function BattleLogPage({ battlesState, teamsState, speciesRosterState, spriteCacheState }: BattleLogPageProps) {
   const [isRecording, setIsRecording] = useState(false);
+  const [editingBattle, setEditingBattle] = useState<Battle | null>(null);
 
-  if (isRecording) {
+  if (isRecording || editingBattle) {
     return (
       <RecordMatchForm
         teamsState={teamsState}
         battlesState={battlesState}
         speciesRosterState={speciesRosterState}
         spriteCacheState={spriteCacheState}
-        onRecorded={() => setIsRecording(false)}
-        onCancel={() => setIsRecording(false)}
+        editingBattle={editingBattle ?? undefined}
+        onRecorded={() => {
+          setIsRecording(false);
+          setEditingBattle(null);
+        }}
+        onCancel={() => {
+          setIsRecording(false);
+          setEditingBattle(null);
+        }}
       />
     );
   }
@@ -51,6 +63,7 @@ export default function BattleLogPage({ battlesState, teamsState, speciesRosterS
 
       <PastBattlesList
         battles={battlesState.battles}
+        onEdit={setEditingBattle}
         onDelete={battlesState.deleteBattle}
       />
     </div>

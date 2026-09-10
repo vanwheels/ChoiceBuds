@@ -4,12 +4,20 @@
  * (see src/renderer/_archived/battle-logger/README.md) with a single
  * ~30-second form: pick a Team, check which of the 6 were brought, add the
  * opponent Pokemon seen, record the result, jot a freeform note. Submits one
- * `addBattle` call - no in-progress state, no later edits.
+ * `addBattle` call.
  *
  * Still builds a full `Battle` object (not a new leaner type) so the
  * Statistics page and its aggregations in utils/battleStats.ts need zero
  * changes - the turn-log/field-state fields it doesn't populate are just
  * left at their empty defaults, same as a fresh live battle used to start.
+ *
+ * Doubles as the edit flow for an already-saved battle when `editingBattle`
+ * is passed (see BattleLogPage.tsx/PastBattlesList.tsx): team/date/setId are
+ * locked (Battle.playerRoster is a point-in-time snapshot, not a live
+ * reference to the team, so there's no sound way to let the team change
+ * mid-edit) and only brought selection, opponent roster, opponent name,
+ * result, and notes are editable, persisted via `updateBattle` instead of
+ * `addBattle`.
  */
 
 import { useState } from 'react';
@@ -32,6 +40,8 @@ interface RecordMatchFormProps {
   spriteCacheState: UseSpriteCacheReturn;
   onRecorded: () => void;
   onCancel: () => void;
+  /** When set, the form edits this already-saved battle instead of creating a new one - see the header doc above. */
+  editingBattle?: Battle;
 }
 
 function snapshotRoster(team: Team): BroughtPokemonSnapshot[] {
@@ -112,24 +122,34 @@ function buildMatchRecord(args: {
   };
 }
 
-export default function RecordMatchForm({ teamsState, battlesState, speciesRosterState, spriteCacheState, onRecorded, onCancel }: RecordMatchFormProps) {
+export default function RecordMatchForm({ teamsState, battlesState, speciesRosterState, spriteCacheState, onRecorded, onCancel, editingBattle }: RecordMatchFormProps) {
   const eligibleTeams = teamsState.teams.filter(t => t.pokemon.length >= 4);
   const priorOpponentNames = Array.from(
     new Set(battlesState.battles.map(b => b.opponentName).filter((n): n is string => !!n))
   );
 
   const [teamId, setTeamId] = useState<string>('');
-  const [opponentName, setOpponentName] = useState('');
-  const [broughtIds, setBroughtIds] = useState<string[]>([]);
-  const [opponentRoster, setOpponentRoster] = useState<OpponentPokemonEntry[]>([]);
+  const [opponentName, setOpponentName] = useState(editingBattle?.opponentName ?? '');
+  const [broughtIds, setBroughtIds] = useState<string[]>(editingBattle?.broughtIds ?? []);
+  const [opponentRoster, setOpponentRoster] = useState<OpponentPokemonEntry[]>(editingBattle?.opponentRoster ?? []);
   const [isAddingOpponent, setIsAddingOpponent] = useState(false);
-  const [result, setResult] = useState<'win' | 'loss' | null>(null);
-  const [notes, setNotes] = useState('');
+  const [result, setResult] = useState<'win' | 'loss' | null>(
+    editingBattle && editingBattle.result !== 'in-progress' ? editingBattle.result : null
+  );
+  const [notes, setNotes] = useState(editingBattle?.notes ?? '');
   const [isSaving, setIsSaving] = useState(false);
 
-  const team = eligibleTeams.find(t => t.id === teamId);
-  const playerRoster = team ? snapshotRoster(team) : [];
-  const canSave = !!team && broughtIds.length > 0 && result !== null && !isSaving;
+  // Edit mode locks the team - playerRoster is a point-in-time snapshot, not
+  // a live reference, so the stored snapshot is used as-is rather than
+  // re-derived from the (possibly since-changed) live team.
+  const team = editingBattle
+    ? teamsState.teams.find(t => t.id === editingBattle.teamId)
+    : eligibleTeams.find(t => t.id === teamId);
+  const playerRoster = editingBattle ? editingBattle.playerRoster : (team ? snapshotRoster(team) : []);
+  const rulesetFormat = editingBattle ? (team?.format ?? editingBattle.format) : team?.format;
+  const canSave = editingBattle
+    ? broughtIds.length > 0 && result !== null && !isSaving
+    : !!team && broughtIds.length > 0 && result !== null && !isSaving;
 
   const handleSelectTeam = (nextTeamId: string) => {
     setTeamId(nextTeamId);
@@ -161,15 +181,27 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
   const removeOpponent = (id: string) => setOpponentRoster(prev => prev.filter(o => o.id !== id));
 
   const handleSave = async () => {
-    if (!team || !result) return;
+    if (!result) return;
     setIsSaving(true);
 
-    const battle = buildMatchRecord({
-      team, playerRoster, broughtIds, opponentRoster, opponentName, result, notes,
-      existingBattles: battlesState.battles,
-    });
+    const trimmedName = opponentName.trim();
+    const trimmedNotes = notes.trim();
 
-    const success = await battlesState.addBattle(battle);
+    const success = editingBattle
+      ? await battlesState.updateBattle(editingBattle.id, {
+          broughtIds,
+          opponentRoster,
+          opponentName: trimmedName || undefined,
+          result,
+          notes: trimmedNotes || undefined,
+        })
+      : team
+        ? await battlesState.addBattle(buildMatchRecord({
+            team, playerRoster, broughtIds, opponentRoster, opponentName, result, notes,
+            existingBattles: battlesState.battles,
+          }))
+        : false;
+
     setIsSaving(false);
     if (success) onRecorded();
   };
@@ -177,13 +209,16 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
   return (
     <div className="flex flex-col gap-4 max-w-2xl">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-zinc-100">Record a Match</h2>
+        <h2 className="text-lg font-bold text-zinc-100">{editingBattle ? 'Edit Match' : 'Record a Match'}</h2>
         <button onClick={onCancel} className="text-sm text-zinc-400 hover:text-zinc-200">Cancel</button>
       </div>
 
       <div>
         <label className="block text-sm font-medium text-zinc-300 mb-2">Team</label>
-        {eligibleTeams.length === 0 ? (
+        {editingBattle ? (
+          // Locked in edit mode - playerRoster is a snapshot tied to this team, so it can't be reselected (see header doc).
+          <p className="text-sm text-zinc-100">{editingBattle.teamName} ({editingBattle.format})</p>
+        ) : eligibleTeams.length === 0 ? (
           <p className="text-sm text-zinc-400">No saved teams with at least 4 Pokemon yet - build one in the Teams tab first.</p>
         ) : (
           <select
@@ -199,7 +234,7 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
         )}
       </div>
 
-      {team && (
+      {(editingBattle || team) && (
         <div>
           <label className="block text-sm font-medium text-zinc-300 mb-2">
             Brought ({broughtIds.length}/{MAX_BROUGHT})
@@ -241,7 +276,7 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
             isAddingOpponent ? (
               <SpeciesPickerCard
                 roster={speciesRosterState.roster}
-                rulesetId={toRegulationId(team?.format ?? 'Reg M-B')}
+                rulesetId={toRegulationId(rulesetFormat ?? 'Reg M-B')}
                 resolveSprite={spriteCacheState.resolveSprite}
                 onSelect={handleAddOpponent}
                 onClose={() => setIsAddingOpponent(false)}
@@ -261,7 +296,10 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
 
       <div>
         <label htmlFor="opponentName" className="block text-sm font-medium text-zinc-300 mb-2">
-          Opponent Name <span className="text-zinc-500 font-normal">(optional - type the same name again to continue a Bo3 set)</span>
+          Opponent Name{' '}
+          {!editingBattle && (
+            <span className="text-zinc-500 font-normal">(optional - type the same name again to continue a Bo3 set)</span>
+          )}
         </label>
         <input
           id="opponentName"
@@ -314,7 +352,7 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
         disabled={!canSave}
         className="px-4 py-2 rounded-lg bg-accent-gold hover:bg-accent-gold-deep disabled:bg-zinc-700 disabled:text-zinc-500 text-zinc-900 font-semibold transition-colors cursor-pointer disabled:cursor-not-allowed"
       >
-        Save Match
+        {editingBattle ? 'Save Changes' : 'Save Match'}
       </button>
     </div>
   );

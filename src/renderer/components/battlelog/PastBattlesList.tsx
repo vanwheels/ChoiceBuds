@@ -1,9 +1,9 @@
 /**
  * PastBattlesList.tsx - Logged Battle History
  * Reverse-chronological (battlesState.battles is already newest-first, since
- * addBattle prepends). Read-only besides delete - the row already shows
- * everything a post-match record holds (see RecordMatchForm.tsx), so there's
- * no separate detail view to click through to.
+ * addBattle prepends). Edit/delete only - no separate detail view, since
+ * the row already shows everything a post-match record holds (see
+ * RecordMatchForm.tsx, which also doubles as the edit form via `onEdit`).
  * Grouped by Bo3 set (see utils/battleSets.ts) - a set of 1 (the common
  * case for anyone not using the Opponent Name field) renders exactly like a
  * plain row always did, no visual change; a set of 2-3 renders as a
@@ -15,6 +15,7 @@ import { groupBattlesBySet, getSetOutcome } from '../../utils/battleSets';
 
 interface PastBattlesListProps {
   battles: Battle[];
+  onEdit: (battle: Battle) => void;
   onDelete: (battleId: string) => void;
 }
 
@@ -37,9 +38,10 @@ const RESULT_LABELS: Record<Battle['result'], string> = {
 };
 
 /** Shows the team name unless `gameLabel` is set - a Bo3 set always uses one team for all 3 games, so grouped rows show the team name once in the set header instead (see the group render below). */
-function BattleRow({ battle, gameLabel, onDelete }: {
+function BattleRow({ battle, gameLabel, onEdit, onDelete }: {
   battle: Battle;
   gameLabel?: string;
+  onEdit: (battle: Battle) => void;
   onDelete: (battleId: string) => void;
 }) {
   return (
@@ -61,6 +63,13 @@ function BattleRow({ battle, gameLabel, onDelete }: {
           {RESULT_LABELS[battle.result]}
         </span>
         <button
+          onClick={() => onEdit(battle)}
+          title="Edit"
+          className="w-6 h-6 flex items-center justify-center rounded text-zinc-500 hover:text-accent-gold hover:bg-zinc-700 cursor-pointer"
+        >
+          ✎
+        </button>
+        <button
           onClick={() => onDelete(battle.id)}
           title="Delete"
           className="w-6 h-6 flex items-center justify-center rounded text-zinc-500 hover:text-red-400 hover:bg-zinc-700 cursor-pointer"
@@ -72,7 +81,7 @@ function BattleRow({ battle, gameLabel, onDelete }: {
   );
 }
 
-export default function PastBattlesList({ battles, onDelete }: PastBattlesListProps) {
+export default function PastBattlesList({ battles, onEdit, onDelete }: PastBattlesListProps) {
   if (battles.length === 0) {
     return <p className="text-sm text-zinc-400">No battles logged yet.</p>;
   }
@@ -85,7 +94,7 @@ export default function PastBattlesList({ battles, onDelete }: PastBattlesListPr
       <div className="grid items-start gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))' }}>
         {groups.map(group => {
           if (group.battles.length === 1) {
-            return <BattleRow key={group.setId} battle={group.battles[0]} onDelete={onDelete} />;
+            return <BattleRow key={group.setId} battle={group.battles[0]} onEdit={onEdit} onDelete={onDelete} />;
           }
 
           const outcome = getSetOutcome(group.battles);
@@ -103,7 +112,7 @@ export default function PastBattlesList({ battles, onDelete }: PastBattlesListPr
               </span>
               <div className="grid gap-1.5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))' }}>
                 {group.battles.map((battle, i) => (
-                  <BattleRow key={battle.id} battle={battle} gameLabel={`Game ${i + 1}`} onDelete={onDelete} />
+                  <BattleRow key={battle.id} battle={battle} gameLabel={`Game ${i + 1}`} onEdit={onEdit} onDelete={onDelete} />
                 ))}
               </div>
             </div>
