@@ -18,6 +18,15 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Battle Logger: Edit Saved Battle] - Leg 1** (2026-09-10) - see commit
+  `8d7707a`. `RecordMatchForm` now doubles as the edit form for an
+  already-saved battle (an `editingBattle` prop, wired through a new Edit
+  button on `PastBattlesList`'s rows), saving via the existing
+  `updateBattle` instead of `addBattle`. Team/date/setId are locked in edit
+  mode - `Battle.playerRoster` is a point-in-time snapshot, not a live
+  reference, so the stored snapshot is edited as-is rather than re-derived
+  from the team's current state.
+
 - **[Battle Logger: Maushold Missing From Opponent Selection] - Leg 1**
   (2026-09-10) - see commit `ca7eeac`. Root cause: PokeAPI has no bare
   "maushold" resource, only maushold-family-of-four/-three varieties, but

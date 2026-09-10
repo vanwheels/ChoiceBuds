@@ -18,13 +18,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 
 ## Current Milestone: Battle Logger Overhaul
 
-- **[Battle Logger: Edit Saved Battle] — Leg 1** *(Last touched: 2026-09-10 ·
-  Re-checks: 0)*
-  No way to edit a battle once it's been created and saved — create-only
-  today. Needs an edit flow, likely reusing the logger UI in an edit mode
-  (draft/commit shape similar to `useActiveEditor`'s pattern for team
-  Pokémon) rather than a separate screen.
-
 - **[Battle Logger: Selection UI Improvements] — Leg 1** *(Last touched:
   2026-09-10 · Re-checks: 0)*
   No visual indicator shows which 4 of your own Pokémon have been selected
