@@ -30,11 +30,20 @@ Leg 8). Legs below are a tentative breakdown, not yet started.
 
 - **[Live Calc → Speed Tiers Tie-in] — Leg 6** *(Last touched: 2026-09-09 ·
   Re-checks: 0)*
-  Wire an inferred SP-Speed range from a Live Calc session
-  (`hooks/useLiveCalc.ts`) to override/annotate the matching threat's
-  generic usage-based speed entry in the tiers view. Wiring mechanism
-  (shared state vs. explicit "send to Speed Tiers" action) still open.
-  Targets Leg 8's full-regulation-roster data shape, not Leg 3/4's.
+  Sequenced after Leg 15 below (an in-project dependency, not the formal
+  Blocked tier's external-blocker sense). Scoping this leg live
+  (2026-09-09) found `hooks/useLiveCalc.ts`'s engine only infers Def/SpD,
+  not Speed —
+  there's no SP-Speed range yet for this leg to wire up. See
+  [docs/investigations/live-calc-speed-inference-scope.md](docs/investigations/live-calc-speed-inference-scope.md)
+  for the full finding and Vanny's call to build the missing inference
+  first rather than descope this leg. Once Leg 15 exists: wire its
+  `speedBound` to override/annotate the matching threat's generic
+  usage-based speed entry in the tiers view. Wiring mechanism (shared
+  state vs. explicit "send to Speed Tiers" action) still open — deferred
+  to this leg's own build session, not resolved in the scoping pass since
+  there's no data yet to wire. Targets Leg 8's full-regulation-roster data
+  shape, not Leg 3/4's.
 
 - **[Speed Tiers Verification Pass] — Leg 7** *(Last touched: 2026-09-09 ·
   Re-checks: 0)*
@@ -54,6 +63,74 @@ Leg 8). Legs below are a tentative breakdown, not yet started.
   Team Gap Analysis-style typing threats (`usageThreats.ts::computeUsageThreats`),
   alongside the All/Top 60/Top 120 usage-rank toggle Leg 8 already built.
   Theoretical/deferred, so explicitly not the default. Unscoped beyond that.
+
+- **[Speed Tiers Per-Spread Value Placement Bug] — Leg 10** *(Last touched:
+  2026-09-09 · Re-checks: 0)*
+  Reported live 2026-09-09: when a threat has multiple ranked usage spreads,
+  their entries render bundled under one (the highest) speed tier instead of
+  each landing at its own computed speed. `speedTierList.ts::buildSpeedTierEntries`
+  already builds one row per spread using that spread's own computed `speed`
+  (via `speedTiers.ts::computeThreatSpeedProfile`, which feeds each spread's
+  own `points` table into `finalSpeed`), and `groupSpeedTiers` groups purely
+  by that `speed` value — the pipeline looks correct on paper, so root cause
+  is unconfirmed. Needs a live `run-desktop` repro against real usage data to
+  check whether per-spread speed is actually varying, or collapsing to one
+  value somewhere upstream (a spread's reported nature not being applied,
+  only `points` — see `computeThreatSpeedProfile`'s `baseState()` call, which
+  doesn't set `nature` per spread).
+
+- **[Speed Tiers Usage Threshold Control] — Leg 11** *(Last touched:
+  2026-09-09 · Re-checks: 0)*
+  Requested live 2026-09-09: a user-adjustable minimum usage % for a spread
+  to get its own plotted row, replacing the fixed `SPREAD_USAGE_CUTOFF_PERCENT
+  = 10` constant in `speedTierList.ts`. Default to 25%, adjustable in 10%
+  increments. UI placement TBD — likely alongside the existing All/Top
+  60/Top 120 `rosterScope` toggle in `SpeedTiersPage.tsx`/`SpeedTierFieldPanel.tsx`.
+
+- **[Speed Tiers "Bounds Only" Toggle] — Leg 12** *(Last touched: 2026-09-09
+  · Re-checks: 0)*
+  Requested live 2026-09-09: a toggle to show only each threat's 3 fixed
+  min/neutral/max bound rows (`ThreatSpeedBounds`), suppressing usage-based
+  spread rows entirely. Distinct from Leg 9's "Threats Only" toggle (narrows
+  the species list, not the row types) and Leg 11's threshold control (tunes
+  the spread cutoff, doesn't remove spread rows outright).
+
+- **[Speed Tiers Mega Sprite Fallback] — Leg 13** *(Last touched: 2026-09-09
+  · Re-checks: 0)*
+  Reported live 2026-09-09: Mega-form rows render with the base species'
+  sprite instead of the Mega form's own, hurting visual clarity in the dense
+  grid. `SpeedTiersPage.tsx`'s `rosterCandidates` builder falls back to
+  `dbEntry.spriteUrl` whenever `getCachedMegaSprite(megaName)` misses
+  (`spriteUrl: megaSprite?.spriteUrl ?? dbEntry.spriteUrl`) — needs checking
+  whether `useInitialSync`'s bulk Mega-sprite prefetch actually covers every
+  roster Mega candidate, or whether this needs its own on-demand fetch
+  (`useMegaSprite`) rather than relying purely on the prefetch cache.
+
+- **[Speed Tiers Trick Room Sort-Order Bug] — Leg 14** *(Last touched:
+  2026-09-09 · Re-checks: 0)*
+  Reported live 2026-09-09: with the Trick Room toggle active (slowest-first
+  sort), the fastest entry on the grid (Mega Raichu, 200 Speed) renders as
+  the very first tile instead of last/near-last — the row also visually
+  mirrors itself (descends then re-ascends back up to 200) rather than
+  monotonically increasing. Possibly the same root cause as Leg 10's
+  bundling bug, possibly its own issue in `groupSpeedTiers`
+  (`speedTierList.ts`) or however `SpeedTierList.tsx` lays groups out into
+  the grid — not investigated yet, explicitly deferred per Vanny at report
+  time.
+
+- **[Live Calc Speed Inference Engine] — Leg 15** *(Last touched:
+  2026-09-09 · Re-checks: 0)*
+  Prerequisite for Leg 6, surfaced while scoping it — `hooks/useLiveCalc.ts`'s
+  engine only narrows Def/SpD, no Speed at all, structurally (damage-percent
+  observations can't reveal a defender's Speed). New capability: turn-order
+  observations ("did my Pokémon or the defender act first this turn"),
+  neutral-field-only for v1 (no Tailwind/Trick Room/paralysis tracked yet),
+  narrowing a `speedBound` the same per-observation bound-intersection shape
+  `liveCalcEngine.ts` already uses for Def/SpD. Full scoping doc:
+  [docs/investigations/live-calc-speed-inference-scope.md](docs/investigations/live-calc-speed-inference-scope.md) —
+  resolved design decisions plus a list of open follow-ups (exact turn-order
+  math, priority-move handling, speed-tie handling, UI shape) still to settle
+  while building.
 
 ## Blocked
 
