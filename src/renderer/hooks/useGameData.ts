@@ -18,6 +18,7 @@ import {
 import { fetchChampionsUsage, normalizeUsageCacheKey } from '../services/championsBattleData';
 import { normalizeSlug } from '../utils/pokemonRules';
 import { readCacheEntry, runCachedFetch, withCacheEntry, createEmptyGameDataCache } from '../utils/cacheManager';
+import { useDebouncedWrite } from './useDebouncedWrite';
 import { NEVER_EXPIRES } from '../utils/cacheExpiry';
 import { applyChampionsMoveOverride } from '../config/championsMoveOverrides';
 import { applyMoveFlags } from '../config/moveFlags';
@@ -99,14 +100,12 @@ export function useGameData(): UseGameDataReturn {
     return () => { cancelled = true; };
   }, []);
 
-  // Write-through to disk on every change, once initialized - mirrors
-  // useTeams.ts/useDatabase.ts's "persist on every mutation" convention.
-  useEffect(() => {
-    if (!isInitialized || !cache) return;
-    window.electron.writeGameDataCache(cache).catch((err: unknown) => {
-      console.error('Error persisting game data cache:', err);
-    });
-  }, [isInitialized, cache]);
+  // Debounced write-through to disk, once initialized - see
+  // useDebouncedWrite.ts's header for why this is debounced rather than
+  // firing on every single mutation (a burst of cache-miss fetches, e.g.
+  // useUsageSync.ts's TTL-expiry wave, used to serialize into one full
+  // multi-MB write per mutation).
+  useDebouncedWrite(cache, isInitialized, window.electron.writeGameDataCache, 'Error persisting game data cache:');
 
   // Champions overrides are applied at this read boundary (not baked into
   // what's fetched/cached) so corrections are self-healing against data

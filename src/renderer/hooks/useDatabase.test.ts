@@ -31,12 +31,14 @@ describe('useDatabase', () => {
     await waitFor(() => expect(result.current.isInitialized).toBe(true));
 
     expect(result.current.cache).toEqual(expect.objectContaining({ version: 1, entries: {} }));
-    expect(window.electron.writePokeAPICache).toHaveBeenCalledWith(
+    // Write-through is debounced (see useDebouncedWrite.ts) rather than
+    // immediate, so this needs to wait for the debounce window.
+    await waitFor(() => expect(window.electron.writePokeAPICache).toHaveBeenCalledWith(
       expect.objectContaining({ version: 1, entries: {} })
-    );
+    ));
   });
 
-  it('loads a persisted cache from disk without overwriting it', async () => {
+  it('loads a persisted cache from disk without immediately overwriting it', async () => {
     const cache = makeCache({ gengar: makeEntry() });
     vi.mocked(window.electron.readPokeAPICache).mockResolvedValueOnce(cache);
 
@@ -44,6 +46,10 @@ describe('useDatabase', () => {
     await waitFor(() => expect(result.current.isInitialized).toBe(true));
 
     expect(result.current.cache?.entries.gengar).toEqual(makeEntry());
+    // Checked synchronously, before the debounced write-through effect's
+    // window elapses - the hook still schedules a harmless rewrite of this
+    // same unchanged content ~500ms later (same one-write-per-launch
+    // pattern useGameData.ts already has), just not immediately.
     expect(window.electron.writePokeAPICache).not.toHaveBeenCalled();
   });
 
@@ -98,7 +104,7 @@ describe('useDatabase', () => {
     expect(result.current.isCacheEntryValid('gengar')).toBe(false);
   });
 
-  it('setCacheEntry normalizes the species key, persists, and updates state', async () => {
+  it('setCacheEntry normalizes the species key, updates state immediately, and persists via the debounced write-through', async () => {
     const { result } = renderHook(() => useDatabase());
     await waitFor(() => expect(result.current.isInitialized).toBe(true));
 
@@ -109,23 +115,31 @@ describe('useDatabase', () => {
 
     expect(success).toBe(true);
     expect(result.current.getCachedEntry('gengar')).toEqual(makeEntry());
-    expect(window.electron.writePokeAPICache).toHaveBeenCalledWith(
+    await waitFor(() => expect(window.electron.writePokeAPICache).toHaveBeenCalledWith(
       expect.objectContaining({ entries: { gengar: makeEntry() } })
-    );
+    ));
   });
 
-  it('setCacheEntry leaves state untouched and returns false when the write fails', async () => {
+  it('setCacheEntry updates state optimistically even when the underlying debounced write later fails', async () => {
+    // The write-through effect no longer gates state on disk success - a
+    // failed/rejected write is log-only (see useDebouncedWrite.ts), same
+    // as useGameData.ts's write-through already behaves. The in-memory
+    // cache is the source of truth for the running session; a failed
+    // write just means next launch re-fetches whatever didn't persist.
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const { result } = renderHook(() => useDatabase());
     await waitFor(() => expect(result.current.isInitialized).toBe(true));
-    vi.mocked(window.electron.writePokeAPICache).mockResolvedValueOnce(false);
+    vi.mocked(window.electron.writePokeAPICache).mockRejectedValueOnce(new Error('disk error'));
 
-    let success = true;
+    let success = false;
     await act(async () => {
       success = await result.current.setCacheEntry('gengar', makeEntry());
     });
 
-    expect(success).toBe(false);
-    expect(result.current.getCachedEntry('gengar')).toBeNull();
+    expect(success).toBe(true);
+    expect(result.current.getCachedEntry('gengar')).toEqual(makeEntry());
+    await waitFor(() => expect(consoleErrorSpy).toHaveBeenCalledWith('Error persisting PokeAPI cache:', expect.any(Error)));
+    consoleErrorSpy.mockRestore();
   });
 
   it('cleanExpiredEntries removes only expired entries', async () => {

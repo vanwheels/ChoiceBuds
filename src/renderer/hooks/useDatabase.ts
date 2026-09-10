@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { PokeAPICache, PokeAPICacheEntry } from '../types/pokemon';
 import { NEVER_EXPIRES } from '../utils/cacheExpiry';
+import { useDebouncedWrite } from './useDebouncedWrite';
 
 export interface UseDatabaseReturn {
   cache: PokeAPICache | null;
@@ -45,7 +46,9 @@ export function useDatabase(): UseDatabaseReturn {
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * Internal: Clean expired entries from cache
+   * Internal: Clean expired entries from cache. Persistence is no longer
+   * done here directly - it goes through the debounced write-through
+   * effect below, same as every other cache mutation in this hook.
    */
   const cleanExpiredEntriesInternal = useCallback(async (currentCache: PokeAPICache): Promise<boolean> => {
     try {
@@ -68,14 +71,9 @@ export function useDatabase(): UseDatabaseReturn {
         lastCleaned: now,
       };
 
-      const success = await window.electron.writePokeAPICache(updatedCache);
-
-      if (success) {
-        setCache(updatedCache);
-        console.log(`[useDatabase] Cleaned ${removedCount} expired cache entries`);
-      }
-
-      return success;
+      setCache(updatedCache);
+      console.log(`[useDatabase] Cleaned ${removedCount} expired cache entries`);
+      return true;
     } catch (err) {
       console.error('Error cleaning cache:', err);
       return false;
@@ -126,18 +124,19 @@ export function useDatabase(): UseDatabaseReturn {
         await performBackgroundRevalidation(cachedData);
         setIsRevalidating(false);
       } else {
-        // Initialize empty cache if none exists
+        // Initialize empty cache if none exists - persisted via the
+        // debounced write-through effect below, same as every other
+        // mutation, rather than an immediate write here.
         const emptyCache: PokeAPICache = {
           version: 1,
           entries: {},
           lastCleaned: Date.now(),
         };
-        
-        await window.electron.writePokeAPICache(emptyCache);
+
         setCache(emptyCache);
         setIsInitialized(true);
       }
-      
+
       setError(null);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to initialize cache';
@@ -203,13 +202,9 @@ export function useDatabase(): UseDatabaseReturn {
                 lastCleaned: now,
               };
 
-              const success = await window.electron.writePokeAPICache(updatedCache);
               if (ignore) return;
-
-              if (success) {
-                setCache(updatedCache);
-                console.log(`[useDatabase] Cleaned ${removedCount} expired cache entries`);
-              }
+              setCache(updatedCache);
+              console.log(`[useDatabase] Cleaned ${removedCount} expired cache entries`);
             } catch (cleanErr) {
               console.error('[useDatabase] Background revalidation failed:', cleanErr);
               // Don't set error state - this is a background operation
@@ -220,14 +215,14 @@ export function useDatabase(): UseDatabaseReturn {
 
           if (!ignore) setIsRevalidating(false);
         } else {
-          // Initialize empty cache if none exists
+          // Initialize empty cache if none exists - persisted via the
+          // debounced write-through effect below.
           const emptyCache: PokeAPICache = {
             version: 1,
             entries: {},
             lastCleaned: Date.now(),
           };
 
-          await window.electron.writePokeAPICache(emptyCache);
           if (ignore) return;
           setCache(emptyCache);
           setIsInitialized(true);
@@ -247,6 +242,14 @@ export function useDatabase(): UseDatabaseReturn {
       ignore = true;
     };
   }, []);
+
+  // Debounced write-through to disk, once initialized - the sole
+  // persistence path for every mutation above (initial empty-cache
+  // creation, background cleaning, setCacheEntry, clearCache). See
+  // useDebouncedWrite.ts's header and
+  // docs/investigations/app-lag-investigation.md for why this replaced
+  // each call site's own immediate write.
+  useDebouncedWrite(cache, isInitialized, window.electron.writePokeAPICache, 'Error persisting PokeAPI cache:');
 
   /**
    * Get a cached entry for a specific species
@@ -268,39 +271,34 @@ export function useDatabase(): UseDatabaseReturn {
   }, [cache]);
 
   /**
-   * Set a cache entry for a specific species
+   * Set a cache entry for a specific species. Persistence goes through the
+   * debounced write-through effect below rather than an immediate write
+   * here (this is the hot path - one call per cache-miss, and the thing
+   * app-lag-investigation.md root-caused). The resolved `true` means the
+   * in-memory cache was updated and a disk write has been queued, not that
+   * the write itself has been confirmed - matching useGameData.ts's
+   * cache-mutation callbacks, which never confirmed disk success either.
+   * No caller branches on a `false` result today.
    */
   const setCacheEntry = useCallback(async (
     species: string,
     entry: PokeAPICacheEntry
   ): Promise<boolean> => {
     if (!cache) return false;
-    
-    try {
-      const normalizedSpecies = species.toLowerCase().trim();
-      
-      const updatedCache: PokeAPICache = {
-        ...cache,
-        entries: {
-          ...cache.entries,
-          [normalizedSpecies]: entry,
-        },
-      };
-      
-      const success = await window.electron.writePokeAPICache(updatedCache);
-      
-      if (success) {
-        setCache(updatedCache);
-        setError(null);
-      }
-      
-      return success;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to set cache entry';
-      setError(errorMessage);
-      console.error('Error setting cache entry:', err);
-      return false;
-    }
+
+    const normalizedSpecies = species.toLowerCase().trim();
+
+    const updatedCache: PokeAPICache = {
+      ...cache,
+      entries: {
+        ...cache.entries,
+        [normalizedSpecies]: entry,
+      },
+    };
+
+    setCache(updatedCache);
+    setError(null);
+    return true;
   }, [cache]);
 
   /**
@@ -320,30 +318,19 @@ export function useDatabase(): UseDatabaseReturn {
   }, [cache, cleanExpiredEntriesInternal]);
 
   /**
-   * Clear entire cache (useful for debugging or user-initiated reset)
+   * Clear entire cache (useful for debugging or user-initiated reset).
+   * Persisted via the debounced write-through effect below.
    */
   const clearCache = useCallback(async (): Promise<boolean> => {
-    try {
-      const emptyCache: PokeAPICache = {
-        version: 1,
-        entries: {},
-        lastCleaned: Date.now(),
-      };
-      
-      const success = await window.electron.writePokeAPICache(emptyCache);
-      
-      if (success) {
-        setCache(emptyCache);
-        setError(null);
-      }
-      
-      return success;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to clear cache';
-      setError(errorMessage);
-      console.error('Error clearing cache:', err);
-      return false;
-    }
+    const emptyCache: PokeAPICache = {
+      version: 1,
+      entries: {},
+      lastCleaned: Date.now(),
+    };
+
+    setCache(emptyCache);
+    setError(null);
+    return true;
   }, []);
 
   /**

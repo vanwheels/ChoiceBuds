@@ -118,7 +118,7 @@ describe('useGameData', () => {
     consoleErrorSpy.mockRestore();
   });
 
-  it('persists the cache to disk once initialized', async () => {
+  it('persists the cache to disk once initialized, debounced after the mutation settles', async () => {
     const { result } = renderHook(() => useGameData());
     await waitFor(() => expect(result.current.isInitialized).toBe(true));
 
@@ -127,9 +127,11 @@ describe('useGameData', () => {
       await result.current.getAbilityData('Cursed Body');
     });
 
-    expect(window.electron.writeGameDataCache).toHaveBeenCalledWith(
+    // Write-through is debounced (see useDebouncedWrite.ts) so it doesn't
+    // land in the same tick as the mutation - waitFor covers that delay.
+    await waitFor(() => expect(window.electron.writeGameDataCache).toHaveBeenCalledWith(
       expect.objectContaining({ abilities: expect.objectContaining({ 'cursed-body': expect.objectContaining({ name: 'cursed-body' }) }) })
-    );
+    ));
   });
 
   describe('moves', () => {
