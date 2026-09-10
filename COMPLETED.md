@@ -18,6 +18,11 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Speed Tiers "Bounds Only" Toggle] - Leg 12** (2026-09-09) - added the
+  checkbox suppressing usage-based spread rows entirely, leaving just each
+  threat's 3 fixed min/neutral/max bound rows (plus any Live Calc pins). See
+  commit `1e765e0`. Manually live-verified by Vanny.
+
 - **[Speed Tiers "Threats Only" Toggle] - Leg 9** (2026-09-09) - added the
   checkbox and its `slotResistsThreat`-based filter. See commit `72782ce`.
   Manually live-verified by Vanny.

@@ -29,14 +29,6 @@ was shipped, then redone by Leg 4, then Leg 4's own data source superseded
 by Leg 8; Leg 15 was Leg 6's own prerequisite, scoped and built out of
 numeric order). Legs below are a tentative breakdown, not yet started.
 
-- **[Speed Tiers "Bounds Only" Toggle] — Leg 12** *(Last touched: 2026-09-09
-  · Re-checks: 0)*
-  Requested live 2026-09-09: a toggle to show only each threat's 3 fixed
-  min/neutral/max bound rows (`ThreatSpeedBounds`), suppressing usage-based
-  spread rows entirely. Distinct from Leg 9's "Threats Only" toggle (narrows
-  the species list, not the row types) and Leg 11's threshold control (tunes
-  the spread cutoff, doesn't remove spread rows outright).
-
 - **[Speed Tiers Mega Sprite Fallback] — Leg 13** *(Last touched: 2026-09-09
   · Re-checks: 0)*
   Reported live 2026-09-09: Mega-form rows render with the base species'
