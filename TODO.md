@@ -31,26 +31,24 @@ out of numeric order). Legs below are a tentative breakdown, not yet
 started.
 
 - **[Live Calc Turn-Order Speed Stage Boosts] — Leg 16** *(Last touched:
-  2026-09-09 · Re-checks: 0)*
-  Requested live 2026-09-09. Leg 15's turn-order Speed engine
-  (`utils/liveCalcSpeedEngine.ts`) currently compares both sides' unboosted
-  base Speed only — no Speed stage boosts (e.g. a Speed Boost proc, an
-  Icy Wind drop, a Nasty Plot-style self-boost on a Speed-relevant set) for
-  either the attacker or the defender, a documented v1 gap called out in
-  that engine's own header and in
-  [docs/investigations/live-calc-speed-inference-scope.md](docs/investigations/live-calc-speed-inference-scope.md)'s
-  "Resolved during the build" section. Add a per-observation (or
-  per-Pokémon, TBD) stage input for both sides so a turn observed after a
-  boost/drop doesn't misnarrow. Attacker boosts are already known/editable
-  (`CalcPokemonState.boosts` on the existing panel) — the open design
-  question is whether the attacker's *existing* panel boosts should just be
-  honored as-is (dropping the "both sides unboosted for symmetry" v1 call)
-  or whether turn-order observations need their own explicit stage field
-  independent of the panel, and how a defender-side stage guess factors
-  into the nature/SP scan (a new axis alongside nature, or held fixed per
-  observation like the move name already is). Unscoped beyond the request
-  itself — needs a scoping pass before building, same shape as Leg 15's own
-  scope doc.
+  2026-09-10 · Re-checks: 0)*
+  Requested live 2026-09-09; scoped 2026-09-10 — see
+  [docs/investigations/live-calc-turn-order-speed-stage-boosts-scope.md](docs/investigations/live-calc-turn-order-speed-stage-boosts-scope.md)
+  for the full design-questions pass. Resolved: a new `defenderSpeedStage`
+  field (-6..+6, default 0) on each turn-order observation — per-observation
+  (not per-Pokémon), and a known/fixed input the engine applies directly
+  (not a new scanned/narrowed axis alongside nature). The attacker side now
+  honors the existing panel's live boosts + status via
+  `computeEffectiveSpeed()` instead of raw unboosted `rawStats.spe`
+  (weather stays `''` — Live Calc tracks no field weather), dropping Leg
+  15's "both sides unboosted for symmetry" v1 call. Ready to build: touches
+  `liveCalcSpeedEngine.ts` (new field + `attackerSpeed` source +
+  `feasibleSpeedRange()`'s stage multiplier, needs `boostMultiplier()`
+  exported from `damageCalcEngine.ts`), `useLiveCalc.ts`'s
+  `defaultTurnOrderObservation()`, and a new per-row stage input in
+  `LiveCalcTurnOrderList.tsx` mirroring `CalcStatRows.tsx`'s existing
+  boost-stage input. Defender status/Tailwind/weather-ability Speed changes
+  stay out of scope (documented gap, not this leg's job — see scope doc).
 
 ## Blocked
 
