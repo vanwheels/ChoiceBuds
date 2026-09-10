@@ -21,8 +21,9 @@ vi.mock('../services/championsBattleData', async (importOriginal) => {
   return { ...actual, fetchChampionsUsage: vi.fn() };
 });
 
-import { fetchMoveData, fetchItemData, fetchAbilityData, fetchSpeciesLearnset } from '../services/pokeapiService';
+import { fetchMoveData, fetchItemData, fetchAbilityData, fetchSpeciesLearnset, normalizeNameForAPI } from '../services/pokeapiService';
 import { fetchChampionsUsage } from '../services/championsBattleData';
+import { CACHE_WRITE_DEBOUNCE_MS } from './useDebouncedWrite';
 
 const NOW = Date.now();
 
@@ -116,6 +117,28 @@ describe('useGameData', () => {
     await waitFor(() => expect(result.current.isInitialized).toBe(true));
     expect(result.current.cache).toEqual(expect.objectContaining({ version: 1, moves: {} }));
     consoleErrorSpy.mockRestore();
+  });
+
+  it('does not rewrite a cache loaded unchanged from disk, even after the debounce window elapses', async () => {
+    // Every VGC_ITEMS entry needs a cache hit (real spriteUrl) so the
+    // background item-sync effect (see useGameData.ts) finds nothing
+    // missing to fetch/fallback-fill - otherwise that unrelated effect's
+    // own legitimate mutation would fire a write and mask what this test
+    // is actually checking.
+    const items = Object.fromEntries(VGC_ITEMS.map(name => {
+      const normalized = normalizeNameForAPI(name);
+      return [normalized, { name: normalized, category: 'unknown', effect: '', description: '', spriteUrl: 'https://example.com/item.png', cachedAt: NOW, expiresAt: NOW + 100_000 }];
+    }));
+    const cache = makeCache({ moves: { 'shadow-ball': makeMove() }, items });
+    vi.mocked(window.electron.readGameDataCache).mockResolvedValueOnce(cache);
+
+    const { result } = renderHook(() => useGameData());
+    await waitFor(() => expect(result.current.isInitialized).toBe(true));
+
+    // Wait past the debounce window (see useDebouncedWrite.ts) to confirm
+    // the write is skipped outright, not merely delayed.
+    await new Promise(resolve => setTimeout(resolve, CACHE_WRITE_DEBOUNCE_MS + 100));
+    expect(window.electron.writeGameDataCache).not.toHaveBeenCalled();
   });
 
   it('persists the cache to disk once initialized, debounced after the mutation settles', async () => {

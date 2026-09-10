@@ -45,6 +45,17 @@ export function useDatabase(): UseDatabaseReturn {
   const [isRevalidating, setIsRevalidating] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Snapshot of what was actually on disk at mount (undefined when there
+  // was nothing to read) - see useDebouncedWrite.ts's header. State rather
+  // than a ref since it's read during render (to pass to useDebouncedWrite
+  // below) and React forbids reading a ref's value there; it's set in the
+  // same batch as the setCache calls that use it, so the write-through
+  // effect below skips redundantly rewriting a cache it just loaded
+  // unchanged, while a fresh install (nothing on disk yet) or a real
+  // mutation (e.g. background cleaning actually removing something) still
+  // writes normally.
+  const [diskSnapshot, setDiskSnapshot] = useState<string | undefined>(undefined);
+
   /**
    * Internal: Clean expired entries from cache. Persistence is no longer
    * done here directly - it goes through the debounced write-through
@@ -114,11 +125,12 @@ export function useDatabase(): UseDatabaseReturn {
     try {
       // Step 1: Instantly serve stale cache from disk
       const cachedData = await window.electron.readPokeAPICache();
-      
+
       if (cachedData) {
+        setDiskSnapshot(JSON.stringify(cachedData));
         setCache(cachedData);
         setIsInitialized(true);
-        
+
         // Step 2: Background revalidation - check if cleaning is needed
         setIsRevalidating(true);
         await performBackgroundRevalidation(cachedData);
@@ -133,6 +145,7 @@ export function useDatabase(): UseDatabaseReturn {
           lastCleaned: Date.now(),
         };
 
+        setDiskSnapshot(undefined);
         setCache(emptyCache);
         setIsInitialized(true);
       }
@@ -174,6 +187,7 @@ export function useDatabase(): UseDatabaseReturn {
         if (ignore) return;
 
         if (cachedData) {
+          setDiskSnapshot(JSON.stringify(cachedData));
           setCache(cachedData);
           setIsInitialized(true);
 
@@ -224,6 +238,7 @@ export function useDatabase(): UseDatabaseReturn {
           };
 
           if (ignore) return;
+          setDiskSnapshot(undefined);
           setCache(emptyCache);
           setIsInitialized(true);
         }
@@ -248,8 +263,10 @@ export function useDatabase(): UseDatabaseReturn {
   // creation, background cleaning, setCacheEntry, clearCache). See
   // useDebouncedWrite.ts's header and
   // docs/investigations/app-lag-investigation.md for why this replaced
-  // each call site's own immediate write.
-  useDebouncedWrite(cache, isInitialized, window.electron.writePokeAPICache, 'Error persisting PokeAPI cache:');
+  // each call site's own immediate write - and diskSnapshot's header
+  // above for why it's passed through, to skip the redundant rewrite of a
+  // cache loaded unchanged.
+  useDebouncedWrite(cache, isInitialized, window.electron.writePokeAPICache, 'Error persisting PokeAPI cache:', undefined, diskSnapshot);
 
   /**
    * Get a cached entry for a specific species

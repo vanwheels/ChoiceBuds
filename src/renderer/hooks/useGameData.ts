@@ -73,6 +73,14 @@ export function useGameData(): UseGameDataReturn {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Snapshot of what was actually on disk at mount (undefined when there
+  // was nothing to read) - see useDebouncedWrite.ts's header. State rather
+  // than a ref since it's read during render (to pass to useDebouncedWrite
+  // below) and React forbids reading a ref's value there; it's set in the
+  // same batch as the setCache calls below so it's never stale by the time
+  // the write-through effect first runs.
+  const [diskSnapshot, setDiskSnapshot] = useState<string | undefined>(undefined);
+
   // Read the persisted cache from disk on mount (SWR-style, matching
   // useDatabase.ts) - previously this always reset to empty on every launch,
   // meaning move/item/ability/learnset data could never survive a restart.
@@ -81,6 +89,7 @@ export function useGameData(): UseGameDataReturn {
     window.electron.readGameDataCache()
       .then((persisted: GameDataCache | null) => {
         if (cancelled) return;
+        setDiskSnapshot(persisted ? JSON.stringify(persisted) : undefined);
         // A cache file written before lastSyncedSpeciesNames existed (was
         // called initialBulkSyncCompletedAt) predates the field entirely -
         // undefined, not an empty array - so every read/write site that
@@ -94,6 +103,7 @@ export function useGameData(): UseGameDataReturn {
       .catch((err: unknown) => {
         if (cancelled) return;
         console.error('Error reading game data cache:', err);
+        setDiskSnapshot(undefined);
         setCache(createEmptyGameDataCache());
         setIsInitialized(true);
       });
@@ -104,8 +114,9 @@ export function useGameData(): UseGameDataReturn {
   // useDebouncedWrite.ts's header for why this is debounced rather than
   // firing on every single mutation (a burst of cache-miss fetches, e.g.
   // useUsageSync.ts's TTL-expiry wave, used to serialize into one full
-  // multi-MB write per mutation).
-  useDebouncedWrite(cache, isInitialized, window.electron.writeGameDataCache, 'Error persisting game data cache:');
+  // multi-MB write per mutation) - and for why diskSnapshot is passed
+  // through, to skip the redundant rewrite of a cache loaded unchanged.
+  useDebouncedWrite(cache, isInitialized, window.electron.writeGameDataCache, 'Error persisting game data cache:', undefined, diskSnapshot);
 
   // Champions overrides are applied at this read boundary (not baked into
   // what's fetched/cached) so corrections are self-healing against data

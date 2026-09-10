@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { useDatabase, createCacheEntry } from './useDatabase';
 import { NEVER_EXPIRES } from '../utils/cacheExpiry';
+import { CACHE_WRITE_DEBOUNCE_MS } from './useDebouncedWrite';
 import type { PokeAPICache, PokeAPICacheEntry } from '../types/pokemon';
 
 const BASE_STATS = { hp: 60, attack: 65, defense: 60, specialAttack: 130, specialDefense: 75, speed: 110 };
@@ -46,10 +47,19 @@ describe('useDatabase', () => {
     await waitFor(() => expect(result.current.isInitialized).toBe(true));
 
     expect(result.current.cache?.entries.gengar).toEqual(makeEntry());
-    // Checked synchronously, before the debounced write-through effect's
-    // window elapses - the hook still schedules a harmless rewrite of this
-    // same unchanged content ~500ms later (same one-write-per-launch
-    // pattern useGameData.ts already has), just not immediately.
+    expect(window.electron.writePokeAPICache).not.toHaveBeenCalled();
+  });
+
+  it('does not rewrite a cache loaded unchanged from disk, even after the debounce window elapses', async () => {
+    const cache = makeCache({ gengar: makeEntry() });
+    vi.mocked(window.electron.readPokeAPICache).mockResolvedValueOnce(cache);
+
+    const { result } = renderHook(() => useDatabase());
+    await waitFor(() => expect(result.current.isInitialized).toBe(true));
+
+    // Wait past the debounce window (see useDebouncedWrite.ts) to confirm
+    // the write is skipped outright, not merely delayed.
+    await new Promise(resolve => setTimeout(resolve, CACHE_WRITE_DEBOUNCE_MS + 100));
     expect(window.electron.writePokeAPICache).not.toHaveBeenCalled();
   });
 
