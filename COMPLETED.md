@@ -18,6 +18,16 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Speed Tiers Save Override: Over-Cap SP Warning] - Leg 18** (2026-09-10) -
+  see commit `<pending>`. Added `utils/evTotal.ts`'s `getTotalSP`/
+  `MAX_TOTAL_SP` and used it to surface a non-blocking `⚠ total/66` badge
+  (visually matching `StatsColumn.tsx:121`'s existing pill) wherever a team
+  member's real SP total exceeds the cap: a per-sprite badge on `TeamCard
+  .tsx`'s collapsed mini sprite strip (so the overage is visible without
+  expanding the card at all), and a header-level badge on `PokemonCard.tsx`
+  next to the species/pokedex line. Doesn't touch `StatsColumn.tsx` itself -
+  that file's own inline total stays as-is, out of this leg's scope.
+
 - **[Speed Tiers Preview Strip: Save Override to Team] - Leg 17** (2026-09-10) -
   see commit `453fa2e`. Added `patchPokemonWithOverride` (Speed SP + nature only,
   species excluded) to `utils/speedTierOverrides.ts`, plus a per-card Save

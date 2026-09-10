@@ -24,23 +24,14 @@ for the full design-questions pass. Its "team-anchored threat list, not a
 vgcmulticalc reskin" differentiation call was itself reversed the same day
 by Leg 8 — see
 [docs/investigations/speed-tiers-full-roster-pivot.md](docs/investigations/speed-tiers-full-roster-pivot.md).
-Legs 1-6, 8, and 13-16 are done — see `COMPLETED.md` (Leg 3's row-list
+Legs 1-6, 8, and 13-18 are done — see `COMPLETED.md` (Leg 3's row-list
 shell was shipped, then redone by Leg 4, then Leg 4's own data source
 superseded by Leg 8; Leg 15 was Leg 6's own prerequisite, scoped and built
-out of numeric order).
-
-- **[Speed Tiers Save Override: Over-Cap SP Warning] — Leg 18** *(Last
-  touched: 2026-09-10 · Re-checks: 0)*
-  Scoped alongside Leg 17 in the same session — see
-  [docs/investigations/speed-tiers-save-override-scope.md](docs/investigations/speed-tiers-save-override-scope.md).
-  Leg 17's save only sees Speed in isolation (unlike Team Builder's
-  `StatsColumn.tsx`, which gates every stat's `+` at a live 66-total cap
-  across all six stats), so it can legitimately push a team member's real
-  EV total over 66. Resolved: don't block the save, surface a warning
-  instead — a `⚠` flag (visually matching `StatsColumn.tsx:121`'s existing
-  `⚠ total/66` treatment) on both `TeamCard.tsx` and `PokemonCard.tsx` for
-  any team member over the cap. Neither file currently computes a per-mon
-  EV total today - new derived state at both render sites, not a rewire.
+out of numeric order). No leg is currently scoped past 18 — see
+[docs/investigations/speed-calc-scope.md](docs/investigations/speed-calc-scope.md)'s
+"Open follow-ups" section for what's still unresolved (field-effect
+toggles, the Team Gap Analysis Speed Annotation relationship) before the
+next leg can be scoped.
 
 ## Blocked
 

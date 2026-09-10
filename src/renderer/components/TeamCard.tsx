@@ -12,6 +12,7 @@ import { useRosterActions } from '../hooks/useRosterActions';
 import { toRegulationId } from '../utils/pokemonRules';
 import { getRegulationTheme } from '../config/pokemonTheme';
 import { getPixelSpriteUrl } from '../utils/spriteUrl';
+import { getTotalSP, MAX_TOTAL_SP } from '../utils/evTotal';
 import { getMegaApiSlug } from '../config/megaEvolution';
 import { getCachedMegaSprite, useMegaSpritePrefetch } from '../hooks/useMegaSprite';
 import { TEAMS_LIST_DRAG_TYPE, type TeamsListDragPayload } from '../utils/teamsListDragTypes';
@@ -253,13 +254,28 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
               const spriteUrl = megaSprite
                 ? (p.showdownData.shiny ? megaSprite.shinySpriteUrl : megaSprite.spriteUrl)
                 : getPixelSpriteUrl(p.pokedexNumber, p.showdownData.species, p.showdownData.gender || 'M', p.showdownData.shiny);
+              // Over-cap SP warning (Speed Tiers Save Override: Over-Cap SP
+              // Warning, see TODO.md) - surfaced here too, not just on the
+              // expanded PokemonCard, so the overage is visible without
+              // expanding the team card at all.
+              const totalSP = getTotalSP(p.showdownData.evs);
+              const isOverSPCap = totalSP > MAX_TOTAL_SP;
               return (
-                <img
-                  key={idx}
-                  src={spriteCacheState.resolveSprite(spriteUrl)}
-                  alt={p.showdownData.species}
-                  className="w-14 h-14 object-contain [image-rendering:pixelated] shrink-0"
-                />
+                <div key={idx} className="relative w-14 h-14 shrink-0">
+                  <img
+                    src={spriteCacheState.resolveSprite(spriteUrl)}
+                    alt={p.showdownData.species}
+                    className="w-14 h-14 object-contain [image-rendering:pixelated]"
+                  />
+                  {isOverSPCap && (
+                    <span
+                      title={`${p.showdownData.nickname || p.showdownData.species}: total SP (${totalSP}) exceeds the ${MAX_TOTAL_SP} cap`}
+                      className="absolute -top-1 -right-1 text-[9px] font-bold leading-none px-1 py-0.5 rounded bg-red-600 text-white border border-red-400"
+                    >
+                      ⚠
+                    </span>
+                  )}
+                </div>
               );
             })}
           </div>

@@ -29,6 +29,7 @@ import { toRegulationId } from '../utils/pokemonRules';
 import { getMegaApiSlug } from '../config/megaEvolution';
 import { useMegaSprite } from '../hooks/useMegaSprite';
 import { getPixelSpriteUrl, getAnimatedSpriteUrl } from '../utils/spriteUrl';
+import { getTotalSP, MAX_TOTAL_SP } from '../utils/evTotal';
 import { TEAM_ROSTER_DRAG_TYPE, type TeamRosterDragPayload } from '../utils/teamRosterDragTypes';
 import { DRAG_REORDER_TRANSITION } from '../config/motion';
 
@@ -67,6 +68,16 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
   const [failedAnimatedUrl, setFailedAnimatedUrl] = useState<string | null>(null);
   const spriteUrl = getPixelSpriteUrl(pokedexNumber, showdownData.species, localGender || 'M', isLocalShiny);
   const rulesetId = toRegulationId(team.format);
+  // Over-cap SP warning (Speed Tiers Save Override: Over-Cap SP Warning, see
+  // TODO.md) - a Speed Tiers Preview Strip save only sees Speed's SP in
+  // isolation, so it can legitimately push this total over the 66 cap that
+  // StatsColumn.tsx's own live editing gates against. Not a rewire of that
+  // gate; StatsColumn already shows its own totalEVs/66 pill down in the EV
+  // grid, but that's only visible once you're already looking at the EVs -
+  // this header-level badge surfaces the same overage where a quick scan of
+  // the expanded card actually looks first.
+  const totalSP = getTotalSP(showdownData.evs);
+  const isOverSPCap = totalSP > MAX_TOTAL_SP;
   const [glowC1, glowC2] = getTypeGlowColors(types);
   const glowRingStyle = { '--glow-c1': glowC1, '--glow-c2': glowC2 } as CSSProperties;
 
@@ -275,6 +286,14 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
             className="w-full px-2 py-1 text-sm font-bold text-white bg-zinc-800 border border-zinc-600 rounded text-center outline-none"
           />
           <p className="text-xs text-zinc-300 truncate">{showdownData.species} #{pokedexNumber}</p>
+          {isOverSPCap && (
+            <span
+              title={`Total SP (${totalSP}) exceeds the ${MAX_TOTAL_SP} cap`}
+              className="inline-block mt-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-600 text-white border border-red-400"
+            >
+              ⚠ {totalSP}/{MAX_TOTAL_SP}
+            </span>
+          )}
         </div>
 
         {/* Sprite Container - clickable to open the Roster Swap picker, permanently
