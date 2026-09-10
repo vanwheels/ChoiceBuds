@@ -19,13 +19,23 @@ in:
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
 - **[Battle Logger: Selection UI Improvements] - Leg 1** (2026-09-10) - see
-  commit `2b97738`. `RecordMatchForm`'s player brought-4 picker only
-  signaled selection via a subtle border/background color swap; the
-  opponent roster had no brought concept at all. Added
+  commits `2b97738` and `0d9a3d1`. `RecordMatchForm`'s player brought-4
+  picker only signaled selection via a subtle border/background color
+  swap; the opponent roster had no brought concept at all. Added
   `Battle.opponentBroughtIds` (optional, mirrors `broughtIds`) plus a
   shared `BroughtToggleTile` component (checkmark badge + dimmed
   unselected tiles) used by both pickers, so the brought 4 read as a group
-  at a glance on either side.
+  at a glance on either side. Live-checked, the checkmark still didn't
+  appear on any tile: `playerRoster` was derived straight in the render
+  body via `snapshotRoster(team)`, which mints a fresh
+  `crypto.randomUUID()` per Pokemon on every call - unmemoized, so every
+  re-render (including the one triggered by a tile click) regenerated all
+  the ids, and the id just selected never matched `playerRoster` again.
+  `broughtIds.length` still ticked up (driving the counter), but no tile
+  ever visually lit up, and the saved battle's `broughtIds` likely didn't
+  match its own persisted `playerRoster` ids either. Fixed by snapshotting
+  `playerRoster` into state once, at team-selection time
+  (`handleSelectTeam`), instead of re-deriving it impurely every render.
 
 - **[Battle Logger: Edit Saved Battle] - Leg 1** (2026-09-10) - see commit
   `8d7707a`. `RecordMatchForm` now doubles as the edit form for an
