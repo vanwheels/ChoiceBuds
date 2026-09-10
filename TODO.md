@@ -27,8 +27,34 @@ by Leg 8 — see
 Legs 1-6, 8, and 13-16 are done — see `COMPLETED.md` (Leg 3's row-list
 shell was shipped, then redone by Leg 4, then Leg 4's own data source
 superseded by Leg 8; Leg 15 was Leg 6's own prerequisite, scoped and built
-out of numeric order). No legs currently open — next up would need its own
-scoping pass.
+out of numeric order).
+
+- **[Speed Tiers Preview Strip: Save Override to Team] — Leg 17** *(Last
+  touched: 2026-09-10 · Re-checks: 0)*
+  Scoped 2026-09-10 — see
+  [docs/investigations/speed-tiers-save-override-scope.md](docs/investigations/speed-tiers-save-override-scope.md).
+  A per-card Save action on `TeamPreviewCard.tsx` (plus a page-level "Save
+  All" on `TeamPreviewStrip.tsx`) that writes a team member's session-only
+  Speed-SP + nature override back through `useTeams().updateTeam` — a
+  direct targeted patch of that one Pokémon's `showdownData.evs.speed`/
+  `nature` in the team's `pokemon` array, not the `useActiveEditor` overlay
+  flow. Species/form stays preview-only, excluded from the write-back. No
+  confirmation dialog (matches existing no-confirm precedent app-wide). On
+  success, clears that mon's override in the strip's local Map since it now
+  matches the real saved data.
+
+- **[Speed Tiers Save Override: Over-Cap SP Warning] — Leg 18** *(Last
+  touched: 2026-09-10 · Re-checks: 0)*
+  Scoped alongside Leg 17 in the same session — see
+  [docs/investigations/speed-tiers-save-override-scope.md](docs/investigations/speed-tiers-save-override-scope.md).
+  Leg 17's save only sees Speed in isolation (unlike Team Builder's
+  `StatsColumn.tsx`, which gates every stat's `+` at a live 66-total cap
+  across all six stats), so it can legitimately push a team member's real
+  EV total over 66. Resolved: don't block the save, surface a warning
+  instead — a `⚠` flag (visually matching `StatsColumn.tsx:121`'s existing
+  `⚠ total/66` treatment) on both `TeamCard.tsx` and `PokemonCard.tsx` for
+  any team member over the cap. Neither file currently computes a per-mon
+  EV total today - new derived state at both render sites, not a rewire.
 
 ## Blocked
 
@@ -79,16 +105,6 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
-
-- **[Speed Tiers Preview Strip: Save Override to Team] — Leg 1** *(Last
-  touched: 2026-09-09 · Re-checks: 0)*
-  Follow-up to Speed Tiers Team Preview Strip (Leg 5, shipped — see
-  `COMPLETED.md`): an explicit "save this edit to the team" action that
-  would write a session-only SP/nature/form override made in that strip
-  back through the real Team Builder commit path. Deliberately not built
-  as part of Leg 5 — Vanny flagged it as a future option only when scoping
-  that leg. Needs its own scoping pass now that the override UI shape
-  actually exists to hang a "save" action off of.
 
 - **[Reg M-C Z-A-Exclusive Movepool Audit] — Leg 1** *(Last touched:
   2026-09-09 · Re-checks: 0)*
