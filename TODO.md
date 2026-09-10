@@ -30,20 +30,14 @@ Leg 8). Legs below are a tentative breakdown, not yet started.
 
 - **[Live Calc → Speed Tiers Tie-in] — Leg 6** *(Last touched: 2026-09-09 ·
   Re-checks: 0)*
-  Sequenced after Leg 15 below (an in-project dependency, not the formal
-  Blocked tier's external-blocker sense). Scoping this leg live
-  (2026-09-09) found `hooks/useLiveCalc.ts`'s engine only infers Def/SpD,
-  not Speed —
-  there's no SP-Speed range yet for this leg to wire up. See
-  [docs/investigations/live-calc-speed-inference-scope.md](docs/investigations/live-calc-speed-inference-scope.md)
-  for the full finding and Vanny's call to build the missing inference
-  first rather than descope this leg. Once Leg 15 exists: wire its
-  `speedBound` to override/annotate the matching threat's generic
-  usage-based speed entry in the tiers view. Wiring mechanism (shared
-  state vs. explicit "send to Speed Tiers" action) still open — deferred
-  to this leg's own build session, not resolved in the scoping pass since
-  there's no data yet to wire. Targets Leg 8's full-regulation-roster data
-  shape, not Leg 3/4's.
+  Its prerequisite (Live Calc Speed Inference Engine) shipped — see
+  `COMPLETED.md` — so `useLiveCalc.ts`'s `inference.speedBound` now exists
+  and this leg is unblocked. Wire that `speedBound` to override/annotate the
+  matching threat's generic usage-based speed entry in the tiers view.
+  Wiring mechanism (shared state vs. explicit "send to Speed Tiers" action)
+  still open — not resolved by the prerequisite leg, deferred to this leg's
+  own build session same as originally scoped. Targets Leg 8's
+  full-regulation-roster data shape, not Leg 3/4's.
 
 - **[Speed Tiers Verification Pass] — Leg 7** *(Last touched: 2026-09-09 ·
   Re-checks: 0)*
@@ -117,20 +111,6 @@ Leg 8). Legs below are a tentative breakdown, not yet started.
   (`speedTierList.ts`) or however `SpeedTierList.tsx` lays groups out into
   the grid — not investigated yet, explicitly deferred per Vanny at report
   time.
-
-- **[Live Calc Speed Inference Engine] — Leg 15** *(Last touched:
-  2026-09-09 · Re-checks: 0)*
-  Prerequisite for Leg 6, surfaced while scoping it — `hooks/useLiveCalc.ts`'s
-  engine only narrows Def/SpD, no Speed at all, structurally (damage-percent
-  observations can't reveal a defender's Speed). New capability: turn-order
-  observations ("did my Pokémon or the defender act first this turn"),
-  neutral-field-only for v1 (no Tailwind/Trick Room/paralysis tracked yet),
-  narrowing a `speedBound` the same per-observation bound-intersection shape
-  `liveCalcEngine.ts` already uses for Def/SpD. Full scoping doc:
-  [docs/investigations/live-calc-speed-inference-scope.md](docs/investigations/live-calc-speed-inference-scope.md) —
-  resolved design decisions plus a list of open follow-ups (exact turn-order
-  math, priority-move handling, speed-tie handling, UI shape) still to settle
-  while building.
 
 ## Blocked
 

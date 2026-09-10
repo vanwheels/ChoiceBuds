@@ -5,13 +5,16 @@
  * useDamageCalc, lost on tab switch/app restart per the milestone's own
  * scope doc (docs/investigations/live-calc-stat-inference-scope.md).
  *
- * Owns three things: the attacker (a fully-known `CalcPokemonState`, same
+ * Owns four things: the attacker (a fully-known `CalcPokemonState`, same
  * shape the existing Calc tab's `CalcPokemonPanel` already edits - nothing
- * new needed there), the defender's known species+level, and an add/remove
- * list of damage-percent observations. Every change re-derives
- * `utils/liveCalcEngine.ts`'s `inferDefenderStats()` inference - this file
- * is just the state/plumbing around that pure engine (Leg 1), mirroring how
- * useDamageCalc.ts is state/plumbing around damageCalcEngine.ts.
+ * new needed there), the defender's known species+level, an add/remove list
+ * of damage-percent observations, and an add/remove list of turn-order
+ * observations (Leg 15). Every change re-derives `utils/liveCalcEngine.ts`'s
+ * `inferDefenderStats()` inference and then layers
+ * `utils/liveCalcSpeedEngine.ts`'s `inferDefenderSpeed()` on top of it -
+ * this file is just the state/plumbing around those two pure engines (Legs
+ * 1 and 15), mirroring how useDamageCalc.ts is state/plumbing around
+ * damageCalcEngine.ts.
  *
  * The attacker's own `CalcPokemonState.moves` slots are deliberately left
  * unused here (always the default 4 empty slots) - `buildPokemon()` never
@@ -41,6 +44,10 @@ import {
   type LiveCalcObservation,
   type LiveCalcInference,
 } from '../utils/liveCalcEngine';
+import {
+  inferDefenderSpeed,
+  type LiveCalcTurnOrderObservation,
+} from '../utils/liveCalcSpeedEngine';
 
 const GEN_NUM = 9;
 const DEFAULT_DEFENDER_LEVEL = 50;
@@ -57,6 +64,14 @@ export interface LiveCalcObservationEntry extends LiveCalcObservation {
 
 function defaultObservation(): LiveCalcObservationEntry {
   return { id: makeObservationId(), moveName: '', damagePercent: 0, targetsHit: 2 };
+}
+
+export interface LiveCalcTurnOrderObservationEntry extends LiveCalcTurnOrderObservation {
+  id: string;
+}
+
+function defaultTurnOrderObservation(): LiveCalcTurnOrderObservationEntry {
+  return { id: makeObservationId(), moveName: '', wentFirst: 'attacker' };
 }
 
 export interface UseLiveCalcReturn {
@@ -84,6 +99,10 @@ export interface UseLiveCalcReturn {
   addObservation: () => void;
   updateObservation: (id: string, updates: Partial<LiveCalcObservation>) => void;
   removeObservation: (id: string) => void;
+  turnOrderObservations: LiveCalcTurnOrderObservationEntry[];
+  addTurnOrderObservation: () => void;
+  updateTurnOrderObservation: (id: string, updates: Partial<LiveCalcTurnOrderObservation>) => void;
+  removeTurnOrderObservation: (id: string) => void;
   inference: LiveCalcInference;
 }
 
@@ -93,6 +112,7 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
   const [defenderSpecies, setDefenderSpecies] = useState('');
   const [defenderLevel, setDefenderLevel] = useState(DEFAULT_DEFENDER_LEVEL);
   const [observations, setObservations] = useState<LiveCalcObservationEntry[]>([]);
+  const [turnOrderObservations, setTurnOrderObservations] = useState<LiveCalcTurnOrderObservationEntry[]>([]);
   const [attackerLearnedSlugs, setAttackerLearnedSlugs] = useState<Set<string> | null>(null);
 
   const gen = useMemo(() => Generations.get(GEN_NUM), []);
@@ -149,9 +169,21 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
     setObservations(prev => prev.map(o => (o.id === id ? { ...o, ...updates } : o)));
   const removeObservation = (id: string) => setObservations(prev => prev.filter(o => o.id !== id));
 
-  const inference = useMemo(
+  const addTurnOrderObservation = () => setTurnOrderObservations(prev => [...prev, defaultTurnOrderObservation()]);
+  const updateTurnOrderObservation = (id: string, updates: Partial<LiveCalcTurnOrderObservation>) =>
+    setTurnOrderObservations(prev => prev.map(o => (o.id === id ? { ...o, ...updates } : o)));
+  const removeTurnOrderObservation = (id: string) => setTurnOrderObservations(prev => prev.filter(o => o.id !== id));
+
+  const damageInference = useMemo(
     () => inferDefenderStats(gen, attacker, { species: defenderSpecies, level: defenderLevel }, observations),
     [gen, attacker, defenderSpecies, defenderLevel, observations]
+  );
+  // Speed narrowing (Leg 15) runs as a second pass over the damage-based
+  // inference above - see liveCalcSpeedEngine.ts's header for why it's
+  // layered on top rather than folded into inferDefenderStats() itself.
+  const inference = useMemo(
+    () => inferDefenderSpeed(gen, attacker, { species: defenderSpecies, level: defenderLevel }, damageInference, turnOrderObservations),
+    [gen, attacker, defenderSpecies, defenderLevel, damageInference, turnOrderObservations]
   );
 
   return {
@@ -175,6 +207,10 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
     addObservation,
     updateObservation,
     removeObservation,
+    turnOrderObservations,
+    addTurnOrderObservation,
+    updateTurnOrderObservation,
+    removeTurnOrderObservation,
     inference,
   };
 }

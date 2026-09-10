@@ -1,10 +1,11 @@
 /**
  * LiveCalcPage.tsx - Live Calc Tab
- * Attacker entry, defender species+level, and an add/remove observation
- * list all wire through to Leg 1's `inferDefenderStats()` engine, with
+ * Attacker entry, defender species+level, and two add/remove observation
+ * lists (damage% and turn-order) wire through to Leg 1's
+ * `inferDefenderStats()` and Leg 15's `inferDefenderSpeed()` engines, with
  * LiveCalcResultPanel (Live Calc Results Display - Leg 3) presenting the
- * narrowed result: per-stat SP ranges and nature/ability/item candidate
- * lists with their own certainty indication.
+ * narrowed result: per-stat SP ranges (Def/SpD/Speed) and nature/ability/item
+ * candidate lists with their own certainty indication.
  *
  * useLiveCalc (and the @smogon/calc import it pulls in) is instantiated
  * here rather than in App.tsx, same reasoning as CalcPage.tsx's own header
@@ -22,6 +23,7 @@ import { toRegulationId } from '../../utils/pokemonRules';
 import CalcPokemonPanel from '../calc/CalcPokemonPanel';
 import LiveCalcDefenderPanel from './LiveCalcDefenderPanel';
 import LiveCalcObservationList from './LiveCalcObservationList';
+import LiveCalcTurnOrderList from './LiveCalcTurnOrderList';
 import LiveCalcResultPanel from './LiveCalcResultPanel';
 
 interface LiveCalcPageProps {
@@ -44,6 +46,7 @@ export default function LiveCalcPage({
     attackerFormes, attackerBaseStats, attackerBoostedStats, attackerNatureEffect, attackerMoveOptions,
     defenderSpecies, defenderLevel, setDefenderSpecies, setDefenderLevel,
     observations, addObservation, updateObservation, removeObservation,
+    turnOrderObservations, addTurnOrderObservation, updateTurnOrderObservation, removeTurnOrderObservation,
     inference,
   } = liveCalcState;
 
@@ -81,6 +84,13 @@ export default function LiveCalcPage({
           onAdd={addObservation}
           onUpdate={updateObservation}
           onRemove={removeObservation}
+        />
+        <LiveCalcTurnOrderList
+          observations={turnOrderObservations}
+          moveOptions={attackerMoveOptions}
+          onAdd={addTurnOrderObservation}
+          onUpdate={updateTurnOrderObservation}
+          onRemove={removeTurnOrderObservation}
         />
       </div>
 

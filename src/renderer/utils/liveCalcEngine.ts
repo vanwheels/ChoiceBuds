@@ -104,6 +104,13 @@ export interface LiveCalcInference {
   defBound: LiveCalcStatBound;
   /** Special defensive Stat Points (0-32), narrowed by special-move observations only. */
   spdBound: LiveCalcStatBound;
+  /** Speed Stat Points (0-32). Untouched by this file - narrowed by
+   * `utils/liveCalcSpeedEngine.ts::inferDefenderSpeed()` (Leg 15), which
+   * takes this inference as input and returns an updated copy. Lives on
+   * this same interface (rather than a separate result type) so the two
+   * engines' outputs merge into one `LiveCalcInference` the UI renders,
+   * same as defBound/spdBound already do for their own axis. */
+  speedBound: LiveCalcStatBound;
   natureCandidates: NatureName[];
   /** Starts as the defender species' own real ability pool (@smogon/calc gen data). */
   abilityCandidates: string[];
@@ -111,6 +118,9 @@ export interface LiveCalcInference {
   itemCandidates: string[];
   physicalObservationCount: number;
   specialObservationCount: number;
+  /** Same as physical/specialObservationCount but for turn-order
+   * observations - see `speedBound`'s own comment above. */
+  speedObservationCount: number;
   /** Human-readable notes for observations that were skipped or that
    * contradicted everything narrowed so far - surfaced so a later UI leg can
    * show why an entry didn't move the result, rather than failing silently. */
@@ -130,11 +140,13 @@ export function defaultInference(gen: Generation, species: string): LiveCalcInfe
   return {
     defBound: { min: SP_MIN, max: SP_MAX },
     spdBound: { min: SP_MIN, max: SP_MAX },
+    speedBound: { min: SP_MIN, max: SP_MAX },
     natureCandidates: [...gen.natures].map(n => n.name) as NatureName[],
     abilityCandidates: dedupeStrings(Object.values(speciesData?.abilities ?? {})),
     itemCandidates: [NO_ITEM, ...LIVE_CALC_DEFENSIVE_ITEMS],
     physicalObservationCount: 0,
     specialObservationCount: 0,
+    speedObservationCount: 0,
     contradictions: [],
   };
 }

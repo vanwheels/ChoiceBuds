@@ -9,11 +9,11 @@
  * own header) - this panel only presents `LiveCalcInference` as-is, no
  * inference logic lives here.
  *
- * "Certainty" is shown two ways, matching the two kinds of unknown the
- * engine narrows: a physical SP range bar for Def, a special SP range bar
- * for SpD (each also showing its own observation count - the bar alone
- * can't distinguish "0 observations, full range" from "many observations
- * that all landed within the full range"), and a candidates-narrowed
+ * "Certainty" is shown per stat axis the engines narrow: a physical SP range
+ * bar for Def, a special SP range bar for SpD, and a Speed SP range bar (Leg
+ * 15's turn-order engine) (each also showing its own observation count - the
+ * bar alone can't distinguish "0 observations, full range" from "many
+ * observations that all landed within the full range"), and a candidates-narrowed
  * fraction bar per nature/ability/item (LiveCalcCandidateGroup). Nothing
  * here invents a single aggregate "confidence score" across all of these -
  * the axes narrow independently (per the engine's own documented
@@ -59,7 +59,7 @@ function StatBoundBar({ label, bound, observationCount }: { label: string; bound
 
 export default function LiveCalcResultPanel({ gen, defenderSpecies, inference }: LiveCalcResultPanelProps) {
   const baseline = defaultInference(gen, defenderSpecies);
-  const totalObservations = inference.physicalObservationCount + inference.specialObservationCount;
+  const totalObservations = inference.physicalObservationCount + inference.specialObservationCount + inference.speedObservationCount;
 
   return (
     <div className="bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-3">
@@ -69,9 +69,10 @@ export default function LiveCalcResultPanel({ gen, defenderSpecies, inference }:
         <p className="text-sm text-zinc-500">Pick a defender species to start narrowing its stats.</p>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <StatBoundBar label="Defense SP" bound={inference.defBound} observationCount={inference.physicalObservationCount} />
             <StatBoundBar label="Sp. Def SP" bound={inference.spdBound} observationCount={inference.specialObservationCount} />
+            <StatBoundBar label="Speed SP" bound={inference.speedBound} observationCount={inference.speedObservationCount} />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

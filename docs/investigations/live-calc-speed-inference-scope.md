@@ -43,34 +43,53 @@ imagined without this new capability first.
   actually active will produce a wrong/misleading narrowing with nothing
   to flag it, until a later leg adds that state.
 
-## Open follow-ups the build leg still has to settle
+## Resolved during the build (2026-09-09, Leg 15)
 
-- **Exact turn-order math.** Given both combatants' known/candidate base
-  Speed, nature candidates (already tracked for the defender via the
-  existing Def/SpD inference — reuse `natureCandidates`), and the SP range
-  scan (0-32, same `SP_MIN`/`SP_MAX` the existing engine uses), which SP
-  values are consistent with "attacker moved first" vs. "defender moved
-  first" this turn. Same per-observation intersection-of-bounds shape as
-  `feasibleSpRange`, just comparing computed Speed stats instead of damage
-  ranges.
-- **Priority moves.** A priority move on either side decides turn order
-  outright regardless of Speed — those observations narrow nothing about
-  Speed and should be skipped/flagged, same treatment as an unusable
-  observation in the existing `contradictions` list.
-- **Speed ties.** Real Showdown/Champions resolves speed ties by a random
-  per-turn coin flip, not a fixed order — a tied-speed observation is
-  ambiguous evidence either direction and needs its own handling (most
-  likely: don't let it narrow anything, since either outcome is
-  consistent with a tie).
-- **UI shape** — new observation type alongside or replacing the existing
-  damage% list in `LiveCalcObservationList.tsx`/`LiveCalcResultPanel.tsx`.
-  Not decided here; an implementation-shape call for the build leg like
-  the original engine's own UI wiring was.
+- **Exact turn-order math.** Implemented in `utils/liveCalcSpeedEngine.ts::
+  inferDefenderSpeed()`: for each defender nature candidate (reused from
+  `inferDefenderStats()`'s already-narrowed `natureCandidates`, not the
+  full gen nature list), scans Speed SP 0-32 and keeps the sub-range whose
+  computed Speed is consistent with the observed order against the
+  attacker's fixed Speed — same per-observation intersection-of-bounds
+  shape as `feasibleSpRange`, comparing computed Speed stats instead of
+  damage ranges. Only the nature axis is scanned (not ability/item, unlike
+  the damage engine's three-axis scan) — ability/item aren't Speed-relevant
+  in v1, per this doc's own Resolved section above.
+- **Base vs. effective Speed, and which side.** Both sides are compared on
+  unboosted base Speed (level+nature+SP+IVs only) — no stage boosts,
+  status, or weather speed-abilities for the attacker either, not just the
+  defender. The scope doc's "given both combatants' known/candidate base
+  Speed" wording already implied this; going further and honoring the
+  attacker's own boosts/status/weather (all already-known, unlike the
+  defender's) was considered and rejected for v1 consistency — asymmetric
+  treatment would make a boosted or paralyzed attacker's turn-order
+  observations misnarrow in a way that'd look like an engine bug rather
+  than a documented limitation. Same "real gap, not a silent one" shape as
+  the neutral-field call above.
+- **Priority moves.** A priority attacker move decides turn order outright
+  regardless of Speed — such an observation is skipped/flagged into
+  `contradictions`, same treatment as an unrecognized move. The defender's
+  own move that turn is never known to this engine (only species/level/
+  candidates are), so a defender priority move remains an undetectable
+  confound — documented in the engine file's header, not solved.
+- **Speed ties.** Handled inline in the per-SP scan rather than as a
+  separate observation type: a computed tie at a given candidate SP counts
+  as consistent with either observed order, so it's never eliminated by a
+  turn-order observation in either direction — falls out naturally from
+  the `defenderSpeed === attackerSpeed` branch in `feasibleSpeedRange()`
+  rather than needing a "tied" answer the UI would have had to expose.
+- **UI shape.** A new `LiveCalcTurnOrderList.tsx` component alongside the
+  existing damage% `LiveCalcObservationList.tsx` (not merged into it — the
+  two observation shapes don't share fields), plus a third `StatBoundBar`
+  in `LiveCalcResultPanel.tsx` for Speed SP alongside the existing Def/SpD
+  bars.
+
+## Still open
+
 - **Leg 6's wiring mechanism** (shared hook state vs. an explicit "send to
-  Speed Tiers" action) stays deferred until this leg actually produces a
-  `speedBound` to wire — asking that question now, before the data exists
-  to wire, would be premature the same way the original scoping doc left
-  it for the tie-in leg itself.
+  Speed Tiers" action) stays deferred until Leg 6's own build session, now
+  that `inference.speedBound` actually exists to wire — not resolved by
+  this leg, which only produces the data.
 
 ## Prior art in-repo
 

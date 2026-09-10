@@ -18,6 +18,27 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Live Calc Speed Inference Engine] - Leg 15** (2026-09-09) - built the
+  missing Speed-inference prerequisite for [Live Calc → Speed Tiers
+  Tie-in] - Leg 6 (see `docs/investigations/live-calc-speed-inference-scope.md`
+  for the resolved design questions). New `utils/liveCalcSpeedEngine.ts`
+  narrows a defender's Speed SP 0-32 range from turn-order observations
+  ("did you or the defender act first this turn"), reusing
+  `liveCalcEngine.ts`'s per-observation bound-intersection shape and its
+  nature-candidate narrowing rather than duplicating it - takes that
+  engine's `LiveCalcInference` as input and returns an updated copy with
+  `speedBound`/`speedObservationCount` set. Scans only the nature axis for
+  Speed (ability/item aren't Speed-relevant in v1, per the scope doc);
+  compares both sides' unboosted base Speed (no stage boosts/status/weather
+  for either side, not just the defender) for symmetry, since the feature's
+  neutral-field v1 scope already excluded those; a priority attacker move
+  is skipped/flagged since it decides order regardless of Speed; a tied
+  computed Speed counts as consistent with either observed order rather
+  than eliminating that SP (real Speed ties are a coin flip). New
+  `LiveCalcTurnOrderList.tsx` UI list alongside the existing damage%
+  observation list; `LiveCalcResultPanel.tsx` gained a third SP bound bar
+  for Speed. See commit `TBD`.
+
 - **[Speed Tiers Full-Regulation Roster Rework] - Leg 8** (2026-09-09) -
   Reversed Leg 3/4's team-anchored threat list (Team Gap Analysis's
   `computeUsageThreats`, typing-filtered) in favor of plotting every species
