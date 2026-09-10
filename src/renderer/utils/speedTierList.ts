@@ -21,6 +21,12 @@
  * bound rows (min/neutral/max - see ThreatSpeedBounds), unfiltered by the
  * cutoff since they aren't usage data to begin with.
  *
+ * A "Bounds Only" toggle (Leg 12, see TODO.md) suppresses the usage-based
+ * spread rows entirely, leaving just the 3 fixed bound rows (and any Live
+ * Calc rows - see below) - passed through as `boundsOnly` below. Distinct
+ * from the Min Spread Usage cutoff (Leg 11), which only tunes how many
+ * spread rows show, not whether they show at all.
+ *
  * A threat also contributes 1-2 Live Calc rows when the caller supplies an
  * `inferredBound` (Live Calc -> Speed Tiers Tie-in, Leg 6, see TODO.md /
  * hooks/useLiveCalcThreatPins.ts) - a real turn-order-narrowed Speed range
@@ -84,11 +90,14 @@ export interface ThreatTierInput {
  * usage share a ranked spread needs to get its own row (see this file's
  * header) - defaults to DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT for callers
  * (tests) that don't care about the live page-level control.
+ * `boundsOnly` (Leg 12) drops every usage-based spread row outright,
+ * regardless of `usageCutoffPercent` - defaults to false.
  */
 export function buildSpeedTierEntries(
   team: TeamSpeedEntry[],
   threats: ThreatTierInput[],
-  usageCutoffPercent: number = DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT
+  usageCutoffPercent: number = DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT,
+  boundsOnly: boolean = false
 ): SpeedTierEntry[] {
   const teamRows: SpeedTierEntry[] = team.map(t => ({
     key: `team-${t.pokemonId}`,
@@ -99,16 +108,18 @@ export function buildSpeedTierEntries(
   }));
 
   const threatRows: SpeedTierEntry[] = threats.flatMap(({ spriteUrl, profile, inferredBound }) => {
-    const spreadRows: SpeedTierEntry[] = profile.spreads
-      .filter(spread => spread.percentage >= usageCutoffPercent)
-      .map((spread, i) => ({
-        key: `threat-${profile.species}-spread-${i}`,
-        kind: 'threat' as const,
-        species: profile.species,
-        spriteUrl,
-        speed: spread.speed,
-        percentage: spread.percentage,
-      }));
+    const spreadRows: SpeedTierEntry[] = boundsOnly
+      ? []
+      : profile.spreads
+          .filter(spread => spread.percentage >= usageCutoffPercent)
+          .map((spread, i) => ({
+            key: `threat-${profile.species}-spread-${i}`,
+            kind: 'threat' as const,
+            species: profile.species,
+            spriteUrl,
+            speed: spread.speed,
+            percentage: spread.percentage,
+          }));
 
     const boundRows: SpeedTierEntry[] = BOUND_LABELS.map(({ key, label }) => ({
       key: `threat-${profile.species}-bound-${key}`,

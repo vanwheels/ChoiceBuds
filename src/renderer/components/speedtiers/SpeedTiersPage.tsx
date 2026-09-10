@@ -44,7 +44,16 @@
  * buildSpeedTierEntries, which otherwise falls back to that file's
  * DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT. Doesn't touch the 3 fixed bound rows
  * (min/neutral/max), which aren't usage data to begin with - same scope
- * split Leg 12's "Bounds Only" toggle (see TODO.md) is built around.
+ * split Leg 12's "Bounds Only" toggle (see below) is built around.
+ *
+ * Bounds Only (Leg 12, see TODO.md): a checkbox that suppresses usage-based
+ * spread rows entirely, leaving just each threat's 3 fixed min/neutral/max
+ * bound rows (plus any Live Calc rows, which aren't usage data either).
+ * Distinct from "Threats Only" above (narrows the species list, not the row
+ * types) and Min Spread Usage (tunes the spread cutoff, doesn't remove
+ * spread rows outright) - passed through to buildSpeedTierEntries as
+ * `boundsOnly`. The Min Spread Usage stepper is disabled while this is on,
+ * since it has nothing left to tune.
  *
  * Team Preview Strip (Leg 5, see docs/investigations/
  * speed-tiers-preview-strip-scope.md): a session-only per-mon Speed SP/
@@ -164,6 +173,7 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
 
   const [rosterScope, setRosterScope] = useState<RosterScope>('all');
   const [threatsOnly, setThreatsOnly] = useState(false);
+  const [boundsOnly, setBoundsOnly] = useState(false);
   const [spreadUsageCutoff, setSpreadUsageCutoff] = useState(DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT);
 
   const usageEntryBySpecies = useMemo(() => {
@@ -276,9 +286,9 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
   }, [rosterCandidates, gen, field, rosterScope, liveCalcPins, threatsOnly, defensiveSlots]);
 
   const tierGroups = useMemo(() => {
-    const entries = filterSpeedTierEntries(buildSpeedTierEntries(teamSpeedEntries, threatTierInputs, spreadUsageCutoff), speciesFilter);
+    const entries = filterSpeedTierEntries(buildSpeedTierEntries(teamSpeedEntries, threatTierInputs, spreadUsageCutoff, boundsOnly), speciesFilter);
     return groupSpeedTiers(entries, trickRoom);
-  }, [teamSpeedEntries, threatTierInputs, trickRoom, speciesFilter, spreadUsageCutoff]);
+  }, [teamSpeedEntries, threatTierInputs, trickRoom, speciesFilter, spreadUsageCutoff, boundsOnly]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -352,13 +362,22 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
               />
               Threats Only
             </label>
-            <div className="flex flex-col gap-1.5">
+            <label className="flex items-center gap-2 text-xs text-zinc-300 cursor-pointer pb-1.5">
+              <input
+                type="checkbox"
+                checked={boundsOnly}
+                onChange={e => setBoundsOnly(e.target.checked)}
+                className="cursor-pointer accent-accent-gold"
+              />
+              Bounds Only
+            </label>
+            <div className={`flex flex-col gap-1.5 ${boundsOnly ? 'opacity-40' : ''}`}>
               <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Min Spread Usage</label>
               <div className="flex items-center gap-1">
                 <button
                   type="button"
                   onClick={() => setSpreadUsageCutoff(v => Math.max(SPREAD_USAGE_CUTOFF_MIN, v - SPREAD_USAGE_CUTOFF_STEP))}
-                  disabled={spreadUsageCutoff <= SPREAD_USAGE_CUTOFF_MIN}
+                  disabled={boundsOnly || spreadUsageCutoff <= SPREAD_USAGE_CUTOFF_MIN}
                   className="w-7 h-7 flex items-center justify-center text-sm font-bold bg-zinc-800 border border-zinc-600 rounded text-white hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 >
                   −
@@ -367,7 +386,7 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
                 <button
                   type="button"
                   onClick={() => setSpreadUsageCutoff(v => Math.min(SPREAD_USAGE_CUTOFF_MAX, v + SPREAD_USAGE_CUTOFF_STEP))}
-                  disabled={spreadUsageCutoff >= SPREAD_USAGE_CUTOFF_MAX}
+                  disabled={boundsOnly || spreadUsageCutoff >= SPREAD_USAGE_CUTOFF_MAX}
                   className="w-7 h-7 flex items-center justify-center text-sm font-bold bg-zinc-800 border border-zinc-600 rounded text-white hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 >
                   +

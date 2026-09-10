@@ -56,6 +56,13 @@ describe('buildSpeedTierEntries', () => {
     expect(entries.filter(e => e.boundLabel !== undefined)).toHaveLength(3);
   });
 
+  it('drops all spread rows but keeps bound rows when boundsOnly is set', () => {
+    const entries = buildSpeedTierEntries([], [threatInput()], DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT, true);
+    expect(entries.filter(e => e.percentage !== undefined)).toHaveLength(0);
+    expect(entries.filter(e => e.boundLabel !== undefined)).toHaveLength(3);
+    expect(entries).toHaveLength(3);
+  });
+
   it('combines team and threat rows', () => {
     const entries = buildSpeedTierEntries([teamEntry()], [threatInput()]);
     expect(entries).toHaveLength(6);
