@@ -7,7 +7,7 @@
  * under the project's 250-line component cap.
  */
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { DragEvent, MouseEvent } from 'react';
 import type { MoveData } from '../types/pokemon';
 import { getTypeTheme, type TypeTheme } from '../config/pokemonTheme';
@@ -52,6 +52,10 @@ export default function MoveBubbleGrid({
 
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
+  // Tooltip anchors to the whole grid's own rect, not the individual hovered
+  // bubble's - see onMouseEnter below.
+  const gridRef = useRef<HTMLDivElement>(null);
+
   // Each bubble is its own drag source (not just the outer card) so that
   // starting a drag here doesn't bubble up into PokemonCard's own
   // draggable card div and pick up the whole Pokemon slot instead -
@@ -94,7 +98,7 @@ export default function MoveBubbleGrid({
   };
 
   return (
-    <div className="grid grid-cols-2 gap-2 w-full">
+    <div ref={gridRef} className="grid grid-cols-2 gap-2 w-full">
       {([0, 1, 2, 3] as const).map(index => {
         const theme = themes[index];
         const key = `move${index}` as const;
@@ -106,7 +110,14 @@ export default function MoveBubbleGrid({
             onDragOver={handleDragOver(index)}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop(index)}
-            onMouseEnter={(e) => onHoverEnter(key, e.currentTarget)}
+            onMouseEnter={() => {
+              // Anchor the shared Tooltip to the whole 2x2 grid's rect, not
+              // this individual bubble's - keeps the tooltip in the same
+              // fixed spot whichever row is hovered, instead of jumping
+              // between rows and covering row 1 when row 2 is hovered (also
+              // stops it from blocking a slot mid drag-and-drop reorder).
+              if (gridRef.current) onHoverEnter(key, gridRef.current);
+            }}
             onMouseLeave={() => onHoverLeave(key)}
             onClick={(e) => onToggleMenu(key, e)}
             className={`w-full min-h-[2.75rem] flex items-center justify-center text-center whitespace-normal break-words p-1 rounded-xl text-xs font-bold transition-colors ${theme.bg} ${theme.text} hover:opacity-80 cursor-grab ${dragOverIndex === index ? 'ring-2 ring-accent-gold' : ''}`}
