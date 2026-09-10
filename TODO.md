@@ -18,13 +18,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 
 ## Current Milestone: UI Polish & Performance
 
-- **[Move Tooltip Position Fix on 2x2 Grid] — Leg 1** *(Last touched:
-  2026-09-10 · Re-checks: 0)*
-  Hovering a move in the 2nd row of the 2x2 move grid shows its tooltip
-  covering the 1st row's moves. Tooltip should anchor to the same fixed
-  position regardless of which row is hovered — improves readability and
-  stops it from blocking slots during drag-and-drop move reordering.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something

@@ -18,6 +18,15 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Move Tooltip Position Fix on 2x2 Grid] - Leg 1** (2026-09-10) - see
+  commit `3fa6718`. Root cause: `Tooltip`/`floatingCardPanel`'s above/below
+  flip is computed per-anchor-rect, so each bubble in the 2x2 move grid
+  produced a different tooltip position - row 2's tooltip flipped to sit
+  right above it, overlapping row 1. Fix: `MoveBubbleGrid` now anchors the
+  shared Tooltip to the whole grid container's rect instead of the
+  individual hovered bubble, so it renders fully above or fully below the
+  entire grid regardless of which move is hovered.
+
 - **[Team Card Collapse Animation Flicker] - Leg 1** (2026-09-10) - see
   commit `0997d17`. Root cause: `TeamCard.tsx`'s outer `col-span-full` class
   was driven directly off `isExpanded`, so clicking Collapse snapped the
