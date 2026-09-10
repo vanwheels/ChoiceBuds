@@ -16,23 +16,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Speed Calc-like Feature
-
-Scoping resolved 2026-09-09 — see
-[docs/investigations/speed-calc-scope.md](docs/investigations/speed-calc-scope.md)
-for the full design-questions pass. Its "team-anchored threat list, not a
-vgcmulticalc reskin" differentiation call was itself reversed the same day
-by Leg 8 — see
-[docs/investigations/speed-tiers-full-roster-pivot.md](docs/investigations/speed-tiers-full-roster-pivot.md).
-Legs 1-6, 8, and 13-18 are done — see `COMPLETED.md` (Leg 3's row-list
-shell was shipped, then redone by Leg 4, then Leg 4's own data source
-superseded by Leg 8; Leg 15 was Leg 6's own prerequisite, scoped and built
-out of numeric order). No leg is currently scoped past 18 — see
-[docs/investigations/speed-calc-scope.md](docs/investigations/speed-calc-scope.md)'s
-"Open follow-ups" section for what's still unresolved (field-effect
-toggles, the Team Gap Analysis Speed Annotation relationship) before the
-next leg can be scoped.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
