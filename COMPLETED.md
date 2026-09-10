@@ -37,7 +37,7 @@ in:
   than eliminating that SP (real Speed ties are a coin flip). New
   `LiveCalcTurnOrderList.tsx` UI list alongside the existing damage%
   observation list; `LiveCalcResultPanel.tsx` gained a third SP bound bar
-  for Speed. See commit `TBD`.
+  for Speed. See commit `5998916`.
 
 - **[Speed Tiers Full-Regulation Roster Rework] - Leg 8** (2026-09-09) -
   Reversed Leg 3/4's team-anchored threat list (Team Gap Analysis's
