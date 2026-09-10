@@ -18,6 +18,15 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Battle Logger: Selection UI Improvements] - Leg 1** (2026-09-10) - see
+  commit `2b97738`. `RecordMatchForm`'s player brought-4 picker only
+  signaled selection via a subtle border/background color swap; the
+  opponent roster had no brought concept at all. Added
+  `Battle.opponentBroughtIds` (optional, mirrors `broughtIds`) plus a
+  shared `BroughtToggleTile` component (checkmark badge + dimmed
+  unselected tiles) used by both pickers, so the brought 4 read as a group
+  at a glance on either side.
+
 - **[Battle Logger: Edit Saved Battle] - Leg 1** (2026-09-10) - see commit
   `8d7707a`. `RecordMatchForm` now doubles as the edit form for an
   already-saved battle (an `editingBattle` prop, wired through a new Edit

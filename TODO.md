@@ -18,13 +18,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 
 ## Current Milestone: Battle Logger Overhaul
 
-- **[Battle Logger: Selection UI Improvements] — Leg 1** *(Last touched:
-  2026-09-10 · Re-checks: 0)*
-  No visual indicator shows which 4 of your own Pokémon have been selected
-  for the battle.
-  - Also can't choose which 4 of the opponent's Pokémon were brought — needs
-    a picker for the opponent's brought-4, not just your own.
-
 - **[Battle Logger: Duplicate Pokémon Selectable] — Leg 1** *(Last touched:
   2026-09-10 · Re-checks: 0)*
   Bug: the same Pokémon can currently be selected more than once for a
