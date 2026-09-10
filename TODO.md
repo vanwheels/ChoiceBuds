@@ -30,22 +30,6 @@ superseded by Leg 8; Leg 15 was Leg 6's own prerequisite, scoped and built
 out of numeric order). Legs below are a tentative breakdown, not yet
 started.
 
-- **[Speed Tiers Trick Room Sort-Order Bug] — Leg 14** *(Last touched:
-  2026-09-09 · Re-checks: 0)*
-  Reported live 2026-09-09: with the Trick Room toggle active (slowest-first
-  sort), the fastest entry on the grid (Mega Raichu, 200 Speed) renders as
-  the very first tile instead of last/near-last — the row also visually
-  mirrors itself (descends then re-ascends back up to 200) rather than
-  monotonically increasing. Possibly the same root cause as Leg 10's
-  bundling bug, possibly its own issue in `groupSpeedTiers`
-  (`speedTierList.ts`) or however `SpeedTierList.tsx` lays groups out into
-  the grid — not investigated yet, explicitly deferred per Vanny at report
-  time. Leg 7's verification pass reproduced this live and found strong
-  evidence it's the same root cause as the duplicate-Mega-candidate bug
-  fixed as Leg 17 (Mega Raichu was the exact species Leg 17 found
-  duplicated, see `COMPLETED.md`) — needs a live re-check now that that fix
-  is in to confirm whether this sort-order symptom is actually gone.
-
 - **[Live Calc Turn-Order Speed Stage Boosts] — Leg 16** *(Last touched:
   2026-09-09 · Re-checks: 0)*
   Requested live 2026-09-09. Leg 15's turn-order Speed engine

@@ -18,6 +18,16 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Speed Tiers Trick Room Sort-Order Bug] - Leg 14** (2026-09-10) - live
+  re-check via `run-desktop` (team + species filter "Raichu", toggling Trick
+  Room) confirms this doesn't reproduce anymore: normal order is a clean
+  descending 200→117 (Mega Raichu-Y's 200 first, as expected) and Trick Room
+  is a clean ascending 117→200 with no mirroring - Leg 17's duplicate-Mega
+  fix was in fact the same root cause Leg 7 suspected. Screenshots
+  `01-raichu-normal.png`/`02-raichu-trickroom.png` in
+  `.claude/skills/run-desktop/shots/`. No code changed - verification only,
+  nothing to commit.
+
 - **[Speed Tiers Mega Sprite Fallback] - Leg 13** (2026-09-09/10) - Mega-form
   rows across the app (Speed Tiers roster/tier-list, Team Preview Strip,
   Teams overview mini sprite strip) rendered the base species' sprite
