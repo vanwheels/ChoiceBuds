@@ -51,8 +51,23 @@ numeric order). Legs below are a tentative breakdown, not yet started.
   `floette-mega` `getFormeFamily`/`SpeedTiersPage` actually look up) —
   switched to the shared curated list so both passes agree. Type-check,
   lint, and full test suite (654 tests) pass; new coverage in
-  `useMegaSprite.test.ts`. Not yet live-verified — ready for Vanny to check
-  a Mega roster row in the running app before moving to `COMPLETED.md`.
+  `useMegaSprite.test.ts`. Live-verified by Vanny 2026-09-09.
+
+  Follow-up added same day: `TeamCard.tsx`'s header "Mini sprite strip"
+  (the flat roster-preview row on the Teams overview grid) never accounted
+  for Mega Evolution at all — always rendered `getPixelSpriteUrl` off the
+  base species, even when that Pokémon actually holds its own Mega Stone.
+  `PokemonCard.tsx`'s own full-detail sprite already handled this correctly
+  via `useMegaSprite`; the strip is a plain `.map()` over up to 6 team
+  members (not a per-item component), so it can't call that hook per item -
+  same Rules-of-Hooks shape as `SpeedTiersPage.tsx`'s roster rows. Fixed by
+  calling `useMegaSpritePrefetch()` once in `TeamCard.tsx` and reading
+  `getCachedMegaSprite(getMegaApiSlug(...))` synchronously per roster slot,
+  falling back to the base sprite exactly as before when there's no Mega
+  Stone match. Type-check/lint/full suite re-verified green; no new
+  automated test (presentational glue in an untested component, per
+  CLAUDE.md's UI-verification default) - needs Vanny's live check of a
+  Mega-Stone-holding team member on the Teams overview page.
 
 - **[Speed Tiers Trick Room Sort-Order Bug] — Leg 14** *(Last touched:
   2026-09-09 · Re-checks: 0)*

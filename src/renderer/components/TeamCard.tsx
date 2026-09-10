@@ -12,6 +12,8 @@ import { useRosterActions } from '../hooks/useRosterActions';
 import { toRegulationId } from '../utils/pokemonRules';
 import { getRegulationTheme } from '../config/pokemonTheme';
 import { getPixelSpriteUrl } from '../utils/spriteUrl';
+import { getMegaApiSlug } from '../config/megaEvolution';
+import { getCachedMegaSprite, useMegaSpritePrefetch } from '../hooks/useMegaSprite';
 import { TEAMS_LIST_DRAG_TYPE, type TeamsListDragPayload } from '../utils/teamsListDragTypes';
 import { CARD_EXPAND_ENTER_TRANSITION, CARD_EXPAND_EXIT_TRANSITION, DRAG_REORDER_TRANSITION } from '../config/motion';
 import PokemonCard from './PokemonCard';
@@ -79,6 +81,12 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
   const [isImageExportOpen, setIsImageExportOpen] = useState(false);
   const [isPdfExportOpen, setIsPdfExportOpen] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  // Warms useMegaSprite.ts's shared id/URL cache so the mini sprite strip
+  // below (a plain .map(), not a per-item component - Rules of Hooks forbids
+  // useMegaSprite itself there) can read a Mega form's real sprite via
+  // getCachedMegaSprite instead of always falling back to the base species -
+  // same pattern SpeedTiersPage.tsx uses, see that hook's own doc comment.
+  useMegaSpritePrefetch();
   const { updateTeam, reorderTeam } = teamsState;
   const rosterActions = useRosterActions(
     updateTeam,
@@ -236,18 +244,24 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
             hasn't been re-verified live against this new width. */}
         <div className="flex-1 flex items-center justify-center">
           <div className="flex flex-row items-center gap-2">
-            {Array.from({ length: 6 }, (_, idx) => team.pokemon?.[idx]).map((p, idx) => (
-              p ? (
+            {Array.from({ length: 6 }, (_, idx) => team.pokemon?.[idx]).map((p, idx) => {
+              if (!p) return <div key={idx} className="w-14 h-14 shrink-0" />;
+              // Same "own Mega Stone" gate PokemonCard.tsx's main sprite
+              // uses - see config/megaEvolution.ts.
+              const megaApiSlug = getMegaApiSlug(p.showdownData.item, p.showdownData.species);
+              const megaSprite = megaApiSlug ? getCachedMegaSprite(megaApiSlug) : null;
+              const spriteUrl = megaSprite
+                ? (p.showdownData.shiny ? megaSprite.shinySpriteUrl : megaSprite.spriteUrl)
+                : getPixelSpriteUrl(p.pokedexNumber, p.showdownData.species, p.showdownData.gender || 'M', p.showdownData.shiny);
+              return (
                 <img
                   key={idx}
-                  src={spriteCacheState.resolveSprite(getPixelSpriteUrl(p.pokedexNumber, p.showdownData.species, p.showdownData.gender || 'M', p.showdownData.shiny))}
+                  src={spriteCacheState.resolveSprite(spriteUrl)}
                   alt={p.showdownData.species}
                   className="w-14 h-14 object-contain [image-rendering:pixelated] shrink-0"
                 />
-              ) : (
-                <div key={idx} className="w-14 h-14 shrink-0" />
-              )
-            ))}
+              );
+            })}
           </div>
         </div>
 
