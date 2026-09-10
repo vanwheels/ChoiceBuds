@@ -26,8 +26,8 @@ function attackerState(overrides: Partial<CalcPokemonState> = {}): CalcPokemonSt
 const SLOW_ATTACKER = attackerState({ species: 'Ferrothorn' });
 const DEFENDER = { species: 'Ferrothorn', level: 50 };
 
-function turnObs(moveName: string, wentFirst: 'attacker' | 'defender'): LiveCalcTurnOrderObservation {
-  return { moveName, wentFirst };
+function turnObs(moveName: string, wentFirst: 'attacker' | 'defender', defenderSpeedStage = 0): LiveCalcTurnOrderObservation {
+  return { moveName, wentFirst, defenderSpeedStage };
 }
 
 describe('inferDefenderSpeed - no/invalid input', () => {
@@ -94,6 +94,33 @@ describe('inferDefenderSpeed - narrowing', () => {
     const two = inferDefenderSpeed(gen, SLOW_ATTACKER, DEFENDER, baseline, [turnObs('Tackle', 'attacker'), turnObs('Tackle', 'attacker')]);
     expect(two.natureCandidates.length).toBeLessThanOrEqual(one.natureCandidates.length);
     for (const n of two.natureCandidates) expect(one.natureCandidates).toContain(n);
+  });
+});
+
+describe('inferDefenderSpeed - stage boosts (Leg 16)', () => {
+  it('a higher defenderSpeedStage lowers the feasible SP floor for a "defender went first" observation', () => {
+    const baseline = defaultInference(gen, DEFENDER.species);
+    const neutral = inferDefenderSpeed(gen, SLOW_ATTACKER, DEFENDER, baseline, [turnObs('Tackle', 'defender', 0)]);
+    const boosted = inferDefenderSpeed(gen, SLOW_ATTACKER, DEFENDER, baseline, [turnObs('Tackle', 'defender', 6)]);
+    // A stage-boosted defender needs less raw SP to out-speed the same attacker.
+    expect(boosted.speedBound.min).toBeLessThanOrEqual(neutral.speedBound.min);
+  });
+
+  it('a lowered defenderSpeedStage raises the feasible SP floor for a "defender went first" observation', () => {
+    const baseline = defaultInference(gen, DEFENDER.species);
+    const neutral = inferDefenderSpeed(gen, SLOW_ATTACKER, DEFENDER, baseline, [turnObs('Tackle', 'defender', 0)]);
+    const lowered = inferDefenderSpeed(gen, SLOW_ATTACKER, DEFENDER, baseline, [turnObs('Tackle', 'defender', -6)]);
+    // A stage-dropped defender needs more raw SP to still out-speed the same attacker.
+    expect(lowered.speedBound.min).toBeGreaterThanOrEqual(neutral.speedBound.min);
+  });
+
+  it("honors the attacker panel's own live Speed boost when comparing turn order", () => {
+    const baseline = defaultInference(gen, DEFENDER.species);
+    const boostedAttacker = attackerState({ species: 'Ferrothorn', boosts: { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 6 } });
+    const neutral = inferDefenderSpeed(gen, SLOW_ATTACKER, DEFENDER, baseline, [turnObs('Tackle', 'attacker')]);
+    const boosted = inferDefenderSpeed(gen, boostedAttacker, DEFENDER, baseline, [turnObs('Tackle', 'attacker')]);
+    // A much faster (self-boosted) attacker is consistent with "you went first" against a wider swath of defender SP.
+    expect(boosted.speedBound.max).toBeGreaterThanOrEqual(neutral.speedBound.max);
   });
 });
 

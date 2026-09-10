@@ -2,11 +2,14 @@
  * LiveCalcTurnOrderList.tsx - Defender Turn-Order Observation Add/Remove List
  * One row per observed turn: which of the attacker's moves was used (its
  * priority is what the engine actually reads - see
- * utils/liveCalcSpeedEngine.ts's header) and which side acted first. A
- * separate list alongside LiveCalcObservationList's damage% rows rather than
- * merged into it - different shape (no damage% field, an order toggle
- * instead of a targets-hit one) and narrows a different stat (Speed vs.
- * Def/SpD), so keeping them as two lists avoids one row type growing
+ * utils/liveCalcSpeedEngine.ts's header), which side acted first, and the
+ * defender's own asserted Speed stage for that turn (-6..+6, default 0 -
+ * same numeric shape/clamping as CalcStatRows.tsx's boost inputs, since it's
+ * a known/fixed input the engine applies directly rather than a scanned
+ * unknown). A separate list alongside LiveCalcObservationList's damage% rows
+ * rather than merged into it - different shape (no damage% field, an order
+ * toggle instead of a targets-hit one) and narrows a different stat (Speed
+ * vs. Def/SpD), so keeping them as two lists avoids one row type growing
  * conditional fields for the other's inputs.
  */
 
@@ -59,6 +62,18 @@ export default function LiveCalcTurnOrderList({ observations, moveOptions, onAdd
             <option value="attacker">You went first</option>
             <option value="defender">Defender went first</option>
           </select>
+          <input
+            type="number"
+            min={-6}
+            max={6}
+            value={obs.defenderSpeedStage}
+            onChange={(e) => {
+              const parsed = Number(e.target.value);
+              if (!Number.isNaN(parsed)) onUpdate(obs.id, { defenderSpeedStage: Math.max(-6, Math.min(6, parsed)) });
+            }}
+            title="Defender's Speed stage this turn (-6 to +6)"
+            className="w-10 shrink-0 px-1 py-0.5 text-xs text-center bg-zinc-900 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
+          />
           <button
             type="button"
             onClick={() => onRemove(obs.id)}

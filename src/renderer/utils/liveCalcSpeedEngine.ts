@@ -16,18 +16,26 @@
  * ## What a turn-order observation means
  * Each observation records which side (the user's own Pokémon, or the
  * defender) acted first on an observed turn, plus the attacker's own move
- * that turn (needed for its priority - see below), under these v1
- * assumptions:
- * - **Both combatants' base computed Speed** (level+nature+SP+IVs), not
- *   their in-battle effective Speed - no stage boosts, status, or weather
- *   speed-abilities factored in for either side. This mirrors the "neutral
- *   field, no Tailwind/Trick Room/paralysis tracked" call from the scope
- *   doc: rather than only leaving the *defender* at a neutral baseline
- *   (its boosts/status genuinely aren't knowable) while honoring the
- *   attacker's own boosts/status/weather, both sides are compared on the
- *   same unboosted footing for symmetry. A real boosted-Speed or paralyzed
- *   attacker will misnarrow against this engine - a documented v1 gap, not
- *   a silent one, same shape as the damage% engine's own neutral-field call.
+ * that turn (needed for its priority - see below) and the defender's own
+ * Speed stage for that turn, under these v2 assumptions (Leg 16 - see
+ * docs/investigations/live-calc-turn-order-speed-stage-boosts-scope.md):
+ * - **The attacker's Speed honors the existing panel's live boosts +
+ *   status**, via `computeEffectiveSpeed()` (weather always passed as `''`
+ *   - Live Calc tracks no field weather anywhere, so this only picks up
+ *   stage boosts + paralysis-halving, not weather-ability Speed doubling).
+ *   This is already-known/editable data on `CalcPokemonPanel`, not a new
+ *   input. **The defender's Speed stage is a per-observation, user-asserted
+ *   field** (`defenderSpeedStage`, -6..+6, default 0) applied directly to
+ *   each scanned SP candidate's computed `rawStats.spe` - a known/fixed
+ *   input the engine applies, not a second unknown scanned alongside
+ *   nature (that would couple two unknowns into one observation, the same
+ *   complexity jump Leg 15 already rejected for Electro Ball/Gyro Ball).
+ *   Leg 15's original "both sides unboosted for symmetry" v1 call is
+ *   reversed by this: the defender no longer needs to be left neutral for
+ *   consistency with the attacker, since it now gets its own explicit
+ *   stage input. Defender status (paralysis) and Tailwind/weather-ability
+ *   Speed changes remain untracked - still a documented gap, just a
+ *   narrower one than before.
  * - **The defender's own move that turn had no priority.** Only the
  *   attacker's move (fully known) can be checked for priority; the
  *   defender's move that turn is never known to this engine (only its
@@ -47,7 +55,7 @@
 
 import { Pokemon, toID } from '@smogon/calc';
 import type { Generation, NatureName, StatsTable } from '@smogon/calc/dist/data/interface';
-import { buildPokemon, type CalcPokemonState } from './damageCalcEngine';
+import { boostMultiplier, computeEffectiveSpeed, type CalcPokemonState } from './damageCalcEngine';
 import { MAX_IVS, spsToEvs, resolveCalcSpecies } from './championsStats';
 import type { LiveCalcInference, LiveCalcStatBound, LiveCalcDefenderInput } from './liveCalcEngine';
 
@@ -62,6 +70,9 @@ export interface LiveCalcTurnOrderObservation {
   moveName: string;
   /** Which side acted first this turn. */
   wentFirst: TurnOrderResult;
+  /** The defender's asserted Speed stage for this turn (-6..+6, default 0) - a known/fixed
+   * input applied directly to each scanned SP candidate, not a second scanned unknown (see file header). */
+  defenderSpeedStage: number;
 }
 
 function intersectBounds(a: LiveCalcStatBound, b: LiveCalcStatBound): LiveCalcStatBound | null {
@@ -81,9 +92,12 @@ function unionBounds(bounds: (LiveCalcStatBound | null)[]): LiveCalcStatBound | 
 
 /**
  * For one nature candidate, scans Speed SP 0-32 and returns the sub-range
- * consistent with the observed turn order against the attacker's fixed base
+ * consistent with the observed turn order against the attacker's effective
  * Speed - a tie at any SP counts as consistent with either order (see file
- * header). Returns null if no SP value is consistent at all.
+ * header). Each candidate's raw Speed is stage-boosted by the observation's
+ * asserted `defenderSpeedStage` before comparing, same `boostMultiplier()`
+ * math `computeEffectiveSpeed()` applies to the attacker side. Returns null
+ * if no SP value is consistent at all.
  */
 function feasibleSpeedRange(
   gen: Generation,
@@ -92,6 +106,7 @@ function feasibleSpeedRange(
   nature: NatureName,
   attackerSpeed: number,
   wentFirst: TurnOrderResult,
+  defenderSpeedStage: number,
 ): LiveCalcStatBound | null {
   let feasibleMin: number | null = null;
   let feasibleMax: number | null = null;
@@ -104,7 +119,7 @@ function feasibleSpeedRange(
         evs: spsToEvs(sps),
         ivs: MAX_IVS,
       });
-      const defenderSpeed = defenderPokemon.rawStats.spe;
+      const defenderSpeed = Math.floor(defenderPokemon.rawStats.spe * boostMultiplier(defenderSpeedStage));
       const consistent =
         defenderSpeed === attackerSpeed ||
         (wentFirst === 'attacker' && attackerSpeed > defenderSpeed) ||
@@ -138,13 +153,12 @@ export function inferDefenderSpeed(
   const result: LiveCalcInference = { ...inference, contradictions: [...inference.contradictions] };
   if (!attacker.species || !defender.species) return result;
 
-  let attackerSpeed: number;
-  try {
-    attackerSpeed = buildPokemon(gen, attacker).rawStats.spe;
-  } catch {
+  const effectiveAttackerSpeed = computeEffectiveSpeed(gen, attacker, '');
+  if (effectiveAttackerSpeed === null) {
     result.contradictions.push('Attacker Pokémon could not be built - check its species/stats.');
     return result;
   }
+  const attackerSpeed = effectiveAttackerSpeed;
 
   for (const obs of observations) {
     const moveData = gen.moves.get(toID(obs.moveName));
@@ -159,7 +173,7 @@ export function inferDefenderSpeed(
 
     const natureResults = result.natureCandidates.map(nature => ({
       nature,
-      bound: feasibleSpeedRange(gen, defender.species, defender.level, nature, attackerSpeed, obs.wentFirst),
+      bound: feasibleSpeedRange(gen, defender.species, defender.level, nature, attackerSpeed, obs.wentFirst, obs.defenderSpeedStage),
     }));
     const feasibleNatures = natureResults.filter(r => r.bound !== null);
 

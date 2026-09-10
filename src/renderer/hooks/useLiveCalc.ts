@@ -71,7 +71,7 @@ export interface LiveCalcTurnOrderObservationEntry extends LiveCalcTurnOrderObse
 }
 
 function defaultTurnOrderObservation(): LiveCalcTurnOrderObservationEntry {
-  return { id: makeObservationId(), moveName: '', wentFirst: 'attacker' };
+  return { id: makeObservationId(), moveName: '', wentFirst: 'attacker', defenderSpeedStage: 0 };
 }
 
 export interface UseLiveCalcReturn {

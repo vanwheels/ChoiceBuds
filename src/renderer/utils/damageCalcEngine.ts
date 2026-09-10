@@ -269,8 +269,11 @@ function getMultihitRange(gen: Generation, moveName: string): [number, number] |
   return [multihit[0], multihit[1]];
 }
 
-/** Standard stage-boost multiplier (-6..+6): >=0 stages are (2+n)/2, negative are 2/(2-n). */
-function boostMultiplier(stage: number): number {
+/** Standard stage-boost multiplier (-6..+6): >=0 stages are (2+n)/2, negative are 2/(2-n).
+ * Exported for reuse by utils/liveCalcSpeedEngine.ts, which applies the same
+ * stage math to a scanned defender Speed candidate rather than a panel's own
+ * boosted stat display. */
+export function boostMultiplier(stage: number): number {
   const clamped = Math.max(-6, Math.min(6, stage));
   return clamped >= 0 ? (2 + clamped) / 2 : 2 / (2 - clamped);
 }
