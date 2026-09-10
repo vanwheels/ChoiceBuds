@@ -22,6 +22,11 @@ in:
   checkbox and its `slotResistsThreat`-based filter. See commit `72782ce`.
   Manually live-verified by Vanny.
 
+- **[Speed Tiers Usage Threshold Control] - Leg 11** (2026-09-09) - added
+  the adjustable Min Spread Usage stepper (10% increments, clamped 5%-95%)
+  next to the All/Top 60/Top 120 toggle. See commit `60ef386`. Manually
+  live-verified by Vanny.
+
 - **[Speed Tiers Per-Spread Value Placement Bug] - Leg 10** (2026-09-09) -
   live re-check via `run-desktop` found the bug doesn't reproduce: Blastoise
   (3 ranked usage spreads above the cutoff, two sharing SP 32 Speed and one
