@@ -102,7 +102,14 @@ const REG_MA_SPECIES: string[] = [
   'toucannon', 'crabominable', 'lycanroc', 'toxapex', 'mudsdale', 'araquanid', 'salazzle', 'tsareena',
   'oranguru', 'passimian', 'mimikyu', 'drampa', 'kommo-o', 'corviknight', 'flapple', 'appletun',
   'sandaconda', 'polteageist', 'hatterene', 'mr-rime', 'runerigus', 'alcremie', 'morpeko', 'dragapult',
-  'wyrdeer', 'kleavor', 'basculegion-male', 'basculegion-female', 'sneasler', 'meowscarada', 'skeledirge', 'quaquaval', 'maushold',
+  'wyrdeer', 'kleavor', 'basculegion-male', 'basculegion-female', 'sneasler', 'meowscarada', 'skeledirge', 'quaquaval',
+  // PokeAPI has no bare "maushold" pokemon resource - only its maushold-family-of-four/
+  // maushold-family-of-three varieties (useSpeciesRoster's picker surfaces exactly these
+  // two slugs). Unlike Squawkabilly's purely cosmetic plumage colors, Family of Three has
+  // a different stat spread than Family of Four (more Attack, less Defense/Sp. Def), so
+  // both are listed as separate legal roster entries rather than collapsed to one slug -
+  // same reasoning as indeedee-male/indeedee-female below.
+  'maushold-family-of-four', 'maushold-family-of-three',
   'garganacl', 'armarouge', 'ceruledge', 'bellibolt', 'scovillain', 'espathra', 'tinkaton',
   // PokeAPI has no bare "palafin" pokemon resource - only its palafin-zero/palafin-hero
   // varieties (Zero is the team-building form; Hero is a battle-only transformation,

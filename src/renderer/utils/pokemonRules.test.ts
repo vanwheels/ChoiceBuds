@@ -77,6 +77,11 @@ describe('validateSpeciesLegality', () => {
     expect(validateSpeciesLegality('tauros-paldea-combat', 'REG-MA')).toBe(true);
   });
 
+  it('accepts both Maushold varieties (PokeAPI has no bare "maushold" resource)', () => {
+    expect(validateSpeciesLegality('maushold-family-of-four', 'REG-MA')).toBe(true);
+    expect(validateSpeciesLegality('maushold-family-of-three', 'REG-MA')).toBe(true);
+  });
+
   it('rejects a Reg M-C-only species under REG-MB', () => {
     expect(validateSpeciesLegality('rillaboom', 'REG-MB')).toBe(false);
   });

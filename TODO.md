@@ -18,14 +18,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 
 ## Current Milestone: Battle Logger Overhaul
 
-- **[Battle Logger: Maushold Missing From Opponent Selection] — Leg 1**
-  *(Last touched: 2026-09-10 · Re-checks: 0)*
-  Maushold doesn't appear in Battle Logger's opponent Pokémon selection list.
-  Maushold has two forms (Family of Four / Family of Three) — worth checking
-  whether this is a form-handling gap in whatever species list the opponent
-  picker sources, similar in shape to the gender-divergent-species handling
-  called out in `CLAUDE.md`.
-
 - **[Battle Logger: Edit Saved Battle] — Leg 1** *(Last touched: 2026-09-10 ·
   Re-checks: 0)*
   No way to edit a battle once it's been created and saved — create-only
