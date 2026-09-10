@@ -20,3 +20,5 @@ milestone.
   [post-mortem](docs/postmortems/regulation-mc-prep.md)
 - **Speed Calc-like Feature** — 2026-09-09 to 2026-09-10 — Shipped —
   [post-mortem](docs/postmortems/speed-calc-like-feature.md)
+- **UI Polish & Performance** — 2026-09-10 — Shipped —
+  [post-mortem](docs/postmortems/ui-polish-performance.md)

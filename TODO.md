@@ -16,7 +16,35 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: UI Polish & Performance
+## Current Milestone: Battle Logger Overhaul
+
+- **[Battle Logger: Maushold Missing From Opponent Selection] — Leg 1**
+  *(Last touched: 2026-09-10 · Re-checks: 0)*
+  Maushold doesn't appear in Battle Logger's opponent Pokémon selection list.
+  Maushold has two forms (Family of Four / Family of Three) — worth checking
+  whether this is a form-handling gap in whatever species list the opponent
+  picker sources, similar in shape to the gender-divergent-species handling
+  called out in `CLAUDE.md`.
+
+- **[Battle Logger: Edit Saved Battle] — Leg 1** *(Last touched: 2026-09-10 ·
+  Re-checks: 0)*
+  No way to edit a battle once it's been created and saved — create-only
+  today. Needs an edit flow, likely reusing the logger UI in an edit mode
+  (draft/commit shape similar to `useActiveEditor`'s pattern for team
+  Pokémon) rather than a separate screen.
+
+- **[Battle Logger: Selection UI Improvements] — Leg 1** *(Last touched:
+  2026-09-10 · Re-checks: 0)*
+  No visual indicator shows which 4 of your own Pokémon have been selected
+  for the battle.
+  - Also can't choose which 4 of the opponent's Pokémon were brought — needs
+    a picker for the opponent's brought-4, not just your own.
+
+- **[Battle Logger: Duplicate Pokémon Selectable] — Leg 1** *(Last touched:
+  2026-09-10 · Re-checks: 0)*
+  Bug: the same Pokémon can currently be selected more than once for a
+  single side's brought-4. Needs a dedupe/disable-already-selected
+  constraint on the picker.
 
 ## Blocked
 
@@ -101,41 +129,11 @@ unblocked.
 
 ## Future Milestones (unscheduled)
 
-2026-09-10 feedback pass batched into 4 candidate milestones; UI Polish &
-Performance was promoted to current (see above). The remaining 3 below keep
-their legs already drafted — pick one to promote next (items keep their
-draft numbering/order until then; no cross-milestone priority has been
-set).
-
-### Candidate: Battle Logger Overhaul
-
-- **[Battle Logger: Maushold Missing From Opponent Selection] — Leg 1**
-  *(Last touched: 2026-09-10 · Re-checks: 0)*
-  Maushold doesn't appear in Battle Logger's opponent Pokémon selection list.
-  Maushold has two forms (Family of Four / Family of Three) — worth checking
-  whether this is a form-handling gap in whatever species list the opponent
-  picker sources, similar in shape to the gender-divergent-species handling
-  called out in `CLAUDE.md`.
-
-- **[Battle Logger: Edit Saved Battle] — Leg 1** *(Last touched: 2026-09-10 ·
-  Re-checks: 0)*
-  No way to edit a battle once it's been created and saved — create-only
-  today. Needs an edit flow, likely reusing the logger UI in an edit mode
-  (draft/commit shape similar to `useActiveEditor`'s pattern for team
-  Pokémon) rather than a separate screen.
-
-- **[Battle Logger: Selection UI Improvements] — Leg 1** *(Last touched:
-  2026-09-10 · Re-checks: 0)*
-  No visual indicator shows which 4 of your own Pokémon have been selected
-  for the battle.
-  - Also can't choose which 4 of the opponent's Pokémon were brought — needs
-    a picker for the opponent's brought-4, not just your own.
-
-- **[Battle Logger: Duplicate Pokémon Selectable] — Leg 1** *(Last touched:
-  2026-09-10 · Re-checks: 0)*
-  Bug: the same Pokémon can currently be selected more than once for a
-  single side's brought-4. Needs a dedupe/disable-already-selected
-  constraint on the picker.
+2026-09-10 feedback pass batched into 4 candidate milestones; Battle Logger
+Overhaul was promoted to current (see above) once UI Polish & Performance
+shipped. The remaining 3 below keep their legs already drafted — pick one to
+promote next (items keep their draft numbering/order until then; no
+cross-milestone priority has been set).
 
 ### Candidate: Statistics Improvements
 
@@ -188,5 +186,5 @@ set).
 - **Live Calc pass.** Live Calc "needs a lot of tweaking" per 2026-09-10
   feedback — explicitly deferred to its own future milestone rather than
   folded into whatever milestone comes next. Not yet scoped into concrete
-  legs (unlike the four candidates above).
+  legs (unlike Statistics Improvements/Team Management QoL above).
 
