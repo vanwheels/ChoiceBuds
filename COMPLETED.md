@@ -36,6 +36,15 @@ in:
   match its own persisted `playerRoster` ids either. Fixed by snapshotting
   `playerRoster` into state once, at team-selection time
   (`handleSelectTeam`), instead of re-deriving it impurely every render.
+  Confirmed live against the user's real `battles.json`: all 8 pre-fix
+  battles had 0 of their `broughtIds` matching their own `playerRoster` -
+  100% corrupted, no id-based recovery possible, and the user no longer
+  remembers which 4 were brought in each. Backed up to
+  `battles.json.bak-broughtids-fix` and cleared `broughtIds` to `[]` on
+  those 8 records (one-time manual fix on the user's machine, not a code
+  change) so they honestly show 0/4 brought instead of a misleading 4/4
+  with nothing highlighted; re-pick via Edit if the real selections matter
+  later.
 
 - **[Battle Logger: Edit Saved Battle] - Leg 1** (2026-09-10) - see commit
   `8d7707a`. `RecordMatchForm` now doubles as the edit form for an
