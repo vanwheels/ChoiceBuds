@@ -19,7 +19,7 @@ in:
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
 - **[Battle Logger: Duplicate Pokémon Selectable] - Leg 1** (2026-09-10) -
-  see commit `TBD`. `RecordMatchForm`'s "+ Add Opponent Pokemon"
+  see commit `b55fbf4`. `RecordMatchForm`'s "+ Add Opponent Pokemon"
   `SpeciesPickerCard` had no dedupe against `opponentRoster`, so the same
   species could be added twice and both entries independently marked
   brought - double-counting one Pokemon in the opponent's brought-4, which
