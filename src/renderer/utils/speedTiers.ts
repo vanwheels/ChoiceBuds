@@ -34,7 +34,8 @@
  * 6-stat build (ranked by real usage %), safe to treat as its own honest
  * distribution - each spread the caller keeps becomes its own row (which
  * ones to keep, e.g. a usage-percentage floor, is a view-layer policy call -
- * see utils/speedTierList.ts's SPREAD_USAGE_CUTOFF_PERCENT). Nature and item
+ * see utils/speedTierList.ts's DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT and
+ * SpeedTiersPage.tsx's user-adjustable cutoff control). Nature and item
  * are deliberately NOT crossed with a spread's own points: the API never
  * says which spread paired with which nature or item in any real battle, so
  * combining them would fabricate joint percentages that don't exist in the

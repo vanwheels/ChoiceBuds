@@ -10,10 +10,14 @@
  * (project convention - see CLAUDE.md's Testing section).
  *
  * A threat contributes one tier-list row per ChampionsUsageEntry.statSpreads
- * entry above SPREAD_USAGE_CUTOFF_PERCENT (not just its top-ranked build) -
- * each real, independently-usage-ranked spread above the floor is its own
- * honest speed value, same reasoning speedTiers.ts's header gives for not
- * crossing spreads with nature/item combinatorially. It also contributes 3
+ * entry above the caller-supplied usage cutoff (not just its top-ranked
+ * build) - each real, independently-usage-ranked spread above the floor is
+ * its own honest speed value, same reasoning speedTiers.ts's header gives
+ * for not crossing spreads with nature/item combinatorially. The cutoff
+ * itself is a user-adjustable page-level control (Speed Tiers Usage
+ * Threshold Control, Leg 11, see TODO.md) - DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT
+ * below is only the fallback for a caller that doesn't pass its own value
+ * (e.g. this file's own tests). It also contributes 3
  * bound rows (min/neutral/max - see ThreatSpeedBounds), unfiltered by the
  * cutoff since they aren't usage data to begin with.
  *
@@ -30,8 +34,8 @@
  */
 import type { ThreatSpeedBounds, ThreatSpeedProfile, TeamSpeedEntry } from './speedTiers';
 
-/** Minimum real usage share (%) a ranked spread needs to get its own plotted row - see this file's header. Tunable; not derived from any measured distribution yet. */
-export const SPREAD_USAGE_CUTOFF_PERCENT = 10;
+/** Default minimum real usage share (%) a ranked spread needs to get its own plotted row - see this file's header. User-adjustable at the page level (SpeedTiersPage.tsx); this is only the fallback default, not a fixed floor. Not derived from any measured distribution. */
+export const DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT = 25;
 
 const BOUND_LABELS: { key: keyof ThreatSpeedBounds; label: 'Min' | 'Neutral' | 'Max' }[] = [
   { key: 'min', label: 'Min' },
@@ -74,8 +78,18 @@ export interface ThreatTierInput {
   types: string[];
 }
 
-/** Flattens a team's per-Pokemon speeds and every threat's per-spread/bound speeds into one unsorted row list. */
-export function buildSpeedTierEntries(team: TeamSpeedEntry[], threats: ThreatTierInput[]): SpeedTierEntry[] {
+/**
+ * Flattens a team's per-Pokemon speeds and every threat's per-spread/bound
+ * speeds into one unsorted row list. `usageCutoffPercent` is the minimum
+ * usage share a ranked spread needs to get its own row (see this file's
+ * header) - defaults to DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT for callers
+ * (tests) that don't care about the live page-level control.
+ */
+export function buildSpeedTierEntries(
+  team: TeamSpeedEntry[],
+  threats: ThreatTierInput[],
+  usageCutoffPercent: number = DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT
+): SpeedTierEntry[] {
   const teamRows: SpeedTierEntry[] = team.map(t => ({
     key: `team-${t.pokemonId}`,
     kind: 'team',
@@ -86,7 +100,7 @@ export function buildSpeedTierEntries(team: TeamSpeedEntry[], threats: ThreatTie
 
   const threatRows: SpeedTierEntry[] = threats.flatMap(({ spriteUrl, profile, inferredBound }) => {
     const spreadRows: SpeedTierEntry[] = profile.spreads
-      .filter(spread => spread.percentage >= SPREAD_USAGE_CUTOFF_PERCENT)
+      .filter(spread => spread.percentage >= usageCutoffPercent)
       .map((spread, i) => ({
         key: `threat-${profile.species}-spread-${i}`,
         kind: 'threat' as const,

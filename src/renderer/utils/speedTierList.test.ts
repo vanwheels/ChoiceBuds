@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { TeamSpeedEntry, ThreatSpeedProfile } from './speedTiers';
-import { buildSpeedTierEntries, filterSpeedTierEntries, groupSpeedTiers, SPREAD_USAGE_CUTOFF_PERCENT, type ThreatTierInput } from './speedTierList';
+import { buildSpeedTierEntries, filterSpeedTierEntries, groupSpeedTiers, DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT, type ThreatTierInput } from './speedTierList';
 
 function teamEntry(overrides: Partial<TeamSpeedEntry> = {}): TeamSpeedEntry {
   return { pokemonId: 'p1', species: 'Incineroar', spriteUrl: 'incineroar.png', speed: 100, ...overrides };
@@ -41,10 +41,17 @@ describe('buildSpeedTierEntries', () => {
     const belowCutoff = threatInput({
       spreads: [
         { speed: 200, percentage: 60 },
-        { speed: 180, percentage: SPREAD_USAGE_CUTOFF_PERCENT - 1 },
+        { speed: 180, percentage: DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT - 1 },
       ],
     });
     const entries = buildSpeedTierEntries([], [belowCutoff]);
+    expect(entries.filter(e => e.percentage !== undefined)).toHaveLength(1);
+    expect(entries.filter(e => e.boundLabel !== undefined)).toHaveLength(3);
+  });
+
+  it('honors a caller-supplied usage cutoff over the default', () => {
+    const entries = buildSpeedTierEntries([], [threatInput()], 45);
+    // Only the 60% spread clears a 45% cutoff; the 30% one now falls below it.
     expect(entries.filter(e => e.percentage !== undefined)).toHaveLength(1);
     expect(entries.filter(e => e.boundLabel !== undefined)).toHaveLength(3);
   });

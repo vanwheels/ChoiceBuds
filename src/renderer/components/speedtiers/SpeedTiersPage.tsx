@@ -38,6 +38,14 @@
  * precedent as it already bypassing the usage-rank cutoff below, since a pin
  * is a confirmed real opponent, not theoretical.
  *
+ * Min Spread Usage (Leg 11, see TODO.md): a page-level stepper controlling
+ * how much of a species' own real usage a ranked stat spread needs to get
+ * its own plotted row - passed through to utils/speedTierList.ts's
+ * buildSpeedTierEntries, which otherwise falls back to that file's
+ * DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT. Doesn't touch the 3 fixed bound rows
+ * (min/neutral/max), which aren't usage data to begin with - same scope
+ * split Leg 12's "Bounds Only" toggle (see TODO.md) is built around.
+ *
  * Team Preview Strip (Leg 5, see docs/investigations/
  * speed-tiers-preview-strip-scope.md): a session-only per-mon Speed SP/
  * nature/form override, merged into computeTeamSpeed's input below via
@@ -71,7 +79,7 @@ import { getFormeFamily } from '../../utils/calcFormes';
 import { getMegaAbility } from '../../config/megaAbilities';
 import { getCachedMegaSprite } from '../../hooks/useMegaSprite';
 import { computeTeamSpeed, computeThreatSpeedProfile, computeInferredThreatSpeedBound, defaultSpeedFieldContext, type SpeedFieldContext } from '../../utils/speedTiers';
-import { buildSpeedTierEntries, filterSpeedTierEntries, groupSpeedTiers, type ThreatTierInput } from '../../utils/speedTierList';
+import { buildSpeedTierEntries, filterSpeedTierEntries, groupSpeedTiers, DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT, type ThreatTierInput } from '../../utils/speedTierList';
 import { applySpeedOverride, defaultSpeedOverride, type TeamSpeedOverride } from '../../utils/speedTierOverrides';
 import { slotResistsThreat } from '../../utils/usageThreats';
 import SpeedTierFieldPanel, { ToggleButton } from './SpeedTierFieldPanel';
@@ -79,6 +87,15 @@ import SpeedTierList from './SpeedTierList';
 import TeamPreviewStrip from './TeamPreviewStrip';
 
 const GEN_NUM = 9;
+
+/**
+ * Bounds for the Min Spread Usage stepper (Leg 11, see TODO.md) - the user's
+ * own hand-picked range/step, not derived from a measured usage
+ * distribution, same as the roster-scope cutoffs above.
+ */
+const SPREAD_USAGE_CUTOFF_STEP = 10;
+const SPREAD_USAGE_CUTOFF_MIN = 5;
+const SPREAD_USAGE_CUTOFF_MAX = 95;
 
 /** Roster-scope toggle options - see this file's header. Cutoffs are the user's own hand-picked values, not derived from a measured usage distribution. */
 type RosterScope = 'all' | 'top60' | 'top120';
@@ -147,6 +164,7 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
 
   const [rosterScope, setRosterScope] = useState<RosterScope>('all');
   const [threatsOnly, setThreatsOnly] = useState(false);
+  const [spreadUsageCutoff, setSpreadUsageCutoff] = useState(DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT);
 
   const usageEntryBySpecies = useMemo(() => {
     const map = new Map<string, ChampionsUsageEntry>();
@@ -258,9 +276,9 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
   }, [rosterCandidates, gen, field, rosterScope, liveCalcPins, threatsOnly, defensiveSlots]);
 
   const tierGroups = useMemo(() => {
-    const entries = filterSpeedTierEntries(buildSpeedTierEntries(teamSpeedEntries, threatTierInputs), speciesFilter);
+    const entries = filterSpeedTierEntries(buildSpeedTierEntries(teamSpeedEntries, threatTierInputs, spreadUsageCutoff), speciesFilter);
     return groupSpeedTiers(entries, trickRoom);
-  }, [teamSpeedEntries, threatTierInputs, trickRoom, speciesFilter]);
+  }, [teamSpeedEntries, threatTierInputs, trickRoom, speciesFilter, spreadUsageCutoff]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -334,6 +352,28 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
               />
               Threats Only
             </label>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Min Spread Usage</label>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setSpreadUsageCutoff(v => Math.max(SPREAD_USAGE_CUTOFF_MIN, v - SPREAD_USAGE_CUTOFF_STEP))}
+                  disabled={spreadUsageCutoff <= SPREAD_USAGE_CUTOFF_MIN}
+                  className="w-7 h-7 flex items-center justify-center text-sm font-bold bg-zinc-800 border border-zinc-600 rounded text-white hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  −
+                </button>
+                <span className="min-w-[3.5ch] text-center text-sm text-zinc-200">{spreadUsageCutoff}%</span>
+                <button
+                  type="button"
+                  onClick={() => setSpreadUsageCutoff(v => Math.min(SPREAD_USAGE_CUTOFF_MAX, v + SPREAD_USAGE_CUTOFF_STEP))}
+                  disabled={spreadUsageCutoff >= SPREAD_USAGE_CUTOFF_MAX}
+                  className="w-7 h-7 flex items-center justify-center text-sm font-bold bg-zinc-800 border border-zinc-600 rounded text-white hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  +
+                </button>
+              </div>
+            </div>
           </div>
           <div className="bg-zinc-800 rounded-lg p-4">
             <SpeedTierList groups={tierGroups} spriteCacheState={spriteCacheState} />

@@ -31,11 +31,15 @@ numeric order). Legs below are a tentative breakdown, not yet started.
 
 - **[Speed Tiers Usage Threshold Control] — Leg 11** *(Last touched:
   2026-09-09 · Re-checks: 0)*
-  Requested live 2026-09-09: a user-adjustable minimum usage % for a spread
-  to get its own plotted row, replacing the fixed `SPREAD_USAGE_CUTOFF_PERCENT
-  = 10` constant in `speedTierList.ts`. Default to 25%, adjustable in 10%
-  increments. UI placement TBD — likely alongside the existing All/Top
-  60/Top 120 `rosterScope` toggle in `SpeedTiersPage.tsx`/`SpeedTierFieldPanel.tsx`.
+  Built: `speedTierList.ts`'s fixed `SPREAD_USAGE_CUTOFF_PERCENT = 10`
+  constant is now `DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT = 25`, only a fallback
+  for callers (tests) that don't pass their own value — `buildSpeedTierEntries`
+  takes an explicit `usageCutoffPercent` param instead. `SpeedTiersPage.tsx`
+  owns the live value as `spreadUsageCutoff` state, adjustable via a −/+
+  stepper (10% increments, clamped 5%-95%) placed next to the existing
+  All/Top 60/Top 120 roster-scope toggle. Doesn't touch the 3 fixed bound
+  rows. Awaiting Vanny's manual live verification before moving to
+  `COMPLETED.md`.
 
 - **[Speed Tiers "Bounds Only" Toggle] — Leg 12** *(Last touched: 2026-09-09
   · Re-checks: 0)*
