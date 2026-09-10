@@ -19,7 +19,7 @@ in:
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
 - **[Team Card Collapse Animation Flicker] - Leg 1** (2026-09-10) - see
-  commit (pending). Root cause: `TeamCard.tsx`'s outer `col-span-full` class
+  commit `0997d17`. Root cause: `TeamCard.tsx`'s outer `col-span-full` class
   was driven directly off `isExpanded`, so clicking Collapse snapped the
   card's grid column back to single-width the instant the button was
   clicked - before the expanded content's own height/fade exit transition
