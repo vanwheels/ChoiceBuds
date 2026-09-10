@@ -226,6 +226,13 @@ export interface Battle {
   playerActiveIds: (string | null)[]; // ids from broughtIds
   playerFaintedIds: string[]; // ids from playerRoster
   opponentRoster: OpponentPokemonEntry[]; // starts empty, grows during the battle
+  // 0-4 ids from opponentRoster - which of the (up to 6) revealed opponent
+  // Pokemon were actually brought to this battle, mirroring broughtIds
+  // above. Optional since battles logged before RecordMatchForm.tsx gained
+  // an opponent brought-4 picker won't have it - normalizeBattle doesn't
+  // need to backfill it (nothing reads it yet besides the form itself), so
+  // callers default it to `[]` themselves.
+  opponentBroughtIds?: string[];
   opponentActiveIds: (string | null)[]; // ids from opponentRoster, same fixed-slot shape as playerActiveIds
   megaEvolvedIds: string[]; // ids (either roster) that have Mega Evolved this battle
   statStages: Record<string, StatStages>; // keyed by pokemonId, either roster - cleared when that id leaves the field (bench/faint)

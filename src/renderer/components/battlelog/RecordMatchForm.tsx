@@ -29,9 +29,17 @@ import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import { groupBattlesBySet, getSetOutcome } from '../../utils/battleSets';
 import { toRegulationId } from '../../utils/pokemonRules';
 import SpeciesPickerCard from '../SpeciesPickerCard';
+import BroughtToggleTile from './BroughtToggleTile';
 
 const MAX_BROUGHT = 4;
 const MAX_OPPONENT_ROSTER_SIZE = 6;
+
+/** Shared toggle logic for both brought-4 pickers below (player roster, opponent roster) - add up to `max` ids, remove on re-click. */
+function toggleId(prev: string[], id: string, max: number): string[] {
+  if (prev.includes(id)) return prev.filter(existing => existing !== id);
+  if (prev.length >= max) return prev;
+  return [...prev, id];
+}
 
 interface RecordMatchFormProps {
   teamsState: UseTeamsReturn;
@@ -87,12 +95,13 @@ function buildMatchRecord(args: {
   playerRoster: BroughtPokemonSnapshot[];
   broughtIds: string[];
   opponentRoster: OpponentPokemonEntry[];
+  opponentBroughtIds: string[];
   opponentName: string;
   result: 'win' | 'loss';
   notes: string;
   existingBattles: Battle[];
 }): Battle {
-  const { team, playerRoster, broughtIds, opponentRoster, opponentName, result, notes, existingBattles } = args;
+  const { team, playerRoster, broughtIds, opponentRoster, opponentBroughtIds, opponentName, result, notes, existingBattles } = args;
   const trimmedName = opponentName.trim();
   const now = Date.now();
   return {
@@ -108,6 +117,7 @@ function buildMatchRecord(args: {
     playerActiveIds: [null, null],
     playerFaintedIds: [],
     opponentRoster,
+    opponentBroughtIds,
     opponentActiveIds: [null, null],
     megaEvolvedIds: [],
     statStages: {},
@@ -132,6 +142,7 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
   const [opponentName, setOpponentName] = useState(editingBattle?.opponentName ?? '');
   const [broughtIds, setBroughtIds] = useState<string[]>(editingBattle?.broughtIds ?? []);
   const [opponentRoster, setOpponentRoster] = useState<OpponentPokemonEntry[]>(editingBattle?.opponentRoster ?? []);
+  const [opponentBroughtIds, setOpponentBroughtIds] = useState<string[]>(editingBattle?.opponentBroughtIds ?? []);
   const [isAddingOpponent, setIsAddingOpponent] = useState(false);
   const [result, setResult] = useState<'win' | 'loss' | null>(
     editingBattle && editingBattle.result !== 'in-progress' ? editingBattle.result : null
@@ -156,13 +167,8 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
     setBroughtIds([]); // roster identity (crypto.randomUUID() ids) is re-rolled per snapshot, so a prior selection can't carry over
   };
 
-  const toggleBrought = (pokemonId: string) => {
-    setBroughtIds(prev => {
-      if (prev.includes(pokemonId)) return prev.filter(id => id !== pokemonId);
-      if (prev.length >= MAX_BROUGHT) return prev;
-      return [...prev, pokemonId];
-    });
-  };
+  const toggleBrought = (pokemonId: string) => setBroughtIds(prev => toggleId(prev, pokemonId, MAX_BROUGHT));
+  const toggleOpponentBrought = (pokemonId: string) => setOpponentBroughtIds(prev => toggleId(prev, pokemonId, MAX_BROUGHT));
 
   const handleAddOpponent = (species: SpeciesRosterEntry) => {
     setIsAddingOpponent(false);
@@ -178,7 +184,10 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
     }]);
   };
 
-  const removeOpponent = (id: string) => setOpponentRoster(prev => prev.filter(o => o.id !== id));
+  const removeOpponent = (id: string) => {
+    setOpponentRoster(prev => prev.filter(o => o.id !== id));
+    setOpponentBroughtIds(prev => prev.filter(broughtId => broughtId !== id)); // drop a stale brought-selection if its entry is removed entirely
+  };
 
   const handleSave = async () => {
     if (!result) return;
@@ -191,13 +200,14 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
       ? await battlesState.updateBattle(editingBattle.id, {
           broughtIds,
           opponentRoster,
+          opponentBroughtIds,
           opponentName: trimmedName || undefined,
           result,
           notes: trimmedNotes || undefined,
         })
       : team
         ? await battlesState.addBattle(buildMatchRecord({
-            team, playerRoster, broughtIds, opponentRoster, opponentName, result, notes,
+            team, playerRoster, broughtIds, opponentRoster, opponentBroughtIds, opponentName, result, notes,
             existingBattles: battlesState.battles,
           }))
         : false;
@@ -240,37 +250,37 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
             Brought ({broughtIds.length}/{MAX_BROUGHT})
           </label>
           <div className="flex flex-wrap gap-2">
-            {playerRoster.map(p => {
-              const brought = broughtIds.includes(p.id);
-              return (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => toggleBrought(p.id)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors cursor-pointer ${
-                    brought ? 'border-accent-gold bg-accent-gold/10 text-zinc-100' : 'border-zinc-700 bg-zinc-800 text-zinc-400 hover:border-zinc-500'
-                  }`}
-                >
-                  <img src={spriteCacheState.resolveSprite(p.spriteUrl)} alt={p.species} className="w-8 h-8" />
-                  <span className="text-sm">{p.nickname || p.species}</span>
-                </button>
-              );
-            })}
+            {playerRoster.map(p => (
+              <BroughtToggleTile
+                key={p.id}
+                spriteUrl={p.spriteUrl}
+                resolveSprite={spriteCacheState.resolveSprite}
+                label={p.nickname || p.species}
+                selected={broughtIds.includes(p.id)}
+                onToggle={() => toggleBrought(p.id)}
+              />
+            ))}
           </div>
         </div>
       )}
 
       <div>
         <label className="block text-sm font-medium text-zinc-300 mb-2">
-          Opponent's Team ({opponentRoster.length}/{MAX_OPPONENT_ROSTER_SIZE})
+          Opponent's Team ({opponentRoster.length}/{MAX_OPPONENT_ROSTER_SIZE}) · Brought ({opponentBroughtIds.length}/{MAX_BROUGHT})
         </label>
         <div className="flex flex-wrap gap-2">
           {opponentRoster.map(o => (
-            <div key={o.id} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-zinc-700 bg-zinc-800">
-              <img src={spriteCacheState.resolveSprite(o.spriteUrl)} alt={o.species} className="w-8 h-8" />
-              <span className="text-sm text-zinc-100">{o.species}</span>
-              <button onClick={() => removeOpponent(o.id)} title="Remove" className="text-zinc-500 hover:text-red-400 cursor-pointer">×</button>
-            </div>
+            <BroughtToggleTile
+              key={o.id}
+              spriteUrl={o.spriteUrl}
+              resolveSprite={spriteCacheState.resolveSprite}
+              label={o.species}
+              selected={opponentBroughtIds.includes(o.id)}
+              onToggle={() => toggleOpponentBrought(o.id)}
+              trailing={
+                <button onClick={() => removeOpponent(o.id)} title="Remove" className="text-zinc-500 hover:text-red-400 cursor-pointer">×</button>
+              }
+            />
           ))}
           {opponentRoster.length < MAX_OPPONENT_ROSTER_SIZE && (
             isAddingOpponent ? (
