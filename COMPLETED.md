@@ -18,6 +18,36 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Speed Tiers Duplicate Mega Roster Candidates] - Leg 17** (2026-09-09) -
+  fixed the duplicate-key bug Leg 7's verification pass found. Root cause
+  and fix in commit `19b4fca`. Live-verified via `run-desktop`: tile counts
+  for Raichu-Mega-X/-Y and Slowbro-Mega now hold steady at 3 (their bound
+  rows only) across repeated roster-scope toggles instead of growing, and
+  no duplicate-key console warnings appear. Leg 10's bundling bug and Leg
+  14's Trick Room sort-order bug both need a live re-check against this fix
+  before any further investigation on either (see their own TODO.md
+  entries).
+
+- **[Speed Tiers Verification Pass] - Leg 7** (2026-09-09) - from-scratch
+  `run-desktop` pass over the whole Speed Tiers tab now that Legs 2/5/6/8/15
+  are all built. Confirmed working: Leg 2's field-modified Speed layer
+  actually reaches the UI (toggling "Your Tailwind" on doubled every team
+  member's displayed Speed exactly, e.g. Rillaboom 105 → 210, not a raw
+  base-stat display); the All/Top 60/Top 120 roster-scope toggle (282/545/
+  1324+ tiles respectively); the Trick Room sort-direction flip for every
+  entry except the one bug below; and Leg 6's full pin/unpin round-trip
+  (pinning Incineroar on Live Calc added two correctly cyan-ringed "Live
+  Min"/"Live Max" rows on Speed Tiers, ties rendered with the amber tie
+  ring too, and Unpin removed them cleanly - 5 tiles back down to 3). Leg
+  5's Team Preview Strip rendered and stayed interactive throughout.
+  Surfaced a new, concretely-reproduced bug during this pass - see
+  [Speed Tiers Duplicate Mega Roster Candidates] - Leg 17 in `TODO.md`,
+  which also ties together the previously-unconfirmed root causes of Leg
+  10's bundling bug and Leg 14's Trick Room order bug (the exact species
+  Leg 14 named, Mega Raichu, is one of the three Leg 17 found duplicated).
+  Screenshots in `.claude/skills/run-desktop/shots/` (01 through 14). No
+  code changed - verification only, nothing to commit.
+
 - **[Live Calc → Speed Tiers Tie-in] - Leg 6** (2026-09-09) - wired Live
   Calc's turn-order-narrowed Speed SP range/nature candidates (Leg 15, see
   below) into Speed Tiers as an annotation on the matching threat, resolving

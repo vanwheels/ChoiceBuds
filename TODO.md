@@ -29,18 +29,6 @@ was shipped, then redone by Leg 4, then Leg 4's own data source superseded
 by Leg 8; Leg 15 was Leg 6's own prerequisite, scoped and built out of
 numeric order). Legs below are a tentative breakdown, not yet started.
 
-- **[Speed Tiers Verification Pass] — Leg 7** *(Last touched: 2026-09-09 ·
-  Re-checks: 0)*
-  Live `run-desktop` pass once Leg 2 is built (Legs 5 and 6 shipped — see
-  `COMPLETED.md`), same shape as the Live Calc milestone's own verification
-  leg. Leg 8's own scope (full-regulation roster + Mega forms + dense grid,
-  including its same-day follow-up fixes) is already manually verified live
-  by Vanny — not via `run-desktop`, but confirmed working after the
-  self-healing initial-sync fix backfilled the roster. This leg is about
-  Leg 2 specifically, plus a from-scratch `run-desktop` pass over the whole
-  page (Leg 6's pin flow included) now that everything exists, not
-  re-verifying Leg 8 again.
-
 - **[Speed Tiers "Threats Only" Toggle] — Leg 9** *(Last touched: 2026-09-09
   · Re-checks: 0)*
   Deferred out of Leg 8's full-regulation-roster pivot at Vanny's own call —
@@ -62,7 +50,11 @@ numeric order). Legs below are a tentative breakdown, not yet started.
   check whether per-spread speed is actually varying, or collapsing to one
   value somewhere upstream (a spread's reported nature not being applied,
   only `points` — see `computeThreatSpeedProfile`'s `baseState()` call, which
-  doesn't set `nature` per spread).
+  doesn't set `nature` per spread). Leg 7's verification pass turned up a
+  separate, concretely-confirmed duplicate-candidate bug, fixed as Leg 17
+  (see `COMPLETED.md`) — needs a live re-check now that that fix is in to
+  see whether this bundling symptom persists on its own before investigating
+  it as its own issue.
 
 - **[Speed Tiers Usage Threshold Control] — Leg 11** *(Last touched:
   2026-09-09 · Re-checks: 0)*
@@ -101,7 +93,11 @@ numeric order). Legs below are a tentative breakdown, not yet started.
   bundling bug, possibly its own issue in `groupSpeedTiers`
   (`speedTierList.ts`) or however `SpeedTierList.tsx` lays groups out into
   the grid — not investigated yet, explicitly deferred per Vanny at report
-  time.
+  time. Leg 7's verification pass reproduced this live and found strong
+  evidence it's the same root cause as the duplicate-Mega-candidate bug
+  fixed as Leg 17 (Mega Raichu was the exact species Leg 17 found
+  duplicated, see `COMPLETED.md`) — needs a live re-check now that that fix
+  is in to confirm whether this sort-order symptom is actually gone.
 
 - **[Live Calc Turn-Order Speed Stage Boosts] — Leg 16** *(Last touched:
   2026-09-09 · Re-checks: 0)*
