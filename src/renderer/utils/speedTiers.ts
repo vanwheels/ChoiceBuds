@@ -197,3 +197,58 @@ export function computeThreatSpeedProfile(gen: Generation, input: ThreatSpeedInp
     return null;
   }
 }
+
+/** Input for computeInferredThreatSpeedBound - see that function's doc comment. */
+export interface InferredThreatSpeedInput {
+  species: string;
+  ability: string;
+  /** Defender level the pin was taken at (Live Calc's own defenderLevel) - not assumed to be 50 like the rest of this file's fixed bounds/spreads. */
+  level: number;
+  /** Speed Stat Points (0-32) range narrowed by Live Calc's turn-order engine (utils/liveCalcSpeedEngine.ts's `LiveCalcInference.speedBound`) - not a real Speed value yet, an SP range. */
+  spMin: number;
+  spMax: number;
+  /** Nature candidates still standing after that same narrowing (`LiveCalcInference.natureCandidates`). */
+  natureCandidates: NatureName[];
+}
+
+/**
+ * Live Calc -> Speed Tiers Tie-in (Leg 6, see TODO.md). Turns a Live
+ * Calc-narrowed Speed SP range + surviving nature candidates into a real,
+ * field-modified min/max effective-Speed bound, the same units every other
+ * row in this file plots. Checks only the two SP-range endpoints against
+ * every candidate nature rather than a full SP scan - Speed is monotonic in
+ * both SP and a fixed nature's multiplier, so the overall min/max can only
+ * land at one of those endpoints, same reasoning computeThreatSpeedProfile's
+ * own min/neutral/max bounds rely on (0 SP / 32 SP extremes there). Null on
+ * an unresolvable species or an empty nature candidate list.
+ */
+export function computeInferredThreatSpeedBound(
+  gen: Generation,
+  input: InferredThreatSpeedInput,
+  field: SpeedFieldContext
+): { min: number; max: number } | null {
+  try {
+    const calcField = buildField(field);
+    const { species, ability, level, spMin, spMax, natureCandidates } = input;
+
+    const baseState = (): CalcPokemonState => ({
+      ...defaultPokemonState(),
+      species,
+      ability,
+      level,
+      item: field.threatItem,
+    });
+
+    const speeds = natureCandidates.flatMap(nature =>
+      [spMin, spMax].map(sp => {
+        const sps: StatsTable = { ...baseState().sps, spe: sp };
+        return finalSpeed(gen, { ...baseState(), nature, sps }, calcField, calcField.defenderSide);
+      })
+    );
+
+    if (speeds.length === 0) return null;
+    return { min: Math.min(...speeds), max: Math.max(...speeds) };
+  } catch {
+    return null;
+  }
+}

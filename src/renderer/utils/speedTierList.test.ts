@@ -53,6 +53,32 @@ describe('buildSpeedTierEntries', () => {
     const entries = buildSpeedTierEntries([teamEntry()], [threatInput()]);
     expect(entries).toHaveLength(6);
   });
+
+  it('adds two Live Calc rows for a pinned threat with a widened inferred bound', () => {
+    const pinned = threatInput();
+    pinned.inferredBound = { min: 120, max: 160 };
+    const entries = buildSpeedTierEntries([], [pinned]);
+    const liveRows = entries.filter(e => e.isLiveCalcBound);
+    expect(liveRows).toEqual([
+      { key: 'threat-Chien-Pao-live-min', kind: 'threat', species: 'Chien-Pao', spriteUrl: 'chien-pao.png', speed: 120, boundLabel: 'Live Min', isLiveCalcBound: true },
+      { key: 'threat-Chien-Pao-live-max', kind: 'threat', species: 'Chien-Pao', spriteUrl: 'chien-pao.png', speed: 160, boundLabel: 'Live Max', isLiveCalcBound: true },
+    ]);
+  });
+
+  it('adds a single Live Calc row when the pinned inferred bound has collapsed to one value', () => {
+    const pinned = threatInput();
+    pinned.inferredBound = { min: 140, max: 140 };
+    const entries = buildSpeedTierEntries([], [pinned]);
+    const liveRows = entries.filter(e => e.isLiveCalcBound);
+    expect(liveRows).toEqual([
+      { key: 'threat-Chien-Pao-live', kind: 'threat', species: 'Chien-Pao', spriteUrl: 'chien-pao.png', speed: 140, boundLabel: 'Live', isLiveCalcBound: true },
+    ]);
+  });
+
+  it('adds no Live Calc rows for an unpinned threat', () => {
+    const entries = buildSpeedTierEntries([], [threatInput()]);
+    expect(entries.some(e => e.isLiveCalcBound)).toBe(false);
+  });
 });
 
 describe('filterSpeedTierEntries', () => {

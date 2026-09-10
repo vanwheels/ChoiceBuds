@@ -16,6 +16,17 @@
  * crossing spreads with nature/item combinatorially. It also contributes 3
  * bound rows (min/neutral/max - see ThreatSpeedBounds), unfiltered by the
  * cutoff since they aren't usage data to begin with.
+ *
+ * A threat also contributes 1-2 Live Calc rows when the caller supplies an
+ * `inferredBound` (Live Calc -> Speed Tiers Tie-in, Leg 6, see TODO.md /
+ * hooks/useLiveCalcThreatPins.ts) - a real turn-order-narrowed Speed range
+ * for that exact species, pinned from the Live Calc tab. These are additive
+ * (`isLiveCalcBound: true`), annotating the threat's generic usage rows
+ * rather than replacing them - the usage spreads/bounds still show what's
+ * statistically likely, while the Live Calc rows show what this specific
+ * opponent's Pokémon has actually been observed to do. One row when the
+ * narrowed range has collapsed to a single Speed value, two (min/max)
+ * otherwise.
  */
 import type { ThreatSpeedBounds, ThreatSpeedProfile, TeamSpeedEntry } from './speedTiers';
 
@@ -36,8 +47,10 @@ export interface SpeedTierEntry {
   speed: number;
   /** Threat spread rows only - this spread's share of the species' real ranked usage. */
   percentage?: number;
-  /** Threat bound rows only - which of the 3 fixed min/neutral/max reference tiers this is. */
-  boundLabel?: 'Min' | 'Neutral' | 'Max';
+  /** Threat bound rows only - which reference tier this is: the 3 fixed generic ones, or a Live Calc-pinned observed range (see isLiveCalcBound). */
+  boundLabel?: 'Min' | 'Neutral' | 'Max' | 'Live' | 'Live Min' | 'Live Max';
+  /** True for a Live Calc-pinned row (Leg 6) - a real, turn-order-narrowed range for this exact opponent Pokémon, not a generic usage/bound number, so it renders distinctly from the dimmed generic bound rows. */
+  isLiveCalcBound?: boolean;
 }
 
 export interface SpeedTierGroup {
@@ -48,6 +61,11 @@ export interface SpeedTierGroup {
 export interface ThreatTierInput {
   spriteUrl: string;
   profile: ThreatSpeedProfile;
+  /** Live Calc -> Speed Tiers Tie-in (Leg 6): a pinned, turn-order-narrowed
+   * Speed bound for this exact threat species (utils/speedTiers.ts::
+   * computeInferredThreatSpeedBound). Undefined when nothing's pinned for
+   * this species - the common case. */
+  inferredBound?: { min: number; max: number };
 }
 
 /** Flattens a team's per-Pokemon speeds and every threat's per-spread/bound speeds into one unsorted row list. */
@@ -60,7 +78,7 @@ export function buildSpeedTierEntries(team: TeamSpeedEntry[], threats: ThreatTie
     speed: t.speed,
   }));
 
-  const threatRows: SpeedTierEntry[] = threats.flatMap(({ spriteUrl, profile }) => {
+  const threatRows: SpeedTierEntry[] = threats.flatMap(({ spriteUrl, profile, inferredBound }) => {
     const spreadRows: SpeedTierEntry[] = profile.spreads
       .filter(spread => spread.percentage >= SPREAD_USAGE_CUTOFF_PERCENT)
       .map((spread, i) => ({
@@ -81,7 +99,40 @@ export function buildSpeedTierEntries(team: TeamSpeedEntry[], threats: ThreatTie
       boundLabel: label,
     }));
 
-    return [...spreadRows, ...boundRows];
+    const liveCalcRows: SpeedTierEntry[] = !inferredBound
+      ? []
+      : inferredBound.min === inferredBound.max
+        ? [{
+            key: `threat-${profile.species}-live`,
+            kind: 'threat' as const,
+            species: profile.species,
+            spriteUrl,
+            speed: inferredBound.min,
+            boundLabel: 'Live' as const,
+            isLiveCalcBound: true,
+          }]
+        : [
+            {
+              key: `threat-${profile.species}-live-min`,
+              kind: 'threat' as const,
+              species: profile.species,
+              spriteUrl,
+              speed: inferredBound.min,
+              boundLabel: 'Live Min' as const,
+              isLiveCalcBound: true,
+            },
+            {
+              key: `threat-${profile.species}-live-max`,
+              kind: 'threat' as const,
+              species: profile.species,
+              spriteUrl,
+              speed: inferredBound.max,
+              boundLabel: 'Live Max' as const,
+              isLiveCalcBound: true,
+            },
+          ];
+
+    return [...spreadRows, ...boundRows, ...liveCalcRows];
   });
 
   return [...teamRows, ...threatRows];

@@ -38,6 +38,15 @@
  * override Map lives here rather than a new hook (see TeamPreviewStrip.tsx's
  * header), keyed by ImportedPokemonInfo.id, which is a crypto.randomUUID()
  * unique across every team, so it's never cleared on a team switch.
+ *
+ * Live Calc -> Speed Tiers Tie-in (Leg 6, see TODO.md): `liveCalcThreatPinsState`
+ * is App.tsx-level shared state (hooks/useLiveCalcThreatPins.ts) - a pin made
+ * on the Live Calc tab surfaces here as an extra "Live" bound row on any
+ * roster candidate whose species matches, computed via utils/speedTiers.ts::
+ * computeInferredThreatSpeedBound and merged in by threatTierInputs below. A
+ * pinned species bypasses the roster-scope usage-rank cutoff (top60/top120)
+ * even if it has no usage data at all or ranks outside it - the user
+ * explicitly pinned this exact opponent Pokémon, so it should always show.
  */
 import { useMemo, useState } from 'react';
 import { Generations } from '@smogon/calc';
@@ -47,13 +56,14 @@ import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseDatabaseReturn } from '../../hooks/useDatabase';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import type { UseSpeciesRosterReturn } from '../../hooks/useSpeciesRoster';
+import type { UseLiveCalcThreatPinsReturn } from '../../hooks/useLiveCalcThreatPins';
 import type { ChampionsUsageEntry, ImportedPokemonInfo } from '../../types/pokemon';
 import { validateSpeciesLegality, toRegulationId } from '../../utils/pokemonRules';
 import { toReadableName } from '../../utils/displayName';
 import { getFormeFamily } from '../../utils/calcFormes';
 import { getMegaAbility } from '../../config/megaAbilities';
 import { getCachedMegaSprite } from '../../hooks/useMegaSprite';
-import { computeTeamSpeed, computeThreatSpeedProfile, defaultSpeedFieldContext, type SpeedFieldContext } from '../../utils/speedTiers';
+import { computeTeamSpeed, computeThreatSpeedProfile, computeInferredThreatSpeedBound, defaultSpeedFieldContext, type SpeedFieldContext } from '../../utils/speedTiers';
 import { buildSpeedTierEntries, filterSpeedTierEntries, groupSpeedTiers, type ThreatTierInput } from '../../utils/speedTierList';
 import { applySpeedOverride, defaultSpeedOverride, type TeamSpeedOverride } from '../../utils/speedTierOverrides';
 import SpeedTierFieldPanel, { ToggleButton } from './SpeedTierFieldPanel';
@@ -91,9 +101,10 @@ interface SpeedTiersPageProps {
   databaseState: UseDatabaseReturn;
   spriteCacheState: UseSpriteCacheReturn;
   speciesRosterState: UseSpeciesRosterReturn;
+  liveCalcThreatPinsState: UseLiveCalcThreatPinsReturn;
 }
 
-export default function SpeedTiersPage({ teamsState, gameDataState, databaseState, spriteCacheState, speciesRosterState }: SpeedTiersPageProps) {
+export default function SpeedTiersPage({ teamsState, gameDataState, databaseState, spriteCacheState, speciesRosterState, liveCalcThreatPinsState }: SpeedTiersPageProps) {
   const { teams } = teamsState;
   const [selectedTeamId, setSelectedTeamId] = useState('');
   const selectedTeam = teams.find(t => t.id === selectedTeamId);
@@ -179,14 +190,26 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
     return candidates;
   }, [legalRoster, usageEntryBySpecies, getCachedEntry, allSpecies]);
 
+  const { pins: liveCalcPins } = liveCalcThreatPinsState;
+
   const threatTierInputs = useMemo<ThreatTierInput[]>(() => {
     const cutoff = rosterScope === 'top60' ? 60 : rosterScope === 'top120' ? 120 : null;
     return rosterCandidates.flatMap((candidate): ThreatTierInput[] => {
-      if (cutoff !== null && (!candidate.usage || candidate.usage.columnPosition > cutoff)) return [];
+      const pin = liveCalcPins.get(candidate.species.toLowerCase());
+      // A pinned species bypasses the usage-rank cutoff - see this file's header.
+      if (cutoff !== null && !pin && (!candidate.usage || candidate.usage.columnPosition > cutoff)) return [];
       const profile = computeThreatSpeedProfile(gen, { species: candidate.species, ability: candidate.ability, usage: candidate.usage }, field);
-      return profile ? [{ spriteUrl: candidate.spriteUrl, profile }] : [];
+      if (!profile) return [];
+      const inferredBound = pin
+        ? computeInferredThreatSpeedBound(
+            gen,
+            { species: candidate.species, ability: candidate.ability, level: pin.level, spMin: pin.speedSpBound.min, spMax: pin.speedSpBound.max, natureCandidates: pin.natureCandidates },
+            field
+          ) ?? undefined
+        : undefined;
+      return [{ spriteUrl: candidate.spriteUrl, profile, inferredBound }];
     });
-  }, [rosterCandidates, gen, field, rosterScope]);
+  }, [rosterCandidates, gen, field, rosterScope, liveCalcPins]);
 
   const tierGroups = useMemo(() => {
     const entries = filterSpeedTierEntries(buildSpeedTierEntries(teamSpeedEntries, threatTierInputs), speciesFilter);

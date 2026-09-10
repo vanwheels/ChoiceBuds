@@ -6,7 +6,7 @@
 import { describe, expect, it } from 'vitest';
 import { Generations } from '@smogon/calc';
 import type { ChampionsUsageEntry, ImportedPokemonInfo } from '../types/pokemon';
-import { computeTeamSpeed, computeThreatSpeedProfile, defaultSpeedFieldContext, type SpeedFieldContext, type ThreatSpeedInput } from './speedTiers';
+import { computeTeamSpeed, computeThreatSpeedProfile, computeInferredThreatSpeedBound, defaultSpeedFieldContext, type SpeedFieldContext, type ThreatSpeedInput } from './speedTiers';
 
 const gen = Generations.get(9);
 
@@ -141,6 +141,78 @@ describe('computeThreatSpeedProfile', () => {
 
   it('returns null for an unresolvable species', () => {
     const result = computeThreatSpeedProfile(gen, { species: 'Not A Real Species', ability: '', usage: null }, defaultSpeedFieldContext());
+    expect(result).toBeNull();
+  });
+});
+
+describe('computeInferredThreatSpeedBound', () => {
+  it('collapses to a single value when the SP range is a single point and only one nature survived', () => {
+    const bound = computeInferredThreatSpeedBound(
+      gen,
+      { species: 'Incineroar', ability: 'Intimidate', level: 50, spMin: 20, spMax: 20, natureCandidates: ['Hardy'] },
+      defaultSpeedFieldContext()
+    );
+    expect(bound?.min).toBe(bound?.max);
+  });
+
+  it('widens as the SP range widens', () => {
+    const narrow = computeInferredThreatSpeedBound(
+      gen,
+      { species: 'Incineroar', ability: 'Intimidate', level: 50, spMin: 20, spMax: 20, natureCandidates: ['Hardy'] },
+      defaultSpeedFieldContext()
+    );
+    const wide = computeInferredThreatSpeedBound(
+      gen,
+      { species: 'Incineroar', ability: 'Intimidate', level: 50, spMin: 0, spMax: 32, natureCandidates: ['Hardy'] },
+      defaultSpeedFieldContext()
+    );
+    expect(wide!.min).toBeLessThan(narrow!.min);
+    expect(wide!.max).toBeGreaterThan(narrow!.max);
+  });
+
+  it('takes the min/max across every surviving nature candidate at the SP endpoints', () => {
+    const oneNature = computeInferredThreatSpeedBound(
+      gen,
+      { species: 'Incineroar', ability: 'Intimidate', level: 50, spMin: 0, spMax: 32, natureCandidates: ['Hardy'] },
+      defaultSpeedFieldContext()
+    );
+    const withTimid = computeInferredThreatSpeedBound(
+      gen,
+      { species: 'Incineroar', ability: 'Intimidate', level: 50, spMin: 0, spMax: 32, natureCandidates: ['Hardy', 'Timid'] },
+      defaultSpeedFieldContext()
+    );
+    expect(withTimid!.max).toBeGreaterThan(oneNature!.max);
+  });
+
+  it('respects field context the same way computeThreatSpeedProfile does', () => {
+    const noTailwind = computeInferredThreatSpeedBound(
+      gen,
+      { species: 'Incineroar', ability: 'Intimidate', level: 50, spMin: 16, spMax: 16, natureCandidates: ['Hardy'] },
+      defaultSpeedFieldContext()
+    );
+    const tailwind = computeInferredThreatSpeedBound(
+      gen,
+      { species: 'Incineroar', ability: 'Intimidate', level: 50, spMin: 16, spMax: 16, natureCandidates: ['Hardy'] },
+      { ...defaultSpeedFieldContext(), threatHasTailwind: true }
+    );
+    expect(tailwind?.min).toBe(noTailwind!.min * 2);
+  });
+
+  it('returns null for an unresolvable species', () => {
+    const result = computeInferredThreatSpeedBound(
+      gen,
+      { species: 'Not A Real Species', ability: '', level: 50, spMin: 0, spMax: 32, natureCandidates: ['Hardy'] },
+      defaultSpeedFieldContext()
+    );
+    expect(result).toBeNull();
+  });
+
+  it('returns null when there are no surviving nature candidates', () => {
+    const result = computeInferredThreatSpeedBound(
+      gen,
+      { species: 'Incineroar', ability: 'Intimidate', level: 50, spMin: 0, spMax: 32, natureCandidates: [] },
+      defaultSpeedFieldContext()
+    );
     expect(result).toBeNull();
   });
 });

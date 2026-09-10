@@ -19,11 +19,22 @@
  * the axes narrow independently (per the engine's own documented
  * per-variable-heuristic approximation) and a single blended number would
  * imply a joint precision the engine doesn't actually have.
+ *
+ * Also owns the "Pin to Speed Tiers" action (Live Calc -> Speed Tiers
+ * Tie-in, Leg 6, see TODO.md / hooks/useLiveCalcThreatPins.ts) - snapshots
+ * the current defender species/level + the Speed SP bound and nature
+ * candidates narrowed above into a shared pin the Speed Tiers tab reads
+ * back. An explicit action rather than automatic mirroring, so a doubles
+ * opponent's several mons can each get their own independently-pinned
+ * snapshot (switch defender species here, pin again) instead of Speed Tiers
+ * only ever reflecting whichever species this page's defender field
+ * currently holds.
  */
 
 import type { Generation } from '@smogon/calc/dist/data/interface';
 import type { LiveCalcInference, LiveCalcStatBound } from '../../utils/liveCalcEngine';
 import { defaultInference } from '../../utils/liveCalcEngine';
+import type { UseLiveCalcThreatPinsReturn } from '../../hooks/useLiveCalcThreatPins';
 import LiveCalcCandidateGroup from './LiveCalcCandidateGroup';
 
 const SP_RANGE_TOTAL = 32;
@@ -31,7 +42,9 @@ const SP_RANGE_TOTAL = 32;
 interface LiveCalcResultPanelProps {
   gen: Generation;
   defenderSpecies: string;
+  defenderLevel: number;
   inference: LiveCalcInference;
+  liveCalcThreatPinsState: UseLiveCalcThreatPinsReturn;
 }
 
 function StatBoundBar({ label, bound, observationCount }: { label: string; bound: LiveCalcStatBound; observationCount: number }) {
@@ -57,9 +70,21 @@ function StatBoundBar({ label, bound, observationCount }: { label: string; bound
   );
 }
 
-export default function LiveCalcResultPanel({ gen, defenderSpecies, inference }: LiveCalcResultPanelProps) {
+export default function LiveCalcResultPanel({ gen, defenderSpecies, defenderLevel, inference, liveCalcThreatPinsState }: LiveCalcResultPanelProps) {
   const baseline = defaultInference(gen, defenderSpecies);
   const totalObservations = inference.physicalObservationCount + inference.specialObservationCount + inference.speedObservationCount;
+
+  const { pins, pinThreat, unpinThreat } = liveCalcThreatPinsState;
+  const isPinned = !!defenderSpecies && pins.has(defenderSpecies.toLowerCase());
+  const handlePin = () => {
+    pinThreat({
+      species: defenderSpecies,
+      level: defenderLevel,
+      speedSpBound: inference.speedBound,
+      natureCandidates: inference.natureCandidates,
+      observationCount: inference.speedObservationCount,
+    });
+  };
 
   return (
     <div className="bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-3">
@@ -73,6 +98,28 @@ export default function LiveCalcResultPanel({ gen, defenderSpecies, inference }:
             <StatBoundBar label="Defense SP" bound={inference.defBound} observationCount={inference.physicalObservationCount} />
             <StatBoundBar label="Sp. Def SP" bound={inference.spdBound} observationCount={inference.specialObservationCount} />
             <StatBoundBar label="Speed SP" bound={inference.speedBound} observationCount={inference.speedObservationCount} />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handlePin}
+              className="px-2.5 py-1 text-xs font-semibold rounded bg-accent-gold/20 text-accent-gold hover:bg-accent-gold/30 border border-accent-gold/40"
+            >
+              {isPinned ? 'Update Speed Tiers pin' : 'Pin to Speed Tiers'}
+            </button>
+            {isPinned && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => unpinThreat(defenderSpecies)}
+                  className="px-2.5 py-1 text-xs rounded text-zinc-400 hover:text-zinc-200"
+                >
+                  Unpin
+                </button>
+                <span className="text-[10px] text-zinc-500">Annotated on the Speed Tiers tab</span>
+              </>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

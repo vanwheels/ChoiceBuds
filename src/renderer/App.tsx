@@ -16,6 +16,7 @@ import { useSpriteCache } from './hooks/useSpriteCache';
 import { useInitialSync } from './hooks/useInitialSync';
 import { useUsageSync } from './hooks/useUsageSync';
 import { useBattles } from './hooks/useBattles';
+import { useLiveCalcThreatPins } from './hooks/useLiveCalcThreatPins';
 import { useSettings } from './hooks/useSettings';
 import { useUpdateCheck } from './hooks/useUpdateCheck';
 import { useReleaseNotes } from './hooks/useReleaseNotes';
@@ -76,6 +77,7 @@ export default function App() {
   const speciesRosterState = useSpeciesRoster();
   const spriteCacheState = useSpriteCache();
   const battlesState = useBattles();
+  const liveCalcThreatPinsState = useLiveCalcThreatPins();
   const settingsState = useSettings();
   const updateCheckState = useUpdateCheck();
   const releaseNotesState = useReleaseNotes(settingsState.settings, settingsState.isLoading, settingsState.updateSettings);
@@ -152,6 +154,7 @@ export default function App() {
                   savedPokemonState={savedPokemonState}
                   spriteCacheState={spriteCacheState}
                   settingsState={settingsState}
+                  liveCalcThreatPinsState={liveCalcThreatPinsState}
                 />
               </Suspense>
             </div>
@@ -196,6 +199,7 @@ export default function App() {
                   databaseState={databaseState}
                   spriteCacheState={spriteCacheState}
                   speciesRosterState={speciesRosterState}
+                  liveCalcThreatPinsState={liveCalcThreatPinsState}
                 />
               </Suspense>
             </div>

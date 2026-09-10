@@ -17,7 +17,11 @@
  * since adjacent same-speed tiles already read as a visual cluster once
  * they're not each forced onto their own full-width row. Bound rows
  * (min/neutral/max reference tiers) render dimmer than real usage-spread
- * rows since they're a hypothetical range, not an observed build.
+ * rows since they're a hypothetical range, not an observed build. A Live
+ * Calc-pinned row (Leg 6, see utils/speedTierList.ts's isLiveCalcBound) is
+ * the opposite of a hypothetical range - it's this exact opponent Pokémon's
+ * real, turn-order-observed Speed - so it gets a cyan ring instead of the
+ * dimmed treatment other bound rows get.
  */
 import type { SpeedTierGroup, SpeedTierEntry } from '../../utils/speedTierList';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
@@ -32,7 +36,13 @@ function EntryTile({ entry, tied, spriteCacheState }: { entry: SpeedTierEntry; t
   return (
     <div
       className={`flex flex-col items-center gap-0.5 w-16 shrink-0 px-1 py-1.5 rounded-lg ${
-        entry.kind === 'team' ? 'bg-accent-gold/10 ring-1 ring-accent-gold/40' : isBound ? 'opacity-50' : 'bg-zinc-900/40'
+        entry.kind === 'team'
+          ? 'bg-accent-gold/10 ring-1 ring-accent-gold/40'
+          : entry.isLiveCalcBound
+            ? 'bg-cyan-500/10 ring-1 ring-cyan-400/50'
+            : isBound
+              ? 'opacity-50'
+              : 'bg-zinc-900/40'
       } ${tied && entry.kind !== 'team' ? 'ring-1 ring-amber-500/40' : ''}`}
       title={entry.species}
     >

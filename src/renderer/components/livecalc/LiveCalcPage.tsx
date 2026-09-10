@@ -10,6 +10,10 @@
  * useLiveCalc (and the @smogon/calc import it pulls in) is instantiated
  * here rather than in App.tsx, same reasoning as CalcPage.tsx's own header
  * comment - keeps this whole module behind App.tsx's React.lazy() boundary.
+ *
+ * `liveCalcThreatPinsState` (Live Calc -> Speed Tiers Tie-in, Leg 6) is the
+ * one piece of this tab's state that isn't local, since it's read back by
+ * the sibling Speed Tiers tab - see hooks/useLiveCalcThreatPins.ts.
  */
 
 import { useLiveCalc } from '../../hooks/useLiveCalc';
@@ -19,6 +23,7 @@ import type { UseDatabaseReturn } from '../../hooks/useDatabase';
 import type { UseSavedPokemonReturn } from '../../hooks/useSavedPokemon';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import type { UseSettingsReturn } from '../../hooks/useSettings';
+import type { UseLiveCalcThreatPinsReturn } from '../../hooks/useLiveCalcThreatPins';
 import { toRegulationId } from '../../utils/pokemonRules';
 import CalcPokemonPanel from '../calc/CalcPokemonPanel';
 import LiveCalcDefenderPanel from './LiveCalcDefenderPanel';
@@ -33,10 +38,11 @@ interface LiveCalcPageProps {
   savedPokemonState: UseSavedPokemonReturn;
   spriteCacheState: UseSpriteCacheReturn;
   settingsState: UseSettingsReturn;
+  liveCalcThreatPinsState: UseLiveCalcThreatPinsReturn;
 }
 
 export default function LiveCalcPage({
-  gameDataState, teamsState, databaseState, savedPokemonState, spriteCacheState, settingsState,
+  gameDataState, teamsState, databaseState, savedPokemonState, spriteCacheState, settingsState, liveCalcThreatPinsState,
 }: LiveCalcPageProps) {
   const liveCalcState = useLiveCalc(gameDataState, toRegulationId(settingsState.settings.defaultRegulation));
   const {
@@ -94,7 +100,13 @@ export default function LiveCalcPage({
         />
       </div>
 
-      <LiveCalcResultPanel gen={gen} defenderSpecies={defenderSpecies} inference={inference} />
+      <LiveCalcResultPanel
+        gen={gen}
+        defenderSpecies={defenderSpecies}
+        defenderLevel={defenderLevel}
+        inference={inference}
+        liveCalcThreatPinsState={liveCalcThreatPinsState}
+      />
     </div>
   );
 }
