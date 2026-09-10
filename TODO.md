@@ -16,6 +16,34 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
+## Current Milestone: UI Polish & Performance
+
+- **[Debounce Game-Data/PokeAPI Cache Persistence] — Leg 1** *(Last
+  touched: 2026-09-10 · Re-checks: 0)*
+  Follow-up fix from Investigate App Lag's diagnosis (see COMPLETED.md /
+  `docs/investigations/app-lag-investigation.md`): `useGameData.ts` and
+  `useDatabase.ts` write their *entire* cache object to disk on every
+  single cache-entry mutation, not just on a real save point. Not dev-vs-
+  prod specific — it's structural, and gets worse as the caches grow
+  (`game-data-cache.json` is already 2.1 MB on a fully-synced install).
+  `useUsageSync.ts` re-syncing the whole roster's usage data on a TTL-
+  expiry wave (every launch) is the main burst trigger — up to ~224
+  sequential full-file writes serialized through `atomicWriteFile`'s write
+  queue. Fix direction: debounce/batch the write-through effects so a burst
+  of mutations collapses into one write, not one per entry.
+
+- **[Team Card Collapse Animation Flicker] — Leg 1** *(Last touched:
+  2026-09-10 · Re-checks: 0)*
+  Collapsing an expanded team card glitches/flickers instead of animating
+  smoothly, as rows shift back to their collapsed positions.
+
+- **[Move Tooltip Position Fix on 2x2 Grid] — Leg 1** *(Last touched:
+  2026-09-10 · Re-checks: 0)*
+  Hovering a move in the 2nd row of the 2x2 move grid shows its tooltip
+  covering the 1st row's moves. Tooltip should anchor to the same fixed
+  position regardless of which row is hovered — improves readability and
+  stops it from blocking slots during drag-and-drop move reordering.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -98,4 +126,93 @@ unblocked.
   a schedule.
 
 ## Future Milestones (unscheduled)
+
+2026-09-10 feedback pass batched into 4 candidate milestones; UI Polish &
+Performance was promoted to current (see above). The remaining 3 below keep
+their legs already drafted — pick one to promote next (items keep their
+draft numbering/order until then; no cross-milestone priority has been
+set).
+
+### Candidate: Battle Logger Overhaul
+
+- **[Battle Logger: Maushold Missing From Opponent Selection] — Leg 1**
+  *(Last touched: 2026-09-10 · Re-checks: 0)*
+  Maushold doesn't appear in Battle Logger's opponent Pokémon selection list.
+  Maushold has two forms (Family of Four / Family of Three) — worth checking
+  whether this is a form-handling gap in whatever species list the opponent
+  picker sources, similar in shape to the gender-divergent-species handling
+  called out in `CLAUDE.md`.
+
+- **[Battle Logger: Edit Saved Battle] — Leg 1** *(Last touched: 2026-09-10 ·
+  Re-checks: 0)*
+  No way to edit a battle once it's been created and saved — create-only
+  today. Needs an edit flow, likely reusing the logger UI in an edit mode
+  (draft/commit shape similar to `useActiveEditor`'s pattern for team
+  Pokémon) rather than a separate screen.
+
+- **[Battle Logger: Selection UI Improvements] — Leg 1** *(Last touched:
+  2026-09-10 · Re-checks: 0)*
+  No visual indicator shows which 4 of your own Pokémon have been selected
+  for the battle.
+  - Also can't choose which 4 of the opponent's Pokémon were brought — needs
+    a picker for the opponent's brought-4, not just your own.
+
+- **[Battle Logger: Duplicate Pokémon Selectable] — Leg 1** *(Last touched:
+  2026-09-10 · Re-checks: 0)*
+  Bug: the same Pokémon can currently be selected more than once for a
+  single side's brought-4. Needs a dedupe/disable-already-selected
+  constraint on the picker.
+
+### Candidate: Statistics Improvements
+
+- **[Statistics: Selected Battle Pokémon Not Tracked] — Leg 1** *(Last
+  touched: 2026-09-10 · Re-checks: 0)*
+  Statistics doesn't currently factor in which Pokémon the user actually
+  selected/brought in their logged battles. Needs scoping — likely feeds a
+  usage-rate or brought-rate view, but what exactly should surface isn't
+  decided yet.
+
+- **[Statistics: Remove "By Opponent" Section] — Leg 1** *(Last touched:
+  2026-09-10 · Re-checks: 0)*
+  Remove the "by opponent" breakdown from the Statistics page — no longer
+  wanted.
+
+- **[Statistics: Win-Loss Column on Most-Faced Pokémon] — Leg 1** *(Last
+  touched: 2026-09-10 · Re-checks: 0)*
+  Add a win-loss record column to the "most-faced Pokémon" table in
+  Statistics.
+
+### Candidate: Team Management QoL
+
+- **[Favorite Teams] — Leg 1** *(Last touched: 2026-09-10 · Re-checks: 0)*
+  Add the ability to favorite a team so favorited teams always sort to the
+  top, mirroring how favoriting works in the user's GW2 Squaded project.
+  Needs a persisted favorite flag on `Team` (`types/pokemon.ts`) plus a sort
+  change in `useTeams`/`TeamsPage`.
+
+- **[Quick Copy/Paste Pokémon & Teams via Right-Click] — Leg 1** *(Last
+  touched: 2026-09-10 · Re-checks: 0)*
+  Add a right-click context menu for quickly copying/pasting a Pokémon or an
+  entire team. Needs scoping: clipboard format (Showdown text vs. internal
+  JSON), and which surfaces (team card, Pokémon card, editor) get the menu.
+
+- **[Saved Builds Database for Team-Building — Scoping] — Leg 1** *(Last
+  touched: 2026-09-10 · Re-checks: 0)*
+  Discuss/scope reusing a named saved-build library (moveset + spread, etc.)
+  during team-building — e.g. save "Defensive Rilla" once, then auto-populate
+  a new Rillaboom slot from it instead of re-entering everything by hand.
+  Note: `SavedPokemonDatabase`/`useSavedPokemon` already exists
+  (`types/pokemon.ts`, `hooks/useSavedPokemon.ts`) from the Speed Calc-like
+  Feature milestone, currently scoped to the Calc panel
+  (`CalcSavedSetsModal.tsx`/`CalcSavedSetPicker.tsx`) — this is about
+  extending that existing mechanism into the team-import/edit flow, not
+  building a new one from scratch. Scoping only — do not start
+  implementation until scoped per a dedicated session.
+
+### Candidate: Live Calc Tuning
+
+- **Live Calc pass.** Live Calc "needs a lot of tweaking" per 2026-09-10
+  feedback — explicitly deferred to its own future milestone rather than
+  folded into whatever milestone comes next. Not yet scoped into concrete
+  legs (unlike the four candidates above).
 

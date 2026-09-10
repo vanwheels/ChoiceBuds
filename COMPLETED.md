@@ -18,6 +18,17 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Investigate App Lag] - Leg 1** (2026-09-10) - Root-caused via static
+  analysis + real userData file measurements rather than a live dev-vs-prod
+  repro (the mechanism found is identical in both - see the doc for why
+  that repro turned out unnecessary): `useGameData.ts`/`useDatabase.ts`
+  write their *entire* cache object to disk on every single cache-entry
+  mutation, and `useUsageSync.ts` re-syncing the whole roster's usage data
+  on every launch is the main burst trigger against an already-2.1MB
+  `game-data-cache.json`. Fix scoped as a new TODO item (Debounce Game-
+  Data/PokeAPI Cache Persistence). Full analysis:
+  `docs/investigations/app-lag-investigation.md`.
+
 - **[Speed Tiers Save Override: Over-Cap SP Warning] - Leg 18** (2026-09-10) -
   see commit `65a7858`. Added `utils/evTotal.ts`'s `getTotalSP`/
   `MAX_TOTAL_SP` and used it to surface a non-blocking `⚠ total/66` badge
