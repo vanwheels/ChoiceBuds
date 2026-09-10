@@ -18,6 +18,11 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Speed Tiers "Threats Only" Toggle] - Leg 9** (2026-09-09) - added the
+  checkbox and its `slotResistsThreat`-based filter. See commit `72782ce`.
+  Manual live verification of the checkbox still pending per project
+  convention (default to manual UI verification).
+
 - **[Speed Tiers Per-Spread Value Placement Bug] - Leg 10** (2026-09-09) -
   live re-check via `run-desktop` found the bug doesn't reproduce: Blastoise
   (3 ranked usage spreads above the cutoff, two sharing SP 32 Speed and one

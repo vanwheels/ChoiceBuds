@@ -29,14 +29,6 @@ was shipped, then redone by Leg 4, then Leg 4's own data source superseded
 by Leg 8; Leg 15 was Leg 6's own prerequisite, scoped and built out of
 numeric order). Legs below are a tentative breakdown, not yet started.
 
-- **[Speed Tiers "Threats Only" Toggle] — Leg 9** *(Last touched: 2026-09-09
-  · Re-checks: 0)*
-  Deferred out of Leg 8's full-regulation-roster pivot at Vanny's own call —
-  a future optional toggle to narrow the default all-regulation view down to
-  Team Gap Analysis-style typing threats (`usageThreats.ts::computeUsageThreats`),
-  alongside the All/Top 60/Top 120 usage-rank toggle Leg 8 already built.
-  Theoretical/deferred, so explicitly not the default. Unscoped beyond that.
-
 - **[Speed Tiers Usage Threshold Control] — Leg 11** *(Last touched:
   2026-09-09 · Re-checks: 0)*
   Requested live 2026-09-09: a user-adjustable minimum usage % for a spread
