@@ -18,6 +18,22 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Team Card Collapse Animation Flicker] - Leg 1** (2026-09-10) - see
+  commit (pending). Root cause: `TeamCard.tsx`'s outer `col-span-full` class
+  was driven directly off `isExpanded`, so clicking Collapse snapped the
+  card's grid column back to single-width the instant the button was
+  clicked - before the expanded content's own height/fade exit transition
+  had actually played. The still-collapsing content got squeezed into the
+  narrower column (re-triggering its own `@container` grid-cols-3/6
+  breakpoint mid-animation) while framer's `layout="position"` FLIP-animated
+  sibling cards into their post-collapse slots using that already-final
+  narrow layout - producing the reported flicker. Fix: a new `isFullWidth`
+  state now stays true for the whole exit transition and only clears via
+  `AnimatePresence`'s `onExitComplete`, so the grid reflow that moves other
+  cards happens after this card is actually done shrinking, not before.
+  Expanding is unaffected (`isFullWidth` still flips true immediately on
+  expand, same as before).
+
 - **[Debounce Game-Data/PokeAPI Cache Persistence] - Leg 1** (2026-09-10) -
   see commit `73d29b5`. Added a shared `useDebouncedWrite` hook and used it
   as the sole write-through path in both `useGameData.ts` and

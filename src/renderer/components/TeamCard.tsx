@@ -74,6 +74,22 @@ const cardExpandVariants = {
 
 export default function TeamCard({ team, onDelete, teamsState, databaseState, gameDataState, speciesRosterState, spriteCacheState, settingsState }: TeamCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  // Collapse-flicker fix (Team Card Collapse Animation Flicker Leg 1, see
+  // TODO.md): col-span-full used to be driven directly off isExpanded, so
+  // toggling it off snapped this card's grid column back to a single column
+  // the instant the button was clicked - before the expanded content's own
+  // height/fade exit transition (cardExpandVariants below) had actually
+  // finished. That left the still-collapsing content squeezed into the
+  // narrower single-column width (re-triggering its own @container
+  // grid-cols-3/6 breakpoint mid-animation) while framer's layout="position"
+  // on the outer motion.div FLIP-animated the sibling cards into their
+  // post-collapse positions using the already-final (narrow) layout - the
+  // width snap and the still-tall content produced the reported flicker.
+  // isFullWidth now stays true for the whole exit transition and only drops
+  // once AnimatePresence's onExitComplete fires below, so the grid reflow
+  // that moves other cards happens after this card is actually done
+  // shrinking, not before.
+  const [isFullWidth, setIsFullWidth] = useState(false);
   const [localTeamName, setLocalTeamName] = useState(team.name);
   const [localAuthor, setLocalAuthor] = useState(team.author || '');
   const [localNotes, setLocalNotes] = useState(team.notes || '');
@@ -153,7 +169,7 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
       layout="position"
       transition={DRAG_REORDER_TRANSITION}
       className={`bg-zinc-900/40 border border-zinc-800/80 border-l-4 ${regulationTheme.accentBorder} rounded-xl transition-all ${
-      isExpanded ? 'col-span-full' : ''
+      isFullWidth ? 'col-span-full' : ''
     }`}>
 
       {/* MINIMIZED VIEW CONTAINER ROW - Enhanced Header with Controls */}
@@ -319,7 +335,15 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
 
           {/* Expand/Collapse Toggle Button */}
           <button
-            onClick={() => setIsExpanded(!isExpanded)}
+            onClick={() => {
+              const next = !isExpanded;
+              setIsExpanded(next);
+              // Expanding: claim the full-width column immediately, before
+              // the content grows into it. Collapsing: isFullWidth is left
+              // alone here and only cleared by onExitComplete below, once
+              // the collapse animation has actually finished.
+              if (next) setIsFullWidth(true);
+            }}
             className={`w-8 h-8 flex items-center justify-center rounded-full text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 transition-colors cursor-pointer ${
               isExpanded ? 'bg-zinc-700 text-zinc-200' : ''
             }`}
@@ -350,7 +374,7 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
           breakpoints were the original bug, since raw viewport width crossing 1280px
           doesn't mean the sidebar-reduced content area actually has room for 6 real
           280px columns. */}
-      <AnimatePresence initial={false}>
+      <AnimatePresence initial={false} onExitComplete={() => setIsFullWidth(false)}>
         {isExpanded && (
           <motion.div
             key="expanded-content"

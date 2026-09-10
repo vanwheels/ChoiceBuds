@@ -18,11 +18,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 
 ## Current Milestone: UI Polish & Performance
 
-- **[Team Card Collapse Animation Flicker] — Leg 1** *(Last touched:
-  2026-09-10 · Re-checks: 0)*
-  Collapsing an expanded team card glitches/flickers instead of animating
-  smoothly, as rows shift back to their collapsed positions.
-
 - **[Move Tooltip Position Fix on 2x2 Grid] — Leg 1** *(Last touched:
   2026-09-10 · Re-checks: 0)*
   Hovering a move in the 2nd row of the 2x2 move grid shows its tooltip
