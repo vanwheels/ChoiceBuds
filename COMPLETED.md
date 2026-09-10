@@ -18,6 +18,13 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Skip Redundant Unchanged-Cache Rewrite On Launch] - Leg 1** (2026-09-10)
+  - see commit `89718de`. `useGameData.ts`/`useDatabase.ts`'s debounced
+  write-through effect fired on the very first cache value it saw (loaded
+  unchanged from disk on mount), queuing one redundant full-cache write per
+  launch. `useDebouncedWrite` now takes a disk-snapshot string to compare
+  against and skips the write when it matches.
+
 - **[Move Tooltip Position Fix on 2x2 Grid] - Leg 1** (2026-09-10) - see
   commit `3fa6718`. Root cause: `Tooltip`/`floatingCardPanel`'s above/below
   flip is computed per-anchor-rect, so each bubble in the 2x2 move grid

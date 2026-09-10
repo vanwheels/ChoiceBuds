@@ -68,18 +68,6 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-- **[Skip Redundant Unchanged-Cache Rewrite On Launch] — Leg 1** *(Last
-  touched: 2026-09-10 · Re-checks: 0)*
-  Surfaced while implementing Debounce Game-Data/PokeAPI Cache Persistence
-  (see COMPLETED.md): both `useGameData.ts` and `useDatabase.ts`'s write-
-  through effects fire on the very first cache value they see (loaded
-  unchanged from disk on mount), not just on real mutations — so every
-  launch re-writes the whole cache back to disk once even when nothing
-  changed. Pre-existing in `useGameData.ts`; newly true for `useDatabase.ts`
-  too now that its persistence path is unified with the same effect shape.
-  Low-impact (one extra write per launch, not a burst) — not worth blocking
-  the debounce fix on, but a real 0-value write worth skipping if picked up.
-
 - **[Reg M-C Z-A-Exclusive Movepool Audit] — Leg 1** *(Last touched:
   2026-09-09 · Re-checks: 0)*
   Deferred out of Regulation M-C Prep's Leg 2 (see COMPLETED.md/postmortem)
