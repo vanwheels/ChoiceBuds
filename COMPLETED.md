@@ -18,6 +18,18 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Debounce Game-Data/PokeAPI Cache Persistence] - Leg 1** (2026-09-10) -
+  see commit `73d29b5`. Added a shared `useDebouncedWrite` hook and used it
+  as the sole write-through path in both `useGameData.ts` and
+  `useDatabase.ts` (unifying the latter's several direct per-call-site
+  writes into the same one-effect shape), so a burst of cache mutations
+  collapses into a handful of writes instead of one per entry. Known,
+  disclosed tradeoff: a quit within the ~500ms debounce window could lose
+  the last unwritten mutation - acceptable since these are reconstructable
+  API caches, not user data. Surfaced a follow-up (see TODO.md's Skip
+  Redundant Unchanged-Cache Rewrite On Launch) rather than folding it into
+  this leg.
+
 - **[Investigate App Lag] - Leg 1** (2026-09-10) - Root-caused via static
   analysis + real userData file measurements rather than a live dev-vs-prod
   repro (the mechanism found is identical in both - see the doc for why

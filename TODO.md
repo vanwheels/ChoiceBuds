@@ -18,20 +18,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 
 ## Current Milestone: UI Polish & Performance
 
-- **[Debounce Game-Data/PokeAPI Cache Persistence] — Leg 1** *(Last
-  touched: 2026-09-10 · Re-checks: 0)*
-  Follow-up fix from Investigate App Lag's diagnosis (see COMPLETED.md /
-  `docs/investigations/app-lag-investigation.md`): `useGameData.ts` and
-  `useDatabase.ts` write their *entire* cache object to disk on every
-  single cache-entry mutation, not just on a real save point. Not dev-vs-
-  prod specific — it's structural, and gets worse as the caches grow
-  (`game-data-cache.json` is already 2.1 MB on a fully-synced install).
-  `useUsageSync.ts` re-syncing the whole roster's usage data on a TTL-
-  expiry wave (every launch) is the main burst trigger — up to ~224
-  sequential full-file writes serialized through `atomicWriteFile`'s write
-  queue. Fix direction: debounce/batch the write-through effects so a burst
-  of mutations collapses into one write, not one per entry.
-
 - **[Team Card Collapse Animation Flicker] — Leg 1** *(Last touched:
   2026-09-10 · Re-checks: 0)*
   Collapsing an expanded team card glitches/flickers instead of animating
@@ -93,6 +79,18 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+- **[Skip Redundant Unchanged-Cache Rewrite On Launch] — Leg 1** *(Last
+  touched: 2026-09-10 · Re-checks: 0)*
+  Surfaced while implementing Debounce Game-Data/PokeAPI Cache Persistence
+  (see COMPLETED.md): both `useGameData.ts` and `useDatabase.ts`'s write-
+  through effects fire on the very first cache value they see (loaded
+  unchanged from disk on mount), not just on real mutations — so every
+  launch re-writes the whole cache back to disk once even when nothing
+  changed. Pre-existing in `useGameData.ts`; newly true for `useDatabase.ts`
+  too now that its persistence path is unified with the same effect shape.
+  Low-impact (one extra write per launch, not a burst) — not worth blocking
+  the debounce fix on, but a real 0-value write worth skipping if picked up.
 
 - **[Reg M-C Z-A-Exclusive Movepool Audit] — Leg 1** *(Last touched:
   2026-09-09 · Re-checks: 0)*
