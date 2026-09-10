@@ -143,6 +143,13 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
   const [broughtIds, setBroughtIds] = useState<string[]>(editingBattle?.broughtIds ?? []);
   const [opponentRoster, setOpponentRoster] = useState<OpponentPokemonEntry[]>(editingBattle?.opponentRoster ?? []);
   const [opponentBroughtIds, setOpponentBroughtIds] = useState<string[]>(editingBattle?.opponentBroughtIds ?? []);
+  // Snapshotted once per team selection (see handleSelectTeam) rather than
+  // derived in render - snapshotRoster mints fresh crypto.randomUUID() ids,
+  // so deriving it every render (as this used to) handed out new ids on
+  // every re-render, including the one right after a brought-tile click:
+  // the id just selected no longer matched anything, so no tile ever
+  // visually showed as selected even though broughtIds.length was correct.
+  const [playerRoster, setPlayerRoster] = useState<BroughtPokemonSnapshot[]>(editingBattle?.playerRoster ?? []);
   const [isAddingOpponent, setIsAddingOpponent] = useState(false);
   const [result, setResult] = useState<'win' | 'loss' | null>(
     editingBattle && editingBattle.result !== 'in-progress' ? editingBattle.result : null
@@ -156,7 +163,6 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
   const team = editingBattle
     ? teamsState.teams.find(t => t.id === editingBattle.teamId)
     : eligibleTeams.find(t => t.id === teamId);
-  const playerRoster = editingBattle ? editingBattle.playerRoster : (team ? snapshotRoster(team) : []);
   const rulesetFormat = editingBattle ? (team?.format ?? editingBattle.format) : team?.format;
   const canSave = editingBattle
     ? broughtIds.length > 0 && result !== null && !isSaving
@@ -165,6 +171,8 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
   const handleSelectTeam = (nextTeamId: string) => {
     setTeamId(nextTeamId);
     setBroughtIds([]); // roster identity (crypto.randomUUID() ids) is re-rolled per snapshot, so a prior selection can't carry over
+    const nextTeam = eligibleTeams.find(t => t.id === nextTeamId);
+    setPlayerRoster(nextTeam ? snapshotRoster(nextTeam) : []);
   };
 
   const toggleBrought = (pokemonId: string) => setBroughtIds(prev => toggleId(prev, pokemonId, MAX_BROUGHT));
