@@ -63,6 +63,15 @@
  * header), keyed by ImportedPokemonInfo.id, which is a crypto.randomUUID()
  * unique across every team, so it's never cleared on a team switch.
  *
+ * Save Override to Team (Leg 17, see TODO.md /
+ * docs/investigations/speed-tiers-save-override-scope.md): saveOverride/
+ * saveAllOverrides below are the one path that does write back - a direct
+ * `teamsState.updateTeam` patch of just `showdownData.evs.speed`/`nature` on
+ * the affected team member(s) (species/form excluded, per that leg's scope
+ * resolution), not the full `useActiveEditor` edit-overlay flow. A successful
+ * save clears that mon's (or, for Save All, every saved mon's) entry out of
+ * `speedOverrides`, since it now matches the team's real saved data.
+ *
  * Live Calc -> Speed Tiers Tie-in (Leg 6, see TODO.md): `liveCalcThreatPinsState`
  * is App.tsx-level shared state (hooks/useLiveCalcThreatPins.ts) - a pin made
  * on the Live Calc tab surfaces here as an extra "Live" bound row on any
@@ -89,7 +98,7 @@ import { getMegaAbility } from '../../config/megaAbilities';
 import { getCachedMegaSprite, useMegaSpritePrefetch } from '../../hooks/useMegaSprite';
 import { computeTeamSpeed, computeThreatSpeedProfile, computeInferredThreatSpeedBound, defaultSpeedFieldContext, type SpeedFieldContext } from '../../utils/speedTiers';
 import { buildSpeedTierEntries, filterSpeedTierEntries, groupSpeedTiers, DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT, type ThreatTierInput } from '../../utils/speedTierList';
-import { applySpeedOverride, defaultSpeedOverride, type TeamSpeedOverride } from '../../utils/speedTierOverrides';
+import { applySpeedOverride, defaultSpeedOverride, patchPokemonWithOverride, type TeamSpeedOverride } from '../../utils/speedTierOverrides';
 import { slotResistsThreat } from '../../utils/usageThreats';
 import SpeedTierFieldPanel, { ToggleButton } from './SpeedTierFieldPanel';
 import SpeedTierList from './SpeedTierList';
@@ -177,6 +186,37 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
       next.set(pokemon.id, { ...current, ...updates });
       return next;
     });
+  };
+
+  // Writes one team member's overridden Speed SP/nature back to the real
+  // team via updateTeam - see this file's header. No-ops if the mon has no
+  // active override (shouldn't happen - TeamPreviewCard's Save button is
+  // disabled in that case) or no team is selected.
+  const saveOverride = async (pokemon: ImportedPokemonInfo) => {
+    if (!selectedTeam) return;
+    const override = speedOverrides.get(pokemon.id);
+    if (!override) return;
+    const updatedPokemon = selectedTeam.pokemon.map(p => (p.id === pokemon.id ? patchPokemonWithOverride(p, override) : p));
+    const success = await teamsState.updateTeam(selectedTeam.id, { pokemon: updatedPokemon });
+    if (success) {
+      setSpeedOverrides(prev => {
+        const next = new Map(prev);
+        next.delete(pokemon.id);
+        return next;
+      });
+    }
+  };
+
+  // Writes every team member currently holding an active override back to
+  // the real team in one updateTeam call, then clears all of them.
+  const saveAllOverrides = async () => {
+    if (!selectedTeam || speedOverrides.size === 0) return;
+    const updatedPokemon = selectedTeam.pokemon.map(p => {
+      const override = speedOverrides.get(p.id);
+      return override ? patchPokemonWithOverride(p, override) : p;
+    });
+    const success = await teamsState.updateTeam(selectedTeam.id, { pokemon: updatedPokemon });
+    if (success) setSpeedOverrides(new Map());
   };
 
   const [rosterScope, setRosterScope] = useState<RosterScope>('all');
@@ -344,6 +384,8 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
             natureOptions={natureOptions}
             overrides={speedOverrides}
             onChangeOverride={updateSpeedOverride}
+            onSaveOverride={saveOverride}
+            onSaveAllOverrides={saveAllOverrides}
             spriteCacheState={spriteCacheState}
           />
           <SpeedTierFieldPanel field={field} onChangeField={updates => setField(prev => ({ ...prev, ...updates }))} trickRoom={trickRoom} onChangeTrickRoom={setTrickRoom} />

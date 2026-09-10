@@ -8,6 +8,14 @@
  * CalcPokemonPanel.tsx's own FormeToggle). All three write into the parent's
  * session-only TeamSpeedOverride via onChange - see utils/speedTierOverrides.ts
  * for why ability isn't a fourth editable field here.
+ *
+ * Save Override to Team (Leg 17, see TODO.md /
+ * docs/investigations/speed-tiers-save-override-scope.md) added the bottom
+ * Save button - enabled only when `hasOverride` is true (this mon has an
+ * active entry in the parent's override Map), disabled otherwise. Calls
+ * `onSave`, which SpeedTiersPage.tsx wires to a direct `updateTeam` patch of
+ * just this mon's Speed SP + nature - species/form is excluded, so the Mega/
+ * stat-forme toggle above stays preview-only regardless of this button.
  */
 import type { NatureName } from '@smogon/calc/dist/data/interface';
 import type { ImportedPokemonInfo } from '../../types/pokemon';
@@ -21,9 +29,11 @@ import { resolveDisplaySpriteUrl } from '../../hooks/useMegaSprite';
 interface TeamPreviewCardProps {
   pokemon: ImportedPokemonInfo;
   override: TeamSpeedOverride;
+  hasOverride: boolean;
   formes: FormeFamily;
   natureOptions: NatureName[];
   onChange: (updates: Partial<TeamSpeedOverride>) => void;
+  onSave: () => void;
   spriteCacheState: UseSpriteCacheReturn;
 }
 
@@ -46,7 +56,7 @@ function FormeToggle({ group, current, onSelect }: { group: string[]; current: s
   );
 }
 
-export default function TeamPreviewCard({ pokemon, override, formes, natureOptions, onChange, spriteCacheState }: TeamPreviewCardProps) {
+export default function TeamPreviewCard({ pokemon, override, hasOverride, formes, natureOptions, onChange, onSave, spriteCacheState }: TeamPreviewCardProps) {
   const incRepeat = useHoldRepeat(() => onChange({ spSpeed: Math.min(32, override.spSpeed + 1) }));
   const decRepeat = useHoldRepeat(() => onChange({ spSpeed: Math.max(0, override.spSpeed - 1) }));
   const megaGroup = formes.megaFormes.length > 0 ? [formes.root, ...formes.megaFormes] : [];
@@ -115,6 +125,18 @@ export default function TeamPreviewCard({ pokemon, override, formes, natureOptio
       {megaGroup.length > 0 && (
         <FormeToggle group={megaGroup} current={override.species} onSelect={(species) => onChange({ species })} />
       )}
+
+      <button
+        type="button"
+        onClick={onSave}
+        disabled={!hasOverride}
+        title={hasOverride ? 'Save Speed SP + nature to this team' : 'No changes to save'}
+        className={`w-full px-1.5 py-0.5 text-[9px] font-bold rounded transition-colors ${
+          hasOverride ? 'bg-accent-gold text-zinc-900 hover:bg-accent-gold/90 cursor-pointer' : 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
+        }`}
+      >
+        Save
+      </button>
     </div>
   );
 }

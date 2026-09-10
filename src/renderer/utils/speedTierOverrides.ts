@@ -29,6 +29,15 @@
  * utils/speedTiers.ts::computeTeamSpeed does the same for the tier list's own
  * "You" tile, both reading the override-applied `showdownData.species` this
  * function already produces rather than needing a fourth override field.
+ *
+ * Save Override to Team (Leg 17, see TODO.md /
+ * docs/investigations/speed-tiers-save-override-scope.md) added
+ * `patchPokemonWithOverride` below - the one function in this file that
+ * feeds an actual team write-back (via SpeedTiersPage.tsx's save actions and
+ * `useTeams().updateTeam`), unlike the three above which stay session-only.
+ * It deliberately only folds in Speed SP + nature, not `species` - the
+ * Mega/stat-forme toggle stays preview-only forever (a form write-back needs
+ * its own design pass - see the scoping doc).
  */
 import type { NatureName } from '@smogon/calc/dist/data/interface';
 import type { ImportedPokemonInfo } from '../types/pokemon';
@@ -71,6 +80,25 @@ export function applySpeedOverride(pokemon: ImportedPokemonInfo, override: TeamS
       ...pokemon.showdownData,
       species: override.species,
       ability: megaAbility ?? pokemon.showdownData.ability,
+      nature: override.nature,
+      evs: { ...pokemon.showdownData.evs, speed: override.spSpeed },
+    },
+  };
+}
+
+/**
+ * Returns a shallow-patched copy of `pokemon` with just the override's Speed
+ * SP and nature folded into `showdownData` - the shape SpeedTiersPage.tsx's
+ * save actions write back into a team's real `pokemon` array via
+ * `useTeams().updateTeam`. Narrower than `applySpeedOverride` above on
+ * purpose: no `species`/ability patch, since form stays preview-only (see
+ * this file's header).
+ */
+export function patchPokemonWithOverride(pokemon: ImportedPokemonInfo, override: TeamSpeedOverride): ImportedPokemonInfo {
+  return {
+    ...pokemon,
+    showdownData: {
+      ...pokemon.showdownData,
       nature: override.nature,
       evs: { ...pokemon.showdownData.evs, speed: override.spSpeed },
     },
