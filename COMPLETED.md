@@ -18,6 +18,22 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Speed Tiers Per-Spread Value Placement Bug] - Leg 10** (2026-09-09) -
+  live re-check via `run-desktop` found the bug doesn't reproduce: Blastoise
+  (3 ranked usage spreads above the cutoff, two sharing SP 32 Speed and one
+  at SP 0) rendered all 3 as separate tiles with their own percentage
+  labels, correctly split into 2 speed tiers (130/130/98) rather than
+  bundled under one; base Raichu's two 32-SP spreads (43%/12%) likewise
+  rendered as two distinct 162-Speed tiles instead of collapsing into one.
+  Confirms the pipeline was correct all along - `computeThreatSpeedProfile`
+  deliberately doesn't apply a per-spread nature (see `speedTiers.ts`'s
+  header on why nature isn't crossed with usage spreads at all), so two
+  spreads sharing the same Speed SP investment landing on the same Speed
+  number is a real tie, not a placement bug. What looked like "bundling" at
+  report time was Leg 17's duplicate-Mega-candidate bug, already fixed and
+  live-verified there. No code changed - verification only, nothing to
+  commit.
+
 - **[Speed Tiers Duplicate Mega Roster Candidates] - Leg 17** (2026-09-09) -
   fixed the duplicate-key bug Leg 7's verification pass found. Root cause
   and fix in commit `19b4fca`. Live-verified via `run-desktop`: tile counts

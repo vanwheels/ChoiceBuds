@@ -37,25 +37,6 @@ numeric order). Legs below are a tentative breakdown, not yet started.
   alongside the All/Top 60/Top 120 usage-rank toggle Leg 8 already built.
   Theoretical/deferred, so explicitly not the default. Unscoped beyond that.
 
-- **[Speed Tiers Per-Spread Value Placement Bug] — Leg 10** *(Last touched:
-  2026-09-09 · Re-checks: 0)*
-  Reported live 2026-09-09: when a threat has multiple ranked usage spreads,
-  their entries render bundled under one (the highest) speed tier instead of
-  each landing at its own computed speed. `speedTierList.ts::buildSpeedTierEntries`
-  already builds one row per spread using that spread's own computed `speed`
-  (via `speedTiers.ts::computeThreatSpeedProfile`, which feeds each spread's
-  own `points` table into `finalSpeed`), and `groupSpeedTiers` groups purely
-  by that `speed` value — the pipeline looks correct on paper, so root cause
-  is unconfirmed. Needs a live `run-desktop` repro against real usage data to
-  check whether per-spread speed is actually varying, or collapsing to one
-  value somewhere upstream (a spread's reported nature not being applied,
-  only `points` — see `computeThreatSpeedProfile`'s `baseState()` call, which
-  doesn't set `nature` per spread). Leg 7's verification pass turned up a
-  separate, concretely-confirmed duplicate-candidate bug, fixed as Leg 17
-  (see `COMPLETED.md`) — needs a live re-check now that that fix is in to
-  see whether this bundling symptom persists on its own before investigating
-  it as its own issue.
-
 - **[Speed Tiers Usage Threshold Control] — Leg 11** *(Last touched:
   2026-09-09 · Re-checks: 0)*
   Requested live 2026-09-09: a user-adjustable minimum usage % for a spread
