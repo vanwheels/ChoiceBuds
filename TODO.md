@@ -16,10 +16,11 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Statistics Improvements
-
-Nothing currently in progress — see `COMPLETED.md` for the latest finished
-item, or "Unscheduled" below for what's queued next.
+No milestone is currently promoted to "Current" — Statistics Improvements
+shipped (see `MILESTONES.md`) and the user deliberately held off promoting
+either "Future Milestones" candidate below for now. See `COMPLETED.md` for
+the latest finished item, or "Unscheduled"/"Future Milestones" below for
+what's queued next.
 
 ## Blocked
 
@@ -116,9 +117,9 @@ unblocked.
 ## Future Milestones (unscheduled)
 
 2026-09-10 feedback pass batched into 4 candidate milestones; Battle Logger
-Overhaul and then Statistics Improvements were promoted to current (see
-above) as prior milestones shipped. The remaining 2 below keep their legs
-already drafted — pick one to promote next (items keep their draft
+Overhaul and then Statistics Improvements were promoted to current and have
+since shipped (see `MILESTONES.md`). The remaining 2 below keep their legs
+already drafted — neither has been promoted yet (items keep their draft
 numbering/order until then; no cross-milestone priority has been set).
 
 ### Candidate: Team Management QoL

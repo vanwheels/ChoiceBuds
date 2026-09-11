@@ -24,3 +24,5 @@ milestone.
   [post-mortem](docs/postmortems/ui-polish-performance.md)
 - **Battle Logger Overhaul** — 2026-09-10 — Shipped —
   [post-mortem](docs/postmortems/battle-logger-overhaul.md)
+- **Statistics Improvements** — 2026-09-10 — Shipped —
+  [post-mortem](docs/postmortems/statistics-improvements.md)
