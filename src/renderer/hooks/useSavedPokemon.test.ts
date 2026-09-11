@@ -155,6 +155,47 @@ describe('useSavedPokemon', () => {
     expect(result.current.error).toContain('nope');
   });
 
+  it('toggleSavedPokemonFavorite flips only the matching entry', async () => {
+    vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
+      version: 1,
+      savedPokemon: [
+        { id: 'a', label: 'Gengar', pokemon: makePokemon(), savedAt: 0, updatedAt: 0 },
+        { id: 'b', label: 'Rillaboom', pokemon: makePokemon({ species: 'Rillaboom' }), savedAt: 0, updatedAt: 0 },
+      ],
+      lastModified: 0,
+    });
+    const { result } = renderHook(() => useSavedPokemon());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    let success = false;
+    await act(async () => {
+      success = await result.current.toggleSavedPokemonFavorite('a');
+    });
+
+    expect(success).toBe(true);
+    expect(result.current.savedPokemon.find(e => e.id === 'a')?.favorite).toBe(true);
+    expect(result.current.savedPokemon.find(e => e.id === 'b')?.favorite).toBeUndefined();
+
+    await act(async () => {
+      success = await result.current.toggleSavedPokemonFavorite('a');
+    });
+
+    expect(result.current.savedPokemon.find(e => e.id === 'a')?.favorite).toBe(false);
+  });
+
+  it('toggleSavedPokemonFavorite fails with an error for an unknown id', async () => {
+    const { result } = renderHook(() => useSavedPokemon());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    let success = true;
+    await act(async () => {
+      success = await result.current.toggleSavedPokemonFavorite('nope');
+    });
+
+    expect(success).toBe(false);
+    expect(result.current.error).toContain('nope');
+  });
+
   it('deleteSavedPokemon removes only the targeted entry', async () => {
     vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
       version: 1,

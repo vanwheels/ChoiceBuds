@@ -47,6 +47,14 @@ export interface UseSavedPokemonReturn {
   addSavedPokemonBatch: (pokemonList: ImportedPokemonInfo[], labels?: string[], ids?: string[]) => Promise<boolean>;
   renameSavedPokemon: (id: string, label: string) => Promise<boolean>;
   /**
+   * Toggles an entry's `favorite` field (Box Tab: Favoriting, see TODO.md) -
+   * same entry-level-field shape as renameSavedPokemon above, not
+   * updateSavedPokemon (which only ever touches the nested `pokemon`
+   * object). Favorited entries sort to the top of the Box grid via
+   * utils/savedPokemonSort.ts's sortSavedPokemonByFavorite.
+   */
+  toggleSavedPokemonFavorite: (id: string) => Promise<boolean>;
+  /**
    * Clones an existing entry into a new one (Box Tab Leg 3, see TODO.md) -
    * fresh entry id AND a fresh `pokemon.id` (same "never reuse a roster-slot
    * id" convention PokemonCard.tsx's handlePastePokemon follows), so the
@@ -235,6 +243,26 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     return success;
   }, [savedPokemon]);
 
+  const toggleSavedPokemonFavorite = useCallback(async (id: string): Promise<boolean> => {
+    const index = savedPokemon.findIndex(e => e.id === id);
+    if (index === -1) {
+      setError(`Saved Pokemon set with ID ${id} not found`);
+      return false;
+    }
+
+    const updated = [...savedPokemon];
+    updated[index] = { ...updated[index], favorite: !updated[index].favorite, updatedAt: Date.now() };
+
+    const success = await persistSavedPokemonToDisk(updated);
+
+    if (success) {
+      setSavedPokemon(updated);
+      setError(null);
+    }
+
+    return success;
+  }, [savedPokemon]);
+
   const updateSavedPokemon = useCallback(async (id: string, updates: Partial<ImportedPokemonInfo>): Promise<boolean> => {
     const index = savedPokemon.findIndex(e => e.id === id);
     if (index === -1) {
@@ -358,6 +386,7 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     toggleCardExpansion,
     addSavedPokemonBatch,
     renameSavedPokemon,
+    toggleSavedPokemonFavorite,
     duplicateSavedPokemon,
     reorderSavedPokemon,
     setSavedPokemonOrder,

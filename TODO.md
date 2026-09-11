@@ -23,42 +23,6 @@ for the one remaining open candidate.
 
 ## Current Milestone: Building Flow Tweaks
 
-- **[Box Tab: Favoriting] — Leg 1** *(Last touched: 2026-09-11 · Re-checks:
-  0)*
-  Split out of Box Tab: Reorder's scoping pass 2026-09-11 - the user asked
-  for this alongside the sort-mode toggle, but it's a distinct feature (its
-  own data field, its own toggle UI, its own sort behavior) so it gets its
-  own item rather than riding along inside Leg 7's build. Direct precedent
-  already in the app: `Team.favorite` (`pokemon.ts`) + `TeamCard.tsx`'s
-  star-icon toggle button + `teamSort.ts::sortTeamsByFavorite` ("favorites
-  first, preserve each group's relative order otherwise").
-  Scoped 2026-09-11 - concrete plan, ready to build:
-  1. **Type**: `SavedPokemonEntry.favorite?: boolean` in `pokemon.ts`,
-     mirroring `Team.favorite`.
-  2. **Hook**: new `useSavedPokemon.ts` action, e.g.
-     `toggleSavedPokemonFavorite(id)`. Mirrors `renameSavedPokemon`'s
-     shape (an entry-level field), not `updateSavedPokemon` - that one only
-     ever touches the nested `pokemon` object, not the entry itself.
-  3. **Sort**: new `sortSavedPokemonByFavorite` utility mirroring
-     `teamSort.ts::sortTeamsByFavorite` exactly, composed on top of
-     `BoxPage.tsx`'s existing `sortedEntries` (favorites-first applies
-     after either Alphabetical or Custom ordering, same composition point
-     Leg 7 already built).
-  4. **Collapsed tile UI** (`BoxCard.tsx`'s `!isExpanded` branch, a tight
-     w-28 sprite+label button with no header row to drop a toggle into): a
-     corner-overlay star directly on the sprite (`absolute -top-1 -right-1`),
-     same precedent as `TeamCard.tsx`'s existing SP-cap-warning badge
-     overlay on its own roster sprites. Needs `stopPropagation` on click so
-     it doesn't also fire `onToggleExpand`. Same star SVG path/gold-fill
-     style as `TeamCard.tsx`'s button.
-  5. **Expanded card UI** (`BoxCard.tsx`'s `isExpanded` branch): a third
-     floating corner button at bottom-left (`-bottom-2.5 -left-2.5`), same
-     circular `w-6 h-6` style as the existing collapse (×) button. Top-right
-     is the collapse button and top-left is the Custom-mode-only drag
-     handle (`isCustomOrder` gate) - favorite has to render in every sort
-     mode, so it can't share top-left with the handle. Bottom-left is
-     unclaimed in all modes.
-
 - **[TeamCard Add-Pokémon: No Species-Clause Dedupe] — Leg 1** *(Last
   touched: 2026-09-10 · Re-checks: 0)*
   Found adjacent to Battle Logger: Duplicate Pokémon Selectable (see

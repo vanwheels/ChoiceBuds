@@ -151,6 +151,13 @@ export interface SavedPokemonEntry {
   pokemon: ImportedPokemonInfo;
   savedAt: number; // Unix timestamp
   updatedAt: number; // Unix timestamp
+  // Favorited entries always sort to the top of the Box grid
+  // (utils/savedPokemonSort.ts's sortSavedPokemonByFavorite), same
+  // favorites-first-preserve-relative-order convention as Team.favorite
+  // above - see Box Tab: Favoriting in TODO.md/COMPLETED.md. Undefined is
+  // equivalent to false; nothing backfills it on read for the same reason
+  // Team.favorite doesn't.
+  favorite?: boolean;
 }
 
 /**

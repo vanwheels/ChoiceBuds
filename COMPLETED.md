@@ -18,6 +18,20 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Box Tab: Favoriting] - Leg 1** (2026-09-11) - see commit `<pending>`.
+  Added `SavedPokemonEntry.favorite?: boolean` (mirroring `Team.favorite`) +
+  `useSavedPokemon.ts`'s `toggleSavedPokemonFavorite` + a new
+  `utils/savedPokemonSort.ts::sortSavedPokemonByFavorite`, composed on top
+  of `BoxPage.tsx`'s existing Alphabetical/Custom `sortedEntries` the same
+  way `TeamsPage.tsx` layers `sortTeamsByFavorite` over its own base sort.
+  `BoxCard.tsx` gets a gold star toggle in both card states: a corner
+  overlay directly on the collapsed tile's sprite (its own `relative`
+  wrapper, since the tile has no header row), and a fourth floating corner
+  button at expanded cards' bottom-left (top-right/top-left are already
+  Collapse/the Custom-mode drag handle). The collapsed tile's sprite+label
+  click target changed from a `<button>` to a `<div onClick>` so the
+  nested star button isn't a button-in-button.
+
 - **[Box Tab: Search] - Leg 8** (2026-09-11) - see commit `74a5e3e`. Added a
   text-search input to `BoxPage.tsx`'s header, filtering `displayedEntries`
   after sort-mode selection so Custom mode's drag order among matches is

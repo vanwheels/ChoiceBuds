@@ -27,6 +27,22 @@
  * directional (out only): no "Paste Pokémon" per-entry item, since Leg 5
  * already covers pasting *into* Box at the grid level.
  *
+ * Favoriting (Box Tab: Favoriting Leg 1, see TODO.md): a star toggle, same
+ * gold-fill SVG path as TeamCard.tsx's own favorite button, persisted via
+ * `onToggleFavorite` -> useSavedPokemon.ts's `toggleSavedPokemonFavorite`.
+ * Rendered as a corner-overlay button in both card states rather than a
+ * context-menu item, since it's a one-click toggle rather than an
+ * occasional action: collapsed tiles get it directly on the sprite
+ * (`absolute -top-1 -right-1`, same precedent as TeamCard.tsx's own
+ * SP-cap-warning badge overlay on its roster sprites) since the tile has no
+ * header row to place a button in; expanded cards get a third floating
+ * corner button at bottom-left (`-bottom-2.5 -left-2.5`, same circular w-6
+ * h-6 style as the collapse button) since top-right is the collapse button
+ * and top-left is the Custom-mode-only drag handle - favorite has to render
+ * in every sort mode, so it can't share top-left with the handle. Both
+ * call `stopPropagation` so the click doesn't also fire `onToggleExpand`
+ * (collapsed) or bubble into the card's own `onContextMenu` region.
+ *
  * Drag-to-reorder (Box Tab: Reorder Leg 7, see TODO.md) only has an effect
  * in BoxPage.tsx's Custom sort mode - `sortMode` gates both the drag
  * *source* (collapsed tile / expanded grip handle aren't `draggable` in
@@ -65,6 +81,7 @@ interface BoxCardProps {
   onAddToTeam: () => void;
   onRename: (label: string) => Promise<boolean>;
   onDuplicate: () => Promise<boolean>;
+  onToggleFavorite: () => Promise<boolean>;
   onDelete: () => Promise<boolean>;
   onReorder: (draggedId: string, targetId: string) => void;
   sortMode: BoxSortMode;
@@ -74,8 +91,8 @@ interface BoxCardProps {
   showAnimatedSprites: boolean;
 }
 
-export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePokemon, onAddToTeam, onRename, onDuplicate, onDelete, onReorder, sortMode, gameDataState, rulesetId, resolveSprite, showAnimatedSprites }: BoxCardProps) {
-  const { pokemon, label } = entry;
+export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePokemon, onAddToTeam, onRename, onDuplicate, onToggleFavorite, onDelete, onReorder, sortMode, gameDataState, rulesetId, resolveSprite, showAnimatedSprites }: BoxCardProps) {
+  const { pokemon, label, favorite } = entry;
   const isCustomOrder = sortMode === 'custom';
 
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
@@ -137,6 +154,29 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
   const handleCopyPokemon = async () => {
     await copyPokemonToClipboard(pokemon);
   };
+
+  // stopPropagation keeps this from also firing onToggleExpand (collapsed
+  // tile) or the card's own onContextMenu region (expanded card) - see
+  // header comment.
+  const handleToggleFavorite = (e: ReactMouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    onToggleFavorite();
+  };
+
+  const favoriteButton = (className: string) => (
+    <button
+      type="button"
+      onClick={handleToggleFavorite}
+      title={favorite ? 'Unfavorite' : 'Favorite'}
+      className={`${className} flex items-center justify-center rounded-full transition-colors cursor-pointer ${
+        favorite ? 'text-accent-gold hover:text-accent-gold-deep' : 'text-zinc-400 hover:text-zinc-200'
+      }`}
+    >
+      <svg viewBox="0 0 24 24" width="12" height="12" fill={favorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 3.5l2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" />
+      </svg>
+    </button>
+  );
 
   const menuItems: ContextMenuItem[] = [
     {
@@ -224,17 +264,24 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
 
   if (!isExpanded) {
     const sprite = (
-      <img
-        src={resolveSprite(getPixelSpriteUrl(
-          pokemon.pokedexNumber,
-          pokemon.showdownData.species,
-          pokemon.showdownData.gender || 'M',
-          pokemon.showdownData.shiny
-        ))}
-        alt={pokemon.showdownData.species}
-        draggable={false}
-        className="w-16 h-16 object-contain [image-rendering:pixelated]"
-      />
+      // relative wrapper scopes the favorite star's absolute positioning to
+      // just the sprite itself (see header comment), sized to match it so
+      // the corner overlay lands on the sprite regardless of the tile's
+      // wider w-28 frame.
+      <div className="relative w-16 h-16">
+        <img
+          src={resolveSprite(getPixelSpriteUrl(
+            pokemon.pokedexNumber,
+            pokemon.showdownData.species,
+            pokemon.showdownData.gender || 'M',
+            pokemon.showdownData.shiny
+          ))}
+          alt={pokemon.showdownData.species}
+          draggable={false}
+          className="w-16 h-16 object-contain [image-rendering:pixelated]"
+        />
+        {favoriteButton('absolute -top-1 -right-1 z-10 w-5 h-5 bg-zinc-800/90')}
+      </div>
     );
 
     return (
@@ -273,10 +320,13 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
               />
             </>
           ) : (
-            <button type="button" onClick={onToggleExpand} className="flex flex-col items-center gap-1 w-full cursor-pointer">
+            // Plain div rather than a button (as this used to be) - the
+            // favorite star above nests its own button on top of the
+            // sprite, and a button-in-button isn't valid HTML.
+            <div onClick={onToggleExpand} className="flex flex-col items-center gap-1 w-full cursor-pointer">
               {sprite}
               <span className="text-xs font-semibold text-zinc-200 truncate w-full text-center">{label}</span>
-            </button>
+            </div>
           )}
 
           {contextMenu}
@@ -332,6 +382,12 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
             </svg>
           </div>
         )}
+
+        {/* Favorite toggle (Box Tab: Favoriting Leg 1, see TODO.md) - bottom-
+            left is unclaimed in every sort mode (top-right is Collapse,
+            top-left is the Custom-mode-only drag handle above), so favorite
+            lives here instead of competing with the handle for top-left. */}
+        {favoriteButton('absolute -bottom-2.5 -left-2.5 z-10 w-6 h-6 border border-zinc-600 bg-zinc-800 hover:border-accent-gold')}
 
         {isRenaming ? (
           <input

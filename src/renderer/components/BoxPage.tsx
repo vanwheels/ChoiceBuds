@@ -84,6 +84,14 @@
  * resolution per tag, ANDed together, matched against the entry's
  * underlying species) rather than a reimplementation, so the two search
  * bars behave identically.
+ *
+ * Favoriting (Box Tab: Favoriting Leg 1, see TODO.md): `SavedPokemonEntry.
+ * favorite`, toggled via `BoxCard.tsx`'s own corner-star buttons, sorts
+ * favorited entries to the top of `sortedEntries` - applied after either
+ * Alphabetical or Custom ordering (`utils/savedPokemonSort.ts`'s
+ * `sortSavedPokemonByFavorite`), same composition point/precedent as
+ * `TeamsPage.tsx` layering `teamSort.ts`'s `sortTeamsByFavorite` over its
+ * own base sort.
  */
 
 import { useState } from 'react';
@@ -108,6 +116,7 @@ import { toRegulationId } from '../utils/pokemonRules';
 import { readPokemonFromClipboard } from '../utils/clipboardPayload';
 import { parseShowdownText } from '../services/parser';
 import { enrichPokemonWithAPI } from '../services/pokeapi';
+import { sortSavedPokemonByFavorite } from '../utils/savedPokemonSort';
 import BoxCard from './BoxCard';
 import SpeciesPickerCard from './SpeciesPickerCard';
 import SaveToLibraryDialog from './SaveToLibraryDialog';
@@ -183,9 +192,14 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
   // Alphabetical mode re-derives species-then-label order every render, same
   // as CalcSavedSetsModal.tsx's own management list, for consistent browsing
   // order across both surfaces.
-  const sortedEntries = sortMode === 'custom'
-    ? savedPokemonState.savedPokemon
-    : sortAlphabetically(savedPokemonState.savedPokemon);
+  // Favorites-first applies after either Alphabetical or Custom ordering
+  // (Box Tab: Favoriting, see TODO.md) - same composition point/precedent as
+  // TeamsPage.tsx layering sortTeamsByFavorite over its own base sort.
+  const sortedEntries = sortSavedPokemonByFavorite(
+    sortMode === 'custom'
+      ? savedPokemonState.savedPokemon
+      : sortAlphabetically(savedPokemonState.savedPokemon)
+  );
 
   // Search (see header comment) - a straight port of
   // SpeciesPickerCard.tsx's own '#tag'-chain resolution, applied to each
@@ -383,6 +397,7 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
                 onAddToTeam={() => setAddToTeamEntryId(entry.id)}
                 onRename={(label) => savedPokemonState.renameSavedPokemon(entry.id, label)}
                 onDuplicate={() => savedPokemonState.duplicateSavedPokemon(entry.id)}
+                onToggleFavorite={() => savedPokemonState.toggleSavedPokemonFavorite(entry.id)}
                 onDelete={() => savedPokemonState.deleteSavedPokemon(entry.id)}
                 onReorder={(draggedId, targetId) => savedPokemonState.reorderSavedPokemon(draggedId, targetId)}
                 sortMode={sortMode}
