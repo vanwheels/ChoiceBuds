@@ -25,7 +25,8 @@ to save into it from Teams at all, and no way to browse it without already
 knowing a species has a match. Originally scoped as 3 legs; Box Tab's own
 leg was further split 2026-09-10 (display/edit vs. creation are different
 enough pieces of work to review separately - flagged before starting, user
-agreed) into what's now Leg 1 (shipped, see `COMPLETED.md`) and Leg 2 below.
+agreed) into what's now Leg 1 (shipped, see `COMPLETED.md`), Leg 2, and
+Leg 3 (the entry-management gap Leg 1 found but didn't fix) below.
 
 - **[Box Tab] — Leg 2** *(Last touched: 2026-09-10 · Re-checks: 0)*
   A "+ New Build" action on `BoxPage.tsx` (Leg 1, see `COMPLETED.md`) that
@@ -36,6 +37,15 @@ agreed) into what's now Leg 1 (shipped, see `COMPLETED.md`) and Leg 2 below.
   expanded/in-edit immediately (`useSavedPokemon.ts`'s `expandedCardIds` from
   Leg 1) - saved builds no longer only arrive via Calc/Teams pushing into
   the library.
+
+- **[Box Tab] — Leg 3** *(Last touched: 2026-09-10 · Re-checks: 0)*
+  Delete/rename affordance for a Box entry, surfaced in `BoxPage.tsx`/
+  `BoxCard.tsx` itself - found while building Leg 1 (see `COMPLETED.md`):
+  `useSavedPokemon.ts`'s `renameSavedPokemon`/`deleteSavedPokemon` already
+  exist but aren't wired into Box Tab's UI, so a Box entry can still only be
+  renamed/deleted via Calc's `CalcSavedSetsModal` - an odd gap for what's
+  meant to be the discoverable home for this library. Promoted from
+  Unscheduled into this milestone 2026-09-10.
 
 ## Blocked
 
@@ -86,18 +96,6 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
-
-- **[Box Tab: No Delete/Rename Affordance] — Leg 1** *(Last touched:
-  2026-09-10 · Re-checks: 0)*
-  Found while building Box Tab Leg 1 (see `COMPLETED.md`): `BoxPage.tsx`
-  only wires `useSavedPokemon.ts`'s expand/edit-in-place and `updateSavedPokemon`
-  - `renameSavedPokemon`/`deleteSavedPokemon` already exist but aren't
-  surfaced in Box Tab's UI (Leg 1's own scope named only the display/expand/
-  edit-in-place shape, not entry management). Right now a Box entry can
-  still only be renamed/deleted via Calc's `CalcSavedSetsModal`, which is an
-  odd gap for what's meant to be the discoverable home for this library. Not
-  fixed here since it wasn't part of what was asked for Leg 1 - flagged
-  rather than absorbed unprompted.
 
 - **[TeamCard Add-Pokémon: No Species-Clause Dedupe] — Leg 1** *(Last
   touched: 2026-09-10 · Re-checks: 0)*
