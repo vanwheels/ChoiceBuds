@@ -27,15 +27,62 @@ leg was further split 2026-09-10 (display/edit vs. creation are different
 enough pieces of work to review separately - flagged before starting, user
 agreed) into what's now Leg 1 and Leg 2 (both shipped, see `COMPLETED.md`)
 and Leg 3 below (the entry-management gap Leg 1 found but didn't fix).
+Expanded again 2026-09-10 (before Leg 3 started) with a second direct-
+feedback pass calling out that Box is still a dead end relative to Teams:
+no way to move a build between Box and a Team in either direction, no
+duplicate, no reorder, no search. Added as Legs 4-8 below - flagged as a
+meaningful size increase over the original 3-leg scope before recording it.
 
 - **[Box Tab] — Leg 3** *(Last touched: 2026-09-10 · Re-checks: 0)*
-  Delete/rename affordance for a Box entry, surfaced in `BoxPage.tsx`/
-  `BoxCard.tsx` itself - found while building Leg 1 (see `COMPLETED.md`):
-  `useSavedPokemon.ts`'s `renameSavedPokemon`/`deleteSavedPokemon` already
-  exist but aren't wired into Box Tab's UI, so a Box entry can still only be
-  renamed/deleted via Calc's `CalcSavedSetsModal` - an odd gap for what's
-  meant to be the discoverable home for this library. Promoted from
-  Unscheduled into this milestone 2026-09-10.
+  Delete/rename/duplicate affordances for a Box entry, surfaced in
+  `BoxPage.tsx`/`BoxCard.tsx` itself - found while building Leg 1 (see
+  `COMPLETED.md`): `useSavedPokemon.ts`'s `renameSavedPokemon`/
+  `deleteSavedPokemon` already exist but aren't wired into Box Tab's UI, so
+  a Box entry can still only be renamed/deleted via Calc's
+  `CalcSavedSetsModal` - an odd gap for what's meant to be the discoverable
+  home for this library. Duplicate has no existing hook support yet, so
+  needs a new `duplicateSavedPokemon`-shaped addition to `useSavedPokemon.ts`
+  alongside the wiring. Promoted from Unscheduled into this milestone
+  2026-09-10; duplicate folded in 2026-09-10 (same entry-action surface as
+  delete/rename, not worth a separate leg).
+
+- **[Box Tab: Import Build to Team] — Leg 4** *(Last touched: 2026-09-10 ·
+  Re-checks: 0)*
+  A Box entry can't currently be added onto an existing team - Box is a
+  dead end relative to Teams. Needs a way (context menu on `BoxCard.tsx`,
+  likely) to add a saved build as a new Pokémon slot on a team the user
+  picks. Not yet scoped in detail (team picker UI, what happens if the
+  target team is already full).
+
+- **[Box Tab: Import via Right-Click] — Leg 5** *(Last touched: 2026-09-10 ·
+  Re-checks: 0)*
+  Box currently has no way to create an entry via paste. Two paths
+  requested: (1) paste raw Showdown export text directly into Box to create
+  a new entry - reuses `services/parser.ts`'s existing `parseShowdownText()`,
+  and (2) extend the existing Quick Copy/Paste Pokémon right-click mechanic
+  (`utils/clipboardPayload.ts::readPokemonFromClipboard`, see `TeamCard.tsx`'s
+  Leg 1/Leg 2 comments) so a "Paste Pokémon" context-menu entry also works
+  inside Box. Not yet scoped in detail (single right-click menu covering
+  both paste sources vs. two separate actions).
+
+- **[Box Tab: Export/Copy Build] — Leg 6** *(Last touched: 2026-09-10 ·
+  Re-checks: 0)*
+  The reverse of Leg 5 - no way to get a build back out of Box via
+  copy/right-click (e.g. to paste into a team, or copy as Showdown text
+  elsewhere). Likely reuses the same clipboard-payload shape Teams already
+  writes via its "Copy" context-menu actions. Not yet scoped in detail
+  (Showdown-text copy vs. ChoiceBuds clipboard-payload copy, or both).
+
+- **[Box Tab: Reorder] — Leg 7** *(Last touched: 2026-09-10 · Re-checks: 0)*
+  No way to reorder Box entries - display order is whatever
+  `SavedPokemonDatabase` currently holds. Not yet scoped in detail
+  (drag-to-reorder vs. up/down affordance, whether it needs a persisted
+  order field).
+
+- **[Box Tab: Search] — Leg 8** *(Last touched: 2026-09-10 · Re-checks: 0)*
+  No way to search/filter Box by name or species - browsing is scroll-only.
+  Not yet scoped in detail (search by saved nickname vs. species vs. both,
+  where the search input lives in `BoxPage.tsx`).
 
 ## Blocked
 
