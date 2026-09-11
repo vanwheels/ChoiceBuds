@@ -18,6 +18,21 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Box Tab: Import via Right-Click] - Leg 5** (2026-09-11) - see commit
+  `d22da94`. Right-click on `BoxPage.tsx`'s grid container (same
+  click-coordinates `ContextMenu` pattern `TeamCard.tsx`'s Leg 2 roster-grid
+  paste menu uses) opens "Paste Pokémon" (port of `TeamCard.tsx`'s
+  `handlePasteNewPokemon`, minus its 6-slot room gate) and "Paste Showdown
+  Text" (same `parseShowdownText` -> `enrichPokemonWithAPI` pipeline
+  `ImportTeamModal.tsx`'s import path uses, minus its saved-build review
+  step). Also added `stopPropagation` to `BoxCard.tsx`'s own context-menu
+  handler, which hadn't needed it before this - without it, right-clicking
+  an existing Box entry also bubbled up into the new grid-level menu.
+  Live-verified via `run-desktop`: pasted a real clipboard payload and real
+  Showdown text, confirmed both created correct entries, confirmed
+  `stopPropagation` isolates the two menus, cleaned up the disposable
+  entries afterward.
+
 - **[Box Tab: Import Build to Team] - Leg 4** (2026-09-11) - see commits
   `10c1a41` and `f6b4b83`. Added an "Add to Team…" item to `BoxCard.tsx`'s
   existing context menu, opening a new `AddToTeamDialog.tsx` (same

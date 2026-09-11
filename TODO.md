@@ -33,17 +33,6 @@ no way to move a build between Box and a Team in either direction, no
 duplicate, no reorder, no search. Added as Legs 4-8 below - flagged as a
 meaningful size increase over the original 3-leg scope before recording it.
 
-- **[Box Tab: Import via Right-Click] — Leg 5** *(Last touched: 2026-09-10 ·
-  Re-checks: 0)*
-  Box currently has no way to create an entry via paste. Two paths
-  requested: (1) paste raw Showdown export text directly into Box to create
-  a new entry - reuses `services/parser.ts`'s existing `parseShowdownText()`,
-  and (2) extend the existing Quick Copy/Paste Pokémon right-click mechanic
-  (`utils/clipboardPayload.ts::readPokemonFromClipboard`, see `TeamCard.tsx`'s
-  Leg 1/Leg 2 comments) so a "Paste Pokémon" context-menu entry also works
-  inside Box. Not yet scoped in detail (single right-click menu covering
-  both paste sources vs. two separate actions).
-
 - **[Box Tab: Export/Copy Build] — Leg 6** *(Last touched: 2026-09-10 ·
   Re-checks: 0)*
   The reverse of Leg 5 - no way to get a build back out of Box via
