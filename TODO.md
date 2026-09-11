@@ -16,10 +16,24 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Battle Logger Overhaul
+## Current Milestone: Statistics Improvements
 
-(No items currently in progress - see `COMPLETED.md` for
-Battle Logger: Duplicate Pokémon Selectable.)
+- **[Statistics: Selected Battle Pokémon Not Tracked] — Leg 1** *(Last
+  touched: 2026-09-10 · Re-checks: 0)*
+  Statistics doesn't currently factor in which Pokémon the user actually
+  selected/brought in their logged battles. Needs scoping — likely feeds a
+  usage-rate or brought-rate view, but what exactly should surface isn't
+  decided yet.
+
+- **[Statistics: Remove "By Opponent" Section] — Leg 2** *(Last touched:
+  2026-09-10 · Re-checks: 0)*
+  Remove the "by opponent" breakdown from the Statistics page — no longer
+  wanted.
+
+- **[Statistics: Win-Loss Column on Most-Faced Pokémon] — Leg 3** *(Last
+  touched: 2026-09-10 · Re-checks: 0)*
+  Add a win-loss record column to the "most-faced Pokémon" table in
+  Statistics.
 
 ## Blocked
 
@@ -116,29 +130,10 @@ unblocked.
 ## Future Milestones (unscheduled)
 
 2026-09-10 feedback pass batched into 4 candidate milestones; Battle Logger
-Overhaul was promoted to current (see above) once UI Polish & Performance
-shipped. The remaining 3 below keep their legs already drafted — pick one to
-promote next (items keep their draft numbering/order until then; no
-cross-milestone priority has been set).
-
-### Candidate: Statistics Improvements
-
-- **[Statistics: Selected Battle Pokémon Not Tracked] — Leg 1** *(Last
-  touched: 2026-09-10 · Re-checks: 0)*
-  Statistics doesn't currently factor in which Pokémon the user actually
-  selected/brought in their logged battles. Needs scoping — likely feeds a
-  usage-rate or brought-rate view, but what exactly should surface isn't
-  decided yet.
-
-- **[Statistics: Remove "By Opponent" Section] — Leg 1** *(Last touched:
-  2026-09-10 · Re-checks: 0)*
-  Remove the "by opponent" breakdown from the Statistics page — no longer
-  wanted.
-
-- **[Statistics: Win-Loss Column on Most-Faced Pokémon] — Leg 1** *(Last
-  touched: 2026-09-10 · Re-checks: 0)*
-  Add a win-loss record column to the "most-faced Pokémon" table in
-  Statistics.
+Overhaul and then Statistics Improvements were promoted to current (see
+above) as prior milestones shipped. The remaining 2 below keep their legs
+already drafted — pick one to promote next (items keep their draft
+numbering/order until then; no cross-milestone priority has been set).
 
 ### Candidate: Team Management QoL
 
