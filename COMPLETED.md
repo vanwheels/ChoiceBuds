@@ -26,6 +26,16 @@ in:
   be circular. `SpeciesPickerCard.tsx` is now unused by `BoxPage.tsx` but
   still serves `PokemonCard.tsx`'s Roster Swap picker unchanged.
 
+- **[Add Pokémon Table: Mega Form Rows] - Leg 2** (2026-09-11) - see commit
+  `af72939`. Core Mega rows in `AddPokemonStatTable.tsx`: one per Mega Stone
+  in `MEGA_STONE_TO_SPECIES`, gated to species already in the roster prop,
+  stats/types read from `@smogon/calc`'s bundled dex. Selecting a row adds
+  the base species with the stone pre-equipped as its item -
+  `useRosterActions.ts`'s `buildSlot`/`addSlot` gained an optional
+  `itemOverride` param for this, threaded through both `TeamCard.tsx` and
+  `BoxPage.tsx`. `#mega` tag search and type/ability-aware tag matching are
+  Leg 3's job - these rows only match plain-text search for now.
+
 - **[Add Pokémon Table: Mega Form Rows] - Leg 1** (2026-09-11) - scoping
   pass, no code changes. Full design in
   `docs/investigations/mega-form-rows-scoping.md`. Overturned the item's own

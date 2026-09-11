@@ -23,19 +23,6 @@ for the one remaining open candidate.
 
 ## Current Milestone: Building Flow Tweaks
 
-- **[Add Pokémon Table: Mega Form Rows] — Leg 2** *(Last touched:
-  2026-09-11 · Re-checks: 0)*
-  Scoped out of Leg 1's planning pass (see
-  `docs/investigations/mega-form-rows-scoping.md` for the full design - not
-  blocked on PokeAPI or user-supplied stats after all, `@smogon/calc`'s
-  bundled dex already has every Mega form's base stats/types, same source
-  `SpeedTiersPage.tsx` already reads). Add one sortable row per Mega Stone
-  in `config/megaEvolution.ts`'s `MEGA_STONE_TO_SPECIES` to
-  `AddPokemonStatTable.tsx`, gated to species already in the roster prop it
-  receives. Selecting a row adds the *base* species holding that stone -
-  needs `useRosterActions.ts`'s `buildSlot`/`addSlot` to grow an optional
-  item-override param.
-
 - **[Add Pokémon Table: Mega Form Rows] — Leg 3** *(Last touched:
   2026-09-11 · Re-checks: 0)*
   Follow-on to Leg 2 above (same scoping doc). Add `#mega` as a searchable
