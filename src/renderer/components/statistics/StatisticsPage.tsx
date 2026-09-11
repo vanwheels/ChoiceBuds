@@ -21,12 +21,14 @@ import {
   getRecentForm,
   getMostUsedPokemon,
   getMostFacedOpponents,
+  getTeamRosterUsage,
 } from '../../utils/battleStats';
 import OverallRecordCard from './OverallRecordCard';
 import RecentFormStrip from './RecentFormStrip';
 import BreakdownPanel from './BreakdownPanel';
 import PokemonUsagePanel from './PokemonUsagePanel';
 import OpponentFacedPanel from './OpponentFacedPanel';
+import TeamRosterUsagePanel from './TeamRosterUsagePanel';
 
 interface StatisticsPageProps {
   battlesState: UseBattlesReturn;
@@ -59,6 +61,7 @@ export default function StatisticsPage({ battlesState, spriteCacheState }: Stati
   const recentForm = useMemo(() => getRecentForm(filteredBattles), [filteredBattles]);
   const mostUsedPokemon = useMemo(() => getMostUsedPokemon(filteredBattles), [filteredBattles]);
   const mostFacedOpponents = useMemo(() => getMostFacedOpponents(filteredBattles), [filteredBattles]);
+  const teamRosterUsage = useMemo(() => getTeamRosterUsage(filteredBattles), [filteredBattles]);
 
   if (battles.length === 0) {
     return (
@@ -104,6 +107,7 @@ export default function StatisticsPage({ battlesState, spriteCacheState }: Stati
         )}
         <PokemonUsagePanel stats={mostUsedPokemon} resolveSprite={spriteCacheState.resolveSprite} />
         <OpponentFacedPanel stats={mostFacedOpponents} resolveSprite={spriteCacheState.resolveSprite} />
+        <TeamRosterUsagePanel usage={teamRosterUsage} resolveSprite={spriteCacheState.resolveSprite} />
       </div>
     </div>
   );

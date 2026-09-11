@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   getOverallRecord, getRecordByFormat, getRecordBySeason, getSeasonsWithBattles,
   getRecordByTeam, getRecordByOpponent, getSetRecord, getRecentForm,
-  getMostUsedPokemon, getMostFacedOpponents,
+  getMostUsedPokemon, getMostFacedOpponents, getTeamRosterUsage,
 } from './battleStats';
 import type { Battle, BroughtPokemonSnapshot, OpponentPokemonEntry } from '../types/pokemon';
 import { SEASONS } from '../config/seasons';
@@ -213,6 +213,47 @@ describe('getMostUsedPokemon', () => {
     ];
     const result = getMostUsedPokemon(battles, 1);
     expect(result).toEqual([{ species: 'A', spriteUrl: a.spriteUrl, count: 2, winRate: 1 }]);
+  });
+});
+
+describe('getTeamRosterUsage', () => {
+  it('tracks a never-brought roster member as a 0-rate row instead of omitting it', () => {
+    const gengar = makeBrought({ id: 'p1', species: 'Gengar' });
+    const incin = makeBrought({ id: 'p2', species: 'Incineroar' });
+    const battles = [
+      makeBattle({ teamId: 't1', teamName: 'Alpha', playerRoster: [gengar, incin], broughtIds: ['p1'], result: 'win' }),
+    ];
+    const result = getTeamRosterUsage(battles);
+    expect(result).toEqual([{
+      teamId: 't1',
+      teamName: 'Alpha',
+      totalTeamBattles: 1,
+      pokemon: [
+        { species: 'Gengar', spriteUrl: gengar.spriteUrl, broughtCount: 1, rate: 1 },
+        { species: 'Incineroar', spriteUrl: incin.spriteUrl, broughtCount: 0, rate: 0 },
+      ],
+    }]);
+  });
+
+  it('keeps teams and their species sorted independently: teams by battle count desc, species within a team by rate desc', () => {
+    const gengar = makeBrought({ id: 'p1', species: 'Gengar' });
+    const incin = makeBrought({ id: 'p2', species: 'Incineroar' });
+    const battles = [
+      // t1: 1 battle total
+      makeBattle({ teamId: 't1', teamName: 'Alpha', playerRoster: [gengar], broughtIds: ['p1'], result: 'win' }),
+      // t2: 2 battles total - Incineroar brought once (50%), Gengar never brought (0%)
+      makeBattle({ teamId: 't2', teamName: 'Beta', playerRoster: [gengar, incin], broughtIds: ['p2'], result: 'win' }),
+      makeBattle({ teamId: 't2', teamName: 'Beta', playerRoster: [gengar, incin], broughtIds: [], result: 'loss' }),
+    ];
+    const result = getTeamRosterUsage(battles);
+    expect(result.map(t => t.teamId)).toEqual(['t2', 't1']);
+    expect(result[0].pokemon.map(p => p.species)).toEqual(['Incineroar', 'Gengar']);
+  });
+
+  it('excludes in-progress battles from both the roster snapshot and the denominator', () => {
+    const gengar = makeBrought({ id: 'p1', species: 'Gengar' });
+    const battles = [makeBattle({ teamId: 't1', playerRoster: [gengar], broughtIds: ['p1'], result: 'in-progress' })];
+    expect(getTeamRosterUsage(battles)).toEqual([]);
   });
 });
 

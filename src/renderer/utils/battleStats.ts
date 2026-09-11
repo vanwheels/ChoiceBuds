@@ -34,6 +34,20 @@ export interface OpponentFacedStat {
   count: number;
 }
 
+export interface TeamRosterUsageStat {
+  species: string;
+  spriteUrl: string;
+  broughtCount: number; // completed battles for this team where this species was in broughtIds
+  rate: number; // broughtCount / totalTeamBattles, 0-1, 0 when totalTeamBattles is 0
+}
+
+export interface TeamRosterUsage {
+  teamId: string;
+  teamName: string;
+  totalTeamBattles: number; // completed battles logged for this team
+  pokemon: TeamRosterUsageStat[]; // every species seen in a playerRoster snapshot for this team, sorted by rate desc
+}
+
 function toRecord(wins: number, losses: number): WinLossRecord {
   const total = wins + losses;
   return { wins, losses, total, winRate: total > 0 ? wins / total : 0 };
@@ -170,6 +184,50 @@ export function getMostUsedPokemon(battles: Battle[], topN = 10): PokemonUsageSt
     }))
     .sort((a, b) => b.count - a.count)
     .slice(0, topN);
+}
+
+/**
+ * Per-team brought-rate: for each team, every species that's ever appeared
+ * in one of its completed-battle playerRoster snapshots, with how often it
+ * was actually brought (broughtIds) vs. sitting on the roster unused. Unlike
+ * getMostUsedPokemon (global, brought-only, no denominator), this surfaces
+ * roster members that were *never* brought - they still need a totalTeamBattles
+ * denominator to show up as a 0% row.
+ */
+export function getTeamRosterUsage(battles: Battle[]): TeamRosterUsage[] {
+  const completed = completedBattles(battles);
+  const byTeam = new Map<string, {
+    teamName: string;
+    totalTeamBattles: number;
+    species: Map<string, { spriteUrl: string; broughtCount: number }>;
+  }>();
+
+  for (const battle of completed) {
+    const team = byTeam.get(battle.teamId) ?? { teamName: battle.teamName, totalTeamBattles: 0, species: new Map() };
+    team.totalTeamBattles++;
+    for (const pokemon of battle.playerRoster) {
+      const entry = team.species.get(pokemon.species) ?? { spriteUrl: pokemon.spriteUrl, broughtCount: 0 };
+      if (battle.broughtIds.includes(pokemon.id)) entry.broughtCount++;
+      team.species.set(pokemon.species, entry);
+    }
+    byTeam.set(battle.teamId, team);
+  }
+
+  return Array.from(byTeam.entries())
+    .map(([teamId, { teamName, totalTeamBattles, species }]) => ({
+      teamId,
+      teamName,
+      totalTeamBattles,
+      pokemon: Array.from(species.entries())
+        .map(([speciesName, { spriteUrl, broughtCount }]) => ({
+          species: speciesName,
+          spriteUrl,
+          broughtCount,
+          rate: totalTeamBattles > 0 ? broughtCount / totalTeamBattles : 0,
+        }))
+        .sort((a, b) => b.rate - a.rate),
+    }))
+    .sort((a, b) => b.totalTeamBattles - a.totalTeamBattles);
 }
 
 export function getMostFacedOpponents(battles: Battle[], topN = 10): OpponentFacedStat[] {
