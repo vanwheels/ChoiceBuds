@@ -20,16 +20,25 @@
  * "Add to Team…" (Box Tab Leg 4, see TODO.md) is the same context menu's
  * newest item - opens BoxPage.tsx's AddToTeamDialog rather than acting
  * directly, since picking a destination team needs its own UI.
+ *
+ * "Copy Pokémon"/"Export" (Box Tab Leg 6, see TODO.md) mirror
+ * PokemonCard.tsx's own menu exactly - straight ports, same
+ * clipboardPayload.ts round-trip and ExportTeamModal.tsx mount. One-
+ * directional (out only): no "Paste Pokémon" per-entry item, since Leg 5
+ * already covers pasting *into* Box at the grid level.
  */
 
 import { useState } from 'react';
 import type { CSSProperties, MouseEvent as ReactMouseEvent } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import type { ImportedPokemonInfo, SavedPokemonEntry } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { RegulationId } from '../utils/pokemonRules';
 import { getTypeGlowColors } from '../config/pokemonTheme';
 import { getPixelSpriteUrl } from '../utils/spriteUrl';
+import { copyPokemonToClipboard } from '../utils/clipboardPayload';
 import EditablePokemonCore from './EditablePokemonCore';
+import ExportTeamModal from './ExportTeamModal';
 import ContextMenu, { type ContextMenuItem } from './ContextMenu';
 
 interface BoxCardProps {
@@ -53,6 +62,7 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameDraft, setRenameDraft] = useState(label);
+  const [isExportOpen, setIsExportOpen] = useState(false);
 
   // stopPropagation (Box Tab: Import via Right-Click Leg 5, see TODO.md)
   // keeps this from also bubbling up into BoxPage.tsx's own
@@ -76,7 +86,32 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
     setIsRenaming(false);
   };
 
+  const handleCopyPokemon = async () => {
+    await copyPokemonToClipboard(pokemon);
+  };
+
   const menuItems: ContextMenuItem[] = [
+    {
+      label: 'Copy Pokémon',
+      onClick: handleCopyPokemon,
+      icon: (
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="9" y="9" width="11" height="11" rx="1.5" />
+          <path d="M5 15H4.5A1.5 1.5 0 0 1 3 13.5v-9A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5V5" />
+        </svg>
+      ),
+    },
+    {
+      label: 'Export',
+      onClick: () => setIsExportOpen(true),
+      icon: (
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 3v12" />
+          <path d="m7 10 5 5 5-5" />
+          <path d="M5 21h14" />
+        </svg>
+      ),
+    },
     {
       label: 'Add to Team…',
       onClick: onAddToTeam,
@@ -126,6 +161,19 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
     <ContextMenu x={contextMenuPos.x} y={contextMenuPos.y} onClose={() => setContextMenuPos(null)} items={menuItems} />
   );
 
+  const exportModal = (
+    <AnimatePresence>
+      {isExportOpen && (
+        <ExportTeamModal
+          pokemonList={[pokemon.showdownData]}
+          title={`Export ${pokemon.showdownData.nickname || pokemon.showdownData.species}`}
+          pasteTitle={pokemon.showdownData.nickname || pokemon.showdownData.species}
+          onClose={() => setIsExportOpen(false)}
+        />
+      )}
+    </AnimatePresence>
+  );
+
   if (!isExpanded) {
     const sprite = (
       <img
@@ -171,6 +219,7 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
         )}
 
         {contextMenu}
+        {exportModal}
       </div>
     );
   }
@@ -215,6 +264,7 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
         />
 
         {contextMenu}
+        {exportModal}
       </div>
     </div>
   );
