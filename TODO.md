@@ -32,6 +32,28 @@ for the one remaining open candidate.
   comment already gives for why Box's "+ New Build" doesn't pass
   `savedPokemon` today).
 
+- **[Add Pokémon Table: Mega Form Rows] — Leg 2** *(Last touched:
+  2026-09-11 · Re-checks: 0)*
+  Scoped out of Leg 1's planning pass (see
+  `docs/investigations/mega-form-rows-scoping.md` for the full design - not
+  blocked on PokeAPI or user-supplied stats after all, `@smogon/calc`'s
+  bundled dex already has every Mega form's base stats/types, same source
+  `SpeedTiersPage.tsx` already reads). Add one sortable row per Mega Stone
+  in `config/megaEvolution.ts`'s `MEGA_STONE_TO_SPECIES` to
+  `AddPokemonStatTable.tsx`, gated to species already in the roster prop it
+  receives. Selecting a row adds the *base* species holding that stone -
+  needs `useRosterActions.ts`'s `buildSlot`/`addSlot` to grow an optional
+  item-override param.
+
+- **[Add Pokémon Table: Mega Form Rows] — Leg 3** *(Last touched:
+  2026-09-11 · Re-checks: 0)*
+  Follow-on to Leg 2 above (same scoping doc). Add `#mega` as a searchable
+  tag - standalone filter to Mega-only rows, and correctly ANDs with
+  type/ability tags against the Mega form's *own* type/guaranteed ability
+  (`config/megaAbilities.ts`'s `MEGA_ABILITIES`) where those differ from the
+  base species', not just its base form's. Move tags need no special
+  handling (Mega Evolution doesn't change a species' learnset).
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -81,19 +103,6 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
-
-- **[Add Pokémon Table: Mega Form Rows] — Leg 1** *(Last touched:
-  2026-09-11 · Re-checks: 0)*
-  Deferred out of Add Pokémon: Sortable Base-Stat Table's scoping pass (see
-  that item's Leg 1 note above for the full reasoning) rather than built with
-  partial coverage. Would extend the sortable table to also list Mega forms
-  as their own rows (e.g. "Mega Gengar, BST 600"), which needs live stat
-  fetching added to `useMegaSprite.ts`'s per-slug `/pokemon/{slug}` call
-  (currently id+sprite only) plus somewhere to cache it. Blocked in practice
-  on PokeAPI itself for 6 Reg M-C Mega species with no resource yet
-  (Baxcalibur, Golisopod, Salamence, and the "Mega Z" forms for
-  Absol/Garchomp/Lucario) - not blocked on a decision anymore, just not
-  prioritized yet.
 
 - **[Reg M-C Z-A-Exclusive Movepool Audit] — Leg 1** *(Last touched:
   2026-09-10 · Re-checks: 1)*

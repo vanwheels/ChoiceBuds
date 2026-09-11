@@ -18,6 +18,18 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Add Pokémon Table: Mega Form Rows] - Leg 1** (2026-09-11) - scoping
+  pass, no code changes. Full design in
+  `docs/investigations/mega-form-rows-scoping.md`. Overturned the item's own
+  "blocked on PokeAPI" note - `@smogon/calc`'s bundled dex (already used by
+  `SpeedTiersPage.tsx`) already has base stats/types for every Mega form,
+  including the 6 species PokeAPI has no resource for yet, so no hand-typed
+  stats or new fetch/cache were needed after all. Resolved via
+  `AskUserQuestion`: `#mega` (Leg 3) does full type/ability-aware tag
+  integration against a Mega form's own (possibly retyped/re-abilitied)
+  data, not just a standalone filter. See `TODO.md`'s Leg 2/3 entries for
+  the concrete build plan.
+
 - **[Add Pokémon: Sortable Base-Stat Table] - Leg 1** (2026-09-11) - see
   commit `8885115`. New `AddPokemonStatTable.tsx` (search + click-to-sort
   HP/Atk/Def/SpA/SpD/Spe/BST columns, Showdown Random Battle Dex-style),
