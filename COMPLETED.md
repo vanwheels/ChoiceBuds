@@ -30,6 +30,11 @@ in:
   `utils/statTable.ts`, unit-tested separately from the component. Mega
   forms excluded per the scoping decision (see Leg 2's TODO.md entry / the
   deferred Mega-rows follow-up in Unscheduled).
+  Follow-up fix same day (commit `e9ac3b6`): the initial cut dropped
+  SpeciesPickerCard's '#tag' type/move/ability search chain entirely (caught
+  live by the user testing `#fire #drought #tailwind`) - ported that
+  resolution chain over verbatim rather than reimplementing it, applied to
+  both the roster rows and the "From Box" section.
 
 - **[TeamCard Add-Pokémon: No Species-Clause Dedupe] - Leg 1** (2026-09-11) -
   see commit `47b709e`. `TeamCard.tsx`'s "+ Add Pokémon"
