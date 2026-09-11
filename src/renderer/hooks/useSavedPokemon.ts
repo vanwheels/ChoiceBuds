@@ -47,6 +47,16 @@ export interface UseSavedPokemonReturn {
   addSavedPokemonBatch: (pokemonList: ImportedPokemonInfo[], labels?: string[], ids?: string[]) => Promise<boolean>;
   renameSavedPokemon: (id: string, label: string) => Promise<boolean>;
   /**
+   * Clones an existing entry into a new one (Box Tab Leg 3, see TODO.md) -
+   * fresh entry id AND a fresh `pokemon.id` (same "never reuse a roster-slot
+   * id" convention PokemonCard.tsx's handlePastePokemon follows), so the
+   * clone doesn't collide with the source if both are ever rendered
+   * side-by-side (e.g. a Framer Motion `layout` key clash). Label reuses
+   * nextAvailableLabel's existing " (2)"/" (3)" suffix dedupe against the
+   * source's own label, rather than a dedicated "Copy of ..." scheme.
+   */
+  duplicateSavedPokemon: (id: string) => Promise<boolean>;
+  /**
    * Field-level update on a saved entry's stored `ImportedPokemonInfo` (Box
    * Tab Leg 1, see TODO.md) - distinct from renameSavedPokemon above, which
    * only ever touches the entry's `label`. Box cards are editable in place,
@@ -224,6 +234,33 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     return success;
   }, [savedPokemon]);
 
+  const duplicateSavedPokemon = useCallback(async (id: string): Promise<boolean> => {
+    const source = savedPokemon.find(e => e.id === id);
+    if (!source) {
+      setError(`Saved Pokemon set with ID ${id} not found`);
+      return false;
+    }
+
+    const now = Date.now();
+    const newEntry: SavedPokemonEntry = {
+      id: crypto.randomUUID(),
+      label: nextAvailableLabel(source.label, savedPokemon.map(e => e.label)),
+      pokemon: { ...source.pokemon, id: crypto.randomUUID() },
+      savedAt: now,
+      updatedAt: now,
+    };
+
+    const updated = [newEntry, ...savedPokemon];
+    const success = await persistSavedPokemonToDisk(updated);
+
+    if (success) {
+      setSavedPokemon(updated);
+      setError(null);
+    }
+
+    return success;
+  }, [savedPokemon]);
+
   const toggleCardExpansion = useCallback((id: string): void => {
     setExpandedCardIds(prev => {
       const next = new Set(prev);
@@ -265,6 +302,7 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     toggleCardExpansion,
     addSavedPokemonBatch,
     renameSavedPokemon,
+    duplicateSavedPokemon,
     updateSavedPokemon,
     deleteSavedPokemon,
     refreshSavedPokemon,

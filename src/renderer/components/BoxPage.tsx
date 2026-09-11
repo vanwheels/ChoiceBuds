@@ -149,6 +149,9 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
                 isExpanded={savedPokemonState.expandedCardIds.has(entry.id)}
                 onToggleExpand={() => savedPokemonState.toggleCardExpansion(entry.id)}
                 onUpdatePokemon={(updates) => savedPokemonState.updateSavedPokemon(entry.id, updates)}
+                onRename={(label) => savedPokemonState.renameSavedPokemon(entry.id, label)}
+                onDuplicate={() => savedPokemonState.duplicateSavedPokemon(entry.id)}
+                onDelete={() => savedPokemonState.deleteSavedPokemon(entry.id)}
                 gameDataState={gameDataState}
                 rulesetId={rulesetId}
                 resolveSprite={spriteCacheState.resolveSprite}
