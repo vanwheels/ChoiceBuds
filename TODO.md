@@ -32,12 +32,44 @@ feedback pass calling out that Box is still a dead end relative to Teams:
 no way to move a build between Box and a Team in either direction, no
 duplicate, no reorder, no search. Added as Legs 4-8 below - flagged as a
 meaningful size increase over the original 3-leg scope before recording it.
+Leg 7 scoped 2026-09-11 (see below); scoping surfaced a second want
+(favoriting) not in the original ask - flagged and split into its own
+Unscheduled item rather than folded into Leg 7's build.
 
-- **[Box Tab: Reorder] — Leg 7** *(Last touched: 2026-09-10 · Re-checks: 0)*
-  No way to reorder Box entries - display order is whatever
-  `SavedPokemonDatabase` currently holds. Not yet scoped in detail
-  (drag-to-reorder vs. up/down affordance, whether it needs a persisted
-  order field).
+- **[Box Tab: Reorder] — Leg 7** *(Last touched: 2026-09-11 · Re-checks: 0)*
+  Scoped 2026-09-11. Corrected assumption in the original wording: Box has
+  no persisted display order today at all - `BoxPage.tsx`'s `sortedEntries`
+  always re-sorts by species-then-label on every render, there's nothing to
+  "reorder" yet without first adding a real order concept.
+  Resolved scope:
+  - A sort-mode toggle in `BoxPage.tsx`'s header: **Alphabetical** (today's
+    species+label sort, stays default) vs. **Custom order**. Persist the
+    chosen mode in `AppSettings` (`settings.ts`) as a new field, e.g.
+    `boxSortMode: 'alphabetical' | 'custom'`.
+  - Custom order = plain array order in `SavedPokemonDatabase.savedPokemon`
+    itself - no dedicated `order` field needed, same as `TeamsDatabase.teams`
+    already works via `reorderTeam`. Resolves the "persisted order field"
+    question from the original item text.
+  - Drag-and-drop (user's choice over up/down buttons), reusing
+    `TeamCard.tsx`'s existing team-list-reorder pattern exactly: a new
+    `reorderSavedPokemon(draggedId, targetId)` in `useSavedPokemon.ts` with
+    the same insert-before-target semantics as `reorderTeam`, a new
+    `utils/boxDragTypes.ts` MIME-payload file mirroring
+    `teamRosterDragTypes.ts`, `motion.div layout="position"` for the slide
+    animation.
+  - Drag affordance split by card state (BoxCard.tsx): the collapsed tile
+    (w-28, sprite+label, single "expand" click action) is draggable as a
+    whole - low click-ambiguity unlike TeamCard's richer header, so no
+    dedicated handle needed there. The expanded card (more interactive
+    surface: rename, context menu, editable fields) gets a dedicated grip
+    handle, mirroring TeamCard's controls-pill handle.
+  - Drag only has an effect in Custom mode - dragging while Alphabetical is
+    selected should be a no-op (or hidden handle/non-draggable state); still
+    an implementation detail, not re-asked.
+  - Not yet decided: whether switching to Custom mode for the first time
+    seeds the array order from the current alphabetical view (so it doesn't
+    visually jump) or from whatever raw disk order already exists. Small
+    enough to resolve at build time, noted here so it isn't lost.
 
 - **[Box Tab: Search] — Leg 8** *(Last touched: 2026-09-10 · Re-checks: 0)*
   No way to search/filter Box by name or species - browsing is scroll-only.
@@ -93,6 +125,26 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+- **[Box Tab: Favoriting] — Leg 1** *(Last touched: 2026-09-11 · Re-checks:
+  0)*
+  Split out of Box Tab: Reorder's scoping pass 2026-09-11 - the user asked
+  for this alongside the sort-mode toggle, but it's a distinct feature (its
+  own data field, its own toggle UI, its own sort behavior) so it gets its
+  own item rather than riding along inside Leg 7's build. Direct precedent
+  already in the app: `Team.favorite` (`pokemon.ts`) + `TeamCard.tsx`'s
+  star-icon toggle button + `teamSort.ts::sortTeamsByFavorite` ("favorites
+  first, preserve each group's relative order otherwise"). Mirrors cleanly
+  onto `SavedPokemonEntry` (new `favorite?: boolean` field) +
+  `useSavedPokemon.ts` + an equivalent sort utility, composed with whichever
+  sort mode Box Tab: Reorder lands on (favorites-first still applies within
+  either Alphabetical or Custom order).
+  Not yet scoped in detail: where the star toggle lives on
+  `BoxCard.tsx`'s **collapsed** tile specifically - that tile is a tight
+  w-28 sprite+label button with no header/button row to drop a toggle into
+  today (unlike `TeamCard.tsx`'s spacious header), so this needs its own
+  small layout call before it's buildable, not just a copy-paste of Team's
+  button.
 
 - **[TeamCard Add-Pokémon: No Species-Clause Dedupe] — Leg 1** *(Last
   touched: 2026-09-10 · Re-checks: 0)*
