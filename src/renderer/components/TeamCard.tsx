@@ -19,7 +19,7 @@ import { getCachedMegaSprite, useMegaSpritePrefetch } from '../hooks/useMegaSpri
 import { TEAMS_LIST_DRAG_TYPE, type TeamsListDragPayload } from '../utils/teamsListDragTypes';
 import { CARD_EXPAND_ENTER_TRANSITION, CARD_EXPAND_EXIT_TRANSITION, DRAG_REORDER_TRANSITION } from '../config/motion';
 import PokemonCard from './PokemonCard';
-import SpeciesPickerCard from './SpeciesPickerCard';
+import AddPokemonStatTable from './AddPokemonStatTable';
 import TeamOverflowMenu from './TeamOverflowMenu';
 import RegulationBadge from './RegulationBadge';
 import ExportTeamModal from './ExportTeamModal';
@@ -529,26 +529,18 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
                 {/* Add-Pokémon trigger (Always-On Editing Leg 2, see TODO.md) -
                     restores the same dashed-box button Leg 1 left disabled, just
                     gated on roster room instead of isEditingTeam now that there's
-                    no edit mode to gate behind. */}
+                    no edit mode to gate behind. Opens AddPokemonStatTable as a
+                    modal (Add Pokémon: Sortable Base-Stat Table Leg 1, see
+                    TODO.md) rather than swapping this slot's own content the way
+                    SpeciesPickerCard used to - a sortable stat table needs more
+                    width than a 280px grid slot affords. */}
                 {team.pokemon.length < 6 && (
-                  isAddPickerOpen ? (
-                    <SpeciesPickerCard
-                      roster={addPickerRoster}
-                      rulesetId={toRegulationId(team.format)}
-                      resolveSprite={spriteCacheState.resolveSprite}
-                      onSelect={handleAddSpecies}
-                      onClose={() => setIsAddPickerOpen(false)}
-                      savedPokemon={addPickerSavedPokemon}
-                      onSelectSaved={handleAddSavedEntry}
-                    />
-                  ) : (
-                    <button
-                      onClick={() => setIsAddPickerOpen(true)}
-                      className="w-full max-w-[280px] h-full min-h-[280px] flex items-center justify-center rounded-lg border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer"
-                    >
-                      <span className="text-sm font-semibold">+ Add Pokémon</span>
-                    </button>
-                  )
+                  <button
+                    onClick={() => setIsAddPickerOpen(true)}
+                    className="w-full max-w-[280px] h-full min-h-[280px] flex items-center justify-center rounded-lg border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer"
+                  >
+                    <span className="text-sm font-semibold">+ Add Pokémon</span>
+                  </button>
                 )}
               </div>
 
@@ -628,6 +620,21 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
           ]}
         />
       )}
+
+      <AnimatePresence>
+        {isAddPickerOpen && (
+          <AddPokemonStatTable
+            roster={addPickerRoster}
+            rulesetId={toRegulationId(team.format)}
+            resolveSprite={spriteCacheState.resolveSprite}
+            getCachedEntry={databaseState.getCachedEntry}
+            onSelect={handleAddSpecies}
+            onClose={() => setIsAddPickerOpen(false)}
+            savedPokemon={addPickerSavedPokemon}
+            onSelectSaved={handleAddSavedEntry}
+          />
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {isExportOpen && (
