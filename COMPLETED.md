@@ -18,6 +18,16 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Quick Copy/Paste Pokémon & Teams via Right-Click] - Leg 2** (2026-09-10)
+  - see commit `7935ee5`. Direct user report on Leg 1: paste only worked by
+  right-clicking an existing team/Pokémon card, and a pasted team kept the
+  source's exact name (indistinguishable in the list) and its `favorite`
+  flag. Added "Paste as New Team" to the Teams page's own empty-space
+  right-click and "Paste Pokémon" (appends a slot) to a team card's roster
+  grid empty space, both via new `utils/teamPaste.ts::buildPastedTeam`
+  which also appends "(Copy)"/"(Copy N)" to the pasted name and resets
+  `favorite` to false.
+
 - **[Saved Builds Database for Team-Building] - Leg 1** (2026-09-10) - see
   commit `b58c9f1`. Roster Swap (`PokemonCard.tsx`) now offers a saved-build
   choice (`SavedSetPicker.tsx`, moved out of `calc/` and generalized from
