@@ -129,9 +129,9 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
     gameDataState.getChampionsUsage
   );
 
-  const handleAddSpecies = async (species: SpeciesRosterEntry) => {
+  const handleAddSpecies = async (species: SpeciesRosterEntry, itemOverride?: string) => {
     setIsAddPickerOpen(false);
-    await rosterActions.addSlot(team, species.name);
+    await rosterActions.addSlot(team, species.name, itemOverride);
   };
 
   // Species Clause: no legal team fields the same species twice, so once a

@@ -27,8 +27,21 @@
  * cache hit yet (shouldn't happen post-sync, but not guaranteed) still shows
  * up in the table with dashes for its stats instead of being dropped.
  *
- * Mega forms are excluded (see TODO.md's Leg 1 scoping note) - `roster` here
- * is the same base legal-roster list SpeciesPickerCard already receives.
+ * Mega forms get their own sortable rows (Add Pokémon Table: Mega Form Rows
+ * Leg 2, see TODO.md and docs/investigations/mega-form-rows-scoping.md) - one
+ * per Mega Stone entry in config/megaEvolution.ts's MEGA_STONE_TO_SPECIES,
+ * gated to species already present in the `roster` prop (so a Mega row never
+ * outlives its base species' own legality/dedupe rules - `roster` here is
+ * already regulation- and already-on-team-filtered by TeamCard.tsx). Base
+ * stats/types come from @smogon/calc's bundled dex (`gen.species.get`), the
+ * same source SpeedTiersPage.tsx already reads for Mega forms - no PokeAPI
+ * resource exists for most of them. Selecting a Mega row adds the *base*
+ * species holding that stone, with the stone itself pre-equipped as its held
+ * item (`onSelect`'s optional `itemOverride` arg, threaded through
+ * useRosterActions.ts's `buildSlot`/`addSlot`) - everything else (ability/
+ * moves) still comes from the normal usage-based default. Mega rows are
+ * excluded from `#tag` search for now (Leg 3, see TODO.md); plain-text
+ * search still matches them by their "Mega {Species}" label.
  *
  * `savedPokemon`/`onSelectSaved` (From Box) mirrors SpeciesPickerCard's own
  * opt-in pair exactly - same filtering rules, same omitted-means-no-section
@@ -44,7 +57,8 @@
  */
 
 import { useState } from 'react';
-import type { PokeAPICacheEntry, SavedPokemonEntry, SpeciesRosterEntry } from '../types/pokemon';
+import { Generations, toID } from '@smogon/calc';
+import type { PokeAPICacheEntry, PokemonStats, SavedPokemonEntry, SpeciesRosterEntry } from '../types/pokemon';
 import type { RegulationId } from '../utils/pokemonRules';
 import { validateSpeciesLegality } from '../utils/pokemonRules';
 import { normalizeSpeciesForAPI } from '../services/pokeapi';
@@ -58,21 +72,37 @@ import { usePokemonMoveFilter, isMoveResolved } from '../hooks/usePokemonMoveFil
 import { usePokemonAbilityFilter } from '../hooks/usePokemonAbilityFilter';
 import { parseTagFilters } from '../utils/tagSearch';
 import { ALL_TYPES } from '../config/typeEffectiveness';
+import { MEGA_STONE_TO_SPECIES, formatMegaLabel } from '../config/megaEvolution';
+import { getCachedMegaSprite, useMegaSpritePrefetch } from '../hooks/useMegaSprite';
+import { toTitleCase } from '../utils/displayName';
 import Modal from './Modal';
+
+// Same Gen 9 dex SpeedTiersPage.tsx reads Mega base stats/types from - see
+// this file's header comment.
+const GEN_NUM = 9;
 
 interface AddPokemonStatTableProps {
   roster: SpeciesRosterEntry[];
   rulesetId: RegulationId;
   resolveSprite: (remoteUrl: string) => string;
   getCachedEntry: (species: string) => PokeAPICacheEntry | null;
-  onSelect: (species: SpeciesRosterEntry) => void;
+  onSelect: (species: SpeciesRosterEntry, itemOverride?: string) => void;
   onClose: () => void;
   savedPokemon?: SavedPokemonEntry[];
   onSelectSaved?: (entry: SavedPokemonEntry) => void;
 }
 
+/**
+ * A generic row shape shared by both a plain roster species and a synthetic
+ * Mega-form row - the table only needs a label/sprite/stats/click-handler to
+ * render and sort, not the underlying species data itself (which differs:
+ * `SpeciesRosterEntry` for a plain row, MEGA_STONE_TO_SPECIES's base
+ * species + stone item name for a Mega row - see this file's header).
+ */
 interface StatTableRow {
-  species: SpeciesRosterEntry;
+  key: string;
+  displayName: string;
+  spriteUrl: string;
   hp: number | null;
   attack: number | null;
   defense: number | null;
@@ -80,6 +110,7 @@ interface StatTableRow {
   specialDefense: number | null;
   speed: number | null;
   bst: number | null;
+  onClick: () => void;
 }
 
 const STAT_COLUMNS: Array<{ key: StatTableSortKey; label: string }> = [
@@ -104,6 +135,16 @@ export default function AddPokemonStatTable({
 }: AddPokemonStatTableProps) {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<StatTableSort | null>(null);
+  const gen = Generations.get(GEN_NUM);
+  // Warms useMegaSprite.ts's module-level id/URL cache for every
+  // Champions-legal Mega form, same call SpeedTiersPage.tsx/TeamCard.tsx make
+  // - safe to call again here even when a caller already has (e.g.
+  // TeamCard.tsx's own useMegaSpritePrefetch call), since it shares one
+  // cache and no-ops once warm. Triggers a re-render (this component has no
+  // memoization to route the version counter through) once real sprite URLs
+  // land, so a Mega row's fallback-to-base sprite gets replaced live rather
+  // than staying pinned to whatever was cached at first render.
+  useMegaSpritePrefetch();
 
   // Same '#tag' type -> move -> ability resolution chain as
   // SpeciesPickerCard.tsx - see that file's header comment for the full
@@ -141,10 +182,12 @@ export default function AddPokemonStatTable({
     ? legalRoster.filter(pkmn => pkmn.name.toLowerCase().includes(search.toLowerCase()))
     : legalRoster.filter(pkmn => matchesTags(pkmn.name));
 
-  const rows: StatTableRow[] = filteredRoster.map(species => {
+  const speciesRows: StatTableRow[] = filteredRoster.map(species => {
     const stats = getCachedEntry(normalizeSpeciesForAPI(species.name))?.baseStats ?? null;
     return {
-      species,
+      key: `species:${species.name}`,
+      displayName: species.name,
+      spriteUrl: species.spriteUrl,
       hp: stats?.hp ?? null,
       attack: stats?.attack ?? null,
       defense: stats?.defense ?? null,
@@ -152,9 +195,49 @@ export default function AddPokemonStatTable({
       specialDefense: stats?.specialDefense ?? null,
       speed: stats?.speed ?? null,
       bst: stats ? computeBST(stats) : null,
+      onClick: () => onSelect(species),
     };
   });
 
+  // One row per Mega Stone, gated to species already in `legalRoster` (see
+  // this file's header) - no #tag matching yet (Leg 3, see TODO.md), so
+  // these only show up in the plain-text-search branch, filtered by their
+  // own "Mega {Species}" label same as a plain row's name.
+  const megaRows: StatTableRow[] = tags.length === 0
+    ? Object.entries(MEGA_STONE_TO_SPECIES).flatMap(([item, entry]) => {
+      const baseSpecies = legalRoster.find(pkmn => pkmn.name.toLowerCase() === entry.species.toLowerCase());
+      if (!baseSpecies) return [];
+
+      const slug = `${entry.species}-${entry.suffix}`;
+      const calcSpecies = gen.species.get(toID(slug));
+      const stats: PokemonStats | null = calcSpecies ? {
+        hp: calcSpecies.baseStats.hp,
+        attack: calcSpecies.baseStats.atk,
+        defense: calcSpecies.baseStats.def,
+        specialAttack: calcSpecies.baseStats.spa,
+        specialDefense: calcSpecies.baseStats.spd,
+        speed: calcSpecies.baseStats.spe,
+      } : null;
+      const displayName = formatMegaLabel(baseSpecies.name, entry.suffix);
+      if (!displayName.toLowerCase().includes(search.toLowerCase())) return [];
+
+      return [{
+        key: `mega:${item}`,
+        displayName,
+        spriteUrl: getCachedMegaSprite(slug)?.spriteUrl ?? baseSpecies.spriteUrl,
+        hp: stats?.hp ?? null,
+        attack: stats?.attack ?? null,
+        defense: stats?.defense ?? null,
+        specialAttack: stats?.specialAttack ?? null,
+        specialDefense: stats?.specialDefense ?? null,
+        speed: stats?.speed ?? null,
+        bst: stats ? computeBST(stats) : null,
+        onClick: () => onSelect(baseSpecies, toTitleCase(item)),
+      }];
+    })
+    : [];
+
+  const rows = [...speciesRows, ...megaRows];
   const sortedRows = sort ? sortStatTableRows(rows, sort, row => row[sort.key]) : rows;
 
   const handleSortClick = (key: StatTableSortKey) => setSort(prev => nextStatTableSort(prev, key));
@@ -246,13 +329,13 @@ export default function AddPokemonStatTable({
               ) : (
                 sortedRows.map((row, i) => (
                   <tr
-                    key={row.species.id}
-                    onClick={() => onSelect(row.species)}
+                    key={row.key}
+                    onClick={row.onClick}
                     className={`cursor-pointer hover:bg-zinc-700/60 transition-colors ${i % 2 === 1 ? 'bg-zinc-900/30' : ''}`}
                   >
                     <td className="py-1.5 px-2 flex items-center gap-2">
-                      <img src={resolveSprite(row.species.spriteUrl)} alt={row.species.name} loading="lazy" className="w-7 h-7 object-contain [image-rendering:pixelated] shrink-0" />
-                      <span className="text-white truncate">{row.species.name}</span>
+                      <img src={resolveSprite(row.spriteUrl)} alt={row.displayName} loading="lazy" className="w-7 h-7 object-contain [image-rendering:pixelated] shrink-0" />
+                      <span className="text-white truncate">{row.displayName}</span>
                     </td>
                     {STAT_COLUMNS.map(col => (
                       <td key={col.key} className="py-1.5 px-2 text-right text-zinc-200 tabular-nums">

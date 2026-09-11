@@ -173,11 +173,11 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
   // header comment above).
   const [pasteContextMenuPos, setPasteContextMenuPos] = useState<{ x: number; y: number } | null>(null);
 
-  const handleSelectNewSpecies = async (species: SpeciesRosterEntry) => {
+  const handleSelectNewSpecies = async (species: SpeciesRosterEntry, itemOverride?: string) => {
     setIsPickerOpen(false);
     setIsBuildingSpecies(true);
     try {
-      const pokemon = await rosterActions.buildSlot(species.name);
+      const pokemon = await rosterActions.buildSlot(species.name, itemOverride);
       setPendingNewBuild({ id: crypto.randomUUID(), pokemon });
     } finally {
       setIsBuildingSpecies(false);

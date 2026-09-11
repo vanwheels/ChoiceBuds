@@ -10,7 +10,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { CURATED_MEGA_FORM_SLUGS, getMegaApiSlug, getMegaFormsForSpecies } from './megaEvolution';
+import { CURATED_MEGA_FORM_SLUGS, formatMegaLabel, getMegaApiSlug, getMegaFormsForSpecies } from './megaEvolution';
 
 describe('Floette Mega Evolution exception', () => {
   it('resolves the held-item match against floette-eternal, not bare floette', () => {
@@ -26,5 +26,20 @@ describe('Floette Mega Evolution exception', () => {
   it("uses @smogon/calc's own naming (floette-mega) in the curated slug set, not the mechanically-derived floette-eternal-mega", () => {
     expect(CURATED_MEGA_FORM_SLUGS.has('floette-mega')).toBe(true);
     expect(CURATED_MEGA_FORM_SLUGS.has('floette-eternal-mega')).toBe(false);
+  });
+});
+
+describe('formatMegaLabel (Add Pokémon Table: Mega Form Rows Leg 2)', () => {
+  it('labels a single-form Mega with no suffix word', () => {
+    expect(formatMegaLabel('Gengar', 'mega')).toBe('Mega Gengar');
+  });
+
+  it('labels a split X/Y form with its letter appended', () => {
+    expect(formatMegaLabel('Charizard', 'mega-x')).toBe('Mega Charizard X');
+    expect(formatMegaLabel('Charizard', 'mega-y')).toBe('Mega Charizard Y');
+  });
+
+  it("labels Reg M-C's second \"Mega Z\" form, matching megaAbilities.ts's own naming", () => {
+    expect(formatMegaLabel('Absol', 'mega-z')).toBe('Mega Absol Z');
   });
 });

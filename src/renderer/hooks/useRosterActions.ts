@@ -25,7 +25,7 @@ const ZERO_EVS: EVSpread = {
 
 export interface UseRosterActionsReturn {
   swapSlot: (team: Team, index: number, species: string) => Promise<boolean>;
-  addSlot: (team: Team, species: string) => Promise<boolean>;
+  addSlot: (team: Team, species: string, itemOverride?: string) => Promise<boolean>;
   removeSlot: (team: Team, index: number) => Promise<boolean>;
   reorderSlot: (team: Team, fromIndex: number, toIndex: number) => Promise<boolean>;
   loadSavedSet: (team: Team, index: number, entry: SavedPokemonEntry) => Promise<boolean>;
@@ -34,8 +34,14 @@ export interface UseRosterActionsReturn {
    * caller with no team/slot to write into yet - BoxPage.tsx's "+ New Build"
    * (Box Tab Leg 2, see TODO.md) - can still get the same usage-based
    * default build for a species before it has anywhere to put it.
+   *
+   * `itemOverride` (Add Pokémon Table: Mega Form Rows Leg 2, see TODO.md)
+   * seeds the built slot's held item instead of leaving it empty - the "add
+   * a Mega form row" flow's whole implementation is just this: the base
+   * species with its Mega Stone already equipped, everything else still the
+   * normal usage-based default.
    */
-  buildSlot: (species: string) => Promise<ImportedPokemonInfo>;
+  buildSlot: (species: string, itemOverride?: string) => Promise<ImportedPokemonInfo>;
 }
 
 export function useRosterActions(
@@ -71,7 +77,7 @@ export function useRosterActions(
    * freshly-added Pokemon's defaults fail legality checks that compare against the
    * Title Case move/ability lists.
    */
-  const buildSlot = useCallback(async (species: string): Promise<ImportedPokemonInfo> => {
+  const buildSlot = useCallback(async (species: string, itemOverride?: string): Promise<ImportedPokemonInfo> => {
     const gender = getFallbackGender(species);
     const [{ moves, abilities }, usage] = await Promise.all([
       getEnrichedSpeciesOptions(species, gender),
@@ -88,7 +94,7 @@ export function useRosterActions(
     const showdownData: ShowdownPokemon = {
       species,
       gender,
-      item: undefined,
+      item: itemOverride,
       ability: abilities[0] ? toReadableName(abilities[0].name) : undefined,
       level: 50,
       shiny: false,
@@ -108,9 +114,9 @@ export function useRosterActions(
     return updateTeam(team.id, { pokemon: updatedPokemon });
   }, [updateTeam, buildSlot]);
 
-  const addSlot = useCallback(async (team: Team, species: string): Promise<boolean> => {
+  const addSlot = useCallback(async (team: Team, species: string, itemOverride?: string): Promise<boolean> => {
     if (team.pokemon.length >= 6) return false;
-    const newSlot = await buildSlot(species);
+    const newSlot = await buildSlot(species, itemOverride);
     return updateTeam(team.id, { pokemon: [...team.pokemon, newSlot] });
   }, [updateTeam, buildSlot]);
 

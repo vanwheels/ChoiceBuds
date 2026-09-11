@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { toReadableName } from './displayName';
+import { toReadableName, toTitleCase } from './displayName';
 
 describe('toReadableName', () => {
   it('title-cases a single-word slug', () => {
@@ -20,5 +20,16 @@ describe('toReadableName', () => {
 
   it('leaves an already-single uppercase letter word alone', () => {
     expect(toReadableName('u-turn')).toBe('U Turn');
+  });
+});
+
+describe('toTitleCase', () => {
+  it('title-cases a single-word identifier', () => {
+    expect(toTitleCase('absolite')).toBe('Absolite');
+  });
+
+  it('capitalizes each space-separated word, matching vgcData.ts\'s Mega Stone casing', () => {
+    expect(toTitleCase('charizardite x')).toBe('Charizardite X');
+    expect(toTitleCase('absolite z')).toBe('Absolite Z');
   });
 });

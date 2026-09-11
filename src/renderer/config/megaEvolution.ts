@@ -156,6 +156,18 @@ CURATED_MEGA_FORM_SLUGS.delete('floette-eternal-mega');
 CURATED_MEGA_FORM_SLUGS.add('floette-mega');
 
 /**
+ * Display label for a Mega form row (Add Pokémon Table: Mega Form Rows Leg
+ * 2, see TODO.md) - "Mega {Species}" for a single-form Mega, "Mega {Species}
+ * X"/"Y"/"Z" for a split form, matching megaAbilities.ts's own doc-comment
+ * naming convention ("Mega Absol Z", etc).
+ */
+export function formatMegaLabel(baseDisplayName: string, suffix: string): string {
+  if (suffix === 'mega') return `Mega ${baseDisplayName}`;
+  const variant = suffix.slice('mega-'.length).toUpperCase();
+  return `Mega ${baseDisplayName} ${variant}`;
+}
+
+/**
  * Resolves the PokeAPI resource slug ("gengar-mega", "charizard-mega-x") for
  * a held item + species pair, or null if that item isn't this species' own
  * Mega Stone. Regional forms (e.g. Slowbro-Galar) never match - Mega
