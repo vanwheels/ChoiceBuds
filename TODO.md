@@ -30,13 +30,41 @@ habit, this session stops at the plan below rather than starting Leg 1.
   split out as its own leg rather than bundled into Leg 1: the import flow
   (`ImportTeamModal.tsx`) offering to auto-populate from a saved build for
   any pasted species that has one, instead of always using the freshly
-  parsed Showdown text. Bigger than Leg 1 — `ImportTeamModal` parses a whole
-  pasted team at once, so this needs a new per-species review/confirmation
-  step (which parsed species matched, which saved build to use per species
-  if more than one, keep-parsed as the default/fallback), not a drop-in
-  reuse of `SavedSetPicker.tsx` the way Leg 1 was. Not yet designed past
-  that. Saving *to* the library stays an explicit user action only (mirrors
-  `CalcSavedSetsModal`'s existing flow) — no auto-offer on complete sets.
+  parsed Showdown text. Saving *to* the library stays an explicit user
+  action only (mirrors `CalcSavedSetsModal`'s existing flow) — no auto-offer
+  on complete sets.
+  Design pass done 2026-09-10 (second pass, now concrete):
+  - Trigger: on "Import Team", parse as today, then check every parsed
+    Pokémon against `savedPokemonState.getSavedSetsForSpecies`. Zero matches
+    across the whole paste → current one-click parse→enrich→save flow is
+    untouched, no new step ever appears.
+  - 1+ match → instead of enriching/saving immediately, swap the modal body
+    to a new review step in a new `ImportBuildReviewStep.tsx` (presentational,
+    same split-out-when-it-grows convention as the rest of `components/`).
+    One row per *parsed Pokémon instance* with a match (not per unique
+    species name — a duplicate species gets independent rows, each free to
+    pick differently), sprite + species name + a `<select>`: "Keep pasted"
+    (default/selected) plus one option per matching `SavedPokemonEntry` by
+    label. Footer: "Back" (discards the review state, returns to the
+    paste-text step) and "Confirm Import".
+  - On confirm: rows left on "Keep pasted" go through the existing
+    `enrichPokemonWithAPI` path unchanged. Rows with a saved build picked
+    skip enrichment entirely and wholesale-replace that slot with the saved
+    entry's own `ImportedPokemonInfo`, same as Leg 1's `loadSavedSet`
+    precedent — not a per-field merge. **Flagged call:** this means a picked
+    build's nickname/shiny/level fully wins over the pasted instance's own,
+    which may surprise a user who e.g. pasted a shiny and picked a
+    non-shiny saved build. Going with full-replace for consistency with
+    Leg 1 rather than inventing a merge rule Leg 1 doesn't have; revisit if
+    it's confusing in practice.
+  - Plumbing: `cloneSavedPokemon` is currently private to
+    `useRosterActions.ts` — move it to a shared spot (e.g.
+    `utils/clonePokemon.ts`) since Leg 2 needs the same deep-clone-with-fresh-id
+    logic and `ImportTeamModal.tsx` isn't a roster action. `ImportTeamModal`
+    also needs `savedPokemonState: UseSavedPokemonReturn` and a sprite
+    resolver (`spriteCacheState.resolveSprite`) threaded in as new props from
+    `TeamsPage.tsx` — both already instantiated there for `PokemonCard`, so
+    this is a same-shape thread-through, not new state.
 
 ## Blocked
 
