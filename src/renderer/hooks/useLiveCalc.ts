@@ -101,6 +101,10 @@ export interface UseLiveCalcReturn {
   setDefenderLevel: (level: number) => void;
   defenderFormes: FormeFamily;
   defenderBaseStats: StatsTable | null;
+  defenderDefBoost: number;
+  defenderSpdBoost: number;
+  setDefenderDefBoost: (stage: number) => void;
+  setDefenderSpdBoost: (stage: number) => void;
   observations: LiveCalcObservationEntry[];
   addObservation: () => void;
   updateObservation: (id: string, updates: Partial<LiveCalcObservation>) => void;
@@ -117,6 +121,8 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
   const [attacker, setAttackerState] = useState<CalcPokemonState>(defaultPokemonState);
   const [defenderSpecies, setDefenderSpecies] = useState('');
   const [defenderLevel, setDefenderLevel] = useState(DEFAULT_DEFENDER_LEVEL);
+  const [defenderDefBoost, setDefenderDefBoost] = useState(0);
+  const [defenderSpdBoost, setDefenderSpdBoost] = useState(0);
   const [observations, setObservations] = useState<LiveCalcObservationEntry[]>([]);
   const [turnOrderObservations, setTurnOrderObservations] = useState<LiveCalcTurnOrderObservationEntry[]>([]);
   const [attackerLearnedSlugs, setAttackerLearnedSlugs] = useState<Set<string> | null>(null);
@@ -158,6 +164,16 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
     if (!attacker.species) setAttackerLearnedSlugs(null);
   }
 
+  // Same render-time-guard pattern as above: a Def/SpD boost asserted for one
+  // defender shouldn't silently carry over and misattribute to whatever
+  // species gets swapped in next.
+  const [defenderResolvedForSpecies, setDefenderResolvedForSpecies] = useState(defenderSpecies);
+  if (defenderSpecies !== defenderResolvedForSpecies) {
+    setDefenderResolvedForSpecies(defenderSpecies);
+    setDefenderDefBoost(0);
+    setDefenderSpdBoost(0);
+  }
+
   useEffect(() => {
     if (!attacker.species) return;
     let cancelled = false;
@@ -185,16 +201,21 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
     setTurnOrderObservations(prev => prev.map(o => (o.id === id ? { ...o, ...updates } : o)));
   const removeTurnOrderObservation = (id: string) => setTurnOrderObservations(prev => prev.filter(o => o.id !== id));
 
+  const defenderInput = useMemo(
+    () => ({ species: defenderSpecies, level: defenderLevel, defBoost: defenderDefBoost, spdBoost: defenderSpdBoost }),
+    [defenderSpecies, defenderLevel, defenderDefBoost, defenderSpdBoost]
+  );
+
   const damageInference = useMemo(
-    () => inferDefenderStats(gen, attacker, { species: defenderSpecies, level: defenderLevel }, observations),
-    [gen, attacker, defenderSpecies, defenderLevel, observations]
+    () => inferDefenderStats(gen, attacker, defenderInput, observations),
+    [gen, attacker, defenderInput, observations]
   );
   // Speed narrowing (Leg 15) runs as a second pass over the damage-based
   // inference above - see liveCalcSpeedEngine.ts's header for why it's
   // layered on top rather than folded into inferDefenderStats() itself.
   const inference = useMemo(
-    () => inferDefenderSpeed(gen, attacker, { species: defenderSpecies, level: defenderLevel }, damageInference, turnOrderObservations),
-    [gen, attacker, defenderSpecies, defenderLevel, damageInference, turnOrderObservations]
+    () => inferDefenderSpeed(gen, attacker, defenderInput, damageInference, turnOrderObservations),
+    [gen, attacker, defenderInput, damageInference, turnOrderObservations]
   );
 
   return {
@@ -216,6 +237,10 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
     setDefenderLevel,
     defenderFormes,
     defenderBaseStats,
+    defenderDefBoost,
+    defenderSpdBoost,
+    setDefenderDefBoost,
+    setDefenderSpdBoost,
     observations,
     addObservation,
     updateObservation,

@@ -28,7 +28,7 @@ const GENGAR_SHADOW_BALL = attackerState({ species: 'Gengar' });
 // immune to either test move (Skarmory, tried first, is Flying-typed and
 // flat-out immune to Ground - a reminder any defender fixture needs an
 // actual damage-relevant matchup, not just "a bulky wall").
-const DEFENDER = { species: 'Ferrothorn', level: 50 };
+const DEFENDER = { species: 'Ferrothorn', level: 50, defBoost: 0, spdBoost: 0 };
 
 function obs(moveName: string, damagePercent: number, targetsHit: 1 | 2 = 2): LiveCalcObservation {
   return { moveName, damagePercent, targetsHit };
@@ -56,7 +56,7 @@ describe('inferDefenderStats - no/invalid input', () => {
   it('returns the default, untouched inference when attacker or defender species is empty', () => {
     const noAttacker = inferDefenderStats(gen, attackerState({ species: '' }), DEFENDER, [obs('Earthquake', 50)]);
     expect(noAttacker.defBound).toEqual({ min: 0, max: 32 });
-    const noDefender = inferDefenderStats(gen, LANDO_EARTHQUAKE, { species: '', level: 50 }, [obs('Earthquake', 50)]);
+    const noDefender = inferDefenderStats(gen, LANDO_EARTHQUAKE, { species: '', level: 50, defBoost: 0, spdBoost: 0 }, [obs('Earthquake', 50)]);
     expect(noDefender.defBound).toEqual({ min: 0, max: 32 });
   });
 });
@@ -127,6 +127,25 @@ describe('inferDefenderStats - graceful degradation', () => {
     const result = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, [obs('Not A Real Move', 40)]);
     expect(result.contradictions.length).toBe(1);
     expect(result.physicalObservationCount).toBe(0);
+  });
+});
+
+describe('inferDefenderStats - known Def/Sp. Def stage boosts', () => {
+  it('a large Def stage boost can turn an otherwise-feasible observation into a contradiction', () => {
+    // A +3 Def stage is a 2.5x raw Def multiplier - far more than any
+    // nature/ability/item candidate this engine scans could claw back, so a
+    // damage% that's plainly achievable unboosted becomes unreachable once
+    // the boost is applied, directly exercising that `boosts` actually
+    // reaches @smogon/calc's `calculate()` rather than being a no-op input.
+    const unboosted = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, [obs('Earthquake', 30)]);
+    const heavilyBoosted = inferDefenderStats(gen, LANDO_EARTHQUAKE, { ...DEFENDER, defBoost: 3 }, [obs('Earthquake', 30)]);
+    expect(unboosted.contradictions.length).toBe(0);
+    expect(heavilyBoosted.contradictions.length).toBe(1);
+  });
+
+  it('leaves spdBound untouched for a physical observation regardless of spdBoost', () => {
+    const result = inferDefenderStats(gen, LANDO_EARTHQUAKE, { ...DEFENDER, spdBoost: -4 }, [obs('Earthquake', 30)]);
+    expect(result.spdBound).toEqual({ min: 0, max: 32 });
   });
 });
 

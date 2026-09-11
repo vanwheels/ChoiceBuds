@@ -50,9 +50,15 @@
  *   a single-target hit of a spread-capable move so `@smogon/calc` doesn't
  *   wrongly apply its automatic Doubles 0.75x spread modifier - see
  *   `isSpreadMove`/`effectiveGameType` below).
- * - Status condition and stat-stage boosts on the defender aren't tracked
- *   (not part of the resolved unknowns list - nature/SP-spread/ability/item
- *   only).
+ * - Status condition on the defender isn't tracked. Def/Sp. Def stat-stage
+ *   boosts ARE tracked (Live Calc Defender Panel Parity - Leg 1 follow-up) -
+ *   but as one static value on `LiveCalcDefenderPanel`, applied identically
+ *   to every damage observation, unlike Speed's own `defenderSpeedStage`
+ *   (`liveCalcSpeedEngine.ts`'s per-turn-order-observation field, since a
+ *   defender's boost state can change mid-battle). A deliberate
+ *   simpler-model call for this axis, not an oversight - it won't correctly
+ *   model a defender whose Def/SpD boost changes partway through the
+ *   observation list.
  */
 
 import { calculate, Pokemon, Move, Field, toID } from '@smogon/calc';
@@ -92,6 +98,11 @@ export interface LiveCalcObservation {
 export interface LiveCalcDefenderInput {
   species: string;
   level: number;
+  /** Known Def/Sp. Def stage boosts (-6..+6, default 0) - see this file's
+   * header for why this is one static value rather than a per-observation
+   * field like Speed's own `defenderSpeedStage`. */
+  defBoost: number;
+  spdBoost: number;
 }
 
 export interface LiveCalcStatBound {
@@ -176,10 +187,13 @@ interface DefenderCandidateSpec {
  * Scans a single unknown axis's one candidate value: for the relevant
  * defensive stat's SP 0-32 (every other stat left at 0, HP at
  * `HP_SP_DEFAULT`), builds a defender with this candidate's
- * nature/ability/item and checks whether `calculate()`'s resulting
- * damage-percent range could plausibly have produced `observedPercent`.
- * Returns the feasible SP sub-range, or null if no SP value works at all
- * (this candidate is infeasible given this one observation).
+ * nature/ability/item (plus the panel's known, fixed `defenderBoosts` -
+ * `@smogon/calc`'s own `calculate()` applies the relevant stage multiplier
+ * internally, same as it would for a real Pokemon instance) and checks
+ * whether `calculate()`'s resulting damage-percent range could plausibly
+ * have produced `observedPercent`. Returns the feasible SP sub-range, or
+ * null if no SP value works at all (this candidate is infeasible given this
+ * one observation).
  */
 function feasibleSpRange(
   gen: Generation,
@@ -192,6 +206,7 @@ function feasibleSpRange(
   candidate: DefenderCandidateSpec,
   observedPercent: number,
   isContactMove: boolean,
+  defenderBoosts: StatsTable,
 ): LiveCalcStatBound | null {
   const defenderEffect = candidate.ability ? getChampionsAbilityDamageEffect(normalizeNameForAPI(candidate.ability)) : undefined;
   const contactMultiplier = isContactMove && defenderEffect?.contactDamageTakenMultiplier != null ? defenderEffect.contactDamageTakenMultiplier : 1;
@@ -208,6 +223,7 @@ function feasibleSpRange(
         item: candidate.item,
         evs: spsToEvs(sps),
         ivs: MAX_IVS,
+        boosts: defenderBoosts,
       });
       const maxHP = defenderPokemon.maxHP();
       if (maxHP <= 0) continue;
@@ -252,6 +268,8 @@ export function inferDefenderStats(
     return inference;
   }
 
+  const defenderBoosts: StatsTable = { ...ZERO_SPS, def: defender.defBoost, spd: defender.spdBoost };
+
   for (const obs of observations) {
     const moveData = gen.moves.get(toID(obs.moveName));
     if (!moveData || moveData.category === 'Status') {
@@ -284,7 +302,7 @@ export function inferDefenderStats(
     const field = new Field({ gameType: effectiveGameType });
 
     const scan = (candidate: DefenderCandidateSpec) =>
-      feasibleSpRange(gen, attackerPokemon, move, field, defender.species, defender.level, relevantStat, candidate, obs.damagePercent, isContactMove);
+      feasibleSpRange(gen, attackerPokemon, move, field, defender.species, defender.level, relevantStat, candidate, obs.damagePercent, isContactMove, defenderBoosts);
 
     const natureResults = inference.natureCandidates.map(nature => ({ value: nature, bound: scan({ nature, ability: undefined, item: undefined }) }));
     const abilityResults = inference.abilityCandidates.map(ability => ({ value: ability, bound: scan({ nature: 'Hardy' as NatureName, ability, item: undefined }) }));

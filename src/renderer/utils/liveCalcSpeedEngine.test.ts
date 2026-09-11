@@ -24,7 +24,7 @@ function attackerState(overrides: Partial<CalcPokemonState> = {}): CalcPokemonSt
 // a fixed, slow number - a fast, known attacker makes "you went first"
 // observations easy to reason about without needing to solve for ties.
 const SLOW_ATTACKER = attackerState({ species: 'Ferrothorn' });
-const DEFENDER = { species: 'Ferrothorn', level: 50 };
+const DEFENDER = { species: 'Ferrothorn', level: 50, defBoost: 0, spdBoost: 0 };
 
 function turnObs(moveName: string, wentFirst: 'attacker' | 'defender', defenderSpeedStage = 0): LiveCalcTurnOrderObservation {
   return { moveName, wentFirst, defenderSpeedStage };
@@ -45,7 +45,7 @@ describe('inferDefenderSpeed - no/invalid input', () => {
     expect(noAttacker.speedBound).toEqual({ min: 0, max: 32 });
     expect(noAttacker.speedObservationCount).toBe(0);
 
-    const noDefender = inferDefenderSpeed(gen, SLOW_ATTACKER, { species: '', level: 50 }, baseline, [turnObs('Tackle', 'attacker')]);
+    const noDefender = inferDefenderSpeed(gen, SLOW_ATTACKER, { species: '', level: 50, defBoost: 0, spdBoost: 0 }, baseline, [turnObs('Tackle', 'attacker')]);
     expect(noDefender.speedBound).toEqual({ min: 0, max: 32 });
   });
 
