@@ -18,6 +18,14 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Add Pokémon Table: Type/Ability Columns] - Leg 1** (2026-09-11) - see
+  commit `a64cc77`. Types/Abilities columns added to
+  `AddPokemonStatTable.tsx`, Showdown Random Battle Dex-style, between
+  Species and the stat columns - joins off data already cached (species
+  rows off the same `PokeAPICacheEntry` the stats join reads; Mega rows off
+  `@smogon/calc`'s bundled dex + `megaAbilities.ts`'s `getMegaAbility`),
+  neither sortable. Modal widened `max-w-3xl` -> `max-w-5xl` to fit.
+
 - **[Add Pokémon: Sortable Base-Stat Table] - Leg 2** (2026-09-11) - see
   commit `b90945b`. Wired Leg 1's `AddPokemonStatTable.tsx` into
   `BoxPage.tsx`'s "+ New Build" flow, replacing the old inline
