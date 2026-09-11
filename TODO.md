@@ -33,19 +33,6 @@ no way to move a build between Box and a Team in either direction, no
 duplicate, no reorder, no search. Added as Legs 4-8 below - flagged as a
 meaningful size increase over the original 3-leg scope before recording it.
 
-- **[Box Tab] — Leg 3** *(Last touched: 2026-09-10 · Re-checks: 0)*
-  Delete/rename/duplicate affordances for a Box entry, surfaced in
-  `BoxPage.tsx`/`BoxCard.tsx` itself - found while building Leg 1 (see
-  `COMPLETED.md`): `useSavedPokemon.ts`'s `renameSavedPokemon`/
-  `deleteSavedPokemon` already exist but aren't wired into Box Tab's UI, so
-  a Box entry can still only be renamed/deleted via Calc's
-  `CalcSavedSetsModal` - an odd gap for what's meant to be the discoverable
-  home for this library. Duplicate has no existing hook support yet, so
-  needs a new `duplicateSavedPokemon`-shaped addition to `useSavedPokemon.ts`
-  alongside the wiring. Promoted from Unscheduled into this milestone
-  2026-09-10; duplicate folded in 2026-09-10 (same entry-action surface as
-  delete/rename, not worth a separate leg).
-
 - **[Box Tab: Import Build to Team] — Leg 4** *(Last touched: 2026-09-10 ·
   Re-checks: 0)*
   A Box entry can't currently be added onto an existing team - Box is a

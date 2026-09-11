@@ -18,6 +18,15 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Box Tab] - Leg 3** (2026-09-10) - see commit `07ea74e`. Wired
+  rename/delete (`useSavedPokemon.ts`'s existing `renameSavedPokemon`/
+  `deleteSavedPokemon`) into Box Tab's own UI via a right-click context
+  menu on `BoxCard.tsx` (same `ContextMenu.tsx` shell `PokemonCard.tsx`
+  already uses), in both the collapsed and expanded states - previously
+  only reachable via Calc's `CalcSavedSetsModal`. Added a new
+  `duplicateSavedPokemon` to `useSavedPokemon.ts` alongside the wiring,
+  since Box had no duplicate support at all yet.
+
 - **[Box Tab] - Leg 2** (2026-09-10) - see commit `e3de643`. Added a
   "+ New Build" dashed tile to `BoxPage.tsx`: opens the same
   `SpeciesPickerCard` as a team's "+ Add Pokémon" slot, builds a usage-based
