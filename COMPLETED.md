@@ -18,6 +18,13 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Saved Builds Database for Team-Building] - Leg 1** (2026-09-10) - see
+  commit `b58c9f1`. Roster Swap (`PokemonCard.tsx`) now offers a saved-build
+  choice (`SavedSetPicker.tsx`, moved out of `calc/` and generalized from
+  Calc-only `CalcSavedSetPicker.tsx`) when the picked species has 1+ saved
+  sets, via a new `useRosterActions::loadSavedSet`. Leg 2 (import-flow reuse
+  in `ImportTeamModal.tsx`) split out as its own leg - see `TODO.md`.
+
 - **[Quick Copy/Paste Pokémon & Teams via Right-Click] - Leg 1** (2026-09-10)
   - see commit `28ea9ab`. New internal JSON clipboard format
   (`utils/clipboardPayload.ts`) round-trips a full `ImportedPokemonInfo`/

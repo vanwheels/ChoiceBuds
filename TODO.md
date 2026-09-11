@@ -23,22 +23,20 @@ shipped first — see `MILESTONES.md`). Scoping pass done 2026-09-10 for the
 two items that needed one; per the user's "split scoping from building"
 habit, this session stops at the plan below rather than starting Leg 1.
 
-- **[Saved Builds Database for Team-Building] — Leg 1** *(Last touched:
+- **[Saved Builds Database for Team-Building] — Leg 2** *(Last touched:
   2026-09-10 · Re-checks: 0)*
-  Reuse a named saved-build library (moveset + spread, etc.) during
-  team-building — e.g. save "Defensive Rilla" once, then auto-populate a new
-  Rillaboom slot from it instead of re-entering everything by hand.
-  `SavedPokemonDatabase`/`useSavedPokemon` already exists (`types/pokemon.ts`,
-  `hooks/useSavedPokemon.ts`) from the Speed Calc-like Feature milestone,
-  currently scoped to the Calc panel (`CalcSavedSetsModal.tsx`/
-  `CalcSavedSetPicker.tsx`) — this extends that existing mechanism into the
-  team-import/edit flow rather than building a new one. Scoped 2026-09-10:
-  reuse is triggered from both the import flow (species match on import
-  offers to auto-populate from a saved build instead of parsing fresh
-  Showdown text) and the editor (load a saved build into the slot already
-  being edited). Saving *to* the library stays an explicit user action only
-  (mirrors `CalcSavedSetsModal`'s existing flow) — no auto-offer on
-  complete sets.
+  Leg 1 (Roster Swap reuse in `PokemonCard.tsx`) shipped — see
+  `COMPLETED.md`. This leg is the other half of the 2026-09-10 scoping pass,
+  split out as its own leg rather than bundled into Leg 1: the import flow
+  (`ImportTeamModal.tsx`) offering to auto-populate from a saved build for
+  any pasted species that has one, instead of always using the freshly
+  parsed Showdown text. Bigger than Leg 1 — `ImportTeamModal` parses a whole
+  pasted team at once, so this needs a new per-species review/confirmation
+  step (which parsed species matched, which saved build to use per species
+  if more than one, keep-parsed as the default/fallback), not a drop-in
+  reuse of `SavedSetPicker.tsx` the way Leg 1 was. Not yet designed past
+  that. Saving *to* the library stays an explicit user action only (mirrors
+  `CalcSavedSetsModal`'s existing flow) — no auto-offer on complete sets.
 
 ## Blocked
 
