@@ -16,11 +16,44 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-No milestone is currently promoted to "Current" — Statistics Improvements
-shipped (see `MILESTONES.md`) and the user deliberately held off promoting
-either "Future Milestones" candidate below for now. See `COMPLETED.md` for
-the latest finished item, or "Unscheduled"/"Future Milestones" below for
-what's queued next.
+## Current Milestone: Team Management QoL
+
+Promoted 2026-09-10 from "Future Milestones" (Statistics Improvements
+shipped first — see `MILESTONES.md`). Scoping pass done 2026-09-10 for the
+two items that needed one; per the user's "split scoping from building"
+habit, this session stops at the plan below rather than starting Leg 1.
+
+- **[Favorite Teams] — Leg 1** *(Last touched: 2026-09-10 · Re-checks: 0)*
+  Add the ability to favorite a team so favorited teams always sort to the
+  top, mirroring how favoriting works in the user's GW2 Squaded project.
+  Needs a persisted favorite flag on `Team` (`types/pokemon.ts`) plus a sort
+  change in `useTeams`/`TeamsPage`. Already scoped — first leg to build.
+
+- **[Quick Copy/Paste Pokémon & Teams via Right-Click] — Leg 1** *(Last
+  touched: 2026-09-10 · Re-checks: 0)*
+  Add a right-click context menu for quickly copying/pasting a Pokémon or an
+  entire team. Scoped 2026-09-10: clipboard carries internal JSON (lossless
+  round-trip of every field, including favorite/saved-build links — not
+  meant to interoperate with Showdown text or other apps). Menu lives on the
+  team card (copy/paste a whole team) and the individual Pokémon card (copy/
+  paste one set) — not the edit overlay.
+
+- **[Saved Builds Database for Team-Building] — Leg 1** *(Last touched:
+  2026-09-10 · Re-checks: 0)*
+  Reuse a named saved-build library (moveset + spread, etc.) during
+  team-building — e.g. save "Defensive Rilla" once, then auto-populate a new
+  Rillaboom slot from it instead of re-entering everything by hand.
+  `SavedPokemonDatabase`/`useSavedPokemon` already exists (`types/pokemon.ts`,
+  `hooks/useSavedPokemon.ts`) from the Speed Calc-like Feature milestone,
+  currently scoped to the Calc panel (`CalcSavedSetsModal.tsx`/
+  `CalcSavedSetPicker.tsx`) — this extends that existing mechanism into the
+  team-import/edit flow rather than building a new one. Scoped 2026-09-10:
+  reuse is triggered from both the import flow (species match on import
+  offers to auto-populate from a saved build instead of parsing fresh
+  Showdown text) and the editor (load a saved build into the slot already
+  being edited). Saving *to* the library stays an explicit user action only
+  (mirrors `CalcSavedSetsModal`'s existing flow) — no auto-offer on
+  complete sets.
 
 ## Blocked
 
@@ -84,7 +117,7 @@ unblocked.
   brought-4 pickers specifically.
 
 - **[Reg M-C Z-A-Exclusive Movepool Audit] — Leg 1** *(Last touched:
-  2026-09-09 · Re-checks: 0)*
+  2026-09-10 · Re-checks: 1)*
   Deferred out of Regulation M-C Prep's Leg 2 (see COMPLETED.md/postmortem)
   rather than forced into that pass. Whether Rillaboom/Baxcalibur/Salamence
   gained any Legends Z-A-exclusive moves PokeAPI's Gen 9 SV learnset
@@ -96,6 +129,16 @@ unblocked.
   these 3 species specifically, not a Serebii read. Golisopod (originally
   the 4th) is resolved — see COMPLETED.md's Champions M-C Balance Patch
   Corrections entry.
+  2026-09-10 re-check: live-queried PokeAPI directly for all 6 Reg M-C new
+  species (rillaboom, baxcalibur, salamence, cinderace, pincurchin,
+  golisopod) — still 0 "champions"-tagged moves for every one of them (vs.
+  51 for an already-covered species like archaludon, confirming the query
+  methodology itself works). No backfill yet, so this audit still can't run
+  the `hasChampionsMoveData` methodology the way Golisopod's fix did —
+  genuinely blocked on PokeAPI, not on effort spent here. One more
+  no-new-info re-check and this needs to either move to Known Exceptions or
+  get flagged for a decision (e.g. hand-curating from user-provided source
+  text the way Golisopod's fix did, rather than waiting on PokeAPI further).
 
 - **[UI Shift Assessment Sweep — Post Card UI Polish] — Leg 1** *(Last
   touched: 2026-09-08 · Re-checks: 0)*
@@ -118,36 +161,9 @@ unblocked.
 
 2026-09-10 feedback pass batched into 4 candidate milestones; Battle Logger
 Overhaul and then Statistics Improvements were promoted to current and have
-since shipped (see `MILESTONES.md`). The remaining 2 below keep their legs
-already drafted — neither has been promoted yet (items keep their draft
-numbering/order until then; no cross-milestone priority has been set).
-
-### Candidate: Team Management QoL
-
-- **[Favorite Teams] — Leg 1** *(Last touched: 2026-09-10 · Re-checks: 0)*
-  Add the ability to favorite a team so favorited teams always sort to the
-  top, mirroring how favoriting works in the user's GW2 Squaded project.
-  Needs a persisted favorite flag on `Team` (`types/pokemon.ts`) plus a sort
-  change in `useTeams`/`TeamsPage`.
-
-- **[Quick Copy/Paste Pokémon & Teams via Right-Click] — Leg 1** *(Last
-  touched: 2026-09-10 · Re-checks: 0)*
-  Add a right-click context menu for quickly copying/pasting a Pokémon or an
-  entire team. Needs scoping: clipboard format (Showdown text vs. internal
-  JSON), and which surfaces (team card, Pokémon card, editor) get the menu.
-
-- **[Saved Builds Database for Team-Building — Scoping] — Leg 1** *(Last
-  touched: 2026-09-10 · Re-checks: 0)*
-  Discuss/scope reusing a named saved-build library (moveset + spread, etc.)
-  during team-building — e.g. save "Defensive Rilla" once, then auto-populate
-  a new Rillaboom slot from it instead of re-entering everything by hand.
-  Note: `SavedPokemonDatabase`/`useSavedPokemon` already exists
-  (`types/pokemon.ts`, `hooks/useSavedPokemon.ts`) from the Speed Calc-like
-  Feature milestone, currently scoped to the Calc panel
-  (`CalcSavedSetsModal.tsx`/`CalcSavedSetPicker.tsx`) — this is about
-  extending that existing mechanism into the team-import/edit flow, not
-  building a new one from scratch. Scoping only — do not start
-  implementation until scoped per a dedicated session.
+since shipped (see `MILESTONES.md`). Team Management QoL was promoted next
+(see `## Current Milestone` above). The remaining candidate below keeps its
+legs already drafted — not yet promoted.
 
 ### Candidate: Live Calc Tuning
 
