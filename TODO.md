@@ -16,55 +16,11 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Team Management QoL
-
-Promoted 2026-09-10 from "Future Milestones" (Statistics Improvements
-shipped first — see `MILESTONES.md`). Scoping pass done 2026-09-10 for the
-two items that needed one; per the user's "split scoping from building"
-habit, this session stops at the plan below rather than starting Leg 1.
-
-- **[Saved Builds Database for Team-Building] — Leg 2** *(Last touched:
-  2026-09-10 · Re-checks: 0)*
-  Leg 1 (Roster Swap reuse in `PokemonCard.tsx`) shipped — see
-  `COMPLETED.md`. This leg is the other half of the 2026-09-10 scoping pass,
-  split out as its own leg rather than bundled into Leg 1: the import flow
-  (`ImportTeamModal.tsx`) offering to auto-populate from a saved build for
-  any pasted species that has one, instead of always using the freshly
-  parsed Showdown text. Saving *to* the library stays an explicit user
-  action only (mirrors `CalcSavedSetsModal`'s existing flow) — no auto-offer
-  on complete sets.
-  Design pass done 2026-09-10 (second pass, now concrete):
-  - Trigger: on "Import Team", parse as today, then check every parsed
-    Pokémon against `savedPokemonState.getSavedSetsForSpecies`. Zero matches
-    across the whole paste → current one-click parse→enrich→save flow is
-    untouched, no new step ever appears.
-  - 1+ match → instead of enriching/saving immediately, swap the modal body
-    to a new review step in a new `ImportBuildReviewStep.tsx` (presentational,
-    same split-out-when-it-grows convention as the rest of `components/`).
-    One row per *parsed Pokémon instance* with a match (not per unique
-    species name — a duplicate species gets independent rows, each free to
-    pick differently), sprite + species name + a `<select>`: "Keep pasted"
-    (default/selected) plus one option per matching `SavedPokemonEntry` by
-    label. Footer: "Back" (discards the review state, returns to the
-    paste-text step) and "Confirm Import".
-  - On confirm: rows left on "Keep pasted" go through the existing
-    `enrichPokemonWithAPI` path unchanged. Rows with a saved build picked
-    skip enrichment entirely and wholesale-replace that slot with the saved
-    entry's own `ImportedPokemonInfo`, same as Leg 1's `loadSavedSet`
-    precedent — not a per-field merge. **Flagged call:** this means a picked
-    build's nickname/shiny/level fully wins over the pasted instance's own,
-    which may surprise a user who e.g. pasted a shiny and picked a
-    non-shiny saved build. Going with full-replace for consistency with
-    Leg 1 rather than inventing a merge rule Leg 1 doesn't have; revisit if
-    it's confusing in practice.
-  - Plumbing: `cloneSavedPokemon` is currently private to
-    `useRosterActions.ts` — move it to a shared spot (e.g.
-    `utils/clonePokemon.ts`) since Leg 2 needs the same deep-clone-with-fresh-id
-    logic and `ImportTeamModal.tsx` isn't a roster action. `ImportTeamModal`
-    also needs `savedPokemonState: UseSavedPokemonReturn` and a sprite
-    resolver (`spriteCacheState.resolveSprite`) threaded in as new props from
-    `TeamsPage.tsx` — both already instantiated there for `PokemonCard`, so
-    this is a same-shape thread-through, not new state.
+No milestone is currently promoted to "Current" — Team Management QoL
+shipped (see `MILESTONES.md`) and its remaining candidate below
+("Live Calc Tuning") still needs a scoping pass before it can be promoted.
+See `COMPLETED.md` for the latest finished item, or "Unscheduled"/"Future
+Milestones" below for what's queued next.
 
 ## Blocked
 
@@ -171,15 +127,15 @@ unblocked.
 ## Future Milestones (unscheduled)
 
 2026-09-10 feedback pass batched into 4 candidate milestones; Battle Logger
-Overhaul and then Statistics Improvements were promoted to current and have
-since shipped (see `MILESTONES.md`). Team Management QoL was promoted next
-(see `## Current Milestone` above). The remaining candidate below keeps its
-legs already drafted — not yet promoted.
+Overhaul, Statistics Improvements, and then Team Management QoL were each
+promoted to current and have since shipped (see `MILESTONES.md`). The
+remaining candidate below is the last of the four — not yet scoped or
+promoted.
 
 ### Candidate: Live Calc Tuning
 
 - **Live Calc pass.** Live Calc "needs a lot of tweaking" per 2026-09-10
   feedback — explicitly deferred to its own future milestone rather than
   folded into whatever milestone comes next. Not yet scoped into concrete
-  legs (unlike Statistics Improvements/Team Management QoL above).
+  legs.
 

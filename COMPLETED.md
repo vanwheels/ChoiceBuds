@@ -18,6 +18,19 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Saved Builds Database for Team-Building] - Leg 2** (2026-09-10) - see
+  commit `0228220`. `ImportTeamModal.tsx` now checks every parsed Pokémon
+  against the saved-build library after parsing; 1+ match swaps the modal
+  into a new review step (`ImportBuildReviewStep.tsx`, one row per parsed
+  instance) instead of enriching/saving immediately, defaulting each row to
+  "Keep pasted" with saved builds as alternatives. Zero matches leaves the
+  original one-click flow untouched. `cloneSavedPokemon` (Leg 1) moved to
+  shared `utils/clonePokemon.ts`; the match-building logic is a
+  unit-tested pure function (`utils/importReview.ts`) rather than living
+  inline in the modal, matching this app's pure-function-first test
+  coverage convention. Milestone-complete: Team Management QoL's other item
+  ([Roster Swap reuse], Leg 1) already shipped - see below.
+
 - **[Quick Copy/Paste Pokémon & Teams via Right-Click] - Leg 2** (2026-09-10)
   - see commit `7935ee5`. Direct user report on Leg 1: paste only worked by
   right-clicking an existing team/Pokémon card, and a pasted team kept the
