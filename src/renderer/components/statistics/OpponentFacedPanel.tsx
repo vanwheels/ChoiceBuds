@@ -1,6 +1,7 @@
 /**
  * OpponentFacedPanel.tsx - Most-Faced Opponent Ranking
- * Ranked list of opposing Pokemon species seen across all battles. Only
+ * Ranked list of opposing Pokemon species seen across all battles, with a
+ * win-loss record from the completed battles they were faced in. Only
  * reflects opponents the user manually tagged during logging (see
  * OpponentPokemonEntry in types/pokemon.ts) - not a guaranteed full
  * picture of every team actually faced.
@@ -26,12 +27,15 @@ export default function OpponentFacedPanel({ stats, resolveSprite }: OpponentFac
               <div key={stat.species} className="flex items-center gap-2">
                 <img src={resolveSprite(stat.spriteUrl)} alt={stat.species} className="w-8 h-8" />
                 <span className="flex-1 text-sm text-zinc-200 truncate">{stat.species}</span>
-                <span className="text-xs text-zinc-400">{stat.count} time{stat.count === 1 ? '' : 's'}</span>
+                <span className="text-xs text-zinc-400">
+                  {stat.count} time{stat.count === 1 ? '' : 's'} - {stat.wins}-{stat.losses}
+                </span>
               </div>
             ))}
           </div>
           <p className="text-xs text-zinc-500 italic">
             Based only on opponents tagged while logging - may undercount teams that weren't fully revealed.
+            Win-loss record only counts completed battles, so it can total less than the times-faced count.
           </p>
         </>
       )}

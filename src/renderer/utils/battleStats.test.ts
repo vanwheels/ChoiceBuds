@@ -238,7 +238,9 @@ describe('getMostFacedOpponents', () => {
       makeBattle({ opponentRoster: [incin], result: 'win' }),
       makeBattle({ opponentRoster: [incin], result: 'in-progress' }),
     ];
-    expect(getMostFacedOpponents(battles)).toEqual([{ species: 'Incineroar', spriteUrl: incin.spriteUrl, count: 2 }]);
+    expect(getMostFacedOpponents(battles)).toEqual([
+      { species: 'Incineroar', spriteUrl: incin.spriteUrl, count: 2, wins: 1, losses: 0 },
+    ]);
   });
 
   it('sorts by count descending and respects topN', () => {
@@ -249,6 +251,19 @@ describe('getMostFacedOpponents', () => {
       makeBattle({ opponentRoster: [a] }),
     ];
     const result = getMostFacedOpponents(battles, 1);
-    expect(result).toEqual([{ species: 'A', spriteUrl: a.spriteUrl, count: 2 }]);
+    expect(result).toEqual([{ species: 'A', spriteUrl: a.spriteUrl, count: 2, wins: 2, losses: 0 }]);
+  });
+
+  it('tallies wins and losses only from completed battles, separately from the all-battle count', () => {
+    const incin = makeOpponent({ species: 'Incineroar' });
+    const battles = [
+      makeBattle({ opponentRoster: [incin], result: 'win' }),
+      makeBattle({ opponentRoster: [incin], result: 'loss' }),
+      makeBattle({ opponentRoster: [incin], result: 'loss' }),
+      makeBattle({ opponentRoster: [incin], result: 'in-progress' }),
+    ];
+    expect(getMostFacedOpponents(battles)).toEqual([
+      { species: 'Incineroar', spriteUrl: incin.spriteUrl, count: 4, wins: 1, losses: 2 },
+    ]);
   });
 });

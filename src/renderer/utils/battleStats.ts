@@ -31,7 +31,9 @@ export interface PokemonUsageStat {
 export interface OpponentFacedStat {
   species: string;
   spriteUrl: string;
-  count: number;
+  count: number; // times faced across all battles, including in-progress
+  wins: number; // completed battles where the player won while facing this opponent
+  losses: number; // completed battles where the player lost while facing this opponent
 }
 
 export interface TeamRosterUsageStat {
@@ -213,18 +215,20 @@ export function getTeamRosterUsage(battles: Battle[]): TeamRosterUsage[] {
 }
 
 export function getMostFacedOpponents(battles: Battle[], topN = 10): OpponentFacedStat[] {
-  const bySpecies = new Map<string, { spriteUrl: string; count: number }>();
+  const bySpecies = new Map<string, { spriteUrl: string; count: number; wins: number; losses: number }>();
 
   for (const battle of battles) {
     for (const opponent of battle.opponentRoster) {
-      const entry = bySpecies.get(opponent.species) ?? { spriteUrl: opponent.spriteUrl, count: 0 };
+      const entry = bySpecies.get(opponent.species) ?? { spriteUrl: opponent.spriteUrl, count: 0, wins: 0, losses: 0 };
       entry.count++;
+      if (battle.result === 'win') entry.wins++;
+      else if (battle.result === 'loss') entry.losses++;
       bySpecies.set(opponent.species, entry);
     }
   }
 
   return Array.from(bySpecies.entries())
-    .map(([species, { spriteUrl, count }]) => ({ species, spriteUrl, count }))
+    .map(([species, { spriteUrl, count, wins, losses }]) => ({ species, spriteUrl, count, wins, losses }))
     .sort((a, b) => b.count - a.count)
     .slice(0, topN);
 }

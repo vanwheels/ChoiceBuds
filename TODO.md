@@ -18,10 +18,22 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 
 ## Current Milestone: Statistics Improvements
 
-- **[Statistics: Win-Loss Column on Most-Faced Pokémon] — Leg 3** *(Last
-  touched: 2026-09-10 · Re-checks: 0)*
-  Add a win-loss record column to the "most-faced Pokémon" table in
-  Statistics.
+- **[Statistics: Team Roster Usage Denominator Ignores Roster Changes] —
+  Leg 1** *(Last touched: 2026-09-10 · Re-checks: 0)*
+  `getTeamRosterUsage` (`utils/battleStats.ts`) divides every species'
+  `broughtCount` by the team's `totalTeamBattles` — completed battles across
+  that `teamId`'s whole history — instead of how many of those battles the
+  species was actually on the roster for. A removed species' `broughtCount`
+  correctly freezes once it stops appearing in `playerRoster`, but
+  `totalTeamBattles` keeps growing anyway, so its displayed rate silently
+  drifts downward instead of staying pinned to the count it actually played
+  in. E.g. swap Salamence out for Hydreigon after battle 12: Salamence
+  should stay `x/12` forever, Hydreigon should start at `x/1` and climb on
+  its own, and unaffected roster members (Rillaboom etc.) keep climbing
+  against the team-wide total as before. Fix: track a per-species battle
+  count (increment only on battles where that species is present in
+  `playerRoster`) and use it as each species' own denominator instead of
+  reusing `totalTeamBattles` for every row.
 
 ## Blocked
 
