@@ -18,7 +18,7 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
-- **[Box Tab: Favoriting] - Leg 1** (2026-09-11) - see commit `<pending>`.
+- **[Box Tab: Favoriting] - Leg 1** (2026-09-11) - see commit `92adc3e`.
   Added `SavedPokemonEntry.favorite?: boolean` (mirroring `Team.favorite`) +
   `useSavedPokemon.ts`'s `toggleSavedPokemonFavorite` + a new
   `utils/savedPokemonSort.ts::sortSavedPokemonByFavorite`, composed on top
