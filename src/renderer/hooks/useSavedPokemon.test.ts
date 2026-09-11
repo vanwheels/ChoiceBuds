@@ -109,6 +109,17 @@ describe('useSavedPokemon', () => {
     expect(result.current.savedPokemon.map(e => e.label)).toContain('My Gengar (2)');
   });
 
+  it('addSavedPokemonBatch uses a supplied id instead of generating one, so a caller can know it up front', async () => {
+    const { result } = renderHook(() => useSavedPokemon());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.addSavedPokemonBatch([makePokemon({ species: 'Gengar' })], ['My Gengar'], ['known-id']);
+    });
+
+    expect(result.current.savedPokemon.map(e => e.id)).toEqual(['known-id']);
+  });
+
   it('renameSavedPokemon updates the label of the matching entry only', async () => {
     vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
       version: 1,

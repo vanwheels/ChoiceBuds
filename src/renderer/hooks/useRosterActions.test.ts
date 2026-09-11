@@ -173,6 +173,17 @@ describe('useRosterActions', () => {
     expect(updates.pokemon[1].showdownData.moves).toEqual(['Fake Out', 'Wood Hammer']);
   });
 
+  it('buildSlot returns a fresh usage-based Pokemon without requiring a team/updateTeam call', async () => {
+    const { result, updateTeam } = setup();
+
+    const built = await result.current.buildSlot('Gengar');
+
+    expect(built.showdownData.species).toBe('Gengar');
+    expect(built.showdownData.moves).toEqual(['Shadow Ball', 'Sludge Bomb', 'Protect', 'Nasty Plot']);
+    expect(built.showdownData.ability).toBe('Cursed Body');
+    expect(updateTeam).not.toHaveBeenCalled();
+  });
+
   it('loadSavedSet assigns a fresh id, distinct from the saved entry\'s own stored Pokemon', async () => {
     const savedPokemon = makePokemon({ species: 'Rillaboom' });
     const entry: SavedPokemonEntry = { id: 'saved-1', label: 'Defensive Rilla', pokemon: savedPokemon, savedAt: Date.now(), updatedAt: Date.now() };

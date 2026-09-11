@@ -35,8 +35,16 @@ export interface UseSavedPokemonReturn {
    * falls back to nickname-or-species same as before. Either way,
    * nextAvailableLabel below still dedupes the result against existing
    * labels; a typed name isn't exempt from that.
+   *
+   * `ids`, when given, supplies the entry id per pokemonList index instead of
+   * a freshly generated `crypto.randomUUID()` (Box Tab Leg 2, see TODO.md) -
+   * lets a caller (BoxPage.tsx's "+ New Build") know the id its new entry
+   * will land under *before* the save resolves, so it can auto-expand that
+   * exact entry (`expandedCardIds` above) the instant the save succeeds
+   * instead of having to guess which of the (possibly still-stale) returned
+   * entries is the new one.
    */
-  addSavedPokemonBatch: (pokemonList: ImportedPokemonInfo[], labels?: string[]) => Promise<boolean>;
+  addSavedPokemonBatch: (pokemonList: ImportedPokemonInfo[], labels?: string[], ids?: string[]) => Promise<boolean>;
   renameSavedPokemon: (id: string, label: string) => Promise<boolean>;
   /**
    * Field-level update on a saved entry's stored `ImportedPokemonInfo` (Box
@@ -154,7 +162,7 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     }
   };
 
-  const addSavedPokemonBatch = useCallback(async (pokemonList: ImportedPokemonInfo[], labels?: string[]): Promise<boolean> => {
+  const addSavedPokemonBatch = useCallback(async (pokemonList: ImportedPokemonInfo[], labels?: string[], ids?: string[]): Promise<boolean> => {
     const labelsSoFar = savedPokemon.map(e => e.label);
     const now = Date.now();
 
@@ -162,7 +170,7 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
       const base = labels?.[i]?.trim() || pokemon.showdownData.nickname || pokemon.showdownData.species;
       const label = nextAvailableLabel(base, labelsSoFar);
       labelsSoFar.push(label); // dedupe against sets earlier in this same batch too, not just pre-existing ones
-      return { id: crypto.randomUUID(), label, pokemon, savedAt: now, updatedAt: now };
+      return { id: ids?.[i] ?? crypto.randomUUID(), label, pokemon, savedAt: now, updatedAt: now };
     });
 
     const updated = [...newEntries, ...savedPokemon];

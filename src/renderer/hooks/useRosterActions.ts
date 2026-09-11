@@ -29,6 +29,13 @@ export interface UseRosterActionsReturn {
   removeSlot: (team: Team, index: number) => Promise<boolean>;
   reorderSlot: (team: Team, fromIndex: number, toIndex: number) => Promise<boolean>;
   loadSavedSet: (team: Team, index: number, entry: SavedPokemonEntry) => Promise<boolean>;
+  /**
+   * Exposed standalone (not just used internally by swapSlot/addSlot) so a
+   * caller with no team/slot to write into yet - BoxPage.tsx's "+ New Build"
+   * (Box Tab Leg 2, see TODO.md) - can still get the same usage-based
+   * default build for a species before it has anywhere to put it.
+   */
+  buildSlot: (species: string) => Promise<ImportedPokemonInfo>;
 }
 
 export function useRosterActions(
@@ -135,5 +142,5 @@ export function useRosterActions(
     return updateTeam(team.id, { pokemon: updatedPokemon });
   }, [updateTeam]);
 
-  return { swapSlot, addSlot, removeSlot, reorderSlot, loadSavedSet };
+  return { swapSlot, addSlot, removeSlot, reorderSlot, loadSavedSet, buildSlot };
 }

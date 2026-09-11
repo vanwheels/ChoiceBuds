@@ -138,6 +138,8 @@ export default function App() {
                 <BoxPage
                   savedPokemonState={savedPokemonState}
                   gameDataState={gameDataState}
+                  databaseState={databaseState}
+                  speciesRosterState={speciesRosterState}
                   spriteCacheState={spriteCacheState}
                   settingsState={settingsState}
                 />
