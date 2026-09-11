@@ -17,10 +17,24 @@
  * tags freely in the same query. Each tag runs through its own type -> move
  * -> ability fallback chain independently (see the per-tag loop below),
  * then a species is kept only if it appears in every tag's resolved set.
+ *
+ * `savedPokemon`/`onSelectSaved` (Box Tab: Add from Box via Add Pokémon
+ * Search, see TODO.md) are an opt-in pair - only TeamCard.tsx's trailing
+ * "+ Add Pokémon" slot passes them, so a saved build the user already built
+ * for a species can be picked directly instead of always landing a fresh
+ * usage-based default. Roster Swap (PokemonCard.tsx) and Box's own
+ * "+ New Build" (BoxPage.tsx) don't pass them - picking a Box entry from
+ * inside Box's own creation flow would be circular, and Roster Swap already
+ * has its own species-then-saved-set two-step via SavedSetPicker.tsx. When
+ * omitted, this renders exactly as before - one flat species list, no
+ * "From Box" section. Same search (plain-text label/species match, or the
+ * same #tag chain by underlying species) as the species half of the list,
+ * and the same `validateSpeciesLegality` filter, so a Box entry follows the
+ * same rules the species list next to it already does.
  */
 
 import { useState } from 'react';
-import type { SpeciesRosterEntry } from '../types/pokemon';
+import type { SavedPokemonEntry, SpeciesRosterEntry } from '../types/pokemon';
 import type { RegulationId } from '../utils/pokemonRules';
 import { validateSpeciesLegality } from '../utils/pokemonRules';
 import { useDismissable } from '../hooks/useDismissable';
@@ -30,6 +44,7 @@ import { usePokemonAbilityFilter } from '../hooks/usePokemonAbilityFilter';
 import { parseTagFilters } from '../utils/tagSearch';
 import { ALL_TYPES } from '../config/typeEffectiveness';
 import { normalizeNameForAPI } from '../services/pokeapiService';
+import { getPixelSpriteUrl } from '../utils/spriteUrl';
 
 interface SpeciesPickerCardProps {
   roster: SpeciesRosterEntry[];
@@ -37,9 +52,11 @@ interface SpeciesPickerCardProps {
   resolveSprite: (remoteUrl: string) => string;
   onSelect: (species: SpeciesRosterEntry) => void;
   onClose: () => void;
+  savedPokemon?: SavedPokemonEntry[];
+  onSelectSaved?: (entry: SavedPokemonEntry) => void;
 }
 
-export default function SpeciesPickerCard({ roster, rulesetId, resolveSprite, onSelect, onClose }: SpeciesPickerCardProps) {
+export default function SpeciesPickerCard({ roster, rulesetId, resolveSprite, onSelect, onClose, savedPokemon, onSelectSaved }: SpeciesPickerCardProps) {
   const [search, setSearch] = useState('');
   const ref = useDismissable<HTMLDivElement>(onClose);
 
@@ -76,12 +93,25 @@ export default function SpeciesPickerCard({ roster, rulesetId, resolveSprite, on
   const tagSets = tags.map(resolvedSetForTag);
   const anyTagPending = tagSets.some(set => set === null);
 
+  // Shared by both halves of the list below - a species (by its own name) or
+  // a saved build (by its underlying species) matches the #tag chain the
+  // same way.
+  const matchesTags = (speciesName: string): boolean =>
+    anyTagPending ? false : tagSets.every(set => set!.has(speciesName.toLowerCase()));
+
   const legalRoster = roster.filter(pkmn => validateSpeciesLegality(pkmn.name, rulesetId));
   const filtered = tags.length === 0
     ? legalRoster.filter(pkmn => pkmn.name.toLowerCase().includes(search.toLowerCase()))
-    : anyTagPending
-      ? []
-      : legalRoster.filter(pkmn => tagSets.every(set => set!.has(pkmn.name.toLowerCase())));
+    : legalRoster.filter(pkmn => matchesTags(pkmn.name));
+
+  const showBoxResults = savedPokemon !== undefined && onSelectSaved !== undefined;
+  const filteredSaved = showBoxResults
+    ? savedPokemon.filter(entry => validateSpeciesLegality(entry.pokemon.showdownData.species, rulesetId))
+      .filter(entry => tags.length === 0
+        ? entry.label.toLowerCase().includes(search.toLowerCase()) ||
+          entry.pokemon.showdownData.species.toLowerCase().includes(search.toLowerCase())
+        : matchesTags(entry.pokemon.showdownData.species))
+    : [];
 
   return (
     <div ref={ref} className="relative bg-zinc-700 border-2 border-accent-gold rounded-lg p-3 flex flex-col gap-3 max-w-[280px] min-h-[280px] max-h-[32rem]">
@@ -107,21 +137,56 @@ export default function SpeciesPickerCard({ roster, rulesetId, resolveSprite, on
 
       {/* Results fill the rest of the slot, capped and scrollable */}
       <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-1">
-        {filtered.length === 0 ? (
+        {filtered.length === 0 && filteredSaved.length === 0 ? (
           <p className="text-xs text-zinc-400 text-center mt-4">
             {tags.length > 0 && anyTagPending ? 'Loading…' : 'No legal species found'}
           </p>
         ) : (
-          filtered.map(pkmn => (
-            <div
-              key={pkmn.id}
-              onClick={() => onSelect(pkmn)}
-              className="flex items-center gap-2 px-2 py-1 rounded hover:bg-zinc-600 cursor-pointer transition-colors"
-            >
-              <img src={resolveSprite(pkmn.spriteUrl)} alt={pkmn.name} loading="lazy" className="w-8 h-8 object-contain [image-rendering:pixelated] shrink-0" />
-              <span className="text-xs text-white truncate">{pkmn.name}</span>
-            </div>
-          ))
+          <>
+            {filteredSaved.length > 0 && (
+              <>
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wide px-2">From Box</span>
+                {filteredSaved.map(entry => (
+                  <div
+                    key={entry.id}
+                    onClick={() => onSelectSaved!(entry)}
+                    className="flex items-center gap-2 px-2 py-1 rounded hover:bg-zinc-600 cursor-pointer transition-colors"
+                  >
+                    <img
+                      src={resolveSprite(getPixelSpriteUrl(
+                        entry.pokemon.pokedexNumber,
+                        entry.pokemon.showdownData.species,
+                        entry.pokemon.showdownData.gender || 'M',
+                        entry.pokemon.showdownData.shiny
+                      ))}
+                      alt={entry.pokemon.showdownData.species}
+                      loading="lazy"
+                      className="w-8 h-8 object-contain [image-rendering:pixelated] shrink-0"
+                    />
+                    <span className="text-xs text-white truncate">{entry.label}</span>
+                  </div>
+                ))}
+              </>
+            )}
+
+            {filtered.length > 0 && (
+              <>
+                {filteredSaved.length > 0 && (
+                  <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wide px-2 mt-1">Species</span>
+                )}
+                {filtered.map(pkmn => (
+                  <div
+                    key={pkmn.id}
+                    onClick={() => onSelect(pkmn)}
+                    className="flex items-center gap-2 px-2 py-1 rounded hover:bg-zinc-600 cursor-pointer transition-colors"
+                  >
+                    <img src={resolveSprite(pkmn.spriteUrl)} alt={pkmn.name} loading="lazy" className="w-8 h-8 object-contain [image-rendering:pixelated] shrink-0" />
+                    <span className="text-xs text-white truncate">{pkmn.name}</span>
+                  </div>
+                ))}
+              </>
+            )}
+          </>
         )}
       </div>
     </div>

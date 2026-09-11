@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { DragEvent, MouseEvent as ReactMouseEvent } from 'react';
-import { Team, SpeciesRosterEntry } from '../types/pokemon';
+import { Team, SpeciesRosterEntry, SavedPokemonEntry } from '../types/pokemon';
 import type { UseTeamsReturn } from '../hooks/useTeams';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
 import type { UseGameDataReturn } from '../hooks/useGameData';
@@ -28,6 +28,7 @@ import TeamSheetPdfModal from './TeamSheetPdfModal';
 import ContextMenu from './ContextMenu';
 import { copyTeamToClipboard, readTeamFromClipboard, readPokemonFromClipboard } from '../utils/clipboardPayload';
 import { buildPastedTeam } from '../utils/teamPaste';
+import { cloneSavedPokemon } from '../utils/clonePokemon';
 
 interface TeamCardProps {
   team: Team;
@@ -131,6 +132,15 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
   const handleAddSpecies = async (species: SpeciesRosterEntry) => {
     setIsAddPickerOpen(false);
     await rosterActions.addSlot(team, species.name);
+  };
+
+  // "+ Add Pokémon" picking a Box result instead of a bare species (Box
+  // Tab: Add from Box via Add Pokémon Search, see TODO.md) - same
+  // clone-and-append `cloneSavedPokemon` already gives a fresh clipboard
+  // paste (handlePasteNewPokemon below) or AddToTeamDialog.tsx's own pick.
+  const handleAddSavedEntry = async (entry: SavedPokemonEntry) => {
+    setIsAddPickerOpen(false);
+    await updateTeam(team.id, { pokemon: [...team.pokemon, cloneSavedPokemon(entry.pokemon)] });
   };
 
   // Right-click opens the Copy/Paste Team context menu (Quick Copy/Paste
@@ -516,6 +526,8 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
                       resolveSprite={spriteCacheState.resolveSprite}
                       onSelect={handleAddSpecies}
                       onClose={() => setIsAddPickerOpen(false)}
+                      savedPokemon={savedPokemonState.savedPokemon}
+                      onSelectSaved={handleAddSavedEntry}
                     />
                   ) : (
                     <button
