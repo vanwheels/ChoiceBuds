@@ -16,11 +16,65 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-No milestone is currently promoted to "Current" — Team Management QoL
-shipped (see `MILESTONES.md`) and its remaining candidate below
-("Live Calc Tuning") still needs a scoping pass before it can be promoted.
-See `COMPLETED.md` for the latest finished item, or "Unscheduled"/"Future
-Milestones" below for what's queued next.
+## Current Milestone: Saved Builds Box
+
+Promoted + scoped 2026-09-10, prompted by direct feedback that the saved-
+build library (Saved Builds Database for Team-Building, both legs shipped -
+see `COMPLETED.md`) had no discoverable home outside the Calc page: no way
+to save into it from Teams at all, and no way to browse it without already
+knowing a species has a match. 3 legs, ordered so each unblocks the next -
+Leg 2 is a pure refactor Leg 3 depends on, do not skip straight to Leg 3.
+
+- **[Save-to-Library Name Prompt] — Leg 1** *(Last touched: 2026-09-10 ·
+  Re-checks: 0)*
+  New shared `SaveToLibraryDialog.tsx` (sprite + a name input pre-filled
+  with nickname-or-species, Save/Cancel) replaces today's silent
+  auto-generated label at both existing/new save points: Calc's existing
+  "Save Set" button (`CalcPokemonPanel.tsx::handleSaveSet`, currently a
+  one-click silent save) and a new "Save to Library" item added to Teams'
+  `PokemonCard.tsx` right-click `ContextMenu` (same menu "Copy Pokémon"/
+  "Export" already live in). `addSavedPokemonBatch`'s existing
+  `nextAvailableLabel` dedup logic stays as a fallback against the
+  user-entered name, not removed. Decided 2026-09-10: prompt applies
+  everywhere (not just the new Teams entry point), for one consistent save
+  flow rather than two.
+
+- **[Extract Editable Pokémon Card Core] — Leg 1** *(Last touched:
+  2026-09-10 · Re-checks: 0)*
+  Pure refactor, no visible behavior change on Teams - a prerequisite for
+  Leg 3's editable Box card, not a feature on its own. `PokemonCard.tsx`
+  today has no team-agnostic "just edit this Pokémon" layer - nickname
+  input, gender/shiny toggles, sprite/type badges, `EditOverlays`
+  (item/ability/moves), and `StatsColumn` (EVs) all close directly over
+  `team`/`pokemonIndex`/`updateTeam` for persistence. Split that display+
+  edit UI into a shared component parameterized over an injected
+  `onUpdate`-style persistence callback instead, so it can target a saved-
+  library entry (Leg 3) just as well as a team roster slot. `PokemonCard.tsx`
+  becomes a thin wrapper adding the roster-only chrome on top (Roster Swap,
+  remove-from-team, drag-reorder, export-as-team-member, copy/paste-into-
+  slot) - none of which apply to a library entry. Needs a live-verify pass
+  afterward (`run-desktop`) confirming every Teams edit path still behaves
+  identically, since this touches every edit interaction on every team.
+
+- **[Box Tab] — Leg 1** *(Last touched: 2026-09-10 · Re-checks: 0)*
+  New "Box" Sidebar tab (`BoxPage.tsx`, lazy-loaded like the other tabs),
+  showing every `savedPokemon` entry as a continuous wrapping grid (no fixed
+  pagination/page-size - a new row starts once the current one fills,
+  decided 2026-09-10 over a PC-box-style paginated layout). Each entry
+  defaults collapsed to just its sprite + build-name label; clicking expands
+  it in place to the full Leg 2 editable card. Expand/collapse state mirrors
+  `useTeams`'s existing `expandedCardIds`/`toggleCardExpansion` pattern,
+  added to `useSavedPokemon.ts` for its own entries. Editing an expanded
+  card writes back through a new `updateSavedPokemon(id, updates)` mutation
+  on `useSavedPokemon.ts` (field-level update on the stored
+  `ImportedPokemonInfo`, distinct from the existing rename-only
+  `renameSavedPokemon`) - decided 2026-09-10: Box cards are editable in
+  place, not read-only. A "+ New Build" action opens a species picker
+  (reusing `SpeciesPickerCard`) and creates a fresh entry via the same
+  usage-based default `useRosterActions::buildSlot` already builds for
+  "+ Add Pokémon" on a team, saved straight into the library through Leg 1's
+  name-prompt dialog and opened expanded/in-edit immediately - saved builds
+  no longer only arrive via Calc/Teams pushing into the library.
 
 ## Blocked
 
