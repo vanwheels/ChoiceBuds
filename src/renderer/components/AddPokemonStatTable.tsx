@@ -54,6 +54,22 @@
  * SpeciesPickerCard's header comment used to give for why Box's "+ New
  * Build" never passed them: picking a Box entry from inside Box's own
  * creation flow would be circular.
+ *
+ * Types/Abilities columns (Add Pokémon Table: Type/Ability Columns Leg 1, see
+ * TODO.md), Showdown Random Battle Dex-style, sit between Species and the
+ * stat columns - neither is sortable (no numeric key to sort by), just
+ * plain columns. Both are joins off data already on hand rather than new
+ * fetches: a species row's types/abilities come straight off the same
+ * PokeAPI cache entry the stats join already reads (`PokeAPICacheEntry`'s
+ * `types`/`abilities` - abilities stored as lowercase-hyphenated slugs,
+ * displayed via `toReadableName`); a Mega row's types come off
+ * `@smogon/calc`'s bundled dex (same source its own base stats already use
+ * above) and its single guaranteed ability off `config/megaAbilities.ts`'s
+ * `getMegaAbility` (keyed by the same `slug` the stats join already
+ * computes) rather than the base species' normal/hidden pair - Mega
+ * Evolving replaces the ability outright, see that config's header. The
+ * modal widened `max-w-3xl` -> `max-w-5xl` to fit both new columns
+ * alongside the existing 7 stat columns without cramming.
  */
 
 import { useState } from 'react';
@@ -73,8 +89,10 @@ import { usePokemonAbilityFilter } from '../hooks/usePokemonAbilityFilter';
 import { parseTagFilters } from '../utils/tagSearch';
 import { ALL_TYPES } from '../config/typeEffectiveness';
 import { MEGA_STONE_TO_SPECIES, formatMegaLabel } from '../config/megaEvolution';
+import { getMegaAbility } from '../config/megaAbilities';
 import { getCachedMegaSprite, useMegaSpritePrefetch } from '../hooks/useMegaSprite';
-import { toTitleCase } from '../utils/displayName';
+import { toTitleCase, toReadableName } from '../utils/displayName';
+import TypeBadge from './TypeBadge';
 import Modal from './Modal';
 
 // Same Gen 9 dex SpeedTiersPage.tsx reads Mega base stats/types from - see
@@ -103,6 +121,8 @@ interface StatTableRow {
   key: string;
   displayName: string;
   spriteUrl: string;
+  types: string[];
+  abilities: string[];
   hp: number | null;
   attack: number | null;
   defense: number | null;
@@ -183,11 +203,14 @@ export default function AddPokemonStatTable({
     : legalRoster.filter(pkmn => matchesTags(pkmn.name));
 
   const speciesRows: StatTableRow[] = filteredRoster.map(species => {
-    const stats = getCachedEntry(normalizeSpeciesForAPI(species.name))?.baseStats ?? null;
+    const cacheEntry = getCachedEntry(normalizeSpeciesForAPI(species.name));
+    const stats = cacheEntry?.baseStats ?? null;
     return {
       key: `species:${species.name}`,
       displayName: species.name,
       spriteUrl: species.spriteUrl,
+      types: cacheEntry?.types ?? [],
+      abilities: cacheEntry?.abilities.map(toReadableName) ?? [],
       hp: stats?.hp ?? null,
       attack: stats?.attack ?? null,
       defense: stats?.defense ?? null,
@@ -221,10 +244,14 @@ export default function AddPokemonStatTable({
       const displayName = formatMegaLabel(baseSpecies.name, entry.suffix);
       if (!displayName.toLowerCase().includes(search.toLowerCase())) return [];
 
+      const megaAbility = getMegaAbility(slug);
+
       return [{
         key: `mega:${item}`,
         displayName,
         spriteUrl: getCachedMegaSprite(slug)?.spriteUrl ?? baseSpecies.spriteUrl,
+        types: calcSpecies ? [...calcSpecies.types] : [],
+        abilities: megaAbility ? [megaAbility] : [],
         hp: stats?.hp ?? null,
         attack: stats?.attack ?? null,
         defense: stats?.defense ?? null,
@@ -252,7 +279,7 @@ export default function AddPokemonStatTable({
     : [];
 
   return (
-    <Modal panelClassName="max-w-3xl max-h-[85vh]">
+    <Modal panelClassName="max-w-5xl max-h-[85vh]">
       <div className="px-6 py-4 border-b border-zinc-700 flex items-center justify-between shrink-0">
         <h2 className="text-xl font-bold text-zinc-100">Add Pokémon</h2>
         <button onClick={onClose} className="text-zinc-400 hover:text-zinc-200 transition-colors">
@@ -305,6 +332,8 @@ export default function AddPokemonStatTable({
             <thead>
               <tr className="bg-zinc-900 sticky top-0 z-10">
                 <th className="py-2 px-2 text-left text-zinc-400 font-semibold border-b border-zinc-700/60">Species</th>
+                <th className="py-2 px-2 text-left text-zinc-400 font-semibold border-b border-zinc-700/60">Types</th>
+                <th className="py-2 px-2 text-left text-zinc-400 font-semibold border-b border-zinc-700/60">Abilities</th>
                 {STAT_COLUMNS.map(col => (
                   <th
                     key={col.key}
@@ -322,7 +351,7 @@ export default function AddPokemonStatTable({
             <tbody>
               {sortedRows.length === 0 ? (
                 <tr>
-                  <td colSpan={STAT_COLUMNS.length + 1} className="py-6 text-center text-zinc-400">
+                  <td colSpan={STAT_COLUMNS.length + 3} className="py-6 text-center text-zinc-400">
                     {tags.length > 0 && anyTagPending ? 'Loading…' : 'No legal species found'}
                   </td>
                 </tr>
@@ -336,6 +365,16 @@ export default function AddPokemonStatTable({
                     <td className="py-1.5 px-2 flex items-center gap-2">
                       <img src={resolveSprite(row.spriteUrl)} alt={row.displayName} loading="lazy" className="w-7 h-7 object-contain [image-rendering:pixelated] shrink-0" />
                       <span className="text-white truncate">{row.displayName}</span>
+                    </td>
+                    <td className="py-1.5 px-2">
+                      <div className="flex items-center gap-1">
+                        {row.types.length > 0
+                          ? row.types.map(type => <TypeBadge key={type} type={type} />)
+                          : <span className="text-zinc-500">—</span>}
+                      </div>
+                    </td>
+                    <td className="py-1.5 px-2 text-zinc-200 whitespace-nowrap">
+                      {row.abilities.length > 0 ? row.abilities.join(' / ') : '—'}
                     </td>
                     {STAT_COLUMNS.map(col => (
                       <td key={col.key} className="py-1.5 px-2 text-right text-zinc-200 tabular-nums">
