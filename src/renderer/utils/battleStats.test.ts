@@ -203,10 +203,34 @@ describe('getTeamRosterUsage', () => {
       teamName: 'Alpha',
       totalTeamBattles: 1,
       pokemon: [
-        { species: 'Gengar', spriteUrl: gengar.spriteUrl, broughtCount: 1, rate: 1 },
-        { species: 'Incineroar', spriteUrl: incin.spriteUrl, broughtCount: 0, rate: 0 },
+        { species: 'Gengar', spriteUrl: gengar.spriteUrl, broughtCount: 1, battleCount: 1, rate: 1 },
+        { species: 'Incineroar', spriteUrl: incin.spriteUrl, broughtCount: 0, battleCount: 1, rate: 0 },
       ],
     }]);
+  });
+
+  it('pins a swapped-out species\' rate to its own battleCount instead of the team-wide total drifting it downward', () => {
+    const salamence = makeBrought({ id: 'p1', species: 'Salamence' });
+    const hydreigon = makeBrought({ id: 'p2', species: 'Hydreigon' });
+    const rillaboom = makeBrought({ id: 'p3', species: 'Rillaboom' });
+    const battles = [
+      // Battles 1-12: Salamence on the roster and always brought, Rillaboom always brought too.
+      ...Array.from({ length: 12 }, () => makeBattle({
+        teamId: 't1', teamName: 'Alpha',
+        playerRoster: [salamence, rillaboom], broughtIds: ['p1', 'p3'], result: 'win',
+      })),
+      // Battle 13+: Salamence swapped out for Hydreigon, which is brought once, Rillaboom still always brought.
+      makeBattle({
+        teamId: 't1', teamName: 'Alpha',
+        playerRoster: [hydreigon, rillaboom], broughtIds: ['p2', 'p3'], result: 'win',
+      }),
+    ];
+    const result = getTeamRosterUsage(battles);
+    expect(result[0].totalTeamBattles).toBe(13);
+    const bySpecies = Object.fromEntries(result[0].pokemon.map(p => [p.species, p]));
+    expect(bySpecies['Salamence']).toEqual({ species: 'Salamence', spriteUrl: salamence.spriteUrl, broughtCount: 12, battleCount: 12, rate: 1 });
+    expect(bySpecies['Hydreigon']).toEqual({ species: 'Hydreigon', spriteUrl: hydreigon.spriteUrl, broughtCount: 1, battleCount: 1, rate: 1 });
+    expect(bySpecies['Rillaboom']).toEqual({ species: 'Rillaboom', spriteUrl: rillaboom.spriteUrl, broughtCount: 13, battleCount: 13, rate: 1 });
   });
 
   it('keeps teams and their species sorted independently: teams by battle count desc, species within a team by rate desc', () => {

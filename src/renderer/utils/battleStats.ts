@@ -40,7 +40,8 @@ export interface TeamRosterUsageStat {
   species: string;
   spriteUrl: string;
   broughtCount: number; // completed battles for this team where this species was in broughtIds
-  rate: number; // broughtCount / totalTeamBattles, 0-1, 0 when totalTeamBattles is 0
+  battleCount: number; // completed battles where this species was in playerRoster (its own denominator, frozen once it leaves the roster - not the team-wide totalTeamBattles)
+  rate: number; // broughtCount / battleCount, 0-1, 0 when battleCount is 0
 }
 
 export interface TeamRosterUsage {
@@ -175,22 +176,27 @@ export function getMostUsedPokemon(battles: Battle[], topN = 10): PokemonUsageSt
  * in one of its completed-battle playerRoster snapshots, with how often it
  * was actually brought (broughtIds) vs. sitting on the roster unused. Unlike
  * getMostUsedPokemon (global, brought-only, no denominator), this surfaces
- * roster members that were *never* brought - they still need a totalTeamBattles
- * denominator to show up as a 0% row.
+ * roster members that were *never* brought - they still need a denominator
+ * to show up as a 0% row. Each species tracks its own battleCount (completed
+ * battles where it appeared in playerRoster) as that denominator rather than
+ * reusing the team-wide totalTeamBattles, so a species' rate freezes once it
+ * leaves the roster instead of drifting downward as the team keeps playing
+ * without it.
  */
 export function getTeamRosterUsage(battles: Battle[]): TeamRosterUsage[] {
   const completed = completedBattles(battles);
   const byTeam = new Map<string, {
     teamName: string;
     totalTeamBattles: number;
-    species: Map<string, { spriteUrl: string; broughtCount: number }>;
+    species: Map<string, { spriteUrl: string; broughtCount: number; battleCount: number }>;
   }>();
 
   for (const battle of completed) {
     const team = byTeam.get(battle.teamId) ?? { teamName: battle.teamName, totalTeamBattles: 0, species: new Map() };
     team.totalTeamBattles++;
     for (const pokemon of battle.playerRoster) {
-      const entry = team.species.get(pokemon.species) ?? { spriteUrl: pokemon.spriteUrl, broughtCount: 0 };
+      const entry = team.species.get(pokemon.species) ?? { spriteUrl: pokemon.spriteUrl, broughtCount: 0, battleCount: 0 };
+      entry.battleCount++;
       if (battle.broughtIds.includes(pokemon.id)) entry.broughtCount++;
       team.species.set(pokemon.species, entry);
     }
@@ -203,11 +209,12 @@ export function getTeamRosterUsage(battles: Battle[]): TeamRosterUsage[] {
       teamName,
       totalTeamBattles,
       pokemon: Array.from(species.entries())
-        .map(([speciesName, { spriteUrl, broughtCount }]) => ({
+        .map(([speciesName, { spriteUrl, broughtCount, battleCount }]) => ({
           species: speciesName,
           spriteUrl,
           broughtCount,
-          rate: totalTeamBattles > 0 ? broughtCount / totalTeamBattles : 0,
+          battleCount,
+          rate: battleCount > 0 ? broughtCount / battleCount : 0,
         }))
         .sort((a, b) => b.rate - a.rate),
     }))

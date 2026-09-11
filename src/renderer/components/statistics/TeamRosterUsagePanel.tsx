@@ -39,7 +39,7 @@ export default function TeamRosterUsagePanel({ usage, resolveSprite }: TeamRoste
                   <div className="h-full bg-accent-gold" style={{ width: `${stat.rate * 100}%` }} />
                 </div>
                 <span className="w-28 text-right text-xs text-zinc-400">
-                  {stat.broughtCount}/{team.totalTeamBattles} ({Math.round(stat.rate * 100)}%)
+                  {stat.broughtCount}/{stat.battleCount} ({Math.round(stat.rate * 100)}%)
                 </span>
               </div>
             ))}
