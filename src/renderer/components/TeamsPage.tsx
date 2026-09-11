@@ -156,31 +156,29 @@ export default function TeamsPage({
           </div>
         ) : (
           <div
-            className="grid grid-cols-1 @[1360px]:grid-cols-2 gap-4 w-full"
+            className="grid grid-cols-1 @[1700px]:grid-cols-2 gap-4 w-full"
             style={{ paddingLeft: '2rem', paddingRight: '2rem' }}
           >
             {/* Responsive teams grid (carousel/grid rework leg 4, see TODO.md):
                 1 column by default, 2 once this wrapper's own @container width
                 (not viewport width - the sidebar eats into that) clears
-                1360px, capped at 2 no matter how wide the window gets
+                1700px, capped at 2 no matter how wide the window gets
                 (explicit user call, see the Window-sizing entry in TODO.md) -
-                no 3rd-column tier for ultrawide monitors. 1360px (not the
-                mockup's own placeholder ~1160px) was picked from the collapsed
-                header's hard-minimum content width at the time: the identity
-                column (max-w-[190px]) + the coverflow's fixed 240px box
-                (flex-shrink:0, never compresses) + the controls pill (~124px)
-                + header padding added up to a real ~574px floor per card
-                (measured live) that a too-low breakpoint left no room for -
-                confirmed live at 1160px each column landed at ~570px, clipping
-                the coverflow/controls together. 1360px kept a comfortable
-                ~50px+ buffer above that floor. STALE as of Team Header Sprite
-                Strip leg 1 (see TODO.md): the coverflow was reverted to a flat
-                strip whose own shrink-0 content is ~376px wide (6 * 56px
-                sprites + 5 * 8px gaps), well past the 240px this floor was
-                measured against - the ~574px floor and the 1360px breakpoint
-                itself have NOT been re-verified live against that new width
-                and may need retuning. Note this halves the width available to
-                each TeamCard's own Pokemon
+                no 3rd-column tier for ultrawide monitors. Retuned from 1360px
+                (Team Card Padding at Certain Window Sizes, see TODO.md/
+                COMPLETED.md): that number was tuned against the old 3D
+                coverflow's fixed 240px box, and Team Header Sprite Strip leg 1
+                (see TODO.md) later reverted the header to a flat sprite strip
+                whose own shrink-0 content is ~376px wide (6 * 56px sprites +
+                5 * 8px gaps) without the breakpoint ever being re-verified
+                against it - so a 2-column card's header (identity column +
+                sprite strip + controls pill) had a real floor of ~751px
+                live-measured via run-desktop, well past what 1360px/2 could
+                give it, and silently overflowed/squished at every window size
+                between the old 1360px trigger and ~1670px where two columns
+                actually fit. 1700px is that live-measured floor plus the same
+                ~50px+ buffer style as the original tuning. Note this halves
+                the width available to each TeamCard's own Pokemon
                 grid once 2 columns activate - TeamCard.tsx's 3-vs-6-column
                 snap (see its own comment) is tuned against realistic
                 single-column widths, not this 2-column state, so 2 teams
