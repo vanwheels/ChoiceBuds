@@ -18,6 +18,15 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Team Card Padding at Certain Window Sizes] - Leg 1** (2026-09-11) - see
+  commit `d9fdc4d`. `TeamsPage.tsx`'s `@[1360px]:grid-cols-2` breakpoint went
+  stale when Team Header Sprite Strip leg 1 widened the header's sprite
+  strip from a 240px coverflow box to a ~376px flat strip without the
+  breakpoint being re-tuned - live-measured via `run-desktop` a real
+  2-column header floor of ~1670px, meaning every window size between
+  1360px and ~1670px rendered a genuinely overflowing header. Raised to
+  1700px; confirmed clean at and above the new crossover.
+
 - **[Add Pokémon Table: Type/Ability Columns] - Leg 1** (2026-09-11) - see
   commit `a64cc77`. Types/Abilities columns added to
   `AddPokemonStatTable.tsx`, Showdown Random Battle Dex-style, between
