@@ -35,6 +35,7 @@ import { SIDEBAR_WIDTH_TRANSITION } from '../config/motion';
 import { useSidebarCollapsed } from '../hooks/useSidebarCollapsed';
 import {
   TeamsIcon,
+  BoxIcon,
   CalcIcon,
   LiveCalcIcon,
   BattleLogIcon,
@@ -52,6 +53,7 @@ interface SidebarProps {
 
 const MAIN_NAV_ITEMS: { tab: ActiveTab; label: string; Icon: typeof TeamsIcon }[] = [
   { tab: 'teams', label: 'Teams', Icon: TeamsIcon },
+  { tab: 'box', label: 'Box', Icon: BoxIcon },
   { tab: 'calc', label: 'Calc', Icon: CalcIcon },
   { tab: 'liveCalc', label: 'Live Calc', Icon: LiveCalcIcon },
   { tab: 'battles', label: 'Battle Log', Icon: BattleLogIcon },

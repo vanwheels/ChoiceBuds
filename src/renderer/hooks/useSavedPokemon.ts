@@ -15,6 +15,13 @@ export interface UseSavedPokemonReturn {
   isLoading: boolean;
   error: string | null;
 
+  // Box Tab's per-entry collapse/expand state (Box Tab Leg 1, see TODO.md) -
+  // same Set<string>-of-ids + toggle shape as useTeams.ts's own
+  // expandedCardIds/toggleCardExpansion, just scoped to savedPokemon entries
+  // instead of teams.
+  expandedCardIds: Set<string>;
+  toggleCardExpansion: (id: string) => void;
+
   /**
    * Adds a whole batch in one persist+state-update, rather than being called
    * once per Pokemon in a loop - a bulk-import loop of N sequential single-add
@@ -31,6 +38,15 @@ export interface UseSavedPokemonReturn {
    */
   addSavedPokemonBatch: (pokemonList: ImportedPokemonInfo[], labels?: string[]) => Promise<boolean>;
   renameSavedPokemon: (id: string, label: string) => Promise<boolean>;
+  /**
+   * Field-level update on a saved entry's stored `ImportedPokemonInfo` (Box
+   * Tab Leg 1, see TODO.md) - distinct from renameSavedPokemon above, which
+   * only ever touches the entry's `label`. Box cards are editable in place,
+   * so this is what EditablePokemonCore.tsx's `onUpdatePokemon` callback
+   * commits through for a Box entry, same shape as PokemonCard.tsx's own
+   * `updatePokemon` for a roster slot.
+   */
+  updateSavedPokemon: (id: string, updates: Partial<ImportedPokemonInfo>) => Promise<boolean>;
   deleteSavedPokemon: (id: string) => Promise<boolean>;
   refreshSavedPokemon: () => Promise<void>;
   getSavedSetsForSpecies: (species: string) => SavedPokemonEntry[];
@@ -49,6 +65,7 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
   const [savedPokemon, setSavedPokemon] = useState<SavedPokemonEntry[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedCardIds, setExpandedCardIds] = useState<Set<string>>(new Set());
 
   /**
    * Internal: Load saved Pokemon from disk via preload bridge. Only called
@@ -179,6 +196,38 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     return success;
   }, [savedPokemon]);
 
+  const updateSavedPokemon = useCallback(async (id: string, updates: Partial<ImportedPokemonInfo>): Promise<boolean> => {
+    const index = savedPokemon.findIndex(e => e.id === id);
+    if (index === -1) {
+      setError(`Saved Pokemon set with ID ${id} not found`);
+      return false;
+    }
+
+    const updated = [...savedPokemon];
+    updated[index] = { ...updated[index], pokemon: { ...updated[index].pokemon, ...updates }, updatedAt: Date.now() };
+
+    const success = await persistSavedPokemonToDisk(updated);
+
+    if (success) {
+      setSavedPokemon(updated);
+      setError(null);
+    }
+
+    return success;
+  }, [savedPokemon]);
+
+  const toggleCardExpansion = useCallback((id: string): void => {
+    setExpandedCardIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
+
   const deleteSavedPokemon = useCallback(async (id: string): Promise<boolean> => {
     const updated = savedPokemon.filter(e => e.id !== id);
     const success = await persistSavedPokemonToDisk(updated);
@@ -204,8 +253,11 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     savedPokemon,
     isLoading,
     error,
+    expandedCardIds,
+    toggleCardExpansion,
     addSavedPokemonBatch,
     renameSavedPokemon,
+    updateSavedPokemon,
     deleteSavedPokemon,
     refreshSavedPokemon,
     getSavedSetsForSpecies,

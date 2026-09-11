@@ -180,6 +180,59 @@ describe('useSavedPokemon', () => {
     expect(result.current.savedPokemon).toHaveLength(1);
   });
 
+  it('updateSavedPokemon merges into the entry\'s pokemon field and bumps updatedAt, leaving other entries untouched', async () => {
+    vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
+      version: 1,
+      savedPokemon: [
+        { id: 'a', label: 'Gengar', pokemon: makePokemon(), savedAt: 0, updatedAt: 0 },
+        { id: 'b', label: 'Rillaboom', pokemon: makePokemon({ species: 'Rillaboom' }), savedAt: 0, updatedAt: 0 },
+      ],
+      lastModified: 0,
+    });
+    const { result } = renderHook(() => useSavedPokemon());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    let success = false;
+    await act(async () => {
+      success = await result.current.updateSavedPokemon('a', { spriteUrl: 'https://example.com/new.png' });
+    });
+
+    expect(success).toBe(true);
+    const updated = result.current.savedPokemon.find(e => e.id === 'a');
+    expect(updated?.pokemon.spriteUrl).toBe('https://example.com/new.png');
+    expect(updated?.pokemon.showdownData.species).toBe('Gengar'); // other pokemon fields untouched
+    expect(updated?.updatedAt).toBeGreaterThan(0);
+    expect(result.current.savedPokemon.find(e => e.id === 'b')?.pokemon.spriteUrl).not.toBe('https://example.com/new.png');
+  });
+
+  it('updateSavedPokemon fails with an error for an unknown id', async () => {
+    const { result } = renderHook(() => useSavedPokemon());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    let success = true;
+    await act(async () => {
+      success = await result.current.updateSavedPokemon('nope', { spriteUrl: 'x' });
+    });
+
+    expect(success).toBe(false);
+    expect(result.current.error).toContain('nope');
+  });
+
+  it('toggleCardExpansion adds and removes an id from expandedCardIds independently per id', async () => {
+    const { result } = renderHook(() => useSavedPokemon());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.expandedCardIds).toEqual(new Set());
+
+    act(() => result.current.toggleCardExpansion('a'));
+    expect(result.current.expandedCardIds).toEqual(new Set(['a']));
+
+    act(() => result.current.toggleCardExpansion('b'));
+    expect(result.current.expandedCardIds).toEqual(new Set(['a', 'b']));
+
+    act(() => result.current.toggleCardExpansion('a'));
+    expect(result.current.expandedCardIds).toEqual(new Set(['b']));
+  });
+
   it('getSavedSetsForSpecies matches case-insensitively against the stored species', async () => {
     vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
       version: 1,

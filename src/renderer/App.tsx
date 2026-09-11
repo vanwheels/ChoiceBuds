@@ -28,6 +28,7 @@ import ReleaseNotesModal from './components/ReleaseNotesModal';
 // Lazy-loaded so each tab's code is only fetched/parsed once a user actually
 // opens it, not on every app startup - CalcPage in particular pulls in
 // @smogon/calc, the app's heaviest dependency.
+const BoxPage = lazy(() => import('./components/BoxPage'));
 const CalcPage = lazy(() => import('./components/calc/CalcPage'));
 const LiveCalcPage = lazy(() => import('./components/livecalc/LiveCalcPage'));
 const BattleLogPage = lazy(() => import('./components/battlelog/BattleLogPage'));
@@ -36,7 +37,7 @@ const TypeMatchupPage = lazy(() => import('./components/typematchup/TypeMatchupP
 const SpeedTiersPage = lazy(() => import('./components/speedtiers/SpeedTiersPage'));
 const SettingsPage = lazy(() => import('./components/SettingsPage'));
 
-export type ActiveTab = 'teams' | 'calc' | 'liveCalc' | 'battles' | 'statistics' | 'typeMatchup' | 'speedTiers' | 'settings';
+export type ActiveTab = 'teams' | 'box' | 'calc' | 'liveCalc' | 'battles' | 'statistics' | 'typeMatchup' | 'speedTiers' | 'settings';
 
 /**
  * Main application shell component
@@ -131,6 +132,18 @@ export default function App() {
               savedPokemonState={savedPokemonState}
             />
           </div>
+          {visitedTabs.has('box') && (
+            <div style={{ display: activeTab === 'box' ? 'block' : 'none' }}>
+              <Suspense fallback={<div className="text-zinc-400 text-sm">Loading box...</div>}>
+                <BoxPage
+                  savedPokemonState={savedPokemonState}
+                  gameDataState={gameDataState}
+                  spriteCacheState={spriteCacheState}
+                  settingsState={settingsState}
+                />
+              </Suspense>
+            </div>
+          )}
           {visitedTabs.has('calc') && (
             <div style={{ display: activeTab === 'calc' ? 'block' : 'none' }}>
               <Suspense fallback={<div className="text-zinc-400 text-sm">Loading calculator...</div>}>

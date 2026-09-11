@@ -27,6 +27,16 @@ export function TeamsIcon({ className }: IconProps) {
   );
 }
 
+export function BoxIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 8.5 12 4l9 4.5-9 4.5-9-4.5Z" />
+      <path d="M3 8.5V16l9 4.5V13" />
+      <path d="M21 8.5V16l-9 4.5" />
+    </svg>
+  );
+}
+
 export function CalcIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
