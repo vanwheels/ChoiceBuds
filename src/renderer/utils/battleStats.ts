@@ -120,24 +120,6 @@ export function getRecordByTeam(battles: Battle[]): LabeledRecord[] {
     .sort((a, b) => b.total - a.total);
 }
 
-/** Per-game record against a named opponent (see Battle.opponentName) - battles with no name set are skipped, since there's nothing to group them by. */
-export function getRecordByOpponent(battles: Battle[], topN = 10): LabeledRecord[] {
-  const completed = completedBattles(battles).filter(b => b.opponentName);
-  const byOpponent = new Map<string, { label: string; wins: number; losses: number }>();
-
-  for (const battle of completed) {
-    const key = battle.opponentName!.trim().toLowerCase();
-    const entry = byOpponent.get(key) ?? { label: battle.opponentName!.trim(), wins: 0, losses: 0 };
-    if (battle.result === 'win') entry.wins++; else entry.losses++;
-    byOpponent.set(key, entry);
-  }
-
-  return Array.from(byOpponent.values())
-    .map(({ label, wins, losses }) => ({ label, ...toRecord(wins, losses) }))
-    .sort((a, b) => b.total - a.total)
-    .slice(0, topN);
-}
-
 /** Set-level (Bo3) record - only counts sets that are actually decided (2 wins either side); an in-progress or 1-1 set doesn't count toward either side yet. */
 export function getSetRecord(battles: Battle[]): WinLossRecord {
   const groups = groupBattlesBySet(battles);

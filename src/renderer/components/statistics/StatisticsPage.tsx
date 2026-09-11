@@ -14,7 +14,6 @@ import {
   getOverallRecord,
   getRecordByFormat,
   getRecordByTeam,
-  getRecordByOpponent,
   getRecordBySeason,
   getSeasonsWithBattles,
   getSetRecord,
@@ -56,7 +55,6 @@ export default function StatisticsPage({ battlesState, spriteCacheState }: Stati
   const setRecord = useMemo(() => getSetRecord(filteredBattles), [filteredBattles]);
   const recordByFormat = useMemo(() => getRecordByFormat(filteredBattles), [filteredBattles]);
   const recordByTeam = useMemo(() => getRecordByTeam(filteredBattles), [filteredBattles]);
-  const recordByOpponent = useMemo(() => getRecordByOpponent(filteredBattles), [filteredBattles]);
   const recordBySeason = useMemo(() => getRecordBySeason(battles), [battles]);
   const recentForm = useMemo(() => getRecentForm(filteredBattles), [filteredBattles]);
   const mostUsedPokemon = useMemo(() => getMostUsedPokemon(filteredBattles), [filteredBattles]);
@@ -101,7 +99,6 @@ export default function StatisticsPage({ battlesState, spriteCacheState }: Stati
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <BreakdownPanel title="By Format" records={recordByFormat} emptyMessage="No completed battles yet." />
         <BreakdownPanel title="By Team" records={recordByTeam} emptyMessage="No completed battles yet." />
-        <BreakdownPanel title="By Opponent" records={recordByOpponent} emptyMessage="No named opponents logged yet." />
         {seasonFilter === ALL_SEASONS && (
           <BreakdownPanel title="By Season" records={recordBySeason} emptyMessage="No battles logged during a known season yet." />
         )}

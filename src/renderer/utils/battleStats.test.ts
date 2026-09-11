@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   getOverallRecord, getRecordByFormat, getRecordBySeason, getSeasonsWithBattles,
-  getRecordByTeam, getRecordByOpponent, getSetRecord, getRecentForm,
+  getRecordByTeam, getSetRecord, getRecentForm,
   getMostUsedPokemon, getMostFacedOpponents, getTeamRosterUsage,
 } from './battleStats';
 import type { Battle, BroughtPokemonSnapshot, OpponentPokemonEntry } from '../types/pokemon';
@@ -121,32 +121,6 @@ describe('getRecordByTeam', () => {
     const result = getRecordByTeam(battles);
     expect(result[0]).toEqual({ label: 'Beta', wins: 2, losses: 0, total: 2, winRate: 1 });
     expect(result[1]).toEqual({ label: 'Alpha', wins: 1, losses: 0, total: 1, winRate: 1 });
-  });
-});
-
-describe('getRecordByOpponent', () => {
-  it('skips battles with no opponentName set', () => {
-    const battles = [makeBattle({ opponentName: undefined, result: 'win' })];
-    expect(getRecordByOpponent(battles)).toEqual([]);
-  });
-
-  it('groups opponents case-insensitively and trims whitespace, using the first-seen casing/trim', () => {
-    const battles = [
-      makeBattle({ opponentName: ' Ash ', result: 'win' }),
-      makeBattle({ opponentName: 'ash', result: 'loss' }),
-    ];
-    const result = getRecordByOpponent(battles);
-    expect(result).toEqual([{ label: 'Ash', wins: 1, losses: 1, total: 2, winRate: 0.5 }]);
-  });
-
-  it('limits results to topN, keeping the highest-total opponents', () => {
-    const battles = [
-      makeBattle({ opponentName: 'A', result: 'win' }),
-      makeBattle({ opponentName: 'B', result: 'win' }),
-      makeBattle({ opponentName: 'B', result: 'win' }),
-    ];
-    const result = getRecordByOpponent(battles, 1);
-    expect(result).toEqual([{ label: 'B', wins: 2, losses: 0, total: 2, winRate: 1 }]);
   });
 });
 
