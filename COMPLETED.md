@@ -18,6 +18,13 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Statistics: Team Roster Usage Denominator Ignores Roster Changes] -
+  Leg 1** (2026-09-10) - see commit `bd41f6b`. `getTeamRosterUsage` was
+  dividing every species' `broughtCount` by the team-wide `totalTeamBattles`
+  instead of how many battles that species was actually on the roster for,
+  so a removed species' rate kept drifting downward as the team kept
+  playing without it. Added a per-species `battleCount` denominator.
+
 - **[Statistics: Win-Loss Column on Most-Faced Pokémon] - Leg 3** (2026-09-10)
   - see commit `4c6d195`. Added a wins/losses tally to
   `getMostFacedOpponents` (completed battles only, kept separate from the
