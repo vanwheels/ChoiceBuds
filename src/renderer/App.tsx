@@ -142,6 +142,7 @@ export default function App() {
                   speciesRosterState={speciesRosterState}
                   spriteCacheState={spriteCacheState}
                   settingsState={settingsState}
+                  teamsState={teamsState}
                 />
               </Suspense>
             </div>

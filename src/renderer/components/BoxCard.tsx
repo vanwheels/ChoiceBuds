@@ -16,6 +16,10 @@
  * Rename is inline (click "Rename" then edit in place, same pattern
  * CalcSavedSetsModal.tsx's own management list already used) rather than a
  * separate dialog.
+ *
+ * "Add to Team…" (Box Tab Leg 4, see TODO.md) is the same context menu's
+ * newest item - opens BoxPage.tsx's AddToTeamDialog rather than acting
+ * directly, since picking a destination team needs its own UI.
  */
 
 import { useState } from 'react';
@@ -33,6 +37,7 @@ interface BoxCardProps {
   isExpanded: boolean;
   onToggleExpand: () => void;
   onUpdatePokemon: (updates: Partial<ImportedPokemonInfo>) => Promise<boolean>;
+  onAddToTeam: () => void;
   onRename: (label: string) => Promise<boolean>;
   onDuplicate: () => Promise<boolean>;
   onDelete: () => Promise<boolean>;
@@ -42,7 +47,7 @@ interface BoxCardProps {
   showAnimatedSprites: boolean;
 }
 
-export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePokemon, onRename, onDuplicate, onDelete, gameDataState, rulesetId, resolveSprite, showAnimatedSprites }: BoxCardProps) {
+export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePokemon, onAddToTeam, onRename, onDuplicate, onDelete, gameDataState, rulesetId, resolveSprite, showAnimatedSprites }: BoxCardProps) {
   const { pokemon, label } = entry;
 
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
@@ -66,6 +71,17 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
   };
 
   const menuItems: ContextMenuItem[] = [
+    {
+      label: 'Add to Team…',
+      onClick: onAddToTeam,
+      icon: (
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M19 8v6M22 11h-6" />
+        </svg>
+      ),
+    },
     {
       label: 'Rename',
       onClick: startRename,

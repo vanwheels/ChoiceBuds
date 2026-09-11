@@ -27,6 +27,15 @@
  * useRosterActions needs an `updateTeam` to construct (only used by its
  * other actions - swapSlot/addSlot/etc - none of which this page calls), so
  * a no-op stub stands in; buildSlot itself never touches it.
+ *
+ * "Add to Team…" (Box Tab Leg 4, see TODO.md): a BoxCard's context menu
+ * opens AddToTeamDialog, tracked here the same `useState` shape as
+ * `pendingNewBuild` above (which entry's dialog is open, not a boolean -
+ * only one can be open at a time). Picking a team there clones the entry's
+ * pokemon (`utils/clonePokemon.ts::cloneSavedPokemon`, the same clone
+ * TeamCard.tsx::handlePasteNewPokemon uses for a clipboard paste) and
+ * appends it via `teamsState.updateTeam` - a copy, not a move, so the Box
+ * entry itself is untouched.
  */
 
 import { useState } from 'react';
@@ -38,11 +47,13 @@ import type { UseDatabaseReturn } from '../hooks/useDatabase';
 import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
 import type { UseSettingsReturn } from '../hooks/useSettings';
+import type { UseTeamsReturn } from '../hooks/useTeams';
 import { useRosterActions } from '../hooks/useRosterActions';
 import { toRegulationId } from '../utils/pokemonRules';
 import BoxCard from './BoxCard';
 import SpeciesPickerCard from './SpeciesPickerCard';
 import SaveToLibraryDialog from './SaveToLibraryDialog';
+import AddToTeamDialog from './AddToTeamDialog';
 
 interface BoxPageProps {
   savedPokemonState: UseSavedPokemonReturn;
@@ -51,12 +62,13 @@ interface BoxPageProps {
   speciesRosterState: UseSpeciesRosterReturn;
   spriteCacheState: UseSpriteCacheReturn;
   settingsState: UseSettingsReturn;
+  teamsState: UseTeamsReturn;
 }
 
 // buildSlot never calls updateTeam - see the header comment above.
 const NOOP_UPDATE_TEAM = async () => false;
 
-export default function BoxPage({ savedPokemonState, gameDataState, databaseState, speciesRosterState, spriteCacheState, settingsState }: BoxPageProps) {
+export default function BoxPage({ savedPokemonState, gameDataState, databaseState, speciesRosterState, spriteCacheState, settingsState, teamsState }: BoxPageProps) {
   const rulesetId = toRegulationId(settingsState.settings.defaultRegulation);
   const rosterActions = useRosterActions(
     NOOP_UPDATE_TEAM,
@@ -71,6 +83,8 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
   // Holds the freshly-built Pokémon and its pre-generated id between
   // buildSlot resolving and the save-name dialog closing - see header comment.
   const [pendingNewBuild, setPendingNewBuild] = useState<{ id: string; pokemon: ImportedPokemonInfo } | null>(null);
+  // Which Box entry's "Add to Team…" dialog is open - see header comment.
+  const [addToTeamEntryId, setAddToTeamEntryId] = useState<string | null>(null);
 
   const handleSelectNewSpecies = async (species: SpeciesRosterEntry) => {
     setIsPickerOpen(false);
@@ -96,6 +110,16 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
     const speciesCompare = a.pokemon.showdownData.species.localeCompare(b.pokemon.showdownData.species);
     return speciesCompare !== 0 ? speciesCompare : a.label.localeCompare(b.label);
   });
+
+  const addToTeamEntry = addToTeamEntryId
+    ? savedPokemonState.savedPokemon.find(e => e.id === addToTeamEntryId) ?? null
+    : null;
+
+  const handleAddToTeam = async (teamId: string, cloned: ImportedPokemonInfo): Promise<boolean> => {
+    const team = teamsState.teams.find(t => t.id === teamId);
+    if (!team) return false;
+    return teamsState.updateTeam(teamId, { pokemon: [...team.pokemon, cloned] });
+  };
 
   return (
     <div className="h-full flex flex-col">
@@ -149,6 +173,7 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
                 isExpanded={savedPokemonState.expandedCardIds.has(entry.id)}
                 onToggleExpand={() => savedPokemonState.toggleCardExpansion(entry.id)}
                 onUpdatePokemon={(updates) => savedPokemonState.updateSavedPokemon(entry.id, updates)}
+                onAddToTeam={() => setAddToTeamEntryId(entry.id)}
                 onRename={(label) => savedPokemonState.renameSavedPokemon(entry.id, label)}
                 onDuplicate={() => savedPokemonState.duplicateSavedPokemon(entry.id)}
                 onDelete={() => savedPokemonState.deleteSavedPokemon(entry.id)}
@@ -169,6 +194,14 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
             resolveSprite={spriteCacheState.resolveSprite}
             onSave={handleSaveNewBuild}
             onClose={() => setPendingNewBuild(null)}
+          />
+        )}
+        {addToTeamEntry && (
+          <AddToTeamDialog
+            pokemon={addToTeamEntry.pokemon}
+            teams={teamsState.teams}
+            onAddToTeam={handleAddToTeam}
+            onClose={() => setAddToTeamEntryId(null)}
           />
         )}
       </AnimatePresence>
