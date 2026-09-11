@@ -18,16 +18,22 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
-- **[Box Tab: Import Build to Team] - Leg 4** (2026-09-11) - see commit
-  `10c1a41`. Added an "Add to Team…" item to `BoxCard.tsx`'s existing
-  context menu, opening a new `AddToTeamDialog.tsx` (same `Modal.tsx` shell
-  as `SaveToLibraryDialog`) that lists the user's teams and, on pick,
-  clones the entry (`cloneSavedPokemon`, the same clone
+- **[Box Tab: Import Build to Team] - Leg 4** (2026-09-11) - see commits
+  `10c1a41` and `f6b4b83`. Added an "Add to Team…" item to `BoxCard.tsx`'s
+  existing context menu, opening a new `AddToTeamDialog.tsx` (same
+  `Modal.tsx` shell as `SaveToLibraryDialog`) that lists the user's teams
+  and, on pick, clones the entry (`cloneSavedPokemon`, the same clone
   `TeamCard.tsx::handlePasteNewPokemon` already uses for a clipboard paste)
   and appends it via `updateTeam` - a copy, not a move. A full team (6/6)
   still renders disabled with a "Full" tag rather than being hidden.
   `BoxPage.tsx` now also takes `teamsState` as a prop, threaded from
-  `App.tsx`'s existing instance.
+  `App.tsx`'s existing instance. Live-verified, then followed up same
+  session on direct feedback that the reverse direction (starting from a
+  Team, not from Box) was still missing: `SpeciesPickerCard.tsx`'s
+  "+ Add Pokémon" search (TeamCard.tsx only, opt-in via a new
+  `savedPokemon`/`onSelectSaved` pair) now surfaces matching Box entries as
+  a "From Box" section alongside the species results, using the same
+  search/legality rules the species half already applies.
 
 - **[Box Tab] - Leg 3** (2026-09-10) - see commit `07ea74e`. Wired
   rename/delete (`useSavedPokemon.ts`'s existing `renameSavedPokemon`/
