@@ -19,7 +19,7 @@ in:
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
 - **[Save-to-Library Name Prompt] - Leg 1** (2026-09-10) - see commit
-  `<pending>`. New shared `SaveToLibraryDialog.tsx` (sprite + a name input
+  `f6365c2`. New shared `SaveToLibraryDialog.tsx` (sprite + a name input
   pre-filled with nickname-or-species, Save/Cancel) replaces the prior
   silent auto-generated label at both Calc's "Save Set" button
   (`CalcPokemonPanel.tsx::handleSaveSet` - now enriches first, then opens
