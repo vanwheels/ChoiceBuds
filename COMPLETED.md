@@ -18,6 +18,23 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Box Tab: Reorder] - Leg 7** (2026-09-11) - see commit `2ea5446`. Added
+  a boxSortMode ('alphabetical' | 'custom') AppSettings field + a pill
+  toggle in `BoxPage.tsx`'s header - Box had no persisted display order at
+  all before this, `sortedEntries` always re-derived species-then-label on
+  every render. Custom mode renders `SavedPokemonDatabase.savedPokemon`'s
+  own array order directly (no dedicated order field, same as
+  `TeamsDatabase.teams` via `reorderTeam`), rearranged via `BoxCard.tsx`'s
+  drag handles and a new `reorderSavedPokemon` in `useSavedPokemon.ts` -
+  same team-list-reorder pattern as `TeamCard.tsx` (`utils/boxDragTypes.ts`
+  MIME payload, `motion.div layout="position"` slide animation). Drag
+  affordance split by card state: the collapsed tile is draggable as a
+  whole, the expanded card gets a dedicated grip handle. The first-ever
+  switch to Custom mode seeds the order from the current Alphabetical view
+  (`setSavedPokemonOrder`, gated by a new `boxCustomOrderSeeded` flag so a
+  later toggle never clobbers an already-dragged order) - resolves the
+  seeding question the scoping pass left open.
+
 - **[Box Tab: Export/Copy Build] - Leg 6** (2026-09-11) - see commit
   `f4d8d29`. Added "Copy Pokémon" and "Export" to `BoxCard.tsx`'s context
   menu, straight ports of `PokemonCard.tsx`'s own versions -

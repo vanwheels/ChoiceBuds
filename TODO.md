@@ -36,41 +36,6 @@ Leg 7 scoped 2026-09-11 (see below); scoping surfaced a second want
 (favoriting) not in the original ask - flagged and split into its own
 Unscheduled item rather than folded into Leg 7's build.
 
-- **[Box Tab: Reorder] — Leg 7** *(Last touched: 2026-09-11 · Re-checks: 0)*
-  Scoped 2026-09-11. Corrected assumption in the original wording: Box has
-  no persisted display order today at all - `BoxPage.tsx`'s `sortedEntries`
-  always re-sorts by species-then-label on every render, there's nothing to
-  "reorder" yet without first adding a real order concept.
-  Resolved scope:
-  - A sort-mode toggle in `BoxPage.tsx`'s header: **Alphabetical** (today's
-    species+label sort, stays default) vs. **Custom order**. Persist the
-    chosen mode in `AppSettings` (`settings.ts`) as a new field, e.g.
-    `boxSortMode: 'alphabetical' | 'custom'`.
-  - Custom order = plain array order in `SavedPokemonDatabase.savedPokemon`
-    itself - no dedicated `order` field needed, same as `TeamsDatabase.teams`
-    already works via `reorderTeam`. Resolves the "persisted order field"
-    question from the original item text.
-  - Drag-and-drop (user's choice over up/down buttons), reusing
-    `TeamCard.tsx`'s existing team-list-reorder pattern exactly: a new
-    `reorderSavedPokemon(draggedId, targetId)` in `useSavedPokemon.ts` with
-    the same insert-before-target semantics as `reorderTeam`, a new
-    `utils/boxDragTypes.ts` MIME-payload file mirroring
-    `teamRosterDragTypes.ts`, `motion.div layout="position"` for the slide
-    animation.
-  - Drag affordance split by card state (BoxCard.tsx): the collapsed tile
-    (w-28, sprite+label, single "expand" click action) is draggable as a
-    whole - low click-ambiguity unlike TeamCard's richer header, so no
-    dedicated handle needed there. The expanded card (more interactive
-    surface: rename, context menu, editable fields) gets a dedicated grip
-    handle, mirroring TeamCard's controls-pill handle.
-  - Drag only has an effect in Custom mode - dragging while Alphabetical is
-    selected should be a no-op (or hidden handle/non-draggable state); still
-    an implementation detail, not re-asked.
-  - Not yet decided: whether switching to Custom mode for the first time
-    seeds the array order from the current alphabetical view (so it doesn't
-    visually jump) or from whatever raw disk order already exists. Small
-    enough to resolve at build time, noted here so it isn't lost.
-
 - **[Box Tab: Search] — Leg 8** *(Last touched: 2026-09-10 · Re-checks: 0)*
   No way to search/filter Box by name or species - browsing is scroll-only.
   Not yet scoped in detail (search by saved nickname vs. species vs. both,
@@ -197,6 +162,28 @@ unblocked.
   yet - needs real ladder-usage volume/distribution to be visible live
   first; revisit once that data exists rather than re-checking this item on
   a schedule.
+
+- **[Add Pokémon: Sortable Base-Stat Table] — Leg 1** *(Last touched:
+  2026-09-11 · Re-checks: 0)*
+  Requested 2026-09-11, referencing Showdown's Random Battle Dex sortable-
+  table view (screenshots shown in chat, not saved to the repo). Wants a way
+  to browse every legal-roster species (Mega forms included) from
+  "+ Add Pokémon" as a table sortable ascending/descending by HP/Atk/Def/
+  SpA/SpD/Spe/BST via column-header clicks, same as Showdown's dex. This
+  replaces/extends `SpeciesPickerCard.tsx`'s current flat search-list layout
+  for both Teams (`TeamCard.tsx`'s trailing add slot) and Box
+  (`BoxPage.tsx`'s "+ New Build"), so needs its own visual scope wider than
+  today's in-slot picker card.
+  Not yet scoped - two real gaps surfaced skimming the current code, not
+  just UI layout: (1) `SpeciesRosterEntry` (`types/gameData.ts`) carries only
+  name/id/sprite today, no base stats - stats live per-species in
+  `PokeAPICache`, so sorting needs a join against that cache, not a new
+  roster field; (2) Mega forms aren't distinct roster entries at all today -
+  `config/megaEvolution.ts`'s `MEGA_STONE_TO_SPECIES` only drives a sprite
+  swap when a Mega Stone is already held, so "Mega Whatever, BST 700" as its
+  own sortable row (with boosted stats) would be new, not a filter over
+  existing data. Needs a decision on how Mega rows get their stats before
+  this is buildable.
 
 ## Future Milestones (unscheduled)
 
