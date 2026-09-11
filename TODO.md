@@ -25,18 +25,8 @@ to save into it from Teams at all, and no way to browse it without already
 knowing a species has a match. Originally scoped as 3 legs; Box Tab's own
 leg was further split 2026-09-10 (display/edit vs. creation are different
 enough pieces of work to review separately - flagged before starting, user
-agreed) into what's now Leg 1 (shipped, see `COMPLETED.md`), Leg 2, and
-Leg 3 (the entry-management gap Leg 1 found but didn't fix) below.
-
-- **[Box Tab] — Leg 2** *(Last touched: 2026-09-10 · Re-checks: 0)*
-  A "+ New Build" action on `BoxPage.tsx` (Leg 1, see `COMPLETED.md`) that
-  opens a species picker (reusing `SpeciesPickerCard`) and creates a fresh
-  entry via the same usage-based default `useRosterActions::buildSlot`
-  already builds for "+ Add Pokémon" on a team, saved straight into the
-  library through the existing Save-to-Library name-prompt dialog and opened
-  expanded/in-edit immediately (`useSavedPokemon.ts`'s `expandedCardIds` from
-  Leg 1) - saved builds no longer only arrive via Calc/Teams pushing into
-  the library.
+agreed) into what's now Leg 1 and Leg 2 (both shipped, see `COMPLETED.md`)
+and Leg 3 below (the entry-management gap Leg 1 found but didn't fix).
 
 - **[Box Tab] — Leg 3** *(Last touched: 2026-09-10 · Re-checks: 0)*
   Delete/rename affordance for a Box entry, surfaced in `BoxPage.tsx`/

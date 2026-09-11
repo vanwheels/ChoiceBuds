@@ -18,6 +18,19 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Box Tab] - Leg 2** (2026-09-10) - see commit `e3de643`. Added a
+  "+ New Build" dashed tile to `BoxPage.tsx`: opens the same
+  `SpeciesPickerCard` as a team's "+ Add Pokémon" slot, builds a usage-based
+  default via `useRosterActions.ts`'s `buildSlot` (now exposed standalone on
+  the hook's return, since Box has no team/slot to write into), then reuses
+  the existing `SaveToLibraryDialog` name prompt to persist it. Gave
+  `addSavedPokemonBatch` an optional per-entry `ids` array so the caller can
+  generate the id up front and hand it straight to `toggleCardExpansion` the
+  instant the save succeeds - the new entry opens directly into edit instead
+  of landing collapsed. `BoxPage` now also takes
+  `databaseState`/`speciesRosterState` as props (needed to construct
+  `useRosterActions` and feed the picker's roster).
+
 - **[Box Tab] - Leg 1** (2026-09-10) - see commit `7120edd`. New "Box"
   sidebar tab (`BoxPage.tsx`) showing every `savedPokemon` entry as a
   continuous flex-wrap grid, collapsed by default to sprite + label
