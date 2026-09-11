@@ -18,13 +18,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 
 ## Current Milestone: Statistics Improvements
 
-- **[Statistics: Selected Battle Pokémon Not Tracked] — Leg 1** *(Last
-  touched: 2026-09-10 · Re-checks: 0)*
-  Statistics doesn't currently factor in which Pokémon the user actually
-  selected/brought in their logged battles. Needs scoping — likely feeds a
-  usage-rate or brought-rate view, but what exactly should surface isn't
-  decided yet.
-
 - **[Statistics: Remove "By Opponent" Section] — Leg 2** *(Last touched:
   2026-09-10 · Re-checks: 0)*
   Remove the "by opponent" breakdown from the Statistics page — no longer

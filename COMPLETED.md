@@ -18,6 +18,13 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Statistics: Selected Battle Pokémon Not Tracked] - Leg 1** (2026-09-10) -
+  see commit `9ff455c`. Existing `getMostUsedPokemon`/`PokemonUsagePanel`
+  tracked brought-Pokémon usage globally, but had no way to show, for one
+  specific team, which of its own roster Pokémon actually get chosen vs.
+  sit unused - added a new per-team `getTeamRosterUsage`/
+  `TeamRosterUsagePanel.tsx` instead of extending the "By Team" breakdown.
+
 - **[Battle Logger: Duplicate Pokémon Selectable] - Leg 1** (2026-09-10) -
   see commit `b55fbf4`. `RecordMatchForm`'s "+ Add Opponent Pokemon"
   `SpeciesPickerCard` had no dedupe against `opponentRoster`, so the same
