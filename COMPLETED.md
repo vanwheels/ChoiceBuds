@@ -19,7 +19,7 @@ in:
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
 - **[TeamCard Add-Pokémon: No Species-Clause Dedupe] - Leg 1** (2026-09-11) -
-  see commit `<pending>`. `TeamCard.tsx`'s "+ Add Pokémon"
+  see commit `47b709e`. `TeamCard.tsx`'s "+ Add Pokémon"
   `SpeciesPickerCard` had no dedupe against the team's own roster, so a
   species already on the team could be added a second time via either add
   path (`handleAddSpecies`'s plain roster results or `handleAddSavedEntry`'s
