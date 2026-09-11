@@ -134,6 +134,18 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
     await rosterActions.addSlot(team, species.name);
   };
 
+  // Species Clause: no legal team fields the same species twice, so once a
+  // species is already on this team it's removed from both the "+ Add
+  // Pokémon" picker's plain-roster results and its "From Box" results
+  // entirely, rather than left pickable-again with only the post-hoc
+  // Validate Team warning to catch it (TeamCard Add-Pokémon: No
+  // Species-Clause Dedupe, see TODO.md) - same fix shape as Battle Logger's
+  // opponent-roster picker (see COMPLETED.md's Duplicate Pokémon Selectable
+  // entry), applied here to both of this picker's add paths.
+  const teamSpeciesSeen = new Set(team.pokemon.map(p => p.showdownData.species.toLowerCase()));
+  const addPickerRoster = speciesRosterState.roster.filter(s => !teamSpeciesSeen.has(s.name.toLowerCase()));
+  const addPickerSavedPokemon = savedPokemonState.savedPokemon.filter(e => !teamSpeciesSeen.has(e.pokemon.showdownData.species.toLowerCase()));
+
   // "+ Add Pokémon" picking a Box result instead of a bare species (Box
   // Tab: Add from Box via Add Pokémon Search, see TODO.md) - same
   // clone-and-append `cloneSavedPokemon` already gives a fresh clipboard
@@ -521,12 +533,12 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
                 {team.pokemon.length < 6 && (
                   isAddPickerOpen ? (
                     <SpeciesPickerCard
-                      roster={speciesRosterState.roster}
+                      roster={addPickerRoster}
                       rulesetId={toRegulationId(team.format)}
                       resolveSprite={spriteCacheState.resolveSprite}
                       onSelect={handleAddSpecies}
                       onClose={() => setIsAddPickerOpen(false)}
-                      savedPokemon={savedPokemonState.savedPokemon}
+                      savedPokemon={addPickerSavedPokemon}
                       onSelectSaved={handleAddSavedEntry}
                     />
                   ) : (

@@ -18,6 +18,19 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[TeamCard Add-Pokémon: No Species-Clause Dedupe] - Leg 1** (2026-09-11) -
+  see commit `<pending>`. `TeamCard.tsx`'s "+ Add Pokémon"
+  `SpeciesPickerCard` had no dedupe against the team's own roster, so a
+  species already on the team could be added a second time via either add
+  path (`handleAddSpecies`'s plain roster results or `handleAddSavedEntry`'s
+  "From Box" results) - `teamValidation.ts`'s Validate Team button only
+  warned about the resulting duplicate after the fact rather than blocking
+  it at add-time. Fixed by filtering both the `roster` and `savedPokemon`
+  arrays passed to that picker down to species not already on `team.pokemon`
+  (case-insensitive), same fix shape as Battle Logger's opponent-roster
+  picker (see "Duplicate Pokémon Selectable" below), applied here to both
+  of this picker's add paths instead of just one.
+
 - **[Box Tab: Favoriting] - Leg 1** (2026-09-11) - see commit `92adc3e`.
   Added `SavedPokemonEntry.favorite?: boolean` (mirroring `Team.favorite`) +
   `useSavedPokemon.ts`'s `toggleSavedPokemonFavorite` + a new
