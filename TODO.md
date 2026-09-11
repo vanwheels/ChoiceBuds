@@ -23,12 +23,6 @@ shipped first — see `MILESTONES.md`). Scoping pass done 2026-09-10 for the
 two items that needed one; per the user's "split scoping from building"
 habit, this session stops at the plan below rather than starting Leg 1.
 
-- **[Favorite Teams] — Leg 1** *(Last touched: 2026-09-10 · Re-checks: 0)*
-  Add the ability to favorite a team so favorited teams always sort to the
-  top, mirroring how favoriting works in the user's GW2 Squaded project.
-  Needs a persisted favorite flag on `Team` (`types/pokemon.ts`) plus a sort
-  change in `useTeams`/`TeamsPage`. Already scoped — first leg to build.
-
 - **[Quick Copy/Paste Pokémon & Teams via Right-Click] — Leg 1** *(Last
   touched: 2026-09-10 · Re-checks: 0)*
   Add a right-click context menu for quickly copying/pasting a Pokémon or an

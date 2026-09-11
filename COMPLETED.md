@@ -18,6 +18,12 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Favorite Teams] - Leg 1** (2026-09-10) - see commit `111bf56`. Added an
+  optional `favorite` flag on `Team`, toggled via a star button in
+  `TeamCard`'s controls pill; `TeamsPage` sorts favorited teams to the top
+  via a new `utils/teamSort.ts` (stable sort - each group keeps its existing
+  drag-reorder position otherwise).
+
 - **[Statistics: Team Roster Usage Denominator Ignores Roster Changes] -
   Leg 1** (2026-09-10) - see commit `bd41f6b`. `getTeamRosterUsage` was
   dividing every species' `broughtCount` by the team-wide `totalTeamBattles`
