@@ -18,6 +18,12 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Add Pokémon Table: Mega Form Rows] - Leg 3** (2026-09-11) - see commit
+  `8f0bb5d`. `#mega` standalone tag (filters table + "From Box" to Mega-only
+  rows) plus own-data type/ability matching for any further `#tag`s ANDed
+  alongside it - see that commit's body for the full writeup. Closes the
+  item (Legs 1-3).
+
 - **[Team Card Padding at Certain Window Sizes] - Leg 1** (2026-09-11) - see
   commit `d9fdc4d`. `TeamsPage.tsx`'s `@[1360px]:grid-cols-2` breakpoint went
   stale when Team Header Sprite Strip leg 1 widened the header's sprite
