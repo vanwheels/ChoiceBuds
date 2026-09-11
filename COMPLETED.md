@@ -18,6 +18,15 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Live Calc Defender Panel Parity] - Leg 1** (2026-09-11) - see commit
+  `85b1877`. Added a forme-family toggle (stat-block + Mega formes, reusing
+  `getFormeFamily`/`FormeFamily`) and a read-only base-stat display to
+  `LiveCalcDefenderPanel`, matching `CalcPokemonPanel`'s known-inputs UI for
+  the attacker on the same tab. Extracted the shared `FormeToggle` button-row
+  out of `CalcPokemonPanel` into its own file so both panels use it. Ability
+  display/lock stays out of scope - see TODO.md's Live Calc Known-Ability
+  Lock item.
+
 - **[Add Pokémon Table: Mega Form Rows] - Leg 3** (2026-09-11) - see commit
   `8f0bb5d`. `#mega` standalone tag (filters table + "From Box" to Mega-only
   rows) plus own-data type/ability matching for any further `#tag`s ANDed

@@ -29,18 +29,6 @@ tweaking" placeholder). Scoped 2026-09-11 after asking Vanny for the actual
 specifics; per the user's "split scoping from building" habit, this session
 stops at the plan below rather than starting Leg 1.
 
-- **[Live Calc Defender Panel Parity] — Leg 1** *(Last touched: 2026-09-11 ·
-  Re-checks: 0)*
-  `LiveCalcDefenderPanel` is species+level only today. Bring it in line with
-  `CalcPokemonPanel`'s known-inputs UI: a forme-family toggle (reuse
-  `getFormeFamily`/`FormeFamily`, same pattern as `useLiveCalc.ts`'s
-  `attackerFormes`) for multi-forme species, and a read-only base-stat
-  display for the selected species/level - base stats are known the instant
-  species is picked, only EVs/nature/ability/item are the actual unknowns
-  being solved for. Ability display/lock is deliberately out of this leg -
-  see Leg 4 below, since surfacing it usefully is an engine-level change,
-  not just UI parity.
-
 - **[Live Calc Observation Move Options: Actual Attacker Moveset] — Leg 1**
   *(Last touched: 2026-09-11 · Re-checks: 0)*
   Observation move dropdowns currently pull from the attacker species' full
