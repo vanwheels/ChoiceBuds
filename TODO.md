@@ -17,8 +17,80 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 [COMPLETED.md](COMPLETED.md).
 
 Saved Builds Box shipped 2026-09-11 (all 8 legs - see `COMPLETED.md` and
-`MILESTONES.md`). No next milestone promoted yet - see "Future Milestones
-(unscheduled)" below for the one open candidate.
+`MILESTONES.md`). Building Flow Tweaks promoted to current 2026-09-11 (name
+placeholder - open to renaming) - see "Future Milestones (unscheduled)" below
+for the one remaining open candidate.
+
+## Current Milestone: Building Flow Tweaks
+
+- **[Box Tab: Favoriting] — Leg 1** *(Last touched: 2026-09-11 · Re-checks:
+  0)*
+  Split out of Box Tab: Reorder's scoping pass 2026-09-11 - the user asked
+  for this alongside the sort-mode toggle, but it's a distinct feature (its
+  own data field, its own toggle UI, its own sort behavior) so it gets its
+  own item rather than riding along inside Leg 7's build. Direct precedent
+  already in the app: `Team.favorite` (`pokemon.ts`) + `TeamCard.tsx`'s
+  star-icon toggle button + `teamSort.ts::sortTeamsByFavorite` ("favorites
+  first, preserve each group's relative order otherwise").
+  Scoped 2026-09-11 - concrete plan, ready to build:
+  1. **Type**: `SavedPokemonEntry.favorite?: boolean` in `pokemon.ts`,
+     mirroring `Team.favorite`.
+  2. **Hook**: new `useSavedPokemon.ts` action, e.g.
+     `toggleSavedPokemonFavorite(id)`. Mirrors `renameSavedPokemon`'s
+     shape (an entry-level field), not `updateSavedPokemon` - that one only
+     ever touches the nested `pokemon` object, not the entry itself.
+  3. **Sort**: new `sortSavedPokemonByFavorite` utility mirroring
+     `teamSort.ts::sortTeamsByFavorite` exactly, composed on top of
+     `BoxPage.tsx`'s existing `sortedEntries` (favorites-first applies
+     after either Alphabetical or Custom ordering, same composition point
+     Leg 7 already built).
+  4. **Collapsed tile UI** (`BoxCard.tsx`'s `!isExpanded` branch, a tight
+     w-28 sprite+label button with no header row to drop a toggle into): a
+     corner-overlay star directly on the sprite (`absolute -top-1 -right-1`),
+     same precedent as `TeamCard.tsx`'s existing SP-cap-warning badge
+     overlay on its own roster sprites. Needs `stopPropagation` on click so
+     it doesn't also fire `onToggleExpand`. Same star SVG path/gold-fill
+     style as `TeamCard.tsx`'s button.
+  5. **Expanded card UI** (`BoxCard.tsx`'s `isExpanded` branch): a third
+     floating corner button at bottom-left (`-bottom-2.5 -left-2.5`), same
+     circular `w-6 h-6` style as the existing collapse (×) button. Top-right
+     is the collapse button and top-left is the Custom-mode-only drag
+     handle (`isCustomOrder` gate) - favorite has to render in every sort
+     mode, so it can't share top-left with the handle. Bottom-left is
+     unclaimed in all modes.
+
+- **[TeamCard Add-Pokémon: No Species-Clause Dedupe] — Leg 1** *(Last
+  touched: 2026-09-10 · Re-checks: 0)*
+  Found adjacent to Battle Logger: Duplicate Pokémon Selectable (see
+  `COMPLETED.md`) but out of that item's scope. `TeamCard.tsx`'s own
+  "+ Add Pokémon" flow (`handleAddSpecies` → `SpeciesPickerCard`) doesn't
+  filter out species already on the team, so a team can be built with the
+  same species twice - `teamValidation.ts`'s "Validate Team" button only
+  warns about this after the fact, it doesn't block it at add-time. Not
+  fixed here since the reported bug was scoped to the Battle Logger
+  brought-4 pickers specifically.
+
+- **[Add Pokémon: Sortable Base-Stat Table] — Leg 1** *(Last touched:
+  2026-09-11 · Re-checks: 0)*
+  Requested 2026-09-11, referencing Showdown's Random Battle Dex sortable-
+  table view (screenshots shown in chat, not saved to the repo). Wants a way
+  to browse every legal-roster species (Mega forms included) from
+  "+ Add Pokémon" as a table sortable ascending/descending by HP/Atk/Def/
+  SpA/SpD/Spe/BST via column-header clicks, same as Showdown's dex. This
+  replaces/extends `SpeciesPickerCard.tsx`'s current flat search-list layout
+  for both Teams (`TeamCard.tsx`'s trailing add slot) and Box
+  (`BoxPage.tsx`'s "+ New Build"), so needs its own visual scope wider than
+  today's in-slot picker card.
+  Not yet scoped - two real gaps surfaced skimming the current code, not
+  just UI layout: (1) `SpeciesRosterEntry` (`types/gameData.ts`) carries only
+  name/id/sprite today, no base stats - stats live per-species in
+  `PokeAPICache`, so sorting needs a join against that cache, not a new
+  roster field; (2) Mega forms aren't distinct roster entries at all today -
+  `config/megaEvolution.ts`'s `MEGA_STONE_TO_SPECIES` only drives a sprite
+  swap when a Mega Stone is already held, so "Mega Whatever, BST 700" as its
+  own sortable row (with boosted stats) would be new, not a filter over
+  existing data. Needs a decision on how Mega rows get their stats before
+  this is buildable.
 
 ## Blocked
 
@@ -70,37 +142,6 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-- **[Box Tab: Favoriting] — Leg 1** *(Last touched: 2026-09-11 · Re-checks:
-  0)*
-  Split out of Box Tab: Reorder's scoping pass 2026-09-11 - the user asked
-  for this alongside the sort-mode toggle, but it's a distinct feature (its
-  own data field, its own toggle UI, its own sort behavior) so it gets its
-  own item rather than riding along inside Leg 7's build. Direct precedent
-  already in the app: `Team.favorite` (`pokemon.ts`) + `TeamCard.tsx`'s
-  star-icon toggle button + `teamSort.ts::sortTeamsByFavorite` ("favorites
-  first, preserve each group's relative order otherwise"). Mirrors cleanly
-  onto `SavedPokemonEntry` (new `favorite?: boolean` field) +
-  `useSavedPokemon.ts` + an equivalent sort utility, composed with whichever
-  sort mode Box Tab: Reorder lands on (favorites-first still applies within
-  either Alphabetical or Custom order).
-  Not yet scoped in detail: where the star toggle lives on
-  `BoxCard.tsx`'s **collapsed** tile specifically - that tile is a tight
-  w-28 sprite+label button with no header/button row to drop a toggle into
-  today (unlike `TeamCard.tsx`'s spacious header), so this needs its own
-  small layout call before it's buildable, not just a copy-paste of Team's
-  button.
-
-- **[TeamCard Add-Pokémon: No Species-Clause Dedupe] — Leg 1** *(Last
-  touched: 2026-09-10 · Re-checks: 0)*
-  Found adjacent to Battle Logger: Duplicate Pokémon Selectable (see
-  `COMPLETED.md`) but out of that item's scope. `TeamCard.tsx`'s own
-  "+ Add Pokémon" flow (`handleAddSpecies` → `SpeciesPickerCard`) doesn't
-  filter out species already on the team, so a team can be built with the
-  same species twice - `teamValidation.ts`'s "Validate Team" button only
-  warns about this after the fact, it doesn't block it at add-time. Not
-  fixed here since the reported bug was scoped to the Battle Logger
-  brought-4 pickers specifically.
-
 - **[Reg M-C Z-A-Exclusive Movepool Audit] — Leg 1** *(Last touched:
   2026-09-10 · Re-checks: 1)*
   Deferred out of Regulation M-C Prep's Leg 2 (see COMPLETED.md/postmortem)
@@ -141,28 +182,6 @@ unblocked.
   yet - needs real ladder-usage volume/distribution to be visible live
   first; revisit once that data exists rather than re-checking this item on
   a schedule.
-
-- **[Add Pokémon: Sortable Base-Stat Table] — Leg 1** *(Last touched:
-  2026-09-11 · Re-checks: 0)*
-  Requested 2026-09-11, referencing Showdown's Random Battle Dex sortable-
-  table view (screenshots shown in chat, not saved to the repo). Wants a way
-  to browse every legal-roster species (Mega forms included) from
-  "+ Add Pokémon" as a table sortable ascending/descending by HP/Atk/Def/
-  SpA/SpD/Spe/BST via column-header clicks, same as Showdown's dex. This
-  replaces/extends `SpeciesPickerCard.tsx`'s current flat search-list layout
-  for both Teams (`TeamCard.tsx`'s trailing add slot) and Box
-  (`BoxPage.tsx`'s "+ New Build"), so needs its own visual scope wider than
-  today's in-slot picker card.
-  Not yet scoped - two real gaps surfaced skimming the current code, not
-  just UI layout: (1) `SpeciesRosterEntry` (`types/gameData.ts`) carries only
-  name/id/sprite today, no base stats - stats live per-species in
-  `PokeAPICache`, so sorting needs a join against that cache, not a new
-  roster field; (2) Mega forms aren't distinct roster entries at all today -
-  `config/megaEvolution.ts`'s `MEGA_STONE_TO_SPECIES` only drives a sprite
-  swap when a Mega Stone is already held, so "Mega Whatever, BST 700" as its
-  own sortable row (with boosted stats) would be new, not a filter over
-  existing data. Needs a decision on how Mega rows get their stats before
-  this is buildable.
 
 ## Future Milestones (unscheduled)
 
