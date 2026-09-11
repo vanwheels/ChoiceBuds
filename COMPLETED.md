@@ -18,6 +18,18 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Save-to-Library Name Prompt] - Leg 1** (2026-09-10) - see commit
+  `<pending>`. New shared `SaveToLibraryDialog.tsx` (sprite + a name input
+  pre-filled with nickname-or-species, Save/Cancel) replaces the prior
+  silent auto-generated label at both Calc's "Save Set" button
+  (`CalcPokemonPanel.tsx::handleSaveSet` - now enriches first, then opens
+  the dialog, and only persists once the name is confirmed) and a new
+  "Save to Library" item on Teams' `PokemonCard.tsx` right-click
+  `ContextMenu`. `addSavedPokemonBatch` (`useSavedPokemon.ts`) grew an
+  optional `labels` param aligned to its `pokemonList` array; a blank/typed
+  name still runs through the existing `nextAvailableLabel` dedup, not
+  bypassed.
+
 - **[Saved Builds Database for Team-Building] - Leg 2** (2026-09-10) - see
   commit `0228220`. `ImportTeamModal.tsx` now checks every parsed Pokémon
   against the saved-build library after parsing; 1+ match swaps the modal

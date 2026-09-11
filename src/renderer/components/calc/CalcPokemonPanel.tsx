@@ -25,13 +25,14 @@
  */
 
 import { useRef, useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import type { DragEvent } from 'react';
 import type { CalcPokemonState, NatureStatEffect } from '../../hooks/useDamageCalc';
 import { STATUS_OPTIONS } from '../../hooks/useDamageCalc';
 import type { FormeFamily } from '../../utils/calcFormes';
 import { formeDisplayLabel } from '../../utils/calcFormes';
 import type { NatureName, StatsTable } from '@smogon/calc/dist/data/interface';
-import type { Team, SavedPokemonEntry } from '../../types/pokemon';
+import type { Team, SavedPokemonEntry, ImportedPokemonInfo } from '../../types/pokemon';
 import type { UseSavedPokemonReturn } from '../../hooks/useSavedPokemon';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseDatabaseReturn } from '../../hooks/useDatabase';
@@ -43,6 +44,7 @@ import { enrichPokemonWithAPI } from '../../services/pokeapi';
 import { formatShowdownText } from '../../services/parser';
 import CalcAutocomplete from './CalcAutocomplete';
 import SavedSetPicker from '../SavedSetPicker';
+import SaveToLibraryDialog from '../SaveToLibraryDialog';
 import CalcStatRows from './CalcStatRows';
 import CalcTeamTray from './CalcTeamTray';
 
@@ -99,6 +101,11 @@ export default function CalcPokemonPanel({
   const [savedSetPickerSpecies, setSavedSetPickerSpecies] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
+  // Enrichment happens on click (as before) so this always has a real
+  // pokedexNumber/sprite to show; the name-prompt dialog only opens once
+  // that's ready, and the actual addSavedPokemonBatch write waits for the
+  // user's confirmed name (Save-to-Library Name Prompt Leg 1, see TODO.md).
+  const [pendingSave, setPendingSave] = useState<ImportedPokemonInfo | null>(null);
   const [justCopied, setJustCopied] = useState(false);
   const autoFillRequestRef = useRef(0);
   // Remembers the ability that was active right before Mega-ing, keyed to
@@ -155,16 +162,23 @@ export default function CalcPokemonPanel({
       const enriched = await enrichPokemonWithAPI(
         calcStateToShowdownPokemon(state), databaseState.getCachedEntry, databaseState.setCacheEntry
       );
-      const success = await savedPokemonState.addSavedPokemonBatch([enriched]);
-      if (success) {
-        setJustSaved(true);
-        window.setTimeout(() => setJustSaved(false), CONFIRMATION_MS);
-      }
+      setPendingSave(enriched);
     } catch (err) {
       console.error('Error saving Calc Pokemon as a set:', err);
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleConfirmSave = async (label: string): Promise<boolean> => {
+    if (!pendingSave) return false;
+    const success = await savedPokemonState.addSavedPokemonBatch([pendingSave], [label]);
+    if (success) {
+      setPendingSave(null);
+      setJustSaved(true);
+      window.setTimeout(() => setJustSaved(false), CONFIRMATION_MS);
+    }
+    return success;
   };
 
   const cycleGender = () => {
@@ -343,6 +357,17 @@ export default function CalcPokemonPanel({
         onChangeSp={(key, value) => onChange({ sps: { ...state.sps, [key]: value } })}
         onChangeBoost={(key, value) => onChange({ boosts: { ...state.boosts, [key]: value } })}
       />
+
+      <AnimatePresence>
+        {pendingSave && (
+          <SaveToLibraryDialog
+            pokemon={pendingSave}
+            resolveSprite={resolveSprite}
+            onSave={handleConfirmSave}
+            onClose={() => setPendingSave(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

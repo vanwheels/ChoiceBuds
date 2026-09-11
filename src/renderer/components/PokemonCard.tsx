@@ -25,6 +25,7 @@ import EditOverlays from './EditOverlays';
 import SpeciesPickerCard from './SpeciesPickerCard';
 import SavedSetPicker from './SavedSetPicker';
 import ExportTeamModal from './ExportTeamModal';
+import SaveToLibraryDialog from './SaveToLibraryDialog';
 import ContextMenu from './ContextMenu';
 import { isGenderless, isFemaleLocked } from '../config/pokemonRules';
 import { toRegulationId } from '../utils/pokemonRules';
@@ -64,6 +65,11 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
   // time, including right after the swap picker closes with no matches.
   const [savedSetPickerSpecies, setSavedSetPickerSpecies] = useState<SpeciesRosterEntry | null>(null);
   const [isExportOpen, setIsExportOpen] = useState(false);
+  // "Save to Library" context-menu item (Save-to-Library Name Prompt Leg 1,
+  // see TODO.md) - opens the shared name-prompt dialog directly, since this
+  // Pokémon (unlike Calc's) is already a real ImportedPokemonInfo with no
+  // enrichment step needed first.
+  const [isSaveToLibraryOpen, setIsSaveToLibraryOpen] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   // Export moved out of the corner into a right-click context menu (Card
   // Action Button Placement Leg 1, see TODO.md) - null when closed, the
@@ -201,6 +207,10 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
   // if the clipboard doesn't hold a ChoiceBuds Pokémon payload.
   const handleCopyPokemon = async () => {
     await copyPokemonToClipboard(pokemon);
+  };
+
+  const handleSaveToLibrary = async (label: string): Promise<boolean> => {
+    return savedPokemonState.addSavedPokemonBatch([pokemon], [label]);
   };
 
   const handlePastePokemon = async () => {
@@ -499,9 +509,29 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
                   </svg>
                 ),
               },
+              {
+                label: 'Save to Library',
+                onClick: () => setIsSaveToLibraryOpen(true),
+                icon: (
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 3.75A1.75 1.75 0 0 1 7.75 2h8.5A1.75 1.75 0 0 1 18 3.75V21l-6-3.5L6 21V3.75Z" />
+                  </svg>
+                ),
+              },
             ]}
           />
         )}
+
+        <AnimatePresence>
+          {isSaveToLibraryOpen && (
+            <SaveToLibraryDialog
+              pokemon={pokemon}
+              resolveSprite={spriteCacheState.resolveSprite}
+              onSave={handleSaveToLibrary}
+              onClose={() => setIsSaveToLibraryOpen(false)}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </motion.div>
   );

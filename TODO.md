@@ -25,20 +25,6 @@ to save into it from Teams at all, and no way to browse it without already
 knowing a species has a match. 3 legs, ordered so each unblocks the next -
 Leg 2 is a pure refactor Leg 3 depends on, do not skip straight to Leg 3.
 
-- **[Save-to-Library Name Prompt] — Leg 1** *(Last touched: 2026-09-10 ·
-  Re-checks: 0)*
-  New shared `SaveToLibraryDialog.tsx` (sprite + a name input pre-filled
-  with nickname-or-species, Save/Cancel) replaces today's silent
-  auto-generated label at both existing/new save points: Calc's existing
-  "Save Set" button (`CalcPokemonPanel.tsx::handleSaveSet`, currently a
-  one-click silent save) and a new "Save to Library" item added to Teams'
-  `PokemonCard.tsx` right-click `ContextMenu` (same menu "Copy Pokémon"/
-  "Export" already live in). `addSavedPokemonBatch`'s existing
-  `nextAvailableLabel` dedup logic stays as a fallback against the
-  user-entered name, not removed. Decided 2026-09-10: prompt applies
-  everywhere (not just the new Teams entry point), for one consistent save
-  flow rather than two.
-
 - **[Extract Editable Pokémon Card Core] — Leg 1** *(Last touched:
   2026-09-10 · Re-checks: 0)*
   Pure refactor, no visible behavior change on Teams - a prerequisite for

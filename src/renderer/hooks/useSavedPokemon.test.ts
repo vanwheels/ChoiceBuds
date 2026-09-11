@@ -93,6 +93,22 @@ describe('useSavedPokemon', () => {
     expect(result.current.savedPokemon).toHaveLength(2);
   });
 
+  it('addSavedPokemonBatch prefers a supplied label over nickname/species, still deduping it', async () => {
+    vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
+      version: 1,
+      savedPokemon: [{ id: 'existing', label: 'My Gengar', pokemon: makePokemon(), savedAt: 0, updatedAt: 0 }],
+      lastModified: 0,
+    });
+    const { result } = renderHook(() => useSavedPokemon());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.addSavedPokemonBatch([makePokemon({ species: 'Gengar' })], ['My Gengar']);
+    });
+
+    expect(result.current.savedPokemon.map(e => e.label)).toContain('My Gengar (2)');
+  });
+
   it('renameSavedPokemon updates the label of the matching entry only', async () => {
     vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
       version: 1,

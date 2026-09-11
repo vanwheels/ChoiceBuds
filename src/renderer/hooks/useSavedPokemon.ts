@@ -22,8 +22,14 @@ export interface UseSavedPokemonReturn {
    * (the caller's event handler doesn't get a fresh hook reference between
    * awaits), so every call but the last would silently overwrite the ones
    * before it. A single batched call sidesteps that entirely.
+   *
+   * `labels`, when given, supplies a user-entered name per pokemonList index
+   * (Save-to-Library Name Prompt Leg 1, see TODO.md) - a blank/omitted entry
+   * falls back to nickname-or-species same as before. Either way,
+   * nextAvailableLabel below still dedupes the result against existing
+   * labels; a typed name isn't exempt from that.
    */
-  addSavedPokemonBatch: (pokemonList: ImportedPokemonInfo[]) => Promise<boolean>;
+  addSavedPokemonBatch: (pokemonList: ImportedPokemonInfo[], labels?: string[]) => Promise<boolean>;
   renameSavedPokemon: (id: string, label: string) => Promise<boolean>;
   deleteSavedPokemon: (id: string) => Promise<boolean>;
   refreshSavedPokemon: () => Promise<void>;
@@ -131,12 +137,12 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     }
   };
 
-  const addSavedPokemonBatch = useCallback(async (pokemonList: ImportedPokemonInfo[]): Promise<boolean> => {
+  const addSavedPokemonBatch = useCallback(async (pokemonList: ImportedPokemonInfo[], labels?: string[]): Promise<boolean> => {
     const labelsSoFar = savedPokemon.map(e => e.label);
     const now = Date.now();
 
-    const newEntries: SavedPokemonEntry[] = pokemonList.map(pokemon => {
-      const base = pokemon.showdownData.nickname || pokemon.showdownData.species;
+    const newEntries: SavedPokemonEntry[] = pokemonList.map((pokemon, i) => {
+      const base = labels?.[i]?.trim() || pokemon.showdownData.nickname || pokemon.showdownData.species;
       const label = nextAvailableLabel(base, labelsSoFar);
       labelsSoFar.push(label); // dedupe against sets earlier in this same batch too, not just pre-existing ones
       return { id: crypto.randomUUID(), label, pokemon, savedAt: now, updatedAt: now };
