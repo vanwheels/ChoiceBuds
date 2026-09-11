@@ -18,14 +18,20 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
-- **[Live Calc Defender Panel Parity] - Leg 1** (2026-09-11) - see commit
-  `85b1877`. Added a forme-family toggle (stat-block + Mega formes, reusing
-  `getFormeFamily`/`FormeFamily`) and a read-only base-stat display to
+- **[Live Calc Defender Panel Parity] - Leg 1** (2026-09-11) - see commits
+  `85b1877`/`1aa49c0`. Added a forme-family toggle (stat-block + Mega formes,
+  reusing `getFormeFamily`/`FormeFamily`) and a base-stat display to
   `LiveCalcDefenderPanel`, matching `CalcPokemonPanel`'s known-inputs UI for
   the attacker on the same tab. Extracted the shared `FormeToggle` button-row
-  out of `CalcPokemonPanel` into its own file so both panels use it. Ability
-  display/lock stays out of scope - see TODO.md's Live Calc Known-Ability
-  Lock item.
+  out of `CalcPokemonPanel` into its own file so both panels use it.
+  Follow-up per live feedback: added real Def/Sp. Def stage-boost inputs
+  (static panel-level fields, -6..+6) wired into `liveCalcEngine.ts`'s
+  `inferDefenderStats()` so `@smogon/calc`'s own `calculate()` applies the
+  known boost to every SP/candidate scan - Atk/SpA/HP got no boost input
+  (defender never attacks here, HP has no stage) and Speed already has its
+  own per-turn-order-observation field, so those four rows stay Base-only.
+  Ability display/lock stays out of scope - see TODO.md's Live Calc
+  Known-Ability Lock item.
 
 - **[Add Pokémon Table: Mega Form Rows] - Leg 3** (2026-09-11) - see commit
   `8f0bb5d`. `#mega` standalone tag (filters table + "From Box" to Mega-only
