@@ -26,7 +26,8 @@ import ExportTeamModal from './ExportTeamModal';
 import TeamExportImageModal from './TeamExportImageModal';
 import TeamSheetPdfModal from './TeamSheetPdfModal';
 import ContextMenu from './ContextMenu';
-import { copyTeamToClipboard, readTeamFromClipboard } from '../utils/clipboardPayload';
+import { copyTeamToClipboard, readTeamFromClipboard, readPokemonFromClipboard } from '../utils/clipboardPayload';
+import { buildPastedTeam } from '../utils/teamPaste';
 
 interface TeamCardProps {
   team: Team;
@@ -106,6 +107,12 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
   // same click-coordinates ContextMenu pattern PokemonCard.tsx already
   // established for its own right-click menu.
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
+  // "Paste Pokémon" anywhere within the roster grid, not just onto an
+  // existing PokemonCard (Leg 2, see TODO.md) - a separate menu/position
+  // from the header's team-level one above, opened from the grid container
+  // itself; PokemonCard's own per-slot context menu stops propagation so a
+  // right-click that lands on an actual card never also opens this one.
+  const [pokemonContextMenuPos, setPokemonContextMenuPos] = useState<{ x: number; y: number } | null>(null);
   // Warms useMegaSprite.ts's shared id/URL cache so the mini sprite strip
   // below (a plain .map(), not a per-item component - Rules of Hooks forbids
   // useMegaSprite itself there) can read a Mega form's real sprite via
@@ -129,8 +136,11 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
   // Right-click opens the Copy/Paste Team context menu (Quick Copy/Paste
   // Pokémon & Teams via Right-Click Leg 1, see TODO.md) - same pattern
   // PokemonCard.tsx already established for its own per-Pokémon menu.
+  // stopPropagation (Leg 2) keeps this from also bubbling up into
+  // TeamsPage.tsx's own anywhere-in-empty-space paste menu.
   const handleTeamContextMenu = (e: ReactMouseEvent<HTMLDivElement>) => {
     e.preventDefault();
+    e.stopPropagation();
     setContextMenuPos({ x: e.clientX, y: e.clientY });
   };
 
@@ -142,23 +152,34 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
   // fresh import) rather than overwriting whichever team's card the paste
   // was triggered from - pasting a whole team is a "duplicate from
   // clipboard" operation, not a per-slot in-place replace the way a single
-  // Pokémon paste is. Fresh id/createdAt/updatedAt for the team and a fresh
-  // id per roster slot so nothing collides with the copy still sitting on
-  // the clipboard (or a second paste of the same copy) - every other field
-  // (name, format, notes, author, favorite, battle team number/name) is
-  // carried over verbatim, per this feature's lossless-round-trip scoping.
+  // Pokémon paste is. See utils/teamPaste.ts::buildPastedTeam for the fresh
+  // id/name/favorite handling (Leg 2, see TODO.md) - format/notes/author/
+  // battle team number/name are the only fields still carried over verbatim.
   // Silently a no-op if the clipboard doesn't hold a ChoiceBuds Team payload.
   const handlePasteTeam = async () => {
     const pasted = await readTeamFromClipboard();
     if (!pasted) return;
-    const newTeam: Team = {
-      ...pasted,
-      id: crypto.randomUUID(),
-      pokemon: pasted.pokemon.map(p => ({ ...p, id: crypto.randomUUID() })),
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-    await addTeam(newTeam);
+    await addTeam(buildPastedTeam(pasted, teamsState.teams.map(t => t.name)));
+  };
+
+  // "Paste Pokémon" anywhere within the roster grid (Leg 2, see TODO.md) -
+  // appends a new slot from the clipboard rather than replacing an existing
+  // one (there's no specific slot to target when the right-click didn't
+  // land on a PokemonCard) - same room gate the "+ Add Pokémon" trigger
+  // uses. Silently a no-op past that if the team's already full or the
+  // clipboard doesn't hold a ChoiceBuds Pokémon payload.
+  const handlePokemonAreaContextMenu = (e: ReactMouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setPokemonContextMenuPos({ x: e.clientX, y: e.clientY });
+  };
+
+  const handlePasteNewPokemon = async () => {
+    if (team.pokemon.length >= 6) return;
+    const pasted = await readPokemonFromClipboard();
+    if (!pasted) return;
+    const newPokemon = { ...pasted, id: crypto.randomUUID() };
+    await updateTeam(team.id, { pokemon: [...team.pokemon, newPokemon] });
   };
 
   // Teams-list reorder via drag-and-drop (Always-On Editing Leg 2, see
@@ -466,7 +487,7 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
                   (keyed off the @container ancestor above), not a viewport media query -
                   unlike the old xl:grid-cols-6 this can't misfire from raw viewport width
                   alone. */}
-              <div className="grid grid-cols-3 @[1040px]:grid-cols-6 gap-4 w-full">
+              <div className="grid grid-cols-3 @[1040px]:grid-cols-6 gap-4 w-full" onContextMenu={handlePokemonAreaContextMenu}>
                 {team.pokemon && team.pokemon.map((p, idx) => (
                   <PokemonCard
                     key={p.id}
@@ -551,6 +572,28 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
             {
               label: 'Paste as New Team',
               onClick: handlePasteTeam,
+              icon: (
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 4.5h1.5a1.5 1.5 0 0 1 3 0H15a1 1 0 0 1 1 1V7H8V5.5a1 1 0 0 1 1-1Z" />
+                  <path d="M8 6H6a1.5 1.5 0 0 0-1.5 1.5v12A1.5 1.5 0 0 0 6 21h12a1.5 1.5 0 0 0 1.5-1.5v-12A1.5 1.5 0 0 0 18 6h-2" />
+                </svg>
+              ),
+            },
+          ]}
+        />
+      )}
+
+      {/* "Paste Pokémon" anywhere within the roster grid, distinct from the
+          header's team-level menu above (Leg 2, see TODO.md). */}
+      {pokemonContextMenuPos && (
+        <ContextMenu
+          x={pokemonContextMenuPos.x}
+          y={pokemonContextMenuPos.y}
+          onClose={() => setPokemonContextMenuPos(null)}
+          items={[
+            {
+              label: 'Paste Pokémon',
+              onClick: handlePasteNewPokemon,
               icon: (
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M9 4.5h1.5a1.5 1.5 0 0 1 3 0H15a1 1 0 0 1 1 1V7H8V5.5a1 1 0 0 1 1-1Z" />

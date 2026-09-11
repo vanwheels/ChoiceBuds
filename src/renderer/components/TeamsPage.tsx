@@ -6,6 +6,7 @@
 
 import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
+import type { MouseEvent as ReactMouseEvent } from 'react';
 import type { RegulationLabel } from '../types/pokemon';
 import { sortTeamsByFavorite } from '../utils/teamSort';
 import type { UseTeamsReturn } from '../hooks/useTeams';
@@ -16,8 +17,11 @@ import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
 import type { UseSettingsReturn } from '../hooks/useSettings';
 import type { UseSavedPokemonReturn } from '../hooks/useSavedPokemon';
+import { readTeamFromClipboard } from '../utils/clipboardPayload';
+import { buildPastedTeam } from '../utils/teamPaste';
 import ImportTeamModal from './ImportTeamModal';
 import TeamCard from './TeamCard';
+import ContextMenu from './ContextMenu';
 
 
 interface TeamsPageProps {
@@ -48,6 +52,26 @@ export default function TeamsPage({
 }: TeamsPageProps) {
   const [activeFilter, setActiveFilter] = useState<FormatFilter>('All');
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  // "Paste as New Team" from anywhere in the page's empty space, not just by
+  // right-clicking an existing TeamCard's own header (Quick Copy/Paste
+  // Pokémon & Teams via Right-Click Leg 2, see TODO.md). TeamCard's own
+  // context-menu handlers stop propagation, so this only ever fires for a
+  // right-click that didn't land on a team card in the first place.
+  const [pasteContextMenuPos, setPasteContextMenuPos] = useState<{ x: number; y: number } | null>(null);
+
+  const handleContentContextMenu = (e: ReactMouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setPasteContextMenuPos({ x: e.clientX, y: e.clientY });
+  };
+
+  // Same "brand-new team, never an overwrite" behavior as TeamCard.tsx's own
+  // per-card paste - see utils/teamPaste.ts::buildPastedTeam. Silently a
+  // no-op if the clipboard doesn't hold a ChoiceBuds Team payload.
+  const handlePasteNewTeam = async () => {
+    const pasted = await readTeamFromClipboard();
+    if (!pasted) return;
+    await teamsState.addTeam(buildPastedTeam(pasted, teamsState.teams.map(t => t.name)));
+  };
 
   // Filter teams based on active format filter
   const filteredTeams = activeFilter === 'All'
@@ -116,7 +140,7 @@ export default function TeamsPage({
           the DOM ancestor chain and diffing scrollHeight/clientHeight per
           ancestor before/after opening the dropdown - this was the only one
           whose clientHeight was exceeded. */}
-      <div className="flex-1 overflow-y-auto px-8 py-6 @container" style={{ scrollbarGutter: 'stable' }}>
+      <div className="flex-1 overflow-y-auto px-8 py-6 @container" style={{ scrollbarGutter: 'stable' }} onContextMenu={handleContentContextMenu}>
         {teamsState.isLoading ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-zinc-400">Loading teams...</div>
@@ -192,6 +216,26 @@ export default function TeamsPage({
           />
         )}
       </AnimatePresence>
+
+      {pasteContextMenuPos && (
+        <ContextMenu
+          x={pasteContextMenuPos.x}
+          y={pasteContextMenuPos.y}
+          onClose={() => setPasteContextMenuPos(null)}
+          items={[
+            {
+              label: 'Paste as New Team',
+              onClick: handlePasteNewTeam,
+              icon: (
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 4.5h1.5a1.5 1.5 0 0 1 3 0H15a1 1 0 0 1 1 1V7H8V5.5a1 1 0 0 1 1-1Z" />
+                  <path d="M8 6H6a1.5 1.5 0 0 0-1.5 1.5v12A1.5 1.5 0 0 0 6 21h12a1.5 1.5 0 0 0 1.5-1.5v-12A1.5 1.5 0 0 0 18 6h-2" />
+                </svg>
+              ),
+            },
+          ]}
+        />
+      )}
     </div>
   );
 }

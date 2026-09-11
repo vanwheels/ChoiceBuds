@@ -213,8 +213,13 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
 
   // Right-click opens the Export context menu instead of the OS/browser's
   // native one (Card Action Button Placement Leg 1, see TODO.md).
+  // stopPropagation (Quick Copy/Paste Leg 2, see TODO.md) keeps this from
+  // also bubbling up into TeamCard.tsx's own roster-grid "Paste Pokémon"
+  // menu - a right-click that lands on an actual card should only ever open
+  // this card's own menu, never both stacked on top of each other.
   const handleContextMenu = (e: ReactMouseEvent<HTMLDivElement>) => {
     e.preventDefault();
+    e.stopPropagation();
     setContextMenuPos({ x: e.clientX, y: e.clientY });
   };
 
