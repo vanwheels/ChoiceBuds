@@ -32,6 +32,7 @@ import { getPixelSpriteUrl, getAnimatedSpriteUrl } from '../utils/spriteUrl';
 import { getTotalSP, MAX_TOTAL_SP } from '../utils/evTotal';
 import { TEAM_ROSTER_DRAG_TYPE, type TeamRosterDragPayload } from '../utils/teamRosterDragTypes';
 import { DRAG_REORDER_TRANSITION } from '../config/motion';
+import { copyPokemonToClipboard, readPokemonFromClipboard } from '../utils/clipboardPayload';
 
 interface PokemonCardProps {
   pokemon: ImportedPokemonInfo;
@@ -158,6 +159,24 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
 
   const handleDelete = async () => {
     await rosterActions.removeSlot(team, pokemonIndex);
+  };
+
+  // Quick Copy/Paste Pokémon via Right-Click (Leg 1, see TODO.md) - internal
+  // JSON round-trip (utils/clipboardPayload.ts), not the Showdown-text export
+  // above. Paste replaces just this slot's set in place (same array position,
+  // fresh id so it doesn't collide with the id still sitting in the clipboard
+  // payload or any other slot pasted from the same copy) - silently a no-op
+  // if the clipboard doesn't hold a ChoiceBuds Pokémon payload.
+  const handleCopyPokemon = async () => {
+    await copyPokemonToClipboard(pokemon);
+  };
+
+  const handlePastePokemon = async () => {
+    const pasted = await readPokemonFromClipboard();
+    if (!pasted) return;
+    const updatedPokemon = [...team.pokemon];
+    updatedPokemon[pokemonIndex] = { ...pasted, id: crypto.randomUUID() };
+    await updateTeam(team.id, { pokemon: updatedPokemon });
   };
 
   // Right-click opens the Export context menu instead of the OS/browser's
@@ -400,6 +419,26 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
             y={contextMenuPos.y}
             onClose={() => setContextMenuPos(null)}
             items={[
+              {
+                label: 'Copy Pokémon',
+                onClick: handleCopyPokemon,
+                icon: (
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="9" width="11" height="11" rx="1.5" />
+                    <path d="M5 15H4.5A1.5 1.5 0 0 1 3 13.5v-9A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5V5" />
+                  </svg>
+                ),
+              },
+              {
+                label: 'Paste Pokémon',
+                onClick: handlePastePokemon,
+                icon: (
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 4.5h1.5a1.5 1.5 0 0 1 3 0H15a1 1 0 0 1 1 1V7H8V5.5a1 1 0 0 1 1-1Z" />
+                    <path d="M8 6H6a1.5 1.5 0 0 0-1.5 1.5v12A1.5 1.5 0 0 0 6 21h12a1.5 1.5 0 0 0 1.5-1.5v-12A1.5 1.5 0 0 0 18 6h-2" />
+                  </svg>
+                ),
+              },
               {
                 label: 'Export',
                 onClick: () => setIsExportOpen(true),

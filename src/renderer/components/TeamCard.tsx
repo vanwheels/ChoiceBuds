@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import type { DragEvent } from 'react';
+import type { DragEvent, MouseEvent as ReactMouseEvent } from 'react';
 import { Team, SpeciesRosterEntry } from '../types/pokemon';
 import type { UseTeamsReturn } from '../hooks/useTeams';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
@@ -24,6 +24,8 @@ import RegulationBadge from './RegulationBadge';
 import ExportTeamModal from './ExportTeamModal';
 import TeamExportImageModal from './TeamExportImageModal';
 import TeamSheetPdfModal from './TeamSheetPdfModal';
+import ContextMenu from './ContextMenu';
+import { copyTeamToClipboard, readTeamFromClipboard } from '../utils/clipboardPayload';
 
 interface TeamCardProps {
   team: Team;
@@ -98,13 +100,17 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
   const [isImageExportOpen, setIsImageExportOpen] = useState(false);
   const [isPdfExportOpen, setIsPdfExportOpen] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  // Quick Copy/Paste Pokémon & Teams via Right-Click (Leg 1, see TODO.md) -
+  // same click-coordinates ContextMenu pattern PokemonCard.tsx already
+  // established for its own right-click menu.
+  const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
   // Warms useMegaSprite.ts's shared id/URL cache so the mini sprite strip
   // below (a plain .map(), not a per-item component - Rules of Hooks forbids
   // useMegaSprite itself there) can read a Mega form's real sprite via
   // getCachedMegaSprite instead of always falling back to the base species -
   // same pattern SpeedTiersPage.tsx uses, see that hook's own doc comment.
   useMegaSpritePrefetch();
-  const { updateTeam, reorderTeam } = teamsState;
+  const { updateTeam, reorderTeam, addTeam } = teamsState;
   const rosterActions = useRosterActions(
     updateTeam,
     databaseState.getCachedEntry,
@@ -116,6 +122,41 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
   const handleAddSpecies = async (species: SpeciesRosterEntry) => {
     setIsAddPickerOpen(false);
     await rosterActions.addSlot(team, species.name);
+  };
+
+  // Right-click opens the Copy/Paste Team context menu (Quick Copy/Paste
+  // Pokémon & Teams via Right-Click Leg 1, see TODO.md) - same pattern
+  // PokemonCard.tsx already established for its own per-Pokémon menu.
+  const handleTeamContextMenu = (e: ReactMouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setContextMenuPos({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleCopyTeam = async () => {
+    await copyTeamToClipboard(team);
+  };
+
+  // Paste always creates a brand-new team (prepended via addTeam, same as a
+  // fresh import) rather than overwriting whichever team's card the paste
+  // was triggered from - pasting a whole team is a "duplicate from
+  // clipboard" operation, not a per-slot in-place replace the way a single
+  // Pokémon paste is. Fresh id/createdAt/updatedAt for the team and a fresh
+  // id per roster slot so nothing collides with the copy still sitting on
+  // the clipboard (or a second paste of the same copy) - every other field
+  // (name, format, notes, author, favorite, battle team number/name) is
+  // carried over verbatim, per this feature's lossless-round-trip scoping.
+  // Silently a no-op if the clipboard doesn't hold a ChoiceBuds Team payload.
+  const handlePasteTeam = async () => {
+    const pasted = await readTeamFromClipboard();
+    if (!pasted) return;
+    const newTeam: Team = {
+      ...pasted,
+      id: crypto.randomUUID(),
+      pokemon: pasted.pokemon.map(p => ({ ...p, id: crypto.randomUUID() })),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    await addTeam(newTeam);
   };
 
   // Teams-list reorder via drag-and-drop (Always-On Editing Leg 2, see
@@ -179,6 +220,7 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
         onDragOver={handleDragOver}
         onDragLeave={() => setIsDragOver(false)}
         onDrop={handleDrop}
+        onContextMenu={handleTeamContextMenu}
         className={`w-full flex flex-row items-center min-h-[116px] py-4 px-6 bg-zinc-950/40 rounded-t-xl transition-colors ${
           isDragOver ? 'ring-2 ring-inset ring-accent-gold' : ''
         }`}
@@ -486,6 +528,36 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
           </motion.div>
         )}
       </AnimatePresence>
+
+      {contextMenuPos && (
+        <ContextMenu
+          x={contextMenuPos.x}
+          y={contextMenuPos.y}
+          onClose={() => setContextMenuPos(null)}
+          items={[
+            {
+              label: 'Copy Team',
+              onClick: handleCopyTeam,
+              icon: (
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="9" y="9" width="11" height="11" rx="1.5" />
+                  <path d="M5 15H4.5A1.5 1.5 0 0 1 3 13.5v-9A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5V5" />
+                </svg>
+              ),
+            },
+            {
+              label: 'Paste as New Team',
+              onClick: handlePasteTeam,
+              icon: (
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 4.5h1.5a1.5 1.5 0 0 1 3 0H15a1 1 0 0 1 1 1V7H8V5.5a1 1 0 0 1 1-1Z" />
+                  <path d="M8 6H6a1.5 1.5 0 0 0-1.5 1.5v12A1.5 1.5 0 0 0 6 21h12a1.5 1.5 0 0 0 1.5-1.5v-12A1.5 1.5 0 0 0 18 6h-2" />
+                </svg>
+              ),
+            },
+          ]}
+        />
+      )}
 
       <AnimatePresence>
         {isExportOpen && (
