@@ -128,6 +128,7 @@ export default function App() {
               speciesRosterState={speciesRosterState}
               spriteCacheState={spriteCacheState}
               settingsState={settingsState}
+              savedPokemonState={savedPokemonState}
             />
           </div>
           {visitedTabs.has('calc') && (

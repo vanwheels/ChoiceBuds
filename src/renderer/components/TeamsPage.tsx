@@ -15,6 +15,7 @@ import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
 import type { UseSettingsReturn } from '../hooks/useSettings';
+import type { UseSavedPokemonReturn } from '../hooks/useSavedPokemon';
 import ImportTeamModal from './ImportTeamModal';
 import TeamCard from './TeamCard';
 
@@ -27,6 +28,7 @@ interface TeamsPageProps {
   speciesRosterState: UseSpeciesRosterReturn;
   spriteCacheState: UseSpriteCacheReturn;
   settingsState: UseSettingsReturn;
+  savedPokemonState: UseSavedPokemonReturn;
 }
 
 type FormatFilter = 'All' | RegulationLabel;
@@ -42,6 +44,7 @@ export default function TeamsPage({
   speciesRosterState,
   spriteCacheState,
   settingsState,
+  savedPokemonState,
 }: TeamsPageProps) {
   const [activeFilter, setActiveFilter] = useState<FormatFilter>('All');
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -170,6 +173,7 @@ export default function TeamsPage({
                 speciesRosterState={speciesRosterState}
                 spriteCacheState={spriteCacheState}
                 settingsState={settingsState}
+                savedPokemonState={savedPokemonState}
               />
             ))}
           </div>

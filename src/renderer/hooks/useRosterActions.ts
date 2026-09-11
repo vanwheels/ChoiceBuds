@@ -6,7 +6,7 @@
  */
 
 import { useCallback } from 'react';
-import type { EVSpread, ImportedPokemonInfo, ShowdownPokemon, Team, PokeAPICacheEntry } from '../types/pokemon';
+import type { EVSpread, ImportedPokemonInfo, SavedPokemonEntry, ShowdownPokemon, Team, PokeAPICacheEntry } from '../types/pokemon';
 import type { UseGameDataReturn } from './useGameData';
 import { enrichPokemonWithAPI } from '../services/pokeapi';
 import { getFallbackGender } from '../config/pokemonRules';
@@ -22,11 +22,38 @@ const ZERO_EVS: EVSpread = {
   speed: 0,
 };
 
+/**
+ * Deep-clones a saved-set's stored ImportedPokemonInfo for placement into a
+ * live roster slot, assigning a fresh id/importedAt rather than reusing the
+ * saved entry's own - the same saved set can be loaded into multiple slots
+ * (or the same slot twice), and `id` is this app's stable per-roster-slot
+ * React key (see types/pokemon.ts's ImportedPokemonInfo.id comment), so
+ * reusing it here would collide the moment the same saved set is loaded
+ * twice into one team.
+ */
+function cloneSavedPokemon(pokemon: ImportedPokemonInfo): ImportedPokemonInfo {
+  return {
+    showdownData: {
+      ...pokemon.showdownData,
+      evs: { ...pokemon.showdownData.evs },
+      moves: [...pokemon.showdownData.moves],
+    },
+    pokedexNumber: pokemon.pokedexNumber,
+    types: [...pokemon.types],
+    baseStats: { ...pokemon.baseStats },
+    spriteUrl: pokemon.spriteUrl,
+    calculatedStats: pokemon.calculatedStats ? { ...pokemon.calculatedStats } : undefined,
+    importedAt: Date.now(),
+    id: crypto.randomUUID(),
+  };
+}
+
 export interface UseRosterActionsReturn {
   swapSlot: (team: Team, index: number, species: string) => Promise<boolean>;
   addSlot: (team: Team, species: string) => Promise<boolean>;
   removeSlot: (team: Team, index: number) => Promise<boolean>;
   reorderSlot: (team: Team, fromIndex: number, toIndex: number) => Promise<boolean>;
+  loadSavedSet: (team: Team, index: number, entry: SavedPokemonEntry) => Promise<boolean>;
 }
 
 export function useRosterActions(
@@ -120,5 +147,18 @@ export function useRosterActions(
     return updateTeam(team.id, { pokemon: updatedPokemon });
   }, [updateTeam]);
 
-  return { swapSlot, addSlot, removeSlot, reorderSlot };
+  /**
+   * Reuse a saved build (useSavedPokemon.ts) directly into a roster slot,
+   * in place of swapSlot's fresh usage-based default - see SavedSetPicker.tsx
+   * and PokemonCard.tsx's Roster Swap wiring (Saved Builds Database for
+   * Team-Building Leg 1, see TODO.md). No enrichment/network call needed -
+   * a saved entry already holds a fully-enriched ImportedPokemonInfo.
+   */
+  const loadSavedSet = useCallback(async (team: Team, index: number, entry: SavedPokemonEntry): Promise<boolean> => {
+    const updatedPokemon = [...team.pokemon];
+    updatedPokemon[index] = cloneSavedPokemon(entry.pokemon);
+    return updateTeam(team.id, { pokemon: updatedPokemon });
+  }, [updateTeam]);
+
+  return { swapSlot, addSlot, removeSlot, reorderSlot, loadSavedSet };
 }

@@ -12,16 +12,18 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { CSSProperties, DragEvent, MouseEvent as ReactMouseEvent } from 'react';
-import type { ImportedPokemonInfo, ShowdownPokemon, Team, SpeciesRosterEntry } from '../types/pokemon';
+import type { ImportedPokemonInfo, SavedPokemonEntry, ShowdownPokemon, Team, SpeciesRosterEntry } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
 import type { UseRosterActionsReturn } from '../hooks/useRosterActions';
+import type { UseSavedPokemonReturn } from '../hooks/useSavedPokemon';
 import { getTypeGlowColors } from '../config/pokemonTheme';
 import TypeBadge from './TypeBadge';
 import StatsColumn from './StatsColumn';
 import EditOverlays from './EditOverlays';
 import SpeciesPickerCard from './SpeciesPickerCard';
+import SavedSetPicker from './SavedSetPicker';
 import ExportTeamModal from './ExportTeamModal';
 import ContextMenu from './ContextMenu';
 import { isGenderless, isFemaleLocked } from '../config/pokemonRules';
@@ -43,17 +45,24 @@ interface PokemonCardProps {
   speciesRosterState: UseSpeciesRosterReturn;
   spriteCacheState: UseSpriteCacheReturn;
   rosterActions: UseRosterActionsReturn;
+  savedPokemonState: UseSavedPokemonReturn;
   showAnimatedSprites: boolean;
 }
 
 const FORM_DIVERGENT: Record<string, boolean> = { 'basculegion': true, 'indeedee': true, 'meowstic': true, 'oinkologne': true };
 
-export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, gameDataState, speciesRosterState, spriteCacheState, rosterActions, showAnimatedSprites }: PokemonCardProps) {
+export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, gameDataState, speciesRosterState, spriteCacheState, rosterActions, savedPokemonState, showAnimatedSprites }: PokemonCardProps) {
   const { showdownData, types, pokedexNumber } = pokemon;
   const [isLocalShiny, setIsLocalShiny] = useState(showdownData.shiny);
   const [localGender, setLocalGender] = useState<'M' | 'F' | 'N' | '' | undefined>(showdownData.gender);
   const [localNickname, setLocalNickname] = useState(showdownData.nickname || '');
   const [isSwapPickerOpen, setIsSwapPickerOpen] = useState(false);
+  // Set the instant a Roster Swap lands on a species with 1+ saved builds
+  // (useSavedPokemon.ts) - offers a choice between those and the usual
+  // fresh usage-based default before committing the swap (Saved Builds
+  // Database for Team-Building Leg 1, see TODO.md). null the rest of the
+  // time, including right after the swap picker closes with no matches.
+  const [savedSetPickerSpecies, setSavedSetPickerSpecies] = useState<SpeciesRosterEntry | null>(null);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   // Export moved out of the corner into a right-click context menu (Card
@@ -152,9 +161,32 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
     await updateTeam(team.id, { pokemon: updatedPokemon });
   };
 
+  // Real list-click on a species with 1+ saved builds opens SavedSetPicker
+  // for a choice between those and a fresh default, instead of committing
+  // the swap immediately - same "offer a saved-set choice on real selection"
+  // pattern CalcPokemonPanel.tsx's own species Autocomplete already uses.
   const handleSwapSelect = async (species: SpeciesRosterEntry) => {
     setIsSwapPickerOpen(false);
+    const savedSets = savedPokemonState.getSavedSetsForSpecies(species.name);
+    if (savedSets.length > 0) {
+      setSavedSetPickerSpecies(species);
+      return;
+    }
     await rosterActions.swapSlot(team, pokemonIndex, species.name);
+  };
+
+  // "Blank" on the saved-set popover: same fresh usage-based default a
+  // species with no saved builds gets immediately above.
+  const handleSwapBlank = async () => {
+    if (!savedSetPickerSpecies) return;
+    const species = savedSetPickerSpecies.name;
+    setSavedSetPickerSpecies(null);
+    await rosterActions.swapSlot(team, pokemonIndex, species);
+  };
+
+  const handleSwapPickSaved = async (entry: SavedPokemonEntry) => {
+    setSavedSetPickerSpecies(null);
+    await rosterActions.loadSavedSet(team, pokemonIndex, entry);
   };
 
   const handleDelete = async () => {
@@ -320,7 +352,7 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
             the left edge of the first Type Badge to the right edge of the second
             (134px = 64px badge + 6px gap + 64px badge), same target width as the
             Ability pill below. */}
-        <div className="flex justify-center">
+        <div className="relative flex justify-center">
           <div
             data-no-drag
             onClick={() => setIsSwapPickerOpen(true)}
@@ -374,6 +406,18 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
               </div>
             </div>
           </div>
+
+          {savedSetPickerSpecies && (
+            <SavedSetPicker
+              species={savedSetPickerSpecies.name}
+              sets={savedPokemonState.getSavedSetsForSpecies(savedSetPickerSpecies.name)}
+              resolveSprite={spriteCacheState.resolveSprite}
+              onPick={handleSwapPickSaved}
+              onBlank={handleSwapBlank}
+              onClose={() => setSavedSetPickerSpecies(null)}
+              align="center"
+            />
+          )}
         </div>
 
         {/* Type Badges - min-w-0 on the outer row lets it shrink with the card

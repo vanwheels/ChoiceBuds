@@ -42,7 +42,7 @@ import { calcStateToShowdownPokemon } from '../../utils/calcExport';
 import { enrichPokemonWithAPI } from '../../services/pokeapi';
 import { formatShowdownText } from '../../services/parser';
 import CalcAutocomplete from './CalcAutocomplete';
-import CalcSavedSetPicker from './CalcSavedSetPicker';
+import SavedSetPicker from '../SavedSetPicker';
 import CalcStatRows from './CalcStatRows';
 import CalcTeamTray from './CalcTeamTray';
 
@@ -235,11 +235,12 @@ export default function CalcPokemonPanel({
             onSelect={handleSpeciesSelect}
           />
           {savedSetPickerSpecies && (
-            <CalcSavedSetPicker
+            <SavedSetPicker
               species={savedSetPickerSpecies}
               sets={savedPokemonState.getSavedSetsForSpecies(savedSetPickerSpecies)}
               resolveSprite={resolveSprite}
               onPick={handlePickSavedSet}
+              onBlank={() => setSavedSetPickerSpecies(null)}
               onClose={() => setSavedSetPickerSpecies(null)}
             />
           )}

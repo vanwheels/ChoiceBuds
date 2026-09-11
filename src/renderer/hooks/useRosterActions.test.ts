@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useRosterActions } from './useRosterActions';
 import type { UseGameDataReturn } from './useGameData';
-import type { ImportedPokemonInfo, PokeAPICacheEntry, ShowdownPokemon, Team } from '../types/pokemon';
+import type { ImportedPokemonInfo, PokeAPICacheEntry, SavedPokemonEntry, ShowdownPokemon, Team } from '../types/pokemon';
 
 const ZERO_EVS = { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 };
 
@@ -154,5 +154,34 @@ describe('useRosterActions', () => {
 
     const [, updates] = updateTeam.mock.calls[0];
     expect(updates.pokemon.map((p: ImportedPokemonInfo) => p.showdownData.species)).toEqual(['B', 'C', 'A']);
+  });
+
+  it('loadSavedSet places a saved entry\'s Pokemon into the slot, without touching other slots', async () => {
+    const savedPokemon = makePokemon({ species: 'Rillaboom', ability: 'Grassy Surge', moves: ['Fake Out', 'Wood Hammer'] });
+    const entry: SavedPokemonEntry = { id: 'saved-1', label: 'Defensive Rilla', pokemon: savedPokemon, savedAt: Date.now(), updatedAt: Date.now() };
+    const team = makeTeam([makePokemon(), makePokemon({ species: 'B' })]);
+    const { result, updateTeam } = setup();
+
+    const success = await result.current.loadSavedSet(team, 1, entry);
+
+    expect(success).toBe(true);
+    const [teamId, updates] = updateTeam.mock.calls[0];
+    expect(teamId).toBe('team-1');
+    expect(updates.pokemon[0]).toBe(team.pokemon[0]); // untouched slot preserved by reference
+    expect(updates.pokemon[1].showdownData.species).toBe('Rillaboom');
+    expect(updates.pokemon[1].showdownData.ability).toBe('Grassy Surge');
+    expect(updates.pokemon[1].showdownData.moves).toEqual(['Fake Out', 'Wood Hammer']);
+  });
+
+  it('loadSavedSet assigns a fresh id, distinct from the saved entry\'s own stored Pokemon', async () => {
+    const savedPokemon = makePokemon({ species: 'Rillaboom' });
+    const entry: SavedPokemonEntry = { id: 'saved-1', label: 'Defensive Rilla', pokemon: savedPokemon, savedAt: Date.now(), updatedAt: Date.now() };
+    const team = makeTeam([makePokemon()]);
+    const { result, updateTeam } = setup();
+
+    await result.current.loadSavedSet(team, 0, entry);
+
+    const [, updates] = updateTeam.mock.calls[0];
+    expect(updates.pokemon[0].id).not.toBe(savedPokemon.id);
   });
 });

@@ -8,6 +8,7 @@ import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
 import type { UseSettingsReturn } from '../hooks/useSettings';
+import type { UseSavedPokemonReturn } from '../hooks/useSavedPokemon';
 import { useRosterActions } from '../hooks/useRosterActions';
 import { toRegulationId } from '../utils/pokemonRules';
 import { getRegulationTheme } from '../config/pokemonTheme';
@@ -36,6 +37,7 @@ interface TeamCardProps {
   speciesRosterState: UseSpeciesRosterReturn;
   spriteCacheState: UseSpriteCacheReturn;
   settingsState: UseSettingsReturn;
+  savedPokemonState: UseSavedPokemonReturn;
 }
 
 // Card expand/collapse (animation/motion leg 2, see TODO.md): animates height
@@ -74,7 +76,7 @@ const cardExpandVariants = {
   },
 };
 
-export default function TeamCard({ team, onDelete, teamsState, databaseState, gameDataState, speciesRosterState, spriteCacheState, settingsState }: TeamCardProps) {
+export default function TeamCard({ team, onDelete, teamsState, databaseState, gameDataState, speciesRosterState, spriteCacheState, settingsState, savedPokemonState }: TeamCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   // Collapse-flicker fix (Team Card Collapse Animation Flicker Leg 1, see
   // TODO.md): col-span-full used to be driven directly off isExpanded, so
@@ -476,6 +478,7 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
                     speciesRosterState={speciesRosterState}
                     spriteCacheState={spriteCacheState}
                     rosterActions={rosterActions}
+                    savedPokemonState={savedPokemonState}
                     showAnimatedSprites={settingsState.settings.showAnimatedSprites}
                   />
                 ))}
