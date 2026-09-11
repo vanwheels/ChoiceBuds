@@ -18,6 +18,12 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Statistics: Win-Loss Column on Most-Faced Pokémon] - Leg 3** (2026-09-10)
+  - see commit `4c6d195`. Added a wins/losses tally to
+  `getMostFacedOpponents` (completed battles only, kept separate from the
+  existing all-battle times-faced count) and displayed it as a W-L record in
+  `OpponentFacedPanel`.
+
 - **[Statistics: Remove "By Opponent" Section] - Leg 2** (2026-09-10) - see
   commit `ebe8213`. Removed the win/loss-by-named-opponent breakdown - no
   longer wanted. Distinct from `OpponentFacedPanel` (most-faced opponent
