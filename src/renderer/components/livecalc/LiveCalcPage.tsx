@@ -50,7 +50,7 @@ export default function LiveCalcPage({
     attacker, setAttacker,
     speciesOptions, itemOptions, abilityOptions, natureOptions,
     attackerFormes, attackerBaseStats, attackerBoostedStats, attackerNatureEffect, attackerMoveOptions,
-    defenderSpecies, defenderLevel, setDefenderSpecies, setDefenderLevel,
+    defenderSpecies, defenderLevel, setDefenderSpecies, setDefenderLevel, defenderFormes, defenderBaseStats,
     observations, addObservation, updateObservation, removeObservation,
     turnOrderObservations, addTurnOrderObservation, updateTurnOrderObservation, removeTurnOrderObservation,
     inference,
@@ -81,6 +81,8 @@ export default function LiveCalcPage({
           species={defenderSpecies}
           level={defenderLevel}
           speciesOptions={speciesOptions}
+          formes={defenderFormes}
+          baseStats={defenderBaseStats}
           onChangeSpecies={setDefenderSpecies}
           onChangeLevel={setDefenderLevel}
         />

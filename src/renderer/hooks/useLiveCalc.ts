@@ -7,13 +7,17 @@
  *
  * Owns four things: the attacker (a fully-known `CalcPokemonState`, same
  * shape the existing Calc tab's `CalcPokemonPanel` already edits - nothing
- * new needed there), the defender's known species+level, an add/remove list
- * of damage-percent observations, and an add/remove list of turn-order
- * observations (Leg 15). Every change re-derives `utils/liveCalcEngine.ts`'s
- * `inferDefenderStats()` inference and then layers
- * `utils/liveCalcSpeedEngine.ts`'s `inferDefenderSpeed()` on top of it -
- * this file is just the state/plumbing around those two pure engines (Legs
- * 1 and 15), mirroring how useDamageCalc.ts is state/plumbing around
+ * new needed there), the defender's known species+level (plus derived-only
+ * `defenderFormes`/`defenderBaseStats`, same `getFormeFamily`/base-stats-
+ * lookup pattern as the attacker's own `attackerFormes`/`attackerBaseStats`
+ * below - species/level are still the only defender state actually held
+ * here, everything else about it remains what the tab is solving for), an
+ * add/remove list of damage-percent observations, and an add/remove list of
+ * turn-order observations (Leg 15). Every change re-derives
+ * `utils/liveCalcEngine.ts`'s `inferDefenderStats()` inference and then
+ * layers `utils/liveCalcSpeedEngine.ts`'s `inferDefenderSpeed()` on top of
+ * it - this file is just the state/plumbing around those two pure engines
+ * (Legs 1 and 15), mirroring how useDamageCalc.ts is state/plumbing around
  * damageCalcEngine.ts.
  *
  * The attacker's own `CalcPokemonState.moves` slots are deliberately left
@@ -95,6 +99,8 @@ export interface UseLiveCalcReturn {
   defenderLevel: number;
   setDefenderSpecies: (species: string) => void;
   setDefenderLevel: (level: number) => void;
+  defenderFormes: FormeFamily;
+  defenderBaseStats: StatsTable | null;
   observations: LiveCalcObservationEntry[];
   addObservation: () => void;
   updateObservation: (id: string, updates: Partial<LiveCalcObservation>) => void;
@@ -128,6 +134,11 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
   const natureOptions = useMemo(() => [...gen.natures].map(n => n.name).sort() as NatureName[], [gen]);
 
   const attackerFormes = useMemo(() => getFormeFamily(allSpecies, attacker.species), [allSpecies, attacker.species]);
+  const defenderFormes = useMemo(() => getFormeFamily(allSpecies, defenderSpecies), [allSpecies, defenderSpecies]);
+  const defenderBaseStats = useMemo(
+    () => (defenderSpecies ? gen.species.get(toID(defenderSpecies))?.baseStats ?? null : null),
+    [gen, defenderSpecies]
+  );
   const attackerNatureEffect = useMemo(() => getNatureStatEffect(gen, attacker.nature), [gen, attacker.nature]);
   const attackerBoostedStats = useMemo(() => computeBoostedStats(gen, attacker, ''), [gen, attacker]);
   const attackerBaseStats = useMemo(
@@ -203,6 +214,8 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
     defenderLevel,
     setDefenderSpecies,
     setDefenderLevel,
+    defenderFormes,
+    defenderBaseStats,
     observations,
     addObservation,
     updateObservation,

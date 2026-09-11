@@ -1,22 +1,46 @@
 /**
  * LiveCalcDefenderPanel.tsx - Defender's Known Inputs
  * Unlike CalcPokemonPanel's fully-known set (reused as-is for the Live Calc
- * attacker - see LiveCalcPage.tsx), the defender is only ever species+level
- * here - everything else about it is exactly what the tab is solving for,
- * via the observation list next to this panel.
+ * attacker - see LiveCalcPage.tsx), the defender is species+level plus what
+ * that species alone already reveals - a forme-family toggle (for stat-block
+ * and Mega formes, same `FormeToggle`/`FormeFamily` CalcPokemonPanel uses)
+ * and its read-only base stats. Everything past that (EVs/SPs, nature,
+ * ability, item) is exactly what the tab is solving for, via the observation
+ * list next to this panel - ability display/lock is deliberately still out
+ * of this leg (see TODO.md's Live Calc Known-Ability Lock leg; surfacing it
+ * usefully is an engine-contract change, not a UI addition).
  */
 
+import type { StatsTable } from '@smogon/calc/dist/data/interface';
+import type { FormeFamily } from '../../utils/calcFormes';
+import { getStatLabelColor } from '../../config/pokemonTheme';
 import CalcAutocomplete from '../calc/CalcAutocomplete';
+import FormeToggle from '../calc/FormeToggle';
+
+const STAT_FIELDS: Array<{ label: string; key: keyof StatsTable }> = [
+  { label: 'HP', key: 'hp' },
+  { label: 'Atk', key: 'atk' },
+  { label: 'Def', key: 'def' },
+  { label: 'SpA', key: 'spa' },
+  { label: 'SpD', key: 'spd' },
+  { label: 'Spe', key: 'spe' },
+];
 
 interface LiveCalcDefenderPanelProps {
   species: string;
   level: number;
   speciesOptions: string[];
+  formes: FormeFamily;
+  baseStats: StatsTable | null;
   onChangeSpecies: (species: string) => void;
   onChangeLevel: (level: number) => void;
 }
 
-export default function LiveCalcDefenderPanel({ species, level, speciesOptions, onChangeSpecies, onChangeLevel }: LiveCalcDefenderPanelProps) {
+export default function LiveCalcDefenderPanel({
+  species, level, speciesOptions, formes, baseStats, onChangeSpecies, onChangeLevel,
+}: LiveCalcDefenderPanelProps) {
+  const megaGroup = formes.megaFormes.length > 0 ? [formes.root, ...formes.megaFormes] : [];
+
   return (
     <div className="flex-1 min-w-[280px] bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-2">
       <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wide">Defender</h3>
@@ -44,6 +68,26 @@ export default function LiveCalcDefenderPanel({ species, level, speciesOptions, 
             className="w-14 px-1 py-0.5 text-sm text-center bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
           />
         </div>
+      </div>
+
+      {formes.statFormes.length > 1 && (
+        <FormeToggle group={formes.statFormes} current={species} onSelect={onChangeSpecies} />
+      )}
+      {megaGroup.length > 0 && (
+        <FormeToggle group={megaGroup} current={species} onSelect={onChangeSpecies} />
+      )}
+
+      <div className="bg-zinc-800 rounded px-2 py-1.5 border border-zinc-600 flex flex-col gap-1">
+        <div className="flex items-center gap-2 text-[10px] text-zinc-400 uppercase tracking-wide">
+          <span className="w-8 shrink-0" />
+          <span className="w-10 text-center shrink-0">Base</span>
+        </div>
+        {STAT_FIELDS.map(({ label, key }) => (
+          <div key={key} className="flex items-center gap-2">
+            <span className={`w-8 text-[10px] uppercase shrink-0 ${getStatLabelColor(label)}`}>{label}</span>
+            <span className="w-10 text-center text-xs text-zinc-300 shrink-0">{baseStats ? baseStats[key] : '—'}</span>
+          </div>
+        ))}
       </div>
     </div>
   );

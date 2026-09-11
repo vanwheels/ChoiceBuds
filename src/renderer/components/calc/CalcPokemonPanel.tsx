@@ -30,7 +30,6 @@ import type { DragEvent } from 'react';
 import type { CalcPokemonState, NatureStatEffect } from '../../hooks/useDamageCalc';
 import { STATUS_OPTIONS } from '../../hooks/useDamageCalc';
 import type { FormeFamily } from '../../utils/calcFormes';
-import { formeDisplayLabel } from '../../utils/calcFormes';
 import type { NatureName, StatsTable } from '@smogon/calc/dist/data/interface';
 import type { Team, SavedPokemonEntry, ImportedPokemonInfo } from '../../types/pokemon';
 import type { UseSavedPokemonReturn } from '../../hooks/useSavedPokemon';
@@ -47,6 +46,7 @@ import SavedSetPicker from '../SavedSetPicker';
 import SaveToLibraryDialog from '../SaveToLibraryDialog';
 import CalcStatRows from './CalcStatRows';
 import CalcTeamTray from './CalcTeamTray';
+import FormeToggle from './FormeToggle';
 
 interface CalcPokemonPanelProps {
   title: string;
@@ -74,25 +74,6 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const GENDER_CYCLE: Array<CalcPokemonState['gender']> = ['M', 'F', ''];
-
-function FormeToggle({ group, current, onSelect }: { group: string[]; current: string; onSelect: (name: string) => void }) {
-  return (
-    <div className="flex gap-1 flex-wrap">
-      {group.map(name => (
-        <button
-          key={name}
-          type="button"
-          onClick={() => onSelect(name)}
-          className={`px-2 py-1 text-xs font-bold rounded transition-colors cursor-pointer ${
-            current === name ? 'bg-accent-gold text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
-          }`}
-        >
-          {formeDisplayLabel(group, name)}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 export default function CalcPokemonPanel({
   title, state, speciesOptions, itemOptions, abilityOptions, natureOptions, formes, baseStats, boostedStats, natureEffect,
