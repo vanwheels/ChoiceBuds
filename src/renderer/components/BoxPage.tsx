@@ -15,9 +15,11 @@
  * slots), so rulesetId falls back to the app's own defaultRegulation
  * setting, same source CalcPage.tsx uses for its own ruleset-less context.
  *
- * "+ New Build" (Box Tab Leg 2, see TODO.md): a dashed tile, same
- * TeamCard.tsx/SpeciesPickerCard shape as "+ Add Pokémon" on a team, except
- * it has no team/slot to write into - species -> useRosterActions.ts's
+ * "+ New Build" (Box Tab Leg 2, see TODO.md): a dashed tile that opens
+ * AddPokemonStatTable.tsx as a modal (Add Pokémon: Sortable Base-Stat Table
+ * Leg 2, see TODO.md - previously SpeciesPickerCard.tsx, same swap
+ * TeamCard.tsx's own "+ Add Pokémon" trigger got in that milestone's Leg 1),
+ * except it has no team/slot to write into - species -> useRosterActions.ts's
  * buildSlot (same usage-based default a fresh roster slot gets) ->
  * SaveToLibraryDialog's name prompt -> addSavedPokemonBatch, then
  * toggleCardExpansion opens the brand-new entry straight into edit. The
@@ -26,7 +28,10 @@
  * save resolves and can be handed to toggleCardExpansion the instant it does.
  * useRosterActions needs an `updateTeam` to construct (only used by its
  * other actions - swapSlot/addSlot/etc - none of which this page calls), so
- * a no-op stub stands in; buildSlot itself never touches it.
+ * a no-op stub stands in; buildSlot itself never touches it. No `savedPokemon`/
+ * `onSelectSaved` passed through - same circular-flow reasoning
+ * SpeciesPickerCard.tsx's header comment used to give for why this call site
+ * never passed them.
  *
  * "Add to Team…" (Box Tab Leg 4, see TODO.md): a BoxCard's context menu
  * opens AddToTeamDialog, tracked here the same `useState` shape as
@@ -118,7 +123,7 @@ import { parseShowdownText } from '../services/parser';
 import { enrichPokemonWithAPI } from '../services/pokeapi';
 import { sortSavedPokemonByFavorite } from '../utils/savedPokemonSort';
 import BoxCard from './BoxCard';
-import SpeciesPickerCard from './SpeciesPickerCard';
+import AddPokemonStatTable from './AddPokemonStatTable';
 import SaveToLibraryDialog from './SaveToLibraryDialog';
 import AddToTeamDialog from './AddToTeamDialog';
 import ContextMenu from './ContextMenu';
@@ -354,23 +359,13 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
           </div>
         ) : (
           <div className="flex flex-wrap gap-4 items-start" onContextMenu={handleGridContextMenu}>
-            {isPickerOpen ? (
-              <SpeciesPickerCard
-                roster={speciesRosterState.roster}
-                rulesetId={rulesetId}
-                resolveSprite={spriteCacheState.resolveSprite}
-                onSelect={handleSelectNewSpecies}
-                onClose={() => setIsPickerOpen(false)}
-              />
-            ) : (
-              <button
-                onClick={() => setIsPickerOpen(true)}
-                disabled={isBuildingSpecies}
-                className="w-[280px] min-h-[280px] flex items-center justify-center rounded-lg border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-wait"
-              >
-                <span className="text-sm font-semibold">{isBuildingSpecies ? 'Building…' : '+ New Build'}</span>
-              </button>
-            )}
+            <button
+              onClick={() => setIsPickerOpen(true)}
+              disabled={isBuildingSpecies}
+              className="w-[280px] min-h-[280px] flex items-center justify-center rounded-lg border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-wait"
+            >
+              <span className="text-sm font-semibold">{isBuildingSpecies ? 'Building…' : '+ New Build'}</span>
+            </button>
 
             {displayedEntries.length === 0 && (
               <div className="flex flex-col justify-center text-zinc-400 px-2 min-h-[280px]">
@@ -412,6 +407,16 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
       </div>
 
       <AnimatePresence>
+        {isPickerOpen && (
+          <AddPokemonStatTable
+            roster={speciesRosterState.roster}
+            rulesetId={rulesetId}
+            resolveSprite={spriteCacheState.resolveSprite}
+            getCachedEntry={databaseState.getCachedEntry}
+            onSelect={handleSelectNewSpecies}
+            onClose={() => setIsPickerOpen(false)}
+          />
+        )}
         {pendingNewBuild && (
           <SaveToLibraryDialog
             pokemon={pendingNewBuild.pokemon}

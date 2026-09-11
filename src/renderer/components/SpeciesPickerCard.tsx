@@ -22,15 +22,14 @@
  * Search, see TODO.md) are an opt-in pair - only TeamCard.tsx's trailing
  * "+ Add Pokémon" slot passes them, so a saved build the user already built
  * for a species can be picked directly instead of always landing a fresh
- * usage-based default. Roster Swap (PokemonCard.tsx) and Box's own
- * "+ New Build" (BoxPage.tsx) don't pass them - picking a Box entry from
- * inside Box's own creation flow would be circular, and Roster Swap already
- * has its own species-then-saved-set two-step via SavedSetPicker.tsx. When
- * omitted, this renders exactly as before - one flat species list, no
- * "From Box" section. Same search (plain-text label/species match, or the
- * same #tag chain by underlying species) as the species half of the list,
- * and the same `validateSpeciesLegality` filter, so a Box entry follows the
- * same rules the species list next to it already does.
+ * usage-based default. Roster Swap (PokemonCard.tsx) doesn't pass them -
+ * it already has its own species-then-saved-set two-step via
+ * SavedSetPicker.tsx. When omitted, this renders exactly as before - one
+ * flat species list, no "From Box" section. Same search (plain-text
+ * label/species match, or the same #tag chain by underlying species) as the
+ * species half of the list, and the same `validateSpeciesLegality` filter,
+ * so a Box entry follows the same rules the species list next to it already
+ * does.
  */
 
 import { useState } from 'react';

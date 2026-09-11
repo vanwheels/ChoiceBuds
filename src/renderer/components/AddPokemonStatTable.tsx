@@ -34,6 +34,13 @@
  * opt-in pair exactly - same filtering rules, same omitted-means-no-section
  * behavior - so TeamCard.tsx's existing "From Box" support carries over
  * unchanged.
+ *
+ * Also wired into BoxPage.tsx's own "+ New Build" flow (Leg 2, see
+ * TODO.md), replacing SpeciesPickerCard there the same way it replaced it on
+ * TeamCard.tsx. BoxPage omits `savedPokemon`/`onSelectSaved` - same reasoning
+ * SpeciesPickerCard's header comment used to give for why Box's "+ New
+ * Build" never passed them: picking a Box entry from inside Box's own
+ * creation flow would be circular.
  */
 
 import { useState } from 'react';
