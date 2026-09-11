@@ -18,6 +18,14 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Box Tab: Export/Copy Build] - Leg 6** (2026-09-11) - see commit
+  `f4d8d29`. Added "Copy Pokémon" and "Export" to `BoxCard.tsx`'s context
+  menu, straight ports of `PokemonCard.tsx`'s own versions -
+  `clipboardPayload.ts`'s internal JSON round-trip and `ExportTeamModal`
+  mounted the same way, both sitting ahead of the existing Add to
+  Team…/Rename/Duplicate/Delete items. One-directional (out only); Leg 5
+  already covers pasting into Box at the grid level.
+
 - **[Box Tab: Import via Right-Click] - Leg 5** (2026-09-11) - see commit
   `d22da94`. Right-click on `BoxPage.tsx`'s grid container (same
   click-coordinates `ContextMenu` pattern `TeamCard.tsx`'s Leg 2 roster-grid

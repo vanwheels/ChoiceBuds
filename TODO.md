@@ -33,14 +33,6 @@ no way to move a build between Box and a Team in either direction, no
 duplicate, no reorder, no search. Added as Legs 4-8 below - flagged as a
 meaningful size increase over the original 3-leg scope before recording it.
 
-- **[Box Tab: Export/Copy Build] — Leg 6** *(Last touched: 2026-09-10 ·
-  Re-checks: 0)*
-  The reverse of Leg 5 - no way to get a build back out of Box via
-  copy/right-click (e.g. to paste into a team, or copy as Showdown text
-  elsewhere). Likely reuses the same clipboard-payload shape Teams already
-  writes via its "Copy" context-menu actions. Not yet scoped in detail
-  (Showdown-text copy vs. ChoiceBuds clipboard-payload copy, or both).
-
 - **[Box Tab: Reorder] — Leg 7** *(Last touched: 2026-09-10 · Re-checks: 0)*
   No way to reorder Box entries - display order is whatever
   `SavedPokemonDatabase` currently holds. Not yet scoped in detail
