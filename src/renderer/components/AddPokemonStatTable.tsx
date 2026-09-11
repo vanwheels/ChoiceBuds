@@ -8,8 +8,12 @@
  * rather than in-slot: a 8-column stat table (sprite+name, HP/Atk/Def/SpA/
  * SpD/Spe, BST) doesn't fit SpeciesPickerCard's 280px card width.
  *
- * Search is plain-text species-name matching only - not SpeciesPickerCard's
- * '#tag' type/move/ability chain, which wasn't asked for here.
+ * Search supports the same '#tag' type/move/ability chain SpeciesPickerCard
+ * does (e.g. '#fire #drought #tailwind', ANDed together) - ported over
+ * as-is (see that file's header comment for the full type -> move -> ability
+ * fallback/resolution writeup) rather than reimplemented, since dropping it
+ * when this component replaced SpeciesPickerCard at this call site was a
+ * real regression, not an intentional cut.
  *
  * Column headers sort the whole table (Showdown Random Battle Dex-style) -
  * see utils/statTable.ts for the actual sort/BST math, kept pure and
@@ -37,10 +41,16 @@ import type { PokeAPICacheEntry, SavedPokemonEntry, SpeciesRosterEntry } from '.
 import type { RegulationId } from '../utils/pokemonRules';
 import { validateSpeciesLegality } from '../utils/pokemonRules';
 import { normalizeSpeciesForAPI } from '../services/pokeapi';
+import { normalizeNameForAPI } from '../services/pokeapiService';
 import { getPixelSpriteUrl } from '../utils/spriteUrl';
 import { getStatLabelColor } from '../config/pokemonTheme';
 import { computeBST, nextStatTableSort, sortStatTableRows } from '../utils/statTable';
 import type { StatTableSort, StatTableSortKey } from '../utils/statTable';
+import { usePokemonTypeFilter } from '../hooks/usePokemonTypeFilter';
+import { usePokemonMoveFilter, isMoveResolved } from '../hooks/usePokemonMoveFilter';
+import { usePokemonAbilityFilter } from '../hooks/usePokemonAbilityFilter';
+import { parseTagFilters } from '../utils/tagSearch';
+import { ALL_TYPES } from '../config/typeEffectiveness';
 import Modal from './Modal';
 
 interface AddPokemonStatTableProps {
@@ -88,10 +98,41 @@ export default function AddPokemonStatTable({
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<StatTableSort | null>(null);
 
+  // Same '#tag' type -> move -> ability resolution chain as
+  // SpeciesPickerCard.tsx - see that file's header comment for the full
+  // writeup. Multiple '#tag's are ANDed together.
+  const tags = parseTagFilters(search).filter(t => t.length > 0);
+  const isTypeTag = (t: string): boolean => (ALL_TYPES as readonly string[]).includes(t);
+  const typeTags = tags.filter(isTypeTag);
+  const normalizedNonTypeTags = tags.filter(t => !isTypeTag(t)).map(normalizeNameForAPI);
+
+  const typeMembers = usePokemonTypeFilter(typeTags);
+  const moveMembers = usePokemonMoveFilter(normalizedNonTypeTags);
+  const moveFailedTags = normalizedNonTypeTags.filter(t => isMoveResolved(t) && moveMembers.get(t) === null);
+  const abilityMembers = usePokemonAbilityFilter(moveFailedTags);
+
+  function resolvedSetForTag(tag: string): Set<string> | null {
+    if (isTypeTag(tag)) return typeMembers.get(tag) ?? null;
+    const normalized = normalizeNameForAPI(tag);
+    const moveSet = moveMembers.get(normalized) ?? null;
+    if (moveSet !== null) return moveSet;
+    if (isMoveResolved(normalized)) return abilityMembers.get(normalized) ?? null;
+    return null;
+  }
+
+  const tagSets = tags.map(resolvedSetForTag);
+  const anyTagPending = tagSets.some(set => set === null);
+
+  // Shared by both the plain-roster and "From Box" halves below - a species
+  // (by its own name) or a saved build (by its underlying species) matches
+  // the #tag chain the same way.
+  const matchesTags = (speciesName: string): boolean =>
+    anyTagPending ? false : tagSets.every(set => set!.has(speciesName.toLowerCase()));
+
   const legalRoster = roster.filter(pkmn => validateSpeciesLegality(pkmn.name, rulesetId));
-  const filteredRoster = search.trim() === ''
-    ? legalRoster
-    : legalRoster.filter(pkmn => pkmn.name.toLowerCase().includes(search.toLowerCase()));
+  const filteredRoster = tags.length === 0
+    ? legalRoster.filter(pkmn => pkmn.name.toLowerCase().includes(search.toLowerCase()))
+    : legalRoster.filter(pkmn => matchesTags(pkmn.name));
 
   const rows: StatTableRow[] = filteredRoster.map(species => {
     const stats = getCachedEntry(normalizeSpeciesForAPI(species.name))?.baseStats ?? null;
@@ -114,9 +155,10 @@ export default function AddPokemonStatTable({
   const showBoxResults = savedPokemon !== undefined && onSelectSaved !== undefined;
   const filteredSaved = showBoxResults
     ? savedPokemon.filter(entry => validateSpeciesLegality(entry.pokemon.showdownData.species, rulesetId))
-      .filter(entry => search.trim() === '' ||
-        entry.label.toLowerCase().includes(search.toLowerCase()) ||
-        entry.pokemon.showdownData.species.toLowerCase().includes(search.toLowerCase()))
+      .filter(entry => tags.length === 0
+        ? entry.label.toLowerCase().includes(search.toLowerCase()) ||
+          entry.pokemon.showdownData.species.toLowerCase().includes(search.toLowerCase())
+        : matchesTags(entry.pokemon.showdownData.species))
     : [];
 
   return (
@@ -135,7 +177,7 @@ export default function AddPokemonStatTable({
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search species..."
+          placeholder="Search species... (#fire, #dragon dance, #fire #flash fire, ...)"
           autoFocus
           className="w-full px-3 py-2 text-sm font-semibold text-white bg-zinc-900 border border-zinc-700 rounded-lg outline-none focus:border-accent-gold"
         />
@@ -191,7 +233,7 @@ export default function AddPokemonStatTable({
               {sortedRows.length === 0 ? (
                 <tr>
                   <td colSpan={STAT_COLUMNS.length + 1} className="py-6 text-center text-zinc-400">
-                    No legal species found
+                    {tags.length > 0 && anyTagPending ? 'Loading…' : 'No legal species found'}
                   </td>
                 </tr>
               ) : (
