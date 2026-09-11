@@ -8,14 +8,20 @@ import { useState } from 'react';
 import { parseShowdownText } from '../services/parser';
 import { enrichPokemonWithAPI } from '../services/pokeapi';
 import { extractPokepasteId, fetchPokepaste, detectRegulationFromNotes } from '../services/pokepaste';
+import { cloneSavedPokemon } from '../utils/clonePokemon';
+import { buildImportReviewRows, type ImportReviewRow } from '../utils/importReview';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
-import type { Team, ImportedPokemonInfo, RegulationLabel } from '../types/pokemon';
+import type { UseSavedPokemonReturn } from '../hooks/useSavedPokemon';
+import type { Team, ImportedPokemonInfo, RegulationLabel, ShowdownPokemon, SavedPokemonEntry } from '../types/pokemon';
 import Modal from './Modal';
+import ImportBuildReviewStep from './ImportBuildReviewStep';
 
 interface ImportTeamModalProps {
   onClose: () => void;
   onImport: (team: Team) => Promise<boolean>;
   databaseState: UseDatabaseReturn;
+  savedPokemonState: UseSavedPokemonReturn;
+  resolveSprite: (remoteUrl: string) => string;
   existingTeamNames: string[];
   defaultRegulation: RegulationLabel;
 }
@@ -35,6 +41,8 @@ export default function ImportTeamModal({
   onClose,
   onImport,
   databaseState,
+  savedPokemonState,
+  resolveSprite,
   existingTeamNames,
   defaultRegulation,
 }: ImportTeamModalProps) {
@@ -46,6 +54,14 @@ export default function ImportTeamModal({
   const [error, setError] = useState<string | null>(null);
   const [importProgress, setImportProgress] = useState<string>('');
   const [isFetchingPokepaste, setIsFetchingPokepaste] = useState(false);
+
+  // Saved-build review step (Leg 2) - null means "show the paste-text step".
+  // pendingParsed holds the *full* parsed list (matched rows and unmatched
+  // rows alike) so finishImport can walk every slot by its original index;
+  // reviewRows is only the subset with 1+ saved-build match, for rendering.
+  const [reviewRows, setReviewRows] = useState<ImportReviewRow[] | null>(null);
+  const [pendingParsed, setPendingParsed] = useState<ShowdownPokemon[]>([]);
+  const [selections, setSelections] = useState<Record<number, SavedPokemonEntry>>({});
 
   /**
    * If the paste box holds nothing but a pokepast.es link, fetch that paste's
@@ -76,49 +92,95 @@ export default function ImportTeamModal({
   };
 
   /**
-   * Handle the import process. An empty paste box is allowed - it creates
-   * a team with no Pokémon yet, added to later from the Teams page, rather
-   * than requiring at least one parseable Pokémon up front.
+   * Step 1: parse the pasted text (if any) and check every parsed Pokémon
+   * against the saved-build library by species. Zero matches across the
+   * whole paste -> falls straight through to finishImport unchanged, so the
+   * one-click parse->enrich->save flow never grows an extra step for a user
+   * with no relevant saved builds. 1+ match swaps the modal body to the
+   * review step instead, and finishImport waits for "Confirm Import".
    */
-  const handleImport = async () => {
+  const handleParseAndReview = async () => {
+    if (!pastedText.trim()) {
+      await finishImport([], {});
+      return;
+    }
+
+    setIsImporting(true);
+    setError(null);
+    setImportProgress('Parsing team data...');
+
+    try {
+      const parseResult = parseShowdownText(pastedText);
+
+      if (!parseResult.success || parseResult.pokemon.length === 0) {
+        throw new Error(
+          parseResult.errors.length > 0
+            ? parseResult.errors.join(', ')
+            : 'Failed to parse team data'
+        );
+      }
+
+      const rows: ImportReviewRow[] = buildImportReviewRows(
+        parseResult.pokemon,
+        savedPokemonState.getSavedSetsForSpecies
+      );
+
+      setImportProgress('');
+
+      if (rows.length > 0) {
+        setPendingParsed(parseResult.pokemon);
+        setReviewRows(rows);
+        setIsImporting(false);
+        return;
+      }
+
+      await finishImport(parseResult.pokemon, {});
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      setError(errorMessage);
+      setImportProgress('');
+      setIsImporting(false);
+    }
+  };
+
+  /**
+   * Step 2 (only reached when handleParseAndReview found 1+ saved-build
+   * match): enrich/save using whatever the review step's rows settled on.
+   * A row left on "Keep pasted" goes through enrichPokemonWithAPI exactly
+   * as before; a row with a saved build picked skips enrichment entirely
+   * and wholesale-replaces that slot with the saved entry's own
+   * ImportedPokemonInfo (cloneSavedPokemon), same full-replace precedent as
+   * Leg 1's loadSavedSet - not a per-field merge.
+   */
+  const finishImport = async (
+    parsedPokemon: ShowdownPokemon[],
+    reviewSelections: Record<number, SavedPokemonEntry>
+  ) => {
     setIsImporting(true);
     setError(null);
 
     try {
-      // Step 1 & 2: Parse Showdown text and enrich with PokeAPI data, skipped entirely when empty
       const enrichedPokemon: ImportedPokemonInfo[] = [];
 
-      if (pastedText.trim()) {
-        setImportProgress('Parsing team data...');
-        const parseResult = parseShowdownText(pastedText);
+      for (let i = 0; i < parsedPokemon.length; i++) {
+        const pokemon = parsedPokemon[i];
+        const pickedEntry = reviewSelections[i];
 
-        if (!parseResult.success || parseResult.pokemon.length === 0) {
-          throw new Error(
-            parseResult.errors.length > 0
-              ? parseResult.errors.join(', ')
-              : 'Failed to parse team data'
-          );
+        if (pickedEntry) {
+          setImportProgress(`Using saved build for ${pokemon.species} (${i + 1}/${parsedPokemon.length})...`);
+          enrichedPokemon.push(cloneSavedPokemon(pickedEntry.pokemon));
+          continue;
         }
 
-        setImportProgress(`Parsed ${parseResult.pokemon.length} Pokémon. Fetching data...`);
-
-        for (let i = 0; i < parseResult.pokemon.length; i++) {
-          const pokemon = parseResult.pokemon[i];
-          setImportProgress(
-            `Enriching ${pokemon.species} (${i + 1}/${parseResult.pokemon.length})...`
-          );
-
-          const enriched = await enrichPokemonWithAPI(
-            pokemon,
-            databaseState.getCachedEntry,
-            databaseState.setCacheEntry
-          );
-
-          enrichedPokemon.push(enriched);
-        }
+        setImportProgress(`Enriching ${pokemon.species} (${i + 1}/${parsedPokemon.length})...`);
+        const enriched = await enrichPokemonWithAPI(
+          pokemon,
+          databaseState.getCachedEntry,
+          databaseState.setCacheEntry
+        );
+        enrichedPokemon.push(enriched);
       }
 
-      // Step 3: Create team object
       const team: Team = {
         id: crypto.randomUUID(),
         name: teamName.trim() || nextGenericTeamName(existingTeamNames),
@@ -131,7 +193,6 @@ export default function ImportTeamModal({
 
       setImportProgress('Saving team...');
 
-      // Step 4: Save team
       const success = await onImport(team);
 
       if (success) {
@@ -141,6 +202,9 @@ export default function ImportTeamModal({
         setAuthor('');
         setTeamFormat(defaultRegulation);
         setImportProgress('');
+        setReviewRows(null);
+        setPendingParsed([]);
+        setSelections({});
         onClose();
       } else {
         throw new Error('Failed to save team');
@@ -154,6 +218,27 @@ export default function ImportTeamModal({
     }
   };
 
+  const handleConfirmReview = () => finishImport(pendingParsed, selections);
+
+  /** Discards the review step's state and returns to the paste-text step - the pasted text itself is left untouched so the user can edit it. */
+  const handleBackFromReview = () => {
+    setReviewRows(null);
+    setPendingParsed([]);
+    setSelections({});
+  };
+
+  const handleSelectBuild = (index: number, entry: SavedPokemonEntry | null) => {
+    setSelections(prev => {
+      const next = { ...prev };
+      if (entry) {
+        next[index] = entry;
+      } else {
+        delete next[index];
+      }
+      return next;
+    });
+  };
+
   /**
    * Handle modal close
    */
@@ -164,6 +249,9 @@ export default function ImportTeamModal({
       setAuthor('');
       setError(null);
       setImportProgress('');
+      setReviewRows(null);
+      setPendingParsed([]);
+      setSelections({});
       onClose();
     }
   };
@@ -172,7 +260,7 @@ export default function ImportTeamModal({
     <Modal>
       {/* Modal Header */}
       <div className="px-6 py-4 border-b border-zinc-700 flex items-center justify-between">
-        <h2 className="text-xl font-bold text-zinc-100">Import Team</h2>
+        <h2 className="text-xl font-bold text-zinc-100">{reviewRows ? 'Review Saved Builds' : 'Import Team'}</h2>
         <button
           onClick={handleClose}
           disabled={isImporting}
@@ -186,83 +274,94 @@ export default function ImportTeamModal({
 
       {/* Modal Body */}
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
-        {/* Team Name Input */}
-        <div>
-          <label htmlFor="teamName" className="block text-sm font-medium text-zinc-300 mb-2">
-            Team Name
-          </label>
-          <input
-            id="teamName"
-            type="text"
-            value={teamName}
-            onChange={(e) => setTeamName(e.target.value)}
-            disabled={isImporting}
-            placeholder="Enter team name... (defaults to &quot;Team N&quot; if left blank)"
-            className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50"
+        {reviewRows ? (
+          <ImportBuildReviewStep
+            rows={reviewRows}
+            selections={selections}
+            resolveSprite={resolveSprite}
+            onSelect={handleSelectBuild}
           />
-        </div>
+        ) : (
+          <>
+            {/* Team Name Input */}
+            <div>
+              <label htmlFor="teamName" className="block text-sm font-medium text-zinc-300 mb-2">
+                Team Name
+              </label>
+              <input
+                id="teamName"
+                type="text"
+                value={teamName}
+                onChange={(e) => setTeamName(e.target.value)}
+                disabled={isImporting}
+                placeholder="Enter team name... (defaults to &quot;Team N&quot; if left blank)"
+                className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50"
+              />
+            </div>
 
-        {/* Author (optional) - Pokepaste pages have one; a plain Showdown export doesn't */}
-        <div>
-          <label htmlFor="teamAuthor" className="block text-sm font-medium text-zinc-300 mb-2">
-            Author <span className="text-zinc-500 font-normal">(optional)</span>
-          </label>
-          <input
-            id="teamAuthor"
-            type="text"
-            value={author}
-            onChange={(e) => setAuthor(e.target.value)}
-            disabled={isImporting}
-            placeholder="Who built this team?"
-            className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50"
-          />
-        </div>
+            {/* Author (optional) - Pokepaste pages have one; a plain Showdown export doesn't */}
+            <div>
+              <label htmlFor="teamAuthor" className="block text-sm font-medium text-zinc-300 mb-2">
+                Author <span className="text-zinc-500 font-normal">(optional)</span>
+              </label>
+              <input
+                id="teamAuthor"
+                type="text"
+                value={author}
+                onChange={(e) => setAuthor(e.target.value)}
+                disabled={isImporting}
+                placeholder="Who built this team?"
+                className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50"
+              />
+            </div>
 
-        {/* Format Selection */}
-        <div>
-          <label htmlFor="teamFormat" className="block text-sm font-medium text-zinc-300 mb-2">
-            Format
-          </label>
-          <select
-            id="teamFormat"
-            value={teamFormat}
-            onChange={(e) => setTeamFormat(e.target.value as typeof teamFormat)}
-            disabled={isImporting}
-            className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50"
-          >
-            <option value="Reg M-A">Reg M-A</option>
-            <option value="Reg M-B">Reg M-B</option>
-            <option value="Reg M-C">Reg M-C</option>
-          </select>
-        </div>
+            {/* Format Selection */}
+            <div>
+              <label htmlFor="teamFormat" className="block text-sm font-medium text-zinc-300 mb-2">
+                Format
+              </label>
+              <select
+                id="teamFormat"
+                value={teamFormat}
+                onChange={(e) => setTeamFormat(e.target.value as typeof teamFormat)}
+                disabled={isImporting}
+                className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50"
+              >
+                <option value="Reg M-A">Reg M-A</option>
+                <option value="Reg M-B">Reg M-B</option>
+                <option value="Reg M-C">Reg M-C</option>
+              </select>
+            </div>
 
-        {/* Paste Area - also accepts a pokepast.es link directly (see handlePasteAreaBlur) */}
-        <div>
-          <label htmlFor="pasteArea" className="block text-sm font-medium text-zinc-300 mb-2">
-            Paste Team (Showdown Format or a pokepast.es link)
-            <span className="text-zinc-500 font-normal"> (optional - leave blank to create an empty team)</span>
-          </label>
-          <textarea
-            id="pasteArea"
-            value={pastedText}
-            onChange={(e) => setPastedText(e.target.value)}
-            onBlur={handlePasteAreaBlur}
-            disabled={isImporting}
-            placeholder="Paste your Showdown/Pokepaste team, or a pokepast.es link, here... (or leave blank for an empty team)"
-            rows={12}
-            className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-500 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50 resize-none"
-          />
-        </div>
+            {/* Paste Area - also accepts a pokepast.es link directly (see handlePasteAreaBlur) */}
+            <div>
+              <label htmlFor="pasteArea" className="block text-sm font-medium text-zinc-300 mb-2">
+                Paste Team (Showdown Format or a pokepast.es link)
+                <span className="text-zinc-500 font-normal"> (optional - leave blank to create an empty team)</span>
+              </label>
+              <textarea
+                id="pasteArea"
+                value={pastedText}
+                onChange={(e) => setPastedText(e.target.value)}
+                onBlur={handlePasteAreaBlur}
+                disabled={isImporting}
+                placeholder="Paste your Showdown/Pokepaste team, or a pokepast.es link, here... (or leave blank for an empty team)"
+                rows={12}
+                className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-500 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50 resize-none"
+              />
+            </div>
 
-        {/* Pokepaste Fetch Progress */}
-        {isFetchingPokepaste && (
-          <div className="flex items-center gap-2 text-accent-gold text-sm">
-            <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-            </svg>
-            <span>Fetching from Pokepaste...</span>
-          </div>
+            {/* Pokepaste Fetch Progress */}
+            {isFetchingPokepaste && (
+              <div className="flex items-center gap-2 text-accent-gold text-sm">
+                <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span>Fetching from Pokepaste...</span>
+              </div>
+            )}
+          </>
         )}
 
         {/* Progress Message */}
@@ -286,20 +385,41 @@ export default function ImportTeamModal({
 
       {/* Modal Footer */}
       <div className="px-6 py-4 border-t border-zinc-700 flex items-center justify-end gap-3">
-        <button
-          onClick={handleClose}
-          disabled={isImporting}
-          className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded-lg transition-colors disabled:opacity-50"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleImport}
-          disabled={isImporting}
-          className="px-4 py-2 bg-accent-gold hover:bg-accent-gold-deep text-zinc-900 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isImporting ? 'Importing...' : pastedText.trim() ? 'Import Team' : 'Create Empty Team'}
-        </button>
+        {reviewRows ? (
+          <>
+            <button
+              onClick={handleBackFromReview}
+              disabled={isImporting}
+              className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded-lg transition-colors disabled:opacity-50"
+            >
+              Back
+            </button>
+            <button
+              onClick={handleConfirmReview}
+              disabled={isImporting}
+              className="px-4 py-2 bg-accent-gold hover:bg-accent-gold-deep text-zinc-900 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isImporting ? 'Importing...' : 'Confirm Import'}
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={handleClose}
+              disabled={isImporting}
+              className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded-lg transition-colors disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleParseAndReview}
+              disabled={isImporting}
+              className="px-4 py-2 bg-accent-gold hover:bg-accent-gold-deep text-zinc-900 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isImporting ? 'Importing...' : pastedText.trim() ? 'Import Team' : 'Create Empty Team'}
+            </button>
+          </>
+        )}
       </div>
     </Modal>
   );

@@ -211,6 +211,8 @@ export default function TeamsPage({
             onClose={() => setIsImportModalOpen(false)}
             onImport={teamsState.addTeam}
             databaseState={databaseState}
+            savedPokemonState={savedPokemonState}
+            resolveSprite={spriteCacheState.resolveSprite}
             existingTeamNames={teamsState.teams.map(team => team.name)}
             defaultRegulation={settingsState.settings.defaultRegulation}
           />

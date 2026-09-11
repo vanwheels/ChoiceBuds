@@ -12,6 +12,7 @@ import { enrichPokemonWithAPI } from '../services/pokeapi';
 import { getFallbackGender } from '../config/pokemonRules';
 import { normalizeSlug } from '../utils/pokemonRules';
 import { toReadableName } from '../utils/displayName';
+import { cloneSavedPokemon } from '../utils/clonePokemon';
 
 const ZERO_EVS: EVSpread = {
   hp: 0,
@@ -21,32 +22,6 @@ const ZERO_EVS: EVSpread = {
   specialDefense: 0,
   speed: 0,
 };
-
-/**
- * Deep-clones a saved-set's stored ImportedPokemonInfo for placement into a
- * live roster slot, assigning a fresh id/importedAt rather than reusing the
- * saved entry's own - the same saved set can be loaded into multiple slots
- * (or the same slot twice), and `id` is this app's stable per-roster-slot
- * React key (see types/pokemon.ts's ImportedPokemonInfo.id comment), so
- * reusing it here would collide the moment the same saved set is loaded
- * twice into one team.
- */
-function cloneSavedPokemon(pokemon: ImportedPokemonInfo): ImportedPokemonInfo {
-  return {
-    showdownData: {
-      ...pokemon.showdownData,
-      evs: { ...pokemon.showdownData.evs },
-      moves: [...pokemon.showdownData.moves],
-    },
-    pokedexNumber: pokemon.pokedexNumber,
-    types: [...pokemon.types],
-    baseStats: { ...pokemon.baseStats },
-    spriteUrl: pokemon.spriteUrl,
-    calculatedStats: pokemon.calculatedStats ? { ...pokemon.calculatedStats } : undefined,
-    importedAt: Date.now(),
-    id: crypto.randomUUID(),
-  };
-}
 
 export interface UseRosterActionsReturn {
   swapSlot: (team: Team, index: number, species: string) => Promise<boolean>;
