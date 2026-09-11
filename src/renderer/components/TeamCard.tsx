@@ -308,6 +308,26 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
             Everything else (Validate/Export/Export Image/Export PDF/Delete)
             still lives in TeamOverflowMenu.tsx's "⋮" dropdown. */}
         <div className="flex items-center gap-0.5 bg-zinc-800 border border-zinc-700 rounded-full p-1 shrink-0">
+          {/* Favorite toggle (Favorite Teams, see TODO.md) - favorited teams
+              always sort to the top of the Teams page (TeamsPage.tsx's own
+              sort), independent of the drag-reorder position reorderTeam
+              persists. Plain updateTeam call, same as RegulationBadge's
+              onChange above - no dedicated hook action needed for a
+              single-field toggle. */}
+          <button
+            onClick={() => updateTeam(team.id, { favorite: !team.favorite })}
+            title={team.favorite ? 'Unfavorite' : 'Favorite'}
+            className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors cursor-pointer ${
+              team.favorite ? 'text-accent-gold hover:text-accent-gold-deep' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700'
+            }`}
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill={team.favorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 3.5l2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" />
+            </svg>
+          </button>
+
+          <span className="w-px h-[18px] bg-zinc-700 mx-0.5" />
+
           {/* Drag handle (Always-On Editing Leg 2, see TODO.md) - draggable
               is scoped to just this button, not the whole header, so
               dragging can't fight with clicking the name/author inputs or

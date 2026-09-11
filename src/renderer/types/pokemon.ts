@@ -120,6 +120,13 @@ export interface Team {
   // itself distinguishes them, joined at generation time.
   battleTeamNumber?: string;
   battleTeamName?: string;
+  // Favorited teams always sort to the top of the Teams page (TeamsPage.tsx),
+  // ahead of unfavorited teams, otherwise preserving each group's existing
+  // relative order - see Favorite Teams in TODO.md/COMPLETED.md. Undefined
+  // is equivalent to false; nothing backfills it on read the way
+  // useTeams.ts's normalizeTeam does for other fields, since "missing" and
+  // "not favorited" mean the same thing here.
+  favorite?: boolean;
 }
 
 /**

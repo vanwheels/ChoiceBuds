@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import type { RegulationLabel } from '../types/pokemon';
+import { sortTeamsByFavorite } from '../utils/teamSort';
 import type { UseTeamsReturn } from '../hooks/useTeams';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
 import type { UseActiveEditorReturn } from '../hooks/useActiveEditor';
@@ -49,6 +50,10 @@ export default function TeamsPage({
   const filteredTeams = activeFilter === 'All'
     ? teamsState.teams
     : teamsState.teams.filter(team => team.format === activeFilter);
+
+  // Favorited teams always sort to the top, otherwise preserving each
+  // group's existing relative (drag-reorderable) order - see teamSort.ts.
+  const sortedTeams = sortTeamsByFavorite(filteredTeams);
 
   // Format filter buttons configuration
   const filterButtons: FormatFilter[] = ['All', 'Reg M-A', 'Reg M-B', 'Reg M-C'];
@@ -154,7 +159,7 @@ export default function TeamsPage({
                 single-column widths, not this 2-column state, so 2 teams
                 side-by-side may render 2x3 even where 1 team alone would
                 reach 1x6. */}
-            {filteredTeams.map(team => (
+            {sortedTeams.map(team => (
               <TeamCard
                 key={team.id}
                 team={team}
