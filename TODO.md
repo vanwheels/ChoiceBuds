@@ -17,15 +17,10 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 [COMPLETED.md](COMPLETED.md).
 
 Saved Builds Box shipped 2026-09-11 (all 8 legs - see `COMPLETED.md` and
-`MILESTONES.md`). Building Flow Tweaks promoted to current 2026-09-11 (name
-placeholder - open to renaming) - see "Future Milestones (unscheduled)" below
-for the one remaining open candidate.
-
-## Current Milestone: Building Flow Tweaks
-
-Building Flow Tweaks' last scoped candidate (Add Pokémon Table: Mega Form
-Rows, Legs 1-3) shipped 2026-09-11 - see `COMPLETED.md`. No further legs
-scoped yet under this milestone.
+`MILESTONES.md`). Building Flow Tweaks shipped 2026-09-11 (see
+`COMPLETED.md` and `MILESTONES.md`) - no milestone currently active; see
+"Future Milestones (unscheduled)" below for the one remaining open
+candidate.
 
 ## Blocked
 
