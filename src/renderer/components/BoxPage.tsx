@@ -54,12 +54,25 @@
  * no-op either way (matches the existing Paste Pokémon/Paste Team
  * convention elsewhere in the app; there's no toast system to surface an
  * error).
+ *
+ * Sort-mode toggle (Box Tab: Reorder Leg 7, see TODO.md): Alphabetical
+ * (this page's original always-on species+label sort, still the default)
+ * vs. Custom order, persisted as `settingsState.settings.boxSortMode`.
+ * Custom order is plain array order in `savedPokemonState.savedPokemon`
+ * itself - no dedicated order field, same as `TeamsDatabase.teams` via
+ * `reorderTeam` - so in Custom mode the grid renders that array as-is and
+ * `BoxCard.tsx`'s drag handles call `reorderSavedPokemon` to rearrange it.
+ * The very first switch to Custom mode seeds that array order from the
+ * current Alphabetical view (`handleSetSortMode` below) so flipping modes
+ * doesn't visually jump the grid; `settingsState.settings.boxCustomOrderSeeded`
+ * gates that to a one-time seed so a later toggle back to Custom never
+ * clobbers an already-dragged order.
  */
 
 import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import type { MouseEvent as ReactMouseEvent } from 'react';
-import type { ImportedPokemonInfo, SpeciesRosterEntry } from '../types/pokemon';
+import type { BoxSortMode, ImportedPokemonInfo, SavedPokemonEntry, SpeciesRosterEntry } from '../types/pokemon';
 import type { UseSavedPokemonReturn } from '../hooks/useSavedPokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
@@ -90,6 +103,16 @@ interface BoxPageProps {
 
 // buildSlot never calls updateTeam - see the header comment above.
 const NOOP_UPDATE_TEAM = async () => false;
+
+// Same species-then-label sort CalcSavedSetsModal.tsx uses for its own
+// management list - Alphabetical mode's own sort, and also what seeds Custom
+// mode's array order the first time it's switched to (see header comment).
+function sortAlphabetically(entries: SavedPokemonEntry[]): SavedPokemonEntry[] {
+  return [...entries].sort((a, b) => {
+    const speciesCompare = a.pokemon.showdownData.species.localeCompare(b.pokemon.showdownData.species);
+    return speciesCompare !== 0 ? speciesCompare : a.label.localeCompare(b.label);
+  });
+}
 
 export default function BoxPage({ savedPokemonState, gameDataState, databaseState, speciesRosterState, spriteCacheState, settingsState, teamsState }: BoxPageProps) {
   const rulesetId = toRegulationId(settingsState.settings.defaultRegulation);
@@ -130,12 +153,28 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
     return success;
   };
 
-  // Same species-then-label sort CalcSavedSetsModal.tsx uses for its own
-  // management list, for consistent browsing order across both surfaces.
-  const sortedEntries = [...savedPokemonState.savedPokemon].sort((a, b) => {
-    const speciesCompare = a.pokemon.showdownData.species.localeCompare(b.pokemon.showdownData.species);
-    return speciesCompare !== 0 ? speciesCompare : a.label.localeCompare(b.label);
-  });
+  const sortMode = settingsState.settings.boxSortMode;
+  // Custom mode renders savedPokemon's own array order as-is (BoxCard.tsx's
+  // drag handles rearrange that array directly via reorderSavedPokemon) -
+  // Alphabetical mode re-derives species-then-label order every render, same
+  // as CalcSavedSetsModal.tsx's own management list, for consistent browsing
+  // order across both surfaces.
+  const displayedEntries = sortMode === 'custom'
+    ? savedPokemonState.savedPokemon
+    : sortAlphabetically(savedPokemonState.savedPokemon);
+
+  const handleSetSortMode = async (mode: BoxSortMode) => {
+    if (mode === 'custom' && !settingsState.settings.boxCustomOrderSeeded) {
+      // First-ever switch to Custom: seed the stored array order from the
+      // current Alphabetical view so the grid doesn't visually jump, then
+      // never do this again (see header comment).
+      const alphabeticalIds = sortAlphabetically(savedPokemonState.savedPokemon).map(e => e.id);
+      await savedPokemonState.setSavedPokemonOrder(alphabeticalIds);
+      await settingsState.updateSettings({ boxSortMode: mode, boxCustomOrderSeeded: true });
+    } else {
+      await settingsState.updateSettings({ boxSortMode: mode });
+    }
+  };
 
   const addToTeamEntry = addToTeamEntryId
     ? savedPokemonState.savedPokemon.find(e => e.id === addToTeamEntryId) ?? null
@@ -188,10 +227,33 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
   return (
     <div className="h-full flex flex-col">
       <header className="bg-zinc-800 border-b border-zinc-700 px-6 py-4" style={{ paddingLeft: '2rem', paddingRight: '2rem' }}>
-        <h2 className="text-2xl font-bold text-zinc-100">Box</h2>
-        <p className="text-sm text-zinc-400 mt-1">
-          {sortedEntries.length} saved {sortedEntries.length === 1 ? 'build' : 'builds'}
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-zinc-100">Box</h2>
+            <p className="text-sm text-zinc-400 mt-1">
+              {displayedEntries.length} saved {displayedEntries.length === 1 ? 'build' : 'builds'}
+            </p>
+          </div>
+
+          {/* Sort-mode toggle (Box Tab: Reorder Leg 7, see TODO.md) - same
+              pill-button filter style TeamsPage.tsx uses for its format
+              filters. */}
+          <div className="flex gap-2">
+            {(['alphabetical', 'custom'] as const).map(mode => (
+              <button
+                key={mode}
+                onClick={() => handleSetSortMode(mode)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  sortMode === mode
+                    ? 'bg-accent-gold text-zinc-900'
+                    : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
+                }`}
+              >
+                {mode === 'alphabetical' ? 'Alphabetical' : 'Custom order'}
+              </button>
+            ))}
+          </div>
+        </div>
       </header>
 
       <div className="flex-1 overflow-y-auto px-8 py-6" style={{ scrollbarGutter: 'stable' }}>
@@ -223,14 +285,14 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
               </button>
             )}
 
-            {sortedEntries.length === 0 && (
+            {displayedEntries.length === 0 && (
               <div className="flex flex-col justify-center text-zinc-400 px-2 min-h-[280px]">
                 <p className="text-lg">No saved builds yet</p>
                 <p className="text-sm mt-2">Save a Pokémon to the library from Teams or Calc, or start one with "+ New Build"</p>
               </div>
             )}
 
-            {sortedEntries.map(entry => (
+            {displayedEntries.map(entry => (
               <BoxCard
                 key={entry.id}
                 entry={entry}
@@ -241,6 +303,8 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
                 onRename={(label) => savedPokemonState.renameSavedPokemon(entry.id, label)}
                 onDuplicate={() => savedPokemonState.duplicateSavedPokemon(entry.id)}
                 onDelete={() => savedPokemonState.deleteSavedPokemon(entry.id)}
+                onReorder={(draggedId, targetId) => savedPokemonState.reorderSavedPokemon(draggedId, targetId)}
+                sortMode={sortMode}
                 gameDataState={gameDataState}
                 rulesetId={rulesetId}
                 resolveSprite={spriteCacheState.resolveSprite}

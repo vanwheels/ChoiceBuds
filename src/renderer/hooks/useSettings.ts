@@ -35,6 +35,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   lastSeasonDataCheckedAt: null,
   championsDataChecks: CHAMPIONS_DATA_CHECKS_DEFAULT,
   showAnimatedSprites: false,
+  boxSortMode: 'alphabetical',
+  boxCustomOrderSeeded: false,
   playerProfile: DEFAULT_PLAYER_PROFILE,
   lastSeenReleaseNotesVersion: null,
   lastModified: Date.now(),

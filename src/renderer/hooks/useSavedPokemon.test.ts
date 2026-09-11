@@ -244,6 +244,64 @@ describe('useSavedPokemon', () => {
     expect(result.current.expandedCardIds).toEqual(new Set(['b']));
   });
 
+  it('reorderSavedPokemon is a no-op for identical ids or an unknown target', async () => {
+    vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
+      version: 1,
+      savedPokemon: [
+        { id: 'a', label: 'Gengar', pokemon: makePokemon(), savedAt: 0, updatedAt: 0 },
+        { id: 'b', label: 'Rillaboom', pokemon: makePokemon({ species: 'Rillaboom' }), savedAt: 0, updatedAt: 0 },
+      ],
+      lastModified: 0,
+    });
+    const { result } = renderHook(() => useSavedPokemon());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(await result.current.reorderSavedPokemon('a', 'a')).toBe(false);
+    expect(await result.current.reorderSavedPokemon('a', 'missing-target')).toBe(false);
+    expect(window.electron.writeSavedPokemonDatabase).not.toHaveBeenCalled();
+  });
+
+  it('reorderSavedPokemon inserts the dragged entry immediately before the target', async () => {
+    vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
+      version: 1,
+      savedPokemon: [
+        { id: 'a', label: 'Gengar', pokemon: makePokemon(), savedAt: 0, updatedAt: 0 },
+        { id: 'b', label: 'Rillaboom', pokemon: makePokemon({ species: 'Rillaboom' }), savedAt: 0, updatedAt: 0 },
+        { id: 'c', label: 'Zapdos', pokemon: makePokemon({ species: 'Zapdos' }), savedAt: 0, updatedAt: 0 },
+      ],
+      lastModified: 0,
+    });
+    const { result } = renderHook(() => useSavedPokemon());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.reorderSavedPokemon('a', 'c');
+    });
+
+    expect(result.current.savedPokemon.map(e => e.id)).toEqual(['b', 'a', 'c']);
+  });
+
+  it('setSavedPokemonOrder reorders to match the given ids, appending any leftover entries untouched', async () => {
+    vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
+      version: 1,
+      savedPokemon: [
+        { id: 'a', label: 'Gengar', pokemon: makePokemon(), savedAt: 0, updatedAt: 0 },
+        { id: 'b', label: 'Rillaboom', pokemon: makePokemon({ species: 'Rillaboom' }), savedAt: 0, updatedAt: 0 },
+        { id: 'c', label: 'Zapdos', pokemon: makePokemon({ species: 'Zapdos' }), savedAt: 0, updatedAt: 0 },
+      ],
+      lastModified: 0,
+    });
+    const { result } = renderHook(() => useSavedPokemon());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.setSavedPokemonOrder(['c', 'a']);
+    });
+
+    // 'b' wasn't named in orderedIds - kept, appended after the given ones.
+    expect(result.current.savedPokemon.map(e => e.id)).toEqual(['c', 'a', 'b']);
+  });
+
   it('getSavedSetsForSpecies matches case-insensitively against the stored species', async () => {
     vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
       version: 1,

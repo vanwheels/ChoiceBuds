@@ -21,6 +21,8 @@ function makeSettings(overrides: Partial<AppSettings> = {}): AppSettings {
     lastSeasonDataCheckedAt: null,
     championsDataChecks: {},
     showAnimatedSprites: false,
+    boxSortMode: 'alphabetical',
+    boxCustomOrderSeeded: false,
     lastSeenReleaseNotesVersion: null,
     playerProfile: {
       playerName: '',

@@ -33,6 +33,16 @@ export interface PlayerProfile {
 export type ChampionsDataCheckId = 'moves' | 'abilities' | 'movepool';
 
 /**
+ * Box Tab's persisted browsing order (Box Tab: Reorder, see TODO.md) -
+ * 'alphabetical' is BoxPage.tsx's original always-on species+label sort;
+ * 'custom' switches to a drag-reordered order held directly in
+ * SavedPokemonDatabase.savedPokemon's own array order (see
+ * useSavedPokemon.ts::reorderSavedPokemon) rather than a dedicated order
+ * field, same as TeamsDatabase.teams already works via reorderTeam.
+ */
+export type BoxSortMode = 'alphabetical' | 'custom';
+
+/**
  * Persisted user preferences, stored as settings.json in userData directory
  */
 export interface AppSettings {
@@ -55,6 +65,12 @@ export interface AppSettings {
   // and utils/spriteUrl.ts::getAnimatedSpriteUrl. Scoped to that one render
   // site only; every other sprite in the app stays static PNG regardless.
   showAnimatedSprites: boolean;
+  boxSortMode: BoxSortMode;
+  // Whether boxSortMode has ever been switched to 'custom' before - gates the
+  // one-time seed-from-current-alphabetical-view behavior in BoxPage.tsx's
+  // sort-mode toggle (see useSavedPokemon.ts::setSavedPokemonOrder) so a
+  // later toggle back to Custom never clobbers an already-dragged order.
+  boxCustomOrderSeeded: boolean;
   playerProfile: PlayerProfile;
   // Version last shown in the Release Notes startup popup (hooks/useReleaseNotes.ts).
   // null means "never shown" - on a fresh install this is used to silently mark
