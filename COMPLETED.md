@@ -18,6 +18,19 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Add Pokémon: Sortable Base-Stat Table] - Leg 1** (2026-09-11) - see
+  commit `8885115`. New `AddPokemonStatTable.tsx` (search + click-to-sort
+  HP/Atk/Def/SpA/SpD/Spe/BST columns, Showdown Random Battle Dex-style),
+  wired into `TeamCard.tsx`'s trailing "+ Add Pokémon" slot as a modal
+  overlay in place of `SpeciesPickerCard` there - a sortable stat table
+  needs more width than that picker's 280px in-slot card allows.
+  `SpeciesPickerCard.tsx` itself is untouched and still serves
+  `PokemonCard.tsx`'s Roster Swap picker. Base stats join the existing
+  `PokeAPICache` at render time (no new fetch); the sort/BST math lives in
+  `utils/statTable.ts`, unit-tested separately from the component. Mega
+  forms excluded per the scoping decision (see Leg 2's TODO.md entry / the
+  deferred Mega-rows follow-up in Unscheduled).
+
 - **[TeamCard Add-Pokémon: No Species-Clause Dedupe] - Leg 1** (2026-09-11) -
   see commit `47b709e`. `TeamCard.tsx`'s "+ Add Pokémon"
   `SpeciesPickerCard` had no dedupe against the team's own roster, so a
