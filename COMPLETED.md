@@ -18,6 +18,14 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Add Pokémon: Sortable Base-Stat Table] - Leg 2** (2026-09-11) - see
+  commit `b90945b`. Wired Leg 1's `AddPokemonStatTable.tsx` into
+  `BoxPage.tsx`'s "+ New Build" flow, replacing the old inline
+  `SpeciesPickerCard` there. No `savedPokemon`/`onSelectSaved` passed
+  through - picking a Box entry from inside Box's own creation flow would
+  be circular. `SpeciesPickerCard.tsx` is now unused by `BoxPage.tsx` but
+  still serves `PokemonCard.tsx`'s Roster Swap picker unchanged.
+
 - **[Add Pokémon Table: Mega Form Rows] - Leg 1** (2026-09-11) - scoping
   pass, no code changes. Full design in
   `docs/investigations/mega-form-rows-scoping.md`. Overturned the item's own

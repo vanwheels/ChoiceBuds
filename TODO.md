@@ -23,15 +23,6 @@ for the one remaining open candidate.
 
 ## Current Milestone: Building Flow Tweaks
 
-- **[Add Pokémon: Sortable Base-Stat Table] — Leg 2** *(Last touched:
-  2026-09-11 · Re-checks: 0)*
-  Wire Leg 1's table component (`AddPokemonStatTable.tsx`, see
-  `COMPLETED.md`) into `BoxPage.tsx`'s "+ New Build" flow too (no "From Box"
-  section needed there - picking a Box entry from inside Box's own creation
-  flow would be circular, same reasoning `SpeciesPickerCard.tsx`'s header
-  comment already gives for why Box's "+ New Build" doesn't pass
-  `savedPokemon` today).
-
 - **[Add Pokémon Table: Mega Form Rows] — Leg 2** *(Last touched:
   2026-09-11 · Re-checks: 0)*
   Scoped out of Leg 1's planning pass (see
