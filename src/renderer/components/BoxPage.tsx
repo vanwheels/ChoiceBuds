@@ -67,6 +67,23 @@
  * doesn't visually jump the grid; `settingsState.settings.boxCustomOrderSeeded`
  * gates that to a one-time seed so a later toggle back to Custom never
  * clobbers an already-dragged order.
+ *
+ * Search (Box Tab: Search Leg 8, see TODO.md): a plain text input next to
+ * the sort-mode toggle, filtering `displayedEntries` *after* sort-mode
+ * selection is applied - so in Custom mode the surviving matches still
+ * render in whatever drag order they hold in the underlying array, just
+ * with non-matching entries hidden rather than removed. Reordering while
+ * filtered isn't given any special handling: `BoxCard.tsx`'s drag handles
+ * always insert the dragged entry immediately before the drop target in
+ * the full underlying array (see `reorderSavedPokemon`), same well-defined
+ * behavior as an unfiltered drag - it's just less visually obvious which
+ * index a drop lands on while some entries in between are hidden.
+ * Search behavior is a straight port of `SpeciesPickerCard.tsx`'s own
+ * '#tag'-chain resolution (no '#tag' -> plain substring match against
+ * label OR species; one or more '#tag's -> type -> move -> ability
+ * resolution per tag, ANDed together, matched against the entry's
+ * underlying species) rather than a reimplementation, so the two search
+ * bars behave identically.
  */
 
 import { useState } from 'react';
@@ -81,6 +98,12 @@ import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
 import type { UseSettingsReturn } from '../hooks/useSettings';
 import type { UseTeamsReturn } from '../hooks/useTeams';
 import { useRosterActions } from '../hooks/useRosterActions';
+import { usePokemonTypeFilter } from '../hooks/usePokemonTypeFilter';
+import { usePokemonMoveFilter, isMoveResolved } from '../hooks/usePokemonMoveFilter';
+import { usePokemonAbilityFilter } from '../hooks/usePokemonAbilityFilter';
+import { parseTagFilters } from '../utils/tagSearch';
+import { ALL_TYPES } from '../config/typeEffectiveness';
+import { normalizeNameForAPI } from '../services/pokeapiService';
 import { toRegulationId } from '../utils/pokemonRules';
 import { readPokemonFromClipboard } from '../utils/clipboardPayload';
 import { parseShowdownText } from '../services/parser';
@@ -124,6 +147,7 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
     gameDataState.getChampionsUsage
   );
 
+  const [search, setSearch] = useState('');
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [isBuildingSpecies, setIsBuildingSpecies] = useState(false);
   // Holds the freshly-built Pokémon and its pre-generated id between
@@ -159,9 +183,48 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
   // Alphabetical mode re-derives species-then-label order every render, same
   // as CalcSavedSetsModal.tsx's own management list, for consistent browsing
   // order across both surfaces.
-  const displayedEntries = sortMode === 'custom'
+  const sortedEntries = sortMode === 'custom'
     ? savedPokemonState.savedPokemon
     : sortAlphabetically(savedPokemonState.savedPokemon);
+
+  // Search (see header comment) - a straight port of
+  // SpeciesPickerCard.tsx's own '#tag'-chain resolution, applied to each
+  // entry's underlying species instead of a roster species name.
+  const tags = parseTagFilters(search).filter(t => t.length > 0);
+  const isTypeTag = (t: string): boolean => (ALL_TYPES as readonly string[]).includes(t);
+  const typeTags = tags.filter(isTypeTag);
+  const normalizedNonTypeTags = tags.filter(t => !isTypeTag(t)).map(normalizeNameForAPI);
+
+  const typeMembers = usePokemonTypeFilter(typeTags);
+  const moveMembers = usePokemonMoveFilter(normalizedNonTypeTags);
+  const moveFailedTags = normalizedNonTypeTags.filter(t => isMoveResolved(t) && moveMembers.get(t) === null);
+  const abilityMembers = usePokemonAbilityFilter(moveFailedTags);
+
+  // Resolves one tag to its matching species set, or null while it's still
+  // in flight somewhere along the type -> move -> ability chain.
+  function resolvedSetForTag(tag: string): Set<string> | null {
+    if (isTypeTag(tag)) return typeMembers.get(tag) ?? null;
+    const normalized = normalizeNameForAPI(tag);
+    const moveSet = moveMembers.get(normalized) ?? null;
+    if (moveSet !== null) return moveSet;
+    if (isMoveResolved(normalized)) return abilityMembers.get(normalized) ?? null;
+    return null;
+  }
+
+  const tagSets = tags.map(resolvedSetForTag);
+  const anyTagPending = tagSets.some(set => set === null);
+
+  const matchesTags = (speciesName: string): boolean =>
+    anyTagPending ? false : tagSets.every(set => set!.has(speciesName.toLowerCase()));
+
+  const displayedEntries = tags.length === 0
+    ? sortedEntries.filter(entry =>
+        entry.label.toLowerCase().includes(search.toLowerCase()) ||
+        entry.pokemon.showdownData.species.toLowerCase().includes(search.toLowerCase())
+      )
+    : sortedEntries.filter(entry => matchesTags(entry.pokemon.showdownData.species));
+
+  const isSearching = search.trim().length > 0;
 
   const handleSetSortMode = async (mode: BoxSortMode) => {
     if (mode === 'custom' && !settingsState.settings.boxCustomOrderSeeded) {
@@ -235,10 +298,20 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
             </p>
           </div>
 
-          {/* Sort-mode toggle (Box Tab: Reorder Leg 7, see TODO.md) - same
-              pill-button filter style TeamsPage.tsx uses for its format
-              filters. */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            {/* Search (Box Tab: Search Leg 8, see TODO.md) - same '#tag'
+                chain SpeciesPickerCard.tsx's own search bar supports. */}
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search builds... (#fire, #dragon dance, ...)"
+              className="w-64 px-3 py-2 text-sm text-white bg-zinc-700 border border-zinc-600 rounded-lg outline-none focus:border-accent-gold placeholder:text-zinc-500"
+            />
+
+            {/* Sort-mode toggle (Box Tab: Reorder Leg 7, see TODO.md) - same
+                pill-button filter style TeamsPage.tsx uses for its format
+                filters. */}
             {(['alphabetical', 'custom'] as const).map(mode => (
               <button
                 key={mode}
@@ -287,8 +360,16 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
 
             {displayedEntries.length === 0 && (
               <div className="flex flex-col justify-center text-zinc-400 px-2 min-h-[280px]">
-                <p className="text-lg">No saved builds yet</p>
-                <p className="text-sm mt-2">Save a Pokémon to the library from Teams or Calc, or start one with "+ New Build"</p>
+                {isSearching ? (
+                  <p className="text-lg">
+                    {tags.length > 0 && anyTagPending ? 'Loading…' : 'No builds match search'}
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-lg">No saved builds yet</p>
+                    <p className="text-sm mt-2">Save a Pokémon to the library from Teams or Calc, or start one with "+ New Build"</p>
+                  </>
+                )}
               </div>
             )}
 

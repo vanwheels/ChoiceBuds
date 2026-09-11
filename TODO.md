@@ -36,10 +36,26 @@ Leg 7 scoped 2026-09-11 (see below); scoping surfaced a second want
 (favoriting) not in the original ask - flagged and split into its own
 Unscheduled item rather than folded into Leg 7's build.
 
-- **[Box Tab: Search] — Leg 8** *(Last touched: 2026-09-10 · Re-checks: 0)*
-  No way to search/filter Box by name or species - browsing is scroll-only.
-  Not yet scoped in detail (search by saved nickname vs. species vs. both,
-  where the search input lives in `BoxPage.tsx`).
+- **[Box Tab: Search] — Leg 8** *(Last touched: 2026-09-11 · Re-checks: 0)*
+  Scoped 2026-09-11. Adds a text-search input to `BoxPage.tsx`'s header
+  (right-hand group, alongside the Alphabetical/Custom order toggle),
+  filtering `displayedEntries` after sort-mode selection so Custom mode's
+  drag order among matches is preserved. Search behavior: full `#tag` chain
+  support (user chose this over plain substring during scoping) by porting
+  `SpeciesPickerCard.tsx`'s existing "From Box" results logic (~lines
+  108-114 there) verbatim rather than reinventing it - no `#tag` present ->
+  plain substring match against label OR species; one or more `#tag`s
+  present -> the same type -> move -> ability resolution chain
+  (`usePokemonTypeFilter`/`usePokemonMoveFilter`/`usePokemonAbilityFilter`
+  via `parseTagFilters`), ANDed across tags, matched against each entry's
+  underlying species. Needs its own empty-state message ("No builds match
+  search") distinct from the existing "No saved builds yet" state.
+  Reorder-while-filtered isn't specially handled - dragging always inserts
+  the dragged entry immediately before the drop target in the underlying
+  full array, same well-defined behavior as reordering with nothing
+  filtered, just less visually obvious while non-matching entries are
+  hidden; worth a doc comment when built, not a design blocker. Not yet
+  built - scoping and building are separate passes.
 
 ## Blocked
 
