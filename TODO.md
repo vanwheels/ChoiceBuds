@@ -25,25 +25,46 @@ for the one remaining open candidate.
 
 - **[Add Pokémon: Sortable Base-Stat Table] — Leg 1** *(Last touched:
   2026-09-11 · Re-checks: 0)*
-  Requested 2026-09-11, referencing Showdown's Random Battle Dex sortable-
-  table view (screenshots shown in chat, not saved to the repo). Wants a way
-  to browse every legal-roster species (Mega forms included) from
-  "+ Add Pokémon" as a table sortable ascending/descending by HP/Atk/Def/
-  SpA/SpD/Spe/BST via column-header clicks, same as Showdown's dex. This
-  replaces/extends `SpeciesPickerCard.tsx`'s current flat search-list layout
-  for both Teams (`TeamCard.tsx`'s trailing add slot) and Box
-  (`BoxPage.tsx`'s "+ New Build"), so needs its own visual scope wider than
-  today's in-slot picker card.
-  Not yet scoped - two real gaps surfaced skimming the current code, not
-  just UI layout: (1) `SpeciesRosterEntry` (`types/gameData.ts`) carries only
-  name/id/sprite today, no base stats - stats live per-species in
-  `PokeAPICache`, so sorting needs a join against that cache, not a new
-  roster field; (2) Mega forms aren't distinct roster entries at all today -
-  `config/megaEvolution.ts`'s `MEGA_STONE_TO_SPECIES` only drives a sprite
-  swap when a Mega Stone is already held, so "Mega Whatever, BST 700" as its
-  own sortable row (with boosted stats) would be new, not a filter over
-  existing data. Needs a decision on how Mega rows get their stats before
-  this is buildable.
+  Scoped 2026-09-11 (see re-check note below for the investigation). Build
+  the new sortable-table component itself (search + ascending/descending
+  sort by HP/Atk/Def/SpA/SpD/Spe/BST via column-header clicks, Showdown
+  Random Battle Dex-style) and wire it into `TeamCard.tsx`'s trailing
+  "+ Add Pokémon" slot only, replacing that one call site's use of
+  `SpeciesPickerCard.tsx`. Needs its own wider layout (likely a modal/overlay
+  rather than the in-slot card `SpeciesPickerCard` uses today - a 7-column
+  sortable table won't fit a 280px slot) and must preserve the existing
+  "From Box" saved-build section TeamCard's add slot already gets via
+  `savedPokemon`/`onSelectSaved`. `SpeciesPickerCard.tsx` itself stays
+  unchanged and keeps serving `PokemonCard.tsx`'s Roster Swap picker, which
+  this request doesn't touch. Stats source: `SpeciesRosterEntry` needs no new
+  field - join `roster[].name` against `PokeAPICache.entries[name.toLowerCase()].baseStats`
+  at render time (already bulk-synced for the full legal roster by
+  `useInitialSync`). Mega forms are excluded from this leg (see decision
+  below) - only base legal-roster species are sortable rows here.
+  2026-09-11 re-check (scoping only, not a stalled investigation - counter
+  not incremented): two gaps flagged when this item was first opened are now
+  resolved. (1) Base stats: not actually a gap - `PokeAPICacheEntry` already
+  carries `baseStats` per species and the full legal roster is already
+  cached by first launch, so this is a join, not new data. (2) Mega forms:
+  real decision, asked the user directly - Mega Evolution isn't a standalone
+  species anywhere else in the app (`config/megaEvolution.ts`: it's a
+  held-item sprite/ability overlay on the base species, never a card-add
+  option), and `useMegaSprite.ts` only fetches id+sprite for a Mega slug,
+  never stats - 6 Reg M-C Mega species (Baxcalibur, Golisopod, Salamence,
+  and the new "Mega Z" forms for Absol/Garchomp/Lucario) have no PokeAPI
+  resource at all yet, so some rows would have no stats source regardless.
+  Decision: exclude Mega forms from this table entirely for now rather than
+  build partial/inconsistent coverage; see the Unscheduled section below for
+  the deferred Mega-rows follow-up.
+
+- **[Add Pokémon: Sortable Base-Stat Table] — Leg 2** *(Last touched:
+  2026-09-11 · Re-checks: 0)*
+  Wire Leg 1's table component into `BoxPage.tsx`'s "+ New Build" flow too
+  (no "From Box" section needed there - picking a Box entry from inside
+  Box's own creation flow would be circular, same reasoning
+  `SpeciesPickerCard.tsx`'s header comment already gives for why Box's
+  "+ New Build" doesn't pass `savedPokemon` today). Depends on Leg 1's
+  component existing first.
 
 ## Blocked
 
@@ -94,6 +115,19 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+- **[Add Pokémon Table: Mega Form Rows] — Leg 1** *(Last touched:
+  2026-09-11 · Re-checks: 0)*
+  Deferred out of Add Pokémon: Sortable Base-Stat Table's scoping pass (see
+  that item's Leg 1 note above for the full reasoning) rather than built with
+  partial coverage. Would extend the sortable table to also list Mega forms
+  as their own rows (e.g. "Mega Gengar, BST 600"), which needs live stat
+  fetching added to `useMegaSprite.ts`'s per-slug `/pokemon/{slug}` call
+  (currently id+sprite only) plus somewhere to cache it. Blocked in practice
+  on PokeAPI itself for 6 Reg M-C Mega species with no resource yet
+  (Baxcalibur, Golisopod, Salamence, and the "Mega Z" forms for
+  Absol/Garchomp/Lucario) - not blocked on a decision anymore, just not
+  prioritized yet.
 
 - **[Reg M-C Z-A-Exclusive Movepool Audit] — Leg 1** *(Last touched:
   2026-09-10 · Re-checks: 1)*
