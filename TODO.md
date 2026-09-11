@@ -33,41 +33,6 @@ no way to move a build between Box and a Team in either direction, no
 duplicate, no reorder, no search. Added as Legs 4-8 below - flagged as a
 meaningful size increase over the original 3-leg scope before recording it.
 
-- **[Box Tab: Import Build to Team] — Leg 4** *(Last touched: 2026-09-11 ·
-  Re-checks: 0)*
-  Scoped 2026-09-11. A Box entry can't currently be added onto an existing
-  team - Box is a dead end relative to Teams. This is a copy, not a move
-  ("Import" wording, matching every existing paste/duplicate in the
-  codebase) - the Box entry stays put.
-  - New "Add to Team…" item in `BoxCard.tsx`'s existing context menu
-    (alongside Rename/Duplicate/Delete - same menu shown in both collapsed
-    and expanded state).
-  - New `AddToTeamDialog.tsx`: a `Modal.tsx` shell (same `max-w-sm` shape as
-    `SaveToLibraryDialog.tsx`) listing `teamsState.teams` in their existing
-    stored order (no re-sorting - matches how Teams tab already displays
-    them). Clicking a team appends the entry via the same clone-and-append
-    `TeamCard.tsx::handlePasteNewPokemon` already does for a clipboard
-    paste: `cloneSavedPokemon(entry.pokemon)` (`utils/clonePokemon.ts` -
-    already shared with `ImportTeamModal.tsx`, gives a fresh id) into
-    `updateTeam(team.id, { pokemon: [...team.pokemon, cloned] })`. No
-    regulation/format filtering - matches the no-filter precedent of
-    "+ Add Pokémon" elsewhere.
-  - Full team (6/6): shown in the list disabled with a "Full" tag rather
-    than hidden, so the user isn't confused by a missing team - matches the
-    `team.pokemon.length < 6` gate already used everywhere else in the app
-    (no "replace a slot" flow exists anywhere to fall back to).
-  - No teams yet: empty state in the dialog ("No teams yet - create one
-    from the Teams tab first") instead of an empty list.
-  - Wiring: `BoxPage.tsx` doesn't currently receive `teamsState` - needs it
-    added to its props and threaded from `App.tsx` (same `teamsState`
-    instance already passed to `TeamsPage`). `BoxCard.tsx` needs an
-    `onAddToTeam` prop; `BoxPage.tsx` tracks which entry's dialog is open,
-    same `useState` shape as its existing `pendingNewBuild`.
-  - No automated test planned - this is UI wiring over already-tested
-    pieces (`cloneSavedPokemon`, `updateTeam`); manual verification per
-    project convention unless a new pure helper (e.g. an "is team full"
-    check) gets extracted, which would get its own unit test.
-
 - **[Box Tab: Import via Right-Click] — Leg 5** *(Last touched: 2026-09-10 ·
   Re-checks: 0)*
   Box currently has no way to create an entry via paste. Two paths
