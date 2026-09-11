@@ -18,9 +18,72 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 
 Saved Builds Box shipped 2026-09-11 (all 8 legs - see `COMPLETED.md` and
 `MILESTONES.md`). Building Flow Tweaks shipped 2026-09-11 (see
-`COMPLETED.md` and `MILESTONES.md`) - no milestone currently active; see
-"Future Milestones (unscheduled)" below for the one remaining open
-candidate.
+`COMPLETED.md` and `MILESTONES.md`).
+
+## Current Milestone: Live Calc Tuning
+
+Promoted 2026-09-11 from "Future Milestones" - the last of the four
+2026-09-10-feedback-pass candidates, and the only one that wasn't already
+drafted into legs at batching time (it went in as a bare "needs a lot of
+tweaking" placeholder). Scoped 2026-09-11 after asking Vanny for the actual
+specifics; per the user's "split scoping from building" habit, this session
+stops at the plan below rather than starting Leg 1.
+
+- **[Live Calc Defender Panel Parity] — Leg 1** *(Last touched: 2026-09-11 ·
+  Re-checks: 0)*
+  `LiveCalcDefenderPanel` is species+level only today. Bring it in line with
+  `CalcPokemonPanel`'s known-inputs UI: a forme-family toggle (reuse
+  `getFormeFamily`/`FormeFamily`, same pattern as `useLiveCalc.ts`'s
+  `attackerFormes`) for multi-forme species, and a read-only base-stat
+  display for the selected species/level - base stats are known the instant
+  species is picked, only EVs/nature/ability/item are the actual unknowns
+  being solved for. Ability display/lock is deliberately out of this leg -
+  see Leg 4 below, since surfacing it usefully is an engine-level change,
+  not just UI parity.
+
+- **[Live Calc Observation Move Options: Actual Attacker Moveset] — Leg 1**
+  *(Last touched: 2026-09-11 · Re-checks: 0)*
+  Observation move dropdowns currently pull from the attacker species' full
+  learned movepool (`useLiveCalc.ts`'s `attackerMoveOptions`, via
+  `getEnrichedSpeciesOptions`) regardless of the attacker's actual 4 moves -
+  `CalcPokemonState.moves` is deliberately left unused today (see the
+  hook's header comment). When the attacker matches a real set with moves
+  already chosen, the dropdown should be capped to those 4 real moves
+  instead of the whole learned pool.
+
+- **[Live Calc Observation Inputs: Crit + Fainted/Survived] — Leg 1** *(Last
+  touched: 2026-09-11 · Re-checks: 0)*
+  Add a crit toggle per observation (feeds `Move`'s `isCrit` in
+  `liveCalcEngine.ts`'s move-building) and a survived/fainted outcome field
+  replacing the implicit "this damage% is exact" assumption - a fainted
+  read only proves the hit dealt *at least* the defender's remaining HP%, a
+  looser and more forgiving bound than guessing an exact percent off a
+  health bar. Likely a root cause of the near-universal "is inconsistent
+  with every narrowed candidate so far" rejection reported live - a crit
+  reading scanned as a non-crit hit looks impossible against every
+  candidate.
+
+- **[Live Calc Known-Ability Lock] — Leg 1** *(Last touched: 2026-09-11 ·
+  Re-checks: 0)*
+  Let the user pin a defender's ability once it's been revealed in-battle
+  (an Intimidate trigger, an ability-activation message, etc.) as a hard
+  filter rather than an open candidate scanned per observation - narrows
+  `inferDefenderStats()`'s ability axis up front instead of relying
+  entirely on damage-number inference. The "ability toggle" half of Leg 1's
+  defender-panel-parity ask; split out because it's an engine-contract
+  change (`inferDefenderStats()` needs a new known-ability param), not a UI
+  addition.
+
+- **[Live Calc Result Clarity Pass] — Leg 1** *(Last touched: 2026-09-11 ·
+  Re-checks: 0)*
+  General readability pass over `LiveCalcResultPanel`/the tab overall - per
+  feedback, "the UI is just not clear on how it's meant to read." Needs a
+  fresh look once Legs 1-4 land (their UI additions reshape the panel
+  anyway) to identify what's actually confusing - candidate-list layout,
+  SP-range bar legends, etc. Also replace the generic `"<move>" is
+  inconsistent with every narrowed candidate so far - observation ignored`
+  contradiction message (`liveCalcEngine.ts`) with something diagnostic -
+  state which axis/why, not just "ignored."
 
 ## Blocked
 
@@ -116,15 +179,8 @@ unblocked.
 ## Future Milestones (unscheduled)
 
 2026-09-10 feedback pass batched into 4 candidate milestones; Battle Logger
-Overhaul, Statistics Improvements, and then Team Management QoL were each
-promoted to current and have since shipped (see `MILESTONES.md`). The
-remaining candidate below is the last of the four — not yet scoped or
-promoted.
-
-### Candidate: Live Calc Tuning
-
-- **Live Calc pass.** Live Calc "needs a lot of tweaking" per 2026-09-10
-  feedback — explicitly deferred to its own future milestone rather than
-  folded into whatever milestone comes next. Not yet scoped into concrete
-  legs.
+Overhaul, Statistics Improvements, and Team Management QoL were each
+promoted to current and have since shipped (see `MILESTONES.md`). Live Calc
+Tuning, the last of the four, was promoted 2026-09-11 (see `## Current
+Milestone` above). Nothing queued here right now.
 
