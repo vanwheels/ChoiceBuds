@@ -23,15 +23,6 @@ shipped first — see `MILESTONES.md`). Scoping pass done 2026-09-10 for the
 two items that needed one; per the user's "split scoping from building"
 habit, this session stops at the plan below rather than starting Leg 1.
 
-- **[Quick Copy/Paste Pokémon & Teams via Right-Click] — Leg 1** *(Last
-  touched: 2026-09-10 · Re-checks: 0)*
-  Add a right-click context menu for quickly copying/pasting a Pokémon or an
-  entire team. Scoped 2026-09-10: clipboard carries internal JSON (lossless
-  round-trip of every field, including favorite/saved-build links — not
-  meant to interoperate with Showdown text or other apps). Menu lives on the
-  team card (copy/paste a whole team) and the individual Pokémon card (copy/
-  paste one set) — not the edit overlay.
-
 - **[Saved Builds Database for Team-Building] — Leg 1** *(Last touched:
   2026-09-10 · Re-checks: 0)*
   Reuse a named saved-build library (moveset + spread, etc.) during

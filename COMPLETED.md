@@ -18,6 +18,16 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Quick Copy/Paste Pokémon & Teams via Right-Click] - Leg 1** (2026-09-10)
+  - see commit `28ea9ab`. New internal JSON clipboard format
+  (`utils/clipboardPayload.ts`) round-trips a full `ImportedPokemonInfo`/
+  `Team` losslessly (whole object spread through, not a hand-picked field
+  subset). `PokemonCard`'s existing right-click menu gained "Copy Pokémon"/
+  "Paste Pokémon" (in-place slot replace); `TeamCard`'s header gained its own
+  right-click menu with "Copy Team"/"Paste as New Team" (paste always
+  prepends a new team via `addTeam` rather than overwriting the triggering
+  card).
+
 - **[Favorite Teams] - Leg 1** (2026-09-10) - see commit `111bf56`. Added an
   optional `favorite` flag on `Team`, toggled via a star button in
   `TeamCard`'s controls pill; `TeamsPage` sorts favorited teams to the top
