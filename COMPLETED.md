@@ -18,6 +18,25 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Extract Editable Pokémon Card Core] - Leg 1** (2026-09-10) - see commit
+  `119962e`. Pure refactor, no visible behavior change on Teams - the
+  Saved Builds Box milestone's Leg 2 prerequisite for Leg 3's editable Box
+  card. New `EditablePokemonCore.tsx` holds the nickname input, gender/shiny
+  toggles, sprite/type badges, `EditOverlays` (item/ability/moves), and
+  `StatsColumn` (EVs), parameterized over an injected `onUpdatePokemon`
+  callback (`Partial<ImportedPokemonInfo>`, not just `showdownData`, since
+  the gender toggle also rewrites the top-level `spriteUrl` field for
+  form-divergent species) instead of closing over `team`/`pokemonIndex`/
+  `updateTeam` directly. `PokemonCard.tsx` is now a thin wrapper adding only
+  the roster-only chrome on top (Roster Swap + its `SavedSetPicker` popover,
+  remove-from-team, drag-reorder, right-click context menu) via
+  `onSpriteClick`/`spriteOverlay` props the core exposes without knowing
+  anything about swapping species. Live-verified via `run-desktop` on a
+  disposable test team (nickname, gender/shiny toggles, Roster Swap, item/
+  ability/move pickers, EV editing, drag-reorder, remove-from-team, and the
+  right-click context menu all confirmed working and persisting across a
+  reload) - real team data untouched, disposable team deleted afterward.
+
 - **[Save-to-Library Name Prompt] - Leg 1** (2026-09-10) - see commit
   `f6365c2`. New shared `SaveToLibraryDialog.tsx` (sprite + a name input
   pre-filled with nickname-or-species, Save/Cancel) replaces the prior

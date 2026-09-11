@@ -23,24 +23,11 @@ build library (Saved Builds Database for Team-Building, both legs shipped -
 see `COMPLETED.md`) had no discoverable home outside the Calc page: no way
 to save into it from Teams at all, and no way to browse it without already
 knowing a species has a match. 3 legs, ordered so each unblocks the next -
-Leg 2 is a pure refactor Leg 3 depends on, do not skip straight to Leg 3.
-
-- **[Extract Editable Pokémon Card Core] — Leg 1** *(Last touched:
-  2026-09-10 · Re-checks: 0)*
-  Pure refactor, no visible behavior change on Teams - a prerequisite for
-  Leg 3's editable Box card, not a feature on its own. `PokemonCard.tsx`
-  today has no team-agnostic "just edit this Pokémon" layer - nickname
-  input, gender/shiny toggles, sprite/type badges, `EditOverlays`
-  (item/ability/moves), and `StatsColumn` (EVs) all close directly over
-  `team`/`pokemonIndex`/`updateTeam` for persistence. Split that display+
-  edit UI into a shared component parameterized over an injected
-  `onUpdate`-style persistence callback instead, so it can target a saved-
-  library entry (Leg 3) just as well as a team roster slot. `PokemonCard.tsx`
-  becomes a thin wrapper adding the roster-only chrome on top (Roster Swap,
-  remove-from-team, drag-reorder, export-as-team-member, copy/paste-into-
-  slot) - none of which apply to a library entry. Needs a live-verify pass
-  afterward (`run-desktop`) confirming every Teams edit path still behaves
-  identically, since this touches every edit interaction on every team.
+Leg 2 (the pure-refactor prerequisite, `EditablePokemonCore.tsx`) shipped
+2026-09-10 as its own `[Extract Editable Pokémon Card Core] — Leg 1` item -
+see `COMPLETED.md`. Leg 3 (wiring Box Tab's expanded card to actually use
+that component) still needs its own TODO item once Box Tab Leg 1 below
+ships - don't skip straight to it in the meantime.
 
 - **[Box Tab] — Leg 1** *(Last touched: 2026-09-10 · Re-checks: 0)*
   New "Box" Sidebar tab (`BoxPage.tsx`, lazy-loaded like the other tabs),
@@ -48,7 +35,9 @@ Leg 2 is a pure refactor Leg 3 depends on, do not skip straight to Leg 3.
   pagination/page-size - a new row starts once the current one fills,
   decided 2026-09-10 over a PC-box-style paginated layout). Each entry
   defaults collapsed to just its sprite + build-name label; clicking expands
-  it in place to the full Leg 2 editable card. Expand/collapse state mirrors
+  it in place to the full `EditablePokemonCore.tsx` editable card (see
+  `COMPLETED.md`'s Extract Editable Pokémon Card Core entry). Expand/collapse
+  state mirrors
   `useTeams`'s existing `expandedCardIds`/`toggleCardExpansion` pattern,
   added to `useSavedPokemon.ts` for its own entries. Editing an expanded
   card writes back through a new `updateSavedPokemon(id, updates)` mutation
