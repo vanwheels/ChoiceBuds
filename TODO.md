@@ -22,34 +22,20 @@ Promoted + scoped 2026-09-10, prompted by direct feedback that the saved-
 build library (Saved Builds Database for Team-Building, both legs shipped -
 see `COMPLETED.md`) had no discoverable home outside the Calc page: no way
 to save into it from Teams at all, and no way to browse it without already
-knowing a species has a match. 3 legs, ordered so each unblocks the next -
-Leg 2 (the pure-refactor prerequisite, `EditablePokemonCore.tsx`) shipped
-2026-09-10 as its own `[Extract Editable Pokémon Card Core] — Leg 1` item -
-see `COMPLETED.md`. Leg 3 (wiring Box Tab's expanded card to actually use
-that component) still needs its own TODO item once Box Tab Leg 1 below
-ships - don't skip straight to it in the meantime.
+knowing a species has a match. Originally scoped as 3 legs; Box Tab's own
+leg was further split 2026-09-10 (display/edit vs. creation are different
+enough pieces of work to review separately - flagged before starting, user
+agreed) into what's now Leg 1 (shipped, see `COMPLETED.md`) and Leg 2 below.
 
-- **[Box Tab] — Leg 1** *(Last touched: 2026-09-10 · Re-checks: 0)*
-  New "Box" Sidebar tab (`BoxPage.tsx`, lazy-loaded like the other tabs),
-  showing every `savedPokemon` entry as a continuous wrapping grid (no fixed
-  pagination/page-size - a new row starts once the current one fills,
-  decided 2026-09-10 over a PC-box-style paginated layout). Each entry
-  defaults collapsed to just its sprite + build-name label; clicking expands
-  it in place to the full `EditablePokemonCore.tsx` editable card (see
-  `COMPLETED.md`'s Extract Editable Pokémon Card Core entry). Expand/collapse
-  state mirrors
-  `useTeams`'s existing `expandedCardIds`/`toggleCardExpansion` pattern,
-  added to `useSavedPokemon.ts` for its own entries. Editing an expanded
-  card writes back through a new `updateSavedPokemon(id, updates)` mutation
-  on `useSavedPokemon.ts` (field-level update on the stored
-  `ImportedPokemonInfo`, distinct from the existing rename-only
-  `renameSavedPokemon`) - decided 2026-09-10: Box cards are editable in
-  place, not read-only. A "+ New Build" action opens a species picker
-  (reusing `SpeciesPickerCard`) and creates a fresh entry via the same
-  usage-based default `useRosterActions::buildSlot` already builds for
-  "+ Add Pokémon" on a team, saved straight into the library through Leg 1's
-  name-prompt dialog and opened expanded/in-edit immediately - saved builds
-  no longer only arrive via Calc/Teams pushing into the library.
+- **[Box Tab] — Leg 2** *(Last touched: 2026-09-10 · Re-checks: 0)*
+  A "+ New Build" action on `BoxPage.tsx` (Leg 1, see `COMPLETED.md`) that
+  opens a species picker (reusing `SpeciesPickerCard`) and creates a fresh
+  entry via the same usage-based default `useRosterActions::buildSlot`
+  already builds for "+ Add Pokémon" on a team, saved straight into the
+  library through the existing Save-to-Library name-prompt dialog and opened
+  expanded/in-edit immediately (`useSavedPokemon.ts`'s `expandedCardIds` from
+  Leg 1) - saved builds no longer only arrive via Calc/Teams pushing into
+  the library.
 
 ## Blocked
 
@@ -100,6 +86,18 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+- **[Box Tab: No Delete/Rename Affordance] — Leg 1** *(Last touched:
+  2026-09-10 · Re-checks: 0)*
+  Found while building Box Tab Leg 1 (see `COMPLETED.md`): `BoxPage.tsx`
+  only wires `useSavedPokemon.ts`'s expand/edit-in-place and `updateSavedPokemon`
+  - `renameSavedPokemon`/`deleteSavedPokemon` already exist but aren't
+  surfaced in Box Tab's UI (Leg 1's own scope named only the display/expand/
+  edit-in-place shape, not entry management). Right now a Box entry can
+  still only be renamed/deleted via Calc's `CalcSavedSetsModal`, which is an
+  odd gap for what's meant to be the discoverable home for this library. Not
+  fixed here since it wasn't part of what was asked for Leg 1 - flagged
+  rather than absorbed unprompted.
 
 - **[TeamCard Add-Pokémon: No Species-Clause Dedupe] — Leg 1** *(Last
   touched: 2026-09-10 · Re-checks: 0)*

@@ -18,6 +18,20 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Box Tab] - Leg 1** (2026-09-10) - see commit `7120edd`. New "Box"
+  sidebar tab (`BoxPage.tsx`) showing every `savedPokemon` entry as a
+  continuous flex-wrap grid, collapsed by default to sprite + label
+  (`BoxCard.tsx`), expanding in place to the full `EditablePokemonCore.tsx`
+  editable card on click. Added `expandedCardIds`/`toggleCardExpansion`
+  (mirroring `useTeams.ts`'s shape) and a new `updateSavedPokemon(id,
+  updates)` field-level mutation to `useSavedPokemon.ts`. Split out of the
+  milestone-scoping pass's original combined Box Tab item - the "+ New
+  Build" creation flow moved to its own Leg 2 (see `TODO.md`) after
+  flagging the combined scope as two different kinds of work before
+  starting. Found (not fixed) a real gap while building this: Box entries
+  have no delete/rename affordance in the new tab's own UI yet - see
+  `TODO.md`'s Box Tab: No Delete/Rename Affordance item.
+
 - **[Extract Editable Pokémon Card Core] - Leg 1** (2026-09-10) - see commit
   `119962e`. Pure refactor, no visible behavior change on Teams - the
   Saved Builds Box milestone's Leg 2 prerequisite for Leg 3's editable Box
