@@ -16,46 +16,9 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Saved Builds Box
-
-Promoted + scoped 2026-09-10, prompted by direct feedback that the saved-
-build library (Saved Builds Database for Team-Building, both legs shipped -
-see `COMPLETED.md`) had no discoverable home outside the Calc page: no way
-to save into it from Teams at all, and no way to browse it without already
-knowing a species has a match. Originally scoped as 3 legs; Box Tab's own
-leg was further split 2026-09-10 (display/edit vs. creation are different
-enough pieces of work to review separately - flagged before starting, user
-agreed) into what's now Leg 1 and Leg 2 (both shipped, see `COMPLETED.md`)
-and Leg 3 below (the entry-management gap Leg 1 found but didn't fix).
-Expanded again 2026-09-10 (before Leg 3 started) with a second direct-
-feedback pass calling out that Box is still a dead end relative to Teams:
-no way to move a build between Box and a Team in either direction, no
-duplicate, no reorder, no search. Added as Legs 4-8 below - flagged as a
-meaningful size increase over the original 3-leg scope before recording it.
-Leg 7 scoped 2026-09-11 (see below); scoping surfaced a second want
-(favoriting) not in the original ask - flagged and split into its own
-Unscheduled item rather than folded into Leg 7's build.
-
-- **[Box Tab: Search] — Leg 8** *(Last touched: 2026-09-11 · Re-checks: 0)*
-  Scoped 2026-09-11. Adds a text-search input to `BoxPage.tsx`'s header
-  (right-hand group, alongside the Alphabetical/Custom order toggle),
-  filtering `displayedEntries` after sort-mode selection so Custom mode's
-  drag order among matches is preserved. Search behavior: full `#tag` chain
-  support (user chose this over plain substring during scoping) by porting
-  `SpeciesPickerCard.tsx`'s existing "From Box" results logic (~lines
-  108-114 there) verbatim rather than reinventing it - no `#tag` present ->
-  plain substring match against label OR species; one or more `#tag`s
-  present -> the same type -> move -> ability resolution chain
-  (`usePokemonTypeFilter`/`usePokemonMoveFilter`/`usePokemonAbilityFilter`
-  via `parseTagFilters`), ANDed across tags, matched against each entry's
-  underlying species. Needs its own empty-state message ("No builds match
-  search") distinct from the existing "No saved builds yet" state.
-  Reorder-while-filtered isn't specially handled - dragging always inserts
-  the dragged entry immediately before the drop target in the underlying
-  full array, same well-defined behavior as reordering with nothing
-  filtered, just less visually obvious while non-matching entries are
-  hidden; worth a doc comment when built, not a design blocker. Not yet
-  built - scoping and building are separate passes.
+Saved Builds Box shipped 2026-09-11 (all 8 legs - see `COMPLETED.md` and
+`MILESTONES.md`). No next milestone promoted yet - see "Future Milestones
+(unscheduled)" below for the one open candidate.
 
 ## Blocked
 

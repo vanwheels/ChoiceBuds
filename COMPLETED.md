@@ -18,6 +18,19 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Box Tab: Search] - Leg 8** (2026-09-11) - see commit `74a5e3e`. Added a
+  text-search input to `BoxPage.tsx`'s header, filtering `displayedEntries`
+  after sort-mode selection so Custom mode's drag order among matches is
+  preserved. Ports `SpeciesPickerCard.tsx`'s own '#tag' resolution chain
+  verbatim (`usePokemonTypeFilter`/`usePokemonMoveFilter`/
+  `usePokemonAbilityFilter` via `parseTagFilters`) rather than reinventing
+  it - no `#tag` -> plain substring match against label OR species; one or
+  more `#tag`s -> per-tag type -> move -> ability resolution, ANDed
+  together, matched against each entry's underlying species. Distinct
+  empty-state message ("No builds match search") from the existing "No
+  saved builds yet" state. This closes out the Saved Builds Box milestone -
+  see `MILESTONES.md`.
+
 - **[Box Tab: Reorder] - Leg 7** (2026-09-11) - see commit `2ea5446`. Added
   a boxSortMode ('alphabetical' | 'custom') AppSettings field + a pill
   toggle in `BoxPage.tsx`'s header - Box had no persisted display order at
