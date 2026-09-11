@@ -54,8 +54,14 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameDraft, setRenameDraft] = useState(label);
 
+  // stopPropagation (Box Tab: Import via Right-Click Leg 5, see TODO.md)
+  // keeps this from also bubbling up into BoxPage.tsx's own
+  // anywhere-in-the-grid paste menu - same precedent PokemonCard.tsx's
+  // per-slot context menu already established for TeamCard.tsx's grid-level
+  // paste menu.
   const handleContextMenu = (e: ReactMouseEvent<HTMLDivElement>) => {
     e.preventDefault();
+    e.stopPropagation();
     setContextMenuPos({ x: e.clientX, y: e.clientY });
   };
 

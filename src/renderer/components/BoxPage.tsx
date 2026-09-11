@@ -36,10 +36,29 @@
  * TeamCard.tsx::handlePasteNewPokemon uses for a clipboard paste) and
  * appends it via `teamsState.updateTeam` - a copy, not a move, so the Box
  * entry itself is untouched.
+ *
+ * Right-click-to-import (Box Tab Leg 5, see TODO.md): a right-click
+ * anywhere in the grid container opens a two-item menu, same
+ * click-coordinates `ContextMenu` and grid-level-paste pattern
+ * `TeamCard.tsx`'s Leg 2 roster grid already established (`BoxCard.tsx`'s
+ * own per-entry context menu stops propagation so a right-click landing on
+ * an actual card never also opens this one). "Paste Pokémon" is a straight
+ * port of `TeamCard.tsx::handlePasteNewPokemon` - `readPokemonFromClipboard`
+ * + a fresh id - calling `addSavedPokemonBatch` instead of `updateTeam`, and
+ * with no 6-slot room gate since Box has no roster-size constraint. "Paste
+ * Showdown Text" reuses the same `parseShowdownText` ->
+ * `enrichPokemonWithAPI` pipeline `ImportTeamModal.tsx`'s import path uses,
+ * one Box entry per successfully-parsed block, but skips that modal's
+ * saved-build review step entirely - both items commit immediately with no
+ * confirmation dialog, and unparseable/empty clipboard content is a silent
+ * no-op either way (matches the existing Paste Pokémon/Paste Team
+ * convention elsewhere in the app; there's no toast system to surface an
+ * error).
  */
 
 import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
+import type { MouseEvent as ReactMouseEvent } from 'react';
 import type { ImportedPokemonInfo, SpeciesRosterEntry } from '../types/pokemon';
 import type { UseSavedPokemonReturn } from '../hooks/useSavedPokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
@@ -50,10 +69,14 @@ import type { UseSettingsReturn } from '../hooks/useSettings';
 import type { UseTeamsReturn } from '../hooks/useTeams';
 import { useRosterActions } from '../hooks/useRosterActions';
 import { toRegulationId } from '../utils/pokemonRules';
+import { readPokemonFromClipboard } from '../utils/clipboardPayload';
+import { parseShowdownText } from '../services/parser';
+import { enrichPokemonWithAPI } from '../services/pokeapi';
 import BoxCard from './BoxCard';
 import SpeciesPickerCard from './SpeciesPickerCard';
 import SaveToLibraryDialog from './SaveToLibraryDialog';
 import AddToTeamDialog from './AddToTeamDialog';
+import ContextMenu from './ContextMenu';
 
 interface BoxPageProps {
   savedPokemonState: UseSavedPokemonReturn;
@@ -85,6 +108,9 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
   const [pendingNewBuild, setPendingNewBuild] = useState<{ id: string; pokemon: ImportedPokemonInfo } | null>(null);
   // Which Box entry's "Add to Team…" dialog is open - see header comment.
   const [addToTeamEntryId, setAddToTeamEntryId] = useState<string | null>(null);
+  // Grid-level "Paste Pokémon"/"Paste Showdown Text" menu (Leg 5, see
+  // header comment above).
+  const [pasteContextMenuPos, setPasteContextMenuPos] = useState<{ x: number; y: number } | null>(null);
 
   const handleSelectNewSpecies = async (species: SpeciesRosterEntry) => {
     setIsPickerOpen(false);
@@ -121,6 +147,44 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
     return teamsState.updateTeam(teamId, { pokemon: [...team.pokemon, cloned] });
   };
 
+  const handleGridContextMenu = (e: ReactMouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setPasteContextMenuPos({ x: e.clientX, y: e.clientY });
+  };
+
+  // "Paste Pokémon" (Leg 5) - straight port of
+  // TeamCard.tsx::handlePasteNewPokemon, minus its 6-slot room gate (Box has
+  // no roster-size constraint). Silently a no-op if the clipboard doesn't
+  // hold a ChoiceBuds Pokémon payload.
+  const handlePastePokemon = async () => {
+    const pasted = await readPokemonFromClipboard();
+    if (!pasted) return;
+    await savedPokemonState.addSavedPokemonBatch([{ ...pasted, id: crypto.randomUUID() }]);
+  };
+
+  // "Paste Showdown Text" (Leg 5) - same parse -> enrich pipeline
+  // ImportTeamModal.tsx's import path uses, minus its saved-build review
+  // step; one Box entry per successfully-parsed block. Silently a no-op if
+  // the clipboard is empty or doesn't parse as Showdown text.
+  const handlePasteShowdownText = async () => {
+    let text: string;
+    try {
+      text = await navigator.clipboard.readText();
+    } catch {
+      return;
+    }
+    if (!text.trim()) return;
+
+    const parseResult = parseShowdownText(text);
+    if (!parseResult.success || parseResult.pokemon.length === 0) return;
+
+    const enriched: ImportedPokemonInfo[] = [];
+    for (const pokemon of parseResult.pokemon) {
+      enriched.push(await enrichPokemonWithAPI(pokemon, databaseState.getCachedEntry, databaseState.setCacheEntry));
+    }
+    await savedPokemonState.addSavedPokemonBatch(enriched);
+  };
+
   return (
     <div className="h-full flex flex-col">
       <header className="bg-zinc-800 border-b border-zinc-700 px-6 py-4" style={{ paddingLeft: '2rem', paddingRight: '2rem' }}>
@@ -140,7 +204,7 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
             <div className="text-red-400">Error: {savedPokemonState.error}</div>
           </div>
         ) : (
-          <div className="flex flex-wrap gap-4 items-start">
+          <div className="flex flex-wrap gap-4 items-start" onContextMenu={handleGridContextMenu}>
             {isPickerOpen ? (
               <SpeciesPickerCard
                 roster={speciesRosterState.roster}
@@ -205,6 +269,36 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
           />
         )}
       </AnimatePresence>
+
+      {pasteContextMenuPos && (
+        <ContextMenu
+          x={pasteContextMenuPos.x}
+          y={pasteContextMenuPos.y}
+          onClose={() => setPasteContextMenuPos(null)}
+          items={[
+            {
+              label: 'Paste Pokémon',
+              onClick: handlePastePokemon,
+              icon: (
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 4.5h1.5a1.5 1.5 0 0 1 3 0H15a1 1 0 0 1 1 1V7H8V5.5a1 1 0 0 1 1-1Z" />
+                  <path d="M8 6H6a1.5 1.5 0 0 0-1.5 1.5v12A1.5 1.5 0 0 0 6 21h12a1.5 1.5 0 0 0 1.5-1.5v-12A1.5 1.5 0 0 0 18 6h-2" />
+                </svg>
+              ),
+            },
+            {
+              label: 'Paste Showdown Text',
+              onClick: handlePasteShowdownText,
+              icon: (
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 3.5h9l4.5 4.5v12.5a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 4.5 20.5v-15A1.5 1.5 0 0 1 6 3.5Z" />
+                  <path d="M9 12h6M9 15.5h6M9 8.5h2" />
+                </svg>
+              ),
+            },
+          ]}
+        />
+      )}
     </div>
   );
 }
