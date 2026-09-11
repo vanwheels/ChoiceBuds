@@ -39,9 +39,20 @@
  * species holding that stone, with the stone itself pre-equipped as its held
  * item (`onSelect`'s optional `itemOverride` arg, threaded through
  * useRosterActions.ts's `buildSlot`/`addSlot`) - everything else (ability/
- * moves) still comes from the normal usage-based default. Mega rows are
- * excluded from `#tag` search for now (Leg 3, see TODO.md); plain-text
- * search still matches them by their "Mega {Species}" label.
+ * moves) still comes from the normal usage-based default. Plain-text search
+ * still matches Mega rows by their "Mega {Species}" label.
+ *
+ * `#mega` (Add Pokémon Table: Mega Form Rows Leg 3, see TODO.md and
+ * docs/investigations/mega-form-rows-scoping.md) is a standalone `#tag` that
+ * filters the whole modal (table + "From Box") to Mega-only rows, and ANDs
+ * correctly with any other `#type`/`#ability` tags against the Mega form's
+ * *own* type/guaranteed ability where those differ from the base species' -
+ * e.g. `#mega #water` matches Mega Gyarados (retyped Water/Dark), and
+ * `#mega #thermal exchange` matches only Mega Baxcalibur, not every Dragon
+ * with a Baxcalibur base form. `#move` tags need no special handling - Mega
+ * Evolving doesn't change a species' learnset, so they still resolve off the
+ * base species' own move-tag membership. Without `#mega`, Mega rows are
+ * still excluded from `#tag` search entirely, same as before Leg 3.
  *
  * `savedPokemon`/`onSelectSaved` (From Box) mirrors SpeciesPickerCard's own
  * opt-in pair exactly - same filtering rules, same omitted-means-no-section
@@ -170,9 +181,16 @@ export default function AddPokemonStatTable({
   // SpeciesPickerCard.tsx - see that file's header comment for the full
   // writeup. Multiple '#tag's are ANDed together.
   const tags = parseTagFilters(search).filter(t => t.length > 0);
+  const isTagMode = tags.length > 0;
+  const hasMegaTag = tags.includes('mega');
+  // '#mega' itself isn't a type/move/ability - strip it out before the rest
+  // of the chain below resolves, so it doesn't get mistaken for (and fail
+  // to resolve as) a move/ability tag. See the Mega rows section below for
+  // what it actually does.
+  const filterTags = tags.filter(t => t !== 'mega');
   const isTypeTag = (t: string): boolean => (ALL_TYPES as readonly string[]).includes(t);
-  const typeTags = tags.filter(isTypeTag);
-  const normalizedNonTypeTags = tags.filter(t => !isTypeTag(t)).map(normalizeNameForAPI);
+  const typeTags = filterTags.filter(isTypeTag);
+  const normalizedNonTypeTags = filterTags.filter(t => !isTypeTag(t)).map(normalizeNameForAPI);
 
   const typeMembers = usePokemonTypeFilter(typeTags);
   const moveMembers = usePokemonMoveFilter(normalizedNonTypeTags);
@@ -188,7 +206,7 @@ export default function AddPokemonStatTable({
     return null;
   }
 
-  const tagSets = tags.map(resolvedSetForTag);
+  const tagSets = filterTags.map(resolvedSetForTag);
   const anyTagPending = tagSets.some(set => set === null);
 
   // Shared by both the plain-roster and "From Box" halves below - a species
@@ -198,9 +216,13 @@ export default function AddPokemonStatTable({
     anyTagPending ? false : tagSets.every(set => set!.has(speciesName.toLowerCase()));
 
   const legalRoster = roster.filter(pkmn => validateSpeciesLegality(pkmn.name, rulesetId));
-  const filteredRoster = tags.length === 0
-    ? legalRoster.filter(pkmn => pkmn.name.toLowerCase().includes(search.toLowerCase()))
-    : legalRoster.filter(pkmn => matchesTags(pkmn.name));
+  // '#mega' is a standalone filter to Mega-only rows (see below) - no plain
+  // species rows alongside it.
+  const filteredRoster = hasMegaTag
+    ? []
+    : !isTagMode
+      ? legalRoster.filter(pkmn => pkmn.name.toLowerCase().includes(search.toLowerCase()))
+      : legalRoster.filter(pkmn => matchesTags(pkmn.name));
 
   const speciesRows: StatTableRow[] = filteredRoster.map(species => {
     const cacheEntry = getCachedEntry(normalizeSpeciesForAPI(species.name));
@@ -223,10 +245,18 @@ export default function AddPokemonStatTable({
   });
 
   // One row per Mega Stone, gated to species already in `legalRoster` (see
-  // this file's header) - no #tag matching yet (Leg 3, see TODO.md), so
-  // these only show up in the plain-text-search branch, filtered by their
-  // own "Mega {Species}" label same as a plain row's name.
-  const megaRows: StatTableRow[] = tags.length === 0
+  // this file's header). Shown in plain-text mode (matched by "Mega
+  // {Species}" label, as before) or, in tag mode, only once '#mega' is one
+  // of the tags - a standalone filter to Mega-only rows that then ANDs any
+  // remaining tags against the Mega form's *own* type/guaranteed ability
+  // (config/megaAbilities.ts's MEGA_ABILITIES) where those differ from the
+  // base species', not just its base form's (see docs/investigations/
+  // mega-form-rows-scoping.md). Move tags need no special handling - Mega
+  // Evolving doesn't change a species' learnset, so they still resolve off
+  // the base species' own move-tag membership, same `tagSets` the plain
+  // roster rows above already use.
+  const showMegaRows = !isTagMode || hasMegaTag;
+  const megaRows: StatTableRow[] = showMegaRows
     ? Object.entries(MEGA_STONE_TO_SPECIES).flatMap(([item, entry]) => {
       const baseSpecies = legalRoster.find(pkmn => pkmn.name.toLowerCase() === entry.species.toLowerCase());
       if (!baseSpecies) return [];
@@ -242,9 +272,36 @@ export default function AddPokemonStatTable({
         speed: calcSpecies.baseStats.spe,
       } : null;
       const displayName = formatMegaLabel(baseSpecies.name, entry.suffix);
-      if (!displayName.toLowerCase().includes(search.toLowerCase())) return [];
-
       const megaAbility = getMegaAbility(slug);
+
+      if (isTagMode) {
+        // '#mega' alone (no other tags) matches every Mega row unfiltered -
+        // filterTags is empty, so .every() below is vacuously true.
+        if (anyTagPending) return [];
+        const baseLower = baseSpecies.name.toLowerCase();
+        const matchesRemainingTags = filterTags.every((tag, i) => {
+          if (isTypeTag(tag)) {
+            // Own types, not the base species' - some Megas retype (e.g.
+            // Mega Gyarados is Water/Dark, not Water/Flying).
+            const types = calcSpecies ? calcSpecies.types.map(t => t.toLowerCase()) : [];
+            return types.includes(tag);
+          }
+          const normalized = normalizeNameForAPI(tag);
+          const isAbilityTag = isMoveResolved(normalized) && (moveMembers.get(normalized) ?? null) === null;
+          // A confirmed Mega ability replaces the base species' normal/
+          // hidden pair outright, so it wins over the base-species
+          // membership check below rather than falling back onto it. Move
+          // tags, and ability tags with no confirmed override yet (see
+          // megaAbilities.ts's header), still fall through to that same
+          // base-species check `tagSets[i]` already resolved above.
+          if (isAbilityTag && megaAbility) return normalizeNameForAPI(megaAbility) === normalized;
+          const set = tagSets[i];
+          return set ? set.has(baseLower) : false;
+        });
+        if (!matchesRemainingTags) return [];
+      } else if (!displayName.toLowerCase().includes(search.toLowerCase())) {
+        return [];
+      }
 
       return [{
         key: `mega:${item}`,
@@ -269,10 +326,13 @@ export default function AddPokemonStatTable({
 
   const handleSortClick = (key: StatTableSortKey) => setSort(prev => nextStatTableSort(prev, key));
 
-  const showBoxResults = savedPokemon !== undefined && onSelectSaved !== undefined;
+  // '#mega' filters the whole modal to Mega-only rows - a saved Box build is
+  // never one of those, so it drops out entirely rather than staying visible
+  // alongside them.
+  const showBoxResults = savedPokemon !== undefined && onSelectSaved !== undefined && !hasMegaTag;
   const filteredSaved = showBoxResults
     ? savedPokemon.filter(entry => validateSpeciesLegality(entry.pokemon.showdownData.species, rulesetId))
-      .filter(entry => tags.length === 0
+      .filter(entry => !isTagMode
         ? entry.label.toLowerCase().includes(search.toLowerCase()) ||
           entry.pokemon.showdownData.species.toLowerCase().includes(search.toLowerCase())
         : matchesTags(entry.pokemon.showdownData.species))
@@ -294,7 +354,7 @@ export default function AddPokemonStatTable({
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search species... (#fire, #dragon dance, #fire #flash fire, ...)"
+          placeholder="Search species... (#fire, #dragon dance, #mega, #mega #water, ...)"
           autoFocus
           className="w-full px-3 py-2 text-sm font-semibold text-white bg-zinc-900 border border-zinc-700 rounded-lg outline-none focus:border-accent-gold"
         />

@@ -23,14 +23,9 @@ for the one remaining open candidate.
 
 ## Current Milestone: Building Flow Tweaks
 
-- **[Add Pokémon Table: Mega Form Rows] — Leg 3** *(Last touched:
-  2026-09-11 · Re-checks: 0)*
-  Follow-on to Leg 2 above (same scoping doc). Add `#mega` as a searchable
-  tag - standalone filter to Mega-only rows, and correctly ANDs with
-  type/ability tags against the Mega form's *own* type/guaranteed ability
-  (`config/megaAbilities.ts`'s `MEGA_ABILITIES`) where those differ from the
-  base species', not just its base form's. Move tags need no special
-  handling (Mega Evolution doesn't change a species' learnset).
+Building Flow Tweaks' last scoped candidate (Add Pokémon Table: Mega Form
+Rows, Legs 1-3) shipped 2026-09-11 - see `COMPLETED.md`. No further legs
+scoped yet under this milestone.
 
 ## Blocked
 
