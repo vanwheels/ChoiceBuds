@@ -18,11 +18,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 
 ## Current Milestone: Statistics Improvements
 
-- **[Statistics: Remove "By Opponent" Section] — Leg 2** *(Last touched:
-  2026-09-10 · Re-checks: 0)*
-  Remove the "by opponent" breakdown from the Statistics page — no longer
-  wanted.
-
 - **[Statistics: Win-Loss Column on Most-Faced Pokémon] — Leg 3** *(Last
   touched: 2026-09-10 · Re-checks: 0)*
   Add a win-loss record column to the "most-faced Pokémon" table in

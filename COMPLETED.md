@@ -18,6 +18,11 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Statistics: Remove "By Opponent" Section] - Leg 2** (2026-09-10) - see
+  commit `ebe8213`. Removed the win/loss-by-named-opponent breakdown - no
+  longer wanted. Distinct from `OpponentFacedPanel` (most-faced opponent
+  Pokémon), which stays.
+
 - **[Statistics: Selected Battle Pokémon Not Tracked] - Leg 1** (2026-09-10) -
   see commit `9ff455c`. Existing `getMostUsedPokemon`/`PokemonUsagePanel`
   tracked brought-Pokémon usage globally, but had no way to show, for one
