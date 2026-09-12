@@ -35,12 +35,20 @@ auto-populate, doubles support) left underneath it. No further legs are
 scoped right now; the milestone stays open per Vanny's explicit call rather
 than being closed out here.
 
-- **[Live Calc Feedback Pass 2] — Leg 4** *(Last touched: 2026-09-11 ·
-  Re-checks: 0)*
-  Feature-parity gap, sequenced last since it's additive scope rather than
-  a fix. Live Calc still doesn't mirror the regular Calc page's fields per
-  Vanny's earlier explicit ask - no way to set the opponent's status
-  condition.
+- **[Live Calc Player/Opponent Card Redesign] — Leg 1** *(Last touched:
+  2026-09-11 · Re-checks: 0)*
+  Unblocked - mockup received and scoped 2026-09-11, see
+  `docs/investigations/live-calc-card-redesign-scope.md` for the full
+  resolved spec (this absorbs `Live Calc Feedback Pass 2`'s former Legs 4 and
+  6 wholesale, both deleted from this file). Unified Base/SP/Boost/Total
+  stat table on both Player and Opponent panels (Opponent's SP/Total are
+  ranges, narrowing live); Base/Mega toggle moves beside the species field;
+  Level drops from the visible panel, Gender stays but the species box
+  shrinks to fit it in; Opponent panel gains a Status field with real
+  burn/paralysis/Hex effects wired through (not just cosmetic); HP Stat
+  Points default to 0 everywhere instead of the old 16 midpoint. Likely
+  supersedes Leg 3's field ordering/header shape per this item's original
+  note - build against the mockup, not Leg 3's layout.
 
 - **[Live Calc Feedback Pass 2] — Leg 5** *(Last touched: 2026-09-11 ·
   Re-checks: 0)*
@@ -58,40 +66,12 @@ than being closed out here.
   data instead of `gen.species.get()` directly - scope that against a couple
   more known mismatched species before committing to the fix shape.
 
-- **[Live Calc Feedback Pass 2] — Leg 6** *(Last touched: 2026-09-11 ·
-  Re-checks: 0)*
-  Found live-verifying Leg 3: Vanny flagged that Live Calc doesn't consider
-  the defender's HP Stat Points at all. Confirmed this is Live Calc-specific,
-  not a regression on the regular Calc page (there, `computeSideResults()`
-  builds both Pokémon via `buildPokemon()`, which already feeds real HP SPs
-  through `spsToEvs()` into `maxHP()`). Live Calc's own inference engine
-  (`utils/liveCalcEngine.ts`) instead holds the unknown defender's HP SPs at
-  a fixed `HP_SP_DEFAULT` (16, the midpoint) rather than solving for it
-  jointly with the relevant defensive stat - this was an explicit, already-
-  documented v1 approximation from `docs/investigations/
-  live-calc-stat-inference-scope.md` (see this file's own header comment),
-  not an oversight. Vanny is now asking to revisit that accepted tradeoff
-  after live use rather than leave it as-is - needs a scoping pass on what
-  "considering HP SP" should actually mean here (a wider/user-adjustable
-  default? jointly narrowing HP alongside the defensive stat, the "hybrid
-  brute-force pass" the scope doc already flagged as the eventual fix for
-  this whole approximation category?) before it becomes a concrete leg.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
 outside this project — a person, a dependency, or an external decision.
 Exempt from the re-check counter; they move back to "In progress" once
 unblocked.
-
-- **[Live Calc Player/Opponent Card Redesign] — Leg 1** *(Last touched:
-  2026-09-11 · Re-checks: 0)*
-  Blocked: waiting on Vanny to send a mockup she's drawn for what the
-  Attacker/Opponent panels should look like going forward, to discuss next
-  session. Raised right after Leg 3's panel-mirroring pass, so likely
-  supersedes some of that leg's layout choices once the mockup is in hand -
-  don't treat Leg 3's field ordering/header shape as settled until this is
-  resolved.
 
 - **[Team Card Grid Layout Re-check] — Leg 1** *(Last touched: 2026-08-31 ·
   Re-checks: 0)*
@@ -142,6 +122,20 @@ unblocked.
   session). See `docs/investigations/live-calc-layout-rework-scope.md`.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+- **[Live Calc Usage-Data-Backed Inference] — Leg 1** *(Last touched:
+  2026-09-11 · Re-checks: 0)*
+  Raised by Vanny while scoping Live Calc Player/Opponent Card Redesign - a
+  good future tie-in, not part of that leg's ask. `CalcPokemonPanel` already
+  auto-fills the Player side's ability/item/nature/SPs/moves from Champions
+  ranked-ladder usage data as a starting point; open question is whether the
+  Opponent side means the same thing (a one-time auto-fill suggestion once
+  species is picked - small) or using usage frequency as a weighted prior
+  inside `liveCalcEngine.ts`'s narrowing math itself (materially larger -
+  that engine is currently pure deterministic elimination, not statistical).
+  See `docs/investigations/live-calc-card-redesign-scope.md`'s "Not in scope"
+  section. Needs that shape question answered before it becomes a concrete
+  leg.
 
 - **[Live Calc Global Popup Launcher] — Leg 1** *(Last touched: 2026-09-11 ·
   Re-checks: 0)*
