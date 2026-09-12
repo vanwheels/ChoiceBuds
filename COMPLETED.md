@@ -18,6 +18,17 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Live Calc Feedback Pass 2] - Leg 3** (2026-09-11) - see commit
+  `8f3e5f7`. Layout restructuring: folded the "Inferred Defender" bar-chart
+  section (formerly its own `LiveCalcResultPanel`) into the Opponent panel
+  itself (`LiveCalcDefenderPanel.tsx`) - narrowed SP ranges and nature/
+  ability/item candidates now render inline below that panel's known-fact
+  fields instead of as a separate section between the move grids and the
+  Pokémon-panel row. Also reordered the Opponent panel's fields
+  (Item+Ability grid, then Nature) and header (title left, Pin action right)
+  to match `CalcPokemonPanel`'s attacker layout, resolving the
+  Attacker/Opponent panel mismatch carried over from a prior feedback pass.
+
 - **[Live Calc Feedback Pass 2] - Leg 2** (2026-09-11) - see commit
   `5faaae3`. Inference-engine bug: `inferDefenderStats()`/
   `inferOpponentOffensiveStats()` required nature, ability, AND item to each
