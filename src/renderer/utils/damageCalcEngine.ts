@@ -41,6 +41,13 @@ const ZERO_STATS: StatsTable = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 }
 export const WEATHER_OPTIONS: Weather[] = ['Sun', 'Rain', 'Sand', 'Snow', 'Harsh Sunshine', 'Heavy Rain', 'Strong Winds'];
 export const TERRAIN_OPTIONS: Terrain[] = ['Electric', 'Grassy', 'Psychic', 'Misty'];
 export const STATUS_OPTIONS: StatusName[] = ['slp', 'psn', 'brn', 'frz', 'par', 'tox'];
+/** Shared with `LiveCalcDefenderPanel.tsx`'s own Status field (Live Calc
+ * Player/Opponent Card Redesign) - previously a local const duplicated only
+ * in `CalcPokemonPanel.tsx`, hoisted here alongside `STATUS_OPTIONS` since
+ * both panels' Status selects now need it. */
+export const STATUS_LABELS: Record<StatusName, string> = {
+  slp: 'Asleep', psn: 'Poisoned', brn: 'Burned', frz: 'Frozen', par: 'Paralyzed', tox: 'Badly Poisoned',
+};
 export const GENDER_OPTIONS: GenderName[] = ['M', 'F', 'N'];
 
 /** Comparable form for matching PokeAPI's lowercase-hyphenated move slugs

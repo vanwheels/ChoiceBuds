@@ -20,7 +20,10 @@
  * (`defenderAtkBoost`/`defenderSpaBoost`/`defenderSpeBoost`, alongside the
  * existing Def/SpD ones) and a second, mirrored add/remove observation list
  * (`reverseObservations`, for "their move -> you") alongside the existing
- * damage-percent and turn-order lists. Every change re-derives
+ * damage-percent and turn-order lists. `defenderStatus`/`setDefenderStatus`
+ * (Live Calc Player/Opponent Card Redesign) is the same directly-known-fact
+ * shape as the boost stages, not a Known-Fact Lock like ability/item/nature -
+ * see `liveCalcEngine.ts`'s `LiveCalcDefenderInput.status`. Every change re-derives
  * `utils/liveCalcEngine.ts`'s `inferDefenderStats()` inference, layers
  * `utils/liveCalcSpeedEngine.ts`'s `inferDefenderSpeed()` on top of it, then
  * layers `liveCalcEngine.ts`'s own `inferOpponentOffensiveStats()` (the
@@ -58,7 +61,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Generations, toID } from '@smogon/calc';
-import type { Generation, NatureName, StatsTable } from '@smogon/calc/dist/data/interface';
+import type { Generation, NatureName, StatsTable, StatusName } from '@smogon/calc/dist/data/interface';
 import { validateSpeciesLegality, type RegulationId } from '../utils/pokemonRules';
 import { getFormeFamily, type FormeFamily } from '../utils/calcFormes';
 import { getMegaAbility } from '../config/megaAbilities';
@@ -79,10 +82,12 @@ import {
   inferOpponentOffensiveStats,
   computeYourMoveRanges,
   computeTheirMoveRanges,
+  computeDefenderTotalRanges,
   type LiveCalcObservation,
   type LiveCalcReverseObservation,
   type LiveCalcInference,
   type LiveCalcMoveRangeEntry,
+  type LiveCalcTotalRange,
 } from '../utils/liveCalcEngine';
 import {
   inferDefenderSpeed,
@@ -203,6 +208,14 @@ export interface UseLiveCalcReturn {
   setDefenderKnownItem: (item: string) => void;
   defenderKnownNature: NatureName | '';
   setDefenderKnownNature: (nature: NatureName | '') => void;
+  /** Directly-known opponent status (Live Calc Player/Opponent Card
+   * Redesign) - NOT a Known-Fact Lock like ability/item/nature above (it
+   * doesn't narrow a scanned axis), just wired straight into every calc the
+   * same way `CalcPokemonPanel`'s own Status field already is - see
+   * `liveCalcEngine.ts`'s `LiveCalcDefenderInput.status`. Empty string means
+   * healthy. */
+  defenderStatus: StatusName | '';
+  setDefenderStatus: (status: StatusName | '') => void;
   observations: LiveCalcObservationEntry[];
   addObservation: () => void;
   updateObservation: (id: string, updates: Partial<LiveCalcObservation>) => void;
@@ -238,6 +251,10 @@ export interface UseLiveCalcReturn {
    * `computeTheirMoveRanges`. */
   yourMoveRanges: LiveCalcMoveRangeEntry[];
   theirMoveRanges: LiveCalcMoveRangeEntry[];
+  /** The Opponent panel's unified stat table Total column (Live Calc
+   * Player/Opponent Card Redesign) - see `liveCalcEngine.ts`'s
+   * `computeDefenderTotalRanges()`. Null until a defender species is picked. */
+  defenderTotalRanges: Record<keyof StatsTable, LiveCalcTotalRange> | null;
 }
 
 export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation: RegulationId): UseLiveCalcReturn {
@@ -253,6 +270,7 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
   const [defenderKnownAbility, setDefenderKnownAbility] = useState('');
   const [defenderKnownItem, setDefenderKnownItem] = useState('');
   const [defenderKnownNature, setDefenderKnownNature] = useState<NatureName | ''>('');
+  const [defenderStatus, setDefenderStatus] = useState<StatusName | ''>('');
   const [observations, setObservations] = useState<LiveCalcObservationEntry[]>([]);
   const [turnOrderObservations, setTurnOrderObservations] = useState<LiveCalcTurnOrderObservationEntry[]>([]);
   const [reverseObservations, setReverseObservations] = useState<LiveCalcReverseObservationEntry[]>([]);
@@ -317,6 +335,7 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
     setDefenderKnownAbility(getMegaAbility(defenderSpecies.toLowerCase()) ?? '');
     setDefenderKnownItem('');
     setDefenderKnownNature('');
+    setDefenderStatus('');
   }
 
   const defenderAbilityOptions = useMemo(
@@ -376,8 +395,9 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
       knownAbility: defenderKnownAbility || undefined,
       knownItem: defenderKnownItem || undefined,
       knownNature: defenderKnownNature || undefined,
+      status: defenderStatus || undefined,
     }),
-    [defenderSpecies, defenderLevel, defenderDefBoost, defenderSpdBoost, defenderAtkBoost, defenderSpaBoost, defenderSpeBoost, defenderKnownAbility, defenderKnownItem, defenderKnownNature]
+    [defenderSpecies, defenderLevel, defenderDefBoost, defenderSpdBoost, defenderAtkBoost, defenderSpaBoost, defenderSpeBoost, defenderKnownAbility, defenderKnownItem, defenderKnownNature, defenderStatus]
   );
 
   const damageInference = useMemo(
@@ -410,6 +430,14 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
   const theirMoveRanges = useMemo(
     () => computeTheirMoveRanges(gen, attacker, defenderInput, inference, defenderMoves),
     [gen, attacker, defenderInput, inference, defenderMoves]
+  );
+
+  // The Opponent panel's unified stat table Total column (Live Calc
+  // Player/Opponent Card Redesign) - same "re-derive on every change" pattern
+  // as the move ranges above.
+  const defenderTotalRanges = useMemo(
+    () => computeDefenderTotalRanges(gen, defenderInput, inference),
+    [gen, defenderInput, inference]
   );
 
   return {
@@ -449,6 +477,8 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
     setDefenderKnownItem,
     defenderKnownNature,
     setDefenderKnownNature,
+    defenderStatus,
+    setDefenderStatus,
     observations,
     addObservation,
     updateObservation,
@@ -467,6 +497,7 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
     setDefenderMove,
     yourMoveRanges,
     theirMoveRanges,
+    defenderTotalRanges,
   };
 }
 

@@ -1,10 +1,14 @@
 /**
  * LiveCalcDefenderPanel.tsx - Opponent's Known Inputs + Inferred Result
  * Unlike CalcPokemonPanel's fully-known set (reused as-is for the Live Calc
- * attacker - see LiveCalcPage.tsx), the opponent is species+level plus
- * whatever's actually been confirmed in-battle - a forme-family toggle (for
- * stat-block and Mega formes, same `FormeToggle`/`FormeFamily`
- * CalcPokemonPanel uses) and its read-only base stats.
+ * attacker - see LiveCalcPage.tsx), the opponent is species plus whatever's
+ * actually been confirmed in-battle - a forme-family toggle (for stat-block
+ * and Mega formes, same `FormeToggle`/`FormeFamily` CalcPokemonPanel uses)
+ * and its read-only base stats. Level has no visible field here either (Live
+ * Calc Player/Opponent Card Redesign, same call as CalcPokemonPanel's own
+ * header - VGC is always Lv50); `level` is still a prop (used by
+ * `handlePin` and every calc this panel's data feeds), just not user-edited
+ * from this panel.
  *
  * All five combat stats (Live Calc Page Layout & Function Rework - Leg 1/2)
  * carry an editable stage-boost input (-6..+6) now, not just Def/Sp. Def -
@@ -33,39 +37,59 @@
  * battle, offensive items included (Choice Specs, Life Orb) now that the
  * opponent's own attacks are modeled too.
  *
- * Fields are grouped/ordered (species+level, forme toggles, Item+Ability,
- * Nature, stat block) to match CalcPokemonPanel's own field order - Live
- * Calc Feedback Pass 2's ask that the Attacker and Opponent panels visually
- * mirror each other. The header row follows the same "title left, actions
- * right" shape too, though the action itself (Pin to Speed Tiers) is
+ * Status (Live Calc Player/Opponent Card Redesign) is NOT a Known-Fact Lock
+ * like Item/Ability/Nature above - it doesn't narrow a scanned axis, it's a
+ * directly-known fact wired straight into every calc, same shape as the
+ * Boost inputs. Named `status`/`onChangeStatus` (not `knownStatus`) to match
+ * that Boost-field naming rather than the three Lock fields' `known*` naming.
+ * See `liveCalcEngine.ts`'s `LiveCalcDefenderInput.status` for the real
+ * damage/speed effects this unlocks via `@smogon/calc`'s own mechanics
+ * (burn halving physical damage dealt, paralysis halving Speed, Hex/Facade's
+ * own status checks, etc.).
+ *
+ * Fields are grouped/ordered (species+Mega toggle, stat-forme toggle,
+ * Item+Ability, Nature+Status, stat table) to match CalcPokemonPanel's own
+ * field order - Live Calc Feedback Pass 2's ask that the Attacker and
+ * Opponent panels visually mirror each other, extended by the Card Redesign
+ * leg to also move the Mega toggle beside species the same way
+ * CalcPokemonPanel's now does. The header row follows the same "title left,
+ * actions right" shape too, though the action itself (Pin to Speed Tiers) is
  * necessarily different since there's no known-set to copy/save for a
  * partially-known opponent.
  *
- * The "Inferred Defender" result - narrowed Def/Sp. Def/Speed Stat Point
- * ranges plus nature/ability/item candidates - lives at the bottom of this
- * same panel rather than as its own section further down the page (Live
- * Calc Feedback Pass 2, Leg 3): it's the live readout of exactly the fields
- * above it, so keeping it in the same panel reads as one continuous
- * "what do we know about the opponent" unit instead of two disconnected
- * ones. `StatBoundBar` (moved here from the now-removed LiveCalcResultPanel)
- * renders the three SP range bars against a fixed 0-32 scale;
- * `LiveCalcCandidateGroup` (still its own file, shared shape) renders the
- * three candidate-narrowing fractions. This panel only presents whatever
- * `LiveCalcInference` it's given - no inference logic lives here, see
- * utils/liveCalcEngine.ts.
+ * The stat table itself (`LiveCalcDefenderStatRows`) is the unified
+ * Base/SP/Boost/Total shape `CalcStatRows.tsx` already gives the Attacker
+ * panel, with SP/Total as ranges instead of single values - see that
+ * component's own header. The "Inferred Defender" result underneath it -
+ * narrowed Def/Sp. Def/Atk/Sp. Atk/Speed Stat Point ranges (as detailed
+ * progress bars, not just the stat table's compact numbers) plus
+ * nature/ability/item candidates - lives at the bottom of this same panel
+ * rather than as its own section further down the page (Live Calc Feedback
+ * Pass 2, Leg 3): it's the live readout of exactly the fields above it, so
+ * keeping it in the same panel reads as one continuous "what do we know
+ * about the opponent" unit instead of two disconnected ones. `StatBoundBar`
+ * (moved here from the now-removed LiveCalcResultPanel) renders the SP range
+ * bars against a fixed 0-32 scale - grown from 3 (Def/SpD/Speed) to all 5
+ * combat stats once `inferOpponentOffensiveStats()` started narrowing
+ * Atk/SpA too (Live Calc Player/Opponent Card Redesign: those two bounds
+ * already existed on `LiveCalcInference`, just weren't rendered anywhere
+ * until now - no engine work needed for this). `LiveCalcCandidateGroup`
+ * (still its own file, shared shape) renders the three candidate-narrowing
+ * fractions. This panel only presents whatever `LiveCalcInference` (and
+ * `computeDefenderTotalRanges()`'s derived Total ranges) it's given - no
+ * inference logic lives here, see utils/liveCalcEngine.ts.
  */
 
-import type { StatsTable } from '@smogon/calc/dist/data/interface';
-import type { NatureName } from '@smogon/calc/dist/data/interface';
-import type { Generation } from '@smogon/calc/dist/data/interface';
+import type { StatsTable, NatureName, StatusName, Generation } from '@smogon/calc/dist/data/interface';
 import type { FormeFamily } from '../../utils/calcFormes';
-import type { LiveCalcInference, LiveCalcStatBound } from '../../utils/liveCalcEngine';
+import type { LiveCalcInference, LiveCalcStatBound, LiveCalcTotalRange } from '../../utils/liveCalcEngine';
 import { defaultInference } from '../../utils/liveCalcEngine';
+import { STATUS_OPTIONS, STATUS_LABELS } from '../../utils/damageCalcEngine';
 import type { UseLiveCalcThreatPinsReturn } from '../../hooks/useLiveCalcThreatPins';
-import { getStatLabelColor } from '../../config/pokemonTheme';
 import CalcAutocomplete from '../calc/CalcAutocomplete';
 import FormeToggle from '../calc/FormeToggle';
 import LiveCalcCandidateGroup from './LiveCalcCandidateGroup';
+import LiveCalcDefenderStatRows from './LiveCalcDefenderStatRows';
 
 const SP_RANGE_TOTAL = 32;
 
@@ -96,15 +120,6 @@ function StatBoundBar({ label, bound, observationCount }: { label: string; bound
   );
 }
 
-const STAT_FIELDS: Array<{ label: string; key: keyof StatsTable }> = [
-  { label: 'HP', key: 'hp' },
-  { label: 'Atk', key: 'atk' },
-  { label: 'Def', key: 'def' },
-  { label: 'SpA', key: 'spa' },
-  { label: 'SpD', key: 'spd' },
-  { label: 'Spe', key: 'spe' },
-];
-
 interface LiveCalcDefenderPanelProps {
   gen: Generation;
   species: string;
@@ -130,8 +145,9 @@ interface LiveCalcDefenderPanelProps {
   knownAbility: string;
   knownItem: string;
   knownNature: NatureName | '';
+  /** Directly-known status, not a locked scan axis - see this file's header. */
+  status: StatusName | '';
   onChangeSpecies: (species: string) => void;
-  onChangeLevel: (level: number) => void;
   onChangeAtkBoost: (stage: number) => void;
   onChangeDefBoost: (stage: number) => void;
   onChangeSpaBoost: (stage: number) => void;
@@ -140,23 +156,29 @@ interface LiveCalcDefenderPanelProps {
   onChangeKnownAbility: (ability: string) => void;
   onChangeKnownItem: (item: string) => void;
   onChangeKnownNature: (nature: NatureName | '') => void;
+  onChangeStatus: (status: StatusName | '') => void;
   /** The live narrowed result for this species, presented at the bottom of
    * this panel - see this file's header. */
   inference: LiveCalcInference;
+  /** The stat table's own Total column, derived from `inference` plus the
+   * boosts/known-nature above - see `liveCalcEngine.ts::computeDefenderTotalRanges()`. */
+  totalRanges: Record<keyof StatsTable, LiveCalcTotalRange> | null;
   liveCalcThreatPinsState: UseLiveCalcThreatPinsReturn;
 }
 
 export default function LiveCalcDefenderPanel({
   gen, species, level, speciesOptions, formes, baseStats,
   atkBoost, defBoost, spaBoost, spdBoost, speBoost,
-  abilityOptions, itemOptions, natureOptions, knownAbility, knownItem, knownNature,
-  onChangeSpecies, onChangeLevel, onChangeAtkBoost, onChangeDefBoost, onChangeSpaBoost, onChangeSpdBoost, onChangeSpeBoost,
-  onChangeKnownAbility, onChangeKnownItem, onChangeKnownNature,
-  inference, liveCalcThreatPinsState,
+  abilityOptions, itemOptions, natureOptions, knownAbility, knownItem, knownNature, status,
+  onChangeSpecies, onChangeAtkBoost, onChangeDefBoost, onChangeSpaBoost, onChangeSpdBoost, onChangeSpeBoost,
+  onChangeKnownAbility, onChangeKnownItem, onChangeKnownNature, onChangeStatus,
+  inference, totalRanges, liveCalcThreatPinsState,
 }: LiveCalcDefenderPanelProps) {
   const megaGroup = formes.megaFormes.length > 0 ? [formes.root, ...formes.megaFormes] : [];
   const baseline = defaultInference(gen, species);
-  const totalObservations = inference.physicalObservationCount + inference.specialObservationCount + inference.speedObservationCount;
+  const totalObservations =
+    inference.physicalObservationCount + inference.specialObservationCount + inference.speedObservationCount +
+    inference.theirPhysicalObservationCount + inference.theirSpecialObservationCount;
 
   const { pins, pinThreat, unpinThreat } = liveCalcThreatPinsState;
   const isPinned = !!species && pins.has(species.toLowerCase());
@@ -170,13 +192,25 @@ export default function LiveCalcDefenderPanel({
     });
   };
 
-  const boostForKey = (key: keyof StatsTable): { value: number; onChange: (stage: number) => void } | null => {
+  const boostForKey = (key: keyof StatsTable): { value: number; onChange: (stage: number) => void } | undefined => {
     if (key === 'atk') return { value: atkBoost, onChange: onChangeAtkBoost };
     if (key === 'def') return { value: defBoost, onChange: onChangeDefBoost };
     if (key === 'spa') return { value: spaBoost, onChange: onChangeSpaBoost };
     if (key === 'spd') return { value: spdBoost, onChange: onChangeSpdBoost };
     if (key === 'spe') return { value: speBoost, onChange: onChangeSpeBoost };
-    return null;
+    return undefined;
+  };
+
+  const spBounds: Record<keyof StatsTable, LiveCalcStatBound> = {
+    hp: { min: 0, max: 32 },
+    atk: inference.atkBound,
+    def: inference.defBound,
+    spa: inference.spaBound,
+    spd: inference.spdBound,
+    spe: inference.speedBound,
+  };
+  const statRowBoosts: Partial<Record<keyof StatsTable, { value: number; onChange: (stage: number) => void }>> = {
+    atk: boostForKey('atk'), def: boostForKey('def'), spa: boostForKey('spa'), spd: boostForKey('spd'), spe: boostForKey('spe'),
   };
 
   return (
@@ -207,7 +241,7 @@ export default function LiveCalcDefenderPanel({
         )}
       </div>
       <div className="flex gap-2 items-end">
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <CalcAutocomplete
             label="Species (Forme)"
             value={species}
@@ -216,27 +250,13 @@ export default function LiveCalcDefenderPanel({
             onChange={onChangeSpecies}
           />
         </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Lv</label>
-          <input
-            type="number"
-            min={1}
-            max={100}
-            value={level}
-            onChange={(e) => {
-              const parsed = Number(e.target.value);
-              if (!Number.isNaN(parsed)) onChangeLevel(Math.max(1, Math.min(100, parsed)));
-            }}
-            className="w-14 px-1 py-0.5 text-sm text-center bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
-          />
-        </div>
+        {megaGroup.length > 0 && (
+          <FormeToggle group={megaGroup} current={species} onSelect={onChangeSpecies} />
+        )}
       </div>
 
       {formes.statFormes.length > 1 && (
         <FormeToggle group={formes.statFormes} current={species} onSelect={onChangeSpecies} />
-      )}
-      {megaGroup.length > 0 && (
-        <FormeToggle group={megaGroup} current={species} onSelect={onChangeSpecies} />
       )}
 
       <div className="grid grid-cols-2 gap-2">
@@ -267,51 +287,34 @@ export default function LiveCalcDefenderPanel({
         </div>
       </div>
 
-      <div className="flex flex-col gap-1">
-        <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Known Nature</label>
-        <select
-          value={knownNature}
-          onChange={(e) => onChangeKnownNature(e.target.value as NatureName | '')}
-          title="Pin the opponent's nature once it's been confirmed (a stat-boost/-reduction message, a damage roll that only fits one nature, etc.)"
-          className="w-full px-1 py-0.5 text-xs bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold cursor-pointer"
-        >
-          <option value="">Unknown</option>
-          {natureOptions.map(nature => <option key={nature} value={nature}>{nature}</option>)}
-        </select>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="flex flex-col gap-1">
+          <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Known Nature</label>
+          <select
+            value={knownNature}
+            onChange={(e) => onChangeKnownNature(e.target.value as NatureName | '')}
+            title="Pin the opponent's nature once it's been confirmed (a stat-boost/-reduction message, a damage roll that only fits one nature, etc.)"
+            className="w-full px-1 py-0.5 text-xs bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold cursor-pointer"
+          >
+            <option value="">Unknown</option>
+            {natureOptions.map(nature => <option key={nature} value={nature}>{nature}</option>)}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Status</label>
+          <select
+            value={status}
+            onChange={(e) => onChangeStatus(e.target.value as StatusName | '')}
+            title="Mark a status confirmed in-battle - applies its real damage/speed effects (burn halving physical damage dealt, paralysis halving Speed, Hex/Facade's own checks) to every calc"
+            className="w-full px-1 py-0.5 text-xs bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold cursor-pointer"
+          >
+            <option value="">Healthy</option>
+            {STATUS_OPTIONS.map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
+          </select>
+        </div>
       </div>
 
-      <div className="bg-zinc-800 rounded px-2 py-1.5 border border-zinc-600 flex flex-col gap-1">
-        <div className="flex items-center gap-2 text-[10px] text-zinc-400 uppercase tracking-wide">
-          <span className="w-8 shrink-0" />
-          <span className="w-10 text-center shrink-0">Base</span>
-          <span className="w-10 text-center shrink-0">Boost</span>
-        </div>
-        {STAT_FIELDS.map(({ label, key }) => {
-          const boost = boostForKey(key);
-          return (
-            <div key={key} className="flex items-center gap-2">
-              <span className={`w-8 text-[10px] uppercase shrink-0 ${getStatLabelColor(label)}`}>{label}</span>
-              <span className="w-10 text-center text-xs text-zinc-300 shrink-0">{baseStats ? baseStats[key] : '—'}</span>
-              {boost ? (
-                <input
-                  type="number"
-                  min={-6}
-                  max={6}
-                  value={boost.value}
-                  onChange={(e) => {
-                    const parsed = Number(e.target.value);
-                    if (!Number.isNaN(parsed)) boost.onChange(Math.max(-6, Math.min(6, parsed)));
-                  }}
-                  title="Known stat stage boost (-6 to +6)"
-                  className="w-10 shrink-0 px-1 py-0.5 text-xs text-center bg-zinc-900 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
-                />
-              ) : (
-                <span className="w-10 text-center text-xs text-zinc-600 shrink-0">—</span>
-              )}
-            </div>
-          );
-        })}
-      </div>
+      <LiveCalcDefenderStatRows baseStats={baseStats} spBounds={spBounds} totalRanges={totalRanges} boosts={statRowBoosts} />
 
       {species && (
         <div className="flex flex-col gap-3 border-t border-zinc-800/80 pt-2">
@@ -324,7 +327,9 @@ export default function LiveCalcDefenderPanel({
           <div>
             <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-wide mb-1.5">Stat Points (0-32)</h4>
             <div className="grid grid-cols-1 gap-2">
+              <StatBoundBar label="Attack" bound={inference.atkBound} observationCount={inference.theirPhysicalObservationCount} />
               <StatBoundBar label="Defense" bound={inference.defBound} observationCount={inference.physicalObservationCount} />
+              <StatBoundBar label="Sp. Atk" bound={inference.spaBound} observationCount={inference.theirSpecialObservationCount} />
               <StatBoundBar label="Sp. Def" bound={inference.spdBound} observationCount={inference.specialObservationCount} />
               <StatBoundBar label="Speed" bound={inference.speedBound} observationCount={inference.speedObservationCount} />
             </div>
@@ -358,3 +363,4 @@ export default function LiveCalcDefenderPanel({
     </div>
   );
 }
+

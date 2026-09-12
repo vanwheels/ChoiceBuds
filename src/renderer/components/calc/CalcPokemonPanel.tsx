@@ -2,17 +2,21 @@
  * CalcPokemonPanel.tsx - One Pokémon's Damage Calc Config
  * Reused for both Pokémon - species/forme (unified autocomplete - typing an
  * exact regional/gendered forme name like "Ninetales-Alola" or "Meowstic-F"
- * selects it directly), level, gender (icon toggle matching PokemonCard.tsx
- * in the Teams tab), item, ability, nature, status, SPs, and stat boosts.
- * No IV editor and no Tera type - the real Champions calc's stat table only
- * shows Base/SPs (IVs passed to the engine fixed at max, see
- * useDamageCalc), and Tera isn't modeled here currently.
+ * selects it directly), gender (icon toggle matching PokemonCard.tsx in the
+ * Teams tab), item, ability, nature, status, SPs, and stat boosts. Level has
+ * no visible field (Live Calc Player/Opponent Card Redesign) - VGC is always
+ * Lv50, so `state.level` stays whatever `defaultPokemonState()` set it to
+ * rather than being user-editable here. No IV editor and no Tera type - the
+ * real Champions calc's stat table only shows Base/SPs (IVs passed to the
+ * engine fixed at max, see useDamageCalc), and Tera isn't modeled here
+ * currently.
  *
- * Same-species alternate-stat-block formes (e.g. Aegislash Blade/Shield) and
- * Mega Evolution get their own in-panel toggle rows instead of requiring a
- * fresh species search - see utils/calcFormes.ts for why regional/gendered
- * forms are deliberately excluded from this (they're already independently
- * searchable). Moves live in CalcMoveGrid, not here.
+ * Same-species alternate-stat-block formes (e.g. Aegislash Blade/Shield) get
+ * their own in-panel toggle row below the top row; Mega Evolution's toggle
+ * sits IN the top row, beside the species field (Live Calc Player/Opponent
+ * Card Redesign) - see utils/calcFormes.ts for why regional/gendered forms
+ * are deliberately excluded from either toggle (they're already
+ * independently searchable). Moves live in CalcMoveGrid, not here.
  *
  * A real dropdown-list species selection (see handleSpeciesSelect - never a
  * mid-typing character) also auto-fills ability/item/nature/Stat-Points/
@@ -28,7 +32,7 @@ import { useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import type { DragEvent } from 'react';
 import type { CalcPokemonState, NatureStatEffect } from '../../hooks/useDamageCalc';
-import { STATUS_OPTIONS } from '../../hooks/useDamageCalc';
+import { STATUS_OPTIONS, STATUS_LABELS } from '../../hooks/useDamageCalc';
 import type { FormeFamily } from '../../utils/calcFormes';
 import type { NatureName, StatsTable } from '@smogon/calc/dist/data/interface';
 import type { Team, SavedPokemonEntry, ImportedPokemonInfo } from '../../types/pokemon';
@@ -68,10 +72,6 @@ interface CalcPokemonPanelProps {
 }
 
 const CONFIRMATION_MS = 2000;
-
-const STATUS_LABELS: Record<string, string> = {
-  slp: 'Asleep', psn: 'Poisoned', brn: 'Burned', frz: 'Frozen', par: 'Paralyzed', tox: 'Badly Poisoned',
-};
 
 const GENDER_CYCLE: Array<CalcPokemonState['gender']> = ['M', 'F', ''];
 
@@ -220,7 +220,7 @@ export default function CalcPokemonPanel({
       <CalcTeamTray teams={teams} resolveSprite={resolveSprite} onLoadPokemon={(p) => onChange(teamPokemonToCalcUpdates(p))} />
 
       <div className="flex gap-2 items-end">
-        <div className="flex-1 relative">
+        <div className="flex-1 relative min-w-0">
           <CalcAutocomplete
             label="Species (Forme)"
             value={state.species}
@@ -240,20 +240,25 @@ export default function CalcPokemonPanel({
             />
           )}
         </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Lv</label>
-          <input
-            type="number"
-            min={1}
-            max={100}
-            value={state.level}
-            onChange={(e) => {
-              const parsed = Number(e.target.value);
-              if (!Number.isNaN(parsed)) onChange({ level: Math.max(1, Math.min(100, parsed)) });
+        {megaGroup.length > 0 && (
+          <FormeToggle
+            group={megaGroup}
+            current={state.species}
+            onSelect={(species) => {
+              const megaAbility = getMegaAbility(species.toLowerCase());
+              if (megaAbility) {
+                if (preMegaAbilityRef.current?.root !== formes.root) {
+                  preMegaAbilityRef.current = { root: formes.root, ability: state.ability };
+                }
+                onChange({ species, ability: megaAbility });
+              } else {
+                const revert = preMegaAbilityRef.current?.root === formes.root ? preMegaAbilityRef.current.ability : null;
+                preMegaAbilityRef.current = null;
+                onChange(revert !== null ? { species, ability: revert } : { species });
+              }
             }}
-            className="w-14 px-1 py-0.5 text-sm text-center bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
           />
-        </div>
+        )}
         <div
           className="w-9 h-9 shrink-0 bg-zinc-800 rounded-lg border border-zinc-600 flex items-center justify-center overflow-hidden cursor-pointer hover:border-accent-gold transition-colors"
           onClick={cycleGender}
@@ -267,25 +272,6 @@ export default function CalcPokemonPanel({
 
       {formes.statFormes.length > 1 && (
         <FormeToggle group={formes.statFormes} current={state.species} onSelect={(species) => onChange({ species })} />
-      )}
-      {megaGroup.length > 0 && (
-        <FormeToggle
-          group={megaGroup}
-          current={state.species}
-          onSelect={(species) => {
-            const megaAbility = getMegaAbility(species.toLowerCase());
-            if (megaAbility) {
-              if (preMegaAbilityRef.current?.root !== formes.root) {
-                preMegaAbilityRef.current = { root: formes.root, ability: state.ability };
-              }
-              onChange({ species, ability: megaAbility });
-            } else {
-              const revert = preMegaAbilityRef.current?.root === formes.root ? preMegaAbilityRef.current.ability : null;
-              preMegaAbilityRef.current = null;
-              onChange(revert !== null ? { species, ability: revert } : { species });
-            }
-          }}
-        />
       )}
 
       <div className="grid grid-cols-2 gap-2">

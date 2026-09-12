@@ -45,11 +45,15 @@
  *
  * ## Other v1 approximations (all flagged in the scope doc as Leg 1's own
  * design details to settle, or as stated assumptions):
- * - HP SPs are held at a fixed default (`HP_SP_DEFAULT`, chosen as the
- *   midpoint 16) rather than solved for jointly with the relevant defensive
- *   stat - the scope doc explicitly allows this HP/defense-stat coupling
+ * - HP SPs are held at a fixed 0 (`ZERO_SPS.hp`, per Vanny's call in Live
+ *   Calc Player/Opponent Card Redesign - see that leg's scope doc) rather
+ *   than solved for jointly with the relevant defensive stat. This used to
+ *   default to the midpoint 16 (`HP_SP_DEFAULT`) as a deliberate v1
  *   approximation rather than blocking on disentangling both unknowns from
- *   one data point.
+ *   one data point - Vanny's later call was to never assume a nonzero HP
+ *   default anywhere, so this file's own internal scans now just use 0 like
+ *   every other unscanned stat (`ZERO_SPS`), same HP/defense-stat coupling
+ *   approximation as before, just without the nonzero assumption.
  * - No multi-hit: multi-hit moves (Bullet Seed etc.) are rejected as unusable
  *   observations outright (recorded as a contradiction/warning) rather than
  *   modeled with their own extra variance. Crit IS modeled (Live Calc
@@ -83,8 +87,24 @@
  *   Once set, it hard-locks `abilityCandidates` to that single value and
  *   becomes the nature/item axes' own neutral default - see that field's
  *   own doc comment.
- * - Status condition on the defender isn't tracked. Def/Sp. Def stat-stage
- *   boosts ARE tracked (Live Calc Defender Panel Parity - Leg 1 follow-up) -
+ * - Status condition on the opponent (`LiveCalcDefenderInput.status`, Live
+ *   Calc Player/Opponent Card Redesign) IS tracked now, wired the same way
+ *   `CalcPokemonPanel`'s own Status field already feeds `buildPokemon()` -
+ *   set directly on whichever `Pokemon` object the opponent is built as
+ *   (defender in `feasibleSpRange()`/`yourMoveRangeEntry()`, attacker in
+ *   `feasibleOffensiveSpRange()`/`theirMoveRangeEntry()`) and left to
+ *   `@smogon/calc`'s own bundled mechanics (`applyBurn`, `hasStatus('par')`
+ *   doubling, Facade/Hex's own status checks, etc.) to apply - no hand-rolled
+ *   status math here. Like the boost stages below, it's one static value
+ *   applied identically to every observation, not a per-observation field -
+ *   a real opponent's status can change mid-battle (a Toxic Spikes poison
+ *   cured by a Pecha Berry, a burn from a Will-O-Wisp mid-fight) and this
+ *   won't retroactively re-score earlier observations against the state they
+ *   were actually logged under, same simpler-model tradeoff Def/SpD boosts
+ *   below already accept.
+ * - Def/Sp. Def (and now all five combat stats') stat-stage boosts ARE
+ *   tracked (Live Calc Defender Panel Parity - Leg 1 follow-up, generalized
+ *   to Atk/SpA/Speed in Live Calc Page Layout & Function Rework - Leg 1) -
  *   but as one static value on `LiveCalcDefenderPanel`, applied identically
  *   to every damage observation, unlike Speed's own `defenderSpeedStage`
  *   (`liveCalcSpeedEngine.ts`'s per-turn-order-observation field, since a
@@ -123,7 +143,7 @@
  */
 
 import { calculate, Pokemon, Move, Field, toID } from '@smogon/calc';
-import type { Generation, GameType, NatureName, StatsTable } from '@smogon/calc/dist/data/interface';
+import type { Generation, GameType, NatureName, StatsTable, StatusName, StatID } from '@smogon/calc/dist/data/interface';
 import { getChampionsCalcMoveOverride } from '../config/championsMoveOverrides';
 import { getChampionsAbilityDamageEffect } from '../config/championsAbilityDamageEffects';
 import { normalizeNameForAPI } from '../services/pokeapiService';
@@ -131,13 +151,10 @@ import { LIVE_CALC_DEFENSIVE_ITEMS } from '../config/liveCalcDefensiveItems';
 import { LIVE_CALC_OFFENSIVE_ITEMS } from '../config/liveCalcOffensiveItems';
 import { getMegaAbility } from '../config/megaAbilities';
 import { MAX_IVS, spsToEvs, resolveCalcSpecies } from './championsStats';
-import { buildPokemon, type CalcPokemonState, type CalcMoveSlot } from './damageCalcEngine';
+import { buildPokemon, boostMultiplier, type CalcPokemonState, type CalcMoveSlot } from './damageCalcEngine';
 
 const SP_MIN = 0;
 const SP_MAX = 32;
-/** Documented midpoint default for the defender's unsolved HP SPs - see this
- * file's header for why HP/defense-stat coupling isn't fully disentangled. */
-const HP_SP_DEFAULT = 16;
 /** Extra slack beyond a move's own natural 85-100% roll window, to absorb a
  * health-bar-read observation's inherent imprecision and floor/round noise
  * at a candidate's range boundary. */
@@ -198,6 +215,15 @@ export interface LiveCalcDefenderInput {
    * the ability/item axes' own neutral default (in place of `Hardy`).
    * Undefined/empty means still unknown. */
   knownNature?: NatureName;
+  /** A status condition confirmed in-battle (a burn/paralysis animation, a
+   * Toxic counter, etc.) - NOT a locked scan axis like the three above (it
+   * doesn't narrow anything), just a directly-known fact wired straight into
+   * every `Pokemon` object the opponent is built as, same shape as
+   * `CalcPokemonPanel`'s own Status field feeding `buildPokemon()`. See this
+   * file's header for the real damage/speed effects this unlocks (Hex,
+   * Facade, burn's Attack halving, etc.) via `@smogon/calc`'s own mechanics.
+   * Undefined/empty means healthy. */
+  status?: StatusName;
 }
 
 export interface LiveCalcStatBound {
@@ -290,6 +316,115 @@ export function defaultInference(gen: Generation, species: string): LiveCalcInfe
   };
 }
 
+/** A stat's Base+SP+nature+boost "Total" as a min-max span rather than one
+ * fixed number - see `computeDefenderTotalRanges()`'s own header. Structurally
+ * identical to `LiveCalcStatBound` (also a plain {min,max}) but kept as its
+ * own named type since it measures a displayed stat value, not a Stat Point
+ * count - the two are never interchangeable even though they share a shape. */
+export interface LiveCalcTotalRange {
+  min: number;
+  max: number;
+}
+
+/** One throwaway-nature name per stat whose `plus`/`minus` is that stat -
+ * memoized per `Generation` (there's only ever one, gen 9) since
+ * `computeDefenderTotalRanges()` needs one for every non-HP stat on every
+ * call. Built once by scanning `gen.natures` rather than hardcoding specific
+ * nature names, so it stays correct if `@smogon/calc`'s own nature table ever
+ * changes. Any nature that plus/minuses a given stat produces the identical
+ * +10%/-10% multiplier, so which specific one is picked doesn't matter. */
+let cachedNatureLookup: { gen: Generation; plus: Partial<Record<StatID, NatureName>>; minus: Partial<Record<StatID, NatureName>> } | null = null;
+
+function natureLookup(gen: Generation): { plus: Partial<Record<StatID, NatureName>>; minus: Partial<Record<StatID, NatureName>> } {
+  if (cachedNatureLookup?.gen === gen) return cachedNatureLookup;
+  const plus: Partial<Record<StatID, NatureName>> = {};
+  const minus: Partial<Record<StatID, NatureName>> = {};
+  for (const nature of gen.natures) {
+    if (nature.plus && nature.plus !== nature.minus && !plus[nature.plus]) plus[nature.plus] = nature.name as NatureName;
+    if (nature.minus && nature.minus !== nature.plus && !minus[nature.minus]) minus[nature.minus] = nature.name as NatureName;
+  }
+  cachedNatureLookup = { gen, plus, minus };
+  return cachedNatureLookup;
+}
+
+const HARDY: NatureName = 'Hardy' as NatureName;
+
+/**
+ * Opponent stat-table Total range per stat (Live Calc Player/Opponent Card
+ * Redesign): the Base+SP+nature+stage-boost number a single known Pokémon
+ * would show on `CalcStatRows.tsx` (`damageCalcEngine.ts::computeBoostedStats()`),
+ * but as a min-max span since the opponent's own nature/SP-spread aren't
+ * fully known. Reuses `@smogon/calc`'s real `Pokemon` class to read
+ * `rawStats` (same as `computeBoostedStats()` does) rather than
+ * hand-deriving the stat formula, so nature's exact floor/round behavior
+ * matches everywhere else in the app.
+ *
+ * HP never narrows (no HP-based observation mechanism, and always assumed 0
+ * SP internally - see this file's header) - its row always spans the full
+ * SP 0-32 range as a theoretical ceiling for context, and nature never
+ * affects HP. Every other stat spans whatever `inference` has currently
+ * narrowed its SP bound to, plus - while `LiveCalcDefenderInput.knownNature`
+ * is still unset - the -10%/+10% nature extremes too (min endpoint uses the
+ * stat's own lowering nature at the bound's min SP, max endpoint uses its
+ * boosting nature at the bound's max SP). Once a nature IS locked in, both
+ * endpoints use that one real multiplier instead of continuing to span both.
+ * A known stage boost is applied to both endpoints uniformly, same
+ * "Base + SP + nature + stage boost" formula `computeBoostedStats()` already
+ * uses for a single known Pokémon.
+ */
+export function computeDefenderTotalRanges(
+  gen: Generation,
+  defender: LiveCalcDefenderInput,
+  inference: LiveCalcInference,
+): Record<keyof StatsTable, LiveCalcTotalRange> | null {
+  if (!defender.species) return null;
+  const { plus, minus } = natureLookup(gen);
+  const boosts: StatsTable = {
+    ...ZERO_SPS,
+    atk: defender.atkBoost, def: defender.defBoost, spa: defender.spaBoost, spd: defender.spdBoost, spe: defender.speBoost,
+  };
+
+  const boundFor = (key: 'atk' | 'def' | 'spa' | 'spd' | 'spe'): LiveCalcStatBound => {
+    if (key === 'atk') return inference.atkBound;
+    if (key === 'def') return inference.defBound;
+    if (key === 'spa') return inference.spaBound;
+    if (key === 'spd') return inference.spdBound;
+    return inference.speedBound;
+  };
+
+  const rawStatAt = (key: keyof StatsTable, sp: number, nature: NatureName): number | null => {
+    try {
+      const pokemon = new Pokemon(gen, resolveCalcSpecies(defender.species), {
+        level: defender.level,
+        nature,
+        evs: spsToEvs({ ...ZERO_SPS, [key]: sp }),
+        ivs: MAX_IVS,
+      });
+      return pokemon.rawStats[key];
+    } catch {
+      return null;
+    }
+  };
+
+  const result = {} as Record<keyof StatsTable, LiveCalcTotalRange>;
+
+  const hpLo = rawStatAt('hp', SP_MIN, HARDY);
+  const hpHi = rawStatAt('hp', SP_MAX, HARDY);
+  result.hp = { min: hpLo ?? 0, max: hpHi ?? 0 };
+
+  for (const key of ['atk', 'def', 'spa', 'spd', 'spe'] as const) {
+    const bound = boundFor(key);
+    const minNature = defender.knownNature ?? minus[key] ?? HARDY;
+    const maxNature = defender.knownNature ?? plus[key] ?? HARDY;
+    const rawMin = rawStatAt(key, bound.min, minNature) ?? 0;
+    const rawMax = rawStatAt(key, bound.max, maxNature) ?? 0;
+    const multiplier = boostMultiplier(boosts[key]);
+    result[key] = { min: Math.floor(rawMin * multiplier), max: Math.floor(rawMax * multiplier) };
+  }
+
+  return result;
+}
+
 function intersectBounds(a: LiveCalcStatBound, b: LiveCalcStatBound): LiveCalcStatBound | null {
   const min = Math.max(a.min, b.min);
   const max = Math.min(a.max, b.max);
@@ -313,9 +448,9 @@ interface DefenderCandidateSpec {
 
 /**
  * Scans a single unknown axis's one candidate value: for the relevant
- * defensive stat's SP 0-32 (every other stat left at 0, HP at
- * `HP_SP_DEFAULT`), builds a defender with this candidate's
- * nature/ability/item (plus the panel's known, fixed `defenderBoosts` -
+ * defensive stat's SP 0-32 (every other stat, including HP, left at 0),
+ * builds a defender with this candidate's nature/ability/item/status (plus
+ * the panel's known, fixed `defenderBoosts` -
  * `@smogon/calc`'s own `calculate()` applies the relevant stage multiplier
  * internally, same as it would for a real Pokemon instance) and checks
  * whether `calculate()`'s resulting damage-percent range could plausibly
@@ -341,6 +476,7 @@ function feasibleSpRange(
   outcome: LiveCalcObservationOutcome,
   isContactMove: boolean,
   defenderBoosts: StatsTable,
+  status: StatusName | undefined,
 ): LiveCalcStatBound | null {
   const defenderEffect = candidate.ability ? getChampionsAbilityDamageEffect(normalizeNameForAPI(candidate.ability)) : undefined;
   const contactMultiplier = isContactMove && defenderEffect?.contactDamageTakenMultiplier != null ? defenderEffect.contactDamageTakenMultiplier : 1;
@@ -348,13 +484,14 @@ function feasibleSpRange(
   let feasibleMin: number | null = null;
   let feasibleMax: number | null = null;
   for (let sp = SP_MIN; sp <= SP_MAX; sp++) {
-    const sps: StatsTable = { ...ZERO_SPS, hp: HP_SP_DEFAULT, [relevantStat]: sp };
+    const sps: StatsTable = { ...ZERO_SPS, [relevantStat]: sp };
     try {
       const defenderPokemon = new Pokemon(gen, resolveCalcSpecies(defenderSpecies), {
         level,
         nature: candidate.nature,
         ability: candidate.ability,
         item: candidate.item,
+        status,
         evs: spsToEvs(sps),
         ivs: MAX_IVS,
         boosts: defenderBoosts,
@@ -459,7 +596,7 @@ export function inferDefenderStats(
     const field = new Field({ gameType: effectiveGameType });
 
     const scan = (candidate: DefenderCandidateSpec) =>
-      feasibleSpRange(gen, attackerPokemon, move, field, defender.species, defender.level, relevantStat, candidate, obs.damagePercent, obs.outcome, isContactMove, defenderBoosts);
+      feasibleSpRange(gen, attackerPokemon, move, field, defender.species, defender.level, relevantStat, candidate, obs.damagePercent, obs.outcome, isContactMove, defenderBoosts, defender.status);
 
     // Once ability/item/nature are known, each becomes the neutral default
     // the OTHER two axes scan against too (in place of "no ability"/"no
@@ -584,6 +721,7 @@ function feasibleOffensiveSpRange(
   contactMultiplier: number,
   opponentBoosts: StatsTable,
   maxHP: number,
+  status: StatusName | undefined,
 ): LiveCalcStatBound | null {
   let move: InstanceType<typeof Move>;
   try {
@@ -601,13 +739,14 @@ function feasibleOffensiveSpRange(
   let feasibleMin: number | null = null;
   let feasibleMax: number | null = null;
   for (let sp = SP_MIN; sp <= SP_MAX; sp++) {
-    const sps: StatsTable = { ...ZERO_SPS, hp: HP_SP_DEFAULT, [relevantStat]: sp };
+    const sps: StatsTable = { ...ZERO_SPS, [relevantStat]: sp };
     try {
       const attackerPokemon = new Pokemon(gen, resolveCalcSpecies(opponentSpecies), {
         level,
         nature: candidate.nature,
         ability: candidate.ability,
         item: candidate.item,
+        status,
         evs: spsToEvs(sps),
         ivs: MAX_IVS,
         boosts: opponentBoosts,
@@ -716,7 +855,7 @@ export function inferOpponentOffensiveStats(
     const field = new Field({ gameType: effectiveGameType });
 
     const scan = (candidate: DefenderCandidateSpec) =>
-      feasibleOffensiveSpRange(gen, knownDefenderPokemon, field, obs.moveName, obs.isCrit, moveOverrides, opponent.species, opponent.level, relevantStat, candidate, obs.damagePercent, obs.outcome, contactMultiplier, opponentBoosts, maxHP);
+      feasibleOffensiveSpRange(gen, knownDefenderPokemon, field, obs.moveName, obs.isCrit, moveOverrides, opponent.species, opponent.level, relevantStat, candidate, obs.damagePercent, obs.outcome, contactMultiplier, opponentBoosts, maxHP, opponent.status);
 
     const natureResults = result.natureCandidates.map(nature => ({ value: nature, bound: scan({ nature, ability: knownAbility, item: knownItem }) }));
     const abilityResults = knownAbility
@@ -900,13 +1039,14 @@ function yourMoveRangeEntry(
     const defenderEffect = candidate.ability ? getChampionsAbilityDamageEffect(normalizeNameForAPI(candidate.ability)) : undefined;
     const contactMultiplier = isContactMove && defenderEffect?.contactDamageTakenMultiplier != null ? defenderEffect.contactDamageTakenMultiplier : 1;
     for (const sp of spSteps) {
-      const sps: StatsTable = { ...ZERO_SPS, hp: HP_SP_DEFAULT, [relevantStat]: sp };
+      const sps: StatsTable = { ...ZERO_SPS, [relevantStat]: sp };
       try {
         const defenderPokemon = new Pokemon(gen, resolveCalcSpecies(defender.species), {
           level: defender.level,
           nature: candidate.nature,
           ability: candidate.ability,
           item: candidate.item,
+          status: defender.status,
           evs: spsToEvs(sps),
           ivs: MAX_IVS,
           boosts: defenderBoosts,
@@ -1018,13 +1158,14 @@ function theirMoveRangeEntry(
       continue;
     }
     for (const sp of spSteps) {
-      const sps: StatsTable = { ...ZERO_SPS, hp: HP_SP_DEFAULT, [relevantStat]: sp };
+      const sps: StatsTable = { ...ZERO_SPS, [relevantStat]: sp };
       try {
         const opponentPokemon = new Pokemon(gen, resolveCalcSpecies(opponent.species), {
           level: opponent.level,
           nature: candidate.nature,
           ability: candidate.ability,
           item: candidate.item,
+          status: opponent.status,
           evs: spsToEvs(sps),
           ivs: MAX_IVS,
           boosts: opponentBoosts,

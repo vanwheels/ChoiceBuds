@@ -18,6 +18,7 @@ import {
   inferOpponentOffensiveStats,
   computeYourMoveRanges,
   computeTheirMoveRanges,
+  computeDefenderTotalRanges,
   defaultInference,
   NO_ITEM,
   type LiveCalcObservation,
@@ -197,12 +198,18 @@ describe('inferDefenderStats - known Def/Sp. Def stage boosts', () => {
 
 describe('inferDefenderStats - isCrit', () => {
   it('a damage% unreachable normally becomes feasible once isCrit is set, and vice versa', () => {
-    // Earthquake vs. this defender: 55% is above what even the best Def
+    // Earthquake vs. this defender: 65% is above what even the best Def
     // nature/ability/item combo can reach non-crit, but within the
     // crit-boosted range - directly exercises that `isCrit` actually reaches
-    // `Move`'s own crit multiplier rather than being ignored.
-    const nonCrit = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, [obs('Earthquake', 55, 1, { isCrit: false })]);
-    const crit = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, [obs('Earthquake', 55, 1, { isCrit: true })]);
+    // `Move`'s own crit multiplier rather than being ignored. (Live Calc
+    // Player/Opponent Card Redesign's HP SP default 0 - down from the old
+    // v1 midpoint of 16 - raised every non-crit/crit percent this defender
+    // can take, since a smaller assumed max HP means the same raw damage is
+    // a bigger share of it; 55% stopped being unreachable non-crit once that
+    // changed, so this bumped up to a percent still clearly out of non-crit's
+    // reach.)
+    const nonCrit = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, [obs('Earthquake', 65, 1, { isCrit: false })]);
+    const crit = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, [obs('Earthquake', 65, 1, { isCrit: true })]);
     expect(nonCrit.contradictions.length).toBe(1);
     expect(nonCrit.physicalObservationCount).toBe(0);
     expect(crit.contradictions.length).toBe(0);
@@ -283,16 +290,19 @@ describe('inferDefenderStats - Doubles spread-modifier targetsHit handling', () 
   it('a spread move only actually hitting one target is scanned without the Doubles 0.75x reduction', () => {
     // Earthquake (target: allAdjacent) auto-applies @smogon/calc's 0.75x
     // Doubles spread reduction unless targetsHit===1 switches the scan to a
-    // Singles field. 40% is above what Earthquake vs. this defender can ever
+    // Singles field. 45% is above what Earthquake vs. this defender can ever
     // reach WITH the 0.75x reduction applied (targetsHit: 2) but within its
     // real, unreduced range (targetsHit: 1) - so the same observed percent
     // should be a contradiction under one reading and feasible under the
-    // other, directly exercising the field-switch this models.
-    const twoTargets = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, [obs('Earthquake', 40, 2)]);
+    // other, directly exercising the field-switch this models. (Live Calc
+    // Player/Opponent Card Redesign's HP SP default 0 raised both ranges -
+    // see the isCrit test above's own comment for why - so this bumped up
+    // from the old 40% once that stopped being above the Doubles ceiling.)
+    const twoTargets = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, [obs('Earthquake', 45, 2)]);
     expect(twoTargets.physicalObservationCount).toBe(0);
     expect(twoTargets.contradictions.length).toBe(1);
 
-    const oneTarget = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, [obs('Earthquake', 40, 1)]);
+    const oneTarget = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, [obs('Earthquake', 45, 1)]);
     expect(oneTarget.physicalObservationCount).toBe(1);
     expect(oneTarget.contradictions.length).toBe(0);
   });
@@ -519,6 +529,14 @@ describe('computeYourMoveRanges', () => {
     const [, boostedHi] = parsePercentRange(boosted[0].percent);
     expect(boostedHi).toBeLessThan(unboostedHi);
   });
+
+  it("a known defender Status feeds the grid's own scan (Live Calc Player/Opponent Card Redesign) - Hex hits harder once the defender is marked statused", () => {
+    const healthy = computeYourMoveRanges(gen, LANDO_EARTHQUAKE, DEFENDER, BASE_INFERENCE, moveSlots('Hex'));
+    const burned = computeYourMoveRanges(gen, LANDO_EARTHQUAKE, { ...DEFENDER, status: 'brn' }, BASE_INFERENCE, moveSlots('Hex'));
+    const [, healthyHi] = parsePercentRange(healthy[0].percent);
+    const [, burnedHi] = parsePercentRange(burned[0].percent);
+    expect(burnedHi).toBeGreaterThan(healthyHi);
+  });
 });
 
 describe('computeTheirMoveRanges', () => {
@@ -560,5 +578,55 @@ describe('computeTheirMoveRanges', () => {
     const [narrowLo, narrowHi] = parsePercentRange(afterNarrowing[0].percent);
     expect(narrowLo).toBeGreaterThanOrEqual(baseLo);
     expect(narrowHi).toBeLessThanOrEqual(baseHi);
+  });
+
+  it("a known opponent Status feeds the grid's own scan (Live Calc Player/Opponent Card Redesign) - a burned opponent's own Power Whip (physical) hits softer, since burn halves the BURNED Pokémon's own Attack", () => {
+    const healthy = computeTheirMoveRanges(gen, LANDO_EARTHQUAKE, DEFENDER, BASE_INFERENCE, moveSlots('Power Whip'));
+    const burned = computeTheirMoveRanges(gen, LANDO_EARTHQUAKE, { ...DEFENDER, status: 'brn' }, BASE_INFERENCE, moveSlots('Power Whip'));
+    const [, healthyHi] = parsePercentRange(healthy[0].percent);
+    const [, burnedHi] = parsePercentRange(burned[0].percent);
+    expect(burnedHi).toBeLessThan(healthyHi);
+  });
+});
+
+describe('computeDefenderTotalRanges', () => {
+  it('returns null until a defender species is picked', () => {
+    expect(computeDefenderTotalRanges(gen, { ...DEFENDER, species: '' }, BASE_INFERENCE)).toBeNull();
+  });
+
+  it("HP always spans the full 0-32 SP range (no HP-based observation mechanism - Live Calc Player/Opponent Card Redesign) regardless of how far other stats have narrowed", () => {
+    const result = computeDefenderTotalRanges(gen, DEFENDER, BASE_INFERENCE)!;
+    const atSp0 = computeDefenderTotalRanges(gen, DEFENDER, { ...BASE_INFERENCE, defBound: { min: 10, max: 10 } })!;
+    expect(result.hp.max).toBeGreaterThan(result.hp.min);
+    expect(atSp0.hp).toEqual(result.hp); // narrowing another stat never touches HP's own span
+  });
+
+  it('every non-HP stat spans the -10%/+10% nature extremes while nature is unknown', () => {
+    const result = computeDefenderTotalRanges(gen, DEFENDER, BASE_INFERENCE)!;
+    // At the same (full 0-32) SP bound, an unknown nature's span must be
+    // strictly wider than either single real nature's own single-value span
+    // would be - min uses the stat's lowering nature, max its boosting one.
+    expect(result.def.max).toBeGreaterThan(result.def.min);
+  });
+
+  it('collapses to one real nature multiplier for both endpoints once knownNature is set, narrowing the span', () => {
+    const unknown = computeDefenderTotalRanges(gen, DEFENDER, BASE_INFERENCE)!;
+    const known = computeDefenderTotalRanges(gen, { ...DEFENDER, knownNature: 'Hardy' }, BASE_INFERENCE)!;
+    // Hardy is neutral for Def, so its known-nature span should be narrower
+    // than (or equal to, at the SP-bound edges) the unknown-nature span that
+    // also has to account for a -10%/+10% swing on top of the same SP bound.
+    expect(known.def.max - known.def.min).toBeLessThanOrEqual(unknown.def.max - unknown.def.min);
+  });
+
+  it('a known stage boost multiplies both Total endpoints for that stat, same formula as computeBoostedStats()', () => {
+    const unboosted = computeDefenderTotalRanges(gen, DEFENDER, BASE_INFERENCE)!;
+    const boosted = computeDefenderTotalRanges(gen, { ...DEFENDER, defBoost: 2 }, BASE_INFERENCE)!;
+    expect(boosted.def.min).toBeGreaterThan(unboosted.def.min);
+    expect(boosted.def.max).toBeGreaterThan(unboosted.def.max);
+  });
+
+  it('narrows to a single value once the SP bound itself is fully narrowed to one value and nature is known', () => {
+    const result = computeDefenderTotalRanges(gen, { ...DEFENDER, knownNature: 'Hardy' }, { ...BASE_INFERENCE, defBound: { min: 20, max: 20 } })!;
+    expect(result.def.min).toBe(result.def.max);
   });
 });

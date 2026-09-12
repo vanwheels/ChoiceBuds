@@ -53,6 +53,7 @@ export {
   WEATHER_OPTIONS,
   TERRAIN_OPTIONS,
   STATUS_OPTIONS,
+  STATUS_LABELS,
   GENDER_OPTIONS,
 } from '../utils/damageCalcEngine';
 export type {

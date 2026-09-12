@@ -74,16 +74,17 @@ export default function LiveCalcPage({
     speciesOptions, itemOptions, abilityOptions, natureOptions,
     attackerFormes, attackerBaseStats, attackerBoostedStats, attackerNatureEffect, attackerMoveOptions,
     defenderMoveOptions,
-    defenderSpecies, defenderLevel, setDefenderSpecies, setDefenderLevel, defenderFormes, defenderBaseStats,
+    defenderSpecies, defenderLevel, setDefenderSpecies, defenderFormes, defenderBaseStats,
     defenderAtkBoost, defenderDefBoost, defenderSpaBoost, defenderSpdBoost, defenderSpeBoost,
     setDefenderAtkBoost, setDefenderDefBoost, setDefenderSpaBoost, setDefenderSpdBoost, setDefenderSpeBoost,
     defenderAbilityOptions, defenderKnownAbility, setDefenderKnownAbility,
     defenderKnownItem, setDefenderKnownItem, defenderKnownNature, setDefenderKnownNature,
+    defenderStatus, setDefenderStatus,
     observations, addObservation, updateObservation, removeObservation,
     turnOrderObservations, addTurnOrderObservation, updateTurnOrderObservation, removeTurnOrderObservation,
     reverseObservations, addReverseObservation, updateReverseObservation, removeReverseObservation,
     inference,
-    setAttackerMove, defenderMoves, setDefenderMove, yourMoveRanges, theirMoveRanges,
+    setAttackerMove, defenderMoves, setDefenderMove, yourMoveRanges, theirMoveRanges, defenderTotalRanges,
   } = liveCalcState;
 
   return (
@@ -147,8 +148,8 @@ export default function LiveCalcPage({
           knownAbility={defenderKnownAbility}
           knownItem={defenderKnownItem}
           knownNature={defenderKnownNature}
+          status={defenderStatus}
           onChangeSpecies={setDefenderSpecies}
-          onChangeLevel={setDefenderLevel}
           onChangeAtkBoost={setDefenderAtkBoost}
           onChangeDefBoost={setDefenderDefBoost}
           onChangeSpaBoost={setDefenderSpaBoost}
@@ -157,7 +158,9 @@ export default function LiveCalcPage({
           onChangeKnownAbility={setDefenderKnownAbility}
           onChangeKnownItem={setDefenderKnownItem}
           onChangeKnownNature={setDefenderKnownNature}
+          onChangeStatus={setDefenderStatus}
           inference={inference}
+          totalRanges={defenderTotalRanges}
           liveCalcThreatPinsState={liveCalcThreatPinsState}
         />
         <LiveCalcObservationList
