@@ -27,11 +27,21 @@
  * independently (not jointly), a true defender state that combines TWO
  * non-default axes at once (e.g. a Def-boosting nature AND a Def-relevant
  * berry together) can look infeasible on either axis alone even though the
- * combination would explain the observation - this can produce a false
- * "contradicts prior observations" verdict in that specific edge case. This
- * is the tradeoff Vanny's scope doc calls out as acceptable for a v1
- * starting point; the eventual hybrid brute-force pass (once the SP/
- * candidate ranges are already narrowed) is what would close this gap.
+ * combination would explain the observation. This is the tradeoff Vanny's
+ * scope doc calls out as acceptable for a v1 starting point; the eventual
+ * hybrid brute-force pass (once the SP/candidate ranges are already
+ * narrowed) is what would close this gap entirely.
+ * Live Calc Feedback Pass 2 - Leg 2 fixed the part of this approximation that
+ * was an outright bug rather than an accepted tradeoff: an observation used
+ * to be rejected as a full contradiction (and its accepted axes wiped back
+ * to nothing) whenever ANY ONE of the three axes came back empty in
+ * isolation, even if another axis independently proved the observation WAS
+ * explainable. `inferDefenderStats()`/`inferOpponentOffensiveStats()` now
+ * only reject outright when NONE of the three axes found anything on their
+ * own, and only narrow an axis's own candidate list using the axes that
+ * actually produced a result - the genuinely-unresolvable "combines two
+ * non-default axes" case above (nothing works alone) is the only remaining
+ * false-contradiction shape.
  *
  * ## Other v1 approximations (all flagged in the scope doc as Leg 1's own
  * design details to settle, or as stated assumptions):
@@ -118,6 +128,7 @@ import { getChampionsCalcMoveOverride } from '../config/championsMoveOverrides';
 import { getChampionsAbilityDamageEffect } from '../config/championsAbilityDamageEffects';
 import { normalizeNameForAPI } from '../services/pokeapiService';
 import { LIVE_CALC_DEFENSIVE_ITEMS } from '../config/liveCalcDefensiveItems';
+import { LIVE_CALC_OFFENSIVE_ITEMS } from '../config/liveCalcOffensiveItems';
 import { getMegaAbility } from '../config/megaAbilities';
 import { MAX_IVS, spsToEvs, resolveCalcSpecies } from './championsStats';
 import { buildPokemon, type CalcPokemonState, type CalcMoveSlot } from './damageCalcEngine';
@@ -242,15 +253,6 @@ function dedupeStrings(values: (string | undefined)[]): string[] {
   return [...new Set(values.filter((v): v is string => !!v))];
 }
 
-/** "a", "a and b", "a, b, and c" - used to list which axis/axes an
- * observation contradicted, for `inferDefenderStats()`'s own diagnostic
- * contradiction message (Live Calc Result Clarity Pass). */
-function joinWithAnd(items: string[]): string {
-  if (items.length <= 1) return items[0] ?? '';
-  if (items.length === 2) return `${items[0]} and ${items[1]}`;
-  return `${items.slice(0, -1).join(', ')}, and ${items[items.length - 1]}`;
-}
-
 /** Exported for Live Calc Results Display (Leg 3): the UI needs this same
  * "everything still possible" baseline to compute how much an observation
  * has actually narrowed things (e.g. "3 of 11 abilities remain"), not just
@@ -274,7 +276,11 @@ export function defaultInference(gen: Generation, species: string): LiveCalcInfe
     speedBound: { min: SP_MIN, max: SP_MAX },
     natureCandidates: [...gen.natures].map(n => n.name) as NatureName[],
     abilityCandidates: megaAbility ? [megaAbility] : dedupeStrings(Object.values(speciesData?.abilities ?? {})),
-    itemCandidates: [NO_ITEM, ...LIVE_CALC_DEFENSIVE_ITEMS],
+    // Live Calc Feedback Pass 2 - Leg 2: this single shared axis is scanned
+    // from BOTH directions (the defender taking damage AND the opponent
+    // dealing it - see `liveCalcOffensiveItems.ts`'s own header for why they
+    // must be unioned rather than picking one list per call site.
+    itemCandidates: dedupeStrings([NO_ITEM, ...LIVE_CALC_DEFENSIVE_ITEMS, ...LIVE_CALC_OFFENSIVE_ITEMS]),
     physicalObservationCount: 0,
     specialObservationCount: 0,
     theirPhysicalObservationCount: 0,
@@ -473,24 +479,33 @@ export function inferDefenderStats(
     const feasibleAbilities = abilityResults.filter(r => r.bound !== null);
     const feasibleItems = itemResults.filter(r => r.bound !== null);
 
-    if (feasibleNatures.length === 0 || feasibleAbilities.length === 0 || feasibleItems.length === 0) {
+    // Live Calc Feedback Pass 2 - Leg 2: this used to require ALL THREE axes
+    // to independently explain the observation (holding the other two at
+    // neutral) before accepting it at all - but that's stricter than the
+    // "per-axis, union across axes" method this file's header actually
+    // describes. An axis coming back empty only means "this observation
+    // needs help from a non-default value on another axis to explain it",
+    // which is exactly the documented axes-scanned-independently
+    // approximation, not proof the true value is impossible - the real bug
+    // this fixes: e.g. a hit whose damage only makes sense with a specific
+    // nature isn't a contradiction just because ability/item ALONE (with
+    // nature held at Hardy) can't also reach it. Only reject outright when
+    // NONE of the three axes found anything, i.e. even one non-default value
+    // at a time can't get there.
+    if (feasibleNatures.length === 0 && feasibleAbilities.length === 0 && feasibleItems.length === 0) {
       const statLabel = relevantStat === 'def' ? 'Defense' : 'Sp. Def';
       // A locked ability is applied as every other axis's own fixed default
-      // (see the comment above), so if IT'S the one with zero feasible
-      // options, nature/item usually come back empty too - naming the lock
-      // itself is the actionable diagnosis in that case, not "nature, ability,
-      // and item all failed" (misleadingly implying three independent causes).
-      if (knownAbility && feasibleAbilities.length === 0) {
+      // (see the comment above), so if the lock itself is what's breaking
+      // every axis, naming it is the actionable diagnosis, not "nature,
+      // ability, and item all failed" (misleadingly implying three
+      // independent causes).
+      if (knownAbility) {
         inference.contradictions.push(
           `"${obs.moveName}" (${obs.damagePercent}%) doesn't fit the locked ability (${knownAbility}) at any ${statLabel} SP value - check the Known Ability lock or this observation.`
         );
       } else {
-        const failingAxes: string[] = [];
-        if (feasibleNatures.length === 0) failingAxes.push('nature');
-        if (feasibleAbilities.length === 0) failingAxes.push('ability');
-        if (feasibleItems.length === 0) failingAxes.push('item');
         inference.contradictions.push(
-          `"${obs.moveName}" (${obs.damagePercent}%) doesn't fit any ${statLabel} SP value under the narrowed ${joinWithAnd(failingAxes)} candidates - observation ignored.`
+          `"${obs.moveName}" (${obs.damagePercent}%) doesn't fit any ${statLabel} SP value under the narrowed nature, ability, or item candidates - observation ignored.`
         );
       }
       continue;
@@ -512,9 +527,14 @@ export function inferDefenderStats(
       inference.spdBound = newBound;
       inference.specialObservationCount++;
     }
-    inference.natureCandidates = feasibleNatures.map(r => r.value);
-    inference.abilityCandidates = feasibleAbilities.map(r => r.value);
-    inference.itemCandidates = feasibleItems.map(r => r.value);
+    // Only narrow an axis's candidate list using THIS observation's results
+    // when that axis alone found at least one feasible candidate - an axis
+    // that came back empty didn't prove every one of its candidates
+    // impossible (see the comment above), so leave it as the prior
+    // observations left it rather than wiping it to nothing.
+    if (feasibleNatures.length > 0) inference.natureCandidates = feasibleNatures.map(r => r.value);
+    if (feasibleAbilities.length > 0) inference.abilityCandidates = feasibleAbilities.map(r => r.value);
+    if (feasibleItems.length > 0) inference.itemCandidates = feasibleItems.map(r => r.value);
   }
 
   return inference;
@@ -711,19 +731,20 @@ export function inferOpponentOffensiveStats(
     const feasibleAbilities = abilityResults.filter(r => r.bound !== null);
     const feasibleItems = itemResults.filter(r => r.bound !== null);
 
-    if (feasibleNatures.length === 0 || feasibleAbilities.length === 0 || feasibleItems.length === 0) {
+    // Live Calc Feedback Pass 2 - Leg 2: same fix as `inferDefenderStats()` -
+    // an axis coming back empty only means this observation needs help from
+    // a non-default value on another axis, not that every candidate on that
+    // axis is impossible. Only reject outright when NONE of the three axes
+    // found anything on their own.
+    if (feasibleNatures.length === 0 && feasibleAbilities.length === 0 && feasibleItems.length === 0) {
       const statLabel = relevantStat === 'atk' ? 'Attack' : 'Sp. Atk';
-      if (knownAbility && feasibleAbilities.length === 0) {
+      if (knownAbility) {
         result.contradictions.push(
           `"${obs.moveName}" (${obs.damagePercent}%) doesn't fit the locked ability (${knownAbility}) at any ${statLabel} SP value - check the Known Ability lock or this observation.`
         );
       } else {
-        const failingAxes: string[] = [];
-        if (feasibleNatures.length === 0) failingAxes.push('nature');
-        if (feasibleAbilities.length === 0) failingAxes.push('ability');
-        if (feasibleItems.length === 0) failingAxes.push('item');
         result.contradictions.push(
-          `"${obs.moveName}" (${obs.damagePercent}%) doesn't fit any ${statLabel} SP value under the narrowed ${joinWithAnd(failingAxes)} candidates - observation ignored.`
+          `"${obs.moveName}" (${obs.damagePercent}%) doesn't fit any ${statLabel} SP value under the narrowed nature, ability, or item candidates - observation ignored.`
         );
       }
       continue;
@@ -745,9 +766,11 @@ export function inferOpponentOffensiveStats(
       result.spaBound = newBound;
       result.theirSpecialObservationCount++;
     }
-    result.natureCandidates = feasibleNatures.map(r => r.value);
-    result.abilityCandidates = feasibleAbilities.map(r => r.value);
-    result.itemCandidates = feasibleItems.map(r => r.value);
+    // Only narrow an axis using this observation when it alone found a
+    // feasible candidate - see `inferDefenderStats()`'s matching comment.
+    if (feasibleNatures.length > 0) result.natureCandidates = feasibleNatures.map(r => r.value);
+    if (feasibleAbilities.length > 0) result.abilityCandidates = feasibleAbilities.map(r => r.value);
+    if (feasibleItems.length > 0) result.itemCandidates = feasibleItems.map(r => r.value);
   }
 
   return result;

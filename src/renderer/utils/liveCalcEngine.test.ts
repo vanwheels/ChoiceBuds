@@ -70,6 +70,12 @@ describe('inferDefenderStats - no/invalid input', () => {
     expect(result.itemCandidates.length).toBeGreaterThan(1);
   });
 
+  it('seeds itemCandidates from BOTH the defensive and offensive curated lists - Live Calc Feedback Pass 2, Leg 2 (the shared axis is scanned from both the defender-taking-damage and opponent-dealing-damage directions)', () => {
+    const result = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, []);
+    expect(result.itemCandidates).toContain('Chople Berry'); // defensive: Fighting-resist berry
+    expect(result.itemCandidates).toContain('Life Orb'); // offensive: flat damage-dealt boost
+  });
+
   it("seeds ability candidates from the defender species' own real ability pool", () => {
     const result = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, []);
     const realAbilities = Object.values(gen.species.get('ferrothorn' as never)?.abilities ?? {});
@@ -147,7 +153,7 @@ describe('inferDefenderStats - graceful degradation', () => {
 
   it('names the failing axes in the contradiction message (Live Calc Result Clarity Pass), not a generic "ignored"', () => {
     const result = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, [obs('Earthquake', 99999)]);
-    expect(result.contradictions[0]).toMatch(/doesn't fit any Defense SP value under the narrowed nature, ability, and item candidates/);
+    expect(result.contradictions[0]).toMatch(/doesn't fit any Defense SP value under the narrowed nature, ability, or item candidates/);
   });
 
   it('skips a Status move observation with a recorded contradiction rather than crashing', () => {
@@ -191,11 +197,12 @@ describe('inferDefenderStats - known Def/Sp. Def stage boosts', () => {
 
 describe('inferDefenderStats - isCrit', () => {
   it('a damage% unreachable normally becomes feasible once isCrit is set, and vice versa', () => {
-    // Earthquake vs. this defender: 50% is above the non-crit range's max but
-    // within the crit-boosted range - directly exercises that `isCrit`
-    // actually reaches `Move`'s own crit multiplier rather than being ignored.
-    const nonCrit = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, [obs('Earthquake', 50, 1, { isCrit: false })]);
-    const crit = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, [obs('Earthquake', 50, 1, { isCrit: true })]);
+    // Earthquake vs. this defender: 55% is above what even the best Def
+    // nature/ability/item combo can reach non-crit, but within the
+    // crit-boosted range - directly exercises that `isCrit` actually reaches
+    // `Move`'s own crit multiplier rather than being ignored.
+    const nonCrit = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, [obs('Earthquake', 55, 1, { isCrit: false })]);
+    const crit = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, [obs('Earthquake', 55, 1, { isCrit: true })]);
     expect(nonCrit.contradictions.length).toBe(1);
     expect(nonCrit.physicalObservationCount).toBe(0);
     expect(crit.contradictions.length).toBe(0);
@@ -368,6 +375,28 @@ describe('inferOpponentOffensiveStats - graceful degradation', () => {
     const result = inferOpponentOffensiveStats(gen, LANDO_EARTHQUAKE, DEFENDER, BASE_INFERENCE, [reverseObs('Not A Real Move', 40)]);
     expect(result.contradictions.length).toBe(1);
     expect(result.theirPhysicalObservationCount).toBe(0);
+  });
+});
+
+describe('inferOpponentOffensiveStats - offensive item candidates (Live Calc Feedback Pass 2, Leg 2)', () => {
+  // Regression for the reported bug: a reverse observation whose damage%
+  // can only be explained by a real damage-BOOSTING item (Life Orb, a
+  // type-boost item, etc.) used to be rejected outright as "doesn't fit any
+  // SP value", because the shared itemCandidates pool was seeded only from
+  // `liveCalcDefensiveItems.ts`'s damage-TAKEN list - a genuinely feasible
+  // Attack/Sp. Atk value existed, but no candidate item in the pool could
+  // ever reach it. See `liveCalcOffensiveItems.ts`'s own header.
+  it('a hit above the no-item damage ceiling still narrows atkBound instead of contradicting, once a Life Orb candidate exists', () => {
+    const known = attackerState({ species: 'Registeel', level: 50 });
+    const opponent = { species: 'Absol', level: 50, defBoost: 0, spdBoost: 0, atkBoost: 0, spaBoost: 0, speBoost: 0 };
+    const base = defaultInference(gen, opponent.species);
+    // 42% is above the ~36.7% ceiling the best nature/no-item Night Slash can
+    // reach against Registeel at max Atk SP - only reachable with an
+    // offense-boosting item (Life Orb) in the candidate pool.
+    const result = inferOpponentOffensiveStats(gen, known, opponent, base, [reverseObs('Night Slash', 42, 1)]);
+    expect(result.contradictions).toEqual([]);
+    expect(result.theirPhysicalObservationCount).toBe(1);
+    expect(result.itemCandidates).toContain('Life Orb');
   });
 });
 
