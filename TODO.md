@@ -35,6 +35,32 @@ auto-populate, doubles support) left underneath it. No further legs are
 scoped right now; the milestone stays open per Vanny's explicit call rather
 than being closed out here.
 
+- **[Live Calc Feedback Pass 2] — Leg 2** *(Last touched: 2026-09-11 ·
+  Re-checks: 0)*
+  Inference-engine bug, kept separate from Leg 1's quick fixes since it's
+  logic in the narrowing engine itself, not an isolated UI/data fix. Stat-SP
+  narrowing wrongly ignores observations that should fit - e.g. "Night
+  Slash" (20%) flagged as "doesn't fit any Attack SP value under the
+  narrowed nature/ability/item candidates" when a valid Attack SP clearly
+  exists for the opposing Absol.
+
+- **[Live Calc Feedback Pass 2] — Leg 3** *(Last touched: 2026-09-11 ·
+  Re-checks: 0)*
+  Layout restructuring, grouping the two items that touch panel structure
+  together. Fold the "Inferred Defender" bar-chart section into the
+  Opponent panel itself (`LiveCalcDefenderPanel.tsx`) - show narrowed
+  SP/nature ranges inline there instead of as its own section - and use
+  that pass to also finally make the Attacker and Opponent panel layouts
+  visually mirror each other, carried over unresolved from a prior
+  feedback pass.
+
+- **[Live Calc Feedback Pass 2] — Leg 4** *(Last touched: 2026-09-11 ·
+  Re-checks: 0)*
+  Feature-parity gap, sequenced last since it's additive scope rather than
+  a fix. Live Calc still doesn't mirror the regular Calc page's fields per
+  Vanny's earlier explicit ask - no way to set the opponent's status
+  condition.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something

@@ -18,6 +18,16 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Live Calc Feedback Pass 2] - Leg 1** (2026-09-11) - see commit
+  `da652d1`. Three isolated bugs from fresh feedback after the milestone's 3
+  scoped legs shipped: reverse observations weren't auto-filling their move
+  into the "Theirs -> You" grid, observation/turn-order rows overflowed
+  their container instead of wrapping, and Mega ability sourcing (both the
+  opponent panel's auto-fill and its ability-candidate list) read
+  @smogon/calc's own stale bundled data instead of the already-corrected
+  `config/megaAbilities.ts` - most visibly wrong for the 3 Reg M-C "Mega Z"
+  forms.
+
 - **[Live Calc Page Layout & Function Rework] - Leg 3** (2026-09-11) - see
   commit `2d910bc`. Layout & Live Range Grid Rework - the milestone's last
   leg. Reorganized `LiveCalcPage` to mirror `CalcPage`'s structure (two move
