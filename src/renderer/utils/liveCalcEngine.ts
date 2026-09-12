@@ -82,6 +82,34 @@
  *   simpler-model call for this axis, not an oversight - it won't correctly
  *   model a defender whose Def/SpD boost changes partway through the
  *   observation list.
+ * - Live Calc Page Layout & Function Rework (Leg 1, Bidirectional Inference
+ *   Engine): the known-fact-lock pattern above generalizes from ability-only
+ *   to all three scanned axes - `LiveCalcDefenderInput.knownItem`/
+ *   `knownNature` hard-lock the item/nature axes the same way `knownAbility`
+ *   already did, and become the OTHER two axes' own neutral scan default in
+ *   place of "no item"/`Hardy` once set (mirroring how a locked ability
+ *   already became the nature/item axes' own default). The static boost
+ *   input also grows from Def/SpD-only to all five combat stats (`atkBoost`/
+ *   `spaBoost`/`speBoost` alongside the existing `defBoost`/`spdBoost`) -
+ *   the same opponent Pokémon's own stat stages (a seen Swords Dance/Dragon
+ *   Dance) affect damage it DEALS the same as damage it takes, which matters
+ *   now that `inferOpponentOffensiveStats()` (below) models that direction
+ *   too. That function is the actual mirror of `inferDefenderStats()`: it
+ *   infers the opponent's Atk/SpA Stat Points from "their move did X% to
+ *   you" observations (`LiveCalcReverseObservation`) against the one
+ *   fully-known Pokémon (now playing the DEFENDER role for this direction),
+ *   reusing the exact same per-axis heuristic-narrowing shape and the same
+ *   running `LiveCalcInference` - it further narrows whatever nature/
+ *   ability/item candidates `inferDefenderStats()`/`inferDefenderSpeed()`
+ *   already narrowed, same layering relationship Speed's own engine already
+ *   has to this one, rather than producing a second, disconnected inference
+ *   result. There is still exactly one unknown Pokémon in singles, just
+ *   narrowed from two directions of combat evidence now instead of one.
+ *   Contact-damage-taken ability effects (Aura Guard etc.) flip sides
+ *   accordingly: the forward direction reads the effect off the scanned
+ *   defender candidate, this direction reads it off the known Pokémon's own
+ *   real (fixed) ability instead, since the known Pokémon is the one taking
+ *   the hit in this direction.
  */
 
 import { calculate, Pokemon, Move, Field, toID } from '@smogon/calc';
@@ -131,11 +159,14 @@ export interface LiveCalcObservation {
 export interface LiveCalcDefenderInput {
   species: string;
   level: number;
-  /** Known Def/Sp. Def stage boosts (-6..+6, default 0) - see this file's
-   * header for why this is one static value rather than a per-observation
-   * field like Speed's own `defenderSpeedStage`. */
+  /** Known stage boosts (-6..+6, default 0) for all five combat stats - see
+   * this file's header for why these are static values rather than a
+   * per-observation field like Speed's own `defenderSpeedStage`. */
   defBoost: number;
   spdBoost: number;
+  atkBoost: number;
+  spaBoost: number;
+  speBoost: number;
   /** A defender ability confirmed in-battle (an Intimidate trigger, an
    * ability-activation message, etc.) - Live Calc Known-Ability Lock: pins
    * the ability axis to this one value as a hard filter instead of scanning
@@ -145,6 +176,16 @@ export interface LiveCalcDefenderInput {
    * rather than assuming none. Undefined/empty means still unknown - the
    * pre-existing full-pool scan. */
   knownAbility?: string;
+  /** Same lock shape as `knownAbility`, for a held item confirmed in-battle
+   * (a Sitrus Berry heal, a Choice-item lock message, etc.) - pins the item
+   * axis and becomes the ability/nature axes' own neutral default (in place
+   * of "no item"). Undefined/empty means still unknown. */
+  knownItem?: string;
+  /** Same lock shape as `knownAbility`, for a nature confirmed via revealed
+   * stat experience or an explicit read - pins the nature axis and becomes
+   * the ability/item axes' own neutral default (in place of `Hardy`).
+   * Undefined/empty means still unknown. */
+  knownNature?: NatureName;
 }
 
 export interface LiveCalcStatBound {
@@ -157,6 +198,12 @@ export interface LiveCalcInference {
   defBound: LiveCalcStatBound;
   /** Special defensive Stat Points (0-32), narrowed by special-move observations only. */
   spdBound: LiveCalcStatBound;
+  /** Physical offensive Stat Points (0-32), narrowed by `inferOpponentOffensiveStats()`
+   * from "their move -> you" physical-move observations only. Untouched by
+   * `inferDefenderStats()` itself, same layering relationship `speedBound` has to it. */
+  atkBound: LiveCalcStatBound;
+  /** Special offensive Stat Points (0-32), same as `atkBound` but for special-move observations. */
+  spaBound: LiveCalcStatBound;
   /** Speed Stat Points (0-32). Untouched by this file - narrowed by
    * `utils/liveCalcSpeedEngine.ts::inferDefenderSpeed()` (Leg 15), which
    * takes this inference as input and returns an updated copy. Lives on
@@ -173,6 +220,14 @@ export interface LiveCalcInference {
   itemCandidates: string[];
   physicalObservationCount: number;
   specialObservationCount: number;
+  /** Same as physical/specialObservationCount but for the mirror "their move
+   * -> you" direction's own observations (see `atkBound`/`spaBound`'s own
+   * comments above) - kept as separate counts rather than merged into
+   * physical/specialObservationCount since those two only ever counted the
+   * original "your move -> them" direction and existing UI already reads
+   * them that way. */
+  theirPhysicalObservationCount: number;
+  theirSpecialObservationCount: number;
   /** Same as physical/specialObservationCount but for turn-order
    * observations - see `speedBound`'s own comment above. */
   speedObservationCount: number;
@@ -204,12 +259,16 @@ export function defaultInference(gen: Generation, species: string): LiveCalcInfe
   return {
     defBound: { min: SP_MIN, max: SP_MAX },
     spdBound: { min: SP_MIN, max: SP_MAX },
+    atkBound: { min: SP_MIN, max: SP_MAX },
+    spaBound: { min: SP_MIN, max: SP_MAX },
     speedBound: { min: SP_MIN, max: SP_MAX },
     natureCandidates: [...gen.natures].map(n => n.name) as NatureName[],
     abilityCandidates: dedupeStrings(Object.values(speciesData?.abilities ?? {})),
     itemCandidates: [NO_ITEM, ...LIVE_CALC_DEFENSIVE_ITEMS],
     physicalObservationCount: 0,
     specialObservationCount: 0,
+    theirPhysicalObservationCount: 0,
+    theirSpecialObservationCount: 0,
     speedObservationCount: 0,
     contradictions: [],
   };
@@ -330,10 +389,27 @@ export function inferDefenderStats(
     return inference;
   }
 
-  const defenderBoosts: StatsTable = { ...ZERO_SPS, def: defender.defBoost, spd: defender.spdBoost };
+  // Full five-stat boost table even though only def/spd are ever read while
+  // this Pokémon plays the defending role here - atk/spa/spe are inert on
+  // this side of calculate() but it's the same physical Pokémon's state, so
+  // one shared table (also passed to `inferOpponentOffensiveStats()` for the
+  // mirror direction, where atk/spa DO matter) beats keeping two partial ones in sync.
+  const defenderBoosts: StatsTable = {
+    ...ZERO_SPS,
+    atk: defender.atkBoost,
+    def: defender.defBoost,
+    spa: defender.spaBoost,
+    spd: defender.spdBoost,
+    spe: defender.speBoost,
+  };
 
   const knownAbility = defender.knownAbility || undefined;
+  const knownItem = defender.knownItem || undefined;
+  const knownNature = defender.knownNature || undefined;
   if (knownAbility) inference.abilityCandidates = [knownAbility];
+  if (knownItem) inference.itemCandidates = [knownItem];
+  if (knownNature) inference.natureCandidates = [knownNature];
+  const defaultNature: NatureName = knownNature ?? ('Hardy' as NatureName);
 
   for (const obs of observations) {
     const moveData = gen.moves.get(toID(obs.moveName));
@@ -369,18 +445,18 @@ export function inferDefenderStats(
     const scan = (candidate: DefenderCandidateSpec) =>
       feasibleSpRange(gen, attackerPokemon, move, field, defender.species, defender.level, relevantStat, candidate, obs.damagePercent, obs.outcome, isContactMove, defenderBoosts);
 
-    // Once the ability is known, it's the neutral default the OTHER axes
-    // scan against too (in place of "no ability") - see
-    // `LiveCalcDefenderInput.knownAbility`'s own comment for why. The
-    // ability axis itself collapses to a single locked candidate rather than
-    // the species' full pool.
-    const natureResults = inference.natureCandidates.map(nature => ({ value: nature, bound: scan({ nature, ability: knownAbility, item: undefined }) }));
+    // Once ability/item/nature are known, each becomes the neutral default
+    // the OTHER two axes scan against too (in place of "no ability"/"no
+    // item"/`Hardy`) - see `LiveCalcDefenderInput.knownAbility`'s own comment
+    // for why. A locked axis itself collapses to a single candidate (already
+    // done above) rather than its full pool/species pool.
+    const natureResults = inference.natureCandidates.map(nature => ({ value: nature, bound: scan({ nature, ability: knownAbility, item: knownItem }) }));
     const abilityResults = knownAbility
-      ? [{ value: knownAbility, bound: scan({ nature: 'Hardy' as NatureName, ability: knownAbility, item: undefined }) }]
-      : inference.abilityCandidates.map(ability => ({ value: ability, bound: scan({ nature: 'Hardy' as NatureName, ability, item: undefined }) }));
+      ? [{ value: knownAbility, bound: scan({ nature: defaultNature, ability: knownAbility, item: knownItem }) }]
+      : inference.abilityCandidates.map(ability => ({ value: ability, bound: scan({ nature: defaultNature, ability, item: knownItem }) }));
     const itemResults = inference.itemCandidates.map(item => ({
       value: item,
-      bound: scan({ nature: 'Hardy' as NatureName, ability: knownAbility, item: item === NO_ITEM ? undefined : item }),
+      bound: scan({ nature: defaultNature, ability: knownAbility, item: item === NO_ITEM ? undefined : item }),
     }));
 
     const feasibleNatures = natureResults.filter(r => r.bound !== null);
@@ -432,4 +508,237 @@ export function inferDefenderStats(
   }
 
   return inference;
+}
+
+/** Observation for the mirror "their move -> you" direction (Live Calc Page
+ * Layout & Function Rework - Leg 1): structurally identical to
+ * `LiveCalcObservation` (moveName/damagePercent/targetsHit/isCrit/outcome)
+ * but consumed by `inferOpponentOffensiveStats()` instead, where the
+ * opponent is the one attacking and `damagePercent` is a percent of the
+ * KNOWN Pokémon's own max HP, not the opponent's. Kept as its own named type
+ * rather than a plain alias so call sites stay unambiguous about which
+ * direction an observation belongs to. */
+export interface LiveCalcReverseObservation {
+  moveName: string;
+  damagePercent: number;
+  targetsHit: 1 | 2;
+  isCrit: boolean;
+  outcome: LiveCalcObservationOutcome;
+}
+
+/**
+ * Mirror of `feasibleSpRange()` for the reverse direction: the unknown
+ * opponent plays ATTACKER here (its candidate nature/ability/item and the
+ * scanned Atk/SpA SP value), the known Pokémon (`defenderPokemon`, already
+ * built once by the caller - its stats don't change per candidate/SP) plays
+ * DEFENDER. `contactMultiplier` is passed in already resolved from the known
+ * Pokémon's own real ability (see `inferOpponentOffensiveStats()`), unlike
+ * `feasibleSpRange()` which resolves it per-candidate since ITS defender is
+ * the unknown side. The Move itself still depends on the candidate's
+ * ability/item (an attacker-side move-power modifier like Technician), so
+ * it's rebuilt once per candidate here rather than once per observation.
+ */
+function feasibleOffensiveSpRange(
+  gen: Generation,
+  defenderPokemon: InstanceType<typeof Pokemon>,
+  field: InstanceType<typeof Field>,
+  moveName: string,
+  isCrit: boolean,
+  moveOverrides: ReturnType<typeof getChampionsCalcMoveOverride>,
+  opponentSpecies: string,
+  level: number,
+  relevantStat: 'atk' | 'spa',
+  candidate: DefenderCandidateSpec,
+  observedPercent: number,
+  outcome: LiveCalcObservationOutcome,
+  contactMultiplier: number,
+  opponentBoosts: StatsTable,
+  maxHP: number,
+): LiveCalcStatBound | null {
+  let move: InstanceType<typeof Move>;
+  try {
+    move = new Move(gen, moveName, {
+      ability: candidate.ability,
+      item: candidate.item,
+      species: opponentSpecies,
+      isCrit,
+      overrides: moveOverrides,
+    });
+  } catch {
+    return null;
+  }
+
+  let feasibleMin: number | null = null;
+  let feasibleMax: number | null = null;
+  for (let sp = SP_MIN; sp <= SP_MAX; sp++) {
+    const sps: StatsTable = { ...ZERO_SPS, hp: HP_SP_DEFAULT, [relevantStat]: sp };
+    try {
+      const attackerPokemon = new Pokemon(gen, resolveCalcSpecies(opponentSpecies), {
+        level,
+        nature: candidate.nature,
+        ability: candidate.ability,
+        item: candidate.item,
+        evs: spsToEvs(sps),
+        ivs: MAX_IVS,
+        boosts: opponentBoosts,
+      });
+      const result = calculate(gen, attackerPokemon, defenderPokemon, move, field);
+      const range = result.range();
+      const lo = ((range[0] / maxHP) * 100) * contactMultiplier;
+      const hi = ((range[1] / maxHP) * 100) * contactMultiplier;
+      const feasible = outcome === 'fainted'
+        ? hi + PERCENT_TOLERANCE >= observedPercent
+        : observedPercent >= lo - PERCENT_TOLERANCE && observedPercent <= hi + PERCENT_TOLERANCE;
+      if (feasible) {
+        feasibleMin = feasibleMin === null ? sp : Math.min(feasibleMin, sp);
+        feasibleMax = feasibleMax === null ? sp : Math.max(feasibleMax, sp);
+      }
+    } catch {
+      continue; // an invalid/blocked combo at this SP value just isn't feasible - not a hard failure
+    }
+  }
+  return feasibleMin === null ? null : { min: feasibleMin, max: feasibleMax! };
+}
+
+/**
+ * Narrows the opponent's unknown Atk/SpA Stat Points (and further trims
+ * whatever nature/ability/item candidates are already running) from a list
+ * of "their move -> you" observations against the one fully-known Pokémon -
+ * the actual mirror of `inferDefenderStats()`, same file-header design this
+ * shares with `liveCalcSpeedEngine.ts`'s own Speed pass: takes the inference
+ * already produced upstream and returns an updated copy, touching only
+ * atkBound/spaBound/theirPhysicalObservationCount/
+ * theirSpecialObservationCount plus whatever narrowing falls out of the
+ * shared nature/ability/item axes - never defBound/spdBound/speedBound,
+ * which belong to the other two passes. Locks (`knownAbility`/`knownItem`/
+ * `knownNature`) are re-applied defensively at the top rather than assumed
+ * already-collapsed by an earlier pass, so this function stays correct on
+ * its own (e.g. in isolation in a test) regardless of call order.
+ */
+export function inferOpponentOffensiveStats(
+  gen: Generation,
+  knownPokemon: CalcPokemonState,
+  opponent: LiveCalcDefenderInput,
+  inference: LiveCalcInference,
+  observations: LiveCalcReverseObservation[],
+): LiveCalcInference {
+  const result: LiveCalcInference = { ...inference, contradictions: [...inference.contradictions] };
+  if (!knownPokemon.species || !opponent.species) return result;
+
+  let knownDefenderPokemon: InstanceType<typeof Pokemon>;
+  try {
+    knownDefenderPokemon = buildPokemon(gen, knownPokemon);
+  } catch {
+    result.contradictions.push('Your Pokémon could not be built - check its species/stats.');
+    return result;
+  }
+  const maxHP = knownDefenderPokemon.maxHP();
+  if (maxHP <= 0) return result;
+
+  const opponentBoosts: StatsTable = {
+    ...ZERO_SPS,
+    atk: opponent.atkBoost,
+    def: opponent.defBoost,
+    spa: opponent.spaBoost,
+    spd: opponent.spdBoost,
+    spe: opponent.speBoost,
+  };
+
+  const knownAbility = opponent.knownAbility || undefined;
+  const knownItem = opponent.knownItem || undefined;
+  const knownNature = opponent.knownNature || undefined;
+  if (knownAbility) result.abilityCandidates = [knownAbility];
+  if (knownItem) result.itemCandidates = [knownItem];
+  if (knownNature) result.natureCandidates = [knownNature];
+  const defaultNature: NatureName = knownNature ?? ('Hardy' as NatureName);
+
+  // Unlike `feasibleSpRange()` (where the scanned candidate plays defender),
+  // the known Pokémon is the one taking the hit in this direction, so its
+  // OWN real, fixed ability is what a Champions-invented contact-damage
+  // effect (Aura Guard etc.) reads off - resolved once here, not per candidate.
+  const knownAbilityEffect = knownPokemon.ability ? getChampionsAbilityDamageEffect(normalizeNameForAPI(knownPokemon.ability)) : undefined;
+
+  for (const obs of observations) {
+    const moveData = gen.moves.get(toID(obs.moveName));
+    if (!moveData || moveData.category === 'Status') {
+      result.contradictions.push(`"${obs.moveName}" isn't a usable damaging move - observation skipped.`);
+      continue;
+    }
+    if (moveData.multihit !== undefined) {
+      result.contradictions.push(`"${obs.moveName}" is a multi-hit move - not modeled in v1, observation skipped.`);
+      continue;
+    }
+
+    const relevantStat: 'atk' | 'spa' = moveData.category === 'Physical' ? 'atk' : 'spa';
+    const isSpreadMove = ['allAdjacent', 'allAdjacentFoes'].includes(moveData.target ?? '');
+    const effectiveGameType: GameType = isSpreadMove && obs.targetsHit === 1 ? 'Singles' : 'Doubles';
+    const isContactMove = !!moveData.flags?.contact;
+    const contactMultiplier = isContactMove && knownAbilityEffect?.contactDamageTakenMultiplier != null ? knownAbilityEffect.contactDamageTakenMultiplier : 1;
+    const moveOverrides = getChampionsCalcMoveOverride(obs.moveName);
+
+    try {
+      // Validates the move name/species combo builds at all before scanning any candidate.
+      new Move(gen, obs.moveName, { species: opponent.species, isCrit: obs.isCrit, overrides: moveOverrides });
+    } catch {
+      result.contradictions.push(`Could not build move "${obs.moveName}" - observation skipped.`);
+      continue;
+    }
+    const field = new Field({ gameType: effectiveGameType });
+
+    const scan = (candidate: DefenderCandidateSpec) =>
+      feasibleOffensiveSpRange(gen, knownDefenderPokemon, field, obs.moveName, obs.isCrit, moveOverrides, opponent.species, opponent.level, relevantStat, candidate, obs.damagePercent, obs.outcome, contactMultiplier, opponentBoosts, maxHP);
+
+    const natureResults = result.natureCandidates.map(nature => ({ value: nature, bound: scan({ nature, ability: knownAbility, item: knownItem }) }));
+    const abilityResults = knownAbility
+      ? [{ value: knownAbility, bound: scan({ nature: defaultNature, ability: knownAbility, item: knownItem }) }]
+      : result.abilityCandidates.map(ability => ({ value: ability, bound: scan({ nature: defaultNature, ability, item: knownItem }) }));
+    const itemResults = result.itemCandidates.map(item => ({
+      value: item,
+      bound: scan({ nature: defaultNature, ability: knownAbility, item: item === NO_ITEM ? undefined : item }),
+    }));
+
+    const feasibleNatures = natureResults.filter(r => r.bound !== null);
+    const feasibleAbilities = abilityResults.filter(r => r.bound !== null);
+    const feasibleItems = itemResults.filter(r => r.bound !== null);
+
+    if (feasibleNatures.length === 0 || feasibleAbilities.length === 0 || feasibleItems.length === 0) {
+      const statLabel = relevantStat === 'atk' ? 'Attack' : 'Sp. Atk';
+      if (knownAbility && feasibleAbilities.length === 0) {
+        result.contradictions.push(
+          `"${obs.moveName}" (${obs.damagePercent}%) doesn't fit the locked ability (${knownAbility}) at any ${statLabel} SP value - check the Known Ability lock or this observation.`
+        );
+      } else {
+        const failingAxes: string[] = [];
+        if (feasibleNatures.length === 0) failingAxes.push('nature');
+        if (feasibleAbilities.length === 0) failingAxes.push('ability');
+        if (feasibleItems.length === 0) failingAxes.push('item');
+        result.contradictions.push(
+          `"${obs.moveName}" (${obs.damagePercent}%) doesn't fit any ${statLabel} SP value under the narrowed ${joinWithAnd(failingAxes)} candidates - observation ignored.`
+        );
+      }
+      continue;
+    }
+
+    const observationBound = unionBounds([...feasibleNatures, ...feasibleAbilities, ...feasibleItems].map(r => r.bound));
+    const prevBound = relevantStat === 'atk' ? result.atkBound : result.spaBound;
+    const newBound = observationBound ? intersectBounds(prevBound, observationBound) : null;
+    if (!newBound) {
+      const statLabel = relevantStat === 'atk' ? 'Attack' : 'Sp. Atk';
+      result.contradictions.push(`"${obs.moveName}" (${obs.damagePercent}%) contradicts earlier ${statLabel} observations - ignored.`);
+      continue;
+    }
+
+    if (relevantStat === 'atk') {
+      result.atkBound = newBound;
+      result.theirPhysicalObservationCount++;
+    } else {
+      result.spaBound = newBound;
+      result.theirSpecialObservationCount++;
+    }
+    result.natureCandidates = feasibleNatures.map(r => r.value);
+    result.abilityCandidates = feasibleAbilities.map(r => r.value);
+    result.itemCandidates = feasibleItems.map(r => r.value);
+  }
+
+  return result;
 }

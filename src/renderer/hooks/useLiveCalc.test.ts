@@ -200,6 +200,80 @@ describe('useLiveCalc', () => {
     expect(result.current.defenderKnownAbility).toBe('');
   });
 
+  it('setDefenderAtkBoost/SpaBoost/SpeBoost update independently, and reset back to 0 when the defender species changes', () => {
+    const { result } = setup();
+    act(() => result.current.setDefenderSpecies('Garchomp'));
+
+    act(() => {
+      result.current.setDefenderAtkBoost(2);
+      result.current.setDefenderSpaBoost(-1);
+      result.current.setDefenderSpeBoost(3);
+    });
+    expect(result.current.defenderAtkBoost).toBe(2);
+    expect(result.current.defenderSpaBoost).toBe(-1);
+    expect(result.current.defenderSpeBoost).toBe(3);
+
+    act(() => result.current.setDefenderSpecies('Ferrothorn'));
+    expect(result.current.defenderAtkBoost).toBe(0);
+    expect(result.current.defenderSpaBoost).toBe(0);
+    expect(result.current.defenderSpeBoost).toBe(0);
+  });
+
+  it('setDefenderKnownItem/setDefenderKnownNature lock their axes, and reset back to unknown when the defender species changes', () => {
+    const { result } = setup();
+    act(() => {
+      result.current.setAttacker({ species: 'Gengar' });
+      result.current.setDefenderSpecies('Garchomp');
+    });
+
+    act(() => {
+      result.current.setDefenderKnownItem('Leftovers');
+      result.current.setDefenderKnownNature('Jolly');
+    });
+    expect(result.current.defenderKnownItem).toBe('Leftovers');
+    expect(result.current.defenderKnownNature).toBe('Jolly');
+    expect(result.current.inference.itemCandidates).toEqual(['Leftovers']);
+    expect(result.current.inference.natureCandidates).toEqual(['Jolly']);
+
+    act(() => result.current.setDefenderSpecies('Ferrothorn'));
+    expect(result.current.defenderKnownItem).toBe('');
+    expect(result.current.defenderKnownNature).toBe('');
+  });
+
+  it('addReverseObservation/updateReverseObservation/removeReverseObservation manage the mirror observation list independently of observations', () => {
+    const { result } = setup();
+
+    act(() => result.current.addReverseObservation());
+    act(() => result.current.addReverseObservation());
+    expect(result.current.reverseObservations).toHaveLength(2);
+    expect(result.current.observations).toHaveLength(0);
+    const [first, second] = result.current.reverseObservations;
+    expect(first.id).not.toBe(second.id);
+
+    act(() => result.current.updateReverseObservation(first.id, { moveName: 'Rock Tomb', damagePercent: 35 }));
+    expect(result.current.reverseObservations[0]).toMatchObject({ moveName: 'Rock Tomb', damagePercent: 35 });
+    expect(result.current.reverseObservations[1]).toEqual(second);
+
+    act(() => result.current.removeReverseObservation(first.id));
+    expect(result.current.reverseObservations).toEqual([second]);
+  });
+
+  it("flows a real reverse observation end-to-end into inferOpponentOffensiveStats(), narrowing atkBound", () => {
+    const { result } = setup();
+    act(() => {
+      result.current.setAttacker({ species: 'Gengar' });
+      result.current.setDefenderSpecies('Garchomp');
+    });
+    act(() => result.current.addReverseObservation());
+    const [obs] = result.current.reverseObservations;
+
+    act(() => result.current.updateReverseObservation(obs.id, { moveName: 'Rock Tomb', damagePercent: 32, targetsHit: 1 }));
+
+    expect(result.current.inference.atkBound).not.toEqual({ min: 0, max: 32 });
+    expect(result.current.inference.theirPhysicalObservationCount).toBe(1);
+    expect(result.current.inference.spaBound).toEqual({ min: 0, max: 32 });
+  });
+
   it('attackerBaseStats is null with no species selected, and the real base stat table once one is', () => {
     const { result } = setup();
     expect(result.current.attackerBaseStats).toBe(null);

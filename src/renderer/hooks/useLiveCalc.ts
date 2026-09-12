@@ -14,14 +14,20 @@
  * one piece of defender state that isn't purely "what the tab is solving
  * for": Live Calc Known-Ability Lock, an opt-in hard override for the
  * ability axis once it's confirmed in-battle rather than left for the engine
- * to scan/narrow), an add/remove list of damage-percent observations, and an
- * add/remove list of turn-order observations (Leg 15). Every change
- * re-derives
- * `utils/liveCalcEngine.ts`'s `inferDefenderStats()` inference and then
- * layers `utils/liveCalcSpeedEngine.ts`'s `inferDefenderSpeed()` on top of
- * it - this file is just the state/plumbing around those two pure engines
- * (Legs 1 and 15), mirroring how useDamageCalc.ts is state/plumbing around
- * damageCalcEngine.ts.
+ * to scan/narrow - generalized to `defenderKnownItem`/`defenderKnownNature`
+ * (Live Calc Page Layout & Function Rework - Leg 1), same opt-in-lock shape.
+ * That leg also adds the 3 previously-untracked boost stages
+ * (`defenderAtkBoost`/`defenderSpaBoost`/`defenderSpeBoost`, alongside the
+ * existing Def/SpD ones) and a second, mirrored add/remove observation list
+ * (`reverseObservations`, for "their move -> you") alongside the existing
+ * damage-percent and turn-order lists. Every change re-derives
+ * `utils/liveCalcEngine.ts`'s `inferDefenderStats()` inference, layers
+ * `utils/liveCalcSpeedEngine.ts`'s `inferDefenderSpeed()` on top of it, then
+ * layers `liveCalcEngine.ts`'s own `inferOpponentOffensiveStats()` (the
+ * mirror direction) on top of THAT - this file is just the state/plumbing
+ * around those three pure engine passes (Legs 1, 15, and Leg 1 of the
+ * Layout & Function Rework), mirroring how useDamageCalc.ts is
+ * state/plumbing around damageCalcEngine.ts.
  *
  * The attacker's own `CalcPokemonState.moves` slots are never read by
  * `buildPokemon()` - each observation carries its own move name instead,
@@ -54,7 +60,9 @@ import {
 import {
   defaultInference,
   inferDefenderStats,
+  inferOpponentOffensiveStats,
   type LiveCalcObservation,
+  type LiveCalcReverseObservation,
   type LiveCalcInference,
 } from '../utils/liveCalcEngine';
 import {
@@ -87,6 +95,14 @@ function defaultTurnOrderObservation(): LiveCalcTurnOrderObservationEntry {
   return { id: makeObservationId(), moveName: '', wentFirst: 'attacker', defenderSpeedStage: 0 };
 }
 
+export interface LiveCalcReverseObservationEntry extends LiveCalcReverseObservation {
+  id: string;
+}
+
+function defaultReverseObservation(): LiveCalcReverseObservationEntry {
+  return { id: makeObservationId(), moveName: '', damagePercent: 0, targetsHit: 2, isCrit: false, outcome: 'survived' };
+}
+
 export interface UseLiveCalcReturn {
   /** Exposed for Live Calc Results Display (Leg 3), which needs to compute
    * `inferDefenderStats()`'s own pre-narrowing baseline (via the engine's
@@ -114,6 +130,17 @@ export interface UseLiveCalcReturn {
   defenderSpdBoost: number;
   setDefenderDefBoost: (stage: number) => void;
   setDefenderSpdBoost: (stage: number) => void;
+  /** The 3 previously-untracked combat-stat boost stages (Live Calc Page
+   * Layout & Function Rework - Leg 1) - see `liveCalcEngine.ts`'s
+   * `LiveCalcDefenderInput.atkBoost`/`spaBoost`/`speBoost` for why these
+   * matter once the opponent's own offense (not just its defense) is
+   * modeled via `inferOpponentOffensiveStats()`. */
+  defenderAtkBoost: number;
+  defenderSpaBoost: number;
+  defenderSpeBoost: number;
+  setDefenderAtkBoost: (stage: number) => void;
+  setDefenderSpaBoost: (stage: number) => void;
+  setDefenderSpeBoost: (stage: number) => void;
   /** The defender species' own real ability pool - options for the Known
    * Ability lock below, independent of any narrowing observations have
    * already done. Empty until a species is picked. */
@@ -124,6 +151,14 @@ export interface UseLiveCalcReturn {
    * `liveCalcEngine.ts`'s `LiveCalcDefenderInput.knownAbility`. */
   defenderKnownAbility: string;
   setDefenderKnownAbility: (ability: string) => void;
+  /** Same lock shape as `defenderKnownAbility`, generalized to item/nature
+   * (Live Calc Page Layout & Function Rework - Leg 1) - see
+   * `liveCalcEngine.ts`'s `LiveCalcDefenderInput.knownItem`/`knownNature`.
+   * Empty string means still unknown for both. */
+  defenderKnownItem: string;
+  setDefenderKnownItem: (item: string) => void;
+  defenderKnownNature: NatureName | '';
+  setDefenderKnownNature: (nature: NatureName | '') => void;
   observations: LiveCalcObservationEntry[];
   addObservation: () => void;
   updateObservation: (id: string, updates: Partial<LiveCalcObservation>) => void;
@@ -132,6 +167,13 @@ export interface UseLiveCalcReturn {
   addTurnOrderObservation: () => void;
   updateTurnOrderObservation: (id: string, updates: Partial<LiveCalcTurnOrderObservation>) => void;
   removeTurnOrderObservation: (id: string) => void;
+  /** Live Calc Page Layout & Function Rework - Leg 1: the mirror "their move
+   * -> you" observation list, consumed by `inferOpponentOffensiveStats()`.
+   * Same add/update/remove shape as `observations` above. */
+  reverseObservations: LiveCalcReverseObservationEntry[];
+  addReverseObservation: () => void;
+  updateReverseObservation: (id: string, updates: Partial<LiveCalcReverseObservation>) => void;
+  removeReverseObservation: (id: string) => void;
   inference: LiveCalcInference;
 }
 
@@ -142,9 +184,15 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
   const [defenderLevel, setDefenderLevel] = useState(DEFAULT_DEFENDER_LEVEL);
   const [defenderDefBoost, setDefenderDefBoost] = useState(0);
   const [defenderSpdBoost, setDefenderSpdBoost] = useState(0);
+  const [defenderAtkBoost, setDefenderAtkBoost] = useState(0);
+  const [defenderSpaBoost, setDefenderSpaBoost] = useState(0);
+  const [defenderSpeBoost, setDefenderSpeBoost] = useState(0);
   const [defenderKnownAbility, setDefenderKnownAbility] = useState('');
+  const [defenderKnownItem, setDefenderKnownItem] = useState('');
+  const [defenderKnownNature, setDefenderKnownNature] = useState<NatureName | ''>('');
   const [observations, setObservations] = useState<LiveCalcObservationEntry[]>([]);
   const [turnOrderObservations, setTurnOrderObservations] = useState<LiveCalcTurnOrderObservationEntry[]>([]);
+  const [reverseObservations, setReverseObservations] = useState<LiveCalcReverseObservationEntry[]>([]);
   const [attackerLearnedSlugs, setAttackerLearnedSlugs] = useState<Set<string> | null>(null);
 
   const gen = useMemo(() => Generations.get(GEN_NUM), []);
@@ -192,7 +240,12 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
     setDefenderResolvedForSpecies(defenderSpecies);
     setDefenderDefBoost(0);
     setDefenderSpdBoost(0);
+    setDefenderAtkBoost(0);
+    setDefenderSpaBoost(0);
+    setDefenderSpeBoost(0);
     setDefenderKnownAbility('');
+    setDefenderKnownItem('');
+    setDefenderKnownNature('');
   }
 
   const defenderAbilityOptions = useMemo(
@@ -229,15 +282,25 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
     setTurnOrderObservations(prev => prev.map(o => (o.id === id ? { ...o, ...updates } : o)));
   const removeTurnOrderObservation = (id: string) => setTurnOrderObservations(prev => prev.filter(o => o.id !== id));
 
+  const addReverseObservation = () => setReverseObservations(prev => [...prev, defaultReverseObservation()]);
+  const updateReverseObservation = (id: string, updates: Partial<LiveCalcReverseObservation>) =>
+    setReverseObservations(prev => prev.map(o => (o.id === id ? { ...o, ...updates } : o)));
+  const removeReverseObservation = (id: string) => setReverseObservations(prev => prev.filter(o => o.id !== id));
+
   const defenderInput = useMemo(
     () => ({
       species: defenderSpecies,
       level: defenderLevel,
       defBoost: defenderDefBoost,
       spdBoost: defenderSpdBoost,
+      atkBoost: defenderAtkBoost,
+      spaBoost: defenderSpaBoost,
+      speBoost: defenderSpeBoost,
       knownAbility: defenderKnownAbility || undefined,
+      knownItem: defenderKnownItem || undefined,
+      knownNature: defenderKnownNature || undefined,
     }),
-    [defenderSpecies, defenderLevel, defenderDefBoost, defenderSpdBoost, defenderKnownAbility]
+    [defenderSpecies, defenderLevel, defenderDefBoost, defenderSpdBoost, defenderAtkBoost, defenderSpaBoost, defenderSpeBoost, defenderKnownAbility, defenderKnownItem, defenderKnownNature]
   );
 
   const damageInference = useMemo(
@@ -247,9 +310,16 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
   // Speed narrowing (Leg 15) runs as a second pass over the damage-based
   // inference above - see liveCalcSpeedEngine.ts's header for why it's
   // layered on top rather than folded into inferDefenderStats() itself.
-  const inference = useMemo(
+  const speedInference = useMemo(
     () => inferDefenderSpeed(gen, attacker, defenderInput, damageInference, turnOrderObservations),
     [gen, attacker, defenderInput, damageInference, turnOrderObservations]
+  );
+  // Reverse-direction narrowing (Live Calc Page Layout & Function Rework -
+  // Leg 1) runs as a third pass, same layering shape as Speed above - see
+  // liveCalcEngine.ts's inferOpponentOffensiveStats() header.
+  const inference = useMemo(
+    () => inferOpponentOffensiveStats(gen, attacker, defenderInput, speedInference, reverseObservations),
+    [gen, attacker, defenderInput, speedInference, reverseObservations]
   );
 
   return {
@@ -275,9 +345,19 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
     defenderSpdBoost,
     setDefenderDefBoost,
     setDefenderSpdBoost,
+    defenderAtkBoost,
+    defenderSpaBoost,
+    defenderSpeBoost,
+    setDefenderAtkBoost,
+    setDefenderSpaBoost,
+    setDefenderSpeBoost,
     defenderAbilityOptions,
     defenderKnownAbility,
     setDefenderKnownAbility,
+    defenderKnownItem,
+    setDefenderKnownItem,
+    defenderKnownNature,
+    setDefenderKnownNature,
     observations,
     addObservation,
     updateObservation,
@@ -286,6 +366,10 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
     addTurnOrderObservation,
     updateTurnOrderObservation,
     removeTurnOrderObservation,
+    reverseObservations,
+    addReverseObservation,
+    updateReverseObservation,
+    removeReverseObservation,
     inference,
   };
 }

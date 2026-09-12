@@ -13,7 +13,7 @@
 import { describe, expect, it } from 'vitest';
 import { Generations } from '@smogon/calc';
 import { defaultPokemonState, type CalcPokemonState } from './damageCalcEngine';
-import { inferDefenderStats, NO_ITEM, type LiveCalcObservation } from './liveCalcEngine';
+import { inferDefenderStats, inferOpponentOffensiveStats, NO_ITEM, type LiveCalcObservation, type LiveCalcReverseObservation } from './liveCalcEngine';
 
 const gen = Generations.get(9);
 
@@ -28,7 +28,7 @@ const GENGAR_SHADOW_BALL = attackerState({ species: 'Gengar' });
 // immune to either test move (Skarmory, tried first, is Flying-typed and
 // flat-out immune to Ground - a reminder any defender fixture needs an
 // actual damage-relevant matchup, not just "a bulky wall").
-const DEFENDER = { species: 'Ferrothorn', level: 50, defBoost: 0, spdBoost: 0 };
+const DEFENDER = { species: 'Ferrothorn', level: 50, defBoost: 0, spdBoost: 0, atkBoost: 0, spaBoost: 0, speBoost: 0 };
 
 function obs(
   moveName: string,
@@ -36,6 +36,15 @@ function obs(
   targetsHit: 1 | 2 = 2,
   extra: Partial<Pick<LiveCalcObservation, 'isCrit' | 'outcome'>> = {}
 ): LiveCalcObservation {
+  return { moveName, damagePercent, targetsHit, isCrit: false, outcome: 'survived', ...extra };
+}
+
+function reverseObs(
+  moveName: string,
+  damagePercent: number,
+  targetsHit: 1 | 2 = 2,
+  extra: Partial<Pick<LiveCalcReverseObservation, 'isCrit' | 'outcome'>> = {}
+): LiveCalcReverseObservation {
   return { moveName, damagePercent, targetsHit, isCrit: false, outcome: 'survived', ...extra };
 }
 
@@ -61,7 +70,7 @@ describe('inferDefenderStats - no/invalid input', () => {
   it('returns the default, untouched inference when attacker or defender species is empty', () => {
     const noAttacker = inferDefenderStats(gen, attackerState({ species: '' }), DEFENDER, [obs('Earthquake', 50)]);
     expect(noAttacker.defBound).toEqual({ min: 0, max: 32 });
-    const noDefender = inferDefenderStats(gen, LANDO_EARTHQUAKE, { species: '', level: 50, defBoost: 0, spdBoost: 0 }, [obs('Earthquake', 50)]);
+    const noDefender = inferDefenderStats(gen, LANDO_EARTHQUAKE, { species: '', level: 50, defBoost: 0, spdBoost: 0, atkBoost: 0, spaBoost: 0, speBoost: 0 }, [obs('Earthquake', 50)]);
     expect(noDefender.defBound).toEqual({ min: 0, max: 32 });
   });
 });
@@ -258,5 +267,136 @@ describe('inferDefenderStats - Doubles spread-modifier targetsHit handling', () 
     const oneTarget = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, [obs('Earthquake', 40, 1)]);
     expect(oneTarget.physicalObservationCount).toBe(1);
     expect(oneTarget.contradictions.length).toBe(0);
+  });
+});
+
+// Reverse direction (Live Calc Page Layout & Function Rework - Leg 1): the
+// opponent (DEFENDER's species/level/locks/boosts - same input shape, now
+// playing attacker) hits the fully-known LANDO_EARTHQUAKE, which plays
+// defender here. Each test seeds its own upstream inference via
+// inferDefenderStats() with no observations (same defaultInference()
+// baseline `inferOpponentOffensiveStats()` itself falls back to when tested
+// in isolation) rather than hand-building one, so a real narrowed
+// nature/ability/item state is always what's actually threaded through.
+const BASE_INFERENCE = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, []);
+
+describe('inferOpponentOffensiveStats - no/invalid input', () => {
+  it('leaves atk/spaBound at the full default and both reverse counts at 0 with no observations', () => {
+    const result = inferOpponentOffensiveStats(gen, LANDO_EARTHQUAKE, DEFENDER, BASE_INFERENCE, []);
+    expect(result.atkBound).toEqual({ min: 0, max: 32 });
+    expect(result.spaBound).toEqual({ min: 0, max: 32 });
+    expect(result.theirPhysicalObservationCount).toBe(0);
+    expect(result.theirSpecialObservationCount).toBe(0);
+  });
+
+  it('leaves the given inference untouched when the known Pokémon or opponent species is empty', () => {
+    const noKnown = inferOpponentOffensiveStats(gen, attackerState({ species: '' }), DEFENDER, BASE_INFERENCE, [reverseObs('Power Whip', 50)]);
+    expect(noKnown.atkBound).toEqual({ min: 0, max: 32 });
+    const noOpponent = inferOpponentOffensiveStats(gen, LANDO_EARTHQUAKE, { ...DEFENDER, species: '' }, BASE_INFERENCE, [reverseObs('Power Whip', 50)]);
+    expect(noOpponent.atkBound).toEqual({ min: 0, max: 32 });
+  });
+});
+
+describe('inferOpponentOffensiveStats - category separation', () => {
+  it('a physical-move observation narrows only atkBound, leaving spaBound untouched', () => {
+    const result = inferOpponentOffensiveStats(gen, LANDO_EARTHQUAKE, DEFENDER, BASE_INFERENCE, [reverseObs('Power Whip', 45, 1)]);
+    expect(result.theirPhysicalObservationCount).toBe(1);
+    expect(result.theirSpecialObservationCount).toBe(0);
+    expect(result.spaBound).toEqual({ min: 0, max: 32 });
+  });
+
+  it('a special-move observation narrows only spaBound, leaving atkBound untouched', () => {
+    const result = inferOpponentOffensiveStats(gen, LANDO_EARTHQUAKE, DEFENDER, BASE_INFERENCE, [reverseObs('Energy Ball', 26, 1)]);
+    expect(result.theirSpecialObservationCount).toBe(1);
+    expect(result.theirPhysicalObservationCount).toBe(0);
+    expect(result.atkBound).toEqual({ min: 0, max: 32 });
+  });
+});
+
+describe('inferOpponentOffensiveStats - multi-observation narrowing', () => {
+  it('a second consistent observation only ever shrinks (or holds) the running atkBound, never grows it', () => {
+    const one = inferOpponentOffensiveStats(gen, LANDO_EARTHQUAKE, DEFENDER, BASE_INFERENCE, [reverseObs('Power Whip', 45, 1)]);
+    const two = inferOpponentOffensiveStats(gen, LANDO_EARTHQUAKE, DEFENDER, BASE_INFERENCE, [reverseObs('Power Whip', 45, 1), reverseObs('Power Whip', 46, 1)]);
+    expect(two.atkBound.min).toBeGreaterThanOrEqual(one.atkBound.min);
+    expect(two.atkBound.max).toBeLessThanOrEqual(one.atkBound.max);
+    expect(two.theirPhysicalObservationCount).toBe(2);
+  });
+
+  it('further narrows whatever nature/ability/item candidates the forward pass already narrowed, rather than resetting them', () => {
+    const result = inferOpponentOffensiveStats(gen, LANDO_EARTHQUAKE, DEFENDER, BASE_INFERENCE, [reverseObs('Power Whip', 45, 1)]);
+    expect(result.natureCandidates.length).toBeLessThanOrEqual(BASE_INFERENCE.natureCandidates.length);
+    for (const n of result.natureCandidates) expect(BASE_INFERENCE.natureCandidates).toContain(n);
+  });
+});
+
+describe('inferOpponentOffensiveStats - graceful degradation', () => {
+  it('records a contradiction and leaves atkBound unchanged for an impossible damage%', () => {
+    const result = inferOpponentOffensiveStats(gen, LANDO_EARTHQUAKE, DEFENDER, BASE_INFERENCE, [reverseObs('Power Whip', 99999, 1)]);
+    expect(result.atkBound).toEqual(BASE_INFERENCE.atkBound);
+    expect(result.contradictions.length).toBe(1);
+  });
+
+  it('skips a Status move observation with a recorded contradiction rather than crashing', () => {
+    const result = inferOpponentOffensiveStats(gen, LANDO_EARTHQUAKE, DEFENDER, BASE_INFERENCE, [reverseObs('Spikes', 0)]);
+    expect(result.theirPhysicalObservationCount).toBe(0);
+    expect(result.theirSpecialObservationCount).toBe(0);
+    expect(result.contradictions.length).toBe(1);
+  });
+
+  it('skips an unrecognized move name with a recorded contradiction', () => {
+    const result = inferOpponentOffensiveStats(gen, LANDO_EARTHQUAKE, DEFENDER, BASE_INFERENCE, [reverseObs('Not A Real Move', 40)]);
+    expect(result.contradictions.length).toBe(1);
+    expect(result.theirPhysicalObservationCount).toBe(0);
+  });
+});
+
+describe('inferOpponentOffensiveStats - known offensive stage boosts', () => {
+  it('a large Atk stage boost can turn an otherwise-feasible observation into a contradiction', () => {
+    const boosted = { ...DEFENDER, atkBoost: 6 };
+    const boostedBase = inferDefenderStats(gen, LANDO_EARTHQUAKE, boosted, []);
+    const unboosted = inferOpponentOffensiveStats(gen, LANDO_EARTHQUAKE, DEFENDER, BASE_INFERENCE, [reverseObs('Power Whip', 45, 1)]);
+    const heavilyBoosted = inferOpponentOffensiveStats(gen, LANDO_EARTHQUAKE, boosted, boostedBase, [reverseObs('Power Whip', 45, 1)]);
+    expect(unboosted.contradictions.length).toBe(0);
+    expect(heavilyBoosted.contradictions.length).toBe(1);
+  });
+});
+
+describe('inferOpponentOffensiveStats - Known Ability/Item/Nature locks', () => {
+  it('hard-locks abilityCandidates to the opponent\'s known ability, further narrowing atkBound rather than leaving it untouched', () => {
+    const locked = { ...DEFENDER, knownAbility: 'Iron Barbs' };
+    const lockedBase = inferDefenderStats(gen, LANDO_EARTHQUAKE, locked, []);
+    const result = inferOpponentOffensiveStats(gen, LANDO_EARTHQUAKE, locked, lockedBase, [reverseObs('Power Whip', 45, 1)]);
+    expect(result.abilityCandidates).toEqual(['Iron Barbs']);
+  });
+
+  it('hard-locks itemCandidates to the opponent\'s known item', () => {
+    const locked = { ...DEFENDER, knownItem: 'Leftovers' };
+    const lockedBase = inferDefenderStats(gen, LANDO_EARTHQUAKE, locked, []);
+    const result = inferOpponentOffensiveStats(gen, LANDO_EARTHQUAKE, locked, lockedBase, []);
+    expect(result.itemCandidates).toEqual(['Leftovers']);
+  });
+
+  it('hard-locks natureCandidates to the opponent\'s known nature', () => {
+    const locked = { ...DEFENDER, knownNature: 'Adamant' as const };
+    const lockedBase = inferDefenderStats(gen, LANDO_EARTHQUAKE, locked, []);
+    const result = inferOpponentOffensiveStats(gen, LANDO_EARTHQUAKE, locked, lockedBase, []);
+    expect(result.natureCandidates).toEqual(['Adamant']);
+  });
+});
+
+describe('inferOpponentOffensiveStats - contact-damage ability effect reads the KNOWN Pokémon, not the opponent candidate', () => {
+  it("the known Pokémon's own Aura Guard ability halves contact damage taken, the mirror image of the forward direction's own equivalent test", () => {
+    // Tackle (contact, Normal, neutral vs. Ground/Flying) from Ferrothorn
+    // into the fully-known Landorus-Therian - picking a damage% inside the
+    // unboosted range but above what Aura Guard's halving could ever reach
+    // proves the ability is being read off the KNOWN side (Landorus-T) here,
+    // not scanned as a candidate axis on the opponent (Ferrothorn) side -
+    // the forward-direction test this mirrors proves the opposite wiring.
+    const withoutAuraGuard = inferOpponentOffensiveStats(gen, LANDO_EARTHQUAKE, DEFENDER, BASE_INFERENCE, [reverseObs('Tackle', 12, 1)]);
+    const knownWithAuraGuard = attackerState({ species: 'Landorus-Therian', ability: 'Aura Guard' });
+    const auraGuardBase = inferDefenderStats(gen, knownWithAuraGuard, DEFENDER, []);
+    const withAuraGuard = inferOpponentOffensiveStats(gen, knownWithAuraGuard, DEFENDER, auraGuardBase, [reverseObs('Tackle', 12, 1)]);
+    expect(withoutAuraGuard.contradictions.length).toBe(0);
+    expect(withAuraGuard.contradictions.length).toBe(1);
   });
 });

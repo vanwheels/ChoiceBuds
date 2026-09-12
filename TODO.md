@@ -32,13 +32,32 @@ explicit call.
 
 - **[Live Calc Page Layout & Function Rework] — Leg 1** *(Last touched:
   2026-09-11 · Re-checks: 0)*
-  Result Clarity Pass's changes were verified live but didn't land the page
-  where Vanny wants it - still "not happy with this page's layout and how
-  it functions" as a whole, beyond the result panel's own readability.
-  Not yet scoped: Vanny wants to spend more time with the page first to
-  pin down the actual specifics before this turns into concrete legs: per
-  the "split scoping from building" habit, wait for that scoping pass
-  rather than guessing at a rework here.
+  Scoped 2026-09-11 - see
+  `docs/investigations/live-calc-layout-rework-scope.md` for the full
+  decision record. Bidirectional Inference Engine: `liveCalcEngine.ts`
+  gains the mirror narrowing direction ("their move did X% to you" narrows
+  the opponent's Atk/SpA/nature, alongside the existing "your move to
+  them" narrowing their Def/SpD), plus known-fact-lock inputs for item,
+  nature, and the 4 missing stat-boost stages (only Def/SpD boost exist
+  today). Pure engine/hook work, no layout change yet.
+
+- **[Live Calc Page Layout & Function Rework] — Leg 2** *(Last touched:
+  2026-09-11 · Re-checks: 0)*
+  Opponent Panel & Reverse Observations - wires Leg 1's new inputs into
+  `LiveCalcDefenderPanel` (item/nature dropdowns, the 4 missing boost stage
+  fields) and adds a second, mirrored observation list for "their move did
+  X% to you" alongside the existing one. See the scope doc linked in Leg 1.
+
+- **[Live Calc Page Layout & Function Rework] — Leg 3** *(Last touched:
+  2026-09-11 · Re-checks: 0)*
+  Layout & Live Range Grid Rework - reorganizes `LiveCalcPage` to mirror
+  `CalcPage`'s structure: two move grids up top (yours -> them, theirs ->
+  you) each showing a min-max % range per move instead of a fixed number,
+  result panel below, Pokémon-panel row underneath. Needs a range-aware
+  grid variant - today's `CalcMoveGrid` assumes one fixed `Result`. See the
+  scope doc linked in Leg 1. Popup launcher, Battle Log auto-populate, and
+  doubles support are explicitly deferred out of this milestone (see the
+  scope doc's "Deferred" section and the new Unscheduled items below).
 
 ## Blocked
 
@@ -88,7 +107,30 @@ unblocked.
   peer-range rejection + real runtime crash reports). Currently on
   TypeScript ^6.0.3.
 
+- **[Live Calc Battle Log Auto-Populate] — Leg 1** *(Last touched:
+  2026-09-11 · Re-checks: 0)*
+  Blocked: depends on Live Calc Global Popup Launcher existing first (this
+  is specifically about auto-filling both sides from whatever's already
+  selected when that popup is opened from inside an active Battle Log
+  session). See `docs/investigations/live-calc-layout-rework-scope.md`.
+
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+- **[Live Calc Global Popup Launcher] — Leg 1** *(Last touched: 2026-09-11 ·
+  Re-checks: 0)*
+  Raised alongside Live Calc Page Layout & Function Rework's scoping pass
+  but explicitly deferred - a button reachable from anywhere in the app
+  that pops Live Calc as an overlay, rather than only living as its own
+  tab. Not scoped yet; revisit once that rework's 3 legs have shipped and
+  settled. See `docs/investigations/live-calc-layout-rework-scope.md`.
+
+- **[Live Calc Doubles Support] — Leg 1** *(Last touched: 2026-09-11 ·
+  Re-checks: 0)*
+  Raised alongside the same scoping pass - 2 simultaneously-unknown
+  opponents plus ally-side interactions, on top of whatever singles model
+  Live Calc Page Layout & Function Rework lands on. Not scoped; a real
+  future need per Vanny, not this milestone. See
+  `docs/investigations/live-calc-layout-rework-scope.md`.
 
 - **[Reg M-C Z-A-Exclusive Movepool Audit] — Leg 1** *(Last touched:
   2026-09-10 · Re-checks: 1)*
