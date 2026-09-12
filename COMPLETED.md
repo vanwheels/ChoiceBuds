@@ -18,6 +18,12 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Live Calc Observation Move Options: Actual Attacker Moveset] - Leg 1**
+  (2026-09-11) - see commit `bfe70cd`. `attackerMoveOptions` in
+  `useLiveCalc.ts` now caps to the attacker's real 4 moves (`attacker.moves`)
+  once a saved set/usage auto-fill/team-tray drag has populated them,
+  falling back to the learned-movepool narrowing only when none are set.
+
 - **[Live Calc Defender Panel Parity] - Leg 1** (2026-09-11) - see commits
   `85b1877`/`1aa49c0`. Added a forme-family toggle (stat-block + Mega formes,
   reusing `getFormeFamily`/`FormeFamily`) and a base-stat display to

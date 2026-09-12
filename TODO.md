@@ -29,16 +29,6 @@ tweaking" placeholder). Scoped 2026-09-11 after asking Vanny for the actual
 specifics; per the user's "split scoping from building" habit, this session
 stops at the plan below rather than starting Leg 1.
 
-- **[Live Calc Observation Move Options: Actual Attacker Moveset] — Leg 1**
-  *(Last touched: 2026-09-11 · Re-checks: 0)*
-  Observation move dropdowns currently pull from the attacker species' full
-  learned movepool (`useLiveCalc.ts`'s `attackerMoveOptions`, via
-  `getEnrichedSpeciesOptions`) regardless of the attacker's actual 4 moves -
-  `CalcPokemonState.moves` is deliberately left unused today (see the
-  hook's header comment). When the attacker matches a real set with moves
-  already chosen, the dropdown should be capped to those 4 real moves
-  instead of the whole learned pool.
-
 - **[Live Calc Observation Inputs: Crit + Fainted/Survived] — Leg 1** *(Last
   touched: 2026-09-11 · Re-checks: 0)*
   Add a crit toggle per observation (feeds `Move`'s `isCrit` in
