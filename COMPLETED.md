@@ -18,6 +18,20 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Live Calc Result Clarity Pass] - Leg 1** (2026-09-11) - see commit
+  `0eab7a7`. `LiveCalcResultPanel` gained a subtitle stating the
+  read-independently-per-axis rule, split the SP-range and candidate-list
+  grids under their own "Stat Points (0-32)"/"Candidates Narrowed" section
+  labels, added a 0/32 tick row under each SP bar, and gave the
+  skipped/ignored-observations list its own heading. `LiveCalcPage` gained a
+  one-line intro stating the enter-knowns/log-observations/read-result flow.
+  `inferDefenderStats()`'s generic "is inconsistent with every narrowed
+  candidate so far" contradiction message now names which axis
+  (nature/ability/item) actually had zero feasible candidates, or calls out
+  the locked known ability specifically when that shared default is the
+  real cause (see the Known-Ability Lock entry below) rather than
+  misattributing to nature/item too.
+
 - **[Live Calc Known-Ability Lock] - Leg 1** (2026-09-11) - see commit
   `f0ca844`. `LiveCalcDefenderInput` gained an optional `knownAbility` -
   once set, `inferDefenderStats()` hard-locks `abilityCandidates` to that

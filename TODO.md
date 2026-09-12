@@ -26,19 +26,10 @@ Promoted 2026-09-11 from "Future Milestones" - the last of the four
 2026-09-10-feedback-pass candidates, and the only one that wasn't already
 drafted into legs at batching time (it went in as a bare "needs a lot of
 tweaking" placeholder). Scoped 2026-09-11 after asking Vanny for the actual
-specifics; per the user's "split scoping from building" habit, this session
-stops at the plan below rather than starting Leg 1.
-
-- **[Live Calc Result Clarity Pass] — Leg 1** *(Last touched: 2026-09-11 ·
-  Re-checks: 0)*
-  General readability pass over `LiveCalcResultPanel`/the tab overall - per
-  feedback, "the UI is just not clear on how it's meant to read." Needs a
-  fresh look once Legs 1-4 land (their UI additions reshape the panel
-  anyway) to identify what's actually confusing - candidate-list layout,
-  SP-range bar legends, etc. Also replace the generic `"<move>" is
-  inconsistent with every narrowed candidate so far - observation ignored`
-  contradiction message (`liveCalcEngine.ts`) with something diagnostic -
-  state which axis/why, not just "ignored."
+specifics. Both scoped legs (Known-Ability Lock, Result Clarity Pass) have
+now shipped - see `COMPLETED.md` - but the milestone stays open rather than
+closing out per Vanny's explicit call when kicking off the Result Clarity
+Pass session; no further legs queued here yet.
 
 ## Blocked
 
