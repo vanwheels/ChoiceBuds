@@ -30,13 +30,6 @@ specifics. Both scoped legs (Known-Ability Lock, Result Clarity Pass) have
 shipped - see `COMPLETED.md` - but the milestone stays open per Vanny's
 explicit call.
 
-- **[Live Calc Page Layout & Function Rework] — Leg 2** *(Last touched:
-  2026-09-11 · Re-checks: 0)*
-  Opponent Panel & Reverse Observations - wires Leg 1's new inputs into
-  `LiveCalcDefenderPanel` (item/nature dropdowns, the 4 missing boost stage
-  fields) and adds a second, mirrored observation list for "their move did
-  X% to you" alongside the existing one. See the scope doc linked in Leg 1.
-
 - **[Live Calc Page Layout & Function Rework] — Leg 3** *(Last touched:
   2026-09-11 · Re-checks: 0)*
   Layout & Live Range Grid Rework - reorganizes `LiveCalcPage` to mirror

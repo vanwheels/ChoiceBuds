@@ -18,6 +18,16 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Live Calc Page Layout & Function Rework] - Leg 2** (2026-09-11) - see
+  commit `f98fb4b`. Opponent Panel & Reverse Observations - wired Leg 1's
+  `knownItem`/`knownNature`/`atkBoost`/`spaBoost`/`speBoost` into
+  `LiveCalcDefenderPanel` and rendered a second "their move -> you"
+  observation list, reusing `LiveCalcObservationList` for both directions
+  instead of a near-duplicate component. Panel's visible heading renamed
+  "Defender" -> "Opponent" (underlying prop/type names stayed `defender`,
+  matching Leg 1's naming call). Pure UI wiring - no engine/hook logic
+  changes beyond exposing `defenderMoveOptions`.
+
 - **[Live Calc Page Layout & Function Rework] - Leg 1** (2026-09-11) - see
   commit `c948316`. Bidirectional Inference Engine, per
   `docs/investigations/live-calc-layout-rework-scope.md`.
