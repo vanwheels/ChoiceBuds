@@ -32,6 +32,7 @@ function setup(
     getAbilityData: vi.fn(),
     getCachedAbility: vi.fn(),
     getSpeciesLearnset: vi.fn(),
+    getCachedSpeciesLearnset: vi.fn(),
     getEnrichedSpeciesOptions,
     getChampionsUsage: vi.fn(),
     getCachedChampionsUsage: vi.fn(),

@@ -95,6 +95,26 @@ describe('inferDefenderStats - no/invalid input', () => {
     expect(result.abilityCandidates).toEqual(['Sharpness']);
   });
 
+  it("falls back to @smogon/calc's own bundled species data when no real ability slugs are given - the known limitation Live Calc Feedback Pass 2, Leg 5 fixes for callers that DO thread real data through", () => {
+    // Confirmed live: Farigiraf's bundled entry only lists Cud Chew, missing
+    // its real Armor Tail entirely - see resolveAbilityCandidates()'s header
+    // in liveCalcEngine.ts for the full fix.
+    const rawBundledAbilities = Object.values(gen.species.get('farigiraf' as never)?.abilities ?? {});
+    expect(rawBundledAbilities).toEqual(['Cud Chew']);
+    expect(defaultInference(gen, 'Farigiraf').abilityCandidates).toEqual(['Cud Chew']);
+  });
+
+  it('seeds ability candidates from realAbilitySlugs (the app\'s own PokeAPI-backed pipeline) instead of the stale bundled data, once given - Live Calc Feedback Pass 2, Leg 5', () => {
+    const result = defaultInference(gen, 'Farigiraf', ['cud-chew', 'armor-tail']);
+    expect(result.abilityCandidates.sort()).toEqual(['Armor Tail', 'Cud Chew']);
+  });
+
+  it('inferDefenderStats threads its own realAbilitySlugs argument through to defaultInference the same way', () => {
+    const farigiraf = { species: 'Farigiraf', level: 50, defBoost: 0, spdBoost: 0, atkBoost: 0, spaBoost: 0, speBoost: 0 };
+    const result = inferDefenderStats(gen, LANDO_EARTHQUAKE, farigiraf, [], ['cud-chew', 'armor-tail']);
+    expect(result.abilityCandidates.sort()).toEqual(['Armor Tail', 'Cud Chew']);
+  });
+
   it('returns the default, untouched inference when attacker or defender species is empty', () => {
     const noAttacker = inferDefenderStats(gen, attackerState({ species: '' }), DEFENDER, [obs('Earthquake', 50)]);
     expect(noAttacker.defBound).toEqual({ min: 0, max: 32 });

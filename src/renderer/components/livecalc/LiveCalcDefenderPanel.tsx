@@ -176,6 +176,15 @@ export default function LiveCalcDefenderPanel({
 }: LiveCalcDefenderPanelProps) {
   const megaGroup = formes.megaFormes.length > 0 ? [formes.root, ...formes.megaFormes] : [];
   const baseline = defaultInference(gen, species);
+  // Live Calc Feedback Pass 2 - Leg 5: the Ability group's own "N of TOTAL"
+  // denominator uses the already-correct `abilityOptions` prop (sourced from
+  // useLiveCalc.ts's real PokeAPI-backed pipeline) instead of `baseline`
+  // above, which - lacking access to that pipeline itself - would otherwise
+  // still seed abilityCandidates from @smogon/calc's own bundled species
+  // data here, undercounting a species like Farigiraf whose bundled entry
+  // is missing a real ability (Armor Tail). Nature/item totals below are
+  // unaffected by that bug (neither axis is species-ability-pool-derived),
+  // so `baseline` still covers those two as-is.
   const totalObservations =
     inference.physicalObservationCount + inference.specialObservationCount + inference.speedObservationCount +
     inference.theirPhysicalObservationCount + inference.theirSpecialObservationCount;
@@ -339,7 +348,7 @@ export default function LiveCalcDefenderPanel({
             <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-wide mb-1.5">Candidates Narrowed</h4>
             <div className="grid grid-cols-1 gap-2">
               <LiveCalcCandidateGroup label="Nature" candidates={inference.natureCandidates} totalCount={baseline.natureCandidates.length} />
-              <LiveCalcCandidateGroup label="Ability" candidates={inference.abilityCandidates} totalCount={baseline.abilityCandidates.length} />
+              <LiveCalcCandidateGroup label="Ability" candidates={inference.abilityCandidates} totalCount={abilityOptions.length} />
               <LiveCalcCandidateGroup label="Item" candidates={inference.itemCandidates} totalCount={baseline.itemCandidates.length} />
             </div>
           </div>

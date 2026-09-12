@@ -250,9 +250,11 @@ export interface LiveCalcInference {
    * same as defBound/spdBound already do for their own axis. */
   speedBound: LiveCalcStatBound;
   natureCandidates: NatureName[];
-  /** Starts as the defender species' own real ability pool (@smogon/calc gen
-   * data), or the single locked value once `LiveCalcDefenderInput.knownAbility`
-   * is set - see that field's own comment. */
+  /** Starts as the defender species' own real ability pool (see
+   * `defaultInference()`'s `resolveAbilityCandidates()` for where this
+   * actually comes from), or the single locked value once
+   * `LiveCalcDefenderInput.knownAbility` is set - see that field's own
+   * comment. */
   abilityCandidates: string[];
   /** Starts as `NO_ITEM` plus the curated damage-relevant items shortlist. */
   itemCandidates: string[];
@@ -279,21 +281,54 @@ function dedupeStrings(values: (string | undefined)[]): string[] {
   return [...new Set(values.filter((v): v is string => !!v))];
 }
 
+/**
+ * Resolves a species' real ability pool for `defaultInference()`'s
+ * `abilityCandidates` seed, in priority order:
+ * 1. A Mega form's config/megaAbilities.ts override (see that comment below).
+ * 2. `realAbilitySlugs` - the app's own PokeAPI-backed pipeline
+ *    (`useGameData`'s cached species learnset, threaded in by the caller),
+ *    each slug resolved to `@smogon/calc`'s own display-name string via
+ *    `gen.abilities.get()` so it stays a valid `Pokemon`/`Move` `ability`
+ *    option. Live Calc Feedback Pass 2 - Leg 5: this is the fix for
+ *    `@smogon/calc`'s bundled Gen 9 species data being stale/incomplete for
+ *    some species (confirmed live for Farigiraf - its bundled entry only
+ *    lists Cud Chew, missing the real Armor Tail) - the rest of the app
+ *    already treats PokeAPI + config/championsAbilityOverrides.ts (via
+ *    useGameData) as the real source of truth for per-species ability
+ *    pools, not `@smogon/calc`'s own data, so this brings the engine in
+ *    line with that rather than trusting the bundled data.
+ * 3. The raw `@smogon/calc` bundled species data, same as before - the
+ *    fallback whenever `realAbilitySlugs` isn't available yet (species not
+ *    synced, hook not wired, or a test calling this directly with no 3rd
+ *    arg) so this function never regresses to an empty candidate list.
+ */
+function resolveAbilityCandidates(
+  gen: Generation,
+  species: string,
+  speciesData: ReturnType<Generation['species']['get']>,
+  realAbilitySlugs: string[] | undefined,
+): string[] {
+  const megaAbility = species ? getMegaAbility(species.toLowerCase()) : undefined;
+  if (megaAbility) return [megaAbility];
+  if (realAbilitySlugs && realAbilitySlugs.length > 0) {
+    const resolved = dedupeStrings(realAbilitySlugs.map(slug => gen.abilities.get(toID(slug))?.name));
+    if (resolved.length > 0) return resolved;
+  }
+  return dedupeStrings(Object.values(speciesData?.abilities ?? {}));
+}
+
 /** Exported for Live Calc Results Display (Leg 3): the UI needs this same
  * "everything still possible" baseline to compute how much an observation
  * has actually narrowed things (e.g. "3 of 11 abilities remain"), not just
- * the post-narrowing candidate lists on their own. */
-export function defaultInference(gen: Generation, species: string): LiveCalcInference {
+ * the post-narrowing candidate lists on their own.
+ *
+ * `realAbilitySlugs` (Live Calc Feedback Pass 2 - Leg 5) is an optional list
+ * of lowercase PokeAPI ability slugs for `species` (e.g. `useGameData`'s
+ * cached species learnset's own `abilities` field) - see
+ * `resolveAbilityCandidates()`'s own comment for why this takes priority
+ * over `@smogon/calc`'s bundled species data. */
+export function defaultInference(gen: Generation, species: string, realAbilitySlugs?: string[]): LiveCalcInference {
   const speciesData = species ? gen.species.get(toID(species)) : undefined;
-  // Live Calc Feedback Pass 2 - Leg 1: a Mega form's guaranteed ability comes
-  // from config/megaAbilities.ts, not @smogon/calc's own bundled species data
-  // directly - that data is stale placeholder for a few Champions-invented
-  // Mega forms (most visibly the 3 Reg M-C "Mega Z" forms, whose raw
-  // `abilities.0` just duplicates the species' ORDINARY Mega ability rather
-  // than the real, distinct Mega-Z one) - see that config's own header for
-  // the full provenance. Falls back to the raw species data for any
-  // non-Mega species (or a Mega form with no override needed).
-  const megaAbility = species ? getMegaAbility(species.toLowerCase()) : undefined;
   return {
     defBound: { min: SP_MIN, max: SP_MAX },
     spdBound: { min: SP_MIN, max: SP_MAX },
@@ -301,7 +336,7 @@ export function defaultInference(gen: Generation, species: string): LiveCalcInfe
     spaBound: { min: SP_MIN, max: SP_MAX },
     speedBound: { min: SP_MIN, max: SP_MAX },
     natureCandidates: [...gen.natures].map(n => n.name) as NatureName[],
-    abilityCandidates: megaAbility ? [megaAbility] : dedupeStrings(Object.values(speciesData?.abilities ?? {})),
+    abilityCandidates: resolveAbilityCandidates(gen, species, speciesData, realAbilitySlugs),
     // Live Calc Feedback Pass 2 - Leg 2: this single shared axis is scanned
     // from BOTH directions (the defender taking damage AND the opponent
     // dealing it - see `liveCalcOffensiveItems.ts`'s own header for why they
@@ -530,8 +565,9 @@ export function inferDefenderStats(
   attacker: CalcPokemonState,
   defender: LiveCalcDefenderInput,
   observations: LiveCalcObservation[],
+  realAbilitySlugs?: string[],
 ): LiveCalcInference {
-  const inference = defaultInference(gen, defender.species);
+  const inference = defaultInference(gen, defender.species, realAbilitySlugs);
   if (!attacker.species || !defender.species) return inference;
 
   let attackerPokemon: InstanceType<typeof Pokemon>;

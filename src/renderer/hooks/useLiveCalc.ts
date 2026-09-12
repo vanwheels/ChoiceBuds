@@ -302,7 +302,7 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
     [gen, attacker.species]
   );
 
-  const { getEnrichedSpeciesOptions } = gameDataState;
+  const { getEnrichedSpeciesOptions, getCachedSpeciesLearnset } = gameDataState;
 
   // Clears the stale learned-moves set the moment the attacker's species
   // empties out - set during render rather than in an effect, matching
@@ -338,9 +338,22 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
     setDefenderStatus('');
   }
 
+  // Live Calc Feedback Pass 2 - Leg 5: the defender's real ability pool,
+  // cache-only (never a live fetch - useInitialSync already syncs every
+  // legal-roster species' learnset up front, so this should almost always
+  // hit) from the same PokeAPI-backed pipeline the rest of the app treats as
+  // the real source of truth for per-species ability pools, rather than
+  // trusting @smogon/calc's own bundled (sometimes stale/incomplete) species
+  // data - see liveCalcEngine.ts's defaultInference()/resolveAbilityCandidates()
+  // for where this actually gets used and why.
+  const defenderRealAbilitySlugs = useMemo(
+    () => (defenderSpecies ? getCachedSpeciesLearnset(defenderSpecies)?.abilities : undefined),
+    [defenderSpecies, getCachedSpeciesLearnset]
+  );
+
   const defenderAbilityOptions = useMemo(
-    () => (defenderSpecies ? defaultInference(gen, defenderSpecies).abilityCandidates : []),
-    [gen, defenderSpecies]
+    () => (defenderSpecies ? defaultInference(gen, defenderSpecies, defenderRealAbilitySlugs).abilityCandidates : []),
+    [gen, defenderSpecies, defenderRealAbilitySlugs]
   );
 
   useEffect(() => {
@@ -401,8 +414,8 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
   );
 
   const damageInference = useMemo(
-    () => inferDefenderStats(gen, attacker, defenderInput, observations),
-    [gen, attacker, defenderInput, observations]
+    () => inferDefenderStats(gen, attacker, defenderInput, observations, defenderRealAbilitySlugs),
+    [gen, attacker, defenderInput, observations, defenderRealAbilitySlugs]
   );
   // Speed narrowing (Leg 15) runs as a second pass over the damage-based
   // inference above - see liveCalcSpeedEngine.ts's header for why it's

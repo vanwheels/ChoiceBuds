@@ -68,6 +68,7 @@ function makeGameDataState(overrides: Partial<UseGameDataReturn> = {}): UseGameD
     getAbilityData: vi.fn(),
     getCachedAbility: vi.fn(),
     getSpeciesLearnset: vi.fn(),
+    getCachedSpeciesLearnset: vi.fn(),
     getEnrichedSpeciesOptions: vi.fn().mockResolvedValue({ moves: [], abilities: [] }),
     getChampionsUsage: vi.fn(),
     getCachedChampionsUsage: vi.fn(),

@@ -7,11 +7,19 @@ import type { RegulationId } from '../utils/pokemonRules';
 const ZERO_STATS = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
 
 function setup(
-  overrides: { getEnrichedSpeciesOptions?: UseGameDataReturn['getEnrichedSpeciesOptions'] } = {},
+  overrides: {
+    getEnrichedSpeciesOptions?: UseGameDataReturn['getEnrichedSpeciesOptions'];
+    getCachedSpeciesLearnset?: UseGameDataReturn['getCachedSpeciesLearnset'];
+  } = {},
   defaultRegulation: RegulationId = 'REG-MB'
 ) {
   const getEnrichedSpeciesOptions = overrides.getEnrichedSpeciesOptions
     ?? vi.fn().mockResolvedValue({ moves: [], abilities: [] });
+  // Defaults to "nothing cached yet" (defaultInference()'s @smogon/calc
+  // bundled-data fallback) so tests that don't care about Live Calc
+  // Feedback Pass 2 - Leg 5's real-ability-pool pipeline keep exercising the
+  // pre-existing behavior.
+  const getCachedSpeciesLearnset = overrides.getCachedSpeciesLearnset ?? vi.fn().mockReturnValue(null);
   const gameDataState: UseGameDataReturn = {
     cache: null,
     isInitialized: true,
@@ -25,6 +33,7 @@ function setup(
     getAbilityData: vi.fn(),
     getCachedAbility: vi.fn(),
     getSpeciesLearnset: vi.fn(),
+    getCachedSpeciesLearnset,
     getEnrichedSpeciesOptions,
     getChampionsUsage: vi.fn(),
     getCachedChampionsUsage: vi.fn(),
@@ -34,7 +43,7 @@ function setup(
   };
 
   const { result } = renderHook(() => useLiveCalc(gameDataState, defaultRegulation));
-  return { result, getEnrichedSpeciesOptions };
+  return { result, getEnrichedSpeciesOptions, getCachedSpeciesLearnset };
 }
 
 describe('useLiveCalc', () => {
@@ -186,6 +195,17 @@ describe('useLiveCalc', () => {
     act(() => result.current.setDefenderSpecies('Garchomp'));
 
     expect(result.current.defenderAbilityOptions).toEqual(['Sand Veil']);
+  });
+
+  it("defenderAbilityOptions sources the real ability pool from getCachedSpeciesLearnset instead of @smogon/calc's own bundled species data, which is stale for some species (Farigiraf's bundled entry is missing Armor Tail entirely) - Live Calc Feedback Pass 2, Leg 5", () => {
+    const getCachedSpeciesLearnset = vi.fn().mockReturnValue({
+      species: 'farigiraf', abilities: ['cud-chew', 'armor-tail'], moves: [], hasChampionsMoveData: true, cachedAt: 0, expiresAt: 0,
+    });
+    const { result } = setup({ getCachedSpeciesLearnset });
+
+    act(() => result.current.setDefenderSpecies('Farigiraf'));
+
+    expect([...result.current.defenderAbilityOptions].sort()).toEqual(['Armor Tail', 'Cud Chew']);
   });
 
   it('setDefenderKnownAbility locks the ability, and resets back to unknown when the defender species changes', () => {
