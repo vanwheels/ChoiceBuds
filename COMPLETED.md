@@ -18,6 +18,19 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Live Calc Player/Opponent Card Redesign] - Leg 1** (2026-09-12) - see
+  commits `56629d5` (scoping) and `dbb0a33` (implementation). Built against
+  Vanny's mockup: unified Base/SP/Boost/Total stat table on both panels
+  (Opponent's SP/Total as ranges via the new `computeDefenderTotalRanges()`
+  and `LiveCalcDefenderStatRows.tsx`), Base/Mega toggle moved beside the
+  species field on both panels, Level dropped from both panels' visible UI,
+  a real Opponent Status field wired into every damage/speed calc (not just
+  cosmetic), and HP Stat Points defaulting to 0 everywhere instead of the
+  old 16 midpoint - fully absorbing `Live Calc Feedback Pass 2`'s former
+  Legs 4 and 6. Confirmed with Vanny before starting that `CalcPokemonPanel`
+  is shared with the main Damage Calc tab, not Live-Calc-exclusive, and
+  that the layout changes should land on the shared component.
+
 - **[Live Calc Feedback Pass 2] - Leg 3** (2026-09-11) - see commit
   `8f3e5f7`. Layout restructuring: folded the "Inferred Defender" bar-chart
   section (formerly its own `LiveCalcResultPanel`) into the Opponent panel

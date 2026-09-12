@@ -35,21 +35,6 @@ auto-populate, doubles support) left underneath it. No further legs are
 scoped right now; the milestone stays open per Vanny's explicit call rather
 than being closed out here.
 
-- **[Live Calc Player/Opponent Card Redesign] — Leg 1** *(Last touched:
-  2026-09-11 · Re-checks: 0)*
-  Unblocked - mockup received and scoped 2026-09-11, see
-  `docs/investigations/live-calc-card-redesign-scope.md` for the full
-  resolved spec (this absorbs `Live Calc Feedback Pass 2`'s former Legs 4 and
-  6 wholesale, both deleted from this file). Unified Base/SP/Boost/Total
-  stat table on both Player and Opponent panels (Opponent's SP/Total are
-  ranges, narrowing live); Base/Mega toggle moves beside the species field;
-  Level drops from the visible panel, Gender stays but the species box
-  shrinks to fit it in; Opponent panel gains a Status field with real
-  burn/paralysis/Hex effects wired through (not just cosmetic); HP Stat
-  Points default to 0 everywhere instead of the old 16 midpoint. Likely
-  supersedes Leg 3's field ordering/header shape per this item's original
-  note - build against the mockup, not Leg 3's layout.
-
 - **[Live Calc Feedback Pass 2] — Leg 5** *(Last touched: 2026-09-11 ·
   Re-checks: 0)*
   Data-correctness bug, found live-verifying Leg 3: Armor Tail doesn't show
