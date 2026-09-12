@@ -274,6 +274,52 @@ describe('useLiveCalc', () => {
     expect(result.current.inference.spaBound).toEqual({ min: 0, max: 32 });
   });
 
+  it('updateReverseObservation auto-fills a newly-logged move into the first empty "Theirs -> You" grid slot - Live Calc Feedback Pass 2, Leg 1', () => {
+    const { result } = setup();
+    act(() => result.current.addReverseObservation());
+    const [obs] = result.current.reverseObservations;
+
+    act(() => result.current.updateReverseObservation(obs.id, { moveName: 'Close Combat' }));
+
+    expect(result.current.defenderMoves[0].name).toBe('Close Combat');
+  });
+
+  it("updateReverseObservation doesn't duplicate a move already in the grid, and doesn't overflow past 4 slots", () => {
+    const { result } = setup();
+    act(() => {
+      result.current.setDefenderMove(0, { name: 'Close Combat' });
+      result.current.setDefenderMove(1, { name: 'Sucker Punch' });
+      result.current.setDefenderMove(2, { name: 'Knock Off' });
+      result.current.setDefenderMove(3, { name: 'Psycho Cut' });
+    });
+
+    act(() => result.current.addReverseObservation());
+    const [obs] = result.current.reverseObservations;
+    act(() => result.current.updateReverseObservation(obs.id, { moveName: 'Close Combat' }));
+    expect(result.current.defenderMoves.map(m => m.name)).toEqual(['Close Combat', 'Sucker Punch', 'Knock Off', 'Psycho Cut']);
+
+    act(() => result.current.updateReverseObservation(obs.id, { moveName: 'Stone Edge' }));
+    expect(result.current.defenderMoves.map(m => m.name)).toEqual(['Close Combat', 'Sucker Punch', 'Knock Off', 'Psycho Cut']);
+  });
+
+  it('setDefenderSpecies to a Mega form auto-fills defenderKnownAbility to its config-corrected ability - Live Calc Feedback Pass 2, Leg 1', () => {
+    const { result } = setup();
+
+    act(() => result.current.setDefenderSpecies('Absol-Mega-Z'));
+
+    expect(result.current.defenderKnownAbility).toBe('Sharpness');
+  });
+
+  it('setDefenderSpecies back to a non-Mega species resets defenderKnownAbility to unknown', () => {
+    const { result } = setup();
+    act(() => result.current.setDefenderSpecies('Absol-Mega-Z'));
+    expect(result.current.defenderKnownAbility).toBe('Sharpness');
+
+    act(() => result.current.setDefenderSpecies('Absol'));
+
+    expect(result.current.defenderKnownAbility).toBe('');
+  });
+
   it('attackerBaseStats is null with no species selected, and the real base stat table once one is', () => {
     const { result } = setup();
     expect(result.current.attackerBaseStats).toBe(null);

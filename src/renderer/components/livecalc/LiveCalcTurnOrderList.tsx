@@ -11,6 +11,12 @@
  * toggle instead of a targets-hit one) and narrows a different stat (Speed
  * vs. Def/SpD), so keeping them as two lists avoids one row type growing
  * conditional fields for the other's inputs.
+ *
+ * Row wraps rather than forcing everything onto one line (Live Calc
+ * Feedback Pass 2 - Leg 1, same overflow fix as LiveCalcObservationList's
+ * own row) - the move search takes a full-width line of its own, the
+ * went-first select/Speed-stage input/remove button wrap below it as
+ * needed.
  */
 
 import type { LiveCalcTurnOrderObservationEntry } from '../../hooks/useLiveCalc';
@@ -44,8 +50,8 @@ export default function LiveCalcTurnOrderList({ observations, moveOptions, onAdd
       )}
 
       {observations.map(obs => (
-        <div key={obs.id} className="flex items-center gap-2">
-          <div className="flex-1">
+        <div key={obs.id} className="flex flex-wrap items-center gap-2">
+          <div className="w-full">
             <CalcAutocomplete
               value={obs.moveName}
               options={moveOptions}

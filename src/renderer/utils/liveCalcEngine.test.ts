@@ -18,6 +18,7 @@ import {
   inferOpponentOffensiveStats,
   computeYourMoveRanges,
   computeTheirMoveRanges,
+  defaultInference,
   NO_ITEM,
   type LiveCalcObservation,
   type LiveCalcReverseObservation,
@@ -73,6 +74,18 @@ describe('inferDefenderStats - no/invalid input', () => {
     const result = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, []);
     const realAbilities = Object.values(gen.species.get('ferrothorn' as never)?.abilities ?? {});
     expect(result.abilityCandidates.sort()).toEqual([...new Set(realAbilities)].sort());
+  });
+
+  it('seeds a single, config-corrected ability for a Mega form instead of @smogon/calc\'s own (stale) bundled value - Live Calc Feedback Pass 2, Leg 1', () => {
+    // @smogon/calc's own bundled data for Absol-Mega-Z still just duplicates
+    // ordinary Mega Absol's ability (Magic Bounce) - the real, distinct
+    // Mega Z ability (Sharpness) only lives in config/megaAbilities.ts. See
+    // that config's header for the full provenance.
+    const rawBundledAbility = Object.values(gen.species.get('absolmegaz' as never)?.abilities ?? {});
+    expect(rawBundledAbility).toEqual(['Magic Bounce']);
+
+    const result = defaultInference(gen, 'Absol-Mega-Z');
+    expect(result.abilityCandidates).toEqual(['Sharpness']);
   });
 
   it('returns the default, untouched inference when attacker or defender species is empty', () => {

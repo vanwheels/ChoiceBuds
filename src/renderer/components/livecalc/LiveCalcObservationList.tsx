@@ -23,6 +23,15 @@
  * near-duplicate file (unlike LiveCalcTurnOrderList, which stays its own
  * component since ITS row shape actually differs - no damage%, an order
  * toggle instead of a targets-hit one).
+ *
+ * Each row wraps (Live Calc Feedback Pass 2 - Leg 1) rather than forcing the
+ * move search box plus every extension control (damage%, targets-hit,
+ * outcome, crit, remove) onto one line - this list's own container can be as
+ * narrow as its `min-w-[280px]` floor once the page's panel row has 5+
+ * flex-1 siblings, and a single unwrapped line overflowed it. The move
+ * search always takes its own full-width line (`w-full` instead of
+ * `flex-1`) so it stays usable even at that floor; the rest of the controls
+ * wrap onto however many lines they need below it.
  */
 
 import type { LiveCalcObservationEntry, LiveCalcReverseObservationEntry } from '../../hooks/useLiveCalc';
@@ -67,8 +76,8 @@ export default function LiveCalcObservationList({
       )}
 
       {observations.map(obs => (
-        <div key={obs.id} className="flex items-center gap-2">
-          <div className="flex-1">
+        <div key={obs.id} className="flex flex-wrap items-center gap-2">
+          <div className="w-full">
             <CalcAutocomplete
               value={obs.moveName}
               options={moveOptions}

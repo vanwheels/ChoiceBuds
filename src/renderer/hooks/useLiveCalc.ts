@@ -61,6 +61,7 @@ import { Generations, toID } from '@smogon/calc';
 import type { Generation, NatureName, StatsTable } from '@smogon/calc/dist/data/interface';
 import { validateSpeciesLegality, type RegulationId } from '../utils/pokemonRules';
 import { getFormeFamily, type FormeFamily } from '../utils/calcFormes';
+import { getMegaAbility } from '../config/megaAbilities';
 import type { UseGameDataReturn } from './useGameData';
 import {
   normalizeMoveSlug,
@@ -119,6 +120,23 @@ export interface LiveCalcReverseObservationEntry extends LiveCalcReverseObservat
 
 function defaultReverseObservation(): LiveCalcReverseObservationEntry {
   return { id: makeObservationId(), moveName: '', damagePercent: 0, targetsHit: 2, isCrit: false, outcome: 'survived' };
+}
+
+/** Live Calc Feedback Pass 2 - Leg 1: logging a reverse observation for a
+ * move that isn't already showing in the "Theirs -> You" grid auto-fills it
+ * into that grid's first empty slot, so the grid reflects it the same way
+ * the "Yours -> Them" grid already reflects the attacker's own moves (there,
+ * `attackerMoveOptions` is already constrained to `attacker.moves` once a
+ * real set is loaded, so whatever's logged is already in the grid - the
+ * reverse direction has no such backing moveset, so nothing did this for
+ * `defenderMoves` until now). No-ops if the move's already present, or if
+ * all 4 slots are already taken (a real Pokemon has at most 4 moves, so a
+ * 5th distinct one isn't given a slot to bump). */
+function syncMoveIntoSlots(slots: CalcMoveSlot[], moveName: string): CalcMoveSlot[] {
+  if (slots.some(slot => slot.name === moveName)) return slots;
+  const emptyIndex = slots.findIndex(slot => slot.name === '');
+  if (emptyIndex === -1) return slots;
+  return slots.map((slot, i) => (i === emptyIndex ? { ...slot, name: moveName } : slot));
 }
 
 export interface UseLiveCalcReturn {
@@ -280,7 +298,14 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
 
   // Same render-time-guard pattern as above: a Def/SpD boost (or a locked
   // ability) asserted for one defender shouldn't silently carry over and
-  // misattribute to whatever species gets swapped in next.
+  // misattribute to whatever species gets swapped in next. Live Calc
+  // Feedback Pass 2 - Leg 1: when the new species IS a Mega form, known
+  // ability auto-fills to that Mega's guaranteed ability (config/
+  // megaAbilities.ts) instead of resetting to Unknown - the opponent panel
+  // otherwise had no way to lock this in at all (LiveCalcDefenderPanel's own
+  // FormeToggle just swaps species, unlike CalcPokemonPanel's attacker-side
+  // Mega toggle which already does this) - and every other axis resets the
+  // same as before.
   const [defenderResolvedForSpecies, setDefenderResolvedForSpecies] = useState(defenderSpecies);
   if (defenderSpecies !== defenderResolvedForSpecies) {
     setDefenderResolvedForSpecies(defenderSpecies);
@@ -289,7 +314,7 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
     setDefenderAtkBoost(0);
     setDefenderSpaBoost(0);
     setDefenderSpeBoost(0);
-    setDefenderKnownAbility('');
+    setDefenderKnownAbility(getMegaAbility(defenderSpecies.toLowerCase()) ?? '');
     setDefenderKnownItem('');
     setDefenderKnownNature('');
   }
@@ -333,8 +358,10 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
   const removeTurnOrderObservation = (id: string) => setTurnOrderObservations(prev => prev.filter(o => o.id !== id));
 
   const addReverseObservation = () => setReverseObservations(prev => [...prev, defaultReverseObservation()]);
-  const updateReverseObservation = (id: string, updates: Partial<LiveCalcReverseObservation>) =>
+  const updateReverseObservation = (id: string, updates: Partial<LiveCalcReverseObservation>) => {
     setReverseObservations(prev => prev.map(o => (o.id === id ? { ...o, ...updates } : o)));
+    if (updates.moveName) setDefenderMovesState(prev => syncMoveIntoSlots(prev, updates.moveName!));
+  };
   const removeReverseObservation = (id: string) => setReverseObservations(prev => prev.filter(o => o.id !== id));
 
   const defenderInput = useMemo(

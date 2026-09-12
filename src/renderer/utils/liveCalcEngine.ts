@@ -118,6 +118,7 @@ import { getChampionsCalcMoveOverride } from '../config/championsMoveOverrides';
 import { getChampionsAbilityDamageEffect } from '../config/championsAbilityDamageEffects';
 import { normalizeNameForAPI } from '../services/pokeapiService';
 import { LIVE_CALC_DEFENSIVE_ITEMS } from '../config/liveCalcDefensiveItems';
+import { getMegaAbility } from '../config/megaAbilities';
 import { MAX_IVS, spsToEvs, resolveCalcSpecies } from './championsStats';
 import { buildPokemon, type CalcPokemonState, type CalcMoveSlot } from './damageCalcEngine';
 
@@ -256,6 +257,15 @@ function joinWithAnd(items: string[]): string {
  * the post-narrowing candidate lists on their own. */
 export function defaultInference(gen: Generation, species: string): LiveCalcInference {
   const speciesData = species ? gen.species.get(toID(species)) : undefined;
+  // Live Calc Feedback Pass 2 - Leg 1: a Mega form's guaranteed ability comes
+  // from config/megaAbilities.ts, not @smogon/calc's own bundled species data
+  // directly - that data is stale placeholder for a few Champions-invented
+  // Mega forms (most visibly the 3 Reg M-C "Mega Z" forms, whose raw
+  // `abilities.0` just duplicates the species' ORDINARY Mega ability rather
+  // than the real, distinct Mega-Z one) - see that config's own header for
+  // the full provenance. Falls back to the raw species data for any
+  // non-Mega species (or a Mega form with no override needed).
+  const megaAbility = species ? getMegaAbility(species.toLowerCase()) : undefined;
   return {
     defBound: { min: SP_MIN, max: SP_MAX },
     spdBound: { min: SP_MIN, max: SP_MAX },
@@ -263,7 +273,7 @@ export function defaultInference(gen: Generation, species: string): LiveCalcInfe
     spaBound: { min: SP_MIN, max: SP_MAX },
     speedBound: { min: SP_MIN, max: SP_MAX },
     natureCandidates: [...gen.natures].map(n => n.name) as NatureName[],
-    abilityCandidates: dedupeStrings(Object.values(speciesData?.abilities ?? {})),
+    abilityCandidates: megaAbility ? [megaAbility] : dedupeStrings(Object.values(speciesData?.abilities ?? {})),
     itemCandidates: [NO_ITEM, ...LIVE_CALC_DEFENSIVE_ITEMS],
     physicalObservationCount: 0,
     specialObservationCount: 0,
