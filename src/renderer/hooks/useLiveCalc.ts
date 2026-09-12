@@ -72,7 +72,7 @@ export interface LiveCalcObservationEntry extends LiveCalcObservation {
 }
 
 function defaultObservation(): LiveCalcObservationEntry {
-  return { id: makeObservationId(), moveName: '', damagePercent: 0, targetsHit: 2 };
+  return { id: makeObservationId(), moveName: '', damagePercent: 0, targetsHit: 2, isCrit: false, outcome: 'survived' };
 }
 
 export interface LiveCalcTurnOrderObservationEntry extends LiveCalcTurnOrderObservation {

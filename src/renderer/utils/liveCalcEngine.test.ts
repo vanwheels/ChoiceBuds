@@ -30,8 +30,13 @@ const GENGAR_SHADOW_BALL = attackerState({ species: 'Gengar' });
 // actual damage-relevant matchup, not just "a bulky wall").
 const DEFENDER = { species: 'Ferrothorn', level: 50, defBoost: 0, spdBoost: 0 };
 
-function obs(moveName: string, damagePercent: number, targetsHit: 1 | 2 = 2): LiveCalcObservation {
-  return { moveName, damagePercent, targetsHit };
+function obs(
+  moveName: string,
+  damagePercent: number,
+  targetsHit: 1 | 2 = 2,
+  extra: Partial<Pick<LiveCalcObservation, 'isCrit' | 'outcome'>> = {}
+): LiveCalcObservation {
+  return { moveName, damagePercent, targetsHit, isCrit: false, outcome: 'survived', ...extra };
 }
 
 describe('inferDefenderStats - no/invalid input', () => {
@@ -146,6 +151,40 @@ describe('inferDefenderStats - known Def/Sp. Def stage boosts', () => {
   it('leaves spdBound untouched for a physical observation regardless of spdBoost', () => {
     const result = inferDefenderStats(gen, LANDO_EARTHQUAKE, { ...DEFENDER, spdBoost: -4 }, [obs('Earthquake', 30)]);
     expect(result.spdBound).toEqual({ min: 0, max: 32 });
+  });
+});
+
+describe('inferDefenderStats - isCrit', () => {
+  it('a damage% unreachable normally becomes feasible once isCrit is set, and vice versa', () => {
+    // Earthquake vs. this defender: 50% is above the non-crit range's max but
+    // within the crit-boosted range - directly exercises that `isCrit`
+    // actually reaches `Move`'s own crit multiplier rather than being ignored.
+    const nonCrit = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, [obs('Earthquake', 50, 1, { isCrit: false })]);
+    const crit = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, [obs('Earthquake', 50, 1, { isCrit: true })]);
+    expect(nonCrit.contradictions.length).toBe(1);
+    expect(nonCrit.physicalObservationCount).toBe(0);
+    expect(crit.contradictions.length).toBe(0);
+    expect(crit.physicalObservationCount).toBe(1);
+  });
+});
+
+describe('inferDefenderStats - fainted vs. survived outcome', () => {
+  it('a damage% below the real range is a contradiction when survived, but feasible as a fainted lower bound', () => {
+    // 20% reads as "too low to be this hit" if taken as an exact survived
+    // percent (the real range starts well above it), but a fainted read only
+    // claims "at least 20%" - which the real (higher) range satisfies.
+    const survived = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, [obs('Earthquake', 20, 1, { outcome: 'survived' })]);
+    const fainted = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, [obs('Earthquake', 20, 1, { outcome: 'fainted' })]);
+    expect(survived.contradictions.length).toBe(1);
+    expect(survived.physicalObservationCount).toBe(0);
+    expect(fainted.contradictions.length).toBe(0);
+    expect(fainted.physicalObservationCount).toBe(1);
+  });
+
+  it('a damage% clearly out of reach even as a lower bound is still a contradiction when fainted', () => {
+    const fainted = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, [obs('Earthquake', 99999, 1, { outcome: 'fainted' })]);
+    expect(fainted.contradictions.length).toBe(1);
+    expect(fainted.physicalObservationCount).toBe(0);
   });
 });
 

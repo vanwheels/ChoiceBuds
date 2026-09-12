@@ -3,11 +3,16 @@
  * One row per observed hit: which of the attacker's moves was used, the
  * damage it dealt as a percent of the defender's max HP (a health-bar read,
  * not exact HP - see docs/investigations/live-calc-stat-inference-scope.md),
- * and how many targets it actually hit that turn. The targets-hit toggle is
+ * how many targets it actually hit that turn, whether it was a crit, and
+ * whether the defender survived or fainted from it. The targets-hit toggle is
  * shown on every row rather than only spread-capable moves - the engine
  * (utils/liveCalcEngine.ts) only lets it affect a move that's actually
  * spread-capable, so it's harmless noise on a single-target move rather than
- * something this list needs to pre-filter.
+ * something this list needs to pre-filter. The outcome select works the same
+ * way: 'survived' (default) keeps the damage% reading as exact-ish, 'fainted'
+ * tells the engine to treat it as a lower bound only (Live Calc Observation
+ * Inputs: Crit + Fainted/Survived - Leg 1; see liveCalcEngine.ts's header for
+ * why a KO reading can't be trusted as exact).
  */
 
 import type { LiveCalcObservationEntry } from '../../hooks/useLiveCalc';
@@ -74,6 +79,27 @@ export default function LiveCalcObservationList({ observations, moveOptions, onA
             <option value={1}>1 target</option>
             <option value={2}>2 targets</option>
           </select>
+          <select
+            value={obs.outcome}
+            onChange={(e) => onUpdate(obs.id, { outcome: e.target.value as LiveCalcObservationEntry['outcome'] })}
+            title="Whether the defender survived or fainted from this hit - a fainted read is treated as a lower bound, not an exact percent"
+            className="px-1 py-0.5 text-xs bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold cursor-pointer"
+          >
+            <option value="survived">Survived</option>
+            <option value="fainted">Fainted</option>
+          </select>
+          <label
+            title="Was this hit a critical hit?"
+            className="flex items-center gap-1 text-xs text-zinc-400 cursor-pointer select-none"
+          >
+            <input
+              type="checkbox"
+              checked={obs.isCrit}
+              onChange={(e) => onUpdate(obs.id, { isCrit: e.target.checked })}
+              className="cursor-pointer accent-accent-gold"
+            />
+            Crit
+          </label>
           <button
             type="button"
             onClick={() => onRemove(obs.id)}

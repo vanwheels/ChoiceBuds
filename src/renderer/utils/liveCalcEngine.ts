@@ -40,9 +40,25 @@
  *   stat - the scope doc explicitly allows this HP/defense-stat coupling
  *   approximation rather than blocking on disentangling both unknowns from
  *   one data point.
- * - No crit, no multi-hit: multi-hit moves (Bullet Seed etc.) are rejected
- *   as unusable observations outright (recorded as a contradiction/warning)
- *   rather than modeled with their own extra variance.
+ * - No multi-hit: multi-hit moves (Bullet Seed etc.) are rejected as unusable
+ *   observations outright (recorded as a contradiction/warning) rather than
+ *   modeled with their own extra variance. Crit IS modeled (Live Calc
+ *   Observation Inputs: Crit + Fainted/Survived - Leg 1) via each
+ *   observation's own `isCrit` flag, fed straight into `Move`'s own
+ *   constructor option of the same name - `@smogon/calc`'s `calculate()`
+ *   already knows how to apply the crit multiplier (and, in later gens,
+ *   ignore negative defensive stat stages) once told a hit was a crit; nothing
+ *   else in this file's own SP-scanning logic needed to change for it.
+ * - Each observation also carries its own `outcome` ('survived' or
+ *   'fainted', default 'survived') rather than every reading being treated
+ *   as an exact health-bar percent. 'survived' keeps the original exact-ish
+ *   comparison (`observedPercent` within `PERCENT_TOLERANCE` of the
+ *   candidate's computed range). 'fainted' relaxes this to a lower bound
+ *   only - a fainting hit proves the true damage was AT LEAST the reported
+ *   percent (the remaining-HP health-bar read right before the KO), never
+ *   that it was exactly that percent, since a fainted defender's actual
+ *   damage roll could have overkilled well past 0. See `feasibleSpRange`'s
+ *   own comment for the exact comparison this becomes.
  * - No field state (weather/terrain/screens/side conditions) - Leg 1's own
  *   TODO.md entry scopes the engine's inputs to attacker + defender
  *   species/level + observations only, nothing field-related. Every scan
@@ -87,12 +103,22 @@ const ZERO_SPS: StatsTable = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
  * modeled as an absence. */
 export const NO_ITEM = 'None';
 
+/** Whether the reported `damagePercent` should be read as an exact-ish
+ * health-bar percent ('survived', the default/original behavior) or as a
+ * lower bound only ('fainted' - see this file's header for why a KO reading
+ * can't be trusted as an exact percent). */
+export type LiveCalcObservationOutcome = 'survived' | 'fainted';
+
 export interface LiveCalcObservation {
   moveName: string;
   /** Damage dealt by this move as a percent (0-100) of the defender's max HP - a health-bar read, not exact HP. */
   damagePercent: number;
   /** How many targets this hit actually landed on that turn - only meaningful for spread-capable moves in Doubles (see `isSpreadMove`). */
   targetsHit: 1 | 2;
+  /** Whether this hit was a critical hit - fed straight into `Move`'s own `isCrit` option. */
+  isCrit: boolean;
+  /** Whether the defender survived or fainted from this hit - see `LiveCalcObservationOutcome`. */
+  outcome: LiveCalcObservationOutcome;
 }
 
 export interface LiveCalcDefenderInput {
@@ -191,9 +217,14 @@ interface DefenderCandidateSpec {
  * `@smogon/calc`'s own `calculate()` applies the relevant stage multiplier
  * internally, same as it would for a real Pokemon instance) and checks
  * whether `calculate()`'s resulting damage-percent range could plausibly
- * have produced `observedPercent`. Returns the feasible SP sub-range, or
- * null if no SP value works at all (this candidate is infeasible given this
- * one observation).
+ * have produced `observedPercent` - for outcome 'survived', that means
+ * `observedPercent` falling within the candidate's computed range (plus
+ * `PERCENT_TOLERANCE` slack on both ends, same as always); for 'fainted', it
+ * means only that the candidate's range could reach AT LEAST
+ * `observedPercent` (a fainted read is a lower bound, not an exact value -
+ * see this file's header), so only the range's upper end needs to clear it.
+ * Returns the feasible SP sub-range, or null if no SP value works at all
+ * (this candidate is infeasible given this one observation).
  */
 function feasibleSpRange(
   gen: Generation,
@@ -205,6 +236,7 @@ function feasibleSpRange(
   relevantStat: 'def' | 'spd',
   candidate: DefenderCandidateSpec,
   observedPercent: number,
+  outcome: LiveCalcObservationOutcome,
   isContactMove: boolean,
   defenderBoosts: StatsTable,
 ): LiveCalcStatBound | null {
@@ -231,7 +263,10 @@ function feasibleSpRange(
       const range = result.range();
       const lo = ((range[0] / maxHP) * 100) * contactMultiplier;
       const hi = ((range[1] / maxHP) * 100) * contactMultiplier;
-      if (observedPercent >= lo - PERCENT_TOLERANCE && observedPercent <= hi + PERCENT_TOLERANCE) {
+      const feasible = outcome === 'fainted'
+        ? hi + PERCENT_TOLERANCE >= observedPercent
+        : observedPercent >= lo - PERCENT_TOLERANCE && observedPercent <= hi + PERCENT_TOLERANCE;
+      if (feasible) {
         feasibleMin = feasibleMin === null ? sp : Math.min(feasibleMin, sp);
         feasibleMax = feasibleMax === null ? sp : Math.max(feasibleMax, sp);
       }
@@ -292,7 +327,7 @@ export function inferDefenderStats(
         ability: attacker.ability || undefined,
         item: attacker.item || undefined,
         species: attacker.species,
-        isCrit: false,
+        isCrit: obs.isCrit,
         overrides: getChampionsCalcMoveOverride(obs.moveName),
       });
     } catch {
@@ -302,7 +337,7 @@ export function inferDefenderStats(
     const field = new Field({ gameType: effectiveGameType });
 
     const scan = (candidate: DefenderCandidateSpec) =>
-      feasibleSpRange(gen, attackerPokemon, move, field, defender.species, defender.level, relevantStat, candidate, obs.damagePercent, isContactMove, defenderBoosts);
+      feasibleSpRange(gen, attackerPokemon, move, field, defender.species, defender.level, relevantStat, candidate, obs.damagePercent, obs.outcome, isContactMove, defenderBoosts);
 
     const natureResults = inference.natureCandidates.map(nature => ({ value: nature, bound: scan({ nature, ability: undefined, item: undefined }) }));
     const abilityResults = inference.abilityCandidates.map(ability => ({ value: ability, bound: scan({ nature: 'Hardy' as NatureName, ability, item: undefined }) }));
