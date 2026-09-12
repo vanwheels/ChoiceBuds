@@ -157,6 +157,28 @@ describe('useLiveCalc', () => {
     expect(getEnrichedSpeciesOptions).toHaveBeenCalledWith('Gengar', undefined);
   });
 
+  it('attackerMoveOptions caps to the attacker\'s real 4 moves once a set with moves is loaded, ignoring the learned movepool', async () => {
+    const getEnrichedSpeciesOptions = vi.fn().mockResolvedValue({
+      moves: [{ name: 'shadow-ball' }, { name: 'toxic' }, { name: 'sludge-wave' }],
+      abilities: [],
+    });
+    const { result } = setup({ getEnrichedSpeciesOptions });
+
+    act(() => result.current.setAttacker({ species: 'Gengar' }));
+    await waitFor(() => expect(result.current.attackerMoveOptions).toEqual(['Shadow Ball', 'Sludge Wave', 'Toxic']));
+
+    act(() => result.current.setAttacker({
+      moves: [
+        { name: 'Shadow Ball', isCrit: false },
+        { name: 'Sludge Wave', isCrit: false },
+        { name: 'Nasty Plot', isCrit: false },
+        { name: '', isCrit: false },
+      ],
+    }));
+
+    expect(result.current.attackerMoveOptions).toEqual(['Shadow Ball', 'Sludge Wave', 'Nasty Plot']);
+  });
+
   it('attackerBaseStats is null with no species selected, and the real base stat table once one is', () => {
     const { result } = setup();
     expect(result.current.attackerBaseStats).toBe(null);

@@ -20,13 +20,18 @@
  * (Legs 1 and 15), mirroring how useDamageCalc.ts is state/plumbing around
  * damageCalcEngine.ts.
  *
- * The attacker's own `CalcPokemonState.moves` slots are deliberately left
- * unused here (always the default 4 empty slots) - `buildPokemon()` never
- * reads them, and each observation carries its own move name instead. That
- * move name is picked from `attackerMoveOptions`, filtered down to the
- * attacker species' actual learned moveset the same way
- * useDamageCalc.ts's pokemon1MoveOptions is (via getEnrichedSpeciesOptions),
- * falling back to the full move list until that resolves or if it's empty.
+ * The attacker's own `CalcPokemonState.moves` slots are never read by
+ * `buildPokemon()` - each observation carries its own move name instead,
+ * picked from `attackerMoveOptions`. That said, `attacker.moves` isn't
+ * ignored entirely (Live Calc Observation Move Options: Actual Attacker
+ * Moveset - Leg 1): when a real set has been loaded into the attacker panel
+ * (a saved set, a usage auto-fill, a team-tray drag - anything that
+ * populates `attacker.moves` with real move names), `attackerMoveOptions`
+ * caps to just those, since the attacker in practice only ever knows 4
+ * moves. Only once none of the 4 slots are filled does it fall back to the
+ * attacker species' full learned moveset, the same way useDamageCalc.ts's
+ * pokemon1MoveOptions is (via getEnrichedSpeciesOptions), itself falling
+ * back further to the full move list until that resolves or if it's empty.
  */
 
 import { useEffect, useMemo, useState } from 'react';
@@ -184,10 +189,12 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
   }, [attacker.species, attacker.gender, getEnrichedSpeciesOptions]);
 
   const attackerMoveOptions = useMemo(() => {
+    const realMoves = attacker.moves.map(m => m.name).filter(name => name !== '');
+    if (realMoves.length > 0) return realMoves;
     if (!attackerLearnedSlugs) return moveOptions;
     const filtered = moveOptions.filter(name => attackerLearnedSlugs.has(normalizeMoveSlug(name)));
     return filtered.length > 0 ? filtered : moveOptions;
-  }, [moveOptions, attackerLearnedSlugs]);
+  }, [moveOptions, attackerLearnedSlugs, attacker.moves]);
 
   const setAttacker = (updates: Partial<CalcPokemonState>) => setAttackerState(prev => ({ ...prev, ...updates }));
 
