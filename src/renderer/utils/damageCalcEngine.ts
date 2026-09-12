@@ -74,7 +74,10 @@ export interface CalcMoveSlot {
   hits?: number;
 }
 
-function defaultMoves(): CalcMoveSlot[] {
+/** Exported for reuse by useLiveCalc.ts, which needs the same blank 4-slot
+ * shape for its own opponent-side move grid (Live Calc Page Layout &
+ * Function Rework - Leg 3) without going through a whole `defaultPokemonState()`. */
+export function defaultMoveSlots(): CalcMoveSlot[] {
   return Array.from({ length: MOVE_SLOT_COUNT }, () => ({ name: '', isCrit: false }));
 }
 
@@ -102,7 +105,7 @@ export function defaultPokemonState(): CalcPokemonState {
     status: '',
     sps: { ...ZERO_STATS },
     boosts: { ...ZERO_STATS },
-    moves: defaultMoves(),
+    moves: defaultMoveSlots(),
   };
 }
 

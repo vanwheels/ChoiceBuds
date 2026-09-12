@@ -1,17 +1,25 @@
 /**
  * LiveCalcPage.tsx - Live Calc Tab
+ * Layout reorganized (Live Calc Page Layout & Function Rework - Leg 3,
+ * Layout & Live Range Grid Rework) to mirror CalcPage.tsx's own structure:
+ * two live move grids up top (LiveCalcMoveRangeGrid, "Yours -> Them"/"Theirs
+ * -> You"), LiveCalcResultPanel below them, then the Pokémon-panel row
+ * underneath (attacker + defender panels, both damage% observation lists,
+ * the turn-order list). Each grid cell shows a min-max % SPAN rather than
+ * CalcMoveGrid's single fixed number, since the opponent's spread is never
+ * fully resolved here - see LiveCalcMoveRangeGrid's own header for why that
+ * needed a dedicated grid variant instead of reusing CalcMoveGrid.
+ *
  * Attacker entry, opponent species+level+known-facts, and three add/remove
  * observation lists (damage% into them, damage% into you, turn-order) wire
- * through to `inferDefenderStats()`, `inferOpponentOffensiveStats()` (Live
- * Calc Page Layout & Function Rework - Leg 1), and `inferDefenderSpeed()`
- * (Leg 15), with LiveCalcResultPanel (Live Calc Results Display - Leg 3)
- * presenting the narrowed result: per-stat SP ranges (Def/SpD/Speed today -
- * Atk/SpA already narrow under the hood via Leg 1's engine pass, but aren't
- * surfaced here yet, since that's this rework's own Leg 3) and
- * nature/ability/item candidate lists with their own certainty indication.
- * The two damage% lists are the same `LiveCalcObservationList` component
- * rendered twice with different labels (Leg 2) - see that file's header for
- * why they share one component instead of a near-duplicate.
+ * through to `inferDefenderStats()`, `inferOpponentOffensiveStats()` (Leg 1
+ * of this same rework), and `inferDefenderSpeed()` (Leg 15), with
+ * LiveCalcResultPanel (Live Calc Results Display) presenting the narrowed
+ * result: per-stat SP ranges and nature/ability/item candidate lists with
+ * their own certainty indication. The two damage% lists are the same
+ * `LiveCalcObservationList` component rendered twice with different labels
+ * (Leg 2) - see that file's header for why they share one component instead
+ * of a near-duplicate.
  *
  * useLiveCalc (and the @smogon/calc import it pulls in) is instantiated
  * here rather than in App.tsx, same reasoning as CalcPage.tsx's own header
@@ -21,10 +29,11 @@
  * one piece of this tab's state that isn't local, since it's read back by
  * the sibling Speed Tiers tab - see hooks/useLiveCalcThreatPins.ts.
  *
- * The one-line intro paragraph above the panels (Live Calc Result Clarity
- * Pass) states the tab's actual 3-step flow up front - enter knowns, log
- * observations, read the result below - since per feedback the tab wasn't
- * self-explanatory to a first-time reader without it.
+ * The one-line intro paragraph above the grids (Live Calc Result Clarity
+ * Pass, reworded for this leg's reordered layout) states the tab's actual
+ * flow up front - fill in what's known, log observations, read the live
+ * grids/result below - since per feedback the tab wasn't self-explanatory
+ * to a first-time reader without it.
  */
 
 import { useLiveCalc } from '../../hooks/useLiveCalc';
@@ -41,6 +50,7 @@ import LiveCalcDefenderPanel from './LiveCalcDefenderPanel';
 import LiveCalcObservationList from './LiveCalcObservationList';
 import LiveCalcTurnOrderList from './LiveCalcTurnOrderList';
 import LiveCalcResultPanel from './LiveCalcResultPanel';
+import LiveCalcMoveRangeGrid from './LiveCalcMoveRangeGrid';
 
 interface LiveCalcPageProps {
   gameDataState: UseGameDataReturn;
@@ -71,15 +81,41 @@ export default function LiveCalcPage({
     turnOrderObservations, addTurnOrderObservation, updateTurnOrderObservation, removeTurnOrderObservation,
     reverseObservations, addReverseObservation, updateReverseObservation, removeReverseObservation,
     inference,
+    setAttackerMove, defenderMoves, setDefenderMove, yourMoveRanges, theirMoveRanges,
   } = liveCalcState;
 
   return (
     <div className="flex flex-col gap-2">
       <p className="text-xs text-zinc-500">
-        Fill in the attacker and whatever's known about the opponent below, log each hit (either direction)
-        or turn-order read you've seen in battle as an observation, then read the narrowed result at the
-        bottom of the page.
+        Fill in the attacker and whatever's known about the opponent in the panels below, log each hit
+        (either direction) or turn-order read you've seen in battle as an observation - the move grids
+        above narrow live as you go, and the full result sits between them and the panels.
       </p>
+      <div className="flex flex-wrap gap-3">
+        <LiveCalcMoveRangeGrid
+          title="Yours -> Them"
+          moves={attacker.moves}
+          ranges={yourMoveRanges}
+          moveOptions={attackerMoveOptions}
+          onChangeMove={setAttackerMove}
+        />
+        <LiveCalcMoveRangeGrid
+          title="Theirs -> You"
+          moves={defenderMoves}
+          ranges={theirMoveRanges}
+          moveOptions={defenderMoveOptions}
+          onChangeMove={setDefenderMove}
+        />
+      </div>
+
+      <LiveCalcResultPanel
+        gen={gen}
+        defenderSpecies={defenderSpecies}
+        defenderLevel={defenderLevel}
+        inference={inference}
+        liveCalcThreatPinsState={liveCalcThreatPinsState}
+      />
+
       <div className="flex flex-wrap gap-3">
         <CalcPokemonPanel
           title="Attacker"
@@ -155,14 +191,6 @@ export default function LiveCalcPage({
           onRemove={removeTurnOrderObservation}
         />
       </div>
-
-      <LiveCalcResultPanel
-        gen={gen}
-        defenderSpecies={defenderSpecies}
-        defenderLevel={defenderLevel}
-        inference={inference}
-        liveCalcThreatPinsState={liveCalcThreatPinsState}
-      />
     </div>
   );
 }

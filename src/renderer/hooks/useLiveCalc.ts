@@ -44,6 +44,16 @@
  * attacker species' full learned moveset, the same way useDamageCalc.ts's
  * pokemon1MoveOptions is (via getEnrichedSpeciesOptions), itself falling
  * back further to the full move list until that resolves or if it's empty.
+ *
+ * Live Calc Page Layout & Function Rework (Leg 3, Layout & Live Range Grid
+ * Rework): `attacker.moves` gains a real editor at last - the new "Yours ->
+ * Them" move grid (`setAttackerMove`) - and its mirror, `defenderMoves`/
+ * `setDefenderMove`, is a second, separate 4-slot array powering the "Theirs
+ * -> You" grid (NOT a real known opponent moveset, just which 4 moves that
+ * grid currently previews). Both grids' live results (`yourMoveRanges`/
+ * `theirMoveRanges`) are computed the same way `inference` itself is -
+ * re-derived from the current engine state on every change - via
+ * `liveCalcEngine.ts`'s `computeYourMoveRanges()`/`computeTheirMoveRanges()`.
  */
 
 import { useEffect, useMemo, useState } from 'react';
@@ -56,17 +66,22 @@ import {
   normalizeMoveSlug,
   getNatureStatEffect,
   defaultPokemonState,
+  defaultMoveSlots,
   computeBoostedStats,
   type NatureStatEffect,
   type CalcPokemonState,
+  type CalcMoveSlot,
 } from '../utils/damageCalcEngine';
 import {
   defaultInference,
   inferDefenderStats,
   inferOpponentOffensiveStats,
+  computeYourMoveRanges,
+  computeTheirMoveRanges,
   type LiveCalcObservation,
   type LiveCalcReverseObservation,
   type LiveCalcInference,
+  type LiveCalcMoveRangeEntry,
 } from '../utils/liveCalcEngine';
 import {
   inferDefenderSpeed,
@@ -186,6 +201,25 @@ export interface UseLiveCalcReturn {
   updateReverseObservation: (id: string, updates: Partial<LiveCalcReverseObservation>) => void;
   removeReverseObservation: (id: string) => void;
   inference: LiveCalcInference;
+  /** Live Calc Page Layout & Function Rework - Leg 3: the attacker's own
+   * 4-move-slot array, now directly editable via the new "Yours -> Them"
+   * range grid (previously only settable in bulk via a saved-set/team-tray
+   * load - see this file's own header). Same shape/setter pattern as
+   * `useDamageCalc.ts`'s `setPokemon1Move`. */
+  setAttackerMove: (index: number, updates: Partial<CalcMoveSlot>) => void;
+  /** The "Theirs -> You" grid's own 4-move-slot array - unlike
+   * `attacker.moves`, this doesn't track a real known moveset (the opponent's
+   * actual moves are exactly what the tab doesn't know), it's just which 4
+   * moves this grid currently previews a live range for. */
+  defenderMoves: CalcMoveSlot[];
+  setDefenderMove: (index: number, updates: Partial<CalcMoveSlot>) => void;
+  /** The two move grids' own live results - one `LiveCalcMoveRangeEntry` per
+   * slot in `attacker.moves`/`defenderMoves` respectively, each a min-max %
+   * span over the current `inference`'s narrowed candidates rather than one
+   * fixed number. See `utils/liveCalcEngine.ts`'s `computeYourMoveRanges`/
+   * `computeTheirMoveRanges`. */
+  yourMoveRanges: LiveCalcMoveRangeEntry[];
+  theirMoveRanges: LiveCalcMoveRangeEntry[];
 }
 
 export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation: RegulationId): UseLiveCalcReturn {
@@ -204,6 +238,7 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
   const [observations, setObservations] = useState<LiveCalcObservationEntry[]>([]);
   const [turnOrderObservations, setTurnOrderObservations] = useState<LiveCalcTurnOrderObservationEntry[]>([]);
   const [reverseObservations, setReverseObservations] = useState<LiveCalcReverseObservationEntry[]>([]);
+  const [defenderMoves, setDefenderMovesState] = useState<CalcMoveSlot[]>(defaultMoveSlots);
   const [attackerLearnedSlugs, setAttackerLearnedSlugs] = useState<Set<string> | null>(null);
 
   const gen = useMemo(() => Generations.get(GEN_NUM), []);
@@ -282,6 +317,10 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
   }, [moveOptions, attackerLearnedSlugs, attacker.moves]);
 
   const setAttacker = (updates: Partial<CalcPokemonState>) => setAttackerState(prev => ({ ...prev, ...updates }));
+  const setAttackerMove = (index: number, updates: Partial<CalcMoveSlot>) =>
+    setAttackerState(prev => ({ ...prev, moves: prev.moves.map((slot, i) => (i === index ? { ...slot, ...updates } : slot)) }));
+  const setDefenderMove = (index: number, updates: Partial<CalcMoveSlot>) =>
+    setDefenderMovesState(prev => prev.map((slot, i) => (i === index ? { ...slot, ...updates } : slot)));
 
   const addObservation = () => setObservations(prev => [...prev, defaultObservation()]);
   const updateObservation = (id: string, updates: Partial<LiveCalcObservation>) =>
@@ -331,6 +370,19 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
   const inference = useMemo(
     () => inferOpponentOffensiveStats(gen, attacker, defenderInput, speedInference, reverseObservations),
     [gen, attacker, defenderInput, speedInference, reverseObservations]
+  );
+
+  // The two move grids' own live results (Live Calc Page Layout & Function
+  // Rework - Leg 3) - re-derived from the same running `inference` above,
+  // same "every change re-derives the engine passes" pattern this whole hook
+  // already follows.
+  const yourMoveRanges = useMemo(
+    () => computeYourMoveRanges(gen, attacker, defenderInput, inference, attacker.moves),
+    [gen, attacker, defenderInput, inference]
+  );
+  const theirMoveRanges = useMemo(
+    () => computeTheirMoveRanges(gen, attacker, defenderInput, inference, defenderMoves),
+    [gen, attacker, defenderInput, inference, defenderMoves]
   );
 
   return {
@@ -383,6 +435,11 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
     updateReverseObservation,
     removeReverseObservation,
     inference,
+    setAttackerMove,
+    defenderMoves,
+    setDefenderMove,
+    yourMoveRanges,
+    theirMoveRanges,
   };
 }
 

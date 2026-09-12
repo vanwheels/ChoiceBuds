@@ -12,8 +12,16 @@
 
 import { describe, expect, it } from 'vitest';
 import { Generations } from '@smogon/calc';
-import { defaultPokemonState, type CalcPokemonState } from './damageCalcEngine';
-import { inferDefenderStats, inferOpponentOffensiveStats, NO_ITEM, type LiveCalcObservation, type LiveCalcReverseObservation } from './liveCalcEngine';
+import { defaultPokemonState, defaultMoveSlots, type CalcPokemonState, type CalcMoveSlot } from './damageCalcEngine';
+import {
+  inferDefenderStats,
+  inferOpponentOffensiveStats,
+  computeYourMoveRanges,
+  computeTheirMoveRanges,
+  NO_ITEM,
+  type LiveCalcObservation,
+  type LiveCalcReverseObservation,
+} from './liveCalcEngine';
 
 const gen = Generations.get(9);
 
@@ -398,5 +406,117 @@ describe('inferOpponentOffensiveStats - contact-damage ability effect reads the 
     const withAuraGuard = inferOpponentOffensiveStats(gen, knownWithAuraGuard, DEFENDER, auraGuardBase, [reverseObs('Tackle', 12, 1)]);
     expect(withoutAuraGuard.contradictions.length).toBe(0);
     expect(withAuraGuard.contradictions.length).toBe(1);
+  });
+});
+
+// Live Calc Page Layout & Function Rework - Leg 3 (Layout & Live Range Grid
+// Rework): the two move grids' own live results. Reuses BASE_INFERENCE
+// (inferDefenderStats() with no observations) as the "everything still
+// possible" starting point, same as the reverse-direction describe blocks
+// above - a real narrowed inference (from actual observations) is what
+// exercises the "narrower inference -> narrower or equal range" behavior.
+function moveSlots(...names: string[]): CalcMoveSlot[] {
+  const slots = defaultMoveSlots();
+  names.forEach((name, i) => { slots[i] = { ...slots[i], name }; });
+  return slots;
+}
+
+function parsePercentRange(percent: string | null): [number, number] {
+  if (!percent) throw new Error('expected a percent string');
+  const [lo, hi] = percent.replace('%', '').split(' - ').map(Number);
+  return [lo, hi];
+}
+
+describe('computeYourMoveRanges', () => {
+  it('returns an empty entry (no percent, no error) for an unfilled move slot', () => {
+    const result = computeYourMoveRanges(gen, LANDO_EARTHQUAKE, DEFENDER, BASE_INFERENCE, moveSlots());
+    expect(result[0]).toEqual({ moveName: '', percent: null, errorMessage: null });
+  });
+
+  it('returns an error entry for a Status move, without throwing', () => {
+    const result = computeYourMoveRanges(gen, LANDO_EARTHQUAKE, DEFENDER, BASE_INFERENCE, moveSlots('Swords Dance'));
+    expect(result[0].percent).toBeNull();
+    expect(result[0].errorMessage).toBeTruthy();
+  });
+
+  it("returns an error entry for a multi-hit move - not modeled, same v1 limitation as the observation engine's own rejection", () => {
+    const result = computeYourMoveRanges(gen, attackerState({ species: 'Cloyster' }), DEFENDER, BASE_INFERENCE, moveSlots('Icicle Spear'));
+    expect(result[0].percent).toBeNull();
+    expect(result[0].errorMessage).toMatch(/multi-hit/i);
+  });
+
+  it('leaves every slot empty (percent null, no error) when the attacker or defender species is missing', () => {
+    const noAttacker = computeYourMoveRanges(gen, attackerState({ species: '' }), DEFENDER, BASE_INFERENCE, moveSlots('Earthquake'));
+    expect(noAttacker[0]).toEqual({ moveName: 'Earthquake', percent: null, errorMessage: null });
+    const noDefender = computeYourMoveRanges(gen, LANDO_EARTHQUAKE, { ...DEFENDER, species: '' }, BASE_INFERENCE, moveSlots('Earthquake'));
+    expect(noDefender[0]).toEqual({ moveName: 'Earthquake', percent: null, errorMessage: null });
+  });
+
+  it('produces a valid ascending min-max percent span for a real damaging move', () => {
+    const result = computeYourMoveRanges(gen, LANDO_EARTHQUAKE, DEFENDER, BASE_INFERENCE, moveSlots('Earthquake'));
+    expect(result[0].errorMessage).toBeNull();
+    const [lo, hi] = parsePercentRange(result[0].percent);
+    expect(lo).toBeGreaterThanOrEqual(0);
+    expect(hi).toBeGreaterThanOrEqual(lo);
+  });
+
+  it('narrows (or holds) the span once observations have actually narrowed the running inference, never widens it', () => {
+    const narrowed = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, [obs('Earthquake', 30), obs('Earthquake', 31)]);
+    const baseline = computeYourMoveRanges(gen, LANDO_EARTHQUAKE, DEFENDER, BASE_INFERENCE, moveSlots('Earthquake'));
+    const afterNarrowing = computeYourMoveRanges(gen, LANDO_EARTHQUAKE, DEFENDER, narrowed, moveSlots('Earthquake'));
+    const [baseLo, baseHi] = parsePercentRange(baseline[0].percent);
+    const [narrowLo, narrowHi] = parsePercentRange(afterNarrowing[0].percent);
+    expect(narrowLo).toBeGreaterThanOrEqual(baseLo);
+    expect(narrowHi).toBeLessThanOrEqual(baseHi);
+  });
+
+  it("known Def stat-stage boosts on the defender panel feed the grid's own scan too, not just inferDefenderStats()", () => {
+    const unboosted = computeYourMoveRanges(gen, LANDO_EARTHQUAKE, DEFENDER, BASE_INFERENCE, moveSlots('Earthquake'));
+    const boosted = computeYourMoveRanges(gen, LANDO_EARTHQUAKE, { ...DEFENDER, defBoost: 3 }, BASE_INFERENCE, moveSlots('Earthquake'));
+    const [, unboostedHi] = parsePercentRange(unboosted[0].percent);
+    const [, boostedHi] = parsePercentRange(boosted[0].percent);
+    expect(boostedHi).toBeLessThan(unboostedHi);
+  });
+});
+
+describe('computeTheirMoveRanges', () => {
+  it('returns an empty entry for an unfilled move slot', () => {
+    const result = computeTheirMoveRanges(gen, LANDO_EARTHQUAKE, DEFENDER, BASE_INFERENCE, moveSlots());
+    expect(result[0]).toEqual({ moveName: '', percent: null, errorMessage: null });
+  });
+
+  it('leaves every slot empty when the known Pokémon or opponent species is missing', () => {
+    const noKnown = computeTheirMoveRanges(gen, attackerState({ species: '' }), DEFENDER, BASE_INFERENCE, moveSlots('Power Whip'));
+    expect(noKnown[0]).toEqual({ moveName: 'Power Whip', percent: null, errorMessage: null });
+    const noOpponent = computeTheirMoveRanges(gen, LANDO_EARTHQUAKE, { ...DEFENDER, species: '' }, BASE_INFERENCE, moveSlots('Power Whip'));
+    expect(noOpponent[0]).toEqual({ moveName: 'Power Whip', percent: null, errorMessage: null });
+  });
+
+  it('produces a valid ascending min-max percent span for a real damaging move', () => {
+    const result = computeTheirMoveRanges(gen, LANDO_EARTHQUAKE, DEFENDER, BASE_INFERENCE, moveSlots('Power Whip'));
+    expect(result[0].errorMessage).toBeNull();
+    const [lo, hi] = parsePercentRange(result[0].percent);
+    expect(lo).toBeGreaterThanOrEqual(0);
+    expect(hi).toBeGreaterThanOrEqual(lo);
+  });
+
+  it("reads the contact-damage ability effect off the KNOWN Pokémon (Aura Guard halving), same wiring inferOpponentOffensiveStats() already exercises", () => {
+    const withoutAuraGuard = computeTheirMoveRanges(gen, LANDO_EARTHQUAKE, DEFENDER, BASE_INFERENCE, moveSlots('Tackle'));
+    const knownWithAuraGuard = attackerState({ species: 'Landorus-Therian', ability: 'Aura Guard' });
+    const auraGuardBase = inferDefenderStats(gen, knownWithAuraGuard, DEFENDER, []);
+    const withAuraGuard = computeTheirMoveRanges(gen, knownWithAuraGuard, DEFENDER, auraGuardBase, moveSlots('Tackle'));
+    const [, hiWithout] = parsePercentRange(withoutAuraGuard[0].percent);
+    const [, hiWith] = parsePercentRange(withAuraGuard[0].percent);
+    expect(hiWith).toBeLessThan(hiWithout);
+  });
+
+  it('narrows (or holds) the span once reverse observations have actually narrowed the running inference', () => {
+    const narrowed = inferOpponentOffensiveStats(gen, LANDO_EARTHQUAKE, DEFENDER, BASE_INFERENCE, [reverseObs('Power Whip', 45, 1), reverseObs('Power Whip', 46, 1)]);
+    const baseline = computeTheirMoveRanges(gen, LANDO_EARTHQUAKE, DEFENDER, BASE_INFERENCE, moveSlots('Power Whip'));
+    const afterNarrowing = computeTheirMoveRanges(gen, LANDO_EARTHQUAKE, DEFENDER, narrowed, moveSlots('Power Whip'));
+    const [baseLo, baseHi] = parsePercentRange(baseline[0].percent);
+    const [narrowLo, narrowHi] = parsePercentRange(afterNarrowing[0].percent);
+    expect(narrowLo).toBeGreaterThanOrEqual(baseLo);
+    expect(narrowHi).toBeLessThanOrEqual(baseHi);
   });
 });

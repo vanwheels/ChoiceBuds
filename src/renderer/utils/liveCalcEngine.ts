@@ -119,7 +119,7 @@ import { getChampionsAbilityDamageEffect } from '../config/championsAbilityDamag
 import { normalizeNameForAPI } from '../services/pokeapiService';
 import { LIVE_CALC_DEFENSIVE_ITEMS } from '../config/liveCalcDefensiveItems';
 import { MAX_IVS, spsToEvs, resolveCalcSpecies } from './championsStats';
-import { buildPokemon, type CalcPokemonState } from './damageCalcEngine';
+import { buildPokemon, type CalcPokemonState, type CalcMoveSlot } from './damageCalcEngine';
 
 const SP_MIN = 0;
 const SP_MAX = 32;
@@ -741,4 +741,319 @@ export function inferOpponentOffensiveStats(
   }
 
   return result;
+}
+
+/** One move-grid row's result (Live Calc Page Layout & Function Rework - Leg
+ * 3): a min-max % span across every SP/nature/ability/item combination the
+ * CURRENT `LiveCalcInference` still considers possible, rather than
+ * `CalcMoveResultEntry`'s single fixed-defender roll-variance range - there's
+ * no one concrete opponent build to run `result.desc()`/`result.kochance()`
+ * against, so this only carries what the grid actually renders (a formatted
+ * percent span, or an error/skip reason) instead of reusing that richer type. */
+export interface LiveCalcMoveRangeEntry {
+  moveName: string;
+  percent: string | null;
+  errorMessage: string | null;
+}
+
+function emptyRangeEntry(moveName: string): LiveCalcMoveRangeEntry {
+  return { moveName, percent: null, errorMessage: null };
+}
+
+function rangeErrorEntry(moveName: string, message: string): LiveCalcMoveRangeEntry {
+  return { moveName, percent: null, errorMessage: message };
+}
+
+/**
+ * Shared move-level rejection checks for both range functions below - same
+ * "not a usable move" reasons `inferDefenderStats()`/
+ * `inferOpponentOffensiveStats()` already reject observations for (a Status
+ * move, an unrecognized name, a multi-hit move - still not modeled in v1, see
+ * this file's header), surfaced as a grid row instead of a contradiction note
+ * since there's no observation here to skip.
+ */
+function rejectUnusableMove(gen: Generation, moveName: string): LiveCalcMoveRangeEntry | null {
+  const moveData = gen.moves.get(toID(moveName));
+  if (!moveData || moveData.category === 'Status') {
+    return rangeErrorEntry(moveName, `"${moveName}" isn't a usable damaging move.`);
+  }
+  if (moveData.multihit !== undefined) {
+    return rangeErrorEntry(moveName, `"${moveName}" is a multi-hit move - not modeled in v1.`);
+  }
+  return null;
+}
+
+/**
+ * Every combination this grid scans is built from `inference`'s own
+ * already-narrowed nature/ability/item candidates, one axis varied at a time
+ * against the OTHER two axes' shared neutral/known default - same per-axis
+ * shape (and same reasoning for why: no full joint cross-product) as
+ * `feasibleSpRange()`/`feasibleOffensiveSpRange()` above, just producing a
+ * candidate list to fold a range over instead of one candidate to test
+ * feasibility for.
+ */
+function buildCandidateSets(
+  inference: LiveCalcInference,
+  knownAbility: string | undefined,
+  knownItem: string | undefined,
+  knownNature: NatureName | undefined,
+): DefenderCandidateSpec[] {
+  const defaultNature: NatureName = knownNature ?? ('Hardy' as NatureName);
+  return [
+    ...inference.natureCandidates.map(nature => ({ nature, ability: knownAbility, item: knownItem })),
+    ...inference.abilityCandidates.map(ability => ({ nature: defaultNature, ability, item: knownItem })),
+    ...inference.itemCandidates.map(item => ({ nature: defaultNature, ability: knownAbility, item: item === NO_ITEM ? undefined : item })),
+  ];
+}
+
+/** Both SP-bound endpoints, deduped to one entry when the bound is already
+ * fully narrowed to a single value - the SP-to-stat mapping is monotonic, so
+ * (unlike `feasibleSpRange()`'s exhaustive per-SP scan, which has to find
+ * which values satisfy one specific observed reading) the endpoints alone
+ * are enough to find the overall min/max % an axis can produce across the
+ * whole bound. */
+function spBoundEndpoints(bound: LiveCalcStatBound): number[] {
+  return bound.min === bound.max ? [bound.min] : [bound.min, bound.max];
+}
+
+/**
+ * `computeYourMoveRanges()`'s per-move-slot work: builds the Move once (the
+ * attacker side is fully known, so unlike the reverse direction below the
+ * Move doesn't depend on the scanned candidate) and folds every candidate x
+ * SP-endpoint combination's resulting damage-percent range into one overall
+ * span.
+ */
+function yourMoveRangeEntry(
+  gen: Generation,
+  attackerPokemon: InstanceType<typeof Pokemon>,
+  attacker: CalcPokemonState,
+  defender: LiveCalcDefenderInput,
+  inference: LiveCalcInference,
+  defenderBoosts: StatsTable,
+  slot: CalcMoveSlot,
+): LiveCalcMoveRangeEntry {
+  if (!slot.name) return emptyRangeEntry('');
+  const rejected = rejectUnusableMove(gen, slot.name);
+  if (rejected) return rejected;
+  const moveData = gen.moves.get(toID(slot.name))!;
+
+  const relevantStat: 'def' | 'spd' = moveData.category === 'Physical' ? 'def' : 'spd';
+  const bound = relevantStat === 'def' ? inference.defBound : inference.spdBound;
+  const isContactMove = !!moveData.flags?.contact;
+  // Assumes a 2-target hit same as `defaultObservation()`'s own
+  // `targetsHit: 2` default - the grid has no per-move targets-hit input of
+  // its own the way an observation row does.
+  const field = new Field({ gameType: 'Doubles' });
+
+  let move: InstanceType<typeof Move>;
+  try {
+    move = new Move(gen, slot.name, {
+      ability: attacker.ability || undefined,
+      item: attacker.item || undefined,
+      species: attacker.species,
+      isCrit: slot.isCrit,
+      overrides: getChampionsCalcMoveOverride(slot.name),
+    });
+  } catch {
+    return rangeErrorEntry(slot.name, `Could not build move "${slot.name}".`);
+  }
+
+  const candidateSets = buildCandidateSets(inference, defender.knownAbility || undefined, defender.knownItem || undefined, defender.knownNature || undefined);
+  const spSteps = spBoundEndpoints(bound);
+
+  let globalMin: number | null = null;
+  let globalMax: number | null = null;
+  for (const candidate of candidateSets) {
+    const defenderEffect = candidate.ability ? getChampionsAbilityDamageEffect(normalizeNameForAPI(candidate.ability)) : undefined;
+    const contactMultiplier = isContactMove && defenderEffect?.contactDamageTakenMultiplier != null ? defenderEffect.contactDamageTakenMultiplier : 1;
+    for (const sp of spSteps) {
+      const sps: StatsTable = { ...ZERO_SPS, hp: HP_SP_DEFAULT, [relevantStat]: sp };
+      try {
+        const defenderPokemon = new Pokemon(gen, resolveCalcSpecies(defender.species), {
+          level: defender.level,
+          nature: candidate.nature,
+          ability: candidate.ability,
+          item: candidate.item,
+          evs: spsToEvs(sps),
+          ivs: MAX_IVS,
+          boosts: defenderBoosts,
+        });
+        const maxHP = defenderPokemon.maxHP();
+        if (maxHP <= 0) continue;
+        const range = calculate(gen, attackerPokemon, defenderPokemon, move, field).range();
+        const lo = ((range[0] / maxHP) * 100) * contactMultiplier;
+        const hi = ((range[1] / maxHP) * 100) * contactMultiplier;
+        globalMin = globalMin === null ? lo : Math.min(globalMin, lo);
+        globalMax = globalMax === null ? hi : Math.max(globalMax, hi);
+      } catch {
+        continue; // an invalid/blocked combo at this SP value just isn't feasible - not a hard failure
+      }
+    }
+  }
+
+  if (globalMin === null || globalMax === null) {
+    return rangeErrorEntry(slot.name, `"${slot.name}" has no feasible damage range for the currently narrowed candidates.`);
+  }
+  return { moveName: slot.name, percent: `${globalMin.toFixed(1)} - ${globalMax.toFixed(1)}%`, errorMessage: null };
+}
+
+/**
+ * The "Yours -> Them" move grid's live results (Live Calc Page Layout &
+ * Function Rework - Leg 3): one `LiveCalcMoveRangeEntry` per attacker move
+ * slot, each a min-max % span over however far `inference` has (or hasn't
+ * yet) narrowed the defender's Def/SpD SP and nature/ability/item candidates
+ * - the actual mirror of `CalcMoveGrid`'s fixed-defender results for a
+ * still-unknown opponent. `attacker.moves` IS the same 4-slot array this
+ * grid edits directly (unlike the observation lists' own free-typed move
+ * name per entry) - see `useLiveCalc.ts`'s `setAttackerMove`.
+ */
+export function computeYourMoveRanges(
+  gen: Generation,
+  attacker: CalcPokemonState,
+  defender: LiveCalcDefenderInput,
+  inference: LiveCalcInference,
+  moves: CalcMoveSlot[],
+): LiveCalcMoveRangeEntry[] {
+  if (!attacker.species || !defender.species) return moves.map(m => emptyRangeEntry(m.name));
+
+  let attackerPokemon: InstanceType<typeof Pokemon>;
+  try {
+    attackerPokemon = buildPokemon(gen, attacker);
+  } catch {
+    return moves.map(m => rangeErrorEntry(m.name, 'Attacker Pokémon could not be built - check its species/moves.'));
+  }
+
+  const defenderBoosts: StatsTable = {
+    ...ZERO_SPS,
+    atk: defender.atkBoost,
+    def: defender.defBoost,
+    spa: defender.spaBoost,
+    spd: defender.spdBoost,
+    spe: defender.speBoost,
+  };
+
+  return moves.map(slot => yourMoveRangeEntry(gen, attackerPokemon, attacker, defender, inference, defenderBoosts, slot));
+}
+
+/**
+ * `computeTheirMoveRanges()`'s per-move-slot work - mirror of
+ * `yourMoveRangeEntry()` above, same relationship `feasibleOffensiveSpRange()`
+ * has to `feasibleSpRange()`: the unknown opponent plays ATTACKER here (its
+ * candidate nature/ability/item and the scanned Atk/SpA SP endpoint), the
+ * known Pokémon (already built once by the caller) plays DEFENDER, so the
+ * Move itself depends on the scanned candidate's ability/item and gets
+ * rebuilt per candidate rather than once per slot.
+ */
+function theirMoveRangeEntry(
+  gen: Generation,
+  knownDefenderPokemon: InstanceType<typeof Pokemon>,
+  maxHP: number,
+  opponent: LiveCalcDefenderInput,
+  inference: LiveCalcInference,
+  opponentBoosts: StatsTable,
+  contactMultiplierFor: (isContactMove: boolean) => number,
+  slot: CalcMoveSlot,
+): LiveCalcMoveRangeEntry {
+  if (!slot.name) return emptyRangeEntry('');
+  const rejected = rejectUnusableMove(gen, slot.name);
+  if (rejected) return rejected;
+  const moveData = gen.moves.get(toID(slot.name))!;
+
+  const relevantStat: 'atk' | 'spa' = moveData.category === 'Physical' ? 'atk' : 'spa';
+  const bound = relevantStat === 'atk' ? inference.atkBound : inference.spaBound;
+  const contactMultiplier = contactMultiplierFor(!!moveData.flags?.contact);
+  const moveOverrides = getChampionsCalcMoveOverride(slot.name);
+  // Same 2-target-hit default assumption as `yourMoveRangeEntry()` above.
+  const field = new Field({ gameType: 'Doubles' });
+
+  const candidateSets = buildCandidateSets(inference, opponent.knownAbility || undefined, opponent.knownItem || undefined, opponent.knownNature || undefined);
+  const spSteps = spBoundEndpoints(bound);
+
+  let globalMin: number | null = null;
+  let globalMax: number | null = null;
+  for (const candidate of candidateSets) {
+    let move: InstanceType<typeof Move>;
+    try {
+      move = new Move(gen, slot.name, {
+        ability: candidate.ability,
+        item: candidate.item,
+        species: opponent.species,
+        isCrit: slot.isCrit,
+        overrides: moveOverrides,
+      });
+    } catch {
+      continue;
+    }
+    for (const sp of spSteps) {
+      const sps: StatsTable = { ...ZERO_SPS, hp: HP_SP_DEFAULT, [relevantStat]: sp };
+      try {
+        const opponentPokemon = new Pokemon(gen, resolveCalcSpecies(opponent.species), {
+          level: opponent.level,
+          nature: candidate.nature,
+          ability: candidate.ability,
+          item: candidate.item,
+          evs: spsToEvs(sps),
+          ivs: MAX_IVS,
+          boosts: opponentBoosts,
+        });
+        const range = calculate(gen, opponentPokemon, knownDefenderPokemon, move, field).range();
+        const lo = ((range[0] / maxHP) * 100) * contactMultiplier;
+        const hi = ((range[1] / maxHP) * 100) * contactMultiplier;
+        globalMin = globalMin === null ? lo : Math.min(globalMin, lo);
+        globalMax = globalMax === null ? hi : Math.max(globalMax, hi);
+      } catch {
+        continue; // an invalid/blocked combo at this SP value just isn't feasible - not a hard failure
+      }
+    }
+  }
+
+  if (globalMin === null || globalMax === null) {
+    return rangeErrorEntry(slot.name, `"${slot.name}" has no feasible damage range for the currently narrowed candidates.`);
+  }
+  return { moveName: slot.name, percent: `${globalMin.toFixed(1)} - ${globalMax.toFixed(1)}%`, errorMessage: null };
+}
+
+/**
+ * The "Theirs -> You" move grid's live results (Live Calc Page Layout &
+ * Function Rework - Leg 3): the actual mirror of `computeYourMoveRanges()`,
+ * one `LiveCalcMoveRangeEntry` per opponent move slot (`useLiveCalc.ts`'s own
+ * `defenderMoves`/`setDefenderMove` - a new, separate 4-slot array from the
+ * reverse observation list's free-typed per-entry move name, since this grid
+ * needs fixed slots to render live rather than a running log) against the
+ * one known Pokémon, spanning however far `inference` has narrowed the
+ * opponent's Atk/SpA SP and nature/ability/item candidates.
+ */
+export function computeTheirMoveRanges(
+  gen: Generation,
+  knownPokemon: CalcPokemonState,
+  opponent: LiveCalcDefenderInput,
+  inference: LiveCalcInference,
+  moves: CalcMoveSlot[],
+): LiveCalcMoveRangeEntry[] {
+  if (!knownPokemon.species || !opponent.species) return moves.map(m => emptyRangeEntry(m.name));
+
+  let knownDefenderPokemon: InstanceType<typeof Pokemon>;
+  try {
+    knownDefenderPokemon = buildPokemon(gen, knownPokemon);
+  } catch {
+    return moves.map(m => rangeErrorEntry(m.name, 'Your Pokémon could not be built - check its species/stats.'));
+  }
+  const maxHP = knownDefenderPokemon.maxHP();
+  if (maxHP <= 0) return moves.map(m => rangeErrorEntry(m.name, "Your Pokémon's max HP couldn't be computed."));
+
+  const opponentBoosts: StatsTable = {
+    ...ZERO_SPS,
+    atk: opponent.atkBoost,
+    def: opponent.defBoost,
+    spa: opponent.spaBoost,
+    spd: opponent.spdBoost,
+    spe: opponent.speBoost,
+  };
+  // Same fixed-real-ability read as `inferOpponentOffensiveStats()` above -
+  // the known Pokémon is the one taking the hit in this direction.
+  const knownAbilityEffect = knownPokemon.ability ? getChampionsAbilityDamageEffect(normalizeNameForAPI(knownPokemon.ability)) : undefined;
+  const contactMultiplierFor = (isContactMove: boolean) =>
+    isContactMove && knownAbilityEffect?.contactDamageTakenMultiplier != null ? knownAbilityEffect.contactDamageTakenMultiplier : 1;
+
+  return moves.map(slot => theirMoveRangeEntry(gen, knownDefenderPokemon, maxHP, opponent, inference, opponentBoosts, contactMultiplierFor, slot));
 }
