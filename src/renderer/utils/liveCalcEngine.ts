@@ -186,6 +186,15 @@ function dedupeStrings(values: (string | undefined)[]): string[] {
   return [...new Set(values.filter((v): v is string => !!v))];
 }
 
+/** "a", "a and b", "a, b, and c" - used to list which axis/axes an
+ * observation contradicted, for `inferDefenderStats()`'s own diagnostic
+ * contradiction message (Live Calc Result Clarity Pass). */
+function joinWithAnd(items: string[]): string {
+  if (items.length <= 1) return items[0] ?? '';
+  if (items.length === 2) return `${items[0]} and ${items[1]}`;
+  return `${items.slice(0, -1).join(', ')}, and ${items[items.length - 1]}`;
+}
+
 /** Exported for Live Calc Results Display (Leg 3): the UI needs this same
  * "everything still possible" baseline to compute how much an observation
  * has actually narrowed things (e.g. "3 of 11 abilities remain"), not just
@@ -379,7 +388,25 @@ export function inferDefenderStats(
     const feasibleItems = itemResults.filter(r => r.bound !== null);
 
     if (feasibleNatures.length === 0 || feasibleAbilities.length === 0 || feasibleItems.length === 0) {
-      inference.contradictions.push(`"${obs.moveName}" (${obs.damagePercent}%) is inconsistent with every narrowed candidate so far - observation ignored.`);
+      const statLabel = relevantStat === 'def' ? 'Defense' : 'Sp. Def';
+      // A locked ability is applied as every other axis's own fixed default
+      // (see the comment above), so if IT'S the one with zero feasible
+      // options, nature/item usually come back empty too - naming the lock
+      // itself is the actionable diagnosis in that case, not "nature, ability,
+      // and item all failed" (misleadingly implying three independent causes).
+      if (knownAbility && feasibleAbilities.length === 0) {
+        inference.contradictions.push(
+          `"${obs.moveName}" (${obs.damagePercent}%) doesn't fit the locked ability (${knownAbility}) at any ${statLabel} SP value - check the Known Ability lock or this observation.`
+        );
+      } else {
+        const failingAxes: string[] = [];
+        if (feasibleNatures.length === 0) failingAxes.push('nature');
+        if (feasibleAbilities.length === 0) failingAxes.push('ability');
+        if (feasibleItems.length === 0) failingAxes.push('item');
+        inference.contradictions.push(
+          `"${obs.moveName}" (${obs.damagePercent}%) doesn't fit any ${statLabel} SP value under the narrowed ${joinWithAnd(failingAxes)} candidates - observation ignored.`
+        );
+      }
       continue;
     }
 

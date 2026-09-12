@@ -115,6 +115,11 @@ describe('inferDefenderStats - graceful degradation', () => {
     expect(withImpossible.contradictions.length).toBe(1);
   });
 
+  it('names the failing axes in the contradiction message (Live Calc Result Clarity Pass), not a generic "ignored"', () => {
+    const result = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, [obs('Earthquake', 99999)]);
+    expect(result.contradictions[0]).toMatch(/doesn't fit any Defense SP value under the narrowed nature, ability, and item candidates/);
+  });
+
   it('skips a Status move observation with a recorded contradiction rather than crashing', () => {
     const result = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, [obs('Swords Dance', 0)]);
     expect(result.physicalObservationCount).toBe(0);
@@ -229,6 +234,11 @@ describe('inferDefenderStats - Known Ability lock', () => {
     const result = inferDefenderStats(gen, LANDO_EARTHQUAKE, { ...DEFENDER, knownAbility: 'Aura Guard' }, [obs('Tackle', 6, 1)]);
     expect(result.defBound).toEqual(baseline.defBound);
     expect(result.abilityCandidates).toEqual(['Aura Guard']);
+  });
+
+  it("names the locked ability itself in the contradiction message (Live Calc Result Clarity Pass) rather than blaming nature/item too, since the lock is what's shared across all three axes' scans", () => {
+    const result = inferDefenderStats(gen, LANDO_EARTHQUAKE, { ...DEFENDER, knownAbility: 'Aura Guard' }, [obs('Tackle', 6, 1)]);
+    expect(result.contradictions[0]).toMatch(/doesn't fit the locked ability \(Aura Guard\)/);
   });
 });
 

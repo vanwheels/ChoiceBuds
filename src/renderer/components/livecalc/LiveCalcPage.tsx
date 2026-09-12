@@ -14,6 +14,11 @@
  * `liveCalcThreatPinsState` (Live Calc -> Speed Tiers Tie-in, Leg 6) is the
  * one piece of this tab's state that isn't local, since it's read back by
  * the sibling Speed Tiers tab - see hooks/useLiveCalcThreatPins.ts.
+ *
+ * The one-line intro paragraph above the panels (Live Calc Result Clarity
+ * Pass) states the tab's actual 3-step flow up front - enter knowns, log
+ * observations, read the result below - since per feedback the tab wasn't
+ * self-explanatory to a first-time reader without it.
  */
 
 import { useLiveCalc } from '../../hooks/useLiveCalc';
@@ -60,6 +65,10 @@ export default function LiveCalcPage({
 
   return (
     <div className="flex flex-col gap-2">
+      <p className="text-xs text-zinc-500">
+        Fill in the attacker and whatever's known about the defender below, log each hit/turn-order read
+        you've seen in battle as an observation, then read the narrowed result at the bottom of the page.
+      </p>
       <div className="flex flex-wrap gap-3">
         <CalcPokemonPanel
           title="Attacker"

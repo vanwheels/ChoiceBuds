@@ -20,6 +20,21 @@
  * per-variable-heuristic approximation) and a single blended number would
  * imply a joint precision the engine doesn't actually have.
  *
+ * Live Calc Result Clarity Pass (per feedback that "the UI is just not clear
+ * on how it's meant to read"): the two axis families are now under their own
+ * "Stat Points (0-32)"/"Candidates Narrowed" section labels rather than
+ * flowing together as one undifferentiated grid stack, each SP bar carries a
+ * 0/32 tick row so the highlighted range reads against a fixed scale instead
+ * of a bar with no anchor, and a subtitle under the panel's own title states
+ * the read-this-independently-per-axis rule up front rather than leaving it
+ * implicit. The skipped/ignored-observations list also gained its own
+ * section label - it was previously bare amber text with no heading tying it
+ * to "these are the observations that DIDN'T narrow anything." The
+ * diagnostic wording of the messages themselves is `liveCalcEngine.ts`'s own
+ * concern (`inferDefenderStats()`'s contradiction messages now name which
+ * axis/lock actually failed) - this panel just renders whatever string it's
+ * given, same as before.
+ *
  * Also owns the "Pin to Speed Tiers" action (Live Calc -> Speed Tiers
  * Tie-in, Leg 6, see TODO.md / hooks/useLiveCalcThreatPins.ts) - snapshots
  * the current defender species/level + the Speed SP bound and nature
@@ -57,7 +72,7 @@ function StatBoundBar({ label, bound, observationCount }: { label: string; bound
       <div className="flex items-center justify-between text-xs">
         <span className="text-zinc-300 font-semibold">{label}</span>
         <span className="text-zinc-500">
-          {rangeText} · {observationCount} obs.
+          {rangeText} · {observationCount} {observationCount === 1 ? 'observation' : 'observations'}
         </span>
       </div>
       <div className="h-2 rounded-full bg-zinc-800 overflow-hidden relative">
@@ -65,6 +80,10 @@ function StatBoundBar({ label, bound, observationCount }: { label: string; bound
           className="h-full bg-accent-gold absolute top-0"
           style={{ left: `${startPercent}%`, width: `${Math.max(widthPercent, 100 / SP_RANGE_TOTAL)}%` }}
         />
+      </div>
+      <div className="flex items-center justify-between text-[10px] text-zinc-600">
+        <span>0</span>
+        <span>32</span>
       </div>
     </div>
   );
@@ -88,16 +107,26 @@ export default function LiveCalcResultPanel({ gen, defenderSpecies, defenderLeve
 
   return (
     <div className="bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-3">
-      <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wide">Inferred Defender</h3>
+      <div>
+        <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wide">Inferred Defender</h3>
+        <p className="text-xs text-zinc-500">
+          Narrows automatically as observations are added above - a tighter Stat Point range and fewer
+          remaining candidates both mean more certainty, read independently per stat/axis (see each
+          section's own count).
+        </p>
+      </div>
 
       {!defenderSpecies ? (
-        <p className="text-sm text-zinc-500">Pick a defender species to start narrowing its stats.</p>
+        <p className="text-sm text-zinc-500">Pick a defender species above to start narrowing its stats.</p>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <StatBoundBar label="Defense SP" bound={inference.defBound} observationCount={inference.physicalObservationCount} />
-            <StatBoundBar label="Sp. Def SP" bound={inference.spdBound} observationCount={inference.specialObservationCount} />
-            <StatBoundBar label="Speed SP" bound={inference.speedBound} observationCount={inference.speedObservationCount} />
+          <div>
+            <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-wide mb-1.5">Stat Points (0-32)</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <StatBoundBar label="Defense" bound={inference.defBound} observationCount={inference.physicalObservationCount} />
+              <StatBoundBar label="Sp. Def" bound={inference.spdBound} observationCount={inference.specialObservationCount} />
+              <StatBoundBar label="Speed" bound={inference.speedBound} observationCount={inference.speedObservationCount} />
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -122,18 +151,24 @@ export default function LiveCalcResultPanel({ gen, defenderSpecies, defenderLeve
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <LiveCalcCandidateGroup label="Nature" candidates={inference.natureCandidates} totalCount={baseline.natureCandidates.length} />
-            <LiveCalcCandidateGroup label="Ability" candidates={inference.abilityCandidates} totalCount={baseline.abilityCandidates.length} />
-            <LiveCalcCandidateGroup label="Item" candidates={inference.itemCandidates} totalCount={baseline.itemCandidates.length} />
+          <div>
+            <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-wide mb-1.5">Candidates Narrowed</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <LiveCalcCandidateGroup label="Nature" candidates={inference.natureCandidates} totalCount={baseline.natureCandidates.length} />
+              <LiveCalcCandidateGroup label="Ability" candidates={inference.abilityCandidates} totalCount={baseline.abilityCandidates.length} />
+              <LiveCalcCandidateGroup label="Item" candidates={inference.itemCandidates} totalCount={baseline.itemCandidates.length} />
+            </div>
           </div>
 
           {totalObservations === 0 && (
-            <p className="text-xs text-zinc-500">Add an observation to begin narrowing.</p>
+            <p className="text-xs text-zinc-500">Nothing narrowed yet - add an observation above (a damage% hit, or a turn-order read) to begin.</p>
           )}
 
           {inference.contradictions.length > 0 && (
             <div className="flex flex-col gap-1 border-t border-zinc-800/80 pt-2">
+              <h4 className="text-[10px] font-bold text-amber-400/80 uppercase tracking-wide">
+                Skipped/Ignored Observations
+              </h4>
               {inference.contradictions.map((note, i) => (
                 <p key={i} className="text-xs text-amber-400">{note}</p>
               ))}
