@@ -1,28 +1,43 @@
 /**
- * LiveCalcDefenderPanel.tsx - Defender's Known Inputs
+ * LiveCalcDefenderPanel.tsx - Opponent's Known Inputs
  * Unlike CalcPokemonPanel's fully-known set (reused as-is for the Live Calc
- * attacker - see LiveCalcPage.tsx), the defender is species+level plus what
- * that species alone already reveals - a forme-family toggle (for stat-block
- * and Mega formes, same `FormeToggle`/`FormeFamily` CalcPokemonPanel uses)
- * and its read-only base stats, laid out with the same Base/Boost column
- * widths as CalcStatRows so the two panels visually match. Def/Sp. Def carry
- * an editable stage-boost input (-6..+6) - the only two stats the damage-%
- * inference engine (`liveCalcEngine.ts`) actually reads back; the other four
- * rows show base only since they're either not tracked as a stage here
- * (HP has none in-game) or, for Speed, already have their own per-turn-order-
- * observation stage field (`LiveCalcTurnOrderList`'s `defenderSpeedStage`) -
- * a second, panel-level Speed stage here would just conflict with that.
- * Everything past base stats/boosts (EVs/SPs, nature, item) is exactly what
- * the tab is solving for, via the observation list next to this panel.
- * Ability is the one exception: the Known Ability select (Live Calc
- * Known-Ability Lock) lets the user pin a species-real ability once it's
- * been revealed in-battle (an Intimidate trigger, an ability-activation
- * message, etc.), which `useLiveCalc.ts` feeds into `inferDefenderStats()`
- * as a hard filter instead of a scanned candidate - "Unknown" (the default)
- * keeps the pre-existing full-pool-scan behavior.
+ * attacker - see LiveCalcPage.tsx), the opponent is species+level plus
+ * whatever's actually been confirmed in-battle - a forme-family toggle (for
+ * stat-block and Mega formes, same `FormeToggle`/`FormeFamily`
+ * CalcPokemonPanel uses) and its read-only base stats, laid out with the
+ * same Base/Boost column widths as CalcStatRows so the two panels visually
+ * match.
+ *
+ * All five combat stats (Live Calc Page Layout & Function Rework - Leg 1/2)
+ * carry an editable stage-boost input (-6..+6) now, not just Def/Sp. Def -
+ * once the opponent's own offense is modeled (`inferOpponentOffensiveStats()`
+ * narrows their Atk/SpA from "their move -> you" observations), a seen
+ * Swords Dance/Dragon Dance/etc. needs to feed the boosts object on BOTH
+ * damage directions, not just the outgoing one. The `speBoost` field here is
+ * a static "current known stage" snapshot fed into every calc going forward,
+ * distinct from `LiveCalcTurnOrderList`'s `defenderSpeedStage` - that one is
+ * a per-observation stage (what the opponent's Speed stage WAS at the moment
+ * of that specific turn-order read, since it can change turn to turn), used
+ * only by the Speed-narrowing pass itself. They don't conflict: this panel's
+ * `speBoost` answers "what's their Speed stage right now," the turn-order
+ * list answers "what was it back when I saw this particular turn."
+ *
+ * Ability/Item/Nature all follow the same Known-Fact Lock shape (Live Calc
+ * Known-Ability Lock, generalized in Leg 1): each select's default ("Unknown")
+ * keeps the engine's full-pool scan; picking a real value hard-locks that
+ * axis once it's been confirmed in-battle (an Intimidate trigger, a Life Orb
+ * recoil message, a crit that only makes sense off a certain nature, etc.).
+ * Known Item deliberately offers the FULL item list (`itemOptions`, same pool
+ * CalcPokemonPanel's own item field uses) rather than
+ * `config/liveCalcDefensiveItems.ts`'s narrower defensive-berry subset - that
+ * curated list is only the engine's default SCAN pool (items that change
+ * incoming damage), but a hard lock can name literally anything revealed in
+ * battle, offensive items included (Choice Specs, Life Orb) now that the
+ * opponent's own attacks are modeled too.
  */
 
 import type { StatsTable } from '@smogon/calc/dist/data/interface';
+import type { NatureName } from '@smogon/calc/dist/data/interface';
 import type { FormeFamily } from '../../utils/calcFormes';
 import { getStatLabelColor } from '../../config/pokemonTheme';
 import CalcAutocomplete from '../calc/CalcAutocomplete';
@@ -43,36 +58,57 @@ interface LiveCalcDefenderPanelProps {
   speciesOptions: string[];
   formes: FormeFamily;
   baseStats: StatsTable | null;
+  atkBoost: number;
   defBoost: number;
+  spaBoost: number;
   spdBoost: number;
+  speBoost: number;
   /** The defender species' own real ability pool - options for the Known
    * Ability select below. Empty until a species is picked. */
   abilityOptions: string[];
+  /** Full item/nature pools, same lists CalcPokemonPanel's attacker fields
+   * use - see this file's header for why Known Item isn't restricted to the
+   * engine's narrower defensive-item scan pool. */
+  itemOptions: string[];
+  natureOptions: NatureName[];
   /** Empty string means still unknown (the engine's default full-pool scan);
-   * a real ability name hard-locks the ability axis to it. */
+   * a real value hard-locks that axis to it. */
   knownAbility: string;
+  knownItem: string;
+  knownNature: NatureName | '';
   onChangeSpecies: (species: string) => void;
   onChangeLevel: (level: number) => void;
+  onChangeAtkBoost: (stage: number) => void;
   onChangeDefBoost: (stage: number) => void;
+  onChangeSpaBoost: (stage: number) => void;
   onChangeSpdBoost: (stage: number) => void;
+  onChangeSpeBoost: (stage: number) => void;
   onChangeKnownAbility: (ability: string) => void;
+  onChangeKnownItem: (item: string) => void;
+  onChangeKnownNature: (nature: NatureName | '') => void;
 }
 
 export default function LiveCalcDefenderPanel({
-  species, level, speciesOptions, formes, baseStats, defBoost, spdBoost, abilityOptions, knownAbility,
-  onChangeSpecies, onChangeLevel, onChangeDefBoost, onChangeSpdBoost, onChangeKnownAbility,
+  species, level, speciesOptions, formes, baseStats,
+  atkBoost, defBoost, spaBoost, spdBoost, speBoost,
+  abilityOptions, itemOptions, natureOptions, knownAbility, knownItem, knownNature,
+  onChangeSpecies, onChangeLevel, onChangeAtkBoost, onChangeDefBoost, onChangeSpaBoost, onChangeSpdBoost, onChangeSpeBoost,
+  onChangeKnownAbility, onChangeKnownItem, onChangeKnownNature,
 }: LiveCalcDefenderPanelProps) {
   const megaGroup = formes.megaFormes.length > 0 ? [formes.root, ...formes.megaFormes] : [];
 
   const boostForKey = (key: keyof StatsTable): { value: number; onChange: (stage: number) => void } | null => {
+    if (key === 'atk') return { value: atkBoost, onChange: onChangeAtkBoost };
     if (key === 'def') return { value: defBoost, onChange: onChangeDefBoost };
+    if (key === 'spa') return { value: spaBoost, onChange: onChangeSpaBoost };
     if (key === 'spd') return { value: spdBoost, onChange: onChangeSpdBoost };
+    if (key === 'spe') return { value: speBoost, onChange: onChangeSpeBoost };
     return null;
   };
 
   return (
     <div className="flex-1 min-w-[280px] bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-2">
-      <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wide">Defender</h3>
+      <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wide">Opponent</h3>
       <div className="flex gap-2 items-end">
         <div className="flex-1">
           <CalcAutocomplete
@@ -112,12 +148,39 @@ export default function LiveCalcDefenderPanel({
           value={knownAbility}
           onChange={(e) => onChangeKnownAbility(e.target.value)}
           disabled={abilityOptions.length === 0}
-          title="Pin the defender's ability once it's been revealed in-battle (an Intimidate trigger, an ability-activation message, etc.) - narrows the ability axis as a hard filter instead of scanning the full pool per observation"
+          title="Pin the opponent's ability once it's been revealed in-battle (an Intimidate trigger, an ability-activation message, etc.) - narrows the ability axis as a hard filter instead of scanning the full pool per observation"
           className="w-full px-1 py-0.5 text-xs bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <option value="">Unknown</option>
           {abilityOptions.map(ability => <option key={ability} value={ability}>{ability}</option>)}
         </select>
+      </div>
+
+      <div className="flex gap-2">
+        <div className="flex-1 flex flex-col gap-1">
+          <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Known Item</label>
+          <select
+            value={knownItem}
+            onChange={(e) => onChangeKnownItem(e.target.value)}
+            title="Pin the opponent's held item once it's been revealed in-battle (a Life Orb recoil message, a Fling/Knock Off reveal, etc.)"
+            className="w-full px-1 py-0.5 text-xs bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold cursor-pointer"
+          >
+            <option value="">Unknown</option>
+            {itemOptions.map(item => <option key={item} value={item}>{item}</option>)}
+          </select>
+        </div>
+        <div className="flex-1 flex flex-col gap-1">
+          <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Known Nature</label>
+          <select
+            value={knownNature}
+            onChange={(e) => onChangeKnownNature(e.target.value as NatureName | '')}
+            title="Pin the opponent's nature once it's been confirmed (a stat-boost/-reduction message, a damage roll that only fits one nature, etc.)"
+            className="w-full px-1 py-0.5 text-xs bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold cursor-pointer"
+          >
+            <option value="">Unknown</option>
+            {natureOptions.map(nature => <option key={nature} value={nature}>{nature}</option>)}
+          </select>
+        </div>
       </div>
 
       <div className="bg-zinc-800 rounded px-2 py-1.5 border border-zinc-600 flex flex-col gap-1">

@@ -1,11 +1,17 @@
 /**
  * LiveCalcPage.tsx - Live Calc Tab
- * Attacker entry, defender species+level, and two add/remove observation
- * lists (damage% and turn-order) wire through to Leg 1's
- * `inferDefenderStats()` and Leg 15's `inferDefenderSpeed()` engines, with
- * LiveCalcResultPanel (Live Calc Results Display - Leg 3) presenting the
- * narrowed result: per-stat SP ranges (Def/SpD/Speed) and nature/ability/item
- * candidate lists with their own certainty indication.
+ * Attacker entry, opponent species+level+known-facts, and three add/remove
+ * observation lists (damage% into them, damage% into you, turn-order) wire
+ * through to `inferDefenderStats()`, `inferOpponentOffensiveStats()` (Live
+ * Calc Page Layout & Function Rework - Leg 1), and `inferDefenderSpeed()`
+ * (Leg 15), with LiveCalcResultPanel (Live Calc Results Display - Leg 3)
+ * presenting the narrowed result: per-stat SP ranges (Def/SpD/Speed today -
+ * Atk/SpA already narrow under the hood via Leg 1's engine pass, but aren't
+ * surfaced here yet, since that's this rework's own Leg 3) and
+ * nature/ability/item candidate lists with their own certainty indication.
+ * The two damage% lists are the same `LiveCalcObservationList` component
+ * rendered twice with different labels (Leg 2) - see that file's header for
+ * why they share one component instead of a near-duplicate.
  *
  * useLiveCalc (and the @smogon/calc import it pulls in) is instantiated
  * here rather than in App.tsx, same reasoning as CalcPage.tsx's own header
@@ -55,19 +61,24 @@ export default function LiveCalcPage({
     attacker, setAttacker,
     speciesOptions, itemOptions, abilityOptions, natureOptions,
     attackerFormes, attackerBaseStats, attackerBoostedStats, attackerNatureEffect, attackerMoveOptions,
+    defenderMoveOptions,
     defenderSpecies, defenderLevel, setDefenderSpecies, setDefenderLevel, defenderFormes, defenderBaseStats,
-    defenderDefBoost, defenderSpdBoost, setDefenderDefBoost, setDefenderSpdBoost,
+    defenderAtkBoost, defenderDefBoost, defenderSpaBoost, defenderSpdBoost, defenderSpeBoost,
+    setDefenderAtkBoost, setDefenderDefBoost, setDefenderSpaBoost, setDefenderSpdBoost, setDefenderSpeBoost,
     defenderAbilityOptions, defenderKnownAbility, setDefenderKnownAbility,
+    defenderKnownItem, setDefenderKnownItem, defenderKnownNature, setDefenderKnownNature,
     observations, addObservation, updateObservation, removeObservation,
     turnOrderObservations, addTurnOrderObservation, updateTurnOrderObservation, removeTurnOrderObservation,
+    reverseObservations, addReverseObservation, updateReverseObservation, removeReverseObservation,
     inference,
   } = liveCalcState;
 
   return (
     <div className="flex flex-col gap-2">
       <p className="text-xs text-zinc-500">
-        Fill in the attacker and whatever's known about the defender below, log each hit/turn-order read
-        you've seen in battle as an observation, then read the narrowed result at the bottom of the page.
+        Fill in the attacker and whatever's known about the opponent below, log each hit (either direction)
+        or turn-order read you've seen in battle as an observation, then read the narrowed result at the
+        bottom of the page.
       </p>
       <div className="flex flex-wrap gap-3">
         <CalcPokemonPanel
@@ -94,22 +105,47 @@ export default function LiveCalcPage({
           speciesOptions={speciesOptions}
           formes={defenderFormes}
           baseStats={defenderBaseStats}
+          atkBoost={defenderAtkBoost}
           defBoost={defenderDefBoost}
+          spaBoost={defenderSpaBoost}
           spdBoost={defenderSpdBoost}
+          speBoost={defenderSpeBoost}
           abilityOptions={defenderAbilityOptions}
+          itemOptions={itemOptions}
+          natureOptions={natureOptions}
           knownAbility={defenderKnownAbility}
+          knownItem={defenderKnownItem}
+          knownNature={defenderKnownNature}
           onChangeSpecies={setDefenderSpecies}
           onChangeLevel={setDefenderLevel}
+          onChangeAtkBoost={setDefenderAtkBoost}
           onChangeDefBoost={setDefenderDefBoost}
+          onChangeSpaBoost={setDefenderSpaBoost}
           onChangeSpdBoost={setDefenderSpdBoost}
+          onChangeSpeBoost={setDefenderSpeBoost}
           onChangeKnownAbility={setDefenderKnownAbility}
+          onChangeKnownItem={setDefenderKnownItem}
+          onChangeKnownNature={setDefenderKnownNature}
         />
         <LiveCalcObservationList
+          title="Your Moves -> Them"
+          emptyMessage="No observations yet - add one for each hit you've seen land on them."
+          damageHpOwner="the opponent's"
           observations={observations}
           moveOptions={attackerMoveOptions}
           onAdd={addObservation}
           onUpdate={updateObservation}
           onRemove={removeObservation}
+        />
+        <LiveCalcObservationList
+          title="Their Moves -> You"
+          emptyMessage="No observations yet - add one for each hit their Pokémon has landed on you."
+          damageHpOwner="your Pokémon's"
+          observations={reverseObservations}
+          moveOptions={defenderMoveOptions}
+          onAdd={addReverseObservation}
+          onUpdate={updateReverseObservation}
+          onRemove={removeReverseObservation}
         />
         <LiveCalcTurnOrderList
           observations={turnOrderObservations}

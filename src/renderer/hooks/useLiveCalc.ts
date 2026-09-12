@@ -27,7 +27,10 @@
  * mirror direction) on top of THAT - this file is just the state/plumbing
  * around those three pure engine passes (Legs 1, 15, and Leg 1 of the
  * Layout & Function Rework), mirroring how useDamageCalc.ts is
- * state/plumbing around damageCalcEngine.ts.
+ * state/plumbing around damageCalcEngine.ts. Leg 2 of the same rework is UI
+ * wiring only (LiveCalcDefenderPanel's new fields, a second observation
+ * list) - no new state or engine calls were needed here beyond exposing
+ * `defenderMoveOptions` for that second list's move picker.
  *
  * The attacker's own `CalcPokemonState.moves` slots are never read by
  * `buildPokemon()` - each observation carries its own move name instead,
@@ -120,6 +123,14 @@ export interface UseLiveCalcReturn {
   attackerBoostedStats: StatsTable | null;
   attackerNatureEffect: NatureStatEffect;
   attackerMoveOptions: string[];
+  /** Live Calc Page Layout & Function Rework - Leg 2: move options for the
+   * new "their move -> you" reverse observation list. Unlike
+   * `attackerMoveOptions`, this never narrows to a "real loaded set" - the
+   * opponent's actual moveset is exactly what the tab doesn't track, so it's
+   * always the full legal move list (the same unfiltered pool
+   * `attackerMoveOptions` itself falls back to before a real attacker set is
+   * loaded). */
+  defenderMoveOptions: string[];
   defenderSpecies: string;
   defenderLevel: number;
   setDefenderSpecies: (species: string) => void;
@@ -335,6 +346,7 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
     attackerBoostedStats,
     attackerNatureEffect,
     attackerMoveOptions,
+    defenderMoveOptions: moveOptions,
     defenderSpecies,
     defenderLevel,
     setDefenderSpecies,
