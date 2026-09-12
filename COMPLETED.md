@@ -18,6 +18,17 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Live Calc Known-Ability Lock] - Leg 1** (2026-09-11) - see commit
+  `f0ca844`. `LiveCalcDefenderInput` gained an optional `knownAbility` -
+  once set, `inferDefenderStats()` hard-locks `abilityCandidates` to that
+  single value and uses it as the nature/item axes' own neutral default
+  (instead of "no ability") rather than scanning the species' full ability
+  pool per observation. `useLiveCalc` exposes
+  `defenderKnownAbility`/`setDefenderKnownAbility` +
+  `defenderAbilityOptions`, resetting the lock on defender species change.
+  UI: a new "Known Ability" select on `LiveCalcDefenderPanel` (default
+  Unknown).
+
 - **[Live Calc Observation Inputs: Crit + Fainted/Survived] - Leg 1**
   (2026-09-11) - see commit `2781b26`. `LiveCalcObservation` gained `isCrit`
   (fed into `Move`'s own `isCrit` option) and `outcome`

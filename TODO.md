@@ -29,17 +29,6 @@ tweaking" placeholder). Scoped 2026-09-11 after asking Vanny for the actual
 specifics; per the user's "split scoping from building" habit, this session
 stops at the plan below rather than starting Leg 1.
 
-- **[Live Calc Known-Ability Lock] — Leg 1** *(Last touched: 2026-09-11 ·
-  Re-checks: 0)*
-  Let the user pin a defender's ability once it's been revealed in-battle
-  (an Intimidate trigger, an ability-activation message, etc.) as a hard
-  filter rather than an open candidate scanned per observation - narrows
-  `inferDefenderStats()`'s ability axis up front instead of relying
-  entirely on damage-number inference. The "ability toggle" half of Leg 1's
-  defender-panel-parity ask; split out because it's an engine-contract
-  change (`inferDefenderStats()` needs a new known-ability param), not a UI
-  addition.
-
 - **[Live Calc Result Clarity Pass] — Leg 1** *(Last touched: 2026-09-11 ·
   Re-checks: 0)*
   General readability pass over `LiveCalcResultPanel`/the tab overall - per
