@@ -18,6 +18,14 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Calc Result Panel SP Display Fix] - Leg 1** (2026-09-12) - see commit
+  `6cd416b`. Folded into Live Calc Tuning. The Calc tab's Result section
+  showed `@smogon/calc`'s own EV-scale stat mentions ("256+ Atk", "232 HP /
+  160+ Def") verbatim in its description line - Champions has no EV concept
+  at all, only 0-32 SPs. Fixed with a `convertDescEvsToSps()` regex pass in
+  `damageCalcEngine.ts` that rewrites those mentions back to SPs (÷8, the
+  inverse of the existing SP→EV boundary conversion) before display.
+
 - **[Legal Species List Sweep] - Leg 1** (2026-09-12) - see commit `ee455a0`.
   Mimikyu was invisible in the Battle Logger's opponent picker (and every
   other legality-filtered picker) because PokeAPI has no bare "mimikyu"
