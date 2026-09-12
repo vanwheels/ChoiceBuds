@@ -27,9 +27,18 @@ Promoted 2026-09-11 from "Future Milestones" - the last of the four
 drafted into legs at batching time (it went in as a bare "needs a lot of
 tweaking" placeholder). Scoped 2026-09-11 after asking Vanny for the actual
 specifics. Both scoped legs (Known-Ability Lock, Result Clarity Pass) have
-now shipped - see `COMPLETED.md` - but the milestone stays open rather than
-closing out per Vanny's explicit call when kicking off the Result Clarity
-Pass session; no further legs queued here yet.
+shipped - see `COMPLETED.md` - but the milestone stays open per Vanny's
+explicit call.
+
+- **[Live Calc Page Layout & Function Rework] — Leg 1** *(Last touched:
+  2026-09-11 · Re-checks: 0)*
+  Result Clarity Pass's changes were verified live but didn't land the page
+  where Vanny wants it - still "not happy with this page's layout and how
+  it functions" as a whole, beyond the result panel's own readability.
+  Not yet scoped: Vanny wants to spend more time with the page first to
+  pin down the actual specifics before this turns into concrete legs: per
+  the "split scoping from building" habit, wait for that scoping pass
+  rather than guessing at a rework here.
 
 ## Blocked
 
