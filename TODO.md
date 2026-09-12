@@ -42,12 +42,56 @@ than being closed out here.
   Vanny's earlier explicit ask - no way to set the opponent's status
   condition.
 
+- **[Live Calc Feedback Pass 2] — Leg 5** *(Last touched: 2026-09-11 ·
+  Re-checks: 0)*
+  Data-correctness bug, found live-verifying Leg 3: Armor Tail doesn't show
+  up as a candidate ability for Farigiraf in the Opponent panel. Root cause
+  (not yet confirmed against Farigiraf specifically, but same shape as the
+  already-fixed Mega-ability bug from Leg 1 - see `COMPLETED.md`):
+  `useLiveCalc.ts`'s `defenderAbilityOptions` sources from
+  `liveCalcEngine.ts::defaultInference()`'s `abilityCandidates`, which reads
+  `gen.species.get(...).abilities` - `@smogon/calc`'s own bundled species
+  data - rather than the app's PokeAPI + `config/championsAbilityOverrides.ts`
+  pipeline (`useGameData`) the rest of the app treats as the real source of
+  truth for per-species ability pools. Likely needs `defaultInference()`'s
+  ability-candidate lookup rerouted through `useGameData`'s cached species
+  data instead of `gen.species.get()` directly - scope that against a couple
+  more known mismatched species before committing to the fix shape.
+
+- **[Live Calc Feedback Pass 2] — Leg 6** *(Last touched: 2026-09-11 ·
+  Re-checks: 0)*
+  Found live-verifying Leg 3: Vanny flagged that Live Calc doesn't consider
+  the defender's HP Stat Points at all. Confirmed this is Live Calc-specific,
+  not a regression on the regular Calc page (there, `computeSideResults()`
+  builds both Pokémon via `buildPokemon()`, which already feeds real HP SPs
+  through `spsToEvs()` into `maxHP()`). Live Calc's own inference engine
+  (`utils/liveCalcEngine.ts`) instead holds the unknown defender's HP SPs at
+  a fixed `HP_SP_DEFAULT` (16, the midpoint) rather than solving for it
+  jointly with the relevant defensive stat - this was an explicit, already-
+  documented v1 approximation from `docs/investigations/
+  live-calc-stat-inference-scope.md` (see this file's own header comment),
+  not an oversight. Vanny is now asking to revisit that accepted tradeoff
+  after live use rather than leave it as-is - needs a scoping pass on what
+  "considering HP SP" should actually mean here (a wider/user-adjustable
+  default? jointly narrowing HP alongside the defensive stat, the "hybrid
+  brute-force pass" the scope doc already flagged as the eventual fix for
+  this whole approximation category?) before it becomes a concrete leg.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
 outside this project — a person, a dependency, or an external decision.
 Exempt from the re-check counter; they move back to "In progress" once
 unblocked.
+
+- **[Live Calc Player/Opponent Card Redesign] — Leg 1** *(Last touched:
+  2026-09-11 · Re-checks: 0)*
+  Blocked: waiting on Vanny to send a mockup she's drawn for what the
+  Attacker/Opponent panels should look like going forward, to discuss next
+  session. Raised right after Leg 3's panel-mirroring pass, so likely
+  supersedes some of that leg's layout choices once the mockup is in hand -
+  don't treat Leg 3's field ordering/header shape as settled until this is
+  resolved.
 
 - **[Team Card Grid Layout Re-check] — Leg 1** *(Last touched: 2026-08-31 ·
   Re-checks: 0)*
