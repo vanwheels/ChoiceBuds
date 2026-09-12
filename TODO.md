@@ -29,18 +29,6 @@ tweaking" placeholder). Scoped 2026-09-11 after asking Vanny for the actual
 specifics; per the user's "split scoping from building" habit, this session
 stops at the plan below rather than starting Leg 1.
 
-- **[Live Calc Observation Inputs: Crit + Fainted/Survived] — Leg 1** *(Last
-  touched: 2026-09-11 · Re-checks: 0)*
-  Add a crit toggle per observation (feeds `Move`'s `isCrit` in
-  `liveCalcEngine.ts`'s move-building) and a survived/fainted outcome field
-  replacing the implicit "this damage% is exact" assumption - a fainted
-  read only proves the hit dealt *at least* the defender's remaining HP%, a
-  looser and more forgiving bound than guessing an exact percent off a
-  health bar. Likely a root cause of the near-universal "is inconsistent
-  with every narrowed candidate so far" rejection reported live - a crit
-  reading scanned as a non-crit hit looks impossible against every
-  candidate.
-
 - **[Live Calc Known-Ability Lock] — Leg 1** *(Last touched: 2026-09-11 ·
   Re-checks: 0)*
   Let the user pin a defender's ability once it's been revealed in-battle

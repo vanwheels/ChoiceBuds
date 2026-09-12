@@ -18,6 +18,16 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Live Calc Observation Inputs: Crit + Fainted/Survived] - Leg 1**
+  (2026-09-11) - see commit `2781b26`. `LiveCalcObservation` gained `isCrit`
+  (fed into `Move`'s own `isCrit` option) and `outcome`
+  (`'survived' | 'fainted'`, default `'survived'`); `feasibleSpRange` now
+  branches its feasibility check on `outcome` - `'fainted'` relaxes the
+  usual two-sided range comparison to a one-sided lower-bound check, since a
+  KO reading only proves damage was at least the reported %, not exactly
+  that %. UI: an outcome select + crit checkbox added to
+  `LiveCalcObservationList`'s observation row.
+
 - **[Live Calc Observation Move Options: Actual Attacker Moveset] - Leg 1**
   (2026-09-11) - see commit `bfe70cd`. `attackerMoveOptions` in
   `useLiveCalc.ts` now caps to the attacker's real 4 moves (`attacker.moves`)
