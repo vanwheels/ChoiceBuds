@@ -31,7 +31,7 @@ import type {
 import { getChampionsCalcMoveOverride } from '../config/championsMoveOverrides';
 import { getChampionsAbilityDamageEffect } from '../config/championsAbilityDamageEffects';
 import { normalizeNameForAPI } from '../services/pokeapiService';
-import { MAX_IVS, spsToEvs, resolveCalcSpecies } from './championsStats';
+import { MAX_IVS, spsToEvs, evToSp, resolveCalcSpecies } from './championsStats';
 
 const MOVE_SLOT_COUNT = 4;
 
@@ -259,6 +259,26 @@ function adjustedEntry(
   };
 }
 
+/**
+ * `result.desc()`'s EV mentions ("232 HP", "160+ Def", "256+ Atk") are built
+ * by @smogon/calc's own getStatDescriptionText from `pokemon.evs[stat]` -
+ * always this app's SP*8 (see spsToEvs in championsStats.ts), since
+ * @smogon/calc has no native SP concept. Champions itself has no EV concept
+ * at all, so showing that EV number verbatim (as the real calc's Result
+ * section does) is wrong for this app - divides each back down to its
+ * native SP by 8 (evToSp), same conversion boundary spsToEvs crosses in the
+ * other direction. Matches only the six stat abbreviations so move-BP
+ * mentions ("120 BP") and other digit/word pairs in the description are
+ * left untouched.
+ */
+const EV_STAT_PATTERN = /(\d+)([+-]?)( (?:HP|Atk|Def|SpA|SpD|Spe))\b/g;
+
+function convertDescEvsToSps(desc: string): string {
+  return desc.replace(EV_STAT_PATTERN, (_match, evs: string, sign: string, statPart: string) =>
+    `${evToSp(Number(evs))}${sign}${statPart}`
+  );
+}
+
 function flattenDamage(damage: number | number[] | number[][]): number[] {
   if (typeof damage === 'number') return [damage];
   if (damage.length > 0 && Array.isArray(damage[0])) return (damage as number[][]).flat();
@@ -436,7 +456,7 @@ export function computeSideResults(
       return {
         moveName: slot.name,
         percent,
-        desc: result.desc(),
+        desc: convertDescEvsToSps(result.desc()),
         range,
         kochanceText: result.kochance().text,
         possibleDamages: [...new Set(flattenDamage(result.damage))].sort((a, b) => a - b),

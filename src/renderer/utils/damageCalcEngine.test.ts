@@ -126,6 +126,30 @@ describe('computeSideResults', () => {
     expect(entry.multihitRange).toBe(null);
   });
 
+  it("describes stat spreads in this app's native SP scale, not @smogon/calc's own EV scale", () => {
+    const attacker = pokemonWithMove('Rillaboom', 'Wood Hammer', {});
+    attacker.ability = 'Grassy Surge';
+    attacker.item = 'Miracle Seed';
+    attacker.nature = 'Adamant'; // +atk
+    attacker.sps = { ...ZERO_STATS, atk: 32 };
+    const defender = pokemonState({
+      species: 'Farigiraf', nature: 'Impish', // +def
+      sps: { ...ZERO_STATS, hp: 29, def: 20 },
+    });
+
+    const [entry] = computeSideResults(gen, attacker, defender, noSide, noSide, 'Doubles', '', '');
+
+    // @smogon/calc's own result.desc() would say "256+ Atk" / "232 HP / 160+ Def"
+    // (its internal EV scale, SP*8) - this app has no EV concept, so the
+    // description should read back in SPs instead.
+    expect(entry.desc).toContain('32+ Atk');
+    expect(entry.desc).toContain('29 HP');
+    expect(entry.desc).toContain('20+ Def');
+    expect(entry.desc).not.toContain('256');
+    expect(entry.desc).not.toContain('232');
+    expect(entry.desc).not.toContain('160');
+  });
+
   it('produces a clean blocked entry (not an error) when the defender is fully immune via an ability', () => {
     const attacker = pokemonWithMove('Garchomp', 'Earthquake');
     const defender = pokemonState({ species: 'Rotom-Wash', ability: 'Levitate' });

@@ -32,6 +32,14 @@ export function spsToEvs(sps: StatsTable): StatsTable {
   };
 }
 
+/** Inverse of spToEv - exact since every EV this app ever hands @smogon/calc
+ * came from spToEv in the first place (always a multiple of 8). Used to
+ * translate @smogon/calc's own EV-scale result text back to this app's
+ * native SP scale for display (see damageCalcEngine.ts's convertDescEvsToSps). */
+export function evToSp(ev: number): number {
+  return ev / 8;
+}
+
 /**
  * @smogon/calc has no bare "Aegislash" species entry - only its Blade/Shield
  * stat-formes (confirmed directly against the bundled Gen 9 dex: Aegislash-
