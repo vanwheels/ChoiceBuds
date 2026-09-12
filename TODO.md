@@ -30,17 +30,6 @@ specifics. Both scoped legs (Known-Ability Lock, Result Clarity Pass) have
 shipped - see `COMPLETED.md` - but the milestone stays open per Vanny's
 explicit call.
 
-- **[Live Calc Page Layout & Function Rework] — Leg 1** *(Last touched:
-  2026-09-11 · Re-checks: 0)*
-  Scoped 2026-09-11 - see
-  `docs/investigations/live-calc-layout-rework-scope.md` for the full
-  decision record. Bidirectional Inference Engine: `liveCalcEngine.ts`
-  gains the mirror narrowing direction ("their move did X% to you" narrows
-  the opponent's Atk/SpA/nature, alongside the existing "your move to
-  them" narrowing their Def/SpD), plus known-fact-lock inputs for item,
-  nature, and the 4 missing stat-boost stages (only Def/SpD boost exist
-  today). Pure engine/hook work, no layout change yet.
-
 - **[Live Calc Page Layout & Function Rework] — Leg 2** *(Last touched:
   2026-09-11 · Re-checks: 0)*
   Opponent Panel & Reverse Observations - wires Leg 1's new inputs into

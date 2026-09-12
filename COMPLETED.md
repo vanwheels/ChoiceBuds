@@ -18,6 +18,24 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Live Calc Page Layout & Function Rework] - Leg 1** (2026-09-11) - see
+  commit `c948316`. Bidirectional Inference Engine, per
+  `docs/investigations/live-calc-layout-rework-scope.md`.
+  `LiveCalcDefenderInput` gained `knownItem`/`knownNature` (generalizing the
+  existing `knownAbility` lock pattern to all three scanned axes) and
+  `atkBoost`/`spaBoost`/`speBoost` (rounding the boost table out to all five
+  combat stats). New `inferOpponentOffensiveStats()` mirrors
+  `inferDefenderStats()`: narrows the opponent's Atk/SpA SP from "their move
+  -> you" observations against the one fully-known Pokémon, now playing
+  defender - a Champions contact-damage ability effect (Aura Guard) reads
+  off the KNOWN Pokémon's ability in this direction instead of the opponent
+  candidate, since the known side is the one taking the hit here.
+  `useLiveCalc` wires the new locks/boosts into `defenderInput`, adds a
+  second `reverseObservations` list, and layers the new inference pass on
+  top of the existing damage+speed pipeline. Pure engine/hook work - no UI
+  yet (Leg 2 wires it into `LiveCalcDefenderPanel` + a mirrored observation
+  list on the page).
+
 - **[Live Calc Result Clarity Pass] - Leg 1** (2026-09-11) - see commit
   `0eab7a7`. `LiveCalcResultPanel` gained a subtitle stating the
   read-independently-per-axis rule, split the SP-range and candidate-list
