@@ -18,6 +18,18 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Live Calc Usage-Data-Backed Inference] - Leg 2** (2026-09-12) - see
+  commit `2236098`. UI surfacing for Leg 1's engine output:
+  `LiveCalcCandidateGroup` now defaults to the usage-ranked/filtered
+  candidate view (per-chip ladder usage %, most-used first) whenever the
+  opponent's species has Champions ranked-ladder data actually narrowing
+  that axis, with a toggle back to the full physically-possible list -
+  suppressed when the usage view is just an unranked mirror of the full list
+  (no Champions page, or every remaining candidate is off-meta). The
+  narrowing fraction/bar above it still reflects only the physically-possible
+  set, untouched. Closes out the item - both legs of this feature have now
+  shipped.
+
 - **[Live Calc Usage-Data-Backed Inference] - Leg 1** (2026-09-12) - see
   commit `45e9f7c`. Engine + hook plumbing, no UI. New pure module
   `utils/liveCalcUsageWeighting.ts` ranks/filters the nature/ability/item

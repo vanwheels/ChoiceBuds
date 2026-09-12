@@ -28,22 +28,16 @@ drafted into legs at batching time (it went in as a bare "needs a lot of
 tweaking" placeholder). Scoped 2026-09-11 after asking Vanny for the actual
 specifics. All 3 scoped legs of Live Calc Page Layout & Function Rework
 (Bidirectional Inference Engine, Opponent Panel & Reverse Observations,
-Layout & Live Range Grid Rework) plus the earlier Known-Ability Lock and
-Result Clarity Pass legs have now shipped - see `COMPLETED.md` - with only
-the already-deferred Unscheduled items (popup launcher, Battle Log
-auto-populate, doubles support) left underneath it. No further legs are
-scoped right now; the milestone stays open per Vanny's explicit call rather
-than being closed out here.
+Layout & Live Range Grid Rework), the earlier Known-Ability Lock and Result
+Clarity Pass legs, and both legs of Live Calc Usage-Data-Backed Inference
+have now shipped - see `COMPLETED.md` - with only the already-deferred
+Unscheduled items (popup launcher, Battle Log auto-populate, doubles
+support) left underneath it. No further legs are scoped right now; the
+milestone stays open per Vanny's explicit call rather than being closed out
+here.
 
-- **[Live Calc Usage-Data-Backed Inference] — Leg 2** *(Last touched:
-  2026-09-12 · Re-checks: 0)*
-  UI surfacing for Leg 1's engine output: `LiveCalcCandidateGroup.tsx`/
-  `LiveCalcDefenderPanel.tsx` show the usage-ranked/filtered candidates by
-  default with percentage annotations, plus a reveal-all toggle back to the
-  full physically-possible list (Vanny's call - usage-filtered-but-possible
-  candidates are never permanently hidden). Leg 1 has shipped (see
-  `COMPLETED.md`) - `LiveCalcInference.natureUsageCandidates`/
-  `abilityUsageCandidates`/`itemUsageCandidates` are ready to render.
+Nothing currently scoped under this milestone - see "Unscheduled" below for
+adjacent-but-deferred items.
 
 ## Blocked
 
