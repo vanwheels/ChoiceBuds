@@ -347,9 +347,9 @@ export default function LiveCalcDefenderPanel({
           <div>
             <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-wide mb-1.5">Candidates Narrowed</h4>
             <div className="grid grid-cols-1 gap-2">
-              <LiveCalcCandidateGroup label="Nature" candidates={inference.natureCandidates} totalCount={baseline.natureCandidates.length} />
-              <LiveCalcCandidateGroup label="Ability" candidates={inference.abilityCandidates} totalCount={abilityOptions.length} />
-              <LiveCalcCandidateGroup label="Item" candidates={inference.itemCandidates} totalCount={baseline.itemCandidates.length} />
+              <LiveCalcCandidateGroup label="Nature" candidates={inference.natureCandidates} totalCount={baseline.natureCandidates.length} usageCandidates={inference.natureUsageCandidates} />
+              <LiveCalcCandidateGroup label="Ability" candidates={inference.abilityCandidates} totalCount={abilityOptions.length} usageCandidates={inference.abilityUsageCandidates} />
+              <LiveCalcCandidateGroup label="Item" candidates={inference.itemCandidates} totalCount={baseline.itemCandidates.length} usageCandidates={inference.itemUsageCandidates} />
             </div>
           </div>
 
