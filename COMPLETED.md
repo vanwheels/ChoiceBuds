@@ -18,6 +18,14 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Live Calc Usage-Data-Backed Inference] - Leg 1** (2026-09-12) - see
+  commit `45e9f7c`. Engine + hook plumbing, no UI. New pure module
+  `utils/liveCalcUsageWeighting.ts` ranks/filters the nature/ability/item
+  axes against the opponent's `ChampionsUsageEntry` as a post-processing pass
+  over `LiveCalcInference` (mirroring `liveCalcSpeedEngine.ts`'s layering
+  shape), wired into `useLiveCalc.ts` as a fourth pipeline pass fetching
+  usage via `useGameData().getChampionsUsage`. Leg 2 (UI surfacing) is next.
+
 - **[Live Calc Feedback Pass 2] - Leg 5** (2026-09-12) - see commit
   `315244c`. Fixed the Armor Tail/Farigiraf ability-candidate bug found
   live-verifying Leg 3: confirmed the root cause was the same shape as the

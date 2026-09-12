@@ -35,27 +35,15 @@ auto-populate, doubles support) left underneath it. No further legs are
 scoped right now; the milestone stays open per Vanny's explicit call rather
 than being closed out here.
 
-- **[Live Calc Usage-Data-Backed Inference] — Leg 1** *(Last touched:
-  2026-09-12 · Re-checks: 0)*
-  Engine + hook plumbing, no UI. Scoped 2026-09-12 - Vanny's call was the
-  larger of the two original options (usage frequency as a weighted prior
-  inside `liveCalcEngine.ts`'s narrowing math, not just a one-time
-  Opponent-side auto-fill). New pure module applying usage-based
-  filter/ranking as a post-processing pass over the already-computed
-  `LiveCalcInference` (nature/ability/item axes only this leg - stat-spread
-  weighting is a deferred future leg), wired into `useLiveCalc.ts`'s fetch of
-  the opponent's `ChampionsUsageEntry` via `useGameData().getChampionsUsage`.
-  See `docs/investigations/live-calc-usage-weighted-inference-scope.md` for
-  the resolved mechanism (near-0%-usage filter, never-empty-axis fallback,
-  no-usage-data no-op, locked axes never weighted).
-
 - **[Live Calc Usage-Data-Backed Inference] — Leg 2** *(Last touched:
   2026-09-12 · Re-checks: 0)*
   UI surfacing for Leg 1's engine output: `LiveCalcCandidateGroup.tsx`/
   `LiveCalcDefenderPanel.tsx` show the usage-ranked/filtered candidates by
   default with percentage annotations, plus a reveal-all toggle back to the
   full physically-possible list (Vanny's call - usage-filtered-but-possible
-  candidates are never permanently hidden). Depends on Leg 1 shipping first.
+  candidates are never permanently hidden). Leg 1 has shipped (see
+  `COMPLETED.md`) - `LiveCalcInference.natureUsageCandidates`/
+  `abilityUsageCandidates`/`itemUsageCandidates` are ready to render.
 
 ## Blocked
 
