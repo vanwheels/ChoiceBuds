@@ -16,6 +16,7 @@
  */
 
 import { calculate, Pokemon, Move, Field, toID } from '@smogon/calc';
+import { getFinalSpeed } from '@smogon/calc/dist/mechanics/util';
 import type {
   StatsTable,
   GameType,
@@ -289,51 +290,41 @@ export function boostMultiplier(stage: number): number {
 }
 
 /**
- * Speed-doubling abilities that key off the active field weather - the
- * permanent-weather abilities (Desolate Land/Primordial Sea) count as their
- * base weather too, since Chlorophyll/Swift Swim key off "is it sunny/
- * rainy", not the specific ability that caused it. Doesn't cover Tailwind
- * (a side condition, not a per-Pokemon ability, and not yet tracked as calc
- * state) or Sand Force/Ice Body-style non-Speed weather abilities.
- */
-const WEATHER_SPEED_ABILITIES: Record<string, Weather[]> = {
-  'swift swim': ['Rain', 'Heavy Rain'],
-  'chlorophyll': ['Sun', 'Harsh Sunshine'],
-  'sand rush': ['Sand'],
-  'slush rush': ['Snow', 'Hail'],
-};
-
-function weatherSpeedMultiplier(ability: string, weather: Weather | ''): number {
-  if (!weather) return 1;
-  const boostedIn = WEATHER_SPEED_ABILITIES[ability.toLowerCase()];
-  return boostedIn?.includes(weather) ? 2 : 1;
-}
-
-/**
  * Base+SPs+nature+stage boost for all 6 stats - what the Calc's stat table
  * shows as a single computed "Total" per row (see CalcStatRows.tsx),
  * matching what the real games display as a Pokemon's current stat (unlike
  * @smogon/calc's own `rawStats`, which is base+nature+SPs only, no boost).
- * Speed additionally applies weather-boosting abilities (Swift Swim etc.,
- * keyed off the field's active weather) and then paralysis-halving, in that
- * order, matching the real games' modifier ordering - both are already
- * explicit, unambiguous inputs on this panel (state.ability, field.weather).
- * Doesn't model Tailwind, since that's a side condition not yet tracked as
- * calc state. Floored per-stat (not just at the end) since that's how the
- * real stat formula rounds a fractional boost multiplier.
+ * Floored per-stat (not just at the end) since that's how the real stat
+ * formula rounds a fractional boost multiplier.
+ *
+ * Speed used to run its own hand-rolled chain here (weather-boosting
+ * abilities, then paralysis-halving) that silently missed every Speed-
+ * modifying item (Choice Scarf, Iron Ball, Quick Powder+Ditto) and
+ * ability-only cases (Unburden, Quick Feet, Slow Start, Quark Drive/
+ * Protosynthesis) - confirmed live: a Choice Scarf set's displayed Speed
+ * "Total" never reflected the 1.5x boost. Delegates to `getFinalSpeed()`
+ * instead (dist/mechanics/util.js, typed in util.d.ts) - the same private-
+ * but-reachable function `@smogon/calc`'s own `calculate()` uses internally,
+ * already correctly chaining every real Speed modifier with cartridge-
+ * accurate rounding. utils/speedTiers.ts already established this exact
+ * reuse pattern (see its own header) rather than hand-rolling a second,
+ * subtly-different multiplier chain - this brings the Calc tab's/Live
+ * Calc's own Speed display in line with it. Still doesn't model Tailwind or
+ * terrain-keyed abilities (Surge Surfer) - this function only ever sees a
+ * bare weather value, not a full field/side context (Tailwind in particular
+ * needs to know which side this Pokemon is actually on, which no caller
+ * threads through yet) - see TODO.md.
  */
-export function computeBoostedStats(gen: Generation, state: CalcPokemonState, weather: Weather | ''): StatsTable | null {
+export function computeBoostedStats(gen: Generation, state: CalcPokemonState, weather: Weather | '', terrain: Terrain | '' = ''): StatsTable | null {
   if (!state.species) return null;
   try {
     const pokemon = buildPokemon(gen, state);
+    const field = new Field({ weather: weather || undefined, terrain: terrain || undefined });
     const keys = Object.keys(pokemon.rawStats) as (keyof StatsTable)[];
     const entries = keys.map(key => {
+      if (key === 'spe') return [key, getFinalSpeed(gen, pokemon, field, field.attackerSide)] as const;
       const boosted = Math.floor(pokemon.rawStats[key] * boostMultiplier(state.boosts[key]));
-      const weatherBoosted = key === 'spe'
-        ? Math.floor(boosted * weatherSpeedMultiplier(state.ability, weather))
-        : boosted;
-      const final = key === 'spe' && state.status === 'par' ? Math.floor(weatherBoosted / 2) : weatherBoosted;
-      return [key, final] as const;
+      return [key, boosted] as const;
     });
     return Object.fromEntries(entries) as StatsTable;
   } catch {
@@ -341,8 +332,8 @@ export function computeBoostedStats(gen: Generation, state: CalcPokemonState, we
   }
 }
 
-export function computeEffectiveSpeed(gen: Generation, state: CalcPokemonState, weather: Weather | ''): number | null {
-  return computeBoostedStats(gen, state, weather)?.spe ?? null;
+export function computeEffectiveSpeed(gen: Generation, state: CalcPokemonState, weather: Weather | '', terrain: Terrain | '' = ''): number | null {
+  return computeBoostedStats(gen, state, weather, terrain)?.spe ?? null;
 }
 
 /** Exported for reuse by utils/liveCalcEngine.ts, which builds the same kind

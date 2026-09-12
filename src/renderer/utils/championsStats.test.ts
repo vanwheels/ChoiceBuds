@@ -40,4 +40,19 @@ describe('resolveCalcSpecies', () => {
   it('leaves an unrelated species untouched', () => {
     expect(resolveCalcSpecies('Gengar')).toBe('Gengar');
   });
+
+  it('strips an explicit "-M" suffix from a gender-divergent species down to the bare (male-default) name', () => {
+    expect(resolveCalcSpecies('Basculegion-M')).toBe('Basculegion');
+    expect(resolveCalcSpecies('Indeedee-M')).toBe('Indeedee');
+    expect(resolveCalcSpecies('Meowstic-M')).toBe('Meowstic');
+    expect(resolveCalcSpecies('Oinkologne-M')).toBe('Oinkologne');
+  });
+
+  it('leaves a gender-divergent species\' "-F" forme untouched (already matches @smogon/calc\'s own naming)', () => {
+    expect(resolveCalcSpecies('Basculegion-F')).toBe('Basculegion-F');
+  });
+
+  it('leaves a bare gender-divergent species (already male-default) untouched', () => {
+    expect(resolveCalcSpecies('Basculegion')).toBe('Basculegion');
+  });
 });

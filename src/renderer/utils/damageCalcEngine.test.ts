@@ -6,9 +6,8 @@
  * makes) gives a real Gen 9 data object synchronously in a plain Vitest
  * test - no mocking needed since this module is already pure and
  * side-effect-free (see damageCalcEngine.ts's header). Private helpers
- * (buildPokemon, boostMultiplier, weatherSpeedMultiplier, etc.) are covered
- * indirectly through the exported entry points below rather than exported
- * just for testing.
+ * (buildPokemon, boostMultiplier, etc.) are covered indirectly through the
+ * exported entry points below rather than exported just for testing.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -91,6 +90,22 @@ describe('computeBoostedStats / computeEffectiveSpeed', () => {
 
     const paralyzedAndBoosted = pokemonState({ species: 'Gengar', status: 'par', ability: 'Swift Swim' });
     expect(computeEffectiveSpeed(gen, paralyzedAndBoosted, 'Rain')).toBe(130); // floor(floor(130 * 2) / 2)
+  });
+
+  it('applies Choice Scarf\'s 1.5x Speed multiplier - regression test for a Scarf set showing an unmodified Speed Total', () => {
+    const scarfed = pokemonState({ species: 'Gengar', item: 'Choice Scarf' });
+    expect(computeEffectiveSpeed(gen, scarfed, '')).toBe(195); // floor(130 * 1.5)
+  });
+
+  it('applies Iron Ball\'s 0.5x Speed multiplier', () => {
+    const ironBalled = pokemonState({ species: 'Gengar', item: 'Iron Ball' });
+    expect(computeEffectiveSpeed(gen, ironBalled, '')).toBe(65); // floor(130 * 0.5)
+  });
+
+  it('stacks Choice Scarf with a stat-stage boost and paralysis, matching real modifier order', () => {
+    const state = pokemonState({ species: 'Gengar', item: 'Choice Scarf', status: 'par', boosts: { ...ZERO_STATS, spe: 1 } });
+    // rawStats.spe(130) -> +1 stage (195) -> Scarf 1.5x (292) -> par 0.5x (146)
+    expect(computeEffectiveSpeed(gen, state, '')).toBe(146);
   });
 });
 

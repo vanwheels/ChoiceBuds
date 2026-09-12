@@ -32,6 +32,7 @@ import { Generations, toID } from '@smogon/calc';
 import type { StatsTable, NatureName } from '@smogon/calc/dist/data/interface';
 import { validateSpeciesLegality, ALL_REGULATION_IDS, type RegulationId } from '../utils/pokemonRules';
 import { getFormeFamily, type FormeFamily } from '../utils/calcFormes';
+import { resolveCalcSpecies } from '../utils/championsStats';
 import type { UseGameDataReturn } from './useGameData';
 import {
   normalizeMoveSlug,
@@ -135,18 +136,18 @@ export function useDamageCalc(gameDataState: UseGameDataReturn, defaultRegulatio
   const pokemon1NatureEffect = useMemo(() => getNatureStatEffect(gen, pokemon1.nature), [gen, pokemon1.nature]);
   const pokemon2NatureEffect = useMemo(() => getNatureStatEffect(gen, pokemon2.nature), [gen, pokemon2.nature]);
 
-  const pokemon1Speed = useMemo(() => computeEffectiveSpeed(gen, pokemon1, field.weather), [gen, pokemon1, field.weather]);
-  const pokemon2Speed = useMemo(() => computeEffectiveSpeed(gen, pokemon2, field.weather), [gen, pokemon2, field.weather]);
+  const pokemon1Speed = useMemo(() => computeEffectiveSpeed(gen, pokemon1, field.weather, field.terrain), [gen, pokemon1, field.weather, field.terrain]);
+  const pokemon2Speed = useMemo(() => computeEffectiveSpeed(gen, pokemon2, field.weather, field.terrain), [gen, pokemon2, field.weather, field.terrain]);
 
-  const pokemon1BoostedStats = useMemo(() => computeBoostedStats(gen, pokemon1, field.weather), [gen, pokemon1, field.weather]);
-  const pokemon2BoostedStats = useMemo(() => computeBoostedStats(gen, pokemon2, field.weather), [gen, pokemon2, field.weather]);
+  const pokemon1BoostedStats = useMemo(() => computeBoostedStats(gen, pokemon1, field.weather, field.terrain), [gen, pokemon1, field.weather, field.terrain]);
+  const pokemon2BoostedStats = useMemo(() => computeBoostedStats(gen, pokemon2, field.weather, field.terrain), [gen, pokemon2, field.weather, field.terrain]);
 
   const pokemon1BaseStats = useMemo(
-    () => (pokemon1.species ? gen.species.get(toID(pokemon1.species))?.baseStats ?? null : null),
+    () => (pokemon1.species ? gen.species.get(toID(resolveCalcSpecies(pokemon1.species)))?.baseStats ?? null : null),
     [gen, pokemon1.species]
   );
   const pokemon2BaseStats = useMemo(
-    () => (pokemon2.species ? gen.species.get(toID(pokemon2.species))?.baseStats ?? null : null),
+    () => (pokemon2.species ? gen.species.get(toID(resolveCalcSpecies(pokemon2.species)))?.baseStats ?? null : null),
     [gen, pokemon2.species]
   );
 

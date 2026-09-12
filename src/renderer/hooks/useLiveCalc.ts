@@ -64,6 +64,7 @@ import { Generations, toID } from '@smogon/calc';
 import type { Generation, NatureName, StatsTable, StatusName } from '@smogon/calc/dist/data/interface';
 import { validateSpeciesLegality, type RegulationId } from '../utils/pokemonRules';
 import { getFormeFamily, type FormeFamily } from '../utils/calcFormes';
+import { resolveCalcSpecies } from '../utils/championsStats';
 import { getMegaAbility } from '../config/megaAbilities';
 import type { UseGameDataReturn } from './useGameData';
 import type { ChampionsUsageEntry } from '../types/gameData';
@@ -305,7 +306,7 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
   const attackerNatureEffect = useMemo(() => getNatureStatEffect(gen, attacker.nature), [gen, attacker.nature]);
   const attackerBoostedStats = useMemo(() => computeBoostedStats(gen, attacker, ''), [gen, attacker]);
   const attackerBaseStats = useMemo(
-    () => (attacker.species ? gen.species.get(toID(attacker.species))?.baseStats ?? null : null),
+    () => (attacker.species ? gen.species.get(toID(resolveCalcSpecies(attacker.species)))?.baseStats ?? null : null),
     [gen, attacker.species]
   );
 

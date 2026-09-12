@@ -45,7 +45,26 @@ export function spsToEvs(sps: StatsTable): StatsTable {
  * lookups. Any @smogon/calc species lookup needs this resolved first, or it
  * either fails outright or silently resolves to Blade's very different stat
  * spread (140 Atk/SpA, 50 Def/SpD, vs. Shield's 50/140).
+ *
+ * Basculegion/Indeedee/Meowstic/Oinkologne have the opposite quirk: real
+ * Showdown/Pokepaste exports sometimes spell the male form explicitly as
+ * e.g. "Basculegion-M" (services/pokeapi.ts's normalizeSpeciesForAPI already
+ * special-cases this exact "-M" spelling for PokeAPI lookups), but
+ * @smogon/calc's own species dex has no "-M" entry for any of these four -
+ * bare species IS the male default there, only the female form gets its own
+ * "-F" entry (see config/pokemonRules.ts's GENDERED_FORM_VARIANTS for the
+ * same male-is-unmarked convention this app's own storage already follows).
+ * A team import that preserved an explicit "-M" from the original paste text
+ * therefore fails every @smogon/calc lookup outright (species not found)
+ * unless stripped back to the bare name here first.
  */
+const GENDER_DIVERGENT_BASE_SPECIES = ['basculegion', 'indeedee', 'meowstic', 'oinkologne'];
+
 export function resolveCalcSpecies(species: string): string {
-  return species.toLowerCase() === 'aegislash' ? 'Aegislash-Shield' : species;
+  if (species.toLowerCase() === 'aegislash') return 'Aegislash-Shield';
+  const base = species.split('-')[0].toLowerCase();
+  if (GENDER_DIVERGENT_BASE_SPECIES.includes(base) && /-m$/i.test(species)) {
+    return species.slice(0, -'-M'.length);
+  }
+  return species;
 }

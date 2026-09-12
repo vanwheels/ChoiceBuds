@@ -19,10 +19,12 @@
  * that turn (needed for its priority - see below) and the defender's own
  * Speed stage for that turn, under these v2 assumptions (Leg 16 - see
  * docs/investigations/live-calc-turn-order-speed-stage-boosts-scope.md):
- * - **The attacker's Speed honors the existing panel's live boosts +
- *   status**, via `computeEffectiveSpeed()` (weather always passed as `''`
- *   - Live Calc tracks no field weather anywhere, so this only picks up
- *   stage boosts + paralysis-halving, not weather-ability Speed doubling).
+ * - **The attacker's Speed honors the existing panel's live boosts,
+ *   status, and item/ability Speed modifiers (Choice Scarf, Iron Ball,
+ *   Unburden, etc.)**, via `computeEffectiveSpeed()` (weather/terrain
+ *   always passed as `''` - Live Calc tracks no field weather or terrain
+ *   anywhere, so weather-ability Speed doubling like Chlorophyll and
+ *   terrain-keyed abilities like Surge Surfer still don't apply here).
  *   This is already-known/editable data on `CalcPokemonPanel`, not a new
  *   input. **The defender's Speed stage is a per-observation, user-asserted
  *   field** (`defenderSpeedStage`, -6..+6, default 0) applied directly to
