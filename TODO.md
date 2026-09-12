@@ -96,6 +96,21 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
+- **[Calc/Live Calc Tailwind & Terrain-Ability Speed Modeling] — Leg 1**
+  *(Last touched: 2026-09-12 · Re-checks: 0)*
+  Surfaced while fixing Choice Scarf not being factored into the Calc tab's/
+  Live Calc's displayed Speed (see COMPLETED.md's Calc/Live Calc Bug Fixes
+  Leg 1). `computeBoostedStats()` now delegates to `@smogon/calc`'s own
+  `getFinalSpeed()`, so it's item/most-ability-correct, but it still only
+  ever receives a bare weather value - no caller threads a real Field/Side
+  through it, so Tailwind and terrain-keyed abilities (Surge Surfer) still
+  don't apply on the Calc tab's own stat panel or in Live Calc (which tracks
+  no field state at all). Not scoped: Tailwind specifically needs each
+  caller to know which side (`CalcFieldState.pokemon1Side`/`pokemon2Side`)
+  a given Pokemon is actually on, which none of the 3 call sites
+  (`useDamageCalc.ts`, `useLiveCalc.ts`, `liveCalcSpeedEngine.ts`) currently
+  track/pass - a real plumbing decision, not a one-line fix.
+
 - **[Live Calc Global Popup Launcher] — Leg 1** *(Last touched: 2026-09-11 ·
   Re-checks: 0)*
   Raised alongside Live Calc Page Layout & Function Rework's scoping pass

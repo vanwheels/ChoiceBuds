@@ -18,6 +18,19 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Calc/Live Calc Bug Fixes] - Leg 1** (2026-09-12) - see commit `540d4c2`.
+  Two bugs folded into Live Calc Tuning: (1) a team's Basculegion/Indeedee/
+  Meowstic/Oinkologne male set pasted with an explicit "-M" species suffix
+  failed every @smogon/calc species lookup once loaded into the Calc tab or
+  Live Calc (blank base stats, broken damage calc) - fixed in
+  `championsStats.ts::resolveCalcSpecies`. (2) The Calc tab's/Live Calc's
+  displayed Speed number never applied Choice Scarf/Iron Ball/other item or
+  ability-only Speed modifiers - fixed by replacing
+  `damageCalcEngine.ts::computeBoostedStats`'s hand-rolled weather-only
+  chain with `@smogon/calc`'s own `getFinalSpeed()`, the same reuse pattern
+  `utils/speedTiers.ts` already established. See `TODO.md`'s Unscheduled
+  section for the remaining Tailwind/side-threading gap this surfaced.
+
 - **[Live Calc Usage-Data-Backed Inference] - Leg 2** (2026-09-12) - see
   commit `2236098`. UI surfacing for Leg 1's engine output:
   `LiveCalcCandidateGroup` now defaults to the usage-ranked/filtered
