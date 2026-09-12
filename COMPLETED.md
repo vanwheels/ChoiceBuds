@@ -18,6 +18,19 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Live Calc Feedback Pass 2] - Leg 2** (2026-09-11) - see commit
+  `5faaae3`. Inference-engine bug: `inferDefenderStats()`/
+  `inferOpponentOffensiveStats()` required nature, ability, AND item to each
+  independently explain an observation before accepting it at all, and wiped
+  a "partially fit" axis's candidate list to nothing instead of leaving it
+  alone - together, this wrongly rejected observations a real SP value
+  clearly explained (the reported "Night Slash doesn't fit any Attack SP
+  value" case) and could permanently poison later observations too. Also
+  added `config/liveCalcOffensiveItems.ts`, the offense-side mirror of
+  `liveCalcDefensiveItems.ts` - the shared item-candidate axis previously
+  couldn't represent a real damage-boosting item (Life Orb, a type-boost
+  item) at all for the "their move -> you" direction.
+
 - **[Live Calc Feedback Pass 2] - Leg 1** (2026-09-11) - see commit
   `da652d1`. Three isolated bugs from fresh feedback after the milestone's 3
   scoped legs shipped: reverse observations weren't auto-filling their move
