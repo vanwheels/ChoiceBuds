@@ -82,6 +82,36 @@ describe('validateSpeciesLegality', () => {
     expect(validateSpeciesLegality('maushold-family-of-three', 'REG-MA')).toBe(true);
   });
 
+  it('accepts the real roster varieties of species PokeAPI has no bare resource for (Mimikyu, Gourgeist, Lycanroc, Morpeko, Pyroar)', () => {
+    expect(validateSpeciesLegality('mimikyu-disguised', 'REG-MA')).toBe(true);
+    expect(validateSpeciesLegality('gourgeist-average', 'REG-MA')).toBe(true);
+    expect(validateSpeciesLegality('gourgeist-small', 'REG-MA')).toBe(true);
+    expect(validateSpeciesLegality('gourgeist-large', 'REG-MA')).toBe(true);
+    expect(validateSpeciesLegality('gourgeist-super', 'REG-MA')).toBe(true);
+    expect(validateSpeciesLegality('lycanroc-midday', 'REG-MA')).toBe(true);
+    expect(validateSpeciesLegality('lycanroc-midnight', 'REG-MA')).toBe(true);
+    expect(validateSpeciesLegality('lycanroc-dusk', 'REG-MA')).toBe(true);
+    expect(validateSpeciesLegality('morpeko-full-belly', 'REG-MA')).toBe(true);
+    expect(validateSpeciesLegality('pyroar-male', 'REG-MB')).toBe(true);
+  });
+
+  it('rejects the battle-only transformation forms of those same species (not team-building picks)', () => {
+    expect(validateSpeciesLegality('mimikyu-busted', 'REG-MA')).toBe(false);
+    expect(validateSpeciesLegality('morpeko-hangry', 'REG-MA')).toBe(false);
+  });
+
+  it('accepts "toxtricity-amped" (PokeAPI has no bare "toxtricity" resource)', () => {
+    expect(validateSpeciesLegality('toxtricity-amped', 'REG-MC')).toBe(true);
+    expect(validateSpeciesLegality('toxtricity-low-key', 'REG-MC')).toBe(true);
+  });
+
+  it('canonicalizes any Squawkabilly plumage color to the single cosmetic slug', () => {
+    expect(validateSpeciesLegality('squawkabilly-green-plumage', 'REG-MC')).toBe(true);
+    expect(validateSpeciesLegality('squawkabilly-blue-plumage', 'REG-MC')).toBe(true);
+    expect(validateSpeciesLegality('squawkabilly-yellow-plumage', 'REG-MC')).toBe(true);
+    expect(validateSpeciesLegality('squawkabilly-white-plumage', 'REG-MC')).toBe(true);
+  });
+
   it('rejects a Reg M-C-only species under REG-MB', () => {
     expect(validateSpeciesLegality('rillaboom', 'REG-MB')).toBe(false);
   });

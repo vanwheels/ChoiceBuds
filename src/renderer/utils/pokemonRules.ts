@@ -37,6 +37,24 @@
  * legality in this format is species-based only, which is why
  * validateMoveLegality/validateItemLegality below are pass-throughs.
  *
+ * SWEPT 2026-09-12 for a whole class of gap after Mimikyu turned up missing
+ * from the Battle Logger's opponent picker: cross-checked every slug across
+ * all 3 tables against PokeAPI's live /pokemon roster list (the same one
+ * useSpeciesRoster.ts fetches) to find every species whose bare table entry
+ * has no matching bare PokeAPI resource - SpeciesPickerCard's
+ * validateSpeciesLegality filter silently drops every roster entry for a
+ * species whose slug can't match, so this class of gap doesn't fail loud.
+ * Fixed: Mimikyu, Gourgeist, Lycanroc, Morpeko, Pyroar (REG-MA/MB), and
+ * Toxtricity (REG-MC, its plain "Toxtricity" entry only - "toxtricity-low-key"
+ * was already spelled correctly). Squawkabilly turned out to need the same
+ * fix despite being purely cosmetic per the REG_MC_ADDED_SPECIES doc comment
+ * below - PokeAPI still splits its 4 plumage colors into separate resources,
+ * so canonicalizeCosmeticVariantSlug (further down) collapses them back to
+ * one slug instead of listing all 4. Ruled out as false positives: the
+ * intentionally-duplicated bare "aegislash"/"tauros-paldea-{combat,blaze,
+ * aqua}" entries (already covered under their correctly-spelled slugs
+ * elsewhere in the same table).
+ *
  * Distinct from config/pokemonRules.ts, which is the existing static
  * gender-rule table used by the Showdown parser - unrelated concern, kept
  * separate rather than overloaded into the same file.
@@ -97,11 +115,32 @@ const REG_MA_SPECIES: string[] = [
   'meowstic-male', 'meowstic-female', 'aegislash', 'aromatisse', 'slurpuff', 'clawitzer', 'heliolisk', 'tyrantrum', 'aurorus',
   // @smogon/calc has no bare "Aegislash" entry - only its Blade/Shield stat-formes
   'aegislash-blade', 'aegislash-shield',
-  'sylveon', 'hawlucha', 'dedenne', 'goodra', 'goodra-hisui', 'klefki', 'trevenant', 'gourgeist',
+  'sylveon', 'hawlucha', 'dedenne', 'goodra', 'goodra-hisui', 'klefki', 'trevenant',
+  // PokeAPI has no bare "gourgeist" pokemon resource - only its 4 size varieties, which
+  // (unlike Squawkabilly's cosmetic plumage below) have genuinely different stats, so all
+  // 4 get their own slug rather than collapsing to one - same reasoning as Maushold above.
+  'gourgeist-average', 'gourgeist-small', 'gourgeist-large', 'gourgeist-super',
   'avalugg', 'avalugg-hisui', 'noivern', 'decidueye', 'decidueye-hisui', 'incineroar', 'primarina',
-  'toucannon', 'crabominable', 'lycanroc', 'toxapex', 'mudsdale', 'araquanid', 'salazzle', 'tsareena',
-  'oranguru', 'passimian', 'mimikyu', 'drampa', 'kommo-o', 'corviknight', 'flapple', 'appletun',
-  'sandaconda', 'polteageist', 'hatterene', 'mr-rime', 'runerigus', 'alcremie', 'morpeko', 'dragapult',
+  'toucannon', 'crabominable',
+  // PokeAPI has no bare "lycanroc" pokemon resource either - only its 3 ability/version-locked
+  // varieties, each with a distinct stat spread, so all 3 get their own slug (same reasoning
+  // as Gourgeist just above).
+  'lycanroc-midday', 'lycanroc-midnight', 'lycanroc-dusk',
+  'toxapex', 'mudsdale', 'araquanid', 'salazzle', 'tsareena',
+  'oranguru', 'passimian',
+  // PokeAPI has no bare "mimikyu" pokemon resource - only mimikyu-disguised/mimikyu-busted
+  // (plus USUM-only totem variants never relevant here). Busted is a battle-only Disguise-
+  // break transformation, not a team-building pick - same exclusion as Palafin-Hero below -
+  // so only the default Disguised variety is listed. Found live 2026-09-12 auditing for this
+  // same class of gap after Mimikyu turned up missing from the Battle Logger's opponent
+  // picker - see services/pokeapi.ts's normalizeSpeciesForAPI, which already had this mapping
+  // for the *import* path; this file's legality list never got the matching fix.
+  'mimikyu-disguised', 'drampa', 'kommo-o', 'corviknight', 'flapple', 'appletun',
+  'sandaconda', 'polteageist', 'hatterene', 'mr-rime', 'runerigus', 'alcremie',
+  // PokeAPI has no bare "morpeko" pokemon resource - only morpeko-full-belly/morpeko-hangry.
+  // Hangry is a battle-only Hunger Switch transformation, not a team-building pick - same
+  // exclusion as Mimikyu-Busted/Palafin-Hero - so only the default Full Belly variety is listed.
+  'morpeko-full-belly', 'dragapult',
   'wyrdeer', 'kleavor', 'basculegion-male', 'basculegion-female', 'sneasler', 'meowscarada', 'skeledirge', 'quaquaval',
   // PokeAPI has no bare "maushold" pokemon resource - only its maushold-family-of-four/
   // maushold-family-of-three varieties (useSpeciesRoster's picker surfaces exactly these
@@ -121,7 +160,11 @@ const REG_MA_SPECIES: string[] = [
 /** The 22 species Regulation M-B adds on top of everything in REG_MA_SPECIES */
 const REG_MB_ADDED_SPECIES: string[] = [
   'vileplume', 'qwilfish', 'sceptile', 'blaziken', 'swampert', 'mawile', 'metagross', 'staraptor',
-  'musharna', 'scolipede', 'scrafty', 'eelektross', 'pyroar', 'malamar', 'barbaracle', 'dragalge',
+  'musharna', 'scolipede', 'scrafty', 'eelektross',
+  // PokeAPI has no bare "pyroar" pokemon resource - only "pyroar-male" (gender is a cosmetic
+  // sprite difference here, not a separate resource the way Meowstic/Basculegion/Indeedee/
+  // Oinkologne's genuine gender-divergent stats are - see the file header's Gender/Form doc).
+  'pyroar-male', 'malamar', 'barbaracle', 'dragalge',
   'grimmsnarl', 'falinks', 'overqwil', 'houndstone', 'annihilape', 'gholdengo',
 ];
 
@@ -147,9 +190,19 @@ const REG_MB_ADDED_SPECIES: string[] = [
  */
 const REG_MC_ADDED_SPECIES: string[] = [
   'wigglytuff', 'persian', 'persian-alola', 'farfetchd', 'mr-mime', 'swalot', 'salamence', 'gogoat',
-  'golisopod', 'rillaboom', 'cinderace', 'inteleon', 'thievul', 'toxtricity', 'toxtricity-low-key',
+  'golisopod', 'rillaboom', 'cinderace', 'inteleon', 'thievul',
+  // PokeAPI has no bare "toxtricity" pokemon resource - only "toxtricity-amped" (the default
+  // variety Serebii's plain "Toxtricity" row means) and "toxtricity-low-key" below, matching
+  // the Alolan/regional-form convention this file already uses elsewhere.
+  'toxtricity-amped', 'toxtricity-low-key',
   'grapploct', 'perrserker', 'sirfetchd', 'pincurchin', 'indeedee-male', 'indeedee-female', 'pawmot',
-  'arboliva', 'squawkabilly', 'mabosstiff', 'baxcalibur',
+  // PokeAPI also has no bare "squawkabilly" pokemon resource - only its 4 plumage-color
+  // varieties (squawkabilly-{green,blue,yellow,white}-plumage). Unlike Gourgeist/Lycanroc
+  // above, these really are purely cosmetic (matching this file's original intent, quoted in
+  // the REG_MC_ADDED_SPECIES doc comment below), so rather than listing all 4 slugs here,
+  // canonicalizeCosmeticVariantSlug (below) collapses any of them back to 'squawkabilly'
+  // before the legality check runs.
+  'squawkabilly', 'mabosstiff', 'baxcalibur',
 ];
 
 export function normalizeSlug(value: string): string {
@@ -183,6 +236,22 @@ function canonicalizeGenderDivergentSlug(slug: string): string {
     if (slug === `${base}-f`) return `${base}-female`;
   }
   return slug;
+}
+
+/**
+ * Squawkabilly is the one species on the roster with purely cosmetic form
+ * variance (per REG_MC_ADDED_SPECIES's own comment above) where PokeAPI still
+ * models each color as its own pokemon resource (squawkabilly-{green,blue,
+ * yellow,white}-plumage - no bare "squawkabilly" resource at all, same class
+ * of gap as Mimikyu/Gourgeist/etc. above). Collapse any of the 4 roster slugs
+ * back to the single 'squawkabilly' legality entry rather than listing all 4,
+ * since none of them differ in stats/ability the way Gourgeist's or
+ * Lycanroc's varieties do.
+ */
+const SQUAWKABILLY_PLUMAGE_RE = /^squawkabilly-(green|blue|yellow|white)-plumage$/;
+
+function canonicalizeCosmeticVariantSlug(slug: string): string {
+  return SQUAWKABILLY_PLUMAGE_RE.test(slug) ? 'squawkabilly' : slug;
 }
 
 const REG_MA_SPECIES_SET = new Set(REG_MA_SPECIES.map(normalizeSlug));
@@ -248,7 +317,7 @@ const SPECIES_SET_BY_REGULATION: Record<RegulationId, Set<string>> = {
  * the previous one - REG-MB adds to REG-MA, REG-MC adds to REG-MB).
  */
 export function validateSpeciesLegality(speciesId: string, rulesetId: RegulationId): boolean {
-  const normalized = canonicalizeGenderDivergentSlug(normalizeSlug(speciesId));
+  const normalized = canonicalizeCosmeticVariantSlug(canonicalizeGenderDivergentSlug(normalizeSlug(speciesId)));
   return SPECIES_SET_BY_REGULATION[rulesetId].has(normalized);
 }
 
