@@ -66,6 +66,7 @@ import { validateSpeciesLegality, type RegulationId } from '../utils/pokemonRule
 import { getFormeFamily, type FormeFamily } from '../utils/calcFormes';
 import { getMegaAbility } from '../config/megaAbilities';
 import type { UseGameDataReturn } from './useGameData';
+import type { ChampionsUsageEntry } from '../types/gameData';
 import {
   normalizeMoveSlug,
   getNatureStatEffect,
@@ -93,6 +94,7 @@ import {
   inferDefenderSpeed,
   type LiveCalcTurnOrderObservation,
 } from '../utils/liveCalcSpeedEngine';
+import { applyUsageWeighting } from '../utils/liveCalcUsageWeighting';
 
 const GEN_NUM = 9;
 const DEFAULT_DEFENDER_LEVEL = 50;
@@ -276,6 +278,11 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
   const [reverseObservations, setReverseObservations] = useState<LiveCalcReverseObservationEntry[]>([]);
   const [defenderMoves, setDefenderMovesState] = useState<CalcMoveSlot[]>(defaultMoveSlots);
   const [attackerLearnedSlugs, setAttackerLearnedSlugs] = useState<Set<string> | null>(null);
+  // Live Calc Usage-Data-Backed Inference - Leg 1: the opponent species'
+  // Champions ranked-ladder usage snapshot, fed into applyUsageWeighting()
+  // below. Fetched (cache-first, live on a miss) via the same
+  // getChampionsUsage() path CalcPokemonPanel's own auto-fill already uses.
+  const [defenderUsage, setDefenderUsage] = useState<ChampionsUsageEntry | null>(null);
 
   const gen = useMemo(() => Generations.get(GEN_NUM), []);
   const allSpecies = useMemo(() => [...gen.species].map(s => ({ name: s.name, baseSpecies: s.baseSpecies })), [gen]);
@@ -302,7 +309,7 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
     [gen, attacker.species]
   );
 
-  const { getEnrichedSpeciesOptions, getCachedSpeciesLearnset } = gameDataState;
+  const { getEnrichedSpeciesOptions, getCachedSpeciesLearnset, getChampionsUsage } = gameDataState;
 
   // Clears the stale learned-moves set the moment the attacker's species
   // empties out - set during render rather than in an effect, matching
@@ -336,6 +343,9 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
     setDefenderKnownItem('');
     setDefenderKnownNature('');
     setDefenderStatus('');
+    // Avoids showing the PREVIOUS species' usage percentages for one paint
+    // while the effect below fetches the new species' own data.
+    setDefenderUsage(null);
   }
 
   // Live Calc Feedback Pass 2 - Leg 5: the defender's real ability pool,
@@ -364,6 +374,20 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
       .catch(() => { if (!cancelled) setAttackerLearnedSlugs(null); });
     return () => { cancelled = true; };
   }, [attacker.species, attacker.gender, getEnrichedSpeciesOptions]);
+
+  // Live Calc Usage-Data-Backed Inference - Leg 1: (re-)fetches the
+  // opponent's usage snapshot whenever the defender species changes -
+  // applyUsageWeighting() below is a no-op until this resolves (usage stays
+  // null, same as "no Champions page for this species" - see that file's
+  // own header).
+  useEffect(() => {
+    if (!defenderSpecies) return;
+    let cancelled = false;
+    getChampionsUsage(defenderSpecies)
+      .then(usage => { if (!cancelled) setDefenderUsage(usage); })
+      .catch(() => { if (!cancelled) setDefenderUsage(null); });
+    return () => { cancelled = true; };
+  }, [defenderSpecies, getChampionsUsage]);
 
   const attackerMoveOptions = useMemo(() => {
     const realMoves = attacker.moves.map(m => m.name).filter(name => name !== '');
@@ -427,9 +451,17 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
   // Reverse-direction narrowing (Live Calc Page Layout & Function Rework -
   // Leg 1) runs as a third pass, same layering shape as Speed above - see
   // liveCalcEngine.ts's inferOpponentOffensiveStats() header.
-  const inference = useMemo(
+  const offenseInference = useMemo(
     () => inferOpponentOffensiveStats(gen, attacker, defenderInput, speedInference, reverseObservations),
     [gen, attacker, defenderInput, speedInference, reverseObservations]
+  );
+  // Usage-data-backed weighting (Live Calc Usage-Data-Backed Inference - Leg
+  // 1) runs as a fourth and final pass, layering Champions ranked-ladder
+  // usage over whatever the three physical-feasibility passes above already
+  // narrowed - see utils/liveCalcUsageWeighting.ts's own header.
+  const inference = useMemo(
+    () => applyUsageWeighting(offenseInference, defenderUsage),
+    [offenseInference, defenderUsage]
   );
 
   // The two move grids' own live results (Live Calc Page Layout & Function

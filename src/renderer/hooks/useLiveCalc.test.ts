@@ -3,6 +3,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { useLiveCalc } from './useLiveCalc';
 import type { UseGameDataReturn } from './useGameData';
 import type { RegulationId } from '../utils/pokemonRules';
+import type { ChampionsUsageEntry } from '../types/gameData';
 
 const ZERO_STATS = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
 
@@ -10,6 +11,7 @@ function setup(
   overrides: {
     getEnrichedSpeciesOptions?: UseGameDataReturn['getEnrichedSpeciesOptions'];
     getCachedSpeciesLearnset?: UseGameDataReturn['getCachedSpeciesLearnset'];
+    getChampionsUsage?: UseGameDataReturn['getChampionsUsage'];
   } = {},
   defaultRegulation: RegulationId = 'REG-MB'
 ) {
@@ -20,6 +22,12 @@ function setup(
   // Feedback Pass 2 - Leg 5's real-ability-pool pipeline keep exercising the
   // pre-existing behavior.
   const getCachedSpeciesLearnset = overrides.getCachedSpeciesLearnset ?? vi.fn().mockReturnValue(null);
+  // Defaults to "no Champions page for this species" (applyUsageWeighting()'s
+  // full no-op case) so tests that don't care about Live Calc
+  // Usage-Data-Backed Inference - Leg 1 keep exercising pre-existing
+  // behavior - always a resolved promise (never bare vi.fn()) since
+  // useLiveCalc unconditionally calls/awaits this once a defender species is set.
+  const getChampionsUsage = overrides.getChampionsUsage ?? vi.fn().mockResolvedValue(null);
   const gameDataState: UseGameDataReturn = {
     cache: null,
     isInitialized: true,
@@ -35,7 +43,7 @@ function setup(
     getSpeciesLearnset: vi.fn(),
     getCachedSpeciesLearnset,
     getEnrichedSpeciesOptions,
-    getChampionsUsage: vi.fn(),
+    getChampionsUsage,
     getCachedChampionsUsage: vi.fn(),
     clearCache: vi.fn(),
     getUnsyncedSpecies: vi.fn(),
@@ -43,7 +51,7 @@ function setup(
   };
 
   const { result } = renderHook(() => useLiveCalc(gameDataState, defaultRegulation));
-  return { result, getEnrichedSpeciesOptions, getCachedSpeciesLearnset };
+  return { result, getEnrichedSpeciesOptions, getCachedSpeciesLearnset, getChampionsUsage };
 }
 
 describe('useLiveCalc', () => {
@@ -258,6 +266,38 @@ describe('useLiveCalc', () => {
     act(() => result.current.setDefenderSpecies('Ferrothorn'));
     expect(result.current.defenderKnownItem).toBe('');
     expect(result.current.defenderKnownNature).toBe('');
+  });
+
+  it('fetches Champions usage for the defender species and ranks the usage-view candidates once it resolves - Live Calc Usage-Data-Backed Inference, Leg 1', async () => {
+    const usage: ChampionsUsageEntry = {
+      species: 'garchomp', season: 'Season M-3', moves: [], statSpreads: [],
+      // Sand Veil is Garchomp's real (bundled-data) ability candidate here -
+      // Rough Skin isn't one of its scanned candidates, so it's excluded on
+      // purpose to also cover the "absent from candidates" non-match path.
+      abilities: [{ name: 'Sand Veil', percentage: 90 }, { name: 'Rough Skin', percentage: 10 }],
+      items: [{ name: 'Chople Berry', percentage: 40 }],
+      natures: [{ name: 'Jolly', percentage: 60 }, { name: 'Adamant', percentage: 30 }],
+      columnPosition: 1, cachedAt: 0, expiresAt: 0,
+    };
+    const getChampionsUsage = vi.fn().mockResolvedValue(usage);
+    const { result } = setup({ getChampionsUsage });
+
+    act(() => result.current.setDefenderSpecies('Garchomp'));
+    expect(getChampionsUsage).toHaveBeenCalledWith('Garchomp');
+
+    await waitFor(() => expect(result.current.inference.abilityUsageCandidates).toEqual([{ value: 'Sand Veil', percentage: 90 }]));
+    expect(result.current.inference.itemUsageCandidates).toEqual([{ value: 'Chople Berry', percentage: 40 }]);
+    expect(result.current.inference.natureUsageCandidates[0]).toEqual({ value: 'Jolly', percentage: 60 });
+    expect(result.current.inference.natureUsageCandidates[1]).toEqual({ value: 'Adamant', percentage: 30 });
+  });
+
+  it('with no Champions usage page for the species (getChampionsUsage resolves null), usage-view candidates stay an unranked mirror of the base candidates - full no-op per the scope doc', async () => {
+    const { result } = setup(); // default mock resolves null
+    act(() => result.current.setDefenderSpecies('Garchomp'));
+
+    await waitFor(() => expect(result.current.inference.abilityUsageCandidates).toEqual([{ value: 'Sand Veil', percentage: 0 }]));
+    expect(result.current.inference.natureUsageCandidates.every(c => c.percentage === 0)).toBe(true);
+    expect(result.current.inference.natureUsageCandidates.map(c => c.value)).toEqual(result.current.inference.natureCandidates);
   });
 
   it('addReverseObservation/updateReverseObservation/removeReverseObservation manage the mirror observation list independently of observations', () => {

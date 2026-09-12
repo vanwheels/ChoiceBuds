@@ -231,6 +231,17 @@ export interface LiveCalcStatBound {
   max: number;
 }
 
+/** One usage-ranked candidate on a scanned axis (Live Calc Usage-Data-Backed
+ * Inference - Leg 1): `value` is the same candidate string already present in
+ * `natureCandidates`/`abilityCandidates`/`itemCandidates`, `percentage` is its
+ * Champions ranked-ladder usage share (0-100) for the opponent's own species
+ * - see `utils/liveCalcUsageWeighting.ts` for how `LiveCalcInference`'s own
+ * `*UsageCandidates` fields actually get computed. */
+export interface LiveCalcUsageRankedCandidate<T extends string = string> {
+  value: T;
+  percentage: number;
+}
+
 export interface LiveCalcInference {
   /** Physical defensive Stat Points (0-32), narrowed by physical-move observations only. */
   defBound: LiveCalcStatBound;
@@ -258,6 +269,23 @@ export interface LiveCalcInference {
   abilityCandidates: string[];
   /** Starts as `NO_ITEM` plus the curated damage-relevant items shortlist. */
   itemCandidates: string[];
+  /** Usage-ranked/filtered view of `natureCandidates`/`abilityCandidates`/
+   * `itemCandidates` respectively (Live Calc Usage-Data-Backed Inference -
+   * Leg 1): computed by `utils/liveCalcUsageWeighting.ts`'s
+   * `applyUsageWeighting()` as a post-processing pass layered over this
+   * inference the same way `inferDefenderSpeed()`/
+   * `inferOpponentOffensiveStats()` already layer over it - never touched by
+   * this file's own `inferDefenderStats()`/`inferOpponentOffensiveStats()`,
+   * which is why `defaultInference()` below seeds these as an unranked
+   * mirror of their own base candidates (percentage 0) rather than leaving
+   * them empty, so nothing renders an empty/undefined list before that later
+   * pass has actually run. Always a subset (or unranked full copy, when
+   * there's no usage data to rank by) of the matching base field above,
+   * never a separate universe of values - a UI leg renders these by default
+   * and falls back to the base field via its own reveal-all toggle. */
+  natureUsageCandidates: LiveCalcUsageRankedCandidate<NatureName>[];
+  abilityUsageCandidates: LiveCalcUsageRankedCandidate[];
+  itemUsageCandidates: LiveCalcUsageRankedCandidate[];
   physicalObservationCount: number;
   specialObservationCount: number;
   /** Same as physical/specialObservationCount but for the mirror "their move
@@ -329,19 +357,28 @@ function resolveAbilityCandidates(
  * over `@smogon/calc`'s bundled species data. */
 export function defaultInference(gen: Generation, species: string, realAbilitySlugs?: string[]): LiveCalcInference {
   const speciesData = species ? gen.species.get(toID(species)) : undefined;
+  const natureCandidates = [...gen.natures].map(n => n.name) as NatureName[];
+  const abilityCandidates = resolveAbilityCandidates(gen, species, speciesData, realAbilitySlugs);
+  // Live Calc Feedback Pass 2 - Leg 2: this single shared axis is scanned
+  // from BOTH directions (the defender taking damage AND the opponent
+  // dealing it - see `liveCalcOffensiveItems.ts`'s own header for why they
+  // must be unioned rather than picking one list per call site.
+  const itemCandidates = dedupeStrings([NO_ITEM, ...LIVE_CALC_DEFENSIVE_ITEMS, ...LIVE_CALC_OFFENSIVE_ITEMS]);
   return {
     defBound: { min: SP_MIN, max: SP_MAX },
     spdBound: { min: SP_MIN, max: SP_MAX },
     atkBound: { min: SP_MIN, max: SP_MAX },
     spaBound: { min: SP_MIN, max: SP_MAX },
     speedBound: { min: SP_MIN, max: SP_MAX },
-    natureCandidates: [...gen.natures].map(n => n.name) as NatureName[],
-    abilityCandidates: resolveAbilityCandidates(gen, species, speciesData, realAbilitySlugs),
-    // Live Calc Feedback Pass 2 - Leg 2: this single shared axis is scanned
-    // from BOTH directions (the defender taking damage AND the opponent
-    // dealing it - see `liveCalcOffensiveItems.ts`'s own header for why they
-    // must be unioned rather than picking one list per call site.
-    itemCandidates: dedupeStrings([NO_ITEM, ...LIVE_CALC_DEFENSIVE_ITEMS, ...LIVE_CALC_OFFENSIVE_ITEMS]),
+    natureCandidates,
+    abilityCandidates,
+    itemCandidates,
+    // Unranked mirror of the base lists above (percentage 0) - see this
+    // field's own comment on LiveCalcInference for why applyUsageWeighting()
+    // is what actually ranks these, not this function.
+    natureUsageCandidates: natureCandidates.map(value => ({ value, percentage: 0 })),
+    abilityUsageCandidates: abilityCandidates.map(value => ({ value, percentage: 0 })),
+    itemUsageCandidates: itemCandidates.map(value => ({ value, percentage: 0 })),
     physicalObservationCount: 0,
     specialObservationCount: 0,
     theirPhysicalObservationCount: 0,
