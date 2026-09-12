@@ -35,21 +35,8 @@ auto-populate, doubles support) left underneath it. No further legs are
 scoped right now; the milestone stays open per Vanny's explicit call rather
 than being closed out here.
 
-- **[Live Calc Feedback Pass 2] — Leg 5** *(Last touched: 2026-09-11 ·
-  Re-checks: 0)*
-  Data-correctness bug, found live-verifying Leg 3: Armor Tail doesn't show
-  up as a candidate ability for Farigiraf in the Opponent panel. Root cause
-  (not yet confirmed against Farigiraf specifically, but same shape as the
-  already-fixed Mega-ability bug from Leg 1 - see `COMPLETED.md`):
-  `useLiveCalc.ts`'s `defenderAbilityOptions` sources from
-  `liveCalcEngine.ts::defaultInference()`'s `abilityCandidates`, which reads
-  `gen.species.get(...).abilities` - `@smogon/calc`'s own bundled species
-  data - rather than the app's PokeAPI + `config/championsAbilityOverrides.ts`
-  pipeline (`useGameData`) the rest of the app treats as the real source of
-  truth for per-species ability pools. Likely needs `defaultInference()`'s
-  ability-candidate lookup rerouted through `useGameData`'s cached species
-  data instead of `gen.species.get()` directly - scope that against a couple
-  more known mismatched species before committing to the fix shape.
+No open legs right now - Leg 5 (Armor Tail/Farigiraf ability-candidate fix)
+shipped, see `COMPLETED.md`.
 
 ## Blocked
 

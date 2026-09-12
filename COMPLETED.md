@@ -18,6 +18,14 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Live Calc Feedback Pass 2] - Leg 5** (2026-09-12) - see commit
+  `315244c`. Fixed the Armor Tail/Farigiraf ability-candidate bug found
+  live-verifying Leg 3: confirmed the root cause was the same shape as the
+  already-fixed Leg 1 Mega-ability bug (`defaultInference()` trusting
+  `@smogon/calc`'s own stale/incomplete bundled species data instead of the
+  app's real PokeAPI pipeline) and rerouted it through `useGameData`'s
+  newly-exposed `getCachedSpeciesLearnset`.
+
 - **[Live Calc Player/Opponent Card Redesign] - Leg 1** (2026-09-12) - see
   commits `56629d5` (scoping) and `dbb0a33` (implementation). Built against
   Vanny's mockup: unified Base/SP/Boost/Total stat table on both panels
