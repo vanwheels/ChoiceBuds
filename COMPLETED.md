@@ -18,6 +18,17 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Live Calc Page Layout & Function Rework] - Leg 3** (2026-09-11) - see
+  commit `2d910bc`. Layout & Live Range Grid Rework - the milestone's last
+  leg. Reorganized `LiveCalcPage` to mirror `CalcPage`'s structure (two move
+  grids up top, result panel below, Pokémon-panel/observation-list row
+  underneath) and added the range-aware grid variant (`LiveCalcMoveRangeGrid`
+  + `liveCalcEngine.ts`'s `computeYourMoveRanges()`/`computeTheirMoveRanges()`)
+  it needed, since `CalcMoveGrid` assumes one concrete defender build.
+  Attacker move slots are now directly grid-editable for the first time
+  (previously only settable via a saved-set/team-tray load); a new,
+  separate `defenderMoves` array backs the mirrored "Theirs -> You" grid.
+
 - **[Live Calc Page Layout & Function Rework] - Leg 2** (2026-09-11) - see
   commit `f98fb4b`. Opponent Panel & Reverse Observations - wired Leg 1's
   `knownItem`/`knownNature`/`atkBoost`/`spaBoost`/`speBoost` into

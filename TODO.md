@@ -26,20 +26,14 @@ Promoted 2026-09-11 from "Future Milestones" - the last of the four
 2026-09-10-feedback-pass candidates, and the only one that wasn't already
 drafted into legs at batching time (it went in as a bare "needs a lot of
 tweaking" placeholder). Scoped 2026-09-11 after asking Vanny for the actual
-specifics. Both scoped legs (Known-Ability Lock, Result Clarity Pass) have
-shipped - see `COMPLETED.md` - but the milestone stays open per Vanny's
-explicit call.
-
-- **[Live Calc Page Layout & Function Rework] — Leg 3** *(Last touched:
-  2026-09-11 · Re-checks: 0)*
-  Layout & Live Range Grid Rework - reorganizes `LiveCalcPage` to mirror
-  `CalcPage`'s structure: two move grids up top (yours -> them, theirs ->
-  you) each showing a min-max % range per move instead of a fixed number,
-  result panel below, Pokémon-panel row underneath. Needs a range-aware
-  grid variant - today's `CalcMoveGrid` assumes one fixed `Result`. See the
-  scope doc linked in Leg 1. Popup launcher, Battle Log auto-populate, and
-  doubles support are explicitly deferred out of this milestone (see the
-  scope doc's "Deferred" section and the new Unscheduled items below).
+specifics. All 3 scoped legs of Live Calc Page Layout & Function Rework
+(Bidirectional Inference Engine, Opponent Panel & Reverse Observations,
+Layout & Live Range Grid Rework) plus the earlier Known-Ability Lock and
+Result Clarity Pass legs have now shipped - see `COMPLETED.md` - with only
+the already-deferred Unscheduled items (popup launcher, Battle Log
+auto-populate, doubles support) left underneath it. No further legs are
+scoped right now; the milestone stays open per Vanny's explicit call rather
+than being closed out here.
 
 ## Blocked
 
