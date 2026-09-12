@@ -179,6 +179,27 @@ describe('useLiveCalc', () => {
     expect(result.current.attackerMoveOptions).toEqual(['Shadow Ball', 'Sludge Wave', 'Nasty Plot']);
   });
 
+  it('defenderAbilityOptions is empty with no defender species, and the real ability pool once one is picked', () => {
+    const { result } = setup();
+    expect(result.current.defenderAbilityOptions).toEqual([]);
+
+    act(() => result.current.setDefenderSpecies('Garchomp'));
+
+    expect(result.current.defenderAbilityOptions).toEqual(['Sand Veil']);
+  });
+
+  it('setDefenderKnownAbility locks the ability, and resets back to unknown when the defender species changes', () => {
+    const { result } = setup();
+    act(() => result.current.setDefenderSpecies('Garchomp'));
+
+    act(() => result.current.setDefenderKnownAbility('Sand Veil'));
+    expect(result.current.defenderKnownAbility).toBe('Sand Veil');
+    expect(result.current.inference.abilityCandidates).toEqual(['Sand Veil']);
+
+    act(() => result.current.setDefenderSpecies('Ferrothorn'));
+    expect(result.current.defenderKnownAbility).toBe('');
+  });
+
   it('attackerBaseStats is null with no species selected, and the real base stat table once one is', () => {
     const { result } = setup();
     expect(result.current.attackerBaseStats).toBe(null);

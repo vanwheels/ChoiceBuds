@@ -188,6 +188,50 @@ describe('inferDefenderStats - fainted vs. survived outcome', () => {
   });
 });
 
+describe('inferDefenderStats - Known Ability lock', () => {
+  it('hard-locks abilityCandidates to the known ability instead of the full species pool, with no observations', () => {
+    const result = inferDefenderStats(gen, LANDO_EARTHQUAKE, { ...DEFENDER, knownAbility: 'Iron Barbs' }, []);
+    expect(result.abilityCandidates).toEqual(['Iron Barbs']);
+  });
+
+  it('stays locked to the known ability after a consistent observation, rather than widening back to the full pool', () => {
+    const result = inferDefenderStats(gen, LANDO_EARTHQUAKE, { ...DEFENDER, knownAbility: 'Iron Barbs' }, [obs('Earthquake', 30)]);
+    expect(result.abilityCandidates).toEqual(['Iron Barbs']);
+    expect(result.physicalObservationCount).toBe(1);
+  });
+
+  it('a known ability with no modeled damage effect narrows Def the same as leaving the ability open', () => {
+    const unlocked = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, [obs('Earthquake', 30)]);
+    const locked = inferDefenderStats(gen, LANDO_EARTHQUAKE, { ...DEFENDER, knownAbility: 'Iron Barbs' }, [obs('Earthquake', 30)]);
+    expect(locked.defBound).toEqual(unlocked.defBound);
+  });
+
+  it("a known ability with a modeled damage effect (Aura Guard's contact-damage-taken halving) feeds the nature/item axes' own scans too, not just its own axis", () => {
+    // Tackle vs. Ferrothorn spans roughly 4.85%-7.27% across the full Def SP
+    // range with no ability effect - 6% sits inside that. Aura Guard halves
+    // contact damage taken (`championsAbilityDamageEffects.ts`), which
+    // @smogon/calc's own calculate() has no idea about (it's a
+    // Champions-invented ability) - the halving only happens via this
+    // engine's own post-hoc contactMultiplier, so this directly proves
+    // `knownAbility` reaches that multiplier rather than being a no-op past
+    // the ability axis itself.
+    const observation = [obs('Tackle', 6, 1)];
+    const unlocked = inferDefenderStats(gen, LANDO_EARTHQUAKE, DEFENDER, observation);
+    const locked = inferDefenderStats(gen, LANDO_EARTHQUAKE, { ...DEFENDER, knownAbility: 'Aura Guard' }, observation);
+    expect(unlocked.contradictions.length).toBe(0);
+    expect(unlocked.physicalObservationCount).toBe(1);
+    expect(locked.contradictions.length).toBe(1);
+    expect(locked.physicalObservationCount).toBe(0);
+  });
+
+  it('records a contradiction and leaves the running bound/lock unchanged, rather than silently dropping the lock, when the known ability makes an observation infeasible', () => {
+    const baseline = inferDefenderStats(gen, LANDO_EARTHQUAKE, { ...DEFENDER, knownAbility: 'Aura Guard' }, []);
+    const result = inferDefenderStats(gen, LANDO_EARTHQUAKE, { ...DEFENDER, knownAbility: 'Aura Guard' }, [obs('Tackle', 6, 1)]);
+    expect(result.defBound).toEqual(baseline.defBound);
+    expect(result.abilityCandidates).toEqual(['Aura Guard']);
+  });
+});
+
 describe('inferDefenderStats - Doubles spread-modifier targetsHit handling', () => {
   it('a spread move only actually hitting one target is scanned without the Doubles 0.75x reduction', () => {
     // Earthquake (target: allAdjacent) auto-applies @smogon/calc's 0.75x

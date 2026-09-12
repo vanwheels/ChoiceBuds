@@ -12,11 +12,14 @@
  * (HP has none in-game) or, for Speed, already have their own per-turn-order-
  * observation stage field (`LiveCalcTurnOrderList`'s `defenderSpeedStage`) -
  * a second, panel-level Speed stage here would just conflict with that.
- * Everything past base stats/boosts (EVs/SPs, nature, ability, item) is
- * exactly what the tab is solving for, via the observation list next to this
- * panel - ability display/lock is deliberately still out of this leg (see
- * TODO.md's Live Calc Known-Ability Lock leg; surfacing it usefully is an
- * engine-contract change, not a UI addition).
+ * Everything past base stats/boosts (EVs/SPs, nature, item) is exactly what
+ * the tab is solving for, via the observation list next to this panel.
+ * Ability is the one exception: the Known Ability select (Live Calc
+ * Known-Ability Lock) lets the user pin a species-real ability once it's
+ * been revealed in-battle (an Intimidate trigger, an ability-activation
+ * message, etc.), which `useLiveCalc.ts` feeds into `inferDefenderStats()`
+ * as a hard filter instead of a scanned candidate - "Unknown" (the default)
+ * keeps the pre-existing full-pool-scan behavior.
  */
 
 import type { StatsTable } from '@smogon/calc/dist/data/interface';
@@ -42,15 +45,22 @@ interface LiveCalcDefenderPanelProps {
   baseStats: StatsTable | null;
   defBoost: number;
   spdBoost: number;
+  /** The defender species' own real ability pool - options for the Known
+   * Ability select below. Empty until a species is picked. */
+  abilityOptions: string[];
+  /** Empty string means still unknown (the engine's default full-pool scan);
+   * a real ability name hard-locks the ability axis to it. */
+  knownAbility: string;
   onChangeSpecies: (species: string) => void;
   onChangeLevel: (level: number) => void;
   onChangeDefBoost: (stage: number) => void;
   onChangeSpdBoost: (stage: number) => void;
+  onChangeKnownAbility: (ability: string) => void;
 }
 
 export default function LiveCalcDefenderPanel({
-  species, level, speciesOptions, formes, baseStats, defBoost, spdBoost,
-  onChangeSpecies, onChangeLevel, onChangeDefBoost, onChangeSpdBoost,
+  species, level, speciesOptions, formes, baseStats, defBoost, spdBoost, abilityOptions, knownAbility,
+  onChangeSpecies, onChangeLevel, onChangeDefBoost, onChangeSpdBoost, onChangeKnownAbility,
 }: LiveCalcDefenderPanelProps) {
   const megaGroup = formes.megaFormes.length > 0 ? [formes.root, ...formes.megaFormes] : [];
 
@@ -95,6 +105,20 @@ export default function LiveCalcDefenderPanel({
       {megaGroup.length > 0 && (
         <FormeToggle group={megaGroup} current={species} onSelect={onChangeSpecies} />
       )}
+
+      <div className="flex flex-col gap-1">
+        <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Known Ability</label>
+        <select
+          value={knownAbility}
+          onChange={(e) => onChangeKnownAbility(e.target.value)}
+          disabled={abilityOptions.length === 0}
+          title="Pin the defender's ability once it's been revealed in-battle (an Intimidate trigger, an ability-activation message, etc.) - narrows the ability axis as a hard filter instead of scanning the full pool per observation"
+          className="w-full px-1 py-0.5 text-xs bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <option value="">Unknown</option>
+          {abilityOptions.map(ability => <option key={ability} value={ability}>{ability}</option>)}
+        </select>
+      </div>
 
       <div className="bg-zinc-800 rounded px-2 py-1.5 border border-zinc-600 flex flex-col gap-1">
         <div className="flex items-center gap-2 text-[10px] text-zinc-400 uppercase tracking-wide">

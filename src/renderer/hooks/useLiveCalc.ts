@@ -5,15 +5,18 @@
  * useDamageCalc, lost on tab switch/app restart per the milestone's own
  * scope doc (docs/investigations/live-calc-stat-inference-scope.md).
  *
- * Owns four things: the attacker (a fully-known `CalcPokemonState`, same
- * shape the existing Calc tab's `CalcPokemonPanel` already edits - nothing
- * new needed there), the defender's known species+level (plus derived-only
- * `defenderFormes`/`defenderBaseStats`, same `getFormeFamily`/base-stats-
- * lookup pattern as the attacker's own `attackerFormes`/`attackerBaseStats`
- * below - species/level are still the only defender state actually held
- * here, everything else about it remains what the tab is solving for), an
- * add/remove list of damage-percent observations, and an add/remove list of
- * turn-order observations (Leg 15). Every change re-derives
+ * Owns the attacker (a fully-known `CalcPokemonState`, same shape the
+ * existing Calc tab's `CalcPokemonPanel` already edits - nothing new needed
+ * there), the defender's known species+level+`defenderKnownAbility` (plus
+ * derived-only `defenderFormes`/`defenderBaseStats`/`defenderAbilityOptions`,
+ * same `getFormeFamily`/base-stats-lookup pattern as the attacker's own
+ * `attackerFormes`/`attackerBaseStats` below - `defenderKnownAbility` is the
+ * one piece of defender state that isn't purely "what the tab is solving
+ * for": Live Calc Known-Ability Lock, an opt-in hard override for the
+ * ability axis once it's confirmed in-battle rather than left for the engine
+ * to scan/narrow), an add/remove list of damage-percent observations, and an
+ * add/remove list of turn-order observations (Leg 15). Every change
+ * re-derives
  * `utils/liveCalcEngine.ts`'s `inferDefenderStats()` inference and then
  * layers `utils/liveCalcSpeedEngine.ts`'s `inferDefenderSpeed()` on top of
  * it - this file is just the state/plumbing around those two pure engines
@@ -49,6 +52,7 @@ import {
   type CalcPokemonState,
 } from '../utils/damageCalcEngine';
 import {
+  defaultInference,
   inferDefenderStats,
   type LiveCalcObservation,
   type LiveCalcInference,
@@ -110,6 +114,16 @@ export interface UseLiveCalcReturn {
   defenderSpdBoost: number;
   setDefenderDefBoost: (stage: number) => void;
   setDefenderSpdBoost: (stage: number) => void;
+  /** The defender species' own real ability pool - options for the Known
+   * Ability lock below, independent of any narrowing observations have
+   * already done. Empty until a species is picked. */
+  defenderAbilityOptions: string[];
+  /** Live Calc Known-Ability Lock: empty string means still unknown (the
+   * engine's default full-pool scan); a real ability name hard-locks
+   * `inferDefenderStats()`'s ability axis to it - see
+   * `liveCalcEngine.ts`'s `LiveCalcDefenderInput.knownAbility`. */
+  defenderKnownAbility: string;
+  setDefenderKnownAbility: (ability: string) => void;
   observations: LiveCalcObservationEntry[];
   addObservation: () => void;
   updateObservation: (id: string, updates: Partial<LiveCalcObservation>) => void;
@@ -128,6 +142,7 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
   const [defenderLevel, setDefenderLevel] = useState(DEFAULT_DEFENDER_LEVEL);
   const [defenderDefBoost, setDefenderDefBoost] = useState(0);
   const [defenderSpdBoost, setDefenderSpdBoost] = useState(0);
+  const [defenderKnownAbility, setDefenderKnownAbility] = useState('');
   const [observations, setObservations] = useState<LiveCalcObservationEntry[]>([]);
   const [turnOrderObservations, setTurnOrderObservations] = useState<LiveCalcTurnOrderObservationEntry[]>([]);
   const [attackerLearnedSlugs, setAttackerLearnedSlugs] = useState<Set<string> | null>(null);
@@ -169,15 +184,21 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
     if (!attacker.species) setAttackerLearnedSlugs(null);
   }
 
-  // Same render-time-guard pattern as above: a Def/SpD boost asserted for one
-  // defender shouldn't silently carry over and misattribute to whatever
-  // species gets swapped in next.
+  // Same render-time-guard pattern as above: a Def/SpD boost (or a locked
+  // ability) asserted for one defender shouldn't silently carry over and
+  // misattribute to whatever species gets swapped in next.
   const [defenderResolvedForSpecies, setDefenderResolvedForSpecies] = useState(defenderSpecies);
   if (defenderSpecies !== defenderResolvedForSpecies) {
     setDefenderResolvedForSpecies(defenderSpecies);
     setDefenderDefBoost(0);
     setDefenderSpdBoost(0);
+    setDefenderKnownAbility('');
   }
+
+  const defenderAbilityOptions = useMemo(
+    () => (defenderSpecies ? defaultInference(gen, defenderSpecies).abilityCandidates : []),
+    [gen, defenderSpecies]
+  );
 
   useEffect(() => {
     if (!attacker.species) return;
@@ -209,8 +230,14 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
   const removeTurnOrderObservation = (id: string) => setTurnOrderObservations(prev => prev.filter(o => o.id !== id));
 
   const defenderInput = useMemo(
-    () => ({ species: defenderSpecies, level: defenderLevel, defBoost: defenderDefBoost, spdBoost: defenderSpdBoost }),
-    [defenderSpecies, defenderLevel, defenderDefBoost, defenderSpdBoost]
+    () => ({
+      species: defenderSpecies,
+      level: defenderLevel,
+      defBoost: defenderDefBoost,
+      spdBoost: defenderSpdBoost,
+      knownAbility: defenderKnownAbility || undefined,
+    }),
+    [defenderSpecies, defenderLevel, defenderDefBoost, defenderSpdBoost, defenderKnownAbility]
   );
 
   const damageInference = useMemo(
@@ -248,6 +275,9 @@ export function useLiveCalc(gameDataState: UseGameDataReturn, defaultRegulation:
     defenderSpdBoost,
     setDefenderDefBoost,
     setDefenderSpdBoost,
+    defenderAbilityOptions,
+    defenderKnownAbility,
+    setDefenderKnownAbility,
     observations,
     addObservation,
     updateObservation,

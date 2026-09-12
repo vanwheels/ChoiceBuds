@@ -66,6 +66,13 @@
  *   a single-target hit of a spread-capable move so `@smogon/calc` doesn't
  *   wrongly apply its automatic Doubles 0.75x spread modifier - see
  *   `isSpreadMove`/`effectiveGameType` below).
+ * - A confirmed ability (Live Calc Known-Ability Lock) is an optional input
+ *   (`LiveCalcDefenderInput.knownAbility`) rather than something this file
+ *   infers on its own - the UI is the one place a real in-battle reveal
+ *   (an Intimidate trigger, an ability-activation message) gets typed in.
+ *   Once set, it hard-locks `abilityCandidates` to that single value and
+ *   becomes the nature/item axes' own neutral default - see that field's
+ *   own doc comment.
  * - Status condition on the defender isn't tracked. Def/Sp. Def stat-stage
  *   boosts ARE tracked (Live Calc Defender Panel Parity - Leg 1 follow-up) -
  *   but as one static value on `LiveCalcDefenderPanel`, applied identically
@@ -129,6 +136,15 @@ export interface LiveCalcDefenderInput {
    * field like Speed's own `defenderSpeedStage`. */
   defBoost: number;
   spdBoost: number;
+  /** A defender ability confirmed in-battle (an Intimidate trigger, an
+   * ability-activation message, etc.) - Live Calc Known-Ability Lock: pins
+   * the ability axis to this one value as a hard filter instead of scanning
+   * the species' full ability pool per observation, and becomes the
+   * nature/item axes' own neutral default (in place of "no ability") so
+   * those scans stay physically consistent with the real, confirmed ability
+   * rather than assuming none. Undefined/empty means still unknown - the
+   * pre-existing full-pool scan. */
+  knownAbility?: string;
 }
 
 export interface LiveCalcStatBound {
@@ -149,7 +165,9 @@ export interface LiveCalcInference {
    * same as defBound/spdBound already do for their own axis. */
   speedBound: LiveCalcStatBound;
   natureCandidates: NatureName[];
-  /** Starts as the defender species' own real ability pool (@smogon/calc gen data). */
+  /** Starts as the defender species' own real ability pool (@smogon/calc gen
+   * data), or the single locked value once `LiveCalcDefenderInput.knownAbility`
+   * is set - see that field's own comment. */
   abilityCandidates: string[];
   /** Starts as `NO_ITEM` plus the curated damage-relevant items shortlist. */
   itemCandidates: string[];
@@ -305,6 +323,9 @@ export function inferDefenderStats(
 
   const defenderBoosts: StatsTable = { ...ZERO_SPS, def: defender.defBoost, spd: defender.spdBoost };
 
+  const knownAbility = defender.knownAbility || undefined;
+  if (knownAbility) inference.abilityCandidates = [knownAbility];
+
   for (const obs of observations) {
     const moveData = gen.moves.get(toID(obs.moveName));
     if (!moveData || moveData.category === 'Status') {
@@ -339,11 +360,18 @@ export function inferDefenderStats(
     const scan = (candidate: DefenderCandidateSpec) =>
       feasibleSpRange(gen, attackerPokemon, move, field, defender.species, defender.level, relevantStat, candidate, obs.damagePercent, obs.outcome, isContactMove, defenderBoosts);
 
-    const natureResults = inference.natureCandidates.map(nature => ({ value: nature, bound: scan({ nature, ability: undefined, item: undefined }) }));
-    const abilityResults = inference.abilityCandidates.map(ability => ({ value: ability, bound: scan({ nature: 'Hardy' as NatureName, ability, item: undefined }) }));
+    // Once the ability is known, it's the neutral default the OTHER axes
+    // scan against too (in place of "no ability") - see
+    // `LiveCalcDefenderInput.knownAbility`'s own comment for why. The
+    // ability axis itself collapses to a single locked candidate rather than
+    // the species' full pool.
+    const natureResults = inference.natureCandidates.map(nature => ({ value: nature, bound: scan({ nature, ability: knownAbility, item: undefined }) }));
+    const abilityResults = knownAbility
+      ? [{ value: knownAbility, bound: scan({ nature: 'Hardy' as NatureName, ability: knownAbility, item: undefined }) }]
+      : inference.abilityCandidates.map(ability => ({ value: ability, bound: scan({ nature: 'Hardy' as NatureName, ability, item: undefined }) }));
     const itemResults = inference.itemCandidates.map(item => ({
       value: item,
-      bound: scan({ nature: 'Hardy' as NatureName, ability: undefined, item: item === NO_ITEM ? undefined : item }),
+      bound: scan({ nature: 'Hardy' as NatureName, ability: knownAbility, item: item === NO_ITEM ? undefined : item }),
     }));
 
     const feasibleNatures = natureResults.filter(r => r.bound !== null);
