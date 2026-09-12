@@ -1,8 +1,10 @@
 /**
  * useLiveCalcThreatPins - Live Calc -> Speed Tiers Tie-in (Leg 6, see
  * TODO.md). Session-only, cross-tab state: a user-triggered "Pin to Speed
- * Tiers" action on Live Calc's result panel (LiveCalcResultPanel.tsx)
- * snapshots the currently-narrowed Speed SP range + surviving nature
+ * Tiers" action on Live Calc's opponent panel (LiveCalcDefenderPanel.tsx -
+ * this action moved there from the now-merged LiveCalcResultPanel.tsx in
+ * Live Calc Feedback Pass 2, Leg 3) snapshots the currently-narrowed Speed
+ * SP range + surviving nature
  * candidates for the current defender species; Speed Tiers
  * (SpeedTiersPage.tsx) reads the same pins and annotates any roster
  * candidate whose species matches with the resulting real Speed bound

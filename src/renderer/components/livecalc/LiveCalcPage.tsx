@@ -3,23 +3,26 @@
  * Layout reorganized (Live Calc Page Layout & Function Rework - Leg 3,
  * Layout & Live Range Grid Rework) to mirror CalcPage.tsx's own structure:
  * two live move grids up top (LiveCalcMoveRangeGrid, "Yours -> Them"/"Theirs
- * -> You"), LiveCalcResultPanel below them, then the Pokémon-panel row
- * underneath (attacker + defender panels, both damage% observation lists,
- * the turn-order list). Each grid cell shows a min-max % SPAN rather than
- * CalcMoveGrid's single fixed number, since the opponent's spread is never
- * fully resolved here - see LiveCalcMoveRangeGrid's own header for why that
- * needed a dedicated grid variant instead of reusing CalcMoveGrid.
+ * -> You"), then the Pokémon-panel row underneath (attacker + defender
+ * panels, both damage% observation lists, the turn-order list). Each grid
+ * cell shows a min-max % SPAN rather than CalcMoveGrid's single fixed
+ * number, since the opponent's spread is never fully resolved here - see
+ * LiveCalcMoveRangeGrid's own header for why that needed a dedicated grid
+ * variant instead of reusing CalcMoveGrid.
+ *
+ * The narrowed result (per-stat SP ranges, nature/ability/item candidates)
+ * used to sit here as its own LiveCalcResultPanel section between the grids
+ * and the Pokémon-panel row; Live Calc Feedback Pass 2 (Leg 3) folded it
+ * into LiveCalcDefenderPanel itself instead, since it's the live readout of
+ * exactly that panel's own known-fact fields - see that file's header.
  *
  * Attacker entry, opponent species+level+known-facts, and three add/remove
  * observation lists (damage% into them, damage% into you, turn-order) wire
  * through to `inferDefenderStats()`, `inferOpponentOffensiveStats()` (Leg 1
- * of this same rework), and `inferDefenderSpeed()` (Leg 15), with
- * LiveCalcResultPanel (Live Calc Results Display) presenting the narrowed
- * result: per-stat SP ranges and nature/ability/item candidate lists with
- * their own certainty indication. The two damage% lists are the same
- * `LiveCalcObservationList` component rendered twice with different labels
- * (Leg 2) - see that file's header for why they share one component instead
- * of a near-duplicate.
+ * of this same rework), and `inferDefenderSpeed()` (Leg 15). The two damage%
+ * lists are the same `LiveCalcObservationList` component rendered twice with
+ * different labels (Leg 2) - see that file's header for why they share one
+ * component instead of a near-duplicate.
  *
  * useLiveCalc (and the @smogon/calc import it pulls in) is instantiated
  * here rather than in App.tsx, same reasoning as CalcPage.tsx's own header
@@ -49,7 +52,6 @@ import CalcPokemonPanel from '../calc/CalcPokemonPanel';
 import LiveCalcDefenderPanel from './LiveCalcDefenderPanel';
 import LiveCalcObservationList from './LiveCalcObservationList';
 import LiveCalcTurnOrderList from './LiveCalcTurnOrderList';
-import LiveCalcResultPanel from './LiveCalcResultPanel';
 import LiveCalcMoveRangeGrid from './LiveCalcMoveRangeGrid';
 
 interface LiveCalcPageProps {
@@ -108,14 +110,6 @@ export default function LiveCalcPage({
         />
       </div>
 
-      <LiveCalcResultPanel
-        gen={gen}
-        defenderSpecies={defenderSpecies}
-        defenderLevel={defenderLevel}
-        inference={inference}
-        liveCalcThreatPinsState={liveCalcThreatPinsState}
-      />
-
       <div className="flex flex-wrap gap-3">
         <CalcPokemonPanel
           title="Attacker"
@@ -136,6 +130,7 @@ export default function LiveCalcPage({
           onChange={setAttacker}
         />
         <LiveCalcDefenderPanel
+          gen={gen}
           species={defenderSpecies}
           level={defenderLevel}
           speciesOptions={speciesOptions}
@@ -162,6 +157,8 @@ export default function LiveCalcPage({
           onChangeKnownAbility={setDefenderKnownAbility}
           onChangeKnownItem={setDefenderKnownItem}
           onChangeKnownNature={setDefenderKnownNature}
+          inference={inference}
+          liveCalcThreatPinsState={liveCalcThreatPinsState}
         />
         <LiveCalcObservationList
           title="Your Moves -> Them"

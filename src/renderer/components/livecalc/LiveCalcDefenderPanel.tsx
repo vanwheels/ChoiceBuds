@@ -1,12 +1,10 @@
 /**
- * LiveCalcDefenderPanel.tsx - Opponent's Known Inputs
+ * LiveCalcDefenderPanel.tsx - Opponent's Known Inputs + Inferred Result
  * Unlike CalcPokemonPanel's fully-known set (reused as-is for the Live Calc
  * attacker - see LiveCalcPage.tsx), the opponent is species+level plus
  * whatever's actually been confirmed in-battle - a forme-family toggle (for
  * stat-block and Mega formes, same `FormeToggle`/`FormeFamily`
- * CalcPokemonPanel uses) and its read-only base stats, laid out with the
- * same Base/Boost column widths as CalcStatRows so the two panels visually
- * match.
+ * CalcPokemonPanel uses) and its read-only base stats.
  *
  * All five combat stats (Live Calc Page Layout & Function Rework - Leg 1/2)
  * carry an editable stage-boost input (-6..+6) now, not just Def/Sp. Def -
@@ -34,14 +32,69 @@
  * incoming damage), but a hard lock can name literally anything revealed in
  * battle, offensive items included (Choice Specs, Life Orb) now that the
  * opponent's own attacks are modeled too.
+ *
+ * Fields are grouped/ordered (species+level, forme toggles, Item+Ability,
+ * Nature, stat block) to match CalcPokemonPanel's own field order - Live
+ * Calc Feedback Pass 2's ask that the Attacker and Opponent panels visually
+ * mirror each other. The header row follows the same "title left, actions
+ * right" shape too, though the action itself (Pin to Speed Tiers) is
+ * necessarily different since there's no known-set to copy/save for a
+ * partially-known opponent.
+ *
+ * The "Inferred Defender" result - narrowed Def/Sp. Def/Speed Stat Point
+ * ranges plus nature/ability/item candidates - lives at the bottom of this
+ * same panel rather than as its own section further down the page (Live
+ * Calc Feedback Pass 2, Leg 3): it's the live readout of exactly the fields
+ * above it, so keeping it in the same panel reads as one continuous
+ * "what do we know about the opponent" unit instead of two disconnected
+ * ones. `StatBoundBar` (moved here from the now-removed LiveCalcResultPanel)
+ * renders the three SP range bars against a fixed 0-32 scale;
+ * `LiveCalcCandidateGroup` (still its own file, shared shape) renders the
+ * three candidate-narrowing fractions. This panel only presents whatever
+ * `LiveCalcInference` it's given - no inference logic lives here, see
+ * utils/liveCalcEngine.ts.
  */
 
 import type { StatsTable } from '@smogon/calc/dist/data/interface';
 import type { NatureName } from '@smogon/calc/dist/data/interface';
+import type { Generation } from '@smogon/calc/dist/data/interface';
 import type { FormeFamily } from '../../utils/calcFormes';
+import type { LiveCalcInference, LiveCalcStatBound } from '../../utils/liveCalcEngine';
+import { defaultInference } from '../../utils/liveCalcEngine';
+import type { UseLiveCalcThreatPinsReturn } from '../../hooks/useLiveCalcThreatPins';
 import { getStatLabelColor } from '../../config/pokemonTheme';
 import CalcAutocomplete from '../calc/CalcAutocomplete';
 import FormeToggle from '../calc/FormeToggle';
+import LiveCalcCandidateGroup from './LiveCalcCandidateGroup';
+
+const SP_RANGE_TOTAL = 32;
+
+function StatBoundBar({ label, bound, observationCount }: { label: string; bound: LiveCalcStatBound; observationCount: number }) {
+  const startPercent = (bound.min / SP_RANGE_TOTAL) * 100;
+  const widthPercent = ((bound.max - bound.min) / SP_RANGE_TOTAL) * 100;
+  const rangeText = bound.min === bound.max ? `${bound.min} SP` : `${bound.min}-${bound.max} SP`;
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-zinc-300 font-semibold">{label}</span>
+        <span className="text-zinc-500">
+          {rangeText} · {observationCount} {observationCount === 1 ? 'observation' : 'observations'}
+        </span>
+      </div>
+      <div className="h-2 rounded-full bg-zinc-800 overflow-hidden relative">
+        <div
+          className="h-full bg-accent-gold absolute top-0"
+          style={{ left: `${startPercent}%`, width: `${Math.max(widthPercent, 100 / SP_RANGE_TOTAL)}%` }}
+        />
+      </div>
+      <div className="flex items-center justify-between text-[10px] text-zinc-600">
+        <span>0</span>
+        <span>32</span>
+      </div>
+    </div>
+  );
+}
 
 const STAT_FIELDS: Array<{ label: string; key: keyof StatsTable }> = [
   { label: 'HP', key: 'hp' },
@@ -53,6 +106,7 @@ const STAT_FIELDS: Array<{ label: string; key: keyof StatsTable }> = [
 ];
 
 interface LiveCalcDefenderPanelProps {
+  gen: Generation;
   species: string;
   level: number;
   speciesOptions: string[];
@@ -86,16 +140,35 @@ interface LiveCalcDefenderPanelProps {
   onChangeKnownAbility: (ability: string) => void;
   onChangeKnownItem: (item: string) => void;
   onChangeKnownNature: (nature: NatureName | '') => void;
+  /** The live narrowed result for this species, presented at the bottom of
+   * this panel - see this file's header. */
+  inference: LiveCalcInference;
+  liveCalcThreatPinsState: UseLiveCalcThreatPinsReturn;
 }
 
 export default function LiveCalcDefenderPanel({
-  species, level, speciesOptions, formes, baseStats,
+  gen, species, level, speciesOptions, formes, baseStats,
   atkBoost, defBoost, spaBoost, spdBoost, speBoost,
   abilityOptions, itemOptions, natureOptions, knownAbility, knownItem, knownNature,
   onChangeSpecies, onChangeLevel, onChangeAtkBoost, onChangeDefBoost, onChangeSpaBoost, onChangeSpdBoost, onChangeSpeBoost,
   onChangeKnownAbility, onChangeKnownItem, onChangeKnownNature,
+  inference, liveCalcThreatPinsState,
 }: LiveCalcDefenderPanelProps) {
   const megaGroup = formes.megaFormes.length > 0 ? [formes.root, ...formes.megaFormes] : [];
+  const baseline = defaultInference(gen, species);
+  const totalObservations = inference.physicalObservationCount + inference.specialObservationCount + inference.speedObservationCount;
+
+  const { pins, pinThreat, unpinThreat } = liveCalcThreatPinsState;
+  const isPinned = !!species && pins.has(species.toLowerCase());
+  const handlePin = () => {
+    pinThreat({
+      species,
+      level,
+      speedSpBound: inference.speedBound,
+      natureCandidates: inference.natureCandidates,
+      observationCount: inference.speedObservationCount,
+    });
+  };
 
   const boostForKey = (key: keyof StatsTable): { value: number; onChange: (stage: number) => void } | null => {
     if (key === 'atk') return { value: atkBoost, onChange: onChangeAtkBoost };
@@ -108,7 +181,31 @@ export default function LiveCalcDefenderPanel({
 
   return (
     <div className="flex-1 min-w-[280px] bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-2">
-      <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wide">Opponent</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wide">Opponent</h3>
+        {species && (
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={handlePin}
+              title="Snapshot the narrowed Speed SP range and surviving nature candidates below onto the Speed Tiers tab"
+              className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded transition-colors cursor-pointer bg-accent-gold/20 text-accent-gold hover:bg-accent-gold/30 border border-accent-gold/40"
+            >
+              {isPinned ? 'Update Pin' : 'Pin to Speed Tiers'}
+            </button>
+            {isPinned && (
+              <button
+                type="button"
+                onClick={() => unpinThreat(species)}
+                title="Remove this species' pin from the Speed Tiers tab"
+                className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded transition-colors cursor-pointer bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+              >
+                Unpin
+              </button>
+            )}
+          </div>
+        )}
+      </div>
       <div className="flex gap-2 items-end">
         <div className="flex-1">
           <CalcAutocomplete
@@ -142,22 +239,8 @@ export default function LiveCalcDefenderPanel({
         <FormeToggle group={megaGroup} current={species} onSelect={onChangeSpecies} />
       )}
 
-      <div className="flex flex-col gap-1">
-        <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Known Ability</label>
-        <select
-          value={knownAbility}
-          onChange={(e) => onChangeKnownAbility(e.target.value)}
-          disabled={abilityOptions.length === 0}
-          title="Pin the opponent's ability once it's been revealed in-battle (an Intimidate trigger, an ability-activation message, etc.) - narrows the ability axis as a hard filter instead of scanning the full pool per observation"
-          className="w-full px-1 py-0.5 text-xs bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <option value="">Unknown</option>
-          {abilityOptions.map(ability => <option key={ability} value={ability}>{ability}</option>)}
-        </select>
-      </div>
-
-      <div className="flex gap-2">
-        <div className="flex-1 flex flex-col gap-1">
+      <div className="grid grid-cols-2 gap-2">
+        <div className="flex flex-col gap-1">
           <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Known Item</label>
           <select
             value={knownItem}
@@ -169,18 +252,32 @@ export default function LiveCalcDefenderPanel({
             {itemOptions.map(item => <option key={item} value={item}>{item}</option>)}
           </select>
         </div>
-        <div className="flex-1 flex flex-col gap-1">
-          <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Known Nature</label>
+        <div className="flex flex-col gap-1">
+          <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Known Ability</label>
           <select
-            value={knownNature}
-            onChange={(e) => onChangeKnownNature(e.target.value as NatureName | '')}
-            title="Pin the opponent's nature once it's been confirmed (a stat-boost/-reduction message, a damage roll that only fits one nature, etc.)"
-            className="w-full px-1 py-0.5 text-xs bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold cursor-pointer"
+            value={knownAbility}
+            onChange={(e) => onChangeKnownAbility(e.target.value)}
+            disabled={abilityOptions.length === 0}
+            title="Pin the opponent's ability once it's been revealed in-battle (an Intimidate trigger, an ability-activation message, etc.) - narrows the ability axis as a hard filter instead of scanning the full pool per observation"
+            className="w-full px-1 py-0.5 text-xs bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <option value="">Unknown</option>
-            {natureOptions.map(nature => <option key={nature} value={nature}>{nature}</option>)}
+            {abilityOptions.map(ability => <option key={ability} value={ability}>{ability}</option>)}
           </select>
         </div>
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Known Nature</label>
+        <select
+          value={knownNature}
+          onChange={(e) => onChangeKnownNature(e.target.value as NatureName | '')}
+          title="Pin the opponent's nature once it's been confirmed (a stat-boost/-reduction message, a damage roll that only fits one nature, etc.)"
+          className="w-full px-1 py-0.5 text-xs bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold cursor-pointer"
+        >
+          <option value="">Unknown</option>
+          {natureOptions.map(nature => <option key={nature} value={nature}>{nature}</option>)}
+        </select>
       </div>
 
       <div className="bg-zinc-800 rounded px-2 py-1.5 border border-zinc-600 flex flex-col gap-1">
@@ -215,6 +312,49 @@ export default function LiveCalcDefenderPanel({
           );
         })}
       </div>
+
+      {species && (
+        <div className="flex flex-col gap-3 border-t border-zinc-800/80 pt-2">
+          <p className="text-[10px] text-zinc-500">
+            Narrows automatically as observations are added above - a tighter Stat Point range and fewer
+            remaining candidates both mean more certainty, read independently per stat/axis (see each
+            section's own count).
+          </p>
+
+          <div>
+            <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-wide mb-1.5">Stat Points (0-32)</h4>
+            <div className="grid grid-cols-1 gap-2">
+              <StatBoundBar label="Defense" bound={inference.defBound} observationCount={inference.physicalObservationCount} />
+              <StatBoundBar label="Sp. Def" bound={inference.spdBound} observationCount={inference.specialObservationCount} />
+              <StatBoundBar label="Speed" bound={inference.speedBound} observationCount={inference.speedObservationCount} />
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-wide mb-1.5">Candidates Narrowed</h4>
+            <div className="grid grid-cols-1 gap-2">
+              <LiveCalcCandidateGroup label="Nature" candidates={inference.natureCandidates} totalCount={baseline.natureCandidates.length} />
+              <LiveCalcCandidateGroup label="Ability" candidates={inference.abilityCandidates} totalCount={baseline.abilityCandidates.length} />
+              <LiveCalcCandidateGroup label="Item" candidates={inference.itemCandidates} totalCount={baseline.itemCandidates.length} />
+            </div>
+          </div>
+
+          {totalObservations === 0 && (
+            <p className="text-xs text-zinc-500">Nothing narrowed yet - add an observation below to begin.</p>
+          )}
+
+          {inference.contradictions.length > 0 && (
+            <div className="flex flex-col gap-1">
+              <h4 className="text-[10px] font-bold text-amber-400/80 uppercase tracking-wide">
+                Skipped/Ignored Observations
+              </h4>
+              {inference.contradictions.map((note, i) => (
+                <p key={i} className="text-xs text-amber-400">{note}</p>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

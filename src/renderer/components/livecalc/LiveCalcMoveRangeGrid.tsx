@@ -9,7 +9,7 @@
  * which doesn't fit here, hence a dedicated variant rather than reusing it.
  *
  * Deliberately missing two things CalcMoveGrid has: no move-select/detail-
- * panel wiring - Live Calc's own LiveCalcResultPanel already shows the
+ * panel wiring - Live Calc's own LiveCalcDefenderPanel already shows the
  * narrowed-inference detail below the grids, and there's no per-move
  * "explain this one result" breakdown to click into since no single
  * defender build exists to explain a range across many candidates. No hit-
