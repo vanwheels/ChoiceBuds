@@ -18,6 +18,18 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Legal Species List Sweep] - Leg 1** (2026-09-12) - see commit `ee455a0`.
+  Mimikyu was invisible in the Battle Logger's opponent picker (and every
+  other legality-filtered picker) because PokeAPI has no bare "mimikyu"
+  resource, only "mimikyu-disguised"/"-busted", while `pokemonRules.ts`'s
+  Reg M-A/M-B/M-C allowlists still spelled it bare -
+  `validateSpeciesLegality` never matched any roster entry for it. Swept all
+  262 unique slugs across the three regulation lists against PokeAPI's live
+  roster and fixed the same class of gap for Gourgeist, Lycanroc, Morpeko,
+  Pyroar, and Toxtricity too; Squawkabilly needed a `canonicalizeCosmeticVariantSlug`
+  helper instead since its cosmetic plumage colors are still 4 separate
+  PokeAPI resources. One-leg fix, no further sweep needed.
+
 - **[Calc/Live Calc Bug Fixes] - Leg 1** (2026-09-12) - see commit `540d4c2`.
   Two bugs folded into Live Calc Tuning: (1) a team's Basculegion/Indeedee/
   Meowstic/Oinkologne male set pasted with an explicit "-M" species suffix
