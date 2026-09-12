@@ -35,8 +35,27 @@ auto-populate, doubles support) left underneath it. No further legs are
 scoped right now; the milestone stays open per Vanny's explicit call rather
 than being closed out here.
 
-No open legs right now - Leg 5 (Armor Tail/Farigiraf ability-candidate fix)
-shipped, see `COMPLETED.md`.
+- **[Live Calc Usage-Data-Backed Inference] — Leg 1** *(Last touched:
+  2026-09-12 · Re-checks: 0)*
+  Engine + hook plumbing, no UI. Scoped 2026-09-12 - Vanny's call was the
+  larger of the two original options (usage frequency as a weighted prior
+  inside `liveCalcEngine.ts`'s narrowing math, not just a one-time
+  Opponent-side auto-fill). New pure module applying usage-based
+  filter/ranking as a post-processing pass over the already-computed
+  `LiveCalcInference` (nature/ability/item axes only this leg - stat-spread
+  weighting is a deferred future leg), wired into `useLiveCalc.ts`'s fetch of
+  the opponent's `ChampionsUsageEntry` via `useGameData().getChampionsUsage`.
+  See `docs/investigations/live-calc-usage-weighted-inference-scope.md` for
+  the resolved mechanism (near-0%-usage filter, never-empty-axis fallback,
+  no-usage-data no-op, locked axes never weighted).
+
+- **[Live Calc Usage-Data-Backed Inference] — Leg 2** *(Last touched:
+  2026-09-12 · Re-checks: 0)*
+  UI surfacing for Leg 1's engine output: `LiveCalcCandidateGroup.tsx`/
+  `LiveCalcDefenderPanel.tsx` show the usage-ranked/filtered candidates by
+  default with percentage annotations, plus a reveal-all toggle back to the
+  full physically-possible list (Vanny's call - usage-filtered-but-possible
+  candidates are never permanently hidden). Depends on Leg 1 shipping first.
 
 ## Blocked
 
@@ -94,20 +113,6 @@ unblocked.
   session). See `docs/investigations/live-calc-layout-rework-scope.md`.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
-
-- **[Live Calc Usage-Data-Backed Inference] — Leg 1** *(Last touched:
-  2026-09-11 · Re-checks: 0)*
-  Raised by Vanny while scoping Live Calc Player/Opponent Card Redesign - a
-  good future tie-in, not part of that leg's ask. `CalcPokemonPanel` already
-  auto-fills the Player side's ability/item/nature/SPs/moves from Champions
-  ranked-ladder usage data as a starting point; open question is whether the
-  Opponent side means the same thing (a one-time auto-fill suggestion once
-  species is picked - small) or using usage frequency as a weighted prior
-  inside `liveCalcEngine.ts`'s narrowing math itself (materially larger -
-  that engine is currently pure deterministic elimination, not statistical).
-  See `docs/investigations/live-calc-card-redesign-scope.md`'s "Not in scope"
-  section. Needs that shape question answered before it becomes a concrete
-  leg.
 
 - **[Live Calc Global Popup Launcher] — Leg 1** *(Last touched: 2026-09-11 ·
   Re-checks: 0)*
