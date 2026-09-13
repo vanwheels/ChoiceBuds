@@ -40,6 +40,12 @@ export default function CalcPage({
   gameDataState, teamsState, databaseState, savedPokemonState, spriteCacheState, settingsState,
 }: CalcPageProps) {
   const [isSavedSetsOpen, setIsSavedSetsOpen] = useState(false);
+  // Computed inside each side's CalcPokemonPanel (that's where the fetched
+  // ChampionsUsageEntry lives) and lifted up here purely to reach the move
+  // grids above, which CalcPage renders as CalcPokemonPanel's siblings, not
+  // its children - see CalcPokemonPanel.tsx's header comment.
+  const [pokemon1MovePercentByName, setPokemon1MovePercentByName] = useState<Record<string, number>>({});
+  const [pokemon2MovePercentByName, setPokemon2MovePercentByName] = useState<Record<string, number>>({});
   const calcState = useDamageCalc(gameDataState, toRegulationId(settingsState.settings.defaultRegulation));
   const {
     regulationId, setRegulationId,
@@ -83,6 +89,7 @@ export default function CalcPage({
           selectedIndex={selectedResult?.side === 'p1' ? selectedResult.index : null}
           onChangeMove={setPokemon1Move}
           onSelect={(index) => setSelectedResult({ side: 'p1', index })}
+          usagePercentByName={pokemon1MovePercentByName}
         />
         <CalcMoveGrid
           title="Pokémon 2's Moves"
@@ -92,6 +99,7 @@ export default function CalcPage({
           selectedIndex={selectedResult?.side === 'p2' ? selectedResult.index : null}
           onChangeMove={setPokemon2Move}
           onSelect={(index) => setSelectedResult({ side: 'p2', index })}
+          usagePercentByName={pokemon2MovePercentByName}
         />
       </div>
 
@@ -105,6 +113,7 @@ export default function CalcPage({
           itemOptions={itemOptions}
           abilityOptions={abilityOptions}
           natureOptions={natureOptions}
+          moveOptions={pokemon1MoveOptions}
           formes={pokemon1Formes}
           baseStats={pokemon1BaseStats}
           boostedStats={pokemon1BoostedStats}
@@ -115,6 +124,7 @@ export default function CalcPage({
           databaseState={databaseState}
           resolveSprite={spriteCacheState.resolveSprite}
           onChange={setPokemon1}
+          onMoveUsageChange={setPokemon1MovePercentByName}
         />
         <CalcFieldPanel
           field={field}
@@ -133,6 +143,7 @@ export default function CalcPage({
           itemOptions={itemOptions}
           abilityOptions={abilityOptions}
           natureOptions={natureOptions}
+          moveOptions={pokemon2MoveOptions}
           formes={pokemon2Formes}
           baseStats={pokemon2BaseStats}
           boostedStats={pokemon2BoostedStats}
@@ -143,6 +154,7 @@ export default function CalcPage({
           databaseState={databaseState}
           resolveSprite={spriteCacheState.resolveSprite}
           onChange={setPokemon2}
+          onMoveUsageChange={setPokemon2MovePercentByName}
         />
       </div>
 

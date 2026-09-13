@@ -12,11 +12,15 @@
  * fields this pass actually reads/writes, not Live Calc's full former
  * inference shape.
  *
- * Scoped to the nature/ability/item axes only - stat-spread usage
- * (`ChampionsUsageEntry.statSpreads`) has no resolved single-axis mapping yet
- * (see the scope doc's "Not in scope" section) and is left to a future leg.
+ * Covers the four dropdown-shaped axes - nature/ability/item plus moves
+ * (added for Regular Calc Usage-Data Auto-Populate Leg 1, see TODO.md/
+ * `docs/investigations/regular-calc-popup-scope.md` - moves are just a 4th
+ * same-shaped single-value axis, ranked identically). Stat-spread usage
+ * (`ChampionsUsageEntry.statSpreads`) ranks whole 6-stat combos rather than
+ * one value at a time, so it doesn't fit this axis shape - that's Leg 2's
+ * own dedicated chip-row component instead.
  *
- * ## Mechanism (per-axis, all three run identically via `rankCandidates()`)
+ * ## Mechanism (per-axis, all four run identically via `rankCandidates()`)
  * - **"Near-0% usage" = absent from that species' ranked rows entirely.** A
  *   physically-feasible candidate (already surviving in `natureCandidates`/
  *   `abilityCandidates`/`itemCandidates`) that doesn't appear in the matching
@@ -72,9 +76,11 @@ export interface UsageWeightedAxes {
   natureCandidates: NatureName[];
   abilityCandidates: string[];
   itemCandidates: string[];
+  moveCandidates: string[];
   natureUsageCandidates: UsageRankedCandidate<NatureName>[];
   abilityUsageCandidates: UsageRankedCandidate[];
   itemUsageCandidates: UsageRankedCandidate[];
+  moveUsageCandidates: UsageRankedCandidate[];
 }
 
 /**
@@ -101,13 +107,13 @@ function rankCandidates<T extends string>(
 
 /**
  * Fills `inference`'s `natureUsageCandidates`/`abilityUsageCandidates`/
- * `itemUsageCandidates` from `usage`, leaving every other field (including
- * the base `natureCandidates`/`abilityCandidates`/`itemCandidates` these are
- * derived from) untouched. Intended as a LAST pass over whatever pipeline
- * has already produced its own final narrowed candidate lists for this
- * recompute - generic over `T` so a caller's richer inference type passes
- * through unchanged beyond the three usage-candidate fields this actually
- * writes.
+ * `itemUsageCandidates`/`moveUsageCandidates` from `usage`, leaving every
+ * other field (including the base `natureCandidates`/`abilityCandidates`/
+ * `itemCandidates`/`moveCandidates` these are derived from) untouched.
+ * Intended as a LAST pass over whatever pipeline has already produced its
+ * own final narrowed candidate lists for this recompute - generic over `T`
+ * so a caller's richer inference type passes through unchanged beyond the
+ * four usage-candidate fields this actually writes.
  *
  * `usage: null` (no Champions ranked-ladder page for this species at all,
  * `getChampionsUsage()`'s own resolved value in that case) is a full no-op:
@@ -121,6 +127,7 @@ export function applyUsageWeighting<T extends UsageWeightedAxes>(inference: T, u
       natureUsageCandidates: inference.natureCandidates.map(value => ({ value, percentage: 0 })),
       abilityUsageCandidates: inference.abilityCandidates.map(value => ({ value, percentage: 0 })),
       itemUsageCandidates: inference.itemCandidates.map(value => ({ value, percentage: 0 })),
+      moveUsageCandidates: inference.moveCandidates.map(value => ({ value, percentage: 0 })),
     };
   }
 
@@ -129,5 +136,6 @@ export function applyUsageWeighting<T extends UsageWeightedAxes>(inference: T, u
     natureUsageCandidates: rankCandidates<NatureName>(inference.natureCandidates, usage.natures),
     abilityUsageCandidates: rankCandidates(inference.abilityCandidates, usage.abilities),
     itemUsageCandidates: rankCandidates(inference.itemCandidates, usage.items),
+    moveUsageCandidates: rankCandidates(inference.moveCandidates, usage.moves),
   };
 }

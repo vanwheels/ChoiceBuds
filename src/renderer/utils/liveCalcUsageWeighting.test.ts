@@ -16,9 +16,11 @@ function baseInference(overrides: Partial<UsageWeightedAxes> = {}): UsageWeighte
     natureCandidates: ['Jolly', 'Adamant', 'Hardy'] as NatureName[],
     abilityCandidates: ['Sand Veil', 'Rough Skin'],
     itemCandidates: [NO_ITEM, 'Chople Berry', 'Life Orb'],
+    moveCandidates: ['Earthquake', 'Stone Edge'],
     natureUsageCandidates: [],
     abilityUsageCandidates: [],
     itemUsageCandidates: [],
+    moveUsageCandidates: [],
     ...overrides,
   };
 }
@@ -45,6 +47,9 @@ describe('applyUsageWeighting - no usage data', () => {
     ]);
     expect(result.itemUsageCandidates).toEqual([
       { value: NO_ITEM, percentage: 0 }, { value: 'Chople Berry', percentage: 0 }, { value: 'Life Orb', percentage: 0 },
+    ]);
+    expect(result.moveUsageCandidates).toEqual([
+      { value: 'Earthquake', percentage: 0 }, { value: 'Stone Edge', percentage: 0 },
     ]);
     // Every other field passes through untouched.
     expect(result.natureCandidates).toEqual(inference.natureCandidates);
@@ -108,6 +113,17 @@ describe('applyUsageWeighting - real usage data', () => {
     );
 
     expect(result.abilityUsageCandidates).toEqual([{ value: 'Sand Veil', percentage: 0 }]);
+  });
+
+  it('ranks the move axis identically to nature/ability/item (mirrors the same shape)', () => {
+    const result = applyUsageWeighting(
+      baseInference(),
+      usage({ moves: [{ name: 'Stone Edge', percentage: 40 }, { name: 'Earthquake', percentage: 55 }] }),
+    );
+
+    expect(result.moveUsageCandidates).toEqual([
+      { value: 'Earthquake', percentage: 55 }, { value: 'Stone Edge', percentage: 40 },
+    ]);
   });
 
   it('an empty base candidate list (e.g. no defender species yet) stays empty rather than fabricating entries', () => {

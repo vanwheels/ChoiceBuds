@@ -19,9 +19,11 @@ interface CalcMoveGridProps {
   selectedIndex: number | null;
   onChangeMove: (index: number, updates: Partial<CalcMoveSlot>) => void;
   onSelect: (index: number) => void;
+  /** Ladder usage % per move (Regular Calc Usage-Data Auto-Populate Leg 1) - computed in the sibling CalcPokemonPanel and lifted up through CalcPage, since that's where the fetched ChampionsUsageEntry lives. Same shape CalcAutocomplete already expects. */
+  usagePercentByName?: Record<string, number>;
 }
 
-export default function CalcMoveGrid({ title, moves, results, moveOptions, selectedIndex, onChangeMove, onSelect }: CalcMoveGridProps) {
+export default function CalcMoveGrid({ title, moves, results, moveOptions, selectedIndex, onChangeMove, onSelect, usagePercentByName }: CalcMoveGridProps) {
   return (
     <div className="flex-1 min-w-[280px] bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-1">
       <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wide">{title}</h3>
@@ -43,6 +45,7 @@ export default function CalcMoveGrid({ title, moves, results, moveOptions, selec
                 options={moveOptions}
                 placeholder="Search moves..."
                 onChange={(name) => onChangeMove(index, { name, hits: undefined })}
+                usagePercentByName={usagePercentByName}
               />
             </div>
             {minHits !== null && maxHits !== null && (

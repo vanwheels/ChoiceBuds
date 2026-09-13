@@ -26,9 +26,20 @@
  * picker or manual edits can still override. `autoFillRequestRef` guards
  * against a slower, now-superseded fetch clobbering a faster one if the user
  * swaps species again before the first request resolves.
+ *
+ * The fetched `ChampionsUsageEntry` is also kept in state (Regular Calc
+ * Usage-Data Auto-Populate Leg 1) rather than discarded once the top-pick
+ * auto-fill above applies - `applyUsageWeighting()` (utils/
+ * liveCalcUsageWeighting.ts) re-ranks item/ability/nature/move against it on
+ * every render, so the Item/Ability pickers and the Nature `<select>` show
+ * every ranked alternative (with its ladder %), not just the #1 pick.
+ * `moveOptions`/`onMoveUsageChange` exist purely for that ranking - the
+ * actual move pickers live in the sibling CalcMoveGrid (rendered by
+ * CalcPage, not here), so the computed move-percentage map is lifted up via
+ * `onMoveUsageChange` rather than rendered in this component.
  */
 
-import { useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import type { DragEvent } from 'react';
 import type { CalcPokemonState, NatureStatEffect } from '../../hooks/useDamageCalc';
@@ -36,6 +47,7 @@ import { STATUS_OPTIONS, STATUS_LABELS } from '../../hooks/useDamageCalc';
 import type { FormeFamily } from '../../utils/calcFormes';
 import type { NatureName, StatsTable } from '@smogon/calc/dist/data/interface';
 import type { Team, SavedPokemonEntry, ImportedPokemonInfo } from '../../types/pokemon';
+import type { ChampionsUsageEntry } from '../../types/gameData';
 import type { UseSavedPokemonReturn } from '../../hooks/useSavedPokemon';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseDatabaseReturn } from '../../hooks/useDatabase';
@@ -45,6 +57,8 @@ import { teamPokemonToCalcUpdates } from '../../utils/calcTeamImport';
 import { calcStateToShowdownPokemon } from '../../utils/calcExport';
 import { enrichPokemonWithAPI } from '../../services/pokeapi';
 import { formatShowdownText } from '../../services/parser';
+import { applyUsageWeighting, type UsageRankedCandidate } from '../../utils/liveCalcUsageWeighting';
+import { normalizeSlug } from '../../utils/pokemonRules';
 import CalcAutocomplete from './CalcAutocomplete';
 import SavedSetPicker from '../SavedSetPicker';
 import SaveToLibraryDialog from '../SaveToLibraryDialog';
@@ -59,6 +73,8 @@ interface CalcPokemonPanelProps {
   itemOptions: string[];
   abilityOptions: string[];
   natureOptions: NatureName[];
+  /** This panel's own move-slot options (CalcPage's pokemon1MoveOptions/pokemon2MoveOptions) - used only to rank the move axis via applyUsageWeighting(); the move pickers themselves live in the sibling CalcMoveGrid, not here. */
+  moveOptions: string[];
   formes: FormeFamily;
   baseStats: StatsTable | null;
   boostedStats: StatsTable | null;
@@ -69,6 +85,8 @@ interface CalcPokemonPanelProps {
   databaseState: UseDatabaseReturn;
   resolveSprite: (remoteUrl: string) => string;
   onChange: (updates: Partial<CalcPokemonState>) => void;
+  /** Lifts this panel's usage-ranked move percentages (keyed by normalizeSlug(name)) up to CalcPage, which forwards them into the sibling CalcMoveGrid - see this file's header comment. */
+  onMoveUsageChange?: (percentByName: Record<string, number>) => void;
 }
 
 const CONFIRMATION_MS = 2000;
@@ -76,8 +94,8 @@ const CONFIRMATION_MS = 2000;
 const GENDER_CYCLE: Array<CalcPokemonState['gender']> = ['M', 'F', ''];
 
 export default function CalcPokemonPanel({
-  title, state, speciesOptions, itemOptions, abilityOptions, natureOptions, formes, baseStats, boostedStats, natureEffect,
-  teams, savedPokemonState, gameDataState, databaseState, resolveSprite, onChange,
+  title, state, speciesOptions, itemOptions, abilityOptions, natureOptions, moveOptions, formes, baseStats, boostedStats, natureEffect,
+  teams, savedPokemonState, gameDataState, databaseState, resolveSprite, onChange, onMoveUsageChange,
 }: CalcPokemonPanelProps) {
   const [savedSetPickerSpecies, setSavedSetPickerSpecies] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -96,21 +114,62 @@ export default function CalcPokemonPanel({
   // value surviving an unrelated species swap made while still Mega'd.
   const preMegaAbilityRef = useRef<{ root: string; ability: string } | null>(null);
 
+  // Kept in state (rather than discarded once applied below) so the
+  // Item/Ability pickers and Nature select can keep re-ranking against it on
+  // every render - see this file's header comment.
+  const [usage, setUsage] = useState<ChampionsUsageEntry | null>(null);
+
   const autoFillFromUsage = async (species: string) => {
     const requestId = ++autoFillRequestRef.current;
-    const usage = await gameDataState.getChampionsUsage(species);
-    if (autoFillRequestRef.current !== requestId || !usage) return;
+    setUsage(null); // clear the previous species' usage immediately so no stale ranking briefly shows while this fetch is in flight
+    const usageEntry = await gameDataState.getChampionsUsage(species);
+    if (autoFillRequestRef.current !== requestId) return;
+    setUsage(usageEntry);
+    if (!usageEntry) return;
 
     const updates: Partial<CalcPokemonState> = {};
-    if (usage.abilities[0]) updates.ability = usage.abilities[0].name;
-    if (usage.items[0]) updates.item = usage.items[0].name;
-    if (usage.natures[0]) updates.nature = usage.natures[0].name as NatureName;
-    if (usage.statSpreads[0]) updates.sps = usage.statSpreads[0].points;
-    if (usage.moves.length > 0) {
-      updates.moves = Array.from({ length: 4 }, (_, i) => ({ name: usage.moves[i]?.name ?? '', isCrit: false }));
+    if (usageEntry.abilities[0]) updates.ability = usageEntry.abilities[0].name;
+    if (usageEntry.items[0]) updates.item = usageEntry.items[0].name;
+    if (usageEntry.natures[0]) updates.nature = usageEntry.natures[0].name as NatureName;
+    if (usageEntry.statSpreads[0]) updates.sps = usageEntry.statSpreads[0].points;
+    if (usageEntry.moves.length > 0) {
+      updates.moves = Array.from({ length: 4 }, (_, i) => ({ name: usageEntry.moves[i]?.name ?? '', isCrit: false }));
     }
     onChange(updates);
   };
+
+  // Re-ranks all 4 dropdown-shaped axes against the kept usage state above -
+  // a no-op mirror of the base option lists when usage is null (species not
+  // yet picked, or no ranked-ladder page for it at all).
+  const weighted = useMemo(() => applyUsageWeighting({
+    natureCandidates: natureOptions,
+    abilityCandidates: abilityOptions,
+    itemCandidates: itemOptions,
+    moveCandidates: moveOptions,
+    natureUsageCandidates: [], abilityUsageCandidates: [], itemUsageCandidates: [], moveUsageCandidates: [],
+  }, usage), [usage, natureOptions, abilityOptions, itemOptions, moveOptions]);
+
+  // percentage: 0 only ever means "no reliable data" here (either usage is
+  // null entirely, or rankCandidates()'s never-empty-axis fallback) - a
+  // real observed ladder % is never rounded to exactly 0, so this is a safe
+  // way to tell "don't badge/reorder this" apart from a genuine low %.
+  const percentByName = (candidates: UsageRankedCandidate[]): Record<string, number> =>
+    Object.fromEntries(candidates.filter(c => c.percentage > 0).map(c => [normalizeSlug(c.value), c.percentage]));
+
+  const abilityPercentByName = useMemo(() => percentByName(weighted.abilityUsageCandidates), [weighted.abilityUsageCandidates]);
+  const itemPercentByName = useMemo(() => percentByName(weighted.itemUsageCandidates), [weighted.itemUsageCandidates]);
+  const naturePercentByName = useMemo(() => percentByName(weighted.natureUsageCandidates), [weighted.natureUsageCandidates]);
+  const movePercentByName = useMemo(() => percentByName(weighted.moveUsageCandidates), [weighted.moveUsageCandidates]);
+
+  useEffect(() => { onMoveUsageChange?.(movePercentByName); }, [movePercentByName, onMoveUsageChange]);
+
+  // Nature's native <select> can't render a styled badge inside an <option>
+  // (browsers only show its plain text), so the ranked % is appended to the
+  // label itself instead, most-used-first like the other axes.
+  const sortedNatureOptions = useMemo(
+    () => [...natureOptions].sort((a, b) => (naturePercentByName[normalizeSlug(b)] ?? -1) - (naturePercentByName[normalizeSlug(a)] ?? -1)),
+    [natureOptions, naturePercentByName]
+  );
 
   // Only fires on a real dropdown-list click (see CalcAutocomplete.tsx's
   // onSelect), never while typing - species is already applied via onChange
@@ -281,6 +340,7 @@ export default function CalcPokemonPanel({
           options={itemOptions}
           placeholder="None"
           onChange={(item) => onChange({ item })}
+          usagePercentByName={itemPercentByName}
         />
         <CalcAutocomplete
           label="Ability"
@@ -288,6 +348,7 @@ export default function CalcPokemonPanel({
           options={abilityOptions}
           placeholder="None"
           onChange={(ability) => onChange({ ability })}
+          usagePercentByName={abilityPercentByName}
         />
       </div>
 
@@ -299,7 +360,10 @@ export default function CalcPokemonPanel({
             onChange={(e) => onChange({ nature: e.target.value as NatureName })}
             className="px-2 py-0.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
           >
-            {natureOptions.map(n => <option key={n} value={n}>{n}</option>)}
+            {sortedNatureOptions.map(n => {
+              const percent = naturePercentByName[normalizeSlug(n)];
+              return <option key={n} value={n}>{percent != null ? `${n} (${percent.toFixed(1)}%)` : n}</option>;
+            })}
           </select>
         </div>
         <div className="flex flex-col gap-1">

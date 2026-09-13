@@ -4,11 +4,14 @@
  * move) - each just passes a different flat string list. Unlike
  * SpeciesPickerCard (teams roster picker, sprite-aware, legality-filtered),
  * this is a plain sandbox picker: any of @smogon/calc's own data names can
- * be chosen, matching the real Showdown calculator's unrestricted pickers.
+ * be chosen, matching the real Showdown calculator's unrestricted pickers -
+ * `usagePercentByName` (Regular Calc Usage-Data Auto-Populate Leg 1) never
+ * narrows `options`, it only reorders/annotates them.
  */
 
 import { useState } from 'react';
 import { useDismissable } from '../../hooks/useDismissable';
+import { normalizeSlug } from '../../utils/pokemonRules';
 
 const MAX_RESULTS = 50;
 
@@ -20,9 +23,18 @@ interface CalcAutocompleteProps {
   onChange: (value: string) => void;
   /** Fires only on a real click-from-dropdown-list pick, not on every keystroke like onChange does - lets a caller distinguish "the user just selected X" from "the user is still typing". */
   onSelect?: (value: string) => void;
+  /**
+   * Ladder usage % per option, keyed by `normalizeSlug(option)` (same
+   * convention as EditOverlays.tsx's own usage-annotated ability/move
+   * pickers). Options with an entry here sort first (highest % first,
+   * stable beyond that); everything else keeps today's alphabetical order.
+   * Omit/leave undefined for a plain unranked picker (e.g. species, which
+   * has no usage-percentage concept).
+   */
+  usagePercentByName?: Record<string, number>;
 }
 
-export default function CalcAutocomplete({ label, value, options, placeholder, onChange, onSelect }: CalcAutocompleteProps) {
+export default function CalcAutocomplete({ label, value, options, placeholder, onChange, onSelect, usagePercentByName }: CalcAutocompleteProps) {
   const [query, setQuery] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
   const ref = useDismissable<HTMLDivElement>(() => {
@@ -39,8 +51,14 @@ export default function CalcAutocomplete({ label, value, options, placeholder, o
     setQuery(value);
   }
 
+  // Most-used-first; anything with no usage entry sorts after every ranked
+  // option, keeping its original (alphabetical) relative order since
+  // Array.sort is stable - same convention as EditOverlays.tsx's sort.
   const filtered = isOpen
-    ? options.filter(o => o.toLowerCase().includes(query.toLowerCase())).slice(0, MAX_RESULTS)
+    ? options
+        .filter(o => o.toLowerCase().includes(query.toLowerCase()))
+        .sort((a, b) => (usagePercentByName?.[normalizeSlug(b)] ?? -1) - (usagePercentByName?.[normalizeSlug(a)] ?? -1))
+        .slice(0, MAX_RESULTS)
     : [];
 
   const handleSelect = (option: string) => {
@@ -63,16 +81,22 @@ export default function CalcAutocomplete({ label, value, options, placeholder, o
       />
       {isOpen && filtered.length > 0 && (
         <div className="absolute z-50 top-full left-0 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-zinc-700 bg-slate-900 shadow-xl">
-          {filtered.map(option => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => handleSelect(option)}
-              className="w-full text-left px-2 py-1 text-sm text-zinc-200 hover:bg-accent-gold hover:text-zinc-900 transition-colors cursor-pointer"
-            >
-              {option}
-            </button>
-          ))}
+          {filtered.map(option => {
+            const percent = usagePercentByName?.[normalizeSlug(option)];
+            return (
+              <button
+                key={option}
+                type="button"
+                onClick={() => handleSelect(option)}
+                className="w-full flex items-center gap-2 text-left px-2 py-1 text-sm text-zinc-200 hover:bg-accent-gold hover:text-zinc-900 transition-colors cursor-pointer"
+              >
+                <span className="flex-1 truncate">{option}</span>
+                {percent != null && (
+                  <span className="text-accent-gold text-[10px] font-bold whitespace-nowrap">{percent.toFixed(1)}%</span>
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
