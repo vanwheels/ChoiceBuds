@@ -18,6 +18,17 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Regular Calc Battle Log Integration: Prefill] - Leg 1** (2026-09-13) -
+  see commit `cfde0c2`. Species-only, one-shot, one-directional prefill:
+  each opponent tile in `RecordMatchForm.tsx` gets a "Calc" trigger (next to
+  the existing remove button) calling a threaded-down `openCalcPopup`;
+  `App.tsx`'s `openCalcPopup` grew an optional `{ species }` prefill arg,
+  carried in new `calcPrefill` state and passed through `CalcPopup` to
+  `CalcPage`, which applies it to `pokemon2` via a one-shot effect
+  (`setPokemon2({ species })`) and immediately clears it through
+  `onPrefillApplied`. No new schema - `moves`/`ability`/`item` write-back is
+  Leg 2.
+
 - **[Regular Calc Usage-Data Auto-Populate: SP Ranked-Spread Chips] - Leg
   2** (2026-09-13) - see commit `940dbf7`. Stat Points couldn't reuse Leg
   1's annotate-the-existing-dropdown pattern (`CalcStatRows.tsx` has 6 free

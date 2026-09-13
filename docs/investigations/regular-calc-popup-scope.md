@@ -231,3 +231,108 @@ Both legs: keep the async-fetch guard `autoFillFromUsage` already uses
 (`autoFillRequestRef`) governing when the kept-around usage state updates,
 so a fast species swap can't have a slower fetch clobber a newer one —
 same rule, just one more piece of state to gate.
+
+## Battle Log Integration — Leg scoping (2026-09-13, continued)
+
+Scoped in a follow-up session, same day, after both Usage-Data Auto-Populate
+legs shipped. Started from a wrong assumption worth recording, same as the
+"opponent side" one above: the milestone description ("opening the popup
+from an active Battle Log session pre-fills the enemy team from that
+session's `opponentRoster`") was written assuming the old live turn-by-turn
+logging flow still existed. It doesn't — that flow (`ActiveBattleView`,
+`useBattleLogActions.ts`, the whole click-to-scout UI) was retired 2026-08-31
+into `src/renderer/_archived/battle-logger/` in favor of `RecordMatchForm.tsx`,
+a single post-match form (see that directory's README and
+`BattleLogPage.tsx`'s header comment). Two knock-on corrections this forces:
+
+- **There is no persisted or ambient "active session" to detect.**
+  `RecordMatchForm`'s `opponentRoster` is plain local `useState`, alive only
+  while the form is mounted, discarded on save/cancel until then. The global
+  floating Calc launcher (`App.tsx`) can't "notice" a session the way the
+  milestone blurb implied — the only place `opponentRoster` exists is inside
+  the form's own component tree. So the trigger has to be a control *inside*
+  `RecordMatchForm` (a small per-tile button), not the global launcher
+  gaining awareness of anything.
+- **`RecordMatchForm` never populates `moves`/`ability`/`item` today.**
+  `handleAddOpponent` only ever sets `species`/`pokedexNumber`/`spriteUrl`/
+  `types` — the fields this integration would write into are currently dead
+  weight carried over from the archived live-logging schema, not
+  actively-maintained data with a competing writer. That's good news: no
+  conflict to resolve, and this integration becomes the *first* thing that
+  ever populates them under the new form-based flow. It does mean "pre-fill
+  the enemy team from opponentRoster" only ever has species to pre-fill with
+  — moves/ability/item are write-only in this direction, never a prefill
+  source, which matches Calc's own "no new schema needed" framing (that
+  claim holds for moves/ability/item specifically, but not for nature/Stat
+  Points/Tera — see below).
+- **`abilityRevealedOnTurn`/`itemRevealedOnTurn` have no meaning here.**
+  Both are "which turn did this change" markers for a turn-by-turn log that
+  no longer exists in the active recording flow. This integration leaves them
+  alone (still valid, optional, harmless for Statistics-page consumers) but
+  never writes them — there's no "current turn" concept in a post-match form
+  to stamp them with.
+
+Two product calls, Vanny's, resolved the remaining open questions:
+
+- **Write-back stays scoped to `moves`/`ability`/`item`** — the 3 fields
+  `OpponentPokemonEntry` already has. Nature/Stat Points/Tera (which Calc
+  does track) are NOT added to the schema for this milestone; they stay
+  Calc-only/ephemeral, never persisted back to the battle record. Keeps this
+  a wiring leg, not a schema-migration one.
+- **Prefill always targets `pokemon2`**, not "whichever's empty." Simple,
+  predictable slot; `pokemon1` stays free for whatever the user already has
+  loaded (typically their own Pokemon they're checking the matchup against).
+
+### Resulting shape (two legs, not one)
+
+Split the same way Usage-Data Auto-Populate was: prefill has standalone
+value on its own (quickly load a species you're actively recording into Calc
+without any round-trip), write-back is a separate, harder increment that
+depends on the same plumbing.
+
+**Leg 1 — prefill only (species → pokemon2, one-directional):**
+- `RecordMatchForm.tsx`: add a small "Calc" trigger to each opponent tile's
+  `BroughtToggleTile` (alongside the existing remove `×` button in its
+  `trailing` slot).
+- `App.tsx`: `openCalcPopup` gains an optional prefill argument (just a
+  species string for this leg) stored alongside `isCalcPopupOpen`, threaded
+  into `CalcPopup` as a new prop.
+- `CalcPopup.tsx` / `CalcPage.tsx`: `CalcPage` gains an optional
+  `pendingPrefill: { species: string } | null` + a clear callback. An effect
+  applies it once (`setPokemon2({ species })`) and immediately clears it, so
+  it doesn't reapply on unrelated re-renders — same one-shot-then-clear shape
+  as any "apply once" prop.
+- `openCalcPopup`'s new argument has to be threaded down through
+  `BattleLogPage` → `RecordMatchForm` as a plain prop, same as
+  `teamsState`/`battlesState` already are — no context/new global needed for
+  a one-shot value.
+
+**Leg 2 — write-back (moves/ability/item → the opponent entry):**
+- Depends on Leg 1's plumbing; not reachable standalone.
+- `openCalcPopup`'s prefill argument grows an optional
+  `onUpdate: (updates: Partial<OpponentPokemonEntry>) => void`, supplied by
+  `RecordMatchForm` as a thin wrapper over its own `setOpponentRoster`
+  (merge into the matching entry by id).
+- App.tsx keeps the `{ entryId, onUpdate }` pair alive alongside the popup's
+  own open/closed state (a "link"), separate from `hasOpenedCalcPopup`'s
+  stays-mounted-forever state — the *popup* persists for the whole session,
+  but a *link* to one specific in-progress form's entry must not outlive
+  that form.
+- `CalcPage` reports `pokemon2`'s `moves`/`ability`/`item` changes through
+  the link's `onUpdate` whenever they change, but only while a link is
+  active — opening the popup with no battle-log context (the plain floating
+  launcher) never touches this path.
+- **Link teardown is the real design point of this leg.** `RecordMatchForm`
+  can unmount (save or cancel) while the popup stays open for the rest of
+  the session (that's the whole point of `CalcPopup`'s stays-mounted
+  design) — so `RecordMatchForm` must explicitly clear the link (on
+  `onRecorded`/`onCancel`, or unmount) rather than leaving a stale closure
+  over a discarded `setOpponentRoster` around. Re-opening Calc from a
+  different opponent tile re-points the link (one link at a time, matching
+  one popup instance); no stacking/multiple simultaneous links.
+
+Not yet scoped further than this — ready to plan Leg 1's implementation
+directly; Leg 2's exact link-teardown wiring (which of `onRecorded`/
+`onCancel`/unmount clears it, and whether the popup should show any
+"linked to this battle" affordance while active) is deliberately left for
+that leg's own session rather than nailed down speculatively here.
