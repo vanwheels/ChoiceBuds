@@ -12,9 +12,7 @@
  * SpeedTierList.tsx's continuous, densely-packed icon grid (row list → icon
  * grid rework: docs/investigations/speed-tiers-layout-rework.md; that grid
  * reworked again into one continuous flow rather than a block per speed
- * value: docs/investigations/speed-tiers-full-roster-pivot.md). Live Calc →
- * Speed Tiers tie-in (an inferred SP-Speed range overriding a threat's
- * generic entry) is a later leg, not built here.
+ * value: docs/investigations/speed-tiers-full-roster-pivot.md).
  *
  * Roster scope: every species in the selected team's own regulation
  * (validateSpeciesLegality against toRegulationId(selectedTeam.format)) is
@@ -34,9 +32,7 @@
  * all - reuses utils/usageThreats.ts's slotResistsThreat (the resist check
  * only, not computeUsageThreats itself, which carries its own hidden rank
  * cutoff that would shadow the Top 60/Top 120 scope above) rather than
- * replacing roster scope. A Live Calc pinned threat bypasses it too - same
- * precedent as it already bypassing the usage-rank cutoff below, since a pin
- * is a confirmed real opponent, not theoretical.
+ * replacing roster scope.
  *
  * Min Spread Usage (Leg 11, see TODO.md): a page-level stepper controlling
  * how much of a species' own real usage a ranked stat spread needs to get
@@ -48,10 +44,9 @@
  *
  * Bounds Only (Leg 12, see TODO.md): a checkbox that suppresses usage-based
  * spread rows entirely, leaving just each threat's 3 fixed min/neutral/max
- * bound rows (plus any Live Calc rows, which aren't usage data either).
- * Distinct from "Threats Only" above (narrows the species list, not the row
- * types) and Min Spread Usage (tunes the spread cutoff, doesn't remove
- * spread rows outright) - passed through to buildSpeedTierEntries as
+ * bound rows. Distinct from "Threats Only" above (narrows the species list,
+ * not the row types) and Min Spread Usage (tunes the spread cutoff, doesn't
+ * remove spread rows outright) - passed through to buildSpeedTierEntries as
  * `boundsOnly`. The Min Spread Usage stepper is disabled while this is on,
  * since it has nothing left to tune.
  *
@@ -71,15 +66,6 @@
  * resolution), not the full `useActiveEditor` edit-overlay flow. A successful
  * save clears that mon's (or, for Save All, every saved mon's) entry out of
  * `speedOverrides`, since it now matches the team's real saved data.
- *
- * Live Calc -> Speed Tiers Tie-in (Leg 6, see TODO.md): `liveCalcThreatPinsState`
- * is App.tsx-level shared state (hooks/useLiveCalcThreatPins.ts) - a pin made
- * on the Live Calc tab surfaces here as an extra "Live" bound row on any
- * roster candidate whose species matches, computed via utils/speedTiers.ts::
- * computeInferredThreatSpeedBound and merged in by threatTierInputs below. A
- * pinned species bypasses the roster-scope usage-rank cutoff (top60/top120)
- * even if it has no usage data at all or ranks outside it - the user
- * explicitly pinned this exact opponent Pokémon, so it should always show.
  */
 import { useMemo, useState } from 'react';
 import { Generations, toID } from '@smogon/calc';
@@ -89,14 +75,13 @@ import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseDatabaseReturn } from '../../hooks/useDatabase';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import type { UseSpeciesRosterReturn } from '../../hooks/useSpeciesRoster';
-import type { UseLiveCalcThreatPinsReturn } from '../../hooks/useLiveCalcThreatPins';
 import type { ChampionsUsageEntry, ImportedPokemonInfo } from '../../types/pokemon';
 import { validateSpeciesLegality, toRegulationId } from '../../utils/pokemonRules';
 import { toReadableName } from '../../utils/displayName';
 import { getFormeFamily } from '../../utils/calcFormes';
 import { getMegaAbility } from '../../config/megaAbilities';
 import { getCachedMegaSprite, useMegaSpritePrefetch } from '../../hooks/useMegaSprite';
-import { computeTeamSpeed, computeThreatSpeedProfile, computeInferredThreatSpeedBound, defaultSpeedFieldContext, type SpeedFieldContext } from '../../utils/speedTiers';
+import { computeTeamSpeed, computeThreatSpeedProfile, defaultSpeedFieldContext, type SpeedFieldContext } from '../../utils/speedTiers';
 import { buildSpeedTierEntries, filterSpeedTierEntries, groupSpeedTiers, DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT, type ThreatTierInput } from '../../utils/speedTierList';
 import { applySpeedOverride, defaultSpeedOverride, patchPokemonWithOverride, type TeamSpeedOverride } from '../../utils/speedTierOverrides';
 import { slotResistsThreat } from '../../utils/usageThreats';
@@ -150,10 +135,9 @@ interface SpeedTiersPageProps {
   databaseState: UseDatabaseReturn;
   spriteCacheState: UseSpriteCacheReturn;
   speciesRosterState: UseSpeciesRosterReturn;
-  liveCalcThreatPinsState: UseLiveCalcThreatPinsReturn;
 }
 
-export default function SpeedTiersPage({ teamsState, gameDataState, databaseState, spriteCacheState, speciesRosterState, liveCalcThreatPinsState }: SpeedTiersPageProps) {
+export default function SpeedTiersPage({ teamsState, gameDataState, databaseState, spriteCacheState, speciesRosterState }: SpeedTiersPageProps) {
   const { teams } = teamsState;
   const [selectedTeamId, setSelectedTeamId] = useState('');
   const selectedTeam = teams.find(t => t.id === selectedTeamId);
@@ -163,8 +147,8 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
   const [speciesFilter, setSpeciesFilter] = useState('');
   const [speedOverrides, setSpeedOverrides] = useState<Map<string, TeamSpeedOverride>>(new Map());
   const gen = useMemo(() => Generations.get(GEN_NUM), []);
-  // Same construction useDamageCalc.ts/useLiveCalc.ts use for their own
-  // Calc-tab forme toggles - see TeamPreviewCard.tsx's Mega/stat-forme rows.
+  // Same construction useDamageCalc.ts uses for its own Calc-tab forme
+  // toggles - see TeamPreviewCard.tsx's Mega/stat-forme rows.
   const allSpecies = useMemo(() => [...gen.species].map(s => ({ name: s.name, baseSpecies: s.baseSpecies })), [gen]);
   const natureOptions = useMemo(() => [...gen.natures].map(n => n.name).sort() as NatureName[], [gen]);
 
@@ -308,8 +292,6 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [legalRoster, usageEntryBySpecies, getCachedEntry, allSpecies, gen, megaSpriteVersion]);
 
-  const { pins: liveCalcPins } = liveCalcThreatPinsState;
-
   // "Threats Only" checkbox's own defending slots - same construction
   // TypeMatchupPage.tsx already builds for its own usage-threat check.
   const defensiveSlots = useMemo(
@@ -320,25 +302,15 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
   const threatTierInputs = useMemo<ThreatTierInput[]>(() => {
     const cutoff = rosterScope === 'top60' ? 60 : rosterScope === 'top120' ? 120 : null;
     return rosterCandidates.flatMap((candidate): ThreatTierInput[] => {
-      const pin = liveCalcPins.get(candidate.species.toLowerCase());
-      // A pinned species bypasses the usage-rank cutoff - see this file's header.
-      if (cutoff !== null && !pin && (!candidate.usage || candidate.usage.columnPosition > cutoff)) return [];
+      if (cutoff !== null && (!candidate.usage || candidate.usage.columnPosition > cutoff)) return [];
       // "Threats Only": drop any candidate at least one team slot already
-      // resists/is immune to - see this file's header. Same pin bypass as
-      // the cutoff check above, for the same reason.
-      if (threatsOnly && !pin && defensiveSlots.some(d => slotResistsThreat(candidate.types, d))) return [];
+      // resists/is immune to - see this file's header.
+      if (threatsOnly && defensiveSlots.some(d => slotResistsThreat(candidate.types, d))) return [];
       const profile = computeThreatSpeedProfile(gen, { species: candidate.species, ability: candidate.ability, usage: candidate.usage }, field);
       if (!profile) return [];
-      const inferredBound = pin
-        ? computeInferredThreatSpeedBound(
-            gen,
-            { species: candidate.species, ability: candidate.ability, level: pin.level, spMin: pin.speedSpBound.min, spMax: pin.speedSpBound.max, natureCandidates: pin.natureCandidates },
-            field
-          ) ?? undefined
-        : undefined;
-      return [{ spriteUrl: candidate.spriteUrl, profile, inferredBound, types: candidate.types }];
+      return [{ spriteUrl: candidate.spriteUrl, profile, types: candidate.types }];
     });
-  }, [rosterCandidates, gen, field, rosterScope, liveCalcPins, threatsOnly, defensiveSlots]);
+  }, [rosterCandidates, gen, field, rosterScope, threatsOnly, defensiveSlots]);
 
   const tierGroups = useMemo(() => {
     const entries = filterSpeedTierEntries(buildSpeedTierEntries(teamSpeedEntries, threatTierInputs, spreadUsageCutoff, boundsOnly), speciesFilter);

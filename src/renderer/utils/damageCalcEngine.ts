@@ -42,10 +42,8 @@ const ZERO_STATS: StatsTable = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 }
 export const WEATHER_OPTIONS: Weather[] = ['Sun', 'Rain', 'Sand', 'Snow', 'Harsh Sunshine', 'Heavy Rain', 'Strong Winds'];
 export const TERRAIN_OPTIONS: Terrain[] = ['Electric', 'Grassy', 'Psychic', 'Misty'];
 export const STATUS_OPTIONS: StatusName[] = ['slp', 'psn', 'brn', 'frz', 'par', 'tox'];
-/** Shared with `LiveCalcDefenderPanel.tsx`'s own Status field (Live Calc
- * Player/Opponent Card Redesign) - previously a local const duplicated only
- * in `CalcPokemonPanel.tsx`, hoisted here alongside `STATUS_OPTIONS` since
- * both panels' Status selects now need it. */
+/** Previously a local const duplicated in `CalcPokemonPanel.tsx`, hoisted
+ * here alongside `STATUS_OPTIONS`. */
 export const STATUS_LABELS: Record<StatusName, string> = {
   slp: 'Asleep', psn: 'Poisoned', brn: 'Burned', frz: 'Frozen', par: 'Paralyzed', tox: 'Badly Poisoned',
 };
@@ -82,9 +80,7 @@ export interface CalcMoveSlot {
   hits?: number;
 }
 
-/** Exported for reuse by useLiveCalc.ts, which needs the same blank 4-slot
- * shape for its own opponent-side move grid (Live Calc Page Layout &
- * Function Rework - Leg 3) without going through a whole `defaultPokemonState()`. */
+/** A blank 4-slot move grid shape, usable without going through a whole `defaultPokemonState()`. */
 export function defaultMoveSlots(): CalcMoveSlot[] {
   return Array.from({ length: MOVE_SLOT_COUNT }, () => ({ name: '', isCrit: false }));
 }
@@ -300,10 +296,7 @@ function getMultihitRange(gen: Generation, moveName: string): [number, number] |
   return [multihit[0], multihit[1]];
 }
 
-/** Standard stage-boost multiplier (-6..+6): >=0 stages are (2+n)/2, negative are 2/(2-n).
- * Exported for reuse by utils/liveCalcSpeedEngine.ts, which applies the same
- * stage math to a scanned defender Speed candidate rather than a panel's own
- * boosted stat display. */
+/** Standard stage-boost multiplier (-6..+6): >=0 stages are (2+n)/2, negative are 2/(2-n). */
 export function boostMultiplier(stage: number): number {
   const clamped = Math.max(-6, Math.min(6, stage));
   return clamped >= 0 ? (2 + clamped) / 2 : 2 / (2 - clamped);
@@ -356,9 +349,9 @@ export function computeEffectiveSpeed(gen: Generation, state: CalcPokemonState, 
   return computeBoostedStats(gen, state, weather, terrain)?.spe ?? null;
 }
 
-/** Exported for reuse by utils/liveCalcEngine.ts, which builds the same kind
- * of fully-known attacker Pokemon from a CalcPokemonState for its own
- * inference scans rather than duplicating this construction logic. */
+/** Exported for reuse by utils/speedTiers.ts, which builds the same kind
+ * of fully-known Pokemon from a CalcPokemonState for its own Speed math
+ * rather than duplicating this construction logic. */
 export function buildPokemon(gen: Generation, state: CalcPokemonState): InstanceType<typeof Pokemon> {
   return new Pokemon(gen, resolveCalcSpecies(state.species), {
     level: state.level,

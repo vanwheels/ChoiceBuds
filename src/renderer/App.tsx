@@ -16,7 +16,6 @@ import { useSpriteCache } from './hooks/useSpriteCache';
 import { useInitialSync } from './hooks/useInitialSync';
 import { useUsageSync } from './hooks/useUsageSync';
 import { useBattles } from './hooks/useBattles';
-import { useLiveCalcThreatPins } from './hooks/useLiveCalcThreatPins';
 import { useSettings } from './hooks/useSettings';
 import { useUpdateCheck } from './hooks/useUpdateCheck';
 import { useReleaseNotes } from './hooks/useReleaseNotes';
@@ -30,14 +29,13 @@ import ReleaseNotesModal from './components/ReleaseNotesModal';
 // @smogon/calc, the app's heaviest dependency.
 const BoxPage = lazy(() => import('./components/BoxPage'));
 const CalcPage = lazy(() => import('./components/calc/CalcPage'));
-const LiveCalcPage = lazy(() => import('./components/livecalc/LiveCalcPage'));
 const BattleLogPage = lazy(() => import('./components/battlelog/BattleLogPage'));
 const StatisticsPage = lazy(() => import('./components/statistics/StatisticsPage'));
 const TypeMatchupPage = lazy(() => import('./components/typematchup/TypeMatchupPage'));
 const SpeedTiersPage = lazy(() => import('./components/speedtiers/SpeedTiersPage'));
 const SettingsPage = lazy(() => import('./components/SettingsPage'));
 
-export type ActiveTab = 'teams' | 'box' | 'calc' | 'liveCalc' | 'battles' | 'statistics' | 'typeMatchup' | 'speedTiers' | 'settings';
+export type ActiveTab = 'teams' | 'box' | 'calc' | 'battles' | 'statistics' | 'typeMatchup' | 'speedTiers' | 'settings';
 
 /**
  * Main application shell component
@@ -78,7 +76,6 @@ export default function App() {
   const speciesRosterState = useSpeciesRoster();
   const spriteCacheState = useSpriteCache();
   const battlesState = useBattles();
-  const liveCalcThreatPinsState = useLiveCalcThreatPins();
   const settingsState = useSettings();
   const updateCheckState = useUpdateCheck();
   const releaseNotesState = useReleaseNotes(settingsState.settings, settingsState.isLoading, settingsState.updateSettings);
@@ -161,21 +158,6 @@ export default function App() {
               </Suspense>
             </div>
           )}
-          {visitedTabs.has('liveCalc') && (
-            <div style={{ display: activeTab === 'liveCalc' ? 'block' : 'none' }}>
-              <Suspense fallback={<div className="text-zinc-400 text-sm">Loading live calc...</div>}>
-                <LiveCalcPage
-                  gameDataState={gameDataState}
-                  teamsState={teamsState}
-                  databaseState={databaseState}
-                  savedPokemonState={savedPokemonState}
-                  spriteCacheState={spriteCacheState}
-                  settingsState={settingsState}
-                  liveCalcThreatPinsState={liveCalcThreatPinsState}
-                />
-              </Suspense>
-            </div>
-          )}
           {visitedTabs.has('battles') && (
             <div style={{ display: activeTab === 'battles' ? 'block' : 'none' }}>
               <Suspense fallback={<div className="text-zinc-400 text-sm">Loading battle log...</div>}>
@@ -216,7 +198,6 @@ export default function App() {
                   databaseState={databaseState}
                   spriteCacheState={spriteCacheState}
                   speciesRosterState={speciesRosterState}
-                  liveCalcThreatPinsState={liveCalcThreatPinsState}
                 />
               </Suspense>
             </div>

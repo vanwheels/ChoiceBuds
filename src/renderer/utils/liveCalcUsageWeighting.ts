@@ -1,16 +1,18 @@
 /**
- * Live Calc Usage-Data-Backed Inference - Leg 1: a pure post-processing pass
- * that layers Pokemon Champions ranked-ladder usage data
- * (`ChampionsUsageEntry`, `services/championsBattleData.ts`) over an
- * already-computed `LiveCalcInference`, mirroring `liveCalcSpeedEngine.ts`'s
- * own "takes an inference, returns an updated copy" layering shape rather
- * than folding into `liveCalcEngine.ts`'s per-observation scanning. See
- * docs/investigations/live-calc-usage-weighted-inference-scope.md for the
- * resolved design questions this implements - only `applyUsageWeighting()`'s
- * mechanism below, not any change to the underlying physical-feasibility
- * math those observations already narrowed.
+ * Usage-Data-Backed Candidate Ranking - a pure post-processing pass that
+ * layers Pokemon Champions ranked-ladder usage data (`ChampionsUsageEntry`,
+ * `services/championsBattleData.ts`) over an already-narrowed set of
+ * nature/ability/item candidates. Originated as a Live Calc pass
+ * (`docs/investigations/live-calc-usage-weighted-inference-scope.md` has the
+ * resolved design questions `applyUsageWeighting()`'s mechanism below
+ * implements) - kept standalone after Live Calc's retirement (see TODO.md)
+ * since this is the piece slated to generalize onto the Calc popup's
+ * usage-data auto-populate (Regular Calc Usage-Data Auto-Populate, not yet
+ * scoped). `UsageWeightedAxes` below is deliberately narrowed to just the
+ * fields this pass actually reads/writes, not Live Calc's full former
+ * inference shape.
  *
- * Scoped to the nature/ability/item axes only this leg - stat-spread usage
+ * Scoped to the nature/ability/item axes only - stat-spread usage
  * (`ChampionsUsageEntry.statSpreads`) has no resolved single-axis mapping yet
  * (see the scope doc's "Not in scope" section) and is left to a future leg.
  *
@@ -49,7 +51,31 @@
 import type { NatureName } from '@smogon/calc/dist/data/interface';
 import { normalizeSlug } from './pokemonRules';
 import type { ChampionsUsageEntry, ChampionsUsageRankedEntry } from '../types/gameData';
-import type { LiveCalcInference, LiveCalcUsageRankedCandidate } from './liveCalcEngine';
+
+/** No-held-item sentinel - originated in the now-retired liveCalcEngine.ts, kept here since this file still matches item candidates against it. */
+export const NO_ITEM = 'None';
+
+export interface UsageRankedCandidate<T extends string = string> {
+  value: T;
+  percentage: number;
+}
+
+/**
+ * Minimal per-axis candidate shape this module operates on - narrowed from
+ * Live Calc's former full inference type to just the fields
+ * `applyUsageWeighting()` actually reads/writes, so this file compiles
+ * standalone now that `liveCalcEngine.ts` is gone. A caller's own richer type
+ * (e.g. a future Calc-popup inference) can satisfy this structurally without
+ * this file needing to know about it.
+ */
+export interface UsageWeightedAxes {
+  natureCandidates: NatureName[];
+  abilityCandidates: string[];
+  itemCandidates: string[];
+  natureUsageCandidates: UsageRankedCandidate<NatureName>[];
+  abilityUsageCandidates: UsageRankedCandidate[];
+  itemUsageCandidates: UsageRankedCandidate[];
+}
 
 /**
  * Ranks one axis's already-narrowed candidate list against a Champions
@@ -61,7 +87,7 @@ import type { LiveCalcInference, LiveCalcUsageRankedCandidate } from './liveCalc
 function rankCandidates<T extends string>(
   candidates: T[],
   ranked: ChampionsUsageRankedEntry[],
-): LiveCalcUsageRankedCandidate<T>[] {
+): UsageRankedCandidate<T>[] {
   if (candidates.length === 0) return [];
   const percentageBySlug = new Map(ranked.map(entry => [normalizeSlug(entry.name), entry.percentage]));
   const withUsage = candidates
@@ -77,18 +103,18 @@ function rankCandidates<T extends string>(
  * Fills `inference`'s `natureUsageCandidates`/`abilityUsageCandidates`/
  * `itemUsageCandidates` from `usage`, leaving every other field (including
  * the base `natureCandidates`/`abilityCandidates`/`itemCandidates` these are
- * derived from) untouched. Intended as the LAST pass in `useLiveCalc.ts`'s
- * pipeline, run after `inferDefenderStats()`/`inferDefenderSpeed()`/
- * `inferOpponentOffensiveStats()` have already produced their final
- * narrowed candidate lists for this recompute.
+ * derived from) untouched. Intended as a LAST pass over whatever pipeline
+ * has already produced its own final narrowed candidate lists for this
+ * recompute - generic over `T` so a caller's richer inference type passes
+ * through unchanged beyond the three usage-candidate fields this actually
+ * writes.
  *
  * `usage: null` (no Champions ranked-ladder page for this species at all,
  * `getChampionsUsage()`'s own resolved value in that case) is a full no-op:
- * every axis's usage view becomes an unranked mirror of its base candidates,
- * identical to `defaultInference()`'s own initial seeding - i.e. every axis
- * behaves exactly as it does today, unranked and unfiltered.
+ * every axis's usage view becomes an unranked mirror of its base candidates -
+ * i.e. every axis behaves as if unranked/unfiltered.
  */
-export function applyUsageWeighting(inference: LiveCalcInference, usage: ChampionsUsageEntry | null): LiveCalcInference {
+export function applyUsageWeighting<T extends UsageWeightedAxes>(inference: T, usage: ChampionsUsageEntry | null): T {
   if (!usage) {
     return {
       ...inference,

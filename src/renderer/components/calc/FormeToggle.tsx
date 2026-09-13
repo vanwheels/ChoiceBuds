@@ -2,10 +2,9 @@
  * FormeToggle.tsx - Forme-Family Toggle Row
  * Shared button-row toggle for a stat-forme or Mega-forme group (see
  * utils/calcFormes.ts's FormeFamily) - one button per name in the group,
- * highlighting whichever matches the panel's current species. Used by both
- * CalcPokemonPanel (attacker/Calc tab, which layers its own Mega-ability
- * side effect on top via onSelect) and LiveCalcDefenderPanel (species-only,
- * no ability tracked yet - see TODO.md's Live Calc Known-Ability Lock leg).
+ * highlighting whichever matches the panel's current species. Used by
+ * CalcPokemonPanel, which layers its own Mega-ability side effect on top
+ * via onSelect.
  */
 
 import { formeDisplayLabel } from '../../utils/calcFormes';

@@ -22,21 +22,9 @@
  * cutoff since they aren't usage data to begin with.
  *
  * A "Bounds Only" toggle (Leg 12, see TODO.md) suppresses the usage-based
- * spread rows entirely, leaving just the 3 fixed bound rows (and any Live
- * Calc rows - see below) - passed through as `boundsOnly` below. Distinct
- * from the Min Spread Usage cutoff (Leg 11), which only tunes how many
- * spread rows show, not whether they show at all.
- *
- * A threat also contributes 1-2 Live Calc rows when the caller supplies an
- * `inferredBound` (Live Calc -> Speed Tiers Tie-in, Leg 6, see TODO.md /
- * hooks/useLiveCalcThreatPins.ts) - a real turn-order-narrowed Speed range
- * for that exact species, pinned from the Live Calc tab. These are additive
- * (`isLiveCalcBound: true`), annotating the threat's generic usage rows
- * rather than replacing them - the usage spreads/bounds still show what's
- * statistically likely, while the Live Calc rows show what this specific
- * opponent's Pokémon has actually been observed to do. One row when the
- * narrowed range has collapsed to a single Speed value, two (min/max)
- * otherwise.
+ * spread rows entirely, leaving just the 3 fixed bound rows. Distinct from
+ * the Min Spread Usage cutoff (Leg 11), which only tunes how many spread
+ * rows show, not whether they show at all.
  */
 import type { ThreatSpeedBounds, ThreatSpeedProfile, TeamSpeedEntry } from './speedTiers';
 
@@ -57,10 +45,8 @@ export interface SpeedTierEntry {
   speed: number;
   /** Threat spread rows only - this spread's share of the species' real ranked usage. */
   percentage?: number;
-  /** Threat bound rows only - which reference tier this is: the 3 fixed generic ones, or a Live Calc-pinned observed range (see isLiveCalcBound). */
-  boundLabel?: 'Min' | 'Neutral' | 'Max' | 'Live' | 'Live Min' | 'Live Max';
-  /** True for a Live Calc-pinned row (Leg 6) - a real, turn-order-narrowed range for this exact opponent Pokémon, not a generic usage/bound number, so it renders distinctly from the dimmed generic bound rows. */
-  isLiveCalcBound?: boolean;
+  /** Threat bound rows only - which of the 3 fixed generic reference tiers this is. */
+  boundLabel?: 'Min' | 'Neutral' | 'Max';
 }
 
 export interface SpeedTierGroup {
@@ -71,11 +57,6 @@ export interface SpeedTierGroup {
 export interface ThreatTierInput {
   spriteUrl: string;
   profile: ThreatSpeedProfile;
-  /** Live Calc -> Speed Tiers Tie-in (Leg 6): a pinned, turn-order-narrowed
-   * Speed bound for this exact threat species (utils/speedTiers.ts::
-   * computeInferredThreatSpeedBound). Undefined when nothing's pinned for
-   * this species - the common case. */
-  inferredBound?: { min: number; max: number };
   /** This candidate's own defending types (Mega forms get their own, not
    * their base species' - see SpeedTiersPage.tsx's rosterCandidates). Carried
    * through from RosterCandidate so the "Threats Only" filter (Leg 9, see
@@ -107,7 +88,7 @@ export function buildSpeedTierEntries(
     speed: t.speed,
   }));
 
-  const threatRows: SpeedTierEntry[] = threats.flatMap(({ spriteUrl, profile, inferredBound }) => {
+  const threatRows: SpeedTierEntry[] = threats.flatMap(({ spriteUrl, profile }) => {
     const spreadRows: SpeedTierEntry[] = boundsOnly
       ? []
       : profile.spreads
@@ -130,40 +111,7 @@ export function buildSpeedTierEntries(
       boundLabel: label,
     }));
 
-    const liveCalcRows: SpeedTierEntry[] = !inferredBound
-      ? []
-      : inferredBound.min === inferredBound.max
-        ? [{
-            key: `threat-${profile.species}-live`,
-            kind: 'threat' as const,
-            species: profile.species,
-            spriteUrl,
-            speed: inferredBound.min,
-            boundLabel: 'Live' as const,
-            isLiveCalcBound: true,
-          }]
-        : [
-            {
-              key: `threat-${profile.species}-live-min`,
-              kind: 'threat' as const,
-              species: profile.species,
-              spriteUrl,
-              speed: inferredBound.min,
-              boundLabel: 'Live Min' as const,
-              isLiveCalcBound: true,
-            },
-            {
-              key: `threat-${profile.species}-live-max`,
-              kind: 'threat' as const,
-              species: profile.species,
-              spriteUrl,
-              speed: inferredBound.max,
-              boundLabel: 'Live Max' as const,
-              isLiveCalcBound: true,
-            },
-          ];
-
-    return [...spreadRows, ...boundRows, ...liveCalcRows];
+    return [...spreadRows, ...boundRows];
   });
 
   return [...teamRows, ...threatRows];

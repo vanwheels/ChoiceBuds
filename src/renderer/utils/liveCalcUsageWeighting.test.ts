@@ -1,39 +1,24 @@
 /**
- * Test suite for the pure Live Calc usage-weighting pass (Live Calc
- * Usage-Data-Backed Inference - Leg 1). Unlike liveCalcEngine.test.ts/
- * liveCalcSpeedEngine.test.ts, `applyUsageWeighting()` never touches
- * `@smogon/calc`'s own Generation data - it only reads/ranks the candidate
- * string arrays a `LiveCalcInference` already carries - so these tests build
- * a minimal literal `LiveCalcInference` fixture directly rather than routing
- * through `defaultInference()`/a real `gen` object.
+ * Test suite for the pure usage-weighting pass. `applyUsageWeighting()`
+ * never touches `@smogon/calc`'s own Generation data - it only reads/ranks
+ * the candidate string arrays a `UsageWeightedAxes` already carries - so
+ * these tests build a minimal literal fixture directly rather than routing
+ * through any real inference pipeline.
  */
 
 import { describe, expect, it } from 'vitest';
 import type { NatureName } from '@smogon/calc/dist/data/interface';
-import type { LiveCalcInference } from './liveCalcEngine';
-import { NO_ITEM } from './liveCalcEngine';
-import { applyUsageWeighting } from './liveCalcUsageWeighting';
+import { NO_ITEM, applyUsageWeighting, type UsageWeightedAxes } from './liveCalcUsageWeighting';
 import type { ChampionsUsageEntry } from '../types/gameData';
 
-function baseInference(overrides: Partial<LiveCalcInference> = {}): LiveCalcInference {
+function baseInference(overrides: Partial<UsageWeightedAxes> = {}): UsageWeightedAxes {
   return {
-    defBound: { min: 0, max: 32 },
-    spdBound: { min: 0, max: 32 },
-    atkBound: { min: 0, max: 32 },
-    spaBound: { min: 0, max: 32 },
-    speedBound: { min: 0, max: 32 },
     natureCandidates: ['Jolly', 'Adamant', 'Hardy'] as NatureName[],
     abilityCandidates: ['Sand Veil', 'Rough Skin'],
     itemCandidates: [NO_ITEM, 'Chople Berry', 'Life Orb'],
     natureUsageCandidates: [],
     abilityUsageCandidates: [],
     itemUsageCandidates: [],
-    physicalObservationCount: 0,
-    specialObservationCount: 0,
-    theirPhysicalObservationCount: 0,
-    theirSpecialObservationCount: 0,
-    speedObservationCount: 0,
-    contradictions: [],
     ...overrides,
   };
 }
@@ -62,7 +47,6 @@ describe('applyUsageWeighting - no usage data', () => {
       { value: NO_ITEM, percentage: 0 }, { value: 'Chople Berry', percentage: 0 }, { value: 'Life Orb', percentage: 0 },
     ]);
     // Every other field passes through untouched.
-    expect(result.defBound).toEqual(inference.defBound);
     expect(result.natureCandidates).toEqual(inference.natureCandidates);
   });
 });

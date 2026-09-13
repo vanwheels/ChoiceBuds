@@ -47,11 +47,9 @@ export interface UseGameDataReturn {
 
   // Species learnset operations (validates real legal movepool/abilities per species)
   getSpeciesLearnset: (species: string, gender?: Gender) => Promise<SpeciesLearnsetEntry | null>;
-  // Cache-only (never triggers a live fetch) - Live Calc Feedback Pass 2, Leg
-  // 5: exposed so liveCalcEngine.ts's defaultInference() can seed a
-  // species' real ability pool from this pipeline instead of @smogon/calc's
-  // own bundled (and sometimes stale/incomplete - see that function's own
-  // comment) species data.
+  // Cache-only (never triggers a live fetch) - lets a caller seed a species'
+  // real ability pool from this pipeline instead of @smogon/calc's own
+  // bundled (and sometimes stale/incomplete) species data.
   getCachedSpeciesLearnset: (species: string, gender?: Gender) => SpeciesLearnsetEntry | null;
   getEnrichedSpeciesOptions: (species: string, gender?: Gender) => Promise<{ moves: MoveData[]; abilities: AbilityData[] }>;
 
