@@ -55,10 +55,15 @@ splitting scoping from building). Not-yet-scoped items below.
 
 - **[Regular Calc Popup Launcher] — Leg 1** *(Last touched: 2026-09-13 ·
   Re-checks: 0)*
-  Make `CalcPage` launchable as an overlay from anywhere in the app rather
-  than tab-locked. Supersedes the former "Live Calc Global Popup Launcher"
-  item. Not yet scoped. See
-  `docs/investigations/regular-calc-popup-scope.md`.
+  Scoped 2026-09-13 (see `docs/investigations/regular-calc-popup-scope.md`'s
+  "Popup Launcher — Leg 1 scoping" section for the full plan). Calc tab is
+  removed from the sidebar entirely; `CalcPage` becomes reachable only via a
+  new persistent floating launcher button visible on every tab. The popup
+  (`CalcPopup.tsx`, new) mirrors `App.tsx`'s existing `visitedTabs`
+  lazy-once/hidden-after-first-open pattern rather than hoisting
+  `useDamageCalc` into `App.tsx` directly, so its in-progress matchup
+  survives close/reopen without pulling `@smogon/calc` out from behind the
+  lazy-load boundary. Ready to implement.
 
 - **[Regular Calc Usage-Data Auto-Populate] — Leg 1** *(Last touched:
   2026-09-13 · Re-checks: 0)*

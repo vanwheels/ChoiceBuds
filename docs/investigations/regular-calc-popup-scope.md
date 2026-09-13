@@ -69,3 +69,75 @@ This session stopped at the pivot decision, matching the project's usual
 practice of not turning a scoping pass into legs in the same sitting it's
 decided in. See `TODO.md`'s Current Milestone section for the resulting
 not-yet-scoped items.
+
+## Popup Launcher — Leg 1 scoping (2026-09-13, continued)
+
+Scoped in a follow-up session, same day. Three product calls, Vanny's:
+
+- **Calc tab is removed, not kept alongside the popup.** The sidebar's
+  `Calc` entry (`Sidebar.tsx`'s `MAIN_NAV_ITEMS`) and `App.tsx`'s `'calc'`
+  `ActiveTab` case go away entirely — the popup is the only way to reach
+  `CalcPage` going forward.
+- **Trigger is a persistent floating button**, not a sidebar click. Visible
+  on every tab regardless of which one is active or whether the sidebar is
+  collapsed — needed since the sidebar's Calc entry no longer exists to
+  double as the trigger.
+- **In-progress matchup persists across close/reopen**, matching how every
+  other tab already behaves (`App.tsx`'s `visitedTabs` pattern) rather than
+  resetting each time the popup opens.
+
+### The architecture conflict this created, and how it's resolved
+
+The straightforward way to satisfy "persists across close/reopen" would be
+lifting `useDamageCalc()`'s instantiation up into `App.tsx`, next to
+`teamsState`/`gameDataState`/etc. — that's the existing pattern for state
+that needs to outlive a component's mount/unmount.
+
+That's wrong here specifically: `useDamageCalc.ts` has a **static top-level
+import of `@smogon/calc`**, and `App.tsx`'s own header comment documents
+*why* `CalcPage` (and therefore this hook) is loaded through
+`React.lazy()` today — `@smogon/calc` is "the heaviest dependency in the
+app," and the lazy boundary exists so a Teams-only session never pays to
+parse/load it. Importing `useDamageCalc` directly in `App.tsx` would pull
+that import out from behind the lazy boundary and load it on every launch,
+regardless of whether the popup is ever opened — a real regression, not a
+minor tradeoff.
+
+**Resolution:** reuse `App.tsx`'s existing `visitedTabs` trick instead of
+inventing new architecture. Today, a tab that's been opened once stays
+mounted (`display:none` when inactive) rather than unmounting, and is only
+`React.lazy()`-imported the first time it's actually visited. The popup
+gets the same treatment: a `hasOpenedCalcPopup` flag (parallel to
+`visitedTabs`) gates a lazy-loaded `CalcPopup` host that, once opened once,
+stays mounted-but-hidden rather than unmounting on close — so
+`useDamageCalc`'s state (owned inside `CalcPopup`, not hoisted to
+`App.tsx`) survives close/reopen for the rest of the session, and
+`@smogon/calc` still only loads the first time a user actually opens the
+popup. No new pattern, no eager-load regression.
+
+### Resulting shape
+
+- `CalcPopup.tsx` (new, lazy-loaded like today's `CalcPage` import in
+  `App.tsx`): wraps the existing `CalcPage` content in overlay chrome.
+  Reuses `Modal.tsx`'s portal/animation shell but needs its own, much wider
+  `panelClassName` — `CalcPage`'s two move grids + result panel + 3-column
+  field row don't fit `Modal.tsx`'s existing `max-w-3xl` default. A close
+  button in a header bar (existing modals don't have overlay-click/Escape
+  dismissal per `Modal.tsx`'s own note — matching that, not adding new
+  dismissal behavior here).
+- `App.tsx`: drops the `'calc'` `ActiveTab` variant and its
+  `visitedTabs.has('calc')` block; adds `isCalcPopupOpen`/
+  `hasOpenedCalcPopup` state and renders `<CalcPopup>` the same
+  lazy-once/hidden-after way `visitedTabs` renders other tabs, plus the new
+  floating launcher button (rendered unconditionally, outside the
+  per-tab `<main>` content so it survives tab switches).
+- `Sidebar.tsx`: remove the `calc` entry from `MAIN_NAV_ITEMS` (and its
+  `CalcIcon` import, unless the launcher button reuses it — likely does,
+  for visual continuity).
+- No changes needed to `CalcPage.tsx`/`useDamageCalc.ts`/the rest of
+  `components/calc/*` — they're relocated wholesale into the new overlay
+  chrome, not modified.
+
+Ready to implement as a single leg — the pieces above don't have a useful
+half-shipped midpoint (a launcher button with no popup, or a popup with no
+way to open it, are equally not-useful on their own).
