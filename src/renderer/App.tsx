@@ -23,19 +23,20 @@ import TeamsPage from './components/TeamsPage';
 import LoadingScreen from './components/LoadingScreen';
 import Sidebar from './components/Sidebar';
 import ReleaseNotesModal from './components/ReleaseNotesModal';
+import { CalcIcon } from './components/icons/SidebarIcons';
 
 // Lazy-loaded so each tab's code is only fetched/parsed once a user actually
-// opens it, not on every app startup - CalcPage in particular pulls in
-// @smogon/calc, the app's heaviest dependency.
+// opens it, not on every app startup - CalcPopup in particular pulls in
+// @smogon/calc (via CalcPage/useDamageCalc), the app's heaviest dependency.
 const BoxPage = lazy(() => import('./components/BoxPage'));
-const CalcPage = lazy(() => import('./components/calc/CalcPage'));
+const CalcPopup = lazy(() => import('./components/CalcPopup'));
 const BattleLogPage = lazy(() => import('./components/battlelog/BattleLogPage'));
 const StatisticsPage = lazy(() => import('./components/statistics/StatisticsPage'));
 const TypeMatchupPage = lazy(() => import('./components/typematchup/TypeMatchupPage'));
 const SpeedTiersPage = lazy(() => import('./components/speedtiers/SpeedTiersPage'));
 const SettingsPage = lazy(() => import('./components/SettingsPage'));
 
-export type ActiveTab = 'teams' | 'box' | 'calc' | 'battles' | 'statistics' | 'typeMatchup' | 'speedTiers' | 'settings';
+export type ActiveTab = 'teams' | 'box' | 'battles' | 'statistics' | 'typeMatchup' | 'speedTiers' | 'settings';
 
 /**
  * Main application shell component
@@ -67,6 +68,15 @@ export default function App() {
   const goToTab = (tab: ActiveTab) => {
     setActiveTab(tab);
     setVisitedTabs(prev => prev.has(tab) ? prev : new Set(prev).add(tab));
+  };
+  // Same lazy-once/hidden-after-first-open lifecycle as visitedTabs above,
+  // applied to the Calc popup instead of a sidebar tab - see CalcPopup.tsx's
+  // header comment for why it can't just be `{isCalcPopupOpen && <CalcPopup/>}`.
+  const [isCalcPopupOpen, setIsCalcPopupOpen] = useState(false);
+  const [hasOpenedCalcPopup, setHasOpenedCalcPopup] = useState(false);
+  const openCalcPopup = () => {
+    setIsCalcPopupOpen(true);
+    setHasOpenedCalcPopup(true);
   };
   const teamsState = useTeams();
   const databaseState = useDatabase();
@@ -144,20 +154,6 @@ export default function App() {
               </Suspense>
             </div>
           )}
-          {visitedTabs.has('calc') && (
-            <div style={{ display: activeTab === 'calc' ? 'block' : 'none' }}>
-              <Suspense fallback={<div className="text-zinc-400 text-sm">Loading calculator...</div>}>
-                <CalcPage
-                  gameDataState={gameDataState}
-                  teamsState={teamsState}
-                  databaseState={databaseState}
-                  savedPokemonState={savedPokemonState}
-                  spriteCacheState={spriteCacheState}
-                  settingsState={settingsState}
-                />
-              </Suspense>
-            </div>
-          )}
           {visitedTabs.has('battles') && (
             <div style={{ display: activeTab === 'battles' ? 'block' : 'none' }}>
               <Suspense fallback={<div className="text-zinc-400 text-sm">Loading battle log...</div>}>
@@ -210,6 +206,34 @@ export default function App() {
             </div>
           )}
         </main>
+
+        {/* Rendered outside <main> so it survives tab switches - visible
+            regardless of which tab is active or whether the sidebar is
+            collapsed, since the Calc tab it replaces no longer exists to
+            double as the trigger (Regular Calc Popup Launcher Leg 1). */}
+        <button
+          onClick={openCalcPopup}
+          aria-label="Open Calc"
+          className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-accent-gold px-4 py-3 font-bold text-zinc-900 shadow-lg transition-transform cursor-pointer hover:scale-105"
+        >
+          <CalcIcon />
+          Calc
+        </button>
+
+        {hasOpenedCalcPopup && (
+          <Suspense fallback={null}>
+            <CalcPopup
+              isOpen={isCalcPopupOpen}
+              onClose={() => setIsCalcPopupOpen(false)}
+              gameDataState={gameDataState}
+              teamsState={teamsState}
+              databaseState={databaseState}
+              savedPokemonState={savedPokemonState}
+              spriteCacheState={spriteCacheState}
+              settingsState={settingsState}
+            />
+          </Suspense>
+        )}
       </div>
     </MotionConfig>
   );
