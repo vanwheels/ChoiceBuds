@@ -48,6 +48,9 @@ interface CalcPopupProps {
   savedPokemonState: UseSavedPokemonReturn;
   spriteCacheState: UseSpriteCacheReturn;
   settingsState: UseSettingsReturn;
+  /** Forwarded straight through to CalcPage - see its header comment (Regular Calc Battle Log Integration Leg 1). */
+  pendingPrefill?: { species: string } | null;
+  onPrefillApplied?: () => void;
 }
 
 const overlayVariants = {

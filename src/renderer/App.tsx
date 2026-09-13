@@ -74,9 +74,16 @@ export default function App() {
   // header comment for why it can't just be `{isCalcPopupOpen && <CalcPopup/>}`.
   const [isCalcPopupOpen, setIsCalcPopupOpen] = useState(false);
   const [hasOpenedCalcPopup, setHasOpenedCalcPopup] = useState(false);
-  const openCalcPopup = () => {
+  // Set only by a Battle Log opponent tile's "Calc" trigger
+  // (RecordMatchForm.tsx) - the plain floating launcher below calls
+  // openCalcPopup() with no argument, leaving this untouched. CalcPage
+  // applies it once (species -> pokemon2) then clears it via
+  // onPrefillApplied so it doesn't reapply on the popup's later re-renders.
+  const [calcPrefill, setCalcPrefill] = useState<{ species: string } | null>(null);
+  const openCalcPopup = (prefill?: { species: string }) => {
     setIsCalcPopupOpen(true);
     setHasOpenedCalcPopup(true);
+    if (prefill) setCalcPrefill(prefill);
   };
   const teamsState = useTeams();
   const databaseState = useDatabase();
@@ -162,6 +169,7 @@ export default function App() {
                   teamsState={teamsState}
                   speciesRosterState={speciesRosterState}
                   spriteCacheState={spriteCacheState}
+                  openCalcPopup={openCalcPopup}
                 />
               </Suspense>
             </div>
@@ -212,7 +220,7 @@ export default function App() {
             collapsed, since the Calc tab it replaces no longer exists to
             double as the trigger (Regular Calc Popup Launcher Leg 1). */}
         <button
-          onClick={openCalcPopup}
+          onClick={() => openCalcPopup()}
           aria-label="Open Calc"
           className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-accent-gold px-4 py-3 font-bold text-zinc-900 shadow-lg transition-transform cursor-pointer hover:scale-105"
         >
@@ -231,6 +239,8 @@ export default function App() {
               savedPokemonState={savedPokemonState}
               spriteCacheState={spriteCacheState}
               settingsState={settingsState}
+              pendingPrefill={calcPrefill}
+              onPrefillApplied={() => setCalcPrefill(null)}
             />
           </Suspense>
         )}

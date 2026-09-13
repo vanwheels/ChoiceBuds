@@ -23,9 +23,11 @@ interface BattleLogPageProps {
   teamsState: UseTeamsReturn;
   speciesRosterState: UseSpeciesRosterReturn;
   spriteCacheState: UseSpriteCacheReturn;
+  /** Threaded down to RecordMatchForm's per-opponent-tile "Calc" trigger (Regular Calc Battle Log Integration Leg 1) - see App.tsx's openCalcPopup. */
+  openCalcPopup: (prefill?: { species: string }) => void;
 }
 
-export default function BattleLogPage({ battlesState, teamsState, speciesRosterState, spriteCacheState }: BattleLogPageProps) {
+export default function BattleLogPage({ battlesState, teamsState, speciesRosterState, spriteCacheState, openCalcPopup }: BattleLogPageProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [editingBattle, setEditingBattle] = useState<Battle | null>(null);
 
@@ -36,6 +38,7 @@ export default function BattleLogPage({ battlesState, teamsState, speciesRosterS
         battlesState={battlesState}
         speciesRosterState={speciesRosterState}
         spriteCacheState={spriteCacheState}
+        openCalcPopup={openCalcPopup}
         editingBattle={editingBattle ?? undefined}
         onRecorded={() => {
           setIsRecording(false);

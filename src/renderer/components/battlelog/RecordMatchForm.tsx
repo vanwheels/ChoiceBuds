@@ -48,6 +48,8 @@ interface RecordMatchFormProps {
   spriteCacheState: UseSpriteCacheReturn;
   onRecorded: () => void;
   onCancel: () => void;
+  /** Opens the global Calc popup, optionally prefilling pokemon2's species - wired to each opponent tile's "Calc" trigger below (Regular Calc Battle Log Integration Leg 1). */
+  openCalcPopup: (prefill?: { species: string }) => void;
   /** When set, the form edits this already-saved battle instead of creating a new one - see the header doc above. */
   editingBattle?: Battle;
 }
@@ -132,7 +134,7 @@ function buildMatchRecord(args: {
   };
 }
 
-export default function RecordMatchForm({ teamsState, battlesState, speciesRosterState, spriteCacheState, onRecorded, onCancel, editingBattle }: RecordMatchFormProps) {
+export default function RecordMatchForm({ teamsState, battlesState, speciesRosterState, spriteCacheState, onRecorded, onCancel, openCalcPopup, editingBattle }: RecordMatchFormProps) {
   const eligibleTeams = teamsState.teams.filter(t => t.pokemon.length >= 4);
   const priorOpponentNames = Array.from(
     new Set(battlesState.battles.map(b => b.opponentName).filter((n): n is string => !!n))
@@ -295,7 +297,10 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
               selected={opponentBroughtIds.includes(o.id)}
               onToggle={() => toggleOpponentBrought(o.id)}
               trailing={
-                <button onClick={() => removeOpponent(o.id)} title="Remove" className="text-zinc-500 hover:text-red-400 cursor-pointer">×</button>
+                <>
+                  <button onClick={() => openCalcPopup({ species: o.species })} title="Open in Calc" className="text-xs text-zinc-500 hover:text-accent-gold cursor-pointer">Calc</button>
+                  <button onClick={() => removeOpponent(o.id)} title="Remove" className="text-zinc-500 hover:text-red-400 cursor-pointer">×</button>
+                </>
               }
             />
           ))}

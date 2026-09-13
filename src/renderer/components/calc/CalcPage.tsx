@@ -11,7 +11,7 @@
  * Teams-only session never has to parse/load the calc engine.
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { useDamageCalc, ALL_REGULATION_IDS } from '../../hooks/useDamageCalc';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
@@ -34,10 +34,14 @@ interface CalcPageProps {
   savedPokemonState: UseSavedPokemonReturn;
   spriteCacheState: UseSpriteCacheReturn;
   settingsState: UseSettingsReturn;
+  /** Set once by a Battle Log opponent tile's "Calc" trigger (Regular Calc Battle Log Integration Leg 1) - applied to pokemon2 by the effect below, then cleared via onPrefillApplied so it doesn't reapply on unrelated re-renders. Undefined/null outside that flow (e.g. the plain floating launcher). */
+  pendingPrefill?: { species: string } | null;
+  onPrefillApplied?: () => void;
 }
 
 export default function CalcPage({
   gameDataState, teamsState, databaseState, savedPokemonState, spriteCacheState, settingsState,
+  pendingPrefill, onPrefillApplied,
 }: CalcPageProps) {
   const [isSavedSetsOpen, setIsSavedSetsOpen] = useState(false);
   // Computed inside each side's CalcPokemonPanel (that's where the fetched
@@ -57,6 +61,17 @@ export default function CalcPage({
     pokemon1NatureEffect, pokemon2NatureEffect, pokemon1Speed, pokemon2Speed,
     p1Results, p2Results, selectedResult, setSelectedResult, selectedEntry,
   } = calcState;
+
+  // One-shot prefill from a Battle Log opponent tile - fires once per
+  // distinct pendingPrefill (a fresh object each trigger, see App.tsx's
+  // openCalcPopup), then clears it immediately so it doesn't reapply on
+  // this popup's later, unrelated re-renders.
+  useEffect(() => {
+    if (!pendingPrefill) return;
+    setPokemon2({ species: pendingPrefill.species });
+    onPrefillApplied?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingPrefill]);
 
   return (
     <div className="flex flex-col gap-2">
