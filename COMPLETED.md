@@ -18,6 +18,22 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Regular Calc Usage-Data Auto-Populate: Nature/Ability/Item/Move
+  Ranking] - Leg 1** (2026-09-13) - see commit `4bdb771`. `CalcPokemonPanel`
+  now keeps its fetched `ChampionsUsageEntry` in state instead of discarding
+  it after the initial top-pick fill, and re-ranks nature/ability/item/move
+  against it via `applyUsageWeighting()` (`liveCalcUsageWeighting.ts`,
+  extended with a 4th `moveCandidates`/`moveUsageCandidates` axis mirroring
+  the existing three) - so `CalcAutocomplete`'s Item/Ability pickers and the
+  Nature `<select>` show every ranked alternative with its ladder %, not
+  just the #1 pick. Move ranking needed extra plumbing since the move
+  pickers live in the sibling `CalcMoveGrid` (a `CalcPage` child, not a
+  `CalcPokemonPanel` child) - each panel takes a `moveOptions` prop purely
+  to rank that axis and lifts the result to `CalcPage` via
+  `onMoveUsageChange`. See
+  `docs/investigations/regular-calc-popup-scope.md`'s "Usage-Data
+  Auto-Populate" section for the full scoping.
+
 - **[Regular Calc Popup Launcher] - Leg 1** (2026-09-13) - see commit
   `84f148f`. Sidebar's Calc tab removed entirely; `CalcPage` is now reached
   via a persistent floating launcher button visible on every tab, opening it

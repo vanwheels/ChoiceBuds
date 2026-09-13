@@ -53,13 +53,18 @@ Not yet scoped into legs - this session stopped at the pivot decision
 rather than drafting legs in the same sitting (see project convention of
 splitting scoping from building). Not-yet-scoped items below.
 
-- **[Regular Calc Usage-Data Auto-Populate] — Leg 1** *(Last touched:
-  2026-09-13 · Re-checks: 0)*
-  Default the popup's opponent side to per-axis top-usage picks (multiple
-  options per stat, not a single guess) via `championsbattledata.com`
-  ranking, generalizing `utils/liveCalcUsageWeighting.ts` off Live Calc and
-  onto the popup. Not yet scoped. See
-  `docs/investigations/regular-calc-popup-scope.md`.
+- **[Regular Calc Usage-Data Auto-Populate: SP Ranked-Spread Chips] — Leg
+  2** *(Last touched: 2026-09-13 · Re-checks: 0)*
+  Scoped 2026-09-13 alongside Leg 1 — see
+  `docs/investigations/regular-calc-popup-scope.md`'s "Usage-Data
+  Auto-Populate" section. Stat Points can't use Leg 1's "annotate the
+  existing dropdown" pattern (`CalcStatRows.tsx` has 6 free numeric inputs,
+  no dropdown, and usage ranks whole 6-stat spreads, not one stat at a
+  time), so this is a new small chip-row component near `CalcStatRows`
+  listing `usage.statSpreads`'s ranked spreads; clicking one writes all 6
+  `sps` values via the existing `onChange({ sps })`. Leg 1 shipped (see
+  `COMPLETED.md`) and kept the `ChampionsUsageEntry` in `CalcPokemonPanel.tsx`
+  state this leg reuses. Ready to implement.
 
 - **[Regular Calc Battle Log Integration] — Leg 1** *(Last touched:
   2026-09-13 · Re-checks: 0)*

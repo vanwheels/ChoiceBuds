@@ -141,3 +141,93 @@ popup. No new pattern, no eager-load regression.
 Ready to implement as a single leg — the pieces above don't have a useful
 half-shipped midpoint (a launcher button with no popup, or a popup with no
 way to open it, are equally not-useful on their own).
+
+## Usage-Data Auto-Populate — Leg scoping (2026-09-13, continued)
+
+Scoped in a follow-up session, same day, after the Popup Launcher leg
+shipped. Started from a wrong assumption worth recording: the milestone
+description above says "default the popup's **opponent side**" to
+usage-ranked picks, but `CalcPage`/`useDamageCalc.ts` has no player/opponent
+concept at all — `pokemon1`/`pokemon2` are fully symmetric, and a
+single-top-pick usage auto-fill (`CalcPokemonPanel.tsx`'s
+`autoFillFromUsage`) already runs identically on **both** panels whenever a
+species is picked from the dropdown (ability/item/nature/SPs/all 4 moves,
+each just the #1 `ChampionsUsageEntry` row). So "opponent side" was Live
+Calc-era framing that doesn't map onto the real architecture — three product
+calls, Vanny's, resolve it:
+
+- **Applies to both panels**, not one. Matches how the existing single-pick
+  version already treats them, and doesn't couple this leg to the separate
+  not-yet-scoped Battle Log Integration leg.
+- **UI pattern: annotate + reorder the existing pickers, don't build a
+  separate candidate-list panel.** Species-select still auto-fills the #1
+  usage pick into each field exactly as today; what's new is that the
+  picker each field already uses shows the other ranked options (with their
+  ladder %) so picking an alternate is just a normal selection, not a new
+  interaction model.
+- **All 5 axes** (nature/ability/item/SPs/moves), not just the 3
+  `applyUsageWeighting()` already ranks (nature/ability/item). SPs and moves
+  need new ranking logic (see below).
+
+### The SP structural snag, and its resolution
+
+`applyUsageWeighting()`'s "annotate + reorder a picker" pattern assumes a
+single-value axis with an existing dropdown — true for item/ability
+(`CalcAutocomplete`, flat `string[]` options) and nature (a native
+`<select>` over `natureOptions`), and true enough for moves (each of
+`CalcMoveGrid`'s 4 slots is also a `CalcAutocomplete` over a flat move-name
+list). It's **not** true for Stat Points: `CalcStatRows.tsx` has no
+dropdown at all — 6 independent numeric inputs (HP/Atk/Def/SpA/SpD/Spe) —
+and `ChampionsUsageEntry.statSpreads` ranks whole 6-stat combos, not one
+stat at a time, so there's nothing to "reorder."
+
+**Resolution:** SPs get their own small dedicated element instead of a
+dropdown — a compact ranked-spread chip row (e.g. "#1 252/0/0/252/4/0 ·34%",
+"#2 ...") placed near `CalcStatRows`. Clicking a chip writes all 6
+`sps` values at once via the existing `onChange({ sps })`. This is the one
+axis where "annotate the existing picker" doesn't apply, by construction of
+the data shape, not by product preference.
+
+### Resulting shape (two legs, not one)
+
+Separable and each independently useful, unlike the Popup Launcher leg —
+split per the project's smaller-slice preference:
+
+**Leg 1 — nature/ability/item/move ranking:**
+- `liveCalcUsageWeighting.ts`: add a `moveCandidates`/`moveUsageCandidates`
+  pair to `UsageWeightedAxes` (mirrors the existing 3 axes exactly — moves
+  are just a 4th same-shaped single-value axis) so `applyUsageWeighting()`
+  covers all 4 dropdown-shaped axes. `rankCandidates()`'s existing filter/
+  sort/never-empty-fallback logic needs no changes.
+- `CalcAutocomplete.tsx`: extend to accept optional per-option usage
+  percentages (e.g. an `Array<{value: string; percentage?: number}>` in
+  place of the plain `string[]`, or a parallel optional map — options
+  carrying a percentage sort first by rank, then the rest fall back to
+  today's alphabetical order) and render a muted `%` badge beside each
+  ranked option in the dropdown list. Used by item/ability/move call sites;
+  species keeps passing plain strings (no percentage concept there),
+  unaffected.
+- `CalcPokemonPanel.tsx`: `autoFillFromUsage`'s already-fetched
+  `ChampionsUsageEntry` needs to be kept in state (it's currently fetched
+  and then discarded once applied) so it's available to feed
+  `applyUsageWeighting()` on every render, not just at the selection
+  moment. Nature's native `<select>` gets the same sort-then-badge
+  treatment inline (it doesn't go through `CalcAutocomplete`). Existing
+  top-pick auto-fill-on-select behavior is unchanged — this only affects
+  what the picker shows once open.
+- No changes needed to `useDamageCalc.ts`/`damageCalcEngine.ts` — this is
+  presentation-layer ranking over data the panel already fetches.
+
+**Leg 2 — SP ranked-spread chips:**
+- New small component (e.g. `CalcStatSpreadChips.tsx`) rendering
+  `usage.statSpreads` (already sorted by the API) as clickable chips,
+  reusing the `ChampionsUsageEntry` Leg 1's state change already keeps
+  around in `CalcPokemonPanel.tsx` — depends on Leg 1 landing first for
+  that plumbing, not reachable standalone.
+- Sits near `CalcStatRows` in `CalcPokemonPanel.tsx`'s layout; clicking a
+  chip is a plain `onChange({ sps: chip.points })`.
+
+Both legs: keep the async-fetch guard `autoFillFromUsage` already uses
+(`autoFillRequestRef`) governing when the kept-around usage state updates,
+so a fast species swap can't have a slower fetch clobber a newer one —
+same rule, just one more piece of state to gate.
