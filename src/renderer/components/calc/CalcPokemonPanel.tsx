@@ -36,7 +36,11 @@
  * `moveOptions`/`onMoveUsageChange` exist purely for that ranking - the
  * actual move pickers live in the sibling CalcMoveGrid (rendered by
  * CalcPage, not here), so the computed move-percentage map is lifted up via
- * `onMoveUsageChange` rather than rendered in this component.
+ * `onMoveUsageChange` rather than rendered in this component. Stat Points
+ * don't fit that same annotate-a-dropdown shape (usage ranks whole 6-stat
+ * spreads, not one stat at a time), so `usage.statSpreads` is instead
+ * rendered as its own chip row below CalcStatRows (CalcStatSpreadChips.tsx,
+ * Leg 2) - picking a chip writes all 6 `sps` values via `onChange({ sps })`.
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -63,6 +67,7 @@ import CalcAutocomplete from './CalcAutocomplete';
 import SavedSetPicker from '../SavedSetPicker';
 import SaveToLibraryDialog from '../SaveToLibraryDialog';
 import CalcStatRows from './CalcStatRows';
+import CalcStatSpreadChips from './CalcStatSpreadChips';
 import CalcTeamTray from './CalcTeamTray';
 import FormeToggle from './FormeToggle';
 
@@ -388,6 +393,14 @@ export default function CalcPokemonPanel({
         onChangeSp={(key, value) => onChange({ sps: { ...state.sps, [key]: value } })}
         onChangeBoost={(key, value) => onChange({ boosts: { ...state.boosts, [key]: value } })}
       />
+
+      {usage && (
+        <CalcStatSpreadChips
+          statSpreads={usage.statSpreads}
+          currentSps={state.sps}
+          onSelect={(sps) => onChange({ sps })}
+        />
+      )}
 
       <AnimatePresence>
         {pendingSave && (
