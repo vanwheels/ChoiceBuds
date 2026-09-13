@@ -53,18 +53,6 @@ Not yet scoped into legs - this session stopped at the pivot decision
 rather than drafting legs in the same sitting (see project convention of
 splitting scoping from building). Not-yet-scoped items below.
 
-- **[Regular Calc Popup Launcher] — Leg 1** *(Last touched: 2026-09-13 ·
-  Re-checks: 0)*
-  Scoped 2026-09-13 (see `docs/investigations/regular-calc-popup-scope.md`'s
-  "Popup Launcher — Leg 1 scoping" section for the full plan). Calc tab is
-  removed from the sidebar entirely; `CalcPage` becomes reachable only via a
-  new persistent floating launcher button visible on every tab. The popup
-  (`CalcPopup.tsx`, new) mirrors `App.tsx`'s existing `visitedTabs`
-  lazy-once/hidden-after-first-open pattern rather than hoisting
-  `useDamageCalc` into `App.tsx` directly, so its in-progress matchup
-  survives close/reopen without pulling `@smogon/calc` out from behind the
-  lazy-load boundary. Ready to implement.
-
 - **[Regular Calc Usage-Data Auto-Populate] — Leg 1** *(Last touched:
   2026-09-13 · Re-checks: 0)*
   Default the popup's opponent side to per-axis top-usage picks (multiple

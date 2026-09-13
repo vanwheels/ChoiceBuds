@@ -18,6 +18,16 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Regular Calc Popup Launcher] - Leg 1** (2026-09-13) - see commit
+  `84f148f`. Sidebar's Calc tab removed entirely; `CalcPage` is now reached
+  via a persistent floating launcher button visible on every tab, opening it
+  in a new `CalcPopup.tsx` overlay. In-progress matchup persists across
+  close/reopen since `CalcPopup` stays mounted (visibility-toggled, not
+  unmounted) once opened for the first time, rather than hoisting
+  `useDamageCalc` into `App.tsx` - see
+  `docs/investigations/regular-calc-popup-scope.md`'s "Popup Launcher - Leg
+  1 scoping" section for the full architecture reasoning.
+
 - **[Live Calc Retirement] - Leg 1** (2026-09-13) - see commit `cc55a5d`.
   Ripped the Live Calc tab, `liveCalcEngine.ts`/`liveCalcSpeedEngine.ts`/
   `useLiveCalc.ts`, `components/livecalc/*`, and the item-list config that
