@@ -18,6 +18,16 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Regular Calc Usage-Data Auto-Populate: SP Ranked-Spread Chips] - Leg
+  2** (2026-09-13) - see commit `940dbf7`. Stat Points couldn't reuse Leg
+  1's annotate-the-existing-dropdown pattern (`CalcStatRows.tsx` has 6 free
+  numeric inputs, no dropdown, and usage ranks whole 6-stat spreads rather
+  than one stat at a time) - added `CalcStatSpreadChips.tsx`, a small
+  chip-row rendered below `CalcStatRows` that lists `usage.statSpreads`'s
+  ranked spreads; clicking one writes all 6 `sps` values via the existing
+  `onChange({ sps })`. Reuses the `ChampionsUsageEntry` Leg 1 already kept
+  in `CalcPokemonPanel.tsx` state.
+
 - **[Regular Calc Usage-Data Auto-Populate: Nature/Ability/Item/Move
   Ranking] - Leg 1** (2026-09-13) - see commit `4bdb771`. `CalcPokemonPanel`
   now keeps its fetched `ChampionsUsageEntry` in state instead of discarding
