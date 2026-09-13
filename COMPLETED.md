@@ -18,6 +18,18 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Live Calc Retirement] - Leg 1** (2026-09-13) - see commit `cc55a5d`.
+  Ripped the Live Calc tab, `liveCalcEngine.ts`/`liveCalcSpeedEngine.ts`/
+  `useLiveCalc.ts`, `components/livecalc/*`, and the item-list config that
+  only fed its inference, per the Regular Calc Popup pivot (see
+  `docs/investigations/regular-calc-popup-scope.md`). Also removed the
+  Live Calc -> Speed Tiers pin tie-in (`useLiveCalcThreatPins.ts` and the
+  `isLiveCalcBound` plumbing), which had no other producer once the panel
+  it lived on was gone. `liveCalcUsageWeighting.ts` was kept standalone
+  (its Live Calc type imports replaced with a local, narrowed type) since
+  it's slated to generalize onto the popup's usage-data auto-populate in a
+  later, not-yet-scoped leg.
+
 - **[Calc Result Panel SP Display Fix] - Leg 1** (2026-09-12) - see commit
   `6cd416b`. Folded into Live Calc Tuning. The Calc tab's Result section
   showed `@smogon/calc`'s own EV-scale stat mentions ("256+ Atk", "232 HP /

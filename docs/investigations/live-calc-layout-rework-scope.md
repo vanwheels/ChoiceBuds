@@ -1,5 +1,10 @@
 # Live Calc: Page Layout & Function Rework — Scoping Session
 
+**Superseded 2026-09-13** — Live Calc (the tab, its engine, and this
+scoping session's whole model) is being retired rather than tuned further.
+See `docs/investigations/regular-calc-popup-scope.md` for the pivot
+decision and what replaces it. Kept below for historical context only.
+
 Scoping pass done 2026-09-11 per `TODO.md`'s hand-off note (Result Clarity
 Pass shipped the result panel's own readability, but Vanny stayed unhappy
 with the tab's layout/function as a whole and wanted to spend more time with

@@ -20,24 +20,62 @@ Saved Builds Box shipped 2026-09-11 (all 8 legs - see `COMPLETED.md` and
 `MILESTONES.md`). Building Flow Tweaks shipped 2026-09-11 (see
 `COMPLETED.md` and `MILESTONES.md`).
 
-## Current Milestone: Live Calc Tuning
+## Current Milestone: Regular Calc Popup
 
-Promoted 2026-09-11 from "Future Milestones" - the last of the four
-2026-09-10-feedback-pass candidates, and the only one that wasn't already
-drafted into legs at batching time (it went in as a bare "needs a lot of
-tweaking" placeholder). Scoped 2026-09-11 after asking Vanny for the actual
-specifics. All 3 scoped legs of Live Calc Page Layout & Function Rework
-(Bidirectional Inference Engine, Opponent Panel & Reverse Observations,
-Layout & Live Range Grid Rework), the earlier Known-Ability Lock and Result
-Clarity Pass legs, and both legs of Live Calc Usage-Data-Backed Inference
-have now shipped - see `COMPLETED.md` - with only the already-deferred
-Unscheduled items (popup launcher, Battle Log auto-populate, doubles
-support) left underneath it. No further legs are scoped right now; the
-milestone stays open per Vanny's explicit call rather than being closed out
-here.
+Live Calc Tuning (promoted 2026-09-11) shipped all 3 scoped legs of Live
+Calc Page Layout & Function Rework, the Known-Ability Lock and Result
+Clarity Pass legs, and both legs of Usage-Data-Backed Inference (see
+`COMPLETED.md`) - but after living with the result, Vanny called it a
+wrong-tool-for-the-moment problem, not a polish one, and pivoted 2026-09-13
+rather than continuing to tune it further (see
+`docs/investigations/regular-calc-popup-scope.md` for the full scoping
+conversation). Live Calc Tuning is retired, not shipped - no MILESTONES.md
+entry for it.
 
-Nothing currently scoped under this milestone - see "Unscheduled" below for
-adjacent-but-deferred items.
+**The pivot:** Live Calc (its tab, `liveCalcEngine.ts`, observation lists,
+bidirectional inference) was ripped rather than tuned further (see
+`COMPLETED.md`'s Live Calc Retirement). In its place, the existing regular
+Calc (`CalcPage`) gains:
+- A popup launcher - reachable from anywhere in the app as an overlay,
+  rather than tab-locked. Supersedes the former "Live Calc Global Popup
+  Launcher" item.
+- Usage-data auto-populate for the opponent side - per-axis top-N picks via
+  the already-shipped `championsbattledata.com` ranking
+  (`utils/liveCalcUsageWeighting.ts`, generalized off Live Calc). Real
+  correlated full-set data (VGCPastes) is a separate, later milestone - see
+  `docs/investigations/vgcpastes-sourcing-feasibility.md`.
+- Battle Log integration - opening the popup from an active Battle Log
+  session pre-fills the enemy team from that session's `opponentRoster` and
+  writes newly-set fields back into it. Supersedes the former Blocked "Live
+  Calc Battle Log Auto-Populate" item.
+
+Not yet scoped into legs - this session stopped at the pivot decision
+rather than drafting legs in the same sitting (see project convention of
+splitting scoping from building). Not-yet-scoped items below.
+
+- **[Regular Calc Popup Launcher] — Leg 1** *(Last touched: 2026-09-13 ·
+  Re-checks: 0)*
+  Make `CalcPage` launchable as an overlay from anywhere in the app rather
+  than tab-locked. Supersedes the former "Live Calc Global Popup Launcher"
+  item. Not yet scoped. See
+  `docs/investigations/regular-calc-popup-scope.md`.
+
+- **[Regular Calc Usage-Data Auto-Populate] — Leg 1** *(Last touched:
+  2026-09-13 · Re-checks: 0)*
+  Default the popup's opponent side to per-axis top-usage picks (multiple
+  options per stat, not a single guess) via `championsbattledata.com`
+  ranking, generalizing `utils/liveCalcUsageWeighting.ts` off Live Calc and
+  onto the popup. Not yet scoped. See
+  `docs/investigations/regular-calc-popup-scope.md`.
+
+- **[Regular Calc Battle Log Integration] — Leg 1** *(Last touched:
+  2026-09-13 · Re-checks: 0)*
+  When the popup is opened from an active Battle Log session, pre-fill the
+  enemy team from that session's `opponentRoster` and write newly-set
+  fields back into it (`OpponentPokemonEntry`'s existing `moves`/`ability`/
+  `item`/`*RevealedOnTurn` fields - no new schema needed). Supersedes the
+  former Blocked "Live Calc Battle Log Auto-Populate" item. Not yet scoped.
+  See `docs/investigations/regular-calc-popup-scope.md`.
 
 ## Blocked
 
@@ -87,45 +125,35 @@ unblocked.
   peer-range rejection + real runtime crash reports). Currently on
   TypeScript ^6.0.3.
 
-- **[Live Calc Battle Log Auto-Populate] — Leg 1** *(Last touched:
-  2026-09-11 · Re-checks: 0)*
-  Blocked: depends on Live Calc Global Popup Launcher existing first (this
-  is specifically about auto-filling both sides from whatever's already
-  selected when that popup is opened from inside an active Battle Log
-  session). See `docs/investigations/live-calc-layout-rework-scope.md`.
-
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
 - **[Calc/Live Calc Tailwind & Terrain-Ability Speed Modeling] — Leg 1**
-  *(Last touched: 2026-09-12 · Re-checks: 0)*
-  Surfaced while fixing Choice Scarf not being factored into the Calc tab's/
-  Live Calc's displayed Speed (see COMPLETED.md's Calc/Live Calc Bug Fixes
-  Leg 1). `computeBoostedStats()` now delegates to `@smogon/calc`'s own
+  *(Last touched: 2026-09-13 · Re-checks: 0)*
+  Surfaced while fixing Choice Scarf not being factored into the Calc tab's
+  displayed Speed (see COMPLETED.md's Calc/Live Calc Bug Fixes Leg 1).
+  `computeBoostedStats()` now delegates to `@smogon/calc`'s own
   `getFinalSpeed()`, so it's item/most-ability-correct, but it still only
   ever receives a bare weather value - no caller threads a real Field/Side
   through it, so Tailwind and terrain-keyed abilities (Surge Surfer) still
-  don't apply on the Calc tab's own stat panel or in Live Calc (which tracks
-  no field state at all). Not scoped: Tailwind specifically needs each
-  caller to know which side (`CalcFieldState.pokemon1Side`/`pokemon2Side`)
-  a given Pokemon is actually on, which none of the 3 call sites
-  (`useDamageCalc.ts`, `useLiveCalc.ts`, `liveCalcSpeedEngine.ts`) currently
-  track/pass - a real plumbing decision, not a one-line fix.
+  don't apply on the Calc tab's own stat panel. Not scoped: Tailwind
+  specifically needs the caller to know which side
+  (`CalcFieldState.pokemon1Side`/`pokemon2Side`) a given Pokemon is
+  actually on, which `useDamageCalc.ts` doesn't currently track/pass - a
+  real plumbing decision, not a one-line fix. Narrowed from 3 call sites to
+  1 by the Live Calc rip (see COMPLETED.md's Live Calc Retirement) -
+  `useLiveCalc.ts`/`liveCalcSpeedEngine.ts` are gone now, leaving only
+  `computeBoostedStats()`'s own call site.
 
-- **[Live Calc Global Popup Launcher] — Leg 1** *(Last touched: 2026-09-11 ·
+- **[Calc Doubles Support] — Leg 1** *(Last touched: 2026-09-13 ·
   Re-checks: 0)*
-  Raised alongside Live Calc Page Layout & Function Rework's scoping pass
-  but explicitly deferred - a button reachable from anywhere in the app
-  that pops Live Calc as an overlay, rather than only living as its own
-  tab. Not scoped yet; revisit once that rework's 3 legs have shipped and
-  settled. See `docs/investigations/live-calc-layout-rework-scope.md`.
-
-- **[Live Calc Doubles Support] — Leg 1** *(Last touched: 2026-09-11 ·
-  Re-checks: 0)*
-  Raised alongside the same scoping pass - 2 simultaneously-unknown
-  opponents plus ally-side interactions, on top of whatever singles model
-  Live Calc Page Layout & Function Rework lands on. Not scoped; a real
-  future need per Vanny, not this milestone. See
-  `docs/investigations/live-calc-layout-rework-scope.md`.
+  Raised 2026-09-11 as "Live Calc Doubles Support" alongside that tab's own
+  scoping pass - 2 simultaneously-unknown opponents plus ally-side
+  interactions. Retargeted 2026-09-13 at the regular Calc/popup now that
+  Live Calc is being ripped (Current Milestone); the underlying need (a
+  real future ask per Vanny, not this milestone) is unchanged. Not scoped.
+  See `docs/investigations/live-calc-layout-rework-scope.md` (historical
+  context) and `docs/investigations/regular-calc-popup-scope.md` (the
+  pivot).
 
 - **[Reg M-C Z-A-Exclusive Movepool Audit] — Leg 1** *(Last touched:
   2026-09-10 · Re-checks: 1)*
@@ -173,6 +201,14 @@ unblocked.
 2026-09-10 feedback pass batched into 4 candidate milestones; Battle Logger
 Overhaul, Statistics Improvements, and Team Management QoL were each
 promoted to current and have since shipped (see `MILESTONES.md`). Live Calc
-Tuning, the last of the four, was promoted 2026-09-11 (see `## Current
-Milestone` above). Nothing queued here right now.
+Tuning, the last of the four, was promoted 2026-09-11 and later retired in
+favor of Regular Calc Popup (see `## Current Milestone` above).
+
+- VGCPastes real-set sourcing - real correlated multi-set data (per-species
+  extraction) plus a browsable sample-team catalog, both built on the same
+  public-sheet pull. Confirmed technically feasible 2026-09-13 but
+  deliberately deferred out of Regular Calc Popup - needs its own policy
+  exception (bulk vs. today's single-user-triggered pokepaste-read
+  exception), refresh-cadence, and species-name-normalization decisions.
+  See `docs/investigations/vgcpastes-sourcing-feasibility.md`.
 
