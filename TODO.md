@@ -53,18 +53,6 @@ Not yet scoped into legs - this session stopped at the pivot decision
 rather than drafting legs in the same sitting (see project convention of
 splitting scoping from building). Not-yet-scoped items below.
 
-- **[Regular Calc Battle Log Integration] — Leg 2** *(Last touched:
-  2026-09-13 · Re-checks: 0)*
-  Depends on Leg 1's plumbing. Write-back scoped to `moves`/`ability`/`item`
-  only (Vanny's call — nature/Stat Points/Tera stay Calc-only, no schema
-  change to `OpponentPokemonEntry`). `openCalcPopup`'s prefill arg grows an
-  `onUpdate` callback + entry id (a "link", separate from the popup's own
-  stays-mounted-forever state) that `RecordMatchForm` must explicitly clear
-  on save/cancel/unmount — the popup can outlive the form, so a stale link
-  writing into a discarded `setOpponentRoster` is the real design risk here,
-  not yet fully nailed down (deliberately left for this leg's own session).
-  See `docs/investigations/regular-calc-popup-scope.md`.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something

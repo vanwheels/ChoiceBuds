@@ -18,6 +18,26 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Regular Calc Battle Log Integration: Write-Back] - Leg 2** (2026-09-14) -
+  see commit `27aa268`. While a link to a specific opponent-roster entry is
+  active, Calc reports `pokemon2`'s moves/ability/item changes back into
+  that entry via `openCalcPopup`'s new `entryId`/`onUpdate` args, kept alive
+  in `App.tsx` as a `calcLink` separate from the popup's own
+  stays-mounted-forever lifecycle - `RecordMatchForm` clears it on unmount
+  so a stale closure can't write into a discarded form.
+  `CalcPage`'s write-back effect needed two passes, both surfaced live via
+  `run-desktop` (linking a second opponent while the popup still held the
+  first one's leftover fields - Leg 1's prefill only ever sets species, so
+  nothing resets `pokemon2` between links): skipping the link-establishing
+  render alone still let the first genuine edit's full-field snapshot carry
+  a stale value into the union-merged `moves` list, and comparing all 4 move
+  slots as one joined value had the same problem at slot granularity - fixed
+  by diffing moves per slot index against the link's own baseline rather
+  than reporting a snapshot on every change. Live-verified end to end
+  (throwaway team/battles, cleaned up after): two opponents linked in the
+  same still-mounted popup each persisted only their own set
+  moves/ability/item, with no cross-contamination either direction.
+
 - **[Regular Calc Battle Log Integration: Prefill] - Leg 1** (2026-09-13) -
   see commit `cfde0c2`. Species-only, one-shot, one-directional prefill:
   each opponent tile in `RecordMatchForm.tsx` gets a "Calc" trigger (next to
