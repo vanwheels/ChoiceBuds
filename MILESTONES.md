@@ -32,3 +32,5 @@ milestone.
   [post-mortem](docs/postmortems/saved-builds-box.md)
 - **Building Flow Tweaks** — 2026-09-11 — Shipped —
   [post-mortem](docs/postmortems/building-flow-tweaks.md)
+- **Regular Calc Popup** — 2026-09-11 to 2026-09-13 — Shipped —
+  [post-mortem](docs/postmortems/regular-calc-popup.md)

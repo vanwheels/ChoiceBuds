@@ -52,7 +52,7 @@ in:
   `CalcPage`'s own `linkedEntryId`, which the existing per-slot diffing
   effect now targets instead of a link bound at click-time.
 
-- **[Regular Calc Battle Log Integration: Write-Back] - Leg 2** (2026-09-14) -
+- **[Regular Calc Battle Log Integration: Write-Back] - Leg 2** (2026-09-13) -
   see commit `27aa268`. While a link to a specific opponent-roster entry is
   active, Calc reports `pokemon2`'s moves/ability/item changes back into
   that entry via `openCalcPopup`'s new `entryId`/`onUpdate` args, kept alive

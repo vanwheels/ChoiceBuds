@@ -18,41 +18,11 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 
 Saved Builds Box shipped 2026-09-11 (all 8 legs - see `COMPLETED.md` and
 `MILESTONES.md`). Building Flow Tweaks shipped 2026-09-11 (see
-`COMPLETED.md` and `MILESTONES.md`).
-
-## Current Milestone: Regular Calc Popup
-
-Live Calc Tuning (promoted 2026-09-11) shipped all 3 scoped legs of Live
-Calc Page Layout & Function Rework, the Known-Ability Lock and Result
-Clarity Pass legs, and both legs of Usage-Data-Backed Inference (see
-`COMPLETED.md`) - but after living with the result, Vanny called it a
-wrong-tool-for-the-moment problem, not a polish one, and pivoted 2026-09-13
-rather than continuing to tune it further (see
-`docs/investigations/regular-calc-popup-scope.md` for the full scoping
-conversation). Live Calc Tuning is retired, not shipped - no MILESTONES.md
-entry for it.
-
-**The pivot:** Live Calc (its tab, `liveCalcEngine.ts`, observation lists,
-bidirectional inference) was ripped rather than tuned further (see
-`COMPLETED.md`'s Live Calc Retirement). In its place, the existing regular
-Calc (`CalcPage`) gains:
-- A popup launcher - reachable from anywhere in the app as an overlay,
-  rather than tab-locked. Supersedes the former "Live Calc Global Popup
-  Launcher" item.
-- Usage-data auto-populate for the opponent side - per-axis top-N picks via
-  the already-shipped `championsbattledata.com` ranking
-  (`utils/liveCalcUsageWeighting.ts`, generalized off Live Calc). Real
-  correlated full-set data (VGCPastes) is a separate, later milestone - see
-  `docs/investigations/vgcpastes-sourcing-feasibility.md`.
-- Battle Log integration - the popup offers an active Battle Log session's
-  live `opponentRoster` as a "Load from Opponent" tray (any revealed
-  Pokemon, not just one auto-picked) and writes newly-set fields back into
-  whichever entry was loaded. Supersedes the former Blocked "Live Calc
-  Battle Log Auto-Populate" item.
-
-Not yet scoped into legs - this session stopped at the pivot decision
-rather than drafting legs in the same sitting (see project convention of
-splitting scoping from building). Not-yet-scoped items below.
+`COMPLETED.md` and `MILESTONES.md`). Regular Calc Popup shipped 2026-09-13
+(see `COMPLETED.md` and `MILESTONES.md`) - includes the retired Live Calc
+Tuning work that preceded its pivot; see
+[docs/postmortems/regular-calc-popup.md](docs/postmortems/regular-calc-popup.md)
+for the full arc. No milestone currently active.
 
 ## Blocked
 
