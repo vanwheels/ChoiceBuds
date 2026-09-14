@@ -18,6 +18,23 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Regular Calc Battle Log Integration: Fixed Player/Opponent Slots] -
+  Leg 4** (2026-09-13) - see commit `f9a427e`. Leg 3's tray was symmetric on
+  both panels (Load from Team and Load from Opponent side by side on each),
+  so during a Battle Log session either Calc slot could end up holding
+  either side's data. Vanny wanted a fixed layout: Pokemon 2 always the
+  opponent, Pokemon 1 always the player's own team. `battleLogOpponentRoster`
+  is now only ever passed to the Pokemon 2 `CalcPokemonPanel` (Pokemon 1
+  never receives it), and that panel's own `CalcTeamTray` steps aside
+  whenever it does; `registerBattleLogSession` grew a `teamId` field (the
+  team actually selected in `RecordMatchForm`) that only reaches Pokemon 1
+  as a `preferredTeamId`, defaulting its "Load from Team" dropdown so the
+  player's own sprites show immediately instead of an empty placeholder -
+  synced into `CalcTeamTray`'s local selection state via the same
+  adjust-state-during-render pattern `CalcPage` already uses for
+  `linkedEntryId`, so a later manual re-selection isn't clobbered by
+  unrelated re-renders.
+
 - **[Regular Calc Battle Log Integration: Opponent Tray] - Leg 3** (2026-09-13) -
   see commit `bdc153c`. Vanny reported the Leg 1/2 flow was backwards: the
   per-opponent-tile "Calc" button meant clicking into one specific opponent
