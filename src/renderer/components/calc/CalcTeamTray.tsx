@@ -5,9 +5,20 @@
  * a dropdown of the user's saved Teams plus a row of up to 6 sprites for the
  * selected team. Click loads directly into this panel's own Pokemon slot;
  * drag lets it land on either panel (see CalcPokemonPanel.tsx's drop
- * handling) - mirrored identically on both the Pokémon 1 and Pokémon 2
- * panels, unlike Kaizo's opponent side which shows ROM-hack-specific AI
- * flags/exp instead.
+ * handling) - rendered only on the Pokémon 1 panel during a Battle Log
+ * session (Pokemon 2 is reserved for CalcOpponentTray there, see
+ * CalcPokemonPanel.tsx), otherwise mirrored identically on both panels,
+ * unlike Kaizo's opponent side which shows ROM-hack-specific AI flags/exp
+ * instead.
+ *
+ * `preferredTeamId` (Regular Calc Battle Log Integration Leg 4) defaults the
+ * dropdown to the Battle Log session's own selected team, so Pokemon 1 shows
+ * that team's sprites immediately rather than an empty "Select a team..."
+ * placeholder - synced via the "adjust state during render" pattern (see
+ * CalcPage.tsx's linkedEntryId for the same shape) rather than an effect, so
+ * a later manual re-selection isn't clobbered on every unrelated render, but
+ * a genuinely new preferredTeamId (a different Battle Log session, or Calc
+ * opened for the first time this session) still takes effect immediately.
  */
 
 import { useState } from 'react';
@@ -18,12 +29,18 @@ import { CALC_TEAM_POKEMON_DRAG_TYPE, type CalcTeamPokemonDragPayload } from '..
 
 interface CalcTeamTrayProps {
   teams: Team[];
+  preferredTeamId?: string;
   resolveSprite: (remoteUrl: string) => string;
   onLoadPokemon: (p: ImportedPokemonInfo) => void;
 }
 
-export default function CalcTeamTray({ teams, resolveSprite, onLoadPokemon }: CalcTeamTrayProps) {
-  const [selectedTeamId, setSelectedTeamId] = useState('');
+export default function CalcTeamTray({ teams, preferredTeamId, resolveSprite, onLoadPokemon }: CalcTeamTrayProps) {
+  const [selectedTeamId, setSelectedTeamId] = useState(preferredTeamId ?? '');
+  const [prevPreferredTeamId, setPrevPreferredTeamId] = useState(preferredTeamId);
+  if (preferredTeamId !== prevPreferredTeamId) {
+    setPrevPreferredTeamId(preferredTeamId);
+    setSelectedTeamId(preferredTeamId ?? '');
+  }
   const selectedTeam = teams.find(t => t.id === selectedTeamId);
 
   if (teams.length === 0) return null;

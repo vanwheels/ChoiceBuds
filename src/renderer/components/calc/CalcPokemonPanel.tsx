@@ -86,9 +86,11 @@ interface CalcPokemonPanelProps {
   boostedStats: StatsTable | null;
   natureEffect: NatureStatEffect;
   teams: Team[];
-  /** The current Battle Log session's live opponent roster, if any (see App.tsx's battleLogSession doc) - renders CalcOpponentTray when non-empty, omitted/empty otherwise. */
+  /** The preferred team id to default this panel's "Load from Team" tray to (Regular Calc Battle Log Integration Leg 4) - only passed to the Pokemon 1 panel, as the Battle Log session's own selected team. Undefined on Pokemon 2 and outside a Battle Log session, where the tray just starts on its own "Select a team..." placeholder. */
+  preferredTeamId?: string;
+  /** The current Battle Log session's live opponent roster, if any (see App.tsx's battleLogSession doc) - only passed to the Pokemon 2 panel, which is reserved for the opponent during a Battle Log session (Leg 4): its presence (even as an empty array) both renders CalcOpponentTray and hides this panel's own CalcTeamTray, since Pokemon 1 already covers the player's side. Undefined on Pokemon 1 and outside a Battle Log session, where this panel behaves exactly as a plain Calc panel always has. */
   opponentRoster?: OpponentPokemonEntry[];
-  /** Reports the id of whichever opponent-roster entry this panel's tray just loaded - only passed to the Pokemon 2 panel (see CalcPage.tsx's linkedEntryId), since Calc's write-back link is scoped to that slot. Omitted on the Pokemon 1 panel, where loading an opponent is informational only. */
+  /** Reports the id of whichever opponent-roster entry this panel's tray just loaded - only passed to the Pokemon 2 panel (see CalcPage.tsx's linkedEntryId), since Calc's write-back link is scoped to that slot. */
   onLoadOpponentEntry?: (entryId: string) => void;
   savedPokemonState: UseSavedPokemonReturn;
   gameDataState: UseGameDataReturn;
@@ -105,7 +107,7 @@ const GENDER_CYCLE: Array<CalcPokemonState['gender']> = ['M', 'F', ''];
 
 export default function CalcPokemonPanel({
   title, state, speciesOptions, itemOptions, abilityOptions, natureOptions, moveOptions, formes, baseStats, boostedStats, natureEffect,
-  teams, opponentRoster, onLoadOpponentEntry, savedPokemonState, gameDataState, databaseState, resolveSprite, onChange, onMoveUsageChange,
+  teams, preferredTeamId, opponentRoster, onLoadOpponentEntry, savedPokemonState, gameDataState, databaseState, resolveSprite, onChange, onMoveUsageChange,
 }: CalcPokemonPanelProps) {
   const [savedSetPickerSpecies, setSavedSetPickerSpecies] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -311,7 +313,13 @@ export default function CalcPokemonPanel({
         </div>
       </div>
 
-      <CalcTeamTray teams={teams} resolveSprite={resolveSprite} onLoadPokemon={(p) => onChange(teamPokemonToCalcUpdates(p))} />
+      {/* opponentRoster is only ever passed to the Pokemon 2 panel (see this
+          file's prop doc) - its presence means a Battle Log session has
+          reserved this slot for the opponent, so CalcTeamTray steps aside
+          entirely rather than offering a second, conflicting source. */}
+      {!opponentRoster && (
+        <CalcTeamTray teams={teams} preferredTeamId={preferredTeamId} resolveSprite={resolveSprite} onLoadPokemon={(p) => onChange(teamPokemonToCalcUpdates(p))} />
+      )}
       {opponentRoster && (
         <CalcOpponentTray opponentRoster={opponentRoster} resolveSprite={resolveSprite} onLoadPokemon={handleLoadOpponent} />
       )}

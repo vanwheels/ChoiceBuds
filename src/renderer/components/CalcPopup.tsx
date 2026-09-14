@@ -53,6 +53,8 @@ interface CalcPopupProps {
   battleLogOpponentRoster?: OpponentPokemonEntry[];
   /** Forwarded straight through to CalcPage - the active Battle Log session's write-back updater, if any (Regular Calc Battle Log Integration Leg 2/3). See App.tsx's battleLogSession doc. */
   onUpdateOpponentEntry?: (entryId: string, updates: Partial<OpponentPokemonEntry>) => void;
+  /** Forwarded straight through to CalcPage - the active Battle Log session's own team id, if any (Regular Calc Battle Log Integration Leg 4) - defaults Pokemon 1's "Load from Team" tray to it. See App.tsx's battleLogSession doc. */
+  battleLogPlayerTeamId?: string;
 }
 
 const overlayVariants = {

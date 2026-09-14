@@ -23,8 +23,8 @@ interface BattleLogPageProps {
   teamsState: UseTeamsReturn;
   speciesRosterState: UseSpeciesRosterReturn;
   spriteCacheState: UseSpriteCacheReturn;
-  /** Threaded down to RecordMatchForm - registers/clears this session's live opponent roster + write-back updater with the global Calc popup (Regular Calc Battle Log Integration Leg 3) - see App.tsx's battleLogSession. */
-  registerBattleLogSession: (session: { roster: OpponentPokemonEntry[]; onUpdateEntry: (entryId: string, updates: Partial<OpponentPokemonEntry>) => void } | null) => void;
+  /** Threaded down to RecordMatchForm - registers/clears this session's live opponent roster + write-back updater + own team id with the global Calc popup (Regular Calc Battle Log Integration Leg 3/4) - see App.tsx's battleLogSession. */
+  registerBattleLogSession: (session: { roster: OpponentPokemonEntry[]; onUpdateEntry: (entryId: string, updates: Partial<OpponentPokemonEntry>) => void; teamId?: string } | null) => void;
 }
 
 export default function BattleLogPage({ battlesState, teamsState, speciesRosterState, spriteCacheState, registerBattleLogSession }: BattleLogPageProps) {

@@ -48,8 +48,8 @@ interface RecordMatchFormProps {
   spriteCacheState: UseSpriteCacheReturn;
   onRecorded: () => void;
   onCancel: () => void;
-  /** Registers this session's live opponent roster + write-back updater with the global Calc popup (Regular Calc Battle Log Integration Leg 3) - the effect below calls this on mount and on every opponentRoster change, and with `null` on unmount, so the floating Calc launcher always has the current battle's roster ready without needing a per-tile trigger. See App.tsx's battleLogSession doc. */
-  registerBattleLogSession: (session: { roster: OpponentPokemonEntry[]; onUpdateEntry: (entryId: string, updates: Partial<OpponentPokemonEntry>) => void } | null) => void;
+  /** Registers this session's live opponent roster + write-back updater + own team id with the global Calc popup (Regular Calc Battle Log Integration Leg 3/4) - the effect below calls this on mount and on every roster/team change, and with `null` on unmount, so the floating Calc launcher always has the current battle's roster ready without needing a per-tile trigger. See App.tsx's battleLogSession doc. */
+  registerBattleLogSession: (session: { roster: OpponentPokemonEntry[]; onUpdateEntry: (entryId: string, updates: Partial<OpponentPokemonEntry>) => void; teamId?: string } | null) => void;
   /** When set, the form edits this already-saved battle instead of creating a new one - see the header doc above. */
   editingBattle?: Battle;
 }
@@ -223,19 +223,20 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
     }));
   }, []);
 
-  // Keeps the global Calc popup's opponent-roster snapshot live (Regular
-  // Calc Battle Log Integration Leg 3, replacing the old per-opponent-tile
-  // "Calc" button) - registers on mount and re-registers on every roster
-  // change (add/remove/reveal) so CalcOpponentTray always reflects this
-  // session's current roster the instant Calc is opened, then clears the
-  // registration on unmount so a stale closure over this form's own
-  // setOpponentRoster never survives it. `registerBattleLogSession`'s
+  // Keeps the global Calc popup's opponent-roster snapshot (and this
+  // session's own team id, so Calc's Pokemon 1 side can default its "Load
+  // from Team" tray to the team actually being played - Regular Calc
+  // Battle Log Integration Leg 4) live - registers on mount and
+  // re-registers on every roster/team change so CalcOpponentTray always
+  // reflects this session's current roster the instant Calc is opened,
+  // then clears the registration on unmount so a stale closure over this
+  // form's own setOpponentRoster never survives it. `registerBattleLogSession`'s
   // identity must stay stable (App.tsx passes its raw useState setter) -
   // an unstable one here would re-register every render.
   useEffect(() => {
-    registerBattleLogSession({ roster: opponentRoster, onUpdateEntry: handleCalcUpdate });
+    registerBattleLogSession({ roster: opponentRoster, onUpdateEntry: handleCalcUpdate, teamId: team?.id });
     return () => registerBattleLogSession(null);
-  }, [opponentRoster, handleCalcUpdate, registerBattleLogSession]);
+  }, [opponentRoster, handleCalcUpdate, registerBattleLogSession, team?.id]);
 
   const handleSave = async () => {
     if (!result) return;

@@ -82,15 +82,21 @@ export default function App() {
   // Live link to whichever RecordMatchForm session is currently open, if
   // any (Regular Calc Battle Log Integration Leg 3, replacing the old
   // per-opponent-tile "Calc" button - see TODO.md) - registered by
-  // RecordMatchForm on mount/every roster change and cleared on unmount, so
-  // the *global* floating Calc launcher below always has the active
-  // battle's opponent roster ready the instant it's opened, without the
-  // user needing to click into a specific tile first. `null` whenever no
-  // Battle Log session is open (e.g. anywhere else in the app), which is
-  // what makes CalcOpponentTray render nothing outside that flow.
+  // RecordMatchForm on mount/every roster or team change and cleared on
+  // unmount, so the *global* floating Calc launcher below always has the
+  // active battle's opponent roster (and the player's own team id, Leg 4)
+  // ready the instant it's opened, without the user needing to click into a
+  // specific tile first. `null` whenever no Battle Log session is open
+  // (e.g. anywhere else in the app), which is what makes CalcOpponentTray
+  // render nothing outside that flow. `teamId` is the team actually
+  // selected for this battle (undefined until one's picked) - CalcPage uses
+  // it to default Pokemon 1's own "Load from Team" tray, since Pokemon 2 is
+  // reserved for the opponent roster during a Battle Log session (see
+  // CalcPage.tsx).
   const [battleLogSession, setBattleLogSession] = useState<{
     roster: OpponentPokemonEntry[];
     onUpdateEntry: (entryId: string, updates: Partial<OpponentPokemonEntry>) => void;
+    teamId?: string;
   } | null>(null);
   const teamsState = useTeams();
   const databaseState = useDatabase();
@@ -248,6 +254,7 @@ export default function App() {
               settingsState={settingsState}
               battleLogOpponentRoster={battleLogSession?.roster}
               onUpdateOpponentEntry={battleLogSession?.onUpdateEntry}
+              battleLogPlayerTeamId={battleLogSession?.teamId}
             />
           </Suspense>
         )}

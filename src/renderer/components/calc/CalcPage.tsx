@@ -35,15 +35,17 @@ interface CalcPageProps {
   savedPokemonState: UseSavedPokemonReturn;
   spriteCacheState: UseSpriteCacheReturn;
   settingsState: UseSettingsReturn;
-  /** The currently open Battle Log session's live opponent roster, if any (Regular Calc Battle Log Integration Leg 3, see App.tsx's battleLogSession doc) - forwarded straight through to both CalcPokemonPanels so either side's "Load from Opponent" tray can pull in any of the opponent's revealed Pokemon. Undefined outside that flow (e.g. the plain floating launcher opened with no Battle Log session active). */
+  /** The currently open Battle Log session's live opponent roster, if any (Regular Calc Battle Log Integration Leg 3, see App.tsx's battleLogSession doc) - passed only to the Pokemon 2 panel below, which is reserved for the opponent during a Battle Log session (Leg 4 - see this file's render for why Pokemon 1 never receives it). Undefined outside that flow (e.g. the plain floating launcher opened with no Battle Log session active). */
   battleLogOpponentRoster?: OpponentPokemonEntry[];
   /** Merges a write back into a specific opponent-roster entry by id (Regular Calc Battle Log Integration Leg 2/3) - the effect below calls this whenever pokemon2's moves/ability/item change, but only once the Pokemon 2 panel has actually loaded an opponent entry via its tray (see linkedEntryId below). Undefined outside a Battle Log session, same as battleLogOpponentRoster. */
   onUpdateOpponentEntry?: (entryId: string, updates: Partial<OpponentPokemonEntry>) => void;
+  /** The currently open Battle Log session's own team id, if any (Regular Calc Battle Log Integration Leg 4) - passed only to the Pokemon 1 panel below as its preferred "Load from Team" default, since Pokemon 1 is reserved for the player's own side during a Battle Log session. Undefined outside that flow, same as battleLogOpponentRoster. */
+  battleLogPlayerTeamId?: string;
 }
 
 export default function CalcPage({
   gameDataState, teamsState, databaseState, savedPokemonState, spriteCacheState, settingsState,
-  battleLogOpponentRoster, onUpdateOpponentEntry,
+  battleLogOpponentRoster, onUpdateOpponentEntry, battleLogPlayerTeamId,
 }: CalcPageProps) {
   const [isSavedSetsOpen, setIsSavedSetsOpen] = useState(false);
   // Which opponent-roster entry (if any) the Pokemon 2 panel's "Load from
@@ -187,7 +189,7 @@ export default function CalcPage({
           boostedStats={pokemon1BoostedStats}
           natureEffect={pokemon1NatureEffect}
           teams={teamsState.teams}
-          opponentRoster={battleLogOpponentRoster}
+          preferredTeamId={battleLogPlayerTeamId}
           savedPokemonState={savedPokemonState}
           gameDataState={gameDataState}
           databaseState={databaseState}
