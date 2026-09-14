@@ -18,6 +18,23 @@ in:
   (everything through the Battle Logger Re-eval + Data & Process Cleanup
   milestone, split out at the 2026-09-08 Card UI Polish boundary)
 
+- **[Regular Calc Battle Log Integration: Opponent Tray] - Leg 3** (2026-09-13) -
+  see commit `bdc153c`. Vanny reported the Leg 1/2 flow was backwards: the
+  per-opponent-tile "Calc" button meant clicking into one specific opponent
+  Pokemon before Calc showed anything, prefilling only that one. Replaced
+  it with a "Load from Opponent" tray (`CalcOpponentTray.tsx`, sibling to
+  the existing saved-Team tray) driven by the *global* floating Calc
+  launcher instead - `RecordMatchForm` now registers its live
+  `opponentRoster` plus a stable write-back updater with `App.tsx` via a
+  new `registerBattleLogSession` callback on every roster change, so the
+  popup's opponent tray is always current whenever it's opened, with no
+  per-tile trigger needed. This replaced Leg 1's `calcPrefill`/entryId-at-
+  open-time mechanism outright (species now loads by clicking a tray
+  sprite, same as a saved Team) and re-plumbed Leg 2's write-back link to
+  establish dynamically - loading an opponent into the Pokemon 2 slot sets
+  `CalcPage`'s own `linkedEntryId`, which the existing per-slot diffing
+  effect now targets instead of a link bound at click-time.
+
 - **[Regular Calc Battle Log Integration: Write-Back] - Leg 2** (2026-09-14) -
   see commit `27aa268`. While a link to a specific opponent-roster entry is
   active, Calc reports `pokemon2`'s moves/ability/item changes back into
