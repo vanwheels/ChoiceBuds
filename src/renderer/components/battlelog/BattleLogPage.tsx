@@ -10,7 +10,7 @@
  */
 
 import { useState } from 'react';
-import type { Battle } from '../../types/pokemon';
+import type { Battle, OpponentPokemonEntry } from '../../types/pokemon';
 import type { UseBattlesReturn } from '../../hooks/useBattles';
 import type { UseTeamsReturn } from '../../hooks/useTeams';
 import type { UseSpeciesRosterReturn } from '../../hooks/useSpeciesRoster';
@@ -23,11 +23,13 @@ interface BattleLogPageProps {
   teamsState: UseTeamsReturn;
   speciesRosterState: UseSpeciesRosterReturn;
   spriteCacheState: UseSpriteCacheReturn;
-  /** Threaded down to RecordMatchForm's per-opponent-tile "Calc" trigger (Regular Calc Battle Log Integration Leg 1) - see App.tsx's openCalcPopup. */
-  openCalcPopup: (prefill?: { species: string }) => void;
+  /** Threaded down to RecordMatchForm's per-opponent-tile "Calc" trigger (Regular Calc Battle Log Integration Leg 1/2) - see App.tsx's openCalcPopup. */
+  openCalcPopup: (prefill?: { species: string; entryId?: string; onUpdate?: (updates: Partial<OpponentPokemonEntry>) => void }) => void;
+  /** Threaded down to RecordMatchForm so it can tear down its Calc write-back link on unmount (Leg 2) - see App.tsx's calcLink. */
+  clearCalcLink: () => void;
 }
 
-export default function BattleLogPage({ battlesState, teamsState, speciesRosterState, spriteCacheState, openCalcPopup }: BattleLogPageProps) {
+export default function BattleLogPage({ battlesState, teamsState, speciesRosterState, spriteCacheState, openCalcPopup, clearCalcLink }: BattleLogPageProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [editingBattle, setEditingBattle] = useState<Battle | null>(null);
 
@@ -39,6 +41,7 @@ export default function BattleLogPage({ battlesState, teamsState, speciesRosterS
         speciesRosterState={speciesRosterState}
         spriteCacheState={spriteCacheState}
         openCalcPopup={openCalcPopup}
+        clearCalcLink={clearCalcLink}
         editingBattle={editingBattle ?? undefined}
         onRecorded={() => {
           setIsRecording(false);

@@ -31,6 +31,7 @@ import {
   MODAL_PANEL_ENTER_TRANSITION,
   MODAL_PANEL_EXIT_TRANSITION,
 } from '../config/motion';
+import type { OpponentPokemonEntry } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseTeamsReturn } from '../hooks/useTeams';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
@@ -51,6 +52,8 @@ interface CalcPopupProps {
   /** Forwarded straight through to CalcPage - see its header comment (Regular Calc Battle Log Integration Leg 1). */
   pendingPrefill?: { species: string } | null;
   onPrefillApplied?: () => void;
+  /** Forwarded straight through to CalcPage - the active Calc write-back link's callback, if any (Regular Calc Battle Log Integration Leg 2). See App.tsx's calcLink doc. */
+  linkedOnUpdate?: (updates: Partial<OpponentPokemonEntry>) => void;
 }
 
 const overlayVariants = {

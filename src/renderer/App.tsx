@@ -4,8 +4,9 @@
  * Provides core data contexts via custom hooks down the component tree
  */
 
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useCallback, useState } from 'react';
 import { AnimatePresence, MotionConfig } from 'framer-motion';
+import type { OpponentPokemonEntry } from './types/pokemon';
 import { useTeams } from './hooks/useTeams';
 import { useDatabase } from './hooks/useDatabase';
 import { useSavedPokemon } from './hooks/useSavedPokemon';
@@ -80,10 +81,23 @@ export default function App() {
   // applies it once (species -> pokemon2) then clears it via
   // onPrefillApplied so it doesn't reapply on the popup's later re-renders.
   const [calcPrefill, setCalcPrefill] = useState<{ species: string } | null>(null);
-  const openCalcPopup = (prefill?: { species: string }) => {
+  // The "link" from Leg 2 (see TODO.md / regular-calc-popup-scope.md) -
+  // separate from calcPrefill's one-shot species value and from
+  // hasOpenedCalcPopup's stays-mounted-forever popup lifecycle. While a link
+  // is active, CalcPage reports pokemon2's moves/ability/item changes back
+  // through `onUpdate` so they land on this specific opponent-roster entry.
+  // A *link* must not outlive the RecordMatchForm session that created it
+  // (the popup itself does outlive it) - RecordMatchForm clears it via
+  // clearCalcLink on unmount so a stale closure never writes into a
+  // discarded setOpponentRoster. One link at a time: opening Calc from a
+  // different opponent tile just replaces it.
+  const [calcLink, setCalcLink] = useState<{ entryId: string; onUpdate: (updates: Partial<OpponentPokemonEntry>) => void } | null>(null);
+  const clearCalcLink = useCallback(() => setCalcLink(null), []);
+  const openCalcPopup = (prefill?: { species: string; entryId?: string; onUpdate?: (updates: Partial<OpponentPokemonEntry>) => void }) => {
     setIsCalcPopupOpen(true);
     setHasOpenedCalcPopup(true);
-    if (prefill) setCalcPrefill(prefill);
+    if (prefill) setCalcPrefill({ species: prefill.species });
+    if (prefill?.entryId && prefill.onUpdate) setCalcLink({ entryId: prefill.entryId, onUpdate: prefill.onUpdate });
   };
   const teamsState = useTeams();
   const databaseState = useDatabase();
@@ -170,6 +184,7 @@ export default function App() {
                   speciesRosterState={speciesRosterState}
                   spriteCacheState={spriteCacheState}
                   openCalcPopup={openCalcPopup}
+                  clearCalcLink={clearCalcLink}
                 />
               </Suspense>
             </div>
@@ -241,6 +256,7 @@ export default function App() {
               settingsState={settingsState}
               pendingPrefill={calcPrefill}
               onPrefillApplied={() => setCalcPrefill(null)}
+              linkedOnUpdate={calcLink?.onUpdate}
             />
           </Suspense>
         )}
