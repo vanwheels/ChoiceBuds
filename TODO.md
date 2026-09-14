@@ -44,10 +44,11 @@ Calc (`CalcPage`) gains:
   (`utils/liveCalcUsageWeighting.ts`, generalized off Live Calc). Real
   correlated full-set data (VGCPastes) is a separate, later milestone - see
   `docs/investigations/vgcpastes-sourcing-feasibility.md`.
-- Battle Log integration - opening the popup from an active Battle Log
-  session pre-fills the enemy team from that session's `opponentRoster` and
-  writes newly-set fields back into it. Supersedes the former Blocked "Live
-  Calc Battle Log Auto-Populate" item.
+- Battle Log integration - the popup offers an active Battle Log session's
+  live `opponentRoster` as a "Load from Opponent" tray (any revealed
+  Pokemon, not just one auto-picked) and writes newly-set fields back into
+  whichever entry was loaded. Supersedes the former Blocked "Live Calc
+  Battle Log Auto-Populate" item.
 
 Not yet scoped into legs - this session stopped at the pivot decision
 rather than drafting legs in the same sitting (see project convention of

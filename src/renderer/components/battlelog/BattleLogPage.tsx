@@ -23,13 +23,11 @@ interface BattleLogPageProps {
   teamsState: UseTeamsReturn;
   speciesRosterState: UseSpeciesRosterReturn;
   spriteCacheState: UseSpriteCacheReturn;
-  /** Threaded down to RecordMatchForm's per-opponent-tile "Calc" trigger (Regular Calc Battle Log Integration Leg 1/2) - see App.tsx's openCalcPopup. */
-  openCalcPopup: (prefill?: { species: string; entryId?: string; onUpdate?: (updates: Partial<OpponentPokemonEntry>) => void }) => void;
-  /** Threaded down to RecordMatchForm so it can tear down its Calc write-back link on unmount (Leg 2) - see App.tsx's calcLink. */
-  clearCalcLink: () => void;
+  /** Threaded down to RecordMatchForm - registers/clears this session's live opponent roster + write-back updater with the global Calc popup (Regular Calc Battle Log Integration Leg 3) - see App.tsx's battleLogSession. */
+  registerBattleLogSession: (session: { roster: OpponentPokemonEntry[]; onUpdateEntry: (entryId: string, updates: Partial<OpponentPokemonEntry>) => void } | null) => void;
 }
 
-export default function BattleLogPage({ battlesState, teamsState, speciesRosterState, spriteCacheState, openCalcPopup, clearCalcLink }: BattleLogPageProps) {
+export default function BattleLogPage({ battlesState, teamsState, speciesRosterState, spriteCacheState, registerBattleLogSession }: BattleLogPageProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [editingBattle, setEditingBattle] = useState<Battle | null>(null);
 
@@ -40,8 +38,7 @@ export default function BattleLogPage({ battlesState, teamsState, speciesRosterS
         battlesState={battlesState}
         speciesRosterState={speciesRosterState}
         spriteCacheState={spriteCacheState}
-        openCalcPopup={openCalcPopup}
-        clearCalcLink={clearCalcLink}
+        registerBattleLogSession={registerBattleLogSession}
         editingBattle={editingBattle ?? undefined}
         onRecorded={() => {
           setIsRecording(false);

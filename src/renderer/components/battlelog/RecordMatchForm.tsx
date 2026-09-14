@@ -20,7 +20,7 @@
  * `addBattle`.
  */
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { Battle, BroughtPokemonSnapshot, OpponentPokemonEntry, SpeciesRosterEntry, Team } from '../../types/pokemon';
 import type { UseTeamsReturn } from '../../hooks/useTeams';
 import type { UseBattlesReturn } from '../../hooks/useBattles';
@@ -48,10 +48,8 @@ interface RecordMatchFormProps {
   spriteCacheState: UseSpriteCacheReturn;
   onRecorded: () => void;
   onCancel: () => void;
-  /** Opens the global Calc popup, optionally prefilling pokemon2's species and linking Calc's moves/ability/item write-back to a specific opponent-roster entry - wired to each opponent tile's "Calc" trigger below (Regular Calc Battle Log Integration Leg 1/2). */
-  openCalcPopup: (prefill?: { species: string; entryId?: string; onUpdate?: (updates: Partial<OpponentPokemonEntry>) => void }) => void;
-  /** Tears down the Calc write-back link (Leg 2) - called on unmount below so a stale closure over this form's own setOpponentRoster never survives the form (see App.tsx's calcLink doc). */
-  clearCalcLink: () => void;
+  /** Registers this session's live opponent roster + write-back updater with the global Calc popup (Regular Calc Battle Log Integration Leg 3) - the effect below calls this on mount and on every opponentRoster change, and with `null` on unmount, so the floating Calc launcher always has the current battle's roster ready without needing a per-tile trigger. See App.tsx's battleLogSession doc. */
+  registerBattleLogSession: (session: { roster: OpponentPokemonEntry[]; onUpdateEntry: (entryId: string, updates: Partial<OpponentPokemonEntry>) => void } | null) => void;
   /** When set, the form edits this already-saved battle instead of creating a new one - see the header doc above. */
   editingBattle?: Battle;
 }
@@ -136,7 +134,7 @@ function buildMatchRecord(args: {
   };
 }
 
-export default function RecordMatchForm({ teamsState, battlesState, speciesRosterState, spriteCacheState, onRecorded, onCancel, openCalcPopup, clearCalcLink, editingBattle }: RecordMatchFormProps) {
+export default function RecordMatchForm({ teamsState, battlesState, speciesRosterState, spriteCacheState, onRecorded, onCancel, registerBattleLogSession, editingBattle }: RecordMatchFormProps) {
   const eligibleTeams = teamsState.teams.filter(t => t.pokemon.length >= 4);
   const priorOpponentNames = Array.from(
     new Set(battlesState.battles.map(b => b.opponentName).filter((n): n is string => !!n))
@@ -210,17 +208,8 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
     setOpponentBroughtIds(prev => prev.filter(broughtId => broughtId !== id)); // drop a stale brought-selection if its entry is removed entirely
   };
 
-  // Tears the Calc write-back link down whenever this form goes away -
-  // BattleLogPage always unmounts RecordMatchForm on both onRecorded and
-  // onCancel (its conditional render flips off), so a plain unmount cleanup
-  // covers every exit path without needing to intercept each handler
-  // separately. `clearCalcLink`'s identity must stay stable (App.tsx wraps
-  // it in useCallback) - an unstable one here would clear the link the
-  // instant it's set, since this effect would re-run every render.
-  useEffect(() => () => clearCalcLink(), [clearCalcLink]);
-
-  /** Thin wrapper passed as the Calc popup's write-back link (Leg 2) - merges pokemon2's moves/ability/item back into this specific opponent entry by id whenever Calc reports a change, while the link to this entry is still active. Moves union rather than overwrite (case-insensitive, since `OpponentPokemonEntry.moves` is a growable tag list, not the Calc grid's fixed 4 slots) - ability/item overwrite directly since they're single values. */
-  const handleCalcUpdate = (entryId: string) => (updates: Partial<OpponentPokemonEntry>) => {
+  /** Merges Calc-reported moves/ability/item back into a specific opponent-roster entry by id, whenever the global Calc popup's write-back link points at it (Regular Calc Battle Log Integration Leg 2, now dispatched by entryId via registerBattleLogSession's onUpdateEntry rather than a per-tile-bound closure - Leg 3). Moves union rather than overwrite (case-insensitive, since `OpponentPokemonEntry.moves` is a growable tag list, not the Calc grid's fixed 4 slots) - ability/item overwrite directly since they're single values. Wrapped in useCallback so the registration effect below doesn't re-register on every unrelated render. */
+  const handleCalcUpdate = useCallback((entryId: string, updates: Partial<OpponentPokemonEntry>) => {
     setOpponentRoster(prev => prev.map(o => {
       if (o.id !== entryId) return o;
       const next = { ...o };
@@ -232,7 +221,21 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
       }
       return next;
     }));
-  };
+  }, []);
+
+  // Keeps the global Calc popup's opponent-roster snapshot live (Regular
+  // Calc Battle Log Integration Leg 3, replacing the old per-opponent-tile
+  // "Calc" button) - registers on mount and re-registers on every roster
+  // change (add/remove/reveal) so CalcOpponentTray always reflects this
+  // session's current roster the instant Calc is opened, then clears the
+  // registration on unmount so a stale closure over this form's own
+  // setOpponentRoster never survives it. `registerBattleLogSession`'s
+  // identity must stay stable (App.tsx passes its raw useState setter) -
+  // an unstable one here would re-register every render.
+  useEffect(() => {
+    registerBattleLogSession({ roster: opponentRoster, onUpdateEntry: handleCalcUpdate });
+    return () => registerBattleLogSession(null);
+  }, [opponentRoster, handleCalcUpdate, registerBattleLogSession]);
 
   const handleSave = async () => {
     if (!result) return;
@@ -323,10 +326,7 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
               selected={opponentBroughtIds.includes(o.id)}
               onToggle={() => toggleOpponentBrought(o.id)}
               trailing={
-                <>
-                  <button onClick={() => openCalcPopup({ species: o.species, entryId: o.id, onUpdate: handleCalcUpdate(o.id) })} title="Open in Calc" className="text-xs text-zinc-500 hover:text-accent-gold cursor-pointer">Calc</button>
-                  <button onClick={() => removeOpponent(o.id)} title="Remove" className="text-zinc-500 hover:text-red-400 cursor-pointer">×</button>
-                </>
+                <button onClick={() => removeOpponent(o.id)} title="Remove" className="text-zinc-500 hover:text-red-400 cursor-pointer">×</button>
               }
             />
           ))}

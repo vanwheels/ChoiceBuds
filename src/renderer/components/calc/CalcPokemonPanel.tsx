@@ -50,14 +50,14 @@ import type { CalcPokemonState, NatureStatEffect } from '../../hooks/useDamageCa
 import { STATUS_OPTIONS, STATUS_LABELS } from '../../hooks/useDamageCalc';
 import type { FormeFamily } from '../../utils/calcFormes';
 import type { NatureName, StatsTable } from '@smogon/calc/dist/data/interface';
-import type { Team, SavedPokemonEntry, ImportedPokemonInfo } from '../../types/pokemon';
+import type { Team, SavedPokemonEntry, ImportedPokemonInfo, OpponentPokemonEntry } from '../../types/pokemon';
 import type { ChampionsUsageEntry } from '../../types/gameData';
 import type { UseSavedPokemonReturn } from '../../hooks/useSavedPokemon';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseDatabaseReturn } from '../../hooks/useDatabase';
 import { CALC_TEAM_POKEMON_DRAG_TYPE, type CalcTeamPokemonDragPayload } from '../../utils/calcDragTypes';
 import { getMegaAbility } from '../../config/megaAbilities';
-import { teamPokemonToCalcUpdates } from '../../utils/calcTeamImport';
+import { teamPokemonToCalcUpdates, opponentEntryToCalcUpdates } from '../../utils/calcTeamImport';
 import { calcStateToShowdownPokemon } from '../../utils/calcExport';
 import { enrichPokemonWithAPI } from '../../services/pokeapi';
 import { formatShowdownText } from '../../services/parser';
@@ -69,6 +69,7 @@ import SaveToLibraryDialog from '../SaveToLibraryDialog';
 import CalcStatRows from './CalcStatRows';
 import CalcStatSpreadChips from './CalcStatSpreadChips';
 import CalcTeamTray from './CalcTeamTray';
+import CalcOpponentTray from './CalcOpponentTray';
 import FormeToggle from './FormeToggle';
 
 interface CalcPokemonPanelProps {
@@ -85,6 +86,10 @@ interface CalcPokemonPanelProps {
   boostedStats: StatsTable | null;
   natureEffect: NatureStatEffect;
   teams: Team[];
+  /** The current Battle Log session's live opponent roster, if any (see App.tsx's battleLogSession doc) - renders CalcOpponentTray when non-empty, omitted/empty otherwise. */
+  opponentRoster?: OpponentPokemonEntry[];
+  /** Reports the id of whichever opponent-roster entry this panel's tray just loaded - only passed to the Pokemon 2 panel (see CalcPage.tsx's linkedEntryId), since Calc's write-back link is scoped to that slot. Omitted on the Pokemon 1 panel, where loading an opponent is informational only. */
+  onLoadOpponentEntry?: (entryId: string) => void;
   savedPokemonState: UseSavedPokemonReturn;
   gameDataState: UseGameDataReturn;
   databaseState: UseDatabaseReturn;
@@ -100,7 +105,7 @@ const GENDER_CYCLE: Array<CalcPokemonState['gender']> = ['M', 'F', ''];
 
 export default function CalcPokemonPanel({
   title, state, speciesOptions, itemOptions, abilityOptions, natureOptions, moveOptions, formes, baseStats, boostedStats, natureEffect,
-  teams, savedPokemonState, gameDataState, databaseState, resolveSprite, onChange, onMoveUsageChange,
+  teams, opponentRoster, onLoadOpponentEntry, savedPokemonState, gameDataState, databaseState, resolveSprite, onChange, onMoveUsageChange,
 }: CalcPokemonPanelProps) {
   const [savedSetPickerSpecies, setSavedSetPickerSpecies] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -186,6 +191,31 @@ export default function CalcPokemonPanel({
     const sets = savedPokemonState.getSavedSetsForSpecies(species);
     if (sets.length > 0) setSavedSetPickerSpecies(species);
     autoFillFromUsage(species);
+  };
+
+  // Click handler for CalcOpponentTray - applies whatever the opponent entry
+  // actually reveals (species always, ability/item/moves only once seen)
+  // immediately, then layers a usage-based guess on top for exactly the
+  // fields a battle log can never reveal (nature, Stat Points) plus
+  // ability/item only if the opponent tile hasn't shown them yet - unlike
+  // autoFillFromUsage's fresh-species case, a known revealed value must
+  // never be clobbered by a generic top-of-ladder pick.
+  const handleLoadOpponent = async (entry: OpponentPokemonEntry) => {
+    onChange(opponentEntryToCalcUpdates(entry));
+    onLoadOpponentEntry?.(entry.id);
+    const requestId = ++autoFillRequestRef.current;
+    setUsage(null);
+    const usageEntry = await gameDataState.getChampionsUsage(entry.species);
+    if (autoFillRequestRef.current !== requestId) return;
+    setUsage(usageEntry);
+    if (!usageEntry) return;
+
+    const updates: Partial<CalcPokemonState> = {};
+    if (usageEntry.natures[0]) updates.nature = usageEntry.natures[0].name as NatureName;
+    if (usageEntry.statSpreads[0]) updates.sps = usageEntry.statSpreads[0].points;
+    if (!entry.ability && usageEntry.abilities[0]) updates.ability = usageEntry.abilities[0].name;
+    if (!entry.item && usageEntry.items[0]) updates.item = usageEntry.items[0].name;
+    onChange(updates);
   };
 
   const handlePickSavedSet = (entry: SavedPokemonEntry) => {
@@ -282,6 +312,9 @@ export default function CalcPokemonPanel({
       </div>
 
       <CalcTeamTray teams={teams} resolveSprite={resolveSprite} onLoadPokemon={(p) => onChange(teamPokemonToCalcUpdates(p))} />
+      {opponentRoster && (
+        <CalcOpponentTray opponentRoster={opponentRoster} resolveSprite={resolveSprite} onLoadPokemon={handleLoadOpponent} />
+      )}
 
       <div className="flex gap-2 items-end">
         <div className="flex-1 relative min-w-0">

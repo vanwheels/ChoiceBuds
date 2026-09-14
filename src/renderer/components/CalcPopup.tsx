@@ -49,11 +49,10 @@ interface CalcPopupProps {
   savedPokemonState: UseSavedPokemonReturn;
   spriteCacheState: UseSpriteCacheReturn;
   settingsState: UseSettingsReturn;
-  /** Forwarded straight through to CalcPage - see its header comment (Regular Calc Battle Log Integration Leg 1). */
-  pendingPrefill?: { species: string } | null;
-  onPrefillApplied?: () => void;
-  /** Forwarded straight through to CalcPage - the active Calc write-back link's callback, if any (Regular Calc Battle Log Integration Leg 2). See App.tsx's calcLink doc. */
-  linkedOnUpdate?: (updates: Partial<OpponentPokemonEntry>) => void;
+  /** Forwarded straight through to CalcPage - the active Battle Log session's live opponent roster, if any (Regular Calc Battle Log Integration Leg 3). See App.tsx's battleLogSession doc. */
+  battleLogOpponentRoster?: OpponentPokemonEntry[];
+  /** Forwarded straight through to CalcPage - the active Battle Log session's write-back updater, if any (Regular Calc Battle Log Integration Leg 2/3). See App.tsx's battleLogSession doc. */
+  onUpdateOpponentEntry?: (entryId: string, updates: Partial<OpponentPokemonEntry>) => void;
 }
 
 const overlayVariants = {

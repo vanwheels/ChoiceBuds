@@ -15,10 +15,18 @@
  * (see StatsColumn.tsx), so these copy directly into CalcPokemonState.sps
  * with no /4 or *4 conversion, unlike spsToEvs in useDamageCalc.ts (which
  * converts SP into @smogon/calc's own traditional-EV internals).
+ *
+ * `opponentEntryToCalcUpdates` is the equivalent mapping for a Battle Log
+ * opponent tile (powers CalcOpponentTray.tsx) - unlike a saved Team's
+ * ImportedPokemonInfo, an OpponentPokemonEntry only ever carries what's
+ * actually been revealed in-battle (species always, ability/item/moves only
+ * once seen), so it deliberately leaves nature/Stat Points untouched rather
+ * than guessing - CalcPokemonPanel.tsx's handleLoadOpponent layers a
+ * usage-based guess on top of this for exactly the fields still blank.
  */
 
 import type { NatureName, StatsTable } from '@smogon/calc/dist/data/interface';
-import type { ImportedPokemonInfo } from '../types/pokemon';
+import type { ImportedPokemonInfo, OpponentPokemonEntry } from '../types/pokemon';
 import type { CalcPokemonState, CalcMoveSlot } from '../hooks/useDamageCalc';
 
 const ZERO_STATS: StatsTable = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
@@ -44,6 +52,20 @@ export function teamPokemonToCalcUpdates(p: ImportedPokemonInfo): Partial<CalcPo
       spa: sd.evs.specialAttack, spd: sd.evs.specialDefense, spe: sd.evs.speed,
     },
     boosts: { ...ZERO_STATS },
+    moves,
+  };
+}
+
+export function opponentEntryToCalcUpdates(entry: OpponentPokemonEntry): Partial<CalcPokemonState> {
+  const moves: CalcMoveSlot[] = Array.from({ length: MOVE_SLOT_COUNT }, (_, i) => ({
+    name: entry.moves[i] || '',
+    isCrit: false,
+  }));
+
+  return {
+    species: entry.species,
+    item: entry.item || '',
+    ability: entry.ability || '',
     moves,
   };
 }

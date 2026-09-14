@@ -35,18 +35,32 @@ interface CalcPageProps {
   savedPokemonState: UseSavedPokemonReturn;
   spriteCacheState: UseSpriteCacheReturn;
   settingsState: UseSettingsReturn;
-  /** Set once by a Battle Log opponent tile's "Calc" trigger (Regular Calc Battle Log Integration Leg 1) - applied to pokemon2 by the effect below, then cleared via onPrefillApplied so it doesn't reapply on unrelated re-renders. Undefined/null outside that flow (e.g. the plain floating launcher). */
-  pendingPrefill?: { species: string } | null;
-  onPrefillApplied?: () => void;
-  /** Set for as long as a Battle Log opponent entry is linked to this popup (Regular Calc Battle Log Integration Leg 2) - the effect below reports pokemon2's moves/ability/item back through it on every change. Undefined outside that flow, same as pendingPrefill. */
-  linkedOnUpdate?: (updates: Partial<OpponentPokemonEntry>) => void;
+  /** The currently open Battle Log session's live opponent roster, if any (Regular Calc Battle Log Integration Leg 3, see App.tsx's battleLogSession doc) - forwarded straight through to both CalcPokemonPanels so either side's "Load from Opponent" tray can pull in any of the opponent's revealed Pokemon. Undefined outside that flow (e.g. the plain floating launcher opened with no Battle Log session active). */
+  battleLogOpponentRoster?: OpponentPokemonEntry[];
+  /** Merges a write back into a specific opponent-roster entry by id (Regular Calc Battle Log Integration Leg 2/3) - the effect below calls this whenever pokemon2's moves/ability/item change, but only once the Pokemon 2 panel has actually loaded an opponent entry via its tray (see linkedEntryId below). Undefined outside a Battle Log session, same as battleLogOpponentRoster. */
+  onUpdateOpponentEntry?: (entryId: string, updates: Partial<OpponentPokemonEntry>) => void;
 }
 
 export default function CalcPage({
   gameDataState, teamsState, databaseState, savedPokemonState, spriteCacheState, settingsState,
-  pendingPrefill, onPrefillApplied, linkedOnUpdate,
+  battleLogOpponentRoster, onUpdateOpponentEntry,
 }: CalcPageProps) {
   const [isSavedSetsOpen, setIsSavedSetsOpen] = useState(false);
+  // Which opponent-roster entry (if any) the Pokemon 2 panel's "Load from
+  // Opponent" tray last loaded - set via onLoadOpponentEntry below, and the
+  // target of the write-back effect further down. Reset to null (React's
+  // "adjust state during render" pattern - see docs/investigations/
+  // set-state-in-effect-lint-fix.md for why this project prefers it over a
+  // reset useEffect) whenever onUpdateOpponentEntry's identity changes,
+  // i.e. the Battle Log session boundary itself changes (a session
+  // starting, ending, or being replaced by a different one) - a link must
+  // never survive into an unrelated session.
+  const [linkedEntryId, setLinkedEntryId] = useState<string | null>(null);
+  const [prevOnUpdateOpponentEntry, setPrevOnUpdateOpponentEntry] = useState(() => onUpdateOpponentEntry);
+  if (onUpdateOpponentEntry !== prevOnUpdateOpponentEntry) {
+    setPrevOnUpdateOpponentEntry(() => onUpdateOpponentEntry);
+    setLinkedEntryId(null);
+  }
   // Computed inside each side's CalcPokemonPanel (that's where the fetched
   // ChampionsUsageEntry lives) and lifted up here purely to reach the move
   // grids above, which CalcPage renders as CalcPokemonPanel's siblings, not
@@ -65,42 +79,29 @@ export default function CalcPage({
     p1Results, p2Results, selectedResult, setSelectedResult, selectedEntry,
   } = calcState;
 
-  // One-shot prefill from a Battle Log opponent tile - fires once per
-  // distinct pendingPrefill (a fresh object each trigger, see App.tsx's
-  // openCalcPopup), then clears it immediately so it doesn't reapply on
-  // this popup's later, unrelated re-renders.
-  useEffect(() => {
-    if (!pendingPrefill) return;
-    setPokemon2({ species: pendingPrefill.species });
-    onPrefillApplied?.();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pendingPrefill]);
-
-  // Write-back half of the same link (Regular Calc Battle Log Integration
-  // Leg 2) - reports pokemon2's moves/ability/item to the linked opponent
-  // entry whenever any of them actually change, but only while a link is
-  // active (the plain floating launcher never sets linkedOnUpdate).
+  // Write-back to the linked opponent entry (Regular Calc Battle Log
+  // Integration Leg 2/3) - reports pokemon2's moves/ability/item whenever
+  // any of them actually change, but only once the Pokemon 2 panel's own
+  // "Load from Opponent" tray has set linkedEntryId (and only while a
+  // Battle Log session is actually open, i.e. onUpdateOpponentEntry is set).
   //
-  // pokemon2's fields aren't reset when a link is (re)established (Leg 1's
-  // prefill only ever touches species), so whatever ability/item/moves
-  // happen to be sitting in pokemon2 from an earlier, unrelated Calc session
-  // would otherwise look indistinguishable from a real edit. linkBaselineRef
-  // tracks the per-field values as of the link's own start (or its last
-  // reported update) and only ever reports what has actually moved off that
-  // baseline - never a full snapshot of all three (or of all 4 move slots)
-  // every time any one of them changes. That distinction matters specifically
-  // for moves: RecordMatchForm.handleCalcUpdate unions a reported `moves`
-  // list into the entry's existing tags rather than overwriting it (a
-  // growable list, not a fixed 4 slots), so a stale, not-yet-touched slot
-  // riding along on some other slot's edit would get permanently baked into
-  // the entry even though ability/item's plain overwrite would have
-  // self-corrected on the next real change. Moves are diffed per slot index
-  // against the baseline (not as one joined string) for the same reason -
-  // editing slot 0 must not resurface slot 1's still-stale leftover name as
-  // if it were newly set. Establishing a new link's baseline reports nothing.
-  const linkBaselineRef = useRef<{ onUpdate: NonNullable<typeof linkedOnUpdate>; moves: string[]; ability: string; item: string } | null>(null);
+  // linkBaselineRef tracks the per-field values as of the link's own start
+  // (or its last reported update) and only ever reports what has actually
+  // moved off that baseline - never a full snapshot of all three (or of all
+  // 4 move slots) every time any one of them changes. That distinction
+  // matters specifically for moves: RecordMatchForm.handleCalcUpdate unions
+  // a reported `moves` list into the entry's existing tags rather than
+  // overwriting it (a growable list, not a fixed 4 slots), so a stale,
+  // not-yet-touched slot riding along on some other slot's edit would get
+  // permanently baked into the entry even though ability/item's plain
+  // overwrite would have self-corrected on the next real change. Moves are
+  // diffed per slot index against the baseline (not as one joined string)
+  // for the same reason - editing slot 0 must not resurface slot 1's still-
+  // stale leftover name as if it were newly set. Establishing a new link's
+  // baseline (a fresh linkedEntryId) reports nothing.
+  const linkBaselineRef = useRef<{ entryId: string; moves: string[]; ability: string; item: string } | null>(null);
   useEffect(() => {
-    if (!linkedOnUpdate) {
+    if (!onUpdateOpponentEntry || !linkedEntryId) {
       linkBaselineRef.current = null;
       return;
     }
@@ -108,8 +109,8 @@ export default function CalcPage({
     const currentAbility = pokemon2.ability;
     const currentItem = pokemon2.item;
     const baseline = linkBaselineRef.current;
-    if (!baseline || baseline.onUpdate !== linkedOnUpdate) {
-      linkBaselineRef.current = { onUpdate: linkedOnUpdate, moves: currentMoves, ability: currentAbility, item: currentItem };
+    if (!baseline || baseline.entryId !== linkedEntryId) {
+      linkBaselineRef.current = { entryId: linkedEntryId, moves: currentMoves, ability: currentAbility, item: currentItem };
       return;
     }
 
@@ -120,10 +121,10 @@ export default function CalcPage({
     if (currentItem !== baseline.item && currentItem) updates.item = currentItem;
 
     if (Object.keys(updates).length > 0) {
-      linkedOnUpdate(updates);
-      linkBaselineRef.current = { onUpdate: linkedOnUpdate, moves: currentMoves, ability: currentAbility, item: currentItem };
+      onUpdateOpponentEntry(linkedEntryId, updates);
+      linkBaselineRef.current = { entryId: linkedEntryId, moves: currentMoves, ability: currentAbility, item: currentItem };
     }
-  }, [linkedOnUpdate, pokemon2.moves, pokemon2.ability, pokemon2.item]);
+  }, [onUpdateOpponentEntry, linkedEntryId, pokemon2.moves, pokemon2.ability, pokemon2.item]);
 
   return (
     <div className="flex flex-col gap-2">
@@ -186,6 +187,7 @@ export default function CalcPage({
           boostedStats={pokemon1BoostedStats}
           natureEffect={pokemon1NatureEffect}
           teams={teamsState.teams}
+          opponentRoster={battleLogOpponentRoster}
           savedPokemonState={savedPokemonState}
           gameDataState={gameDataState}
           databaseState={databaseState}
@@ -216,6 +218,8 @@ export default function CalcPage({
           boostedStats={pokemon2BoostedStats}
           natureEffect={pokemon2NatureEffect}
           teams={teamsState.teams}
+          opponentRoster={battleLogOpponentRoster}
+          onLoadOpponentEntry={setLinkedEntryId}
           savedPokemonState={savedPokemonState}
           gameDataState={gameDataState}
           databaseState={databaseState}

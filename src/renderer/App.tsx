@@ -4,7 +4,7 @@
  * Provides core data contexts via custom hooks down the component tree
  */
 
-import { lazy, Suspense, useCallback, useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { AnimatePresence, MotionConfig } from 'framer-motion';
 import type { OpponentPokemonEntry } from './types/pokemon';
 import { useTeams } from './hooks/useTeams';
@@ -75,30 +75,23 @@ export default function App() {
   // header comment for why it can't just be `{isCalcPopupOpen && <CalcPopup/>}`.
   const [isCalcPopupOpen, setIsCalcPopupOpen] = useState(false);
   const [hasOpenedCalcPopup, setHasOpenedCalcPopup] = useState(false);
-  // Set only by a Battle Log opponent tile's "Calc" trigger
-  // (RecordMatchForm.tsx) - the plain floating launcher below calls
-  // openCalcPopup() with no argument, leaving this untouched. CalcPage
-  // applies it once (species -> pokemon2) then clears it via
-  // onPrefillApplied so it doesn't reapply on the popup's later re-renders.
-  const [calcPrefill, setCalcPrefill] = useState<{ species: string } | null>(null);
-  // The "link" from Leg 2 (see TODO.md / regular-calc-popup-scope.md) -
-  // separate from calcPrefill's one-shot species value and from
-  // hasOpenedCalcPopup's stays-mounted-forever popup lifecycle. While a link
-  // is active, CalcPage reports pokemon2's moves/ability/item changes back
-  // through `onUpdate` so they land on this specific opponent-roster entry.
-  // A *link* must not outlive the RecordMatchForm session that created it
-  // (the popup itself does outlive it) - RecordMatchForm clears it via
-  // clearCalcLink on unmount so a stale closure never writes into a
-  // discarded setOpponentRoster. One link at a time: opening Calc from a
-  // different opponent tile just replaces it.
-  const [calcLink, setCalcLink] = useState<{ entryId: string; onUpdate: (updates: Partial<OpponentPokemonEntry>) => void } | null>(null);
-  const clearCalcLink = useCallback(() => setCalcLink(null), []);
-  const openCalcPopup = (prefill?: { species: string; entryId?: string; onUpdate?: (updates: Partial<OpponentPokemonEntry>) => void }) => {
+  const openCalcPopup = () => {
     setIsCalcPopupOpen(true);
     setHasOpenedCalcPopup(true);
-    if (prefill) setCalcPrefill({ species: prefill.species });
-    if (prefill?.entryId && prefill.onUpdate) setCalcLink({ entryId: prefill.entryId, onUpdate: prefill.onUpdate });
   };
+  // Live link to whichever RecordMatchForm session is currently open, if
+  // any (Regular Calc Battle Log Integration Leg 3, replacing the old
+  // per-opponent-tile "Calc" button - see TODO.md) - registered by
+  // RecordMatchForm on mount/every roster change and cleared on unmount, so
+  // the *global* floating Calc launcher below always has the active
+  // battle's opponent roster ready the instant it's opened, without the
+  // user needing to click into a specific tile first. `null` whenever no
+  // Battle Log session is open (e.g. anywhere else in the app), which is
+  // what makes CalcOpponentTray render nothing outside that flow.
+  const [battleLogSession, setBattleLogSession] = useState<{
+    roster: OpponentPokemonEntry[];
+    onUpdateEntry: (entryId: string, updates: Partial<OpponentPokemonEntry>) => void;
+  } | null>(null);
   const teamsState = useTeams();
   const databaseState = useDatabase();
   const savedPokemonState = useSavedPokemon();
@@ -183,8 +176,7 @@ export default function App() {
                   teamsState={teamsState}
                   speciesRosterState={speciesRosterState}
                   spriteCacheState={spriteCacheState}
-                  openCalcPopup={openCalcPopup}
-                  clearCalcLink={clearCalcLink}
+                  registerBattleLogSession={setBattleLogSession}
                 />
               </Suspense>
             </div>
@@ -254,9 +246,8 @@ export default function App() {
               savedPokemonState={savedPokemonState}
               spriteCacheState={spriteCacheState}
               settingsState={settingsState}
-              pendingPrefill={calcPrefill}
-              onPrefillApplied={() => setCalcPrefill(null)}
-              linkedOnUpdate={calcLink?.onUpdate}
+              battleLogOpponentRoster={battleLogSession?.roster}
+              onUpdateOpponentEntry={battleLogSession?.onUpdateEntry}
             />
           </Suspense>
         )}
