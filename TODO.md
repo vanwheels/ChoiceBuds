@@ -34,27 +34,10 @@ Cache leg and a Calc Panel Real Sets UI leg; both shipped 2026-09-15 (see
 
 ## Current Milestone: VGCPastes Real-Set Sourcing
 
-Once all legs below are done, revisit scoping
-[Calc Doubles Support] — Leg 1 (still in Unscheduled) before closing this
-milestone - not pulled in now, but flagged 2026-09-14 for reconsideration
-at that point.
-
-- **[Calc/Live Calc Tailwind & Terrain-Ability Speed Modeling] — Leg 1**
-  *(Last touched: 2026-09-13 · Re-checks: 0)*
-  Surfaced while fixing Choice Scarf not being factored into the Calc tab's
-  displayed Speed (see COMPLETED.md's Calc/Live Calc Bug Fixes Leg 1).
-  `computeBoostedStats()` now delegates to `@smogon/calc`'s own
-  `getFinalSpeed()`, so it's item/most-ability-correct, but it still only
-  ever receives a bare weather value - no caller threads a real Field/Side
-  through it, so Tailwind and terrain-keyed abilities (Surge Surfer) still
-  don't apply on the Calc tab's own stat panel. Not scoped: Tailwind
-  specifically needs the caller to know which side
-  (`CalcFieldState.pokemon1Side`/`pokemon2Side`) a given Pokemon is
-  actually on, which `useDamageCalc.ts` doesn't currently track/pass - a
-  real plumbing decision, not a one-line fix. Narrowed from 3 call sites to
-  1 by the Live Calc rip (see COMPLETED.md's Live Calc Retirement) -
-  `useLiveCalc.ts`/`liveCalcSpeedEngine.ts` are gone now, leaving only
-  `computeBoostedStats()`'s own call site.
+All legs of this milestone are done (see `COMPLETED.md`). Next step before
+closing it: revisit scoping [Calc Doubles Support] — Leg 1 (still in
+Unscheduled) - not pulled in now, but flagged 2026-09-14 for reconsideration
+at this point.
 
 ## Blocked
 

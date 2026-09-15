@@ -18,6 +18,17 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Calc/Live Calc Tailwind & Terrain-Ability Speed Modeling] — Leg 1**
+  (2026-09-15) - see commit `845ee26`. `computeBoostedStats()`/
+  `computeEffectiveSpeed()` now take an optional `side: CalcSideConditions`
+  param threaded into their `Field` as `attackerSide`, and
+  `useDamageCalc.ts`'s two stat-panel call sites now pass
+  `field.pokemon1Side`/`pokemon2Side` (mirroring the existing
+  `computeSideResults()` pattern), so a Tailwind set's displayed Speed Total
+  finally reflects the 2x boost. Terrain was already correctly threaded
+  before this leg - only the stale header comment claiming otherwise needed
+  correcting.
+
 - **[VGCPastes Per-Species Real-Set Extraction: Calc Panel Real Sets UI] —
   Leg 4** (2026-09-15) - see commit `c7cab0f`. Wires Leg 3's
   `useVgcRealSetsCache` into `CalcPokemonPanel.tsx`: a species pick (or
