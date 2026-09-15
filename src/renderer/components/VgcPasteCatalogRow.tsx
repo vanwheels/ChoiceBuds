@@ -31,7 +31,8 @@ import type { ShowdownPokemon, SpeciesRosterEntry, VgcPasteTeamRow } from '../ty
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
 import { extractPokepasteId, fetchPokepaste } from '../services/pokepaste';
 import { parseShowdownText } from '../services/parser';
-import { findRosterEntry, formatEvs } from '../utils/vgcPasteRowDisplay';
+import { resolveCatalogSpriteEntry, formatEvs } from '../utils/vgcPasteRowDisplay';
+import { useMegaSpritePrefetch } from '../hooks/useMegaSprite';
 
 interface VgcPasteCatalogRowProps {
   row: VgcPasteTeamRow;
@@ -41,6 +42,10 @@ interface VgcPasteCatalogRowProps {
 }
 
 export default function VgcPasteCatalogRow({ row, onPick, roster, spriteCacheState }: VgcPasteCatalogRowProps) {
+  // Warms hooks/useMegaSprite.ts's shared id/URL cache, same as
+  // TeamCard.tsx's own mini sprite strip - resolveCatalogSpriteEntry's Mega
+  // tier reads that cache synchronously and can't populate it itself.
+  useMegaSpritePrefetch();
   const [isExpanded, setIsExpanded] = useState(false);
   const [previewPokemon, setPreviewPokemon] = useState<ShowdownPokemon[] | null>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
@@ -80,7 +85,7 @@ export default function VgcPasteCatalogRow({ row, onPick, roster, spriteCacheSta
 
         <div className="flex-1 flex items-center justify-center gap-1.5">
           {Array.from({ length: 6 }, (_, idx) => row.species[idx]).map((species, idx) => {
-            const entry = species ? findRosterEntry(species, roster) : undefined;
+            const entry = species ? resolveCatalogSpriteEntry(species, roster) : null;
             if (!entry) return <div key={idx} className="w-10 h-10 shrink-0" />;
             return (
               <img
