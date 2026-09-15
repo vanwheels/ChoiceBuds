@@ -22,7 +22,68 @@ Saved Builds Box shipped 2026-09-11 (all 8 legs - see `COMPLETED.md` and
 (see `COMPLETED.md` and `MILESTONES.md`) - includes the retired Live Calc
 Tuning work that preceded its pivot; see
 [docs/postmortems/regular-calc-popup.md](docs/postmortems/regular-calc-popup.md)
-for the full arc. No milestone currently active.
+for the full arc. VGCPastes Real-Set Sourcing promoted to current milestone
+2026-09-14 (folds in the Tailwind/Terrain-Ability Speed Modeling leg that
+had been sitting in Unscheduled); its own Scoping leg finished the same day,
+splitting into a Sample Team Catalog leg and a Per-Species Real-Set
+Extraction leg (see `COMPLETED.md`).
+
+## Current Milestone: VGCPastes Real-Set Sourcing
+
+Once all legs below are done, revisit scoping
+[Calc Doubles Support] — Leg 1 (still in Unscheduled) before closing this
+milestone - not pulled in now, but flagged 2026-09-14 for reconsideration
+at that point.
+
+- **[VGCPastes Sample Team Catalog] — Leg 1** *(Last touched: 2026-09-14 ·
+  Re-checks: 0)*
+  Scoped 2026-09-14 (see
+  `docs/investigations/vgcpastes-sourcing-scope.md`) out of the prior
+  Scoping leg. Browsable catalog of real tournament teams pulled from the
+  VGCPastes public Google Sheet (per-regulation tabs), filtered to rows
+  flagged `EVs == Yes`, manually refreshed (a button, no background job) and
+  imported via `ImportTeamModal.tsx`'s existing pokepaste-URL path as-is -
+  no per-species parsing needed for this leg. Needs: the draft CLAUDE.md
+  bulk-ingestion policy exception + README Credits entry (text already
+  drafted in the scope doc above, apply verbatim or edited when this leg
+  starts), a new fetch/parse service for the sheet's CSV export endpoint, a
+  persisted local cache of pulled rows (cache-then-refresh-on-demand, same
+  shape as `useGameData`'s pattern) so it's not re-pulling the sheet every
+  app open, and catalog UI listing description/owner/tournament/rank/date/
+  species-list per row. Exact UI entry point (new modal vs. a tab inside
+  `ImportTeamModal`) is an implementation-time call, not fixed here.
+
+- **[VGCPastes Per-Species Real-Set Extraction] — Leg 2** *(Last touched:
+  2026-09-14 · Re-checks: 0)*
+  Deliberately left thin per the 2026-09-14 scoping session (see
+  `docs/investigations/vgcpastes-sourcing-scope.md`) - needs its own
+  scoping pass once Leg 1 ships and there's real sheet-pull plumbing to
+  build on top of. Builds on Leg 1's pulled/cached rows: extract individual
+  Pokémon sets out of each row's pokepaste and correlate them per species
+  (move/item/ability/nature/EV-spread bundles that actually co-occurred in
+  a real team, not synthesized from independent per-axis rankings) to power
+  Calc's opponent auto-population. Known needs, not yet scoped into
+  sub-steps: species-name normalization (sheet text like "Salamence-Mega" →
+  this app's PokeAPI-normalized slugs, same shape as
+  `config/pokemonRules.ts`'s gender-divergent-species handling) and a
+  set-correlation/storage layer distinct from Leg 1's raw-row cache.
+
+- **[Calc/Live Calc Tailwind & Terrain-Ability Speed Modeling] — Leg 1**
+  *(Last touched: 2026-09-13 · Re-checks: 0)*
+  Surfaced while fixing Choice Scarf not being factored into the Calc tab's
+  displayed Speed (see COMPLETED.md's Calc/Live Calc Bug Fixes Leg 1).
+  `computeBoostedStats()` now delegates to `@smogon/calc`'s own
+  `getFinalSpeed()`, so it's item/most-ability-correct, but it still only
+  ever receives a bare weather value - no caller threads a real Field/Side
+  through it, so Tailwind and terrain-keyed abilities (Surge Surfer) still
+  don't apply on the Calc tab's own stat panel. Not scoped: Tailwind
+  specifically needs the caller to know which side
+  (`CalcFieldState.pokemon1Side`/`pokemon2Side`) a given Pokemon is
+  actually on, which `useDamageCalc.ts` doesn't currently track/pass - a
+  real plumbing decision, not a one-line fix. Narrowed from 3 call sites to
+  1 by the Live Calc rip (see COMPLETED.md's Live Calc Retirement) -
+  `useLiveCalc.ts`/`liveCalcSpeedEngine.ts` are gone now, leaving only
+  `computeBoostedStats()`'s own call site.
 
 ## Blocked
 
@@ -74,31 +135,16 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-- **[Calc/Live Calc Tailwind & Terrain-Ability Speed Modeling] — Leg 1**
-  *(Last touched: 2026-09-13 · Re-checks: 0)*
-  Surfaced while fixing Choice Scarf not being factored into the Calc tab's
-  displayed Speed (see COMPLETED.md's Calc/Live Calc Bug Fixes Leg 1).
-  `computeBoostedStats()` now delegates to `@smogon/calc`'s own
-  `getFinalSpeed()`, so it's item/most-ability-correct, but it still only
-  ever receives a bare weather value - no caller threads a real Field/Side
-  through it, so Tailwind and terrain-keyed abilities (Surge Surfer) still
-  don't apply on the Calc tab's own stat panel. Not scoped: Tailwind
-  specifically needs the caller to know which side
-  (`CalcFieldState.pokemon1Side`/`pokemon2Side`) a given Pokemon is
-  actually on, which `useDamageCalc.ts` doesn't currently track/pass - a
-  real plumbing decision, not a one-line fix. Narrowed from 3 call sites to
-  1 by the Live Calc rip (see COMPLETED.md's Live Calc Retirement) -
-  `useLiveCalc.ts`/`liveCalcSpeedEngine.ts` are gone now, leaving only
-  `computeBoostedStats()`'s own call site.
-
-- **[Calc Doubles Support] — Leg 1** *(Last touched: 2026-09-13 ·
+- **[Calc Doubles Support] — Leg 1** *(Last touched: 2026-09-14 ·
   Re-checks: 0)*
   Raised 2026-09-11 as "Live Calc Doubles Support" alongside that tab's own
   scoping pass - 2 simultaneously-unknown opponents plus ally-side
   interactions. Retargeted 2026-09-13 at the regular Calc/popup now that
-  Live Calc is being ripped (Current Milestone); the underlying need (a
-  real future ask per Vanny, not this milestone) is unchanged. Not scoped.
-  See `docs/investigations/live-calc-layout-rework-scope.md` (historical
+  Live Calc is being ripped. Deliberately kept out of the VGCPastes Real-Set
+  Sourcing milestone (Current Milestone) for now; flagged 2026-09-14 to
+  revisit scoping it once that milestone's two legs are done, before the
+  milestone closes. Not scoped. See
+  `docs/investigations/live-calc-layout-rework-scope.md` (historical
   context) and `docs/investigations/regular-calc-popup-scope.md` (the
   pivot).
 
@@ -149,13 +195,9 @@ unblocked.
 Overhaul, Statistics Improvements, and Team Management QoL were each
 promoted to current and have since shipped (see `MILESTONES.md`). Live Calc
 Tuning, the last of the four, was promoted 2026-09-11 and later retired in
-favor of Regular Calc Popup (see `## Current Milestone` above).
+favor of Regular Calc Popup (see `MILESTONES.md`). VGCPastes real-set
+sourcing, deferred out of Regular Calc Popup, was itself promoted to
+current 2026-09-14 (see `## Current Milestone` above).
 
-- VGCPastes real-set sourcing - real correlated multi-set data (per-species
-  extraction) plus a browsable sample-team catalog, both built on the same
-  public-sheet pull. Confirmed technically feasible 2026-09-13 but
-  deliberately deferred out of Regular Calc Popup - needs its own policy
-  exception (bulk vs. today's single-user-triggered pokepaste-read
-  exception), refresh-cadence, and species-name-normalization decisions.
-  See `docs/investigations/vgcpastes-sourcing-feasibility.md`.
+None currently queued.
 

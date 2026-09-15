@@ -18,3 +18,15 @@ file's oldest are in:
 - [docs/archive/completed-2026-09-01-to-2026-09-13.md](docs/archive/completed-2026-09-01-to-2026-09-13.md)
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
+
+- **[VGCPastes Real-Set Sourcing: Scoping] — Leg 1** (2026-09-14) -
+  Scoping-only, no code change. Resolved the four open questions left by
+  `vgcpastes-sourcing-feasibility.md` (Vanny's calls, via
+  `AskUserQuestion`): sequence the browsable sample-team catalog before
+  per-species real-set extraction; refresh via manual pull only, no
+  scheduled job; keep only rows flagged `EVs == Yes`. Also drafted the
+  proposed eighth CLAUDE.md bulk-ingestion policy exception text for Leg 1
+  to apply when it starts. Split into `[VGCPastes Sample Team Catalog] —
+  Leg 1` and `[VGCPastes Per-Species Real-Set Extraction] — Leg 2` in
+  `TODO.md`. Full reasoning in
+  `docs/investigations/vgcpastes-sourcing-scope.md`.
