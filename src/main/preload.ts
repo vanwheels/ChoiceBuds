@@ -144,6 +144,23 @@ const electronAPI = {
   },
 
   /**
+   * Reads the VGCPastes per-species real-set extraction cache from userData directory
+   * @returns Promise resolving to VgcRealSetsCache or null if file doesn't exist
+   */
+  readVgcRealSetsCache: async (): Promise<any> => {
+    return ipcRenderer.invoke('file:read-vgcrealsets-cache');
+  },
+
+  /**
+   * Writes the VGCPastes per-species real-set extraction cache to userData directory
+   * @param data - VgcRealSetsCache object to persist
+   * @returns Promise resolving to success boolean
+   */
+  writeVgcRealSetsCache: async (data: any): Promise<boolean> => {
+    return ipcRenderer.invoke('file:write-vgcrealsets-cache', data);
+  },
+
+  /**
    * Opens a URL in the user's default system browser
    * @param url - the URL to open externally
    */

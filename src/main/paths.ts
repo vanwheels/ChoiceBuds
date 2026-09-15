@@ -71,3 +71,10 @@ export function getWindowStatePath(): string {
 export function getVgcPastesCachePath(): string {
   return path.join(getUserDataPath(), 'vgcpastes-cache.json');
 }
+
+/**
+ * Get the full path to the VGCPastes per-species real-set extraction cache file
+ */
+export function getVgcRealSetsCachePath(): string {
+  return path.join(getUserDataPath(), 'vgcrealsets-cache.json');
+}

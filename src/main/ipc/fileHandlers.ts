@@ -17,6 +17,7 @@ import {
   getSettingsPath,
   getGameDataCachePath,
   getVgcPastesCachePath,
+  getVgcRealSetsCachePath,
 } from '../paths';
 
 export function registerFileHandlers(): void {
@@ -242,6 +243,37 @@ export function registerFileHandlers(): void {
       return true;
     } catch (err) {
       console.error('Error writing VGCPastes cache:', err);
+      return false;
+    }
+  });
+
+  /**
+   * Read the VGCPastes per-species real-set extraction cache from userData directory
+   */
+  ipcMain.handle('file:read-vgcrealsets-cache', async () => {
+    try {
+      const filePath = getVgcRealSetsCachePath();
+      const fileContent = await fs.readFile(filePath, 'utf-8');
+      return JSON.parse(fileContent);
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+        return null;
+      }
+      console.error('Error reading VGC real-sets cache:', err);
+      throw err;
+    }
+  });
+
+  /**
+   * Write the VGCPastes per-species real-set extraction cache to userData directory
+   */
+  ipcMain.handle('file:write-vgcrealsets-cache', async (_event, data) => {
+    try {
+      const filePath = getVgcRealSetsCachePath();
+      await atomicWriteFile(filePath, JSON.stringify(data, null, 2));
+      return true;
+    } catch (err) {
+      console.error('Error writing VGC real-sets cache:', err);
       return false;
     }
   });

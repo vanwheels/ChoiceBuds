@@ -4,7 +4,7 @@
  * types/pokemon.ts (see CLAUDE.md's Architecture section).
  */
 
-import type { PokemonStats, RegulationLabel } from './pokemon';
+import type { PokemonStats, RegulationLabel, EVSpread } from './pokemon';
 
 /**
  * Database schema state for PokeAPI cache
@@ -222,4 +222,52 @@ export interface VgcPastesCache {
   version: number;
   rowsByRegulation: Partial<Record<RegulationLabel, VgcPasteTeamRow[]>>;
   lastFetchedAtByRegulation: Partial<Record<RegulationLabel, number>>;
+}
+
+/**
+ * One distinct move/item/ability/nature/EV bundle extracted from real
+ * tournament pastes for a given species (services/vgcRealSets.ts) - see
+ * TODO.md's VGCPastes Per-Species Real-Set Extraction leg and
+ * docs/investigations/vgcpastes-realset-extraction-scope.md for the scoping
+ * session. `moves` is stored alphabetically sorted (not source order) so two
+ * pastes listing the same four moves in a different order still dedupe into
+ * one bundle - order isn't meaningful in a Showdown export anyway.
+ */
+export interface VgcRealSetBundle {
+  item?: string;
+  ability?: string;
+  nature?: string;
+  moves: string[];
+  evs: EVSpread;
+  occurrences: number; // how many sampled pastes had this exact bundle
+}
+
+/**
+ * One species' extracted real-set data for one regulation - persisted in
+ * VgcRealSetsCache, keyed by regulation then normalizeUsageCacheKey(species)
+ * (services/championsBattleData.ts - the same species-key convention
+ * GameDataCache.usage already uses). `sampledTeamCount` (M) alongside each
+ * bundle's own `occurrences` (N) is what gives the "seen in N of M sampled
+ * teams" signal the scoping session called for.
+ */
+export interface VgcRealSetsEntry {
+  species: string; // normalizeUsageCacheKey(species) - the key this entry was extracted for
+  sampledTeamCount: number;
+  bundles: VgcRealSetBundle[];
+  fetchedAt: number; // Unix timestamp of this extraction
+}
+
+/**
+ * Persisted cache backing useVgcRealSetsCache.ts. Extraction is strictly
+ * on-demand per (regulation, species) - the first time Calc looks a species
+ * up against that regulation's already-cached VgcPasteTeamRow[] - never
+ * eager/bulk across a whole regulation tab. Once extracted for a species it
+ * never expires (a real tournament team's own history doesn't change
+ * retroactively) and is simply never re-fetched, same "never re-fetched"
+ * precedent as VgcPastesCache's own manual-refresh-only rows, just at the
+ * species level instead of the regulation level.
+ */
+export interface VgcRealSetsCache {
+  version: number;
+  entriesByRegulation: Partial<Record<RegulationLabel, Record<string, VgcRealSetsEntry>>>;
 }
