@@ -27,7 +27,9 @@ for the full arc. VGCPastes Real-Set Sourcing promoted to current milestone
 had been sitting in Unscheduled); its own Scoping leg finished the same day,
 splitting into a Sample Team Catalog leg and a Per-Species Real-Set
 Extraction leg (see `COMPLETED.md`). Sample Team Catalog Legs 1, 2, 3, and 4
-shipped the same day (see `COMPLETED.md`).
+shipped the same day (see `COMPLETED.md`). Per-Species Real-Set Extraction's
+own scoping pass finished 2026-09-15, splitting into an Extraction Pipeline &
+Cache leg and a Calc Panel Real Sets UI leg (see `COMPLETED.md`).
 
 ## Current Milestone: VGCPastes Real-Set Sourcing
 
@@ -36,20 +38,31 @@ Once all legs below are done, revisit scoping
 milestone - not pulled in now, but flagged 2026-09-14 for reconsideration
 at that point.
 
-- **[VGCPastes Per-Species Real-Set Extraction] — Leg 2** *(Last touched:
-  2026-09-14 · Re-checks: 0)*
-  Deliberately left thin per the 2026-09-14 scoping session (see
-  `docs/investigations/vgcpastes-sourcing-scope.md`) - needs its own
-  scoping pass once Leg 1 ships and there's real sheet-pull plumbing to
-  build on top of. Builds on Leg 1's pulled/cached rows: extract individual
-  Pokémon sets out of each row's pokepaste and correlate them per species
-  (move/item/ability/nature/EV-spread bundles that actually co-occurred in
-  a real team, not synthesized from independent per-axis rankings) to power
-  Calc's opponent auto-population. Known needs, not yet scoped into
-  sub-steps: species-name normalization (sheet text like "Salamence-Mega" →
-  this app's PokeAPI-normalized slugs, same shape as
-  `config/pokemonRules.ts`'s gender-divergent-species handling) and a
-  set-correlation/storage layer distinct from Leg 1's raw-row cache.
+- **[VGCPastes Per-Species Real-Set Extraction: Extraction Pipeline &
+  Cache] — Leg 3** *(Last touched: 2026-09-15 · Re-checks: 0)*
+  Scoped 2026-09-15 (see
+  `docs/investigations/vgcpastes-realset-extraction-scope.md`) - the prior
+  thin Leg 2 entry is now that scoping session (see `COMPLETED.md`). Headless
+  plumbing only, no UI: given a regulation + species, filter the already-
+  cached `VgcPasteTeamRow[]` by species (free - `normalizeUsageCacheKey()`
+  already handles the sheet's Showdown-format species text, no new
+  normalization needed), sequentially/politely fetch+parse only the matching
+  rows' pokepastes (`fetchPokepaste` → `parseShowdownText`, both existing),
+  dedupe identical move/item/ability/nature/EV bundles into an
+  occurrence-count, and persist the result keyed by (regulation, species) in
+  a new `VgcRealSetsCache` - own userData JSON file + IPC handlers, same
+  shape as `VgcPastesCache`'s. New hook exposes a get-cached-or-fetch-on-miss
+  getter matching `useGameData.ts`'s `getChampionsUsage` shape.
+
+- **[VGCPastes Per-Species Real-Set Extraction: Calc Panel Real Sets UI] —
+  Leg 4** *(Last touched: 2026-09-15 · Re-checks: 0)*
+  Wires Leg 3's hook into `CalcPokemonPanel.tsx`. Real sets surface as their
+  own separate "real sets seen" section - deliberately not blended into the
+  existing `ChampionsUsageEntry`-based ranked candidate list (Regular Calc
+  Usage-Data Auto-Populate Leg 1), per the 2026-09-15 scoping decision (see
+  investigation doc above) - with loading/empty/error states and a
+  pick-a-bundle-to-fill-the-whole-panel interaction. Symmetric across both
+  Pokemon 1 and Pokemon 2 panels, not opponent-exclusive.
 
 - **[Calc/Live Calc Tailwind & Terrain-Ability Speed Modeling] — Leg 1**
   *(Last touched: 2026-09-13 · Re-checks: 0)*

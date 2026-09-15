@@ -18,6 +18,22 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[VGCPastes Per-Species Real-Set Extraction: Scoping] — Leg 2**
+  (2026-09-15) - Scoping-only, no code change. Resolved the two "known
+  needs" the original sourcing-scope session left open: species-name
+  normalization turned out already solved (the sheet's species columns are
+  already raw Showdown-format tokens, so the existing
+  `normalizeUsageCacheKey()` handles matching with no new code), and the
+  set-correlation/storage layer's shape (`AskUserQuestion`, Vanny's calls):
+  on-demand per-species extraction rather than eager bulk-on-refresh, a
+  separate "real sets seen" Calc panel section rather than blending into
+  the existing `ChampionsUsageEntry` ranking, and dedupe-with-occurrence-
+  count for repeated bundles. Split into `[VGCPastes Per-Species Real-Set
+  Extraction: Extraction Pipeline & Cache] — Leg 3` and `[VGCPastes
+  Per-Species Real-Set Extraction: Calc Panel Real Sets UI] — Leg 4` in
+  `TODO.md`. Full reasoning in
+  `docs/investigations/vgcpastes-realset-extraction-scope.md`.
+
 - **[VGCPastes Sample Team Catalog: Notes Auto-Population] — Leg 4**
   (2026-09-14) - see commit `a8d6f33`. Catalog imports now auto-populate the
   new team's Notes from the sheet's Tournament/Event, Rank, Link to Source,
