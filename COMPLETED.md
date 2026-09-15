@@ -18,6 +18,18 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Calc Real Sets Section: Visual Polish: Scoping] — Leg 1** (2026-09-15) -
+  Scoping-only, no code change. `CalcRealSetsSection.tsx` renders every real-
+  set bundle as a full-height stacked card with no cap, pushing
+  `CalcPokemonPanel.tsx` to grow unbounded for a species with many distinct
+  real sets. Presented three options (`AskUserQuestion`) - a scrollable
+  capped list, a collapsed-by-default section, a compact chip row like
+  `CalcStatSpreadChips.tsx` - plus a combined option; Vanny picked collapsed
+  by default with a scrollable/capped list once expanded, since collapsed-
+  only still grows unbounded on open and chips would've dropped the existing
+  card's per-bundle EV/move detail. Scoped as `[Calc Real Sets Section:
+  Visual Polish] — Leg 2` in `TODO.md`.
+
 - **[Calc/Live Calc Tailwind & Terrain-Ability Speed Modeling] — Leg 1**
   (2026-09-15) - see commit `845ee26`. `computeBoostedStats()`/
   `computeEffectiveSpeed()` now take an optional `side: CalcSideConditions`

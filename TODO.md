@@ -34,10 +34,42 @@ Cache leg and a Calc Panel Real Sets UI leg; both shipped 2026-09-15 (see
 
 ## Current Milestone: VGCPastes Real-Set Sourcing
 
-All legs of this milestone are done (see `COMPLETED.md`). Next step before
-closing it: revisit scoping [Calc Doubles Support] — Leg 1 (still in
-Unscheduled) - not pulled in now, but flagged 2026-09-14 for reconsideration
-at this point.
+Core legs are done (see `COMPLETED.md`); three follow-on legs pulled in from
+Unscheduled 2026-09-15 before closing it out.
+
+- **[Calc Real Sets Section: Visual Polish] — Leg 2** *(Last touched:
+  2026-09-15 · Re-checks: 0)*
+  Scoped via Leg 1 (see `COMPLETED.md`): `CalcRealSetsSection.tsx` collapses
+  by default behind a toggle labeled with the bundle count (e.g. "Show 7"),
+  matching the section's existing `label` row rather than adding a new one.
+  Expanding reveals the same full-card bundle rows as today, wrapped in a
+  fixed-height (`max-h`) `overflow-y-auto` container so the panel stops
+  growing unbounded once open. No change to card content/click-to-fill
+  behavior - presentation only.
+
+- **[Team Builder Real Sets Integration] — Leg 1** *(Last touched:
+  2026-09-15 · Re-checks: 0)*
+  Raised alongside the Calc Panel Real Sets UI leg (see `COMPLETED.md`'s Leg
+  4) - VGCPastes real-set data is currently Calc-tab-only, but the same
+  "what do real tournament teams actually run for this species" question is
+  just as relevant while building/editing a Pokemon in the Team Builder
+  (`useActiveEditor`'s draft-editing flow). Not scoped - needs both a
+  placement decision (where in the edit overlay this would surface) and a
+  visual treatment decision, likely informed by whatever the Visual Polish
+  leg above settles on for the Calc tab's own version first.
+
+- **[VGCPastes Sample Team Catalog: Search/Filter] — Leg 1** *(Last touched:
+  2026-09-14 · Re-checks: 0)*
+  Flagged as scope creep during Sample Team Catalog Leg 1 rather than added
+  silently - that leg's own catalog is a plain scrollable list per
+  regulation tab, no search/filter, matching exactly what was scoped. A
+  regulation tab can hold 200+ rows, so a text filter (by species/owner/
+  description) over `VgcPasteCatalogModal.tsx`'s row list would be a
+  natural fast-follow once there's a real usage signal that it's needed.
+
+Also still to revisit before closing: scoping [Calc Doubles Support] — Leg 1
+(still in Unscheduled) - not pulled in now, but flagged 2026-09-14 for
+reconsideration at this point.
 
 ## Blocked
 
@@ -88,28 +120,6 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
-
-- **[Calc Real Sets Section: Visual Polish] — Leg 1** *(Last touched:
-  2026-09-15 · Re-checks: 0)*
-  Flagged live right after using the just-shipped Calc Panel Real Sets UI
-  (see `COMPLETED.md`'s Leg 4): `CalcRealSetsSection.tsx` renders every
-  bundle as a full-height stacked card with no cap, so a species with many
-  distinct real sets pushes the whole `CalcPokemonPanel.tsx` panel to extend
-  indefinitely downward instead of staying a fixed size. Not scoped - needs
-  a decision on the actual presentation (a capped/scrollable list, a
-  collapsed-by-default section, a compact chip-row like
-  `CalcStatSpreadChips.tsx` uses for stat spreads, etc.) before touching code.
-
-- **[Team Builder Real Sets Integration] — Leg 1** *(Last touched:
-  2026-09-15 · Re-checks: 0)*
-  Raised alongside the Calc Panel Real Sets UI leg (see `COMPLETED.md`'s Leg
-  4) - VGCPastes real-set data is currently Calc-tab-only, but the same
-  "what do real tournament teams actually run for this species" question is
-  just as relevant while building/editing a Pokemon in the Team Builder
-  (`useActiveEditor`'s draft-editing flow). Not scoped - needs both a
-  placement decision (where in the edit overlay this would surface) and a
-  visual treatment decision, likely informed by whatever the Visual Polish
-  leg above settles on for the Calc tab's own version first.
 
 - **[Calc Doubles Support] — Leg 1** *(Last touched: 2026-09-14 ·
   Re-checks: 0)*
@@ -179,14 +189,16 @@ unblocked.
   line already sensitive to this exact driver's quirks, so verify live
   rather than assuming safe. Low priority - purely cosmetic.
 
-- **[VGCPastes Sample Team Catalog: Search/Filter] — Leg 1** *(Last touched:
-  2026-09-14 · Re-checks: 0)*
-  Flagged as scope creep during Sample Team Catalog Leg 1 rather than added
-  silently - that leg's own catalog is a plain scrollable list per
-  regulation tab, no search/filter, matching exactly what was scoped. A
-  regulation tab can hold 200+ rows, so a text filter (by species/owner/
-  description) over `VgcPasteCatalogModal.tsx`'s row list would be a
-  natural fast-follow once there's a real usage signal that it's needed.
+- **[Calc Stat Rows: SP / Stat Total Toggle] — Leg 1** *(Last touched:
+  2026-09-15 · Re-checks: 0)*
+  Requested 2026-09-15: `CalcStatRows.tsx`'s SP column (the raw 0-32 Stat
+  Point input, one row per stat alongside the read-only base stat and boost)
+  should be toggleable to instead display each stat's computed total (base +
+  SP + nature) so the player doesn't have to do that math by hand. Not
+  scoped - needs a decision on toggle placement/control (per-row vs. a
+  single panel-level switch) and exactly which computed value to show
+  relative to the boost column already shown separately in the row (with vs.
+  without the stage boost folded in).
 
 ## Future Milestones (unscheduled)
 
