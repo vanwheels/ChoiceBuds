@@ -19,7 +19,7 @@ Entries prior to this file's oldest are in:
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
 - **[Calc Real Sets Section: Visual Polish] — Leg 2** (2026-09-15) - see
-  commit `5095b60`. Built to Leg 1's spec below:
+  commit `a0a8598`. Built to Leg 1's spec below:
   `CalcRealSetsSection.tsx`'s bundle list now sits behind a collapsed-by-
   default toggle in the existing "Real Sets Seen" label row ("Show N" /
   "Hide"), and expanding it wraps the same full-card bundle rows in a
