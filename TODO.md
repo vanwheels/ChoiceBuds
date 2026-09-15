@@ -26,8 +26,8 @@ for the full arc. VGCPastes Real-Set Sourcing promoted to current milestone
 2026-09-14 (folds in the Tailwind/Terrain-Ability Speed Modeling leg that
 had been sitting in Unscheduled); its own Scoping leg finished the same day,
 splitting into a Sample Team Catalog leg and a Per-Species Real-Set
-Extraction leg (see `COMPLETED.md`). Sample Team Catalog Leg 1 shipped the
-same day (see `COMPLETED.md`).
+Extraction leg (see `COMPLETED.md`). Sample Team Catalog Legs 1 and 2
+shipped the same day (see `COMPLETED.md`).
 
 ## Current Milestone: VGCPastes Real-Set Sourcing
 
@@ -35,17 +35,6 @@ Once all legs below are done, revisit scoping
 [Calc Doubles Support] — Leg 1 (still in Unscheduled) before closing this
 milestone - not pulled in now, but flagged 2026-09-14 for reconsideration
 at that point.
-
-- **[VGCPastes Sample Team Catalog: Row Display Rework] — Leg 2** *(Last
-  touched: 2026-09-14 · Re-checks: 0)*
-  Flagged during Leg 1's live verification. Catalog rows currently show
-  description/owner/tournament/rank/date text plus plain species-name
-  chips (`VgcPasteCatalogModal.tsx`'s `TeamRow`) - should instead match
-  the same visual format already used for a user's own teams (team name,
-  author, 6 species sprites), same as `TeamCard.tsx`. Also add an expand
-  affordance per row (next to the Import button) to preview a team's full
-  moves/EV spreads before importing - not decided yet whether that means
-  fetching the pokepaste eagerly per row or only on expand-click.
 
 - **[VGCPastes Sample Team Catalog: Import Field Fixes] — Leg 3** *(Last
   touched: 2026-09-14 · Re-checks: 0)*

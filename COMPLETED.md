@@ -19,6 +19,18 @@ file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[VGCPastes Sample Team Catalog: Row Display Rework] — Leg 2**
+  (2026-09-14) - see commit `d96aef9`. Reworked catalog rows
+  (`VgcPasteCatalogRow.tsx`, split out of `VgcPasteCatalogModal.tsx`) from
+  plain description/owner/tournament/rank/date text + species-name chips to
+  match `TeamCard.tsx`'s own visual format: name/author header + 6 species
+  sprites (matched against the already-loaded roster by normalized name,
+  since the sheet's species text doesn't always match this app's
+  display-name spelling exactly). Added a per-row expand toggle previewing a
+  team's full moves/EV spreads before importing - fetch is lazy (on
+  expand-click only, cached per row), decided via `AskUserQuestion` over
+  eager-per-row-on-tab-load given a regulation tab can hold 200+ rows.
+
 - **[VGCPastes Sample Team Catalog] — Leg 1** (2026-09-14) - see commit
   `dc903aa`. Browsable "Browse Sample Teams" catalog (Teams page) of real
   tournament teams pulled from the public VGCPastes Google Sheet, filtered
