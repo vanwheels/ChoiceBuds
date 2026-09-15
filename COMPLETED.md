@@ -20,8 +20,8 @@ file's oldest are in:
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
 - **[VGCPastes Sample Team Catalog: Row Display Rework] — Leg 2**
-  (2026-09-14) - see commits `d96aef9`, `4cb5ff7`, and `ed39fdf`. Reworked
-  catalog rows (`VgcPasteCatalogRow.tsx`, split out of
+  (2026-09-14) - see commits `d96aef9`, `4cb5ff7`, `ed39fdf`, and `532c494`.
+  Reworked catalog rows (`VgcPasteCatalogRow.tsx`, split out of
   `VgcPasteCatalogModal.tsx`) from plain description/owner/tournament/rank/
   date text + species-name chips to match `TeamCard.tsx`'s own visual
   format: name/author header + 6 species sprites, plus a per-row expand
@@ -34,13 +34,20 @@ file's oldest are in:
   `docs/investigations/vgcpastes-catalog-sprite-matching.md`): only 75/119
   unique species strings matched the roster by direct name. Fixed with a
   3-tier resolver (`utils/vgcPasteRowDisplay.ts::resolveCatalogSpriteEntry`)
-  - direct match, then the same `normalizeSpeciesForAPI` slug normalization
-  the real import path already uses (covers Aegislash/Mimikyu/gender-
-  divergent species), then a Mega-form slug read from the same Mega-sprite
-  cache `TeamCard.tsx` warms - bringing real coverage to 116/119 (97.5%).
-  Surfaced (not fixed here) a genuine `normalizeSpeciesForAPI` gap for
-  Toxtricity, unrelated to the catalog itself - see TODO.md's "Toxtricity
-  Import Enrichment 404".
+  - direct match, then a sheet-spelling override or the same
+  `normalizeSpeciesForAPI` slug normalization the real import path already
+  uses (covers Aegislash/Mimikyu/gender-divergent species/"Maushold-Four"),
+  then a Mega-form slug read from the same Mega-sprite cache `TeamCard.tsx`
+  warms (with a gender-token strip for "Meowstic-F-Mega") - full 119/119
+  coverage once `normalizeSpeciesForAPI` also got its Toxtricity fix (below).
+  Real-import bug, not a catalog-only issue: PokeAPI has no bare
+  `toxtricity` resource, the same class of gap `normalizeSpeciesForAPI`'s
+  `formMappings` table already covered for Aegislash/Mimikyu/Gourgeist/
+  Lycanroc/Morpeko/Palafin/Pyroar, just never added for Toxtricity - added
+  (`services/pokeapi.ts`), fixing a silent import-enrichment 404 for a
+  common VGC pick, independent of the catalog. Added `services/
+  pokeapi.test.ts` (previously untested despite backing every enrichment
+  fetch) covering the full special-case table.
 
 - **[VGCPastes Sample Team Catalog] — Leg 1** (2026-09-14) - see commit
   `dc903aa`. Browsable "Browse Sample Teams" catalog (Teams page) of real

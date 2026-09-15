@@ -149,22 +149,6 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-- **[Toxtricity Import Enrichment 404] — Leg 1** *(Last touched: 2026-09-14 ·
-  Re-checks: 0)*
-  Found while diagnosing VGCPastes catalog sprite-matching gaps (see
-  `docs/investigations/vgcpastes-catalog-sprite-matching.md`), not itself a
-  catalog issue. PokeAPI has no bare `toxtricity` resource (only its
-  `-amped`/`-low-key`/gmax variant slugs), the same class of gap
-  `services/pokeapi.ts::normalizeSpeciesForAPI`'s `formMappings` table
-  already fixes for Aegislash/Mimikyu/Gourgeist/Lycanroc/Morpeko/Palafin/
-  Pyroar - but Toxtricity itself was never added to that table. A plain
-  Showdown-text import of "Toxtricity" (its default forme, same as those
-  other species) likely 404s against the real API today. Small, scoped,
-  same-shape fix as those existing entries (add `'toxtricity':
-  'toxtricity-amped'` - Amped is the default/male-associated forme) - flagged
-  rather than fixed inline since it touches a different file/code path than
-  the leg that surfaced it.
-
 - **[Calc Doubles Support] — Leg 1** *(Last touched: 2026-09-14 ·
   Re-checks: 0)*
   Raised 2026-09-11 as "Live Calc Doubles Support" alongside that tab's own
