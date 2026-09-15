@@ -20,16 +20,27 @@ file's oldest are in:
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
 - **[VGCPastes Sample Team Catalog: Row Display Rework] — Leg 2**
-  (2026-09-14) - see commit `d96aef9`. Reworked catalog rows
-  (`VgcPasteCatalogRow.tsx`, split out of `VgcPasteCatalogModal.tsx`) from
-  plain description/owner/tournament/rank/date text + species-name chips to
-  match `TeamCard.tsx`'s own visual format: name/author header + 6 species
-  sprites (matched against the already-loaded roster by normalized name,
-  since the sheet's species text doesn't always match this app's
-  display-name spelling exactly). Added a per-row expand toggle previewing a
-  team's full moves/EV spreads before importing - fetch is lazy (on
-  expand-click only, cached per row), decided via `AskUserQuestion` over
-  eager-per-row-on-tab-load given a regulation tab can hold 200+ rows.
+  (2026-09-14) - see commits `d96aef9`, `4cb5ff7`, and `ed39fdf`. Reworked
+  catalog rows (`VgcPasteCatalogRow.tsx`, split out of
+  `VgcPasteCatalogModal.tsx`) from plain description/owner/tournament/rank/
+  date text + species-name chips to match `TeamCard.tsx`'s own visual
+  format: name/author header + 6 species sprites, plus a per-row expand
+  toggle previewing a team's full moves/EV spreads before importing - fetch
+  is lazy (on expand-click only, cached per row), decided via
+  `AskUserQuestion` over eager-per-row-on-tab-load given a regulation tab
+  can hold 200+ rows.
+  Live verification immediately surfaced far more empty sprite slots than
+  expected - diagnosed live against the real Reg M-C sheet + PokeAPI (see
+  `docs/investigations/vgcpastes-catalog-sprite-matching.md`): only 75/119
+  unique species strings matched the roster by direct name. Fixed with a
+  3-tier resolver (`utils/vgcPasteRowDisplay.ts::resolveCatalogSpriteEntry`)
+  - direct match, then the same `normalizeSpeciesForAPI` slug normalization
+  the real import path already uses (covers Aegislash/Mimikyu/gender-
+  divergent species), then a Mega-form slug read from the same Mega-sprite
+  cache `TeamCard.tsx` warms - bringing real coverage to 116/119 (97.5%).
+  Surfaced (not fixed here) a genuine `normalizeSpeciesForAPI` gap for
+  Toxtricity, unrelated to the catalog itself - see TODO.md's "Toxtricity
+  Import Enrichment 404".
 
 - **[VGCPastes Sample Team Catalog] — Leg 1** (2026-09-14) - see commit
   `dc903aa`. Browsable "Browse Sample Teams" catalog (Teams page) of real
