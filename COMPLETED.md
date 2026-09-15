@@ -19,6 +19,18 @@ file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[VGCPastes Sample Team Catalog] — Leg 1** (2026-09-14) - see commit
+  `dc903aa`. Browsable "Browse Sample Teams" catalog (Teams page) of real
+  tournament teams pulled from the public VGCPastes Google Sheet, filtered
+  to rows with a confirmed real EV spread, manually refreshed per regulation
+  tab. Picking a row hands its pokepaste link to the existing
+  `ImportTeamModal` import path as-is. Column layout
+  (`services/vgcPastes.ts`) verified live against all three current-game
+  sheet tabs during implementation planning, not guessed. Added the eighth
+  CLAUDE.md bulk-ingestion policy exception + README Credits entry in the
+  same change. Flagged a search/filter follow-up as scope creep rather than
+  building it - see `TODO.md`'s Unscheduled section.
+
 - **[VGCPastes Real-Set Sourcing: Scoping] — Leg 1** (2026-09-14) -
   Scoping-only, no code change. Resolved the four open questions left by
   `vgcpastes-sourcing-feasibility.md` (Vanny's calls, via

@@ -26,7 +26,8 @@ for the full arc. VGCPastes Real-Set Sourcing promoted to current milestone
 2026-09-14 (folds in the Tailwind/Terrain-Ability Speed Modeling leg that
 had been sitting in Unscheduled); its own Scoping leg finished the same day,
 splitting into a Sample Team Catalog leg and a Per-Species Real-Set
-Extraction leg (see `COMPLETED.md`).
+Extraction leg (see `COMPLETED.md`). Sample Team Catalog Leg 1 shipped the
+same day (see `COMPLETED.md`).
 
 ## Current Milestone: VGCPastes Real-Set Sourcing
 
@@ -34,24 +35,6 @@ Once all legs below are done, revisit scoping
 [Calc Doubles Support] — Leg 1 (still in Unscheduled) before closing this
 milestone - not pulled in now, but flagged 2026-09-14 for reconsideration
 at that point.
-
-- **[VGCPastes Sample Team Catalog] — Leg 1** *(Last touched: 2026-09-14 ·
-  Re-checks: 0)*
-  Scoped 2026-09-14 (see
-  `docs/investigations/vgcpastes-sourcing-scope.md`) out of the prior
-  Scoping leg. Browsable catalog of real tournament teams pulled from the
-  VGCPastes public Google Sheet (per-regulation tabs), filtered to rows
-  flagged `EVs == Yes`, manually refreshed (a button, no background job) and
-  imported via `ImportTeamModal.tsx`'s existing pokepaste-URL path as-is -
-  no per-species parsing needed for this leg. Needs: the draft CLAUDE.md
-  bulk-ingestion policy exception + README Credits entry (text already
-  drafted in the scope doc above, apply verbatim or edited when this leg
-  starts), a new fetch/parse service for the sheet's CSV export endpoint, a
-  persisted local cache of pulled rows (cache-then-refresh-on-demand, same
-  shape as `useGameData`'s pattern) so it's not re-pulling the sheet every
-  app open, and catalog UI listing description/owner/tournament/rank/date/
-  species-list per row. Exact UI entry point (new modal vs. a tab inside
-  `ImportTeamModal`) is an implementation-time call, not fixed here.
 
 - **[VGCPastes Per-Species Real-Set Extraction] — Leg 2** *(Last touched:
   2026-09-14 · Re-checks: 0)*
@@ -188,6 +171,15 @@ unblocked.
   yet - needs real ladder-usage volume/distribution to be visible live
   first; revisit once that data exists rather than re-checking this item on
   a schedule.
+
+- **[VGCPastes Sample Team Catalog: Search/Filter] — Leg 1** *(Last touched:
+  2026-09-14 · Re-checks: 0)*
+  Flagged as scope creep during Sample Team Catalog Leg 1 rather than added
+  silently - that leg's own catalog is a plain scrollable list per
+  regulation tab, no search/filter, matching exactly what was scoped. A
+  regulation tab can hold 200+ rows, so a text filter (by species/owner/
+  description) over `VgcPasteCatalogModal.tsx`'s row list would be a
+  natural fast-follow once there's a real usage signal that it's needed.
 
 ## Future Milestones (unscheduled)
 
