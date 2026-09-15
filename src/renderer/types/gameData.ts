@@ -4,7 +4,7 @@
  * types/pokemon.ts (see CLAUDE.md's Architecture section).
  */
 
-import type { PokemonStats } from './pokemon';
+import type { PokemonStats, RegulationLabel } from './pokemon';
 
 /**
  * Database schema state for PokeAPI cache
@@ -183,4 +183,34 @@ export interface GameDataCache {
   // added by a future regulation update gets synced too, not just species
   // present the very first time this ever ran.
   lastSyncedSpeciesNames: string[];
+}
+
+/**
+ * One real tournament team row pulled from the VGCPastes public Google
+ * Sheet (services/vgcPastes.ts) - only rows the sheet itself flags
+ * `EVs == Yes` ever become one of these (see that service's filtering).
+ * `species` is the sheet's own plain-text 6-species list, kept as-is for
+ * display only - no per-species parsing/normalization this leg (that's
+ * VGCPastes Per-Species Real-Set Extraction, see TODO.md).
+ */
+export interface VgcPasteTeamRow {
+  id: string; // Team ID, e.g. "MC254"
+  description: string;
+  owner: string;
+  tournament: string;
+  rank: string;
+  date: string; // raw sheet string, display-only
+  pokepasteUrl: string;
+  species: string[]; // the sheet's own species text, display-only
+}
+
+/**
+ * Persisted cache backing the sample-team catalog (useVgcPastesCache.ts) -
+ * manually refreshed per regulation (a button, no background job), so a
+ * regulation with no entry here simply hasn't been pulled yet.
+ */
+export interface VgcPastesCache {
+  version: number;
+  rowsByRegulation: Partial<Record<RegulationLabel, VgcPasteTeamRow[]>>;
+  lastFetchedAtByRegulation: Partial<Record<RegulationLabel, number>>;
 }

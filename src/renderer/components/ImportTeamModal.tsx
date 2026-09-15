@@ -4,10 +4,10 @@
  * Invokes parser service and enriches with PokeAPI data
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { parseShowdownText } from '../services/parser';
 import { enrichPokemonWithAPI } from '../services/pokeapi';
-import { extractPokepasteId, fetchPokepaste, detectRegulationFromNotes } from '../services/pokepaste';
+import { extractPokepasteId, fetchPokepaste, detectRegulationFromNotes, type PokepasteData } from '../services/pokepaste';
 import { cloneSavedPokemon } from '../utils/clonePokemon';
 import { buildImportReviewRows, type ImportReviewRow } from '../utils/importReview';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
@@ -24,6 +24,11 @@ interface ImportTeamModalProps {
   resolveSprite: (remoteUrl: string) => string;
   existingTeamNames: string[];
   defaultRegulation: RegulationLabel;
+  // Set by VgcPasteCatalogModal.tsx when a catalog row's "Import" button is
+  // clicked - fetched and applied on mount exactly like a user pasting the
+  // same link into the paste area and blurring it (see the mount effect
+  // below and handlePasteAreaBlur, which share applyPokepasteData).
+  prefillPokepasteUrl?: string;
 }
 
 /** Smallest-unused "Team N" - keeps working after teams are renamed/deleted, not just a running count. */
@@ -45,6 +50,7 @@ export default function ImportTeamModal({
   resolveSprite,
   existingTeamNames,
   defaultRegulation,
+  prefillPokepasteUrl,
 }: ImportTeamModalProps) {
   const [pastedText, setPastedText] = useState('');
   const [teamName, setTeamName] = useState('');
@@ -64,13 +70,23 @@ export default function ImportTeamModal({
   const [selections, setSelections] = useState<Record<number, SavedPokemonEntry>>({});
 
   /**
-   * If the paste box holds nothing but a pokepast.es link, fetch that paste's
-   * own JSON (title/author/notes/paste) and use it in place of the link -
+   * Applies a fetched pokepast.es paste's own data into the form fields -
    * team name/author are only auto-filled when still empty, so this never
    * clobbers something the user already typed. Format is applied whenever
    * detected since it's a low-risk best-effort guess the Format dropdown
-   * still lets the user override.
+   * still lets the user override. Shared by handlePasteAreaBlur (a user
+   * pasting/blurring a link) and the prefillPokepasteUrl mount effect below
+   * (VgcPasteCatalogModal.tsx's "Import" button) - same data, two triggers.
    */
+  const applyPokepasteData = (data: PokepasteData) => {
+    setPastedText(data.paste);
+    if (!teamName.trim() && data.title) setTeamName(data.title);
+    if (!author.trim() && data.author) setAuthor(data.author);
+    const detectedFormat = detectRegulationFromNotes(data.notes || '');
+    if (detectedFormat) setTeamFormat(detectedFormat);
+  };
+
+  /** If the paste box holds nothing but a pokepast.es link, fetch and apply it - see applyPokepasteData. */
   const handlePasteAreaBlur = async () => {
     const id = extractPokepasteId(pastedText);
     if (!id) return;
@@ -78,18 +94,47 @@ export default function ImportTeamModal({
     setIsFetchingPokepaste(true);
     setError(null);
     try {
-      const data = await fetchPokepaste(id);
-      setPastedText(data.paste);
-      if (!teamName.trim() && data.title) setTeamName(data.title);
-      if (!author.trim() && data.author) setAuthor(data.author);
-      const detectedFormat = detectRegulationFromNotes(data.notes || '');
-      if (detectedFormat) setTeamFormat(detectedFormat);
+      applyPokepasteData(await fetchPokepaste(id));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch Pokepaste link');
     } finally {
       setIsFetchingPokepaste(false);
     }
   };
+
+  // Prefilled from the sample-team catalog (VgcPasteCatalogModal.tsx) - same
+  // fetch-and-apply as a user pasting the link themselves and blurring the
+  // textarea, just triggered on mount instead. Runs once; prefillPokepasteUrl
+  // never changes across this modal's lifetime (a new prefill always means a
+  // freshly-mounted modal instance). Inline async IIFE (not a named/outer-
+  // scope function called by reference) - React's own accepted fetch-in-
+  // effect shape, matching useDatabase.ts's mount effect; see
+  // docs/investigations/set-state-in-effect-lint-fix.md for why the shape
+  // matters to react-hooks/set-state-in-effect even with no sync setState
+  // before the first await.
+  useEffect(() => {
+    if (!prefillPokepasteUrl) return;
+    const id = extractPokepasteId(prefillPokepasteUrl);
+    if (!id) return;
+
+    let cancelled = false;
+    (async () => {
+      setIsFetchingPokepaste(true);
+      setError(null);
+      try {
+        const data = await fetchPokepaste(id);
+        if (cancelled) return;
+        applyPokepasteData(data);
+      } catch (err) {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : 'Failed to fetch Pokepaste link');
+      } finally {
+        if (!cancelled) setIsFetchingPokepaste(false);
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /**
    * Step 1: parse the pasted text (if any) and check every parsed Pokémon

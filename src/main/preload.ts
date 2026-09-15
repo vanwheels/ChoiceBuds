@@ -127,6 +127,23 @@ const electronAPI = {
   },
 
   /**
+   * Reads the VGCPastes sample-team catalog cache from userData directory
+   * @returns Promise resolving to VgcPastesCache or null if file doesn't exist
+   */
+  readVgcPastesCache: async (): Promise<any> => {
+    return ipcRenderer.invoke('file:read-vgcpastes-cache');
+  },
+
+  /**
+   * Writes the VGCPastes sample-team catalog cache to userData directory
+   * @param data - VgcPastesCache object to persist
+   * @returns Promise resolving to success boolean
+   */
+  writeVgcPastesCache: async (data: any): Promise<boolean> => {
+    return ipcRenderer.invoke('file:write-vgcpastes-cache', data);
+  },
+
+  /**
    * Opens a URL in the user's default system browser
    * @param url - the URL to open externally
    */

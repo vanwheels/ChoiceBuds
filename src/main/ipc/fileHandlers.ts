@@ -16,6 +16,7 @@ import {
   getSavedPokemonPath,
   getSettingsPath,
   getGameDataCachePath,
+  getVgcPastesCachePath,
 } from '../paths';
 
 export function registerFileHandlers(): void {
@@ -210,6 +211,37 @@ export function registerFileHandlers(): void {
       return true;
     } catch (err) {
       console.error('Error writing game data cache:', err);
+      return false;
+    }
+  });
+
+  /**
+   * Read the VGCPastes sample-team catalog cache from userData directory
+   */
+  ipcMain.handle('file:read-vgcpastes-cache', async () => {
+    try {
+      const filePath = getVgcPastesCachePath();
+      const fileContent = await fs.readFile(filePath, 'utf-8');
+      return JSON.parse(fileContent);
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+        return null;
+      }
+      console.error('Error reading VGCPastes cache:', err);
+      throw err;
+    }
+  });
+
+  /**
+   * Write the VGCPastes sample-team catalog cache to userData directory
+   */
+  ipcMain.handle('file:write-vgcpastes-cache', async (_event, data) => {
+    try {
+      const filePath = getVgcPastesCachePath();
+      await atomicWriteFile(filePath, JSON.stringify(data, null, 2));
+      return true;
+    } catch (err) {
+      console.error('Error writing VGCPastes cache:', err);
       return false;
     }
   });

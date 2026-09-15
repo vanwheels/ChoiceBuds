@@ -19,7 +19,9 @@ import type { UseSettingsReturn } from '../hooks/useSettings';
 import type { UseSavedPokemonReturn } from '../hooks/useSavedPokemon';
 import { readTeamFromClipboard } from '../utils/clipboardPayload';
 import { buildPastedTeam } from '../utils/teamPaste';
+import { useVgcPastesCache } from '../hooks/useVgcPastesCache';
 import ImportTeamModal from './ImportTeamModal';
+import VgcPasteCatalogModal from './VgcPasteCatalogModal';
 import TeamCard from './TeamCard';
 import ContextMenu from './ContextMenu';
 
@@ -52,6 +54,13 @@ export default function TeamsPage({
 }: TeamsPageProps) {
   const [activeFilter, setActiveFilter] = useState<FormatFilter>('All');
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isCatalogModalOpen, setIsCatalogModalOpen] = useState(false);
+  // Set when a VgcPasteCatalogModal row's "Import" button is picked - passed
+  // through to ImportTeamModal as prefillPokepasteUrl, cleared once that
+  // modal closes (see its onClose below) so a later plain "Add New Team"
+  // open doesn't inherit a stale prefill.
+  const [importPrefillUrl, setImportPrefillUrl] = useState<string | null>(null);
+  const vgcPastesState = useVgcPastesCache();
   // "Paste as New Team" from anywhere in the page's empty space, not just by
   // right-clicking an existing TeamCard's own header (Quick Copy/Paste
   // Pokémon & Teams via Right-Click Leg 2, see TODO.md). TeamCard's own
@@ -98,14 +107,24 @@ export default function TeamsPage({
             </p>
           </div>
 
-          {/* Add New Team Button */}
-          <button
-            onClick={() => setIsImportModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-accent-gold hover:bg-accent-gold-deep text-zinc-900 rounded-lg transition-colors font-medium"
-          >
-            <span className="text-xl">+</span>
-            <span>Add New Team</span>
-          </button>
+          <div className="flex items-center gap-3">
+            {/* Browse Sample Teams Button - VGCPastes real-team catalog (TODO.md's VGCPastes Sample Team Catalog leg) */}
+            <button
+              onClick={() => setIsCatalogModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded-lg transition-colors font-medium"
+            >
+              <span>Browse Sample Teams</span>
+            </button>
+
+            {/* Add New Team Button */}
+            <button
+              onClick={() => setIsImportModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-accent-gold hover:bg-accent-gold-deep text-zinc-900 rounded-lg transition-colors font-medium"
+            >
+              <span className="text-xl">+</span>
+              <span>Add New Team</span>
+            </button>
+          </div>
         </div>
 
         {/* Format Filter Buttons */}
@@ -206,12 +225,32 @@ export default function TeamsPage({
       <AnimatePresence>
         {isImportModalOpen && (
           <ImportTeamModal
-            onClose={() => setIsImportModalOpen(false)}
+            onClose={() => {
+              setIsImportModalOpen(false);
+              setImportPrefillUrl(null);
+            }}
             onImport={teamsState.addTeam}
             databaseState={databaseState}
             savedPokemonState={savedPokemonState}
             resolveSprite={spriteCacheState.resolveSprite}
             existingTeamNames={teamsState.teams.map(team => team.name)}
+            defaultRegulation={settingsState.settings.defaultRegulation}
+            prefillPokepasteUrl={importPrefillUrl ?? undefined}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* VGCPastes Sample Team Catalog Modal */}
+      <AnimatePresence>
+        {isCatalogModalOpen && (
+          <VgcPasteCatalogModal
+            onClose={() => setIsCatalogModalOpen(false)}
+            onPickPaste={(url) => {
+              setIsCatalogModalOpen(false);
+              setImportPrefillUrl(url);
+              setIsImportModalOpen(true);
+            }}
+            vgcPastesState={vgcPastesState}
             defaultRegulation={settingsState.settings.defaultRegulation}
           />
         )}

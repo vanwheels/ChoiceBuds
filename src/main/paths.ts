@@ -64,3 +64,10 @@ export function getSettingsPath(): string {
 export function getWindowStatePath(): string {
   return path.join(getUserDataPath(), 'window-state.json');
 }
+
+/**
+ * Get the full path to the VGCPastes sample-team catalog cache file
+ */
+export function getVgcPastesCachePath(): string {
+  return path.join(getUserDataPath(), 'vgcpastes-cache.json');
+}
