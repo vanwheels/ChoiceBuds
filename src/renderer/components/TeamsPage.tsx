@@ -252,6 +252,8 @@ export default function TeamsPage({
             }}
             vgcPastesState={vgcPastesState}
             defaultRegulation={settingsState.settings.defaultRegulation}
+            speciesRosterState={speciesRosterState}
+            spriteCacheState={spriteCacheState}
           />
         )}
       </AnimatePresence>

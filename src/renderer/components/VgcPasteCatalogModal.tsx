@@ -7,19 +7,26 @@
  * hands its pokepast.es URL to ImportTeamModal.tsx via onPickPaste, which
  * reuses that modal's existing pokepaste-URL import path as-is - no
  * per-species parsing here (see TODO.md's VGCPastes Per-Species Real-Set
- * Extraction leg for that, separately scoped).
+ * Extraction leg for that, separately scoped). Row rendering itself
+ * (name/author/sprites/expand-to-preview) lives in VgcPasteCatalogRow.tsx -
+ * see that file's header for the Row Display Rework Leg 2 details.
  */
 
 import { useState } from 'react';
-import type { RegulationLabel, VgcPasteTeamRow } from '../types/pokemon';
+import type { RegulationLabel } from '../types/pokemon';
 import type { UseVgcPastesCacheReturn } from '../hooks/useVgcPastesCache';
+import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
+import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
 import Modal from './Modal';
+import VgcPasteCatalogRow from './VgcPasteCatalogRow';
 
 interface VgcPasteCatalogModalProps {
   onClose: () => void;
   onPickPaste: (pokepasteUrl: string) => void;
   vgcPastesState: UseVgcPastesCacheReturn;
   defaultRegulation: RegulationLabel;
+  speciesRosterState: UseSpeciesRosterReturn;
+  spriteCacheState: UseSpriteCacheReturn;
 }
 
 const REGULATIONS: RegulationLabel[] = ['Reg M-A', 'Reg M-B', 'Reg M-C'];
@@ -34,34 +41,6 @@ function formatLastFetched(timestamp: number | null): string | null {
   return `Last pulled ${days} day${days === 1 ? '' : 's'} ago`;
 }
 
-function TeamRow({ row, onPick }: { row: VgcPasteTeamRow; onPick: () => void }) {
-  return (
-    <div className="p-3 bg-zinc-700/50 border border-zinc-600 rounded-lg flex items-start justify-between gap-4">
-      <div className="min-w-0">
-        <p className="text-zinc-100 font-medium truncate">{row.description || row.id}</p>
-        <p className="text-xs text-zinc-400 mt-0.5">
-          {[row.owner, row.tournament, row.rank, row.date].filter(Boolean).join(' · ')}
-        </p>
-        {row.species.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2">
-            {row.species.map((species, i) => (
-              <span key={i} className="px-2 py-0.5 text-xs bg-zinc-800 text-zinc-300 rounded">
-                {species}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-      <button
-        onClick={onPick}
-        className="shrink-0 px-3 py-1.5 bg-accent-gold hover:bg-accent-gold-deep text-zinc-900 rounded-lg transition-colors text-sm font-medium"
-      >
-        Import
-      </button>
-    </div>
-  );
-}
-
 /**
  * Modal component for browsing/importing VGCPastes sample teams.
  */
@@ -70,6 +49,8 @@ export default function VgcPasteCatalogModal({
   onPickPaste,
   vgcPastesState,
   defaultRegulation,
+  speciesRosterState,
+  spriteCacheState,
 }: VgcPasteCatalogModalProps) {
   const [activeTab, setActiveTab] = useState<RegulationLabel>(defaultRegulation);
 
@@ -134,7 +115,13 @@ export default function VgcPasteCatalogModal({
         )}
 
         {rows.map(row => (
-          <TeamRow key={row.id} row={row} onPick={() => onPickPaste(row.pokepasteUrl)} />
+          <VgcPasteCatalogRow
+            key={row.id}
+            row={row}
+            onPick={() => onPickPaste(row.pokepasteUrl)}
+            roster={speciesRosterState.roster}
+            spriteCacheState={spriteCacheState}
+          />
         ))}
       </div>
 
