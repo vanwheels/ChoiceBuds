@@ -26,7 +26,7 @@ for the full arc. VGCPastes Real-Set Sourcing promoted to current milestone
 2026-09-14 (folds in the Tailwind/Terrain-Ability Speed Modeling leg that
 had been sitting in Unscheduled); its own Scoping leg finished the same day,
 splitting into a Sample Team Catalog leg and a Per-Species Real-Set
-Extraction leg (see `COMPLETED.md`). Sample Team Catalog Legs 1 and 2
+Extraction leg (see `COMPLETED.md`). Sample Team Catalog Legs 1, 2, and 3
 shipped the same day (see `COMPLETED.md`).
 
 ## Current Milestone: VGCPastes Real-Set Sourcing
@@ -35,24 +35,6 @@ Once all legs below are done, revisit scoping
 [Calc Doubles Support] — Leg 1 (still in Unscheduled) before closing this
 milestone - not pulled in now, but flagged 2026-09-14 for reconsideration
 at that point.
-
-- **[VGCPastes Sample Team Catalog: Import Field Fixes] — Leg 3** *(Last
-  touched: 2026-09-14 · Re-checks: 0)*
-  Three related correctness bugs found during Leg 1's live verification, all
-  in how `ImportTeamModal`'s prefill (`applyPokepasteData`) populates the
-  form for a catalog-picked row: (1) Team Name auto-fills from the
-  pokepaste's own `title` field, which includes a rental code suffix
-  (e.g. "...Top 16 Team 7C8RLWGQWV") - should be stripped, or the sheet's
-  own `description` (already available on the picked `VgcPasteTeamRow`)
-  used instead of the paste's title. (2) Author auto-fills to the literal
-  string "VGCPastes" (the pokepaste's own `author` field, since VGCPastes
-  itself publishes the paste) instead of the real player - should use the
-  row's own `owner` field (sheet column AJ) when importing via this path.
-  (3) The "Review Saved Builds" step (`ImportBuildReviewStep`) shouldn't
-  show for a catalog-sourced import - go straight to import. All three need
-  `ImportTeamModal` to know it's in "catalog import" mode (the
-  `prefillPokepasteUrl` prop, or a new one) so it can use the row's own
-  name/owner instead of the paste's, and skip the review step.
 
 - **[VGCPastes Sample Team Catalog: Notes Auto-Population] — Leg 4** *(Last
   touched: 2026-09-14 · Re-checks: 0)*
