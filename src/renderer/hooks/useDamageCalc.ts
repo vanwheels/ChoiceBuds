@@ -136,11 +136,11 @@ export function useDamageCalc(gameDataState: UseGameDataReturn, defaultRegulatio
   const pokemon1NatureEffect = useMemo(() => getNatureStatEffect(gen, pokemon1.nature), [gen, pokemon1.nature]);
   const pokemon2NatureEffect = useMemo(() => getNatureStatEffect(gen, pokemon2.nature), [gen, pokemon2.nature]);
 
-  const pokemon1Speed = useMemo(() => computeEffectiveSpeed(gen, pokemon1, field.weather, field.terrain), [gen, pokemon1, field.weather, field.terrain]);
-  const pokemon2Speed = useMemo(() => computeEffectiveSpeed(gen, pokemon2, field.weather, field.terrain), [gen, pokemon2, field.weather, field.terrain]);
+  const pokemon1Speed = useMemo(() => computeEffectiveSpeed(gen, pokemon1, field.weather, field.terrain, field.pokemon1Side), [gen, pokemon1, field.weather, field.terrain, field.pokemon1Side]);
+  const pokemon2Speed = useMemo(() => computeEffectiveSpeed(gen, pokemon2, field.weather, field.terrain, field.pokemon2Side), [gen, pokemon2, field.weather, field.terrain, field.pokemon2Side]);
 
-  const pokemon1BoostedStats = useMemo(() => computeBoostedStats(gen, pokemon1, field.weather, field.terrain), [gen, pokemon1, field.weather, field.terrain]);
-  const pokemon2BoostedStats = useMemo(() => computeBoostedStats(gen, pokemon2, field.weather, field.terrain), [gen, pokemon2, field.weather, field.terrain]);
+  const pokemon1BoostedStats = useMemo(() => computeBoostedStats(gen, pokemon1, field.weather, field.terrain, field.pokemon1Side), [gen, pokemon1, field.weather, field.terrain, field.pokemon1Side]);
+  const pokemon2BoostedStats = useMemo(() => computeBoostedStats(gen, pokemon2, field.weather, field.terrain, field.pokemon2Side), [gen, pokemon2, field.weather, field.terrain, field.pokemon2Side]);
 
   const pokemon1BaseStats = useMemo(
     () => (pokemon1.species ? gen.species.get(toID(resolveCalcSpecies(pokemon1.species)))?.baseStats ?? null : null),

@@ -107,6 +107,13 @@ describe('computeBoostedStats / computeEffectiveSpeed', () => {
     // rawStats.spe(130) -> +1 stage (195) -> Scarf 1.5x (292) -> par 0.5x (146)
     expect(computeEffectiveSpeed(gen, state, '')).toBe(146);
   });
+
+  it('doubles Speed for a Tailwind on this Pokemon\'s own side, not otherwise - regression test for Tailwind not being threaded into the Calc tab\'s displayed Speed', () => {
+    const state = pokemonState({ species: 'Gengar' });
+    const tailwindSide = { ...defaultFieldState().pokemon1Side, isTailwind: true };
+    expect(computeEffectiveSpeed(gen, state, '', '', tailwindSide)).toBe(260); // floor(130 * 2)
+    expect(computeEffectiveSpeed(gen, state, '')).toBe(130); // no side conditions passed - unaffected
+  });
 });
 
 describe('computeSideResults', () => {

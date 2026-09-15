@@ -322,17 +322,24 @@ export function boostMultiplier(stage: number): number {
  * accurate rounding. utils/speedTiers.ts already established this exact
  * reuse pattern (see its own header) rather than hand-rolling a second,
  * subtly-different multiplier chain - this brings the Calc tab's/Live
- * Calc's own Speed display in line with it. Still doesn't model Tailwind or
- * terrain-keyed abilities (Surge Surfer) - this function only ever sees a
- * bare weather value, not a full field/side context (Tailwind in particular
- * needs to know which side this Pokemon is actually on, which no caller
- * threads through yet) - see TODO.md.
+ * Calc's own Speed display in line with it. `side` (this Pokemon's own side
+ * conditions - defaults to no conditions set for callers that don't track a
+ * side) feeds `getFinalSpeed()`'s Tailwind check the same way
+ * `computeSideResults()` already threads `attackerSide`/`defenderSide` into
+ * its own `Field` - terrain-keyed abilities (Surge Surfer) were already
+ * covered via the `terrain` param above.
  */
-export function computeBoostedStats(gen: Generation, state: CalcPokemonState, weather: Weather | '', terrain: Terrain | '' = ''): StatsTable | null {
+export function computeBoostedStats(
+  gen: Generation,
+  state: CalcPokemonState,
+  weather: Weather | '',
+  terrain: Terrain | '' = '',
+  side: CalcSideConditions = defaultSideConditions(),
+): StatsTable | null {
   if (!state.species) return null;
   try {
     const pokemon = buildPokemon(gen, state);
-    const field = new Field({ weather: weather || undefined, terrain: terrain || undefined });
+    const field = new Field({ weather: weather || undefined, terrain: terrain || undefined, attackerSide: side });
     const keys = Object.keys(pokemon.rawStats) as (keyof StatsTable)[];
     const entries = keys.map(key => {
       if (key === 'spe') return [key, getFinalSpeed(gen, pokemon, field, field.attackerSide)] as const;
@@ -345,8 +352,14 @@ export function computeBoostedStats(gen: Generation, state: CalcPokemonState, we
   }
 }
 
-export function computeEffectiveSpeed(gen: Generation, state: CalcPokemonState, weather: Weather | '', terrain: Terrain | '' = ''): number | null {
-  return computeBoostedStats(gen, state, weather, terrain)?.spe ?? null;
+export function computeEffectiveSpeed(
+  gen: Generation,
+  state: CalcPokemonState,
+  weather: Weather | '',
+  terrain: Terrain | '' = '',
+  side: CalcSideConditions = defaultSideConditions(),
+): number | null {
+  return computeBoostedStats(gen, state, weather, terrain, side)?.spe ?? null;
 }
 
 /** Exported for reuse by utils/speedTiers.ts, which builds the same kind
