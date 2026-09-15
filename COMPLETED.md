@@ -18,6 +18,15 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[VGCPastes Per-Species Real-Set Extraction: Extraction Pipeline &
+  Cache] — Leg 3** (2026-09-15) - see commit `c4d9ca9`. Headless plumbing:
+  given a regulation + species, filters the already-cached
+  `VgcPasteTeamRow[]` by species, sequentially fetches+parses only the
+  matching pokepastes, and dedupes identical move/item/ability/nature/EV
+  bundles into an occurrence count, persisted in a new `VgcRealSetsCache`
+  (own userData JSON file + IPC handlers) via a new `useVgcRealSetsCache`
+  hook. No UI - that's Leg 4.
+
 - **[VGCPastes Per-Species Real-Set Extraction: Scoping] — Leg 2**
   (2026-09-15) - Scoping-only, no code change. Resolved the two "known
   needs" the original sourcing-scope session left open: species-name

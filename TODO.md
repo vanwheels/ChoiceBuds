@@ -29,7 +29,8 @@ splitting into a Sample Team Catalog leg and a Per-Species Real-Set
 Extraction leg (see `COMPLETED.md`). Sample Team Catalog Legs 1, 2, 3, and 4
 shipped the same day (see `COMPLETED.md`). Per-Species Real-Set Extraction's
 own scoping pass finished 2026-09-15, splitting into an Extraction Pipeline &
-Cache leg and a Calc Panel Real Sets UI leg (see `COMPLETED.md`).
+Cache leg and a Calc Panel Real Sets UI leg; the Extraction Pipeline & Cache
+leg shipped the same day (see `COMPLETED.md`).
 
 ## Current Milestone: VGCPastes Real-Set Sourcing
 
@@ -37,22 +38,6 @@ Once all legs below are done, revisit scoping
 [Calc Doubles Support] — Leg 1 (still in Unscheduled) before closing this
 milestone - not pulled in now, but flagged 2026-09-14 for reconsideration
 at that point.
-
-- **[VGCPastes Per-Species Real-Set Extraction: Extraction Pipeline &
-  Cache] — Leg 3** *(Last touched: 2026-09-15 · Re-checks: 0)*
-  Scoped 2026-09-15 (see
-  `docs/investigations/vgcpastes-realset-extraction-scope.md`) - the prior
-  thin Leg 2 entry is now that scoping session (see `COMPLETED.md`). Headless
-  plumbing only, no UI: given a regulation + species, filter the already-
-  cached `VgcPasteTeamRow[]` by species (free - `normalizeUsageCacheKey()`
-  already handles the sheet's Showdown-format species text, no new
-  normalization needed), sequentially/politely fetch+parse only the matching
-  rows' pokepastes (`fetchPokepaste` → `parseShowdownText`, both existing),
-  dedupe identical move/item/ability/nature/EV bundles into an
-  occurrence-count, and persist the result keyed by (regulation, species) in
-  a new `VgcRealSetsCache` - own userData JSON file + IPC handlers, same
-  shape as `VgcPastesCache`'s. New hook exposes a get-cached-or-fetch-on-miss
-  getter matching `useGameData.ts`'s `getChampionsUsage` shape.
 
 - **[VGCPastes Per-Species Real-Set Extraction: Calc Panel Real Sets UI] —
   Leg 4** *(Last touched: 2026-09-15 · Re-checks: 0)*
