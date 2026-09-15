@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { parseShowdownText } from '../services/parser';
 import { enrichPokemonWithAPI } from '../services/pokeapi';
 import { extractPokepasteId, fetchPokepaste, detectRegulationFromNotes, type PokepasteData } from '../services/pokepaste';
+import { buildCatalogNotes } from '../services/vgcPastes';
 import { cloneSavedPokemon } from '../utils/clonePokemon';
 import { buildImportReviewRows, type ImportReviewRow } from '../utils/importReview';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
@@ -34,7 +35,9 @@ interface ImportTeamModalProps {
   // comment for why), and handleParseAndReview skips the saved-build review
   // step entirely - a catalog pick is a real player's already-built team,
   // not a work-in-progress the user is refining against their own saved
-  // builds.
+  // builds. finishImport also auto-populates the new Team's Notes from the
+  // row's tournament/rank/link fields via services/vgcPastes.ts's
+  // buildCatalogNotes (Notes Auto-Population, Leg 4, see TODO.md).
   catalogRow?: VgcPasteTeamRow;
 }
 
@@ -258,6 +261,7 @@ export default function ImportTeamModal({
         createdAt: Date.now(),
         updatedAt: Date.now(),
         author: author.trim() || undefined,
+        notes: catalogRow ? buildCatalogNotes(catalogRow) : undefined,
       };
 
       setImportProgress('Saving team...');

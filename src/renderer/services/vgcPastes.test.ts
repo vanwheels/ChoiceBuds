@@ -6,7 +6,8 @@
  */
 
 import { describe, expect, it, vi, afterEach } from 'vitest';
-import { fetchVgcPasteRows } from './vgcPastes';
+import { fetchVgcPasteRows, buildCatalogNotes } from './vgcPastes';
+import type { VgcPasteTeamRow } from '../types/pokemon';
 
 /** Builds one fixture data row with the real sheet's column layout (43 columns, 0-42). */
 function buildRow(overrides: {
@@ -19,6 +20,9 @@ function buildRow(overrides: {
   rank?: string;
   owner?: string;
   species?: string[];
+  linkToSource?: string;
+  reportVideo?: string;
+  otherLinks?: string;
 }): string {
   const cells = new Array(43).fill('');
   cells[0] = overrides.teamId ?? 'MC001';
@@ -28,6 +32,9 @@ function buildRow(overrides: {
   cells[29] = overrides.date ?? '13 Sep 2026';
   cells[30] = overrides.tournament ?? 'Some Regional';
   cells[31] = overrides.rank ?? 'Top 8';
+  cells[32] = overrides.linkToSource ?? '';
+  cells[33] = overrides.reportVideo ?? '';
+  cells[34] = overrides.otherLinks ?? '';
   cells[35] = overrides.owner ?? 'SomeOwner';
   (overrides.species ?? ['Raichu-Mega-Y', 'Staraptor-Mega', 'Rillaboom', 'Gholdengo', 'Sylveon', 'Incineroar'])
     .forEach((species, i) => { cells[37 + i] = species; });
@@ -98,6 +105,9 @@ describe('fetchVgcPasteRows', () => {
         rank: 'Champion',
         owner: 'MichaelderBeste',
         species: ['Raichu-Mega-Y', 'Staraptor-Mega', 'Arcanine-Hisui', 'Rillaboom', 'Gholdengo', 'Sylveon'],
+        linkToSource: 'https://x.com/MichaelderBeste/status/2099221075389206539',
+        reportVideo: '-',
+        otherLinks: 'https://victoryroad.pro/vr-sep26/',
       }),
     ]);
     stubFetch(csv);
@@ -112,6 +122,9 @@ describe('fetchVgcPasteRows', () => {
       date: '13 Sep 2026',
       pokepasteUrl: 'https://pokepast.es/421ae13bcb967417',
       species: ['Raichu-Mega-Y', 'Staraptor-Mega', 'Arcanine-Hisui', 'Rillaboom', 'Gholdengo', 'Sylveon'],
+      linkToSource: 'https://x.com/MichaelderBeste/status/2099221075389206539',
+      reportVideo: '-',
+      otherLinks: 'https://victoryroad.pro/vr-sep26/',
     }]);
   });
 
@@ -123,5 +136,52 @@ describe('fetchVgcPasteRows', () => {
   it('throws on a non-OK response', async () => {
     stubFetch('', false, 500);
     await expect(fetchVgcPasteRows('Reg M-C')).rejects.toThrow(/500/);
+  });
+});
+
+/** Minimal VgcPasteTeamRow with every notes-relevant field blank - each test overrides only what it needs. */
+function buildCatalogRow(overrides: Partial<VgcPasteTeamRow> = {}): VgcPasteTeamRow {
+  return {
+    id: 'MC001',
+    description: 'A sample team',
+    owner: 'SomeOwner',
+    tournament: '',
+    rank: '',
+    date: '13 Sep 2026',
+    pokepasteUrl: 'https://pokepast.es/abc123',
+    species: [],
+    linkToSource: '',
+    reportVideo: '',
+    otherLinks: '',
+    ...overrides,
+  };
+}
+
+describe('buildCatalogNotes', () => {
+  it('returns undefined when every field is blank or the sheet\'s own "-" placeholder', () => {
+    expect(buildCatalogNotes(buildCatalogRow())).toBeUndefined();
+    expect(buildCatalogNotes(buildCatalogRow({ tournament: '-', rank: '-', linkToSource: '-' }))).toBeUndefined();
+  });
+
+  it('builds one line per non-blank field, in sheet-column order', () => {
+    const notes = buildCatalogNotes(buildCatalogRow({
+      tournament: 'VR Septembeer Challenge',
+      rank: 'Champion',
+      linkToSource: 'https://x.com/MichaelderBeste/status/2099221075389206539',
+      reportVideo: '-',
+      otherLinks: 'https://victoryroad.pro/vr-sep26/',
+    }));
+
+    expect(notes).toBe(
+      'Tournament / Event: VR Septembeer Challenge\n' +
+      'Rank: Champion\n' +
+      'Link to Source: https://x.com/MichaelderBeste/status/2099221075389206539\n' +
+      'Other Links: https://victoryroad.pro/vr-sep26/'
+    );
+  });
+
+  it('keeps a non-"-" value like "No Tweet" as a real line', () => {
+    const notes = buildCatalogNotes(buildCatalogRow({ linkToSource: 'No Tweet' }));
+    expect(notes).toBe('Link to Source: No Tweet');
   });
 });

@@ -202,6 +202,15 @@ export interface VgcPasteTeamRow {
   date: string; // raw sheet string, display-only
   pokepasteUrl: string;
   species: string[]; // the sheet's own species text, display-only
+  // Added for Notes Auto-Population (Leg 4, see TODO.md). Raw sheet text,
+  // untouched - the sheet uses "-" as its own placeholder for "not filled
+  // in" across all three, same as it sometimes does for tournament/rank, so
+  // callers building display text (services/vgcPastes.ts's
+  // buildCatalogNotes) are the ones that treat "-"/blank as "omit this
+  // line", not this parsing layer.
+  linkToSource: string; // column AG - usually a social-media post URL, "No Tweet" text is also a real observed value here
+  reportVideo: string; // column AH - a video/report URL
+  otherLinks: string; // column AI - e.g. a tournament standings page
 }
 
 /**

@@ -47,6 +47,9 @@ const COL_EVS = 25;
 const COL_DATE = 29;
 const COL_TOURNAMENT = 30;
 const COL_RANK = 31;
+const COL_LINK_TO_SOURCE = 32;
+const COL_REPORT_VIDEO = 33;
+const COL_OTHER_LINKS = 34;
 const COL_OWNER = 35;
 const SPECIES_COLUMNS = [37, 38, 39, 40, 41, 42];
 
@@ -79,7 +82,36 @@ function toRow(cells: string[]): VgcPasteTeamRow | null {
     date: cells[COL_DATE]?.trim() ?? '',
     pokepasteUrl,
     species: SPECIES_COLUMNS.map(col => cells[col]?.trim() ?? '').filter(Boolean),
+    linkToSource: cells[COL_LINK_TO_SOURCE]?.trim() ?? '',
+    reportVideo: cells[COL_REPORT_VIDEO]?.trim() ?? '',
+    otherLinks: cells[COL_OTHER_LINKS]?.trim() ?? '',
   };
+}
+
+/** True for a sheet cell that's genuinely empty, or holds the sheet's own "-" placeholder for "not filled in". */
+function isBlankSheetValue(value: string): boolean {
+  return value.trim() === '' || value.trim() === '-';
+}
+
+/**
+ * Builds the Notes text a catalog import (ImportTeamModal.tsx's `catalogRow`
+ * prop) auto-populates the new team's `Team.notes` with - one line per
+ * non-blank field, in sheet-column order (Tournament/Event, Rank, Link to
+ * Source, Report/Video, Other Links). `Team.notes` is a plain string with no
+ * rich-text/rendering anywhere in the app (TeamCard.tsx's Notes field is a
+ * plain `<textarea>`), so "hyperlinked" per the original request just means
+ * the bare URL as text - there's no markup to hyperlink it with. Returns
+ * undefined (not an empty string) when every field is blank, matching
+ * `Team.notes`'s own optional-field convention elsewhere.
+ */
+export function buildCatalogNotes(row: VgcPasteTeamRow): string | undefined {
+  const lines: string[] = [];
+  if (!isBlankSheetValue(row.tournament)) lines.push(`Tournament / Event: ${row.tournament}`);
+  if (!isBlankSheetValue(row.rank)) lines.push(`Rank: ${row.rank}`);
+  if (!isBlankSheetValue(row.linkToSource)) lines.push(`Link to Source: ${row.linkToSource}`);
+  if (!isBlankSheetValue(row.reportVideo)) lines.push(`Report / Video: ${row.reportVideo}`);
+  if (!isBlankSheetValue(row.otherLinks)) lines.push(`Other Links: ${row.otherLinks}`);
+  return lines.length > 0 ? lines.join('\n') : undefined;
 }
 
 /**
