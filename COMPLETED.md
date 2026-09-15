@@ -18,6 +18,22 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Team Builder Real Sets Integration: Scoping] — Leg 1** (2026-09-15) -
+  Scoping-only, no code change. VGCPastes real-set data was Calc-tab-only;
+  this leg resolved the placement/visual-treatment decisions the item's own
+  text left open. Investigated `PokemonCard.tsx`'s fixed-width always-
+  inline-editing roster card and the fragile card-height tuning behind the
+  Blocked Team Card Grid Layout item, then presented three placement options
+  (`AskUserQuestion`) - an on-demand floating panel (matching the existing
+  item/ability/move picker pattern), an inline collapsed section (matching
+  the Calc tab's own Visual Polish leg), or a separate context-menu view.
+  Vanny picked the floating panel: zero resting footprint, so it can't
+  reopen the grid-layout tuning, and lets the visual treatment reuse
+  `CalcRealSetsSection`'s existing bundle-card styling directly instead of
+  designing something new. Full reasoning in
+  `docs/investigations/team-builder-real-sets-scope.md`. Scoped as
+  `[Team Builder Real Sets Integration] — Leg 2` in `TODO.md`.
+
 - **[Calc Real Sets Section: Visual Polish] — Leg 2** (2026-09-15) - see
   commit `a0a8598`. Built to Leg 1's spec below:
   `CalcRealSetsSection.tsx`'s bundle list now sits behind a collapsed-by-
