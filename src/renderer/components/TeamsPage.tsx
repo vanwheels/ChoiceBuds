@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import type { MouseEvent as ReactMouseEvent } from 'react';
-import type { RegulationLabel } from '../types/pokemon';
+import type { RegulationLabel, VgcPasteTeamRow } from '../types/pokemon';
 import { sortTeamsByFavorite } from '../utils/teamSort';
 import type { UseTeamsReturn } from '../hooks/useTeams';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
@@ -56,10 +56,13 @@ export default function TeamsPage({
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isCatalogModalOpen, setIsCatalogModalOpen] = useState(false);
   // Set when a VgcPasteCatalogModal row's "Import" button is picked - passed
-  // through to ImportTeamModal as prefillPokepasteUrl, cleared once that
-  // modal closes (see its onClose below) so a later plain "Add New Team"
-  // open doesn't inherit a stale prefill.
-  const [importPrefillUrl, setImportPrefillUrl] = useState<string | null>(null);
+  // through to ImportTeamModal as catalogRow (the whole row, not just its
+  // pokepast.es URL, so the modal can prefer the row's own
+  // description/owner over the paste's own title/author - see
+  // ImportTeamModal.tsx's applyPokepasteData), cleared once that modal
+  // closes (see its onClose below) so a later plain "Add New Team" open
+  // doesn't inherit a stale prefill.
+  const [importPrefillRow, setImportPrefillRow] = useState<VgcPasteTeamRow | null>(null);
   const vgcPastesState = useVgcPastesCache();
   // "Paste as New Team" from anywhere in the page's empty space, not just by
   // right-clicking an existing TeamCard's own header (Quick Copy/Paste
@@ -227,7 +230,7 @@ export default function TeamsPage({
           <ImportTeamModal
             onClose={() => {
               setIsImportModalOpen(false);
-              setImportPrefillUrl(null);
+              setImportPrefillRow(null);
             }}
             onImport={teamsState.addTeam}
             databaseState={databaseState}
@@ -235,7 +238,7 @@ export default function TeamsPage({
             resolveSprite={spriteCacheState.resolveSprite}
             existingTeamNames={teamsState.teams.map(team => team.name)}
             defaultRegulation={settingsState.settings.defaultRegulation}
-            prefillPokepasteUrl={importPrefillUrl ?? undefined}
+            catalogRow={importPrefillRow ?? undefined}
           />
         )}
       </AnimatePresence>
@@ -245,9 +248,9 @@ export default function TeamsPage({
         {isCatalogModalOpen && (
           <VgcPasteCatalogModal
             onClose={() => setIsCatalogModalOpen(false)}
-            onPickPaste={(url) => {
+            onPickPaste={(row) => {
               setIsCatalogModalOpen(false);
-              setImportPrefillUrl(url);
+              setImportPrefillRow(row);
               setIsImportModalOpen(true);
             }}
             vgcPastesState={vgcPastesState}

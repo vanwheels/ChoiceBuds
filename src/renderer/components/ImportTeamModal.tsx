@@ -12,7 +12,7 @@ import { cloneSavedPokemon } from '../utils/clonePokemon';
 import { buildImportReviewRows, type ImportReviewRow } from '../utils/importReview';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
 import type { UseSavedPokemonReturn } from '../hooks/useSavedPokemon';
-import type { Team, ImportedPokemonInfo, RegulationLabel, ShowdownPokemon, SavedPokemonEntry } from '../types/pokemon';
+import type { Team, ImportedPokemonInfo, RegulationLabel, ShowdownPokemon, SavedPokemonEntry, VgcPasteTeamRow } from '../types/pokemon';
 import Modal from './Modal';
 import ImportBuildReviewStep from './ImportBuildReviewStep';
 
@@ -25,10 +25,17 @@ interface ImportTeamModalProps {
   existingTeamNames: string[];
   defaultRegulation: RegulationLabel;
   // Set by VgcPasteCatalogModal.tsx when a catalog row's "Import" button is
-  // clicked - fetched and applied on mount exactly like a user pasting the
-  // same link into the paste area and blurring it (see the mount effect
-  // below and handlePasteAreaBlur, which share applyPokepasteData).
-  prefillPokepasteUrl?: string;
+  // clicked - the paste itself is fetched and applied on mount exactly like
+  // a user pasting the same link into the paste area and blurring it (see
+  // the mount effect below and handlePasteAreaBlur, which share
+  // applyPokepasteData). Its presence also means "catalog import mode":
+  // applyPokepasteData prefers the row's own description/owner over the
+  // paste's own title/author for Team Name/Author (see that function's own
+  // comment for why), and handleParseAndReview skips the saved-build review
+  // step entirely - a catalog pick is a real player's already-built team,
+  // not a work-in-progress the user is refining against their own saved
+  // builds.
+  catalogRow?: VgcPasteTeamRow;
 }
 
 /** Smallest-unused "Team N" - keeps working after teams are renamed/deleted, not just a running count. */
@@ -50,7 +57,7 @@ export default function ImportTeamModal({
   resolveSprite,
   existingTeamNames,
   defaultRegulation,
-  prefillPokepasteUrl,
+  catalogRow,
 }: ImportTeamModalProps) {
   const [pastedText, setPastedText] = useState('');
   const [teamName, setTeamName] = useState('');
@@ -75,13 +82,26 @@ export default function ImportTeamModal({
    * clobbers something the user already typed. Format is applied whenever
    * detected since it's a low-risk best-effort guess the Format dropdown
    * still lets the user override. Shared by handlePasteAreaBlur (a user
-   * pasting/blurring a link) and the prefillPokepasteUrl mount effect below
+   * pasting/blurring a link) and the catalogRow mount effect below
    * (VgcPasteCatalogModal.tsx's "Import" button) - same data, two triggers.
+   *
+   * In catalog mode (catalogRow set), Team Name/Author prefer the row's own
+   * description/owner over the paste's own title/author: VGCPastes
+   * republishes every paste under its own account, so the paste's `author`
+   * is always the literal string "VGCPastes" rather than the real player,
+   * and its `title` carries a rental-code suffix (e.g. "...Top 16 Team
+   * 7C8RLWGQWV") that doesn't belong in a team name. Falls back to the
+   * paste's own fields when the row's description/owner is blank (not every
+   * sheet row has both filled in).
    */
   const applyPokepasteData = (data: PokepasteData) => {
     setPastedText(data.paste);
-    if (!teamName.trim() && data.title) setTeamName(data.title);
-    if (!author.trim() && data.author) setAuthor(data.author);
+    const nameFromCatalog = catalogRow?.description.trim();
+    const teamNameToApply = nameFromCatalog || data.title;
+    if (!teamName.trim() && teamNameToApply) setTeamName(teamNameToApply);
+    const authorFromCatalog = catalogRow?.owner.trim();
+    const authorToApply = authorFromCatalog || data.author;
+    if (!author.trim() && authorToApply) setAuthor(authorToApply);
     const detectedFormat = detectRegulationFromNotes(data.notes || '');
     if (detectedFormat) setTeamFormat(detectedFormat);
   };
@@ -104,8 +124,8 @@ export default function ImportTeamModal({
 
   // Prefilled from the sample-team catalog (VgcPasteCatalogModal.tsx) - same
   // fetch-and-apply as a user pasting the link themselves and blurring the
-  // textarea, just triggered on mount instead. Runs once; prefillPokepasteUrl
-  // never changes across this modal's lifetime (a new prefill always means a
+  // textarea, just triggered on mount instead. Runs once; catalogRow never
+  // changes across this modal's lifetime (a new prefill always means a
   // freshly-mounted modal instance). Inline async IIFE (not a named/outer-
   // scope function called by reference) - React's own accepted fetch-in-
   // effect shape, matching useDatabase.ts's mount effect; see
@@ -113,8 +133,8 @@ export default function ImportTeamModal({
   // matters to react-hooks/set-state-in-effect even with no sync setState
   // before the first await.
   useEffect(() => {
-    if (!prefillPokepasteUrl) return;
-    const id = extractPokepasteId(prefillPokepasteUrl);
+    if (!catalogRow) return;
+    const id = extractPokepasteId(catalogRow.pokepasteUrl);
     if (!id) return;
 
     let cancelled = false;
@@ -143,6 +163,11 @@ export default function ImportTeamModal({
    * one-click parse->enrich->save flow never grows an extra step for a user
    * with no relevant saved builds. 1+ match swaps the modal body to the
    * review step instead, and finishImport waits for "Confirm Import".
+   *
+   * Catalog imports (catalogRow set) always skip the review step regardless
+   * of match count - a VGCPastes row is already a real, complete tournament
+   * team, so there's nothing to reconcile against the user's own saved
+   * builds the way there would be for a hand-pasted/in-progress team.
    */
   const handleParseAndReview = async () => {
     if (!pastedText.trim()) {
@@ -165,10 +190,9 @@ export default function ImportTeamModal({
         );
       }
 
-      const rows: ImportReviewRow[] = buildImportReviewRows(
-        parseResult.pokemon,
-        savedPokemonState.getSavedSetsForSpecies
-      );
+      const rows: ImportReviewRow[] = catalogRow
+        ? []
+        : buildImportReviewRows(parseResult.pokemon, savedPokemonState.getSavedSetsForSpecies);
 
       setImportProgress('');
 

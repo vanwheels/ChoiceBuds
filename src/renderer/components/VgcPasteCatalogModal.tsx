@@ -4,16 +4,22 @@
  * VGCPastes Google Sheet (services/vgcPastes.ts), filtered to rows with a
  * confirmed real EV spread. Manually refreshed per regulation tab - no
  * automatic fetch, ever (see useVgcPastesCache.ts's header). Picking a row
- * hands its pokepast.es URL to ImportTeamModal.tsx via onPickPaste, which
- * reuses that modal's existing pokepaste-URL import path as-is - no
- * per-species parsing here (see TODO.md's VGCPastes Per-Species Real-Set
- * Extraction leg for that, separately scoped). Row rendering itself
+ * hands the whole row to ImportTeamModal.tsx via onPickPaste (not just its
+ * pokepast.es URL) - the modal reuses its existing pokepaste-URL import path
+ * to fetch/parse the paste itself, but prefers the row's own
+ * description/owner fields over the paste's own title/author for Team
+ * Name/Author (see ImportTeamModal.tsx's applyPokepasteData), since the
+ * paste's title carries a rental-code suffix and its author is always the
+ * literal string "VGCPastes" (VGCPastes republishes every paste under its
+ * own account) rather than the real player. No per-species parsing here
+ * (see TODO.md's VGCPastes Per-Species Real-Set Extraction leg for that,
+ * separately scoped). Row rendering itself
  * (name/author/sprites/expand-to-preview) lives in VgcPasteCatalogRow.tsx -
  * see that file's header for the Row Display Rework Leg 2 details.
  */
 
 import { useState } from 'react';
-import type { RegulationLabel } from '../types/pokemon';
+import type { RegulationLabel, VgcPasteTeamRow } from '../types/pokemon';
 import type { UseVgcPastesCacheReturn } from '../hooks/useVgcPastesCache';
 import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
@@ -22,7 +28,7 @@ import VgcPasteCatalogRow from './VgcPasteCatalogRow';
 
 interface VgcPasteCatalogModalProps {
   onClose: () => void;
-  onPickPaste: (pokepasteUrl: string) => void;
+  onPickPaste: (row: VgcPasteTeamRow) => void;
   vgcPastesState: UseVgcPastesCacheReturn;
   defaultRegulation: RegulationLabel;
   speciesRosterState: UseSpeciesRosterReturn;
@@ -118,7 +124,7 @@ export default function VgcPasteCatalogModal({
           <VgcPasteCatalogRow
             key={row.id}
             row={row}
-            onPick={() => onPickPaste(row.pokepasteUrl)}
+            onPick={() => onPickPaste(row)}
             roster={speciesRosterState.roster}
             spriteCacheState={spriteCacheState}
           />
