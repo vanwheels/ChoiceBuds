@@ -176,6 +176,14 @@ export function normalizeSpeciesForAPI(name: string, gender?: 'M' | 'F' | 'N' | 
     'mimikyu': 'mimikyu-disguised',
     'morpeko': 'morpeko-full-belly',
     'pyroar': 'pyroar-male',
+    // Same class of gap as the block above, found 2026-09-14 while diagnosing
+    // VGCPastes catalog sprite-matching gaps (see docs/investigations/
+    // vgcpastes-catalog-sprite-matching.md) rather than the original 2026-07-19
+    // audit - confirmed live 404 on `/pokemon/toxtricity` (200 on
+    // `/pokemon/toxtricity-amped`) before this fix. Toxtricity is a common
+    // enough VGC pick that this was a real, silent import-enrichment failure
+    // the same way Mimikyu's was.
+    'toxtricity': 'toxtricity-amped',
     // @smogon/calc spells the Paldean Tauros breeds without "-breed" (see
     // utils/pokemonRules.ts) but PokeAPI's actual slugs all keep it - confirmed
     // live 404 on `/pokemon/tauros-paldea-combat` before this fix.

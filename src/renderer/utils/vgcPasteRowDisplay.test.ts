@@ -8,7 +8,7 @@ import type { EVSpread, SpeciesRosterEntry } from '../types/pokemon';
 // useMegaSpritePrefetch() (a real hook, not callable from a plain unit test).
 vi.mock('../hooks/useMegaSprite', () => ({
   getCachedMegaSprite: vi.fn((slug: string) =>
-    slug === 'absol-mega-z' || slug === 'floette-mega'
+    ['absol-mega-z', 'floette-mega', 'meowstic-mega'].includes(slug)
       ? { id: 1, spriteUrl: `mega:${slug}`, shinySpriteUrl: `mega-shiny:${slug}` }
       : null
   ),
@@ -60,6 +60,7 @@ describe('resolveCatalogSpriteEntry', () => {
     { name: 'Aegislash-Shield', id: 681, spriteUrl: 'aegislash-shield', shinySpriteUrl: 'aegislash-shield-shiny' },
     { name: 'Basculegion-Male', id: 902, spriteUrl: 'basculegion-male', shinySpriteUrl: 'basculegion-male-shiny' },
     { name: 'Basculegion-Female', id: 902, spriteUrl: 'basculegion-female', shinySpriteUrl: 'basculegion-female-shiny' },
+    { name: 'Maushold-Family-Of-Four', id: 998, spriteUrl: 'maushold-four', shinySpriteUrl: 'maushold-four-shiny' },
   ];
 
   it('uses a direct roster match first', () => {
@@ -87,11 +88,23 @@ describe('resolveCatalogSpriteEntry', () => {
     expect(resolveCatalogSpriteEntry('Floette-Mega', roster)?.spriteUrl).toBe('mega:floette-mega');
   });
 
+  it('strips an embedded gender token before the Mega-slug check', () => {
+    expect(resolveCatalogSpriteEntry('Meowstic-F-Mega', roster)?.spriteUrl).toBe('mega:meowstic-mega');
+  });
+
+  it('resolves the sheet-only "Maushold-Four" spelling via its own override', () => {
+    expect(resolveCatalogSpriteEntry('Maushold-Four', roster)?.spriteUrl).toBe('maushold-four');
+  });
+
   it('returns null for a Mega-shaped string with no curated slug', () => {
     expect(resolveCatalogSpriteEntry('Pikachu-Mega', roster)).toBeNull();
   });
 
+  it('returns null for a curated Mega slug the sprite cache has no entry for yet (e.g. no PokeAPI resource)', () => {
+    expect(resolveCatalogSpriteEntry('Absol-Mega', roster)).toBeNull();
+  });
+
   it('returns null when nothing resolves', () => {
-    expect(resolveCatalogSpriteEntry('Toxtricity', roster)).toBeNull();
+    expect(resolveCatalogSpriteEntry('Not A Real Species', roster)).toBeNull();
   });
 });

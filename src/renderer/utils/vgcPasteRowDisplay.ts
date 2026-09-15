@@ -25,14 +25,15 @@
  *      bare species names to for the real import path - reused here as a
  *      second lookup key rather than re-deriving the same mapping.
  * Confirmed live 2026-09-14 (see docs/investigations/
- * vgcpastes-catalog-sprite-matching.md) - reduces the 44 unmatched to 3
- * genuinely rare residual gaps (a sheet-only "Maushold-Four" spelling that
- * doesn't match normalizeSpeciesForAPI's "maushold" key, a combined
- * Mega+gender-divergent "Meowstic-F-Mega", and "Toxtricity" - the last one
- * is actually a normalizeSpeciesForAPI gap, not a catalog-only issue; see
- * TODO.md's "Toxtricity Import Enrichment 404" entry rather than patching it
- * here). Those 3 fall through to an empty sprite slot, same as any other
- * miss.
+ * vgcpastes-catalog-sprite-matching.md). Two more sheet-specific spellings
+ * needed their own small overrides on top of the three tiers above:
+ * "Maushold-Four" (the sheet's own shorthand - normalizeSpeciesForAPI only
+ * recognizes Showdown's bare "maushold") and "Meowstic-F-Mega" (a gender
+ * token wedged between the base species and "-Mega" that the plain Mega-slug
+ * check doesn't expect). The real Toxtricity gap this same diagnosis
+ * surfaced was fixed at its actual source (services/pokeapi.ts's
+ * normalizeSpeciesForAPI), not overridden here, since it's a real
+ * import-enrichment bug independent of this catalog.
  */
 
 import type { EVSpread, SpeciesRosterEntry } from '../types/pokemon';
@@ -71,7 +72,32 @@ export function findRosterEntry(speciesName: string, roster: SpeciesRosterEntry[
   return roster.find(entry => normalizeForMatch(entry.name) === target);
 }
 
+/**
+ * Sheet-specific species-text spellings that don't match either the roster
+ * directly or normalizeSpeciesForAPI's own Showdown-convention mapping -
+ * each maps straight to the real PokeAPI slug rather than going through
+ * another layer of normalization. "Maushold-Four" is the sheet's own
+ * shorthand for the family-of-four form ("Maushold-Three" added
+ * pre-emptively for the same shorthand pattern, though not yet seen live -
+ * see docs/investigations/vgcpastes-catalog-sprite-matching.md).
+ */
+const SHEET_SPECIES_TEXT_OVERRIDES: Record<string, string> = {
+  'maushold-four': 'maushold-family-of-four',
+  'maushold-three': 'maushold-family-of-three',
+};
+
 const MEGA_TEXT_SUFFIX_PATTERN = /-mega(-[a-z])?$/i;
+
+// A gender token wedged between the base species and "-Mega" (e.g.
+// "Meowstic-F-Mega") - Meowstic is the only gender-divergent species with a
+// Mega Stone (config/megaEvolution.ts's 'meowsticite' entry), and its Mega
+// form has exactly one curated slug ("meowstic-mega"), not a per-gender
+// split - stripped before the curated-slug check below so both genders
+// resolve to that one slug. Written to match any of the app's 4
+// gender-divergent base species (see services/pokeapi.ts's
+// normalizeSpeciesForAPI), not just Meowstic, in case Champions ever gives
+// one of the others its own Mega Stone.
+const GENDER_TOKEN_BEFORE_MEGA_PATTERN = /-(f|female|m|male)-mega((-[a-z])?)$/i;
 
 // Reg M-C's Floette is legal only as Floette-Eternal (see
 // utils/pokemonRules.ts), so a Mega'd Floette's sheet text can read either
@@ -88,10 +114,13 @@ const MEGA_SLUG_TEXT_OVERRIDES: Record<string, string> = {
  * refers to, or null if it's not a "-Mega"/"-Mega-X/Y/Z"-suffixed string, or
  * it is but doesn't resolve to a slug this app's own curated Champions Mega
  * list recognizes (config/megaEvolution.ts) - a real Mega form that just
- * isn't legal here isn't worth guessing a sprite for.
+ * isn't legal here isn't worth guessing a sprite for. Also returns null (not
+ * yet a real sprite) for a genuinely Champions-new Mega with no PokeAPI
+ * resource yet - see hooks/useMegaSprite.ts's own header for why that's
+ * expected rather than a bug.
  */
 function buildMegaSlugFromText(speciesText: string): string | null {
-  const lower = speciesText.toLowerCase().trim();
+  const lower = speciesText.toLowerCase().trim().replace(GENDER_TOKEN_BEFORE_MEGA_PATTERN, '-mega$2');
   if (!MEGA_TEXT_SUFFIX_PATTERN.test(lower)) return null;
   const slug = MEGA_SLUG_TEXT_OVERRIDES[lower] ?? lower;
   return CURATED_MEGA_FORM_SLUGS.has(slug) ? slug : null;
@@ -107,10 +136,12 @@ export interface CatalogSpriteEntry {
  * Resolves a sheet species-name string to a sprite, trying three tiers in
  * order (see this file's header for why each one exists):
  *   1. Direct roster match.
- *   2. The same PokeAPI-slug normalization the real import/enrichment path
- *      uses (services/pokeapi.ts's normalizeSpeciesForAPI), matched back
- *      against the roster - covers gender-divergent species and species
- *      with no bare-named PokeAPI resource.
+ *   2. A sheet-specific spelling override (SHEET_SPECIES_TEXT_OVERRIDES) or,
+ *      failing that, the same PokeAPI-slug normalization the real
+ *      import/enrichment path uses (services/pokeapi.ts's
+ *      normalizeSpeciesForAPI) - matched back against the roster, covering
+ *      gender-divergent species and species with no bare-named PokeAPI
+ *      resource.
  *   3. A Mega-form slug read from the already-warmed Mega-sprite cache
  *      (hooks/useMegaSprite.ts) - callers must have mounted
  *      useMegaSpritePrefetch() first (same as TeamCard.tsx's mini sprite
@@ -121,7 +152,7 @@ export function resolveCatalogSpriteEntry(speciesText: string, roster: SpeciesRo
   const direct = findRosterEntry(speciesText, roster);
   if (direct) return direct;
 
-  const apiSlug = normalizeSpeciesForAPI(speciesText);
+  const apiSlug = SHEET_SPECIES_TEXT_OVERRIDES[speciesText.toLowerCase().trim()] ?? normalizeSpeciesForAPI(speciesText);
   const viaApiSlug = findRosterEntry(apiSlug, roster);
   if (viaApiSlug) return viaApiSlug;
 
