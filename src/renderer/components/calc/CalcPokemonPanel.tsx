@@ -41,6 +41,22 @@
  * spreads, not one stat at a time), so `usage.statSpreads` is instead
  * rendered as its own chip row below CalcStatRows (CalcStatSpreadChips.tsx,
  * Leg 2) - picking a chip writes all 6 `sps` values via `onChange({ sps })`.
+ *
+ * A species pick (or opponent-tray load) also kicks off a second, unrelated
+ * lookup - VGCPastes real-set extraction (services/vgcRealSets.ts via
+ * vgcRealSetsState, VGCPastes Per-Species Real-Set Extraction: Calc Panel
+ * Real Sets UI). Deliberately NOT folded into the ChampionsUsageEntry
+ * ranking above - real sets are whole bundles actually observed together in
+ * tournament pastes, not independent per-axis percentages, and rendering
+ * them blended into the usage ranking would misrepresent one as the other
+ * (see this leg's scoping doc). CalcRealSetsSection renders the result as
+ * its own pick-a-bundle-to-fill-the-panel list; the lookup state itself
+ * (entry/isLoading/error) lives in useCalcRealSetsLookup.ts, pulled out of
+ * this file to keep its own bulk down - see that hook's header for why its
+ * loading/error are tracked per-panel-instance rather than reusing
+ * vgcRealSetsState's own (that cache hook is a single shared instance
+ * mounted once in CalcPage.tsx, matching gameDataState's existing
+ * shared-instance shape).
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -50,14 +66,17 @@ import type { CalcPokemonState, NatureStatEffect } from '../../hooks/useDamageCa
 import { STATUS_OPTIONS, STATUS_LABELS } from '../../hooks/useDamageCalc';
 import type { FormeFamily } from '../../utils/calcFormes';
 import type { NatureName, StatsTable } from '@smogon/calc/dist/data/interface';
-import type { Team, SavedPokemonEntry, ImportedPokemonInfo, OpponentPokemonEntry } from '../../types/pokemon';
+import type { Team, SavedPokemonEntry, ImportedPokemonInfo, OpponentPokemonEntry, RegulationLabel } from '../../types/pokemon';
 import type { ChampionsUsageEntry } from '../../types/gameData';
 import type { UseSavedPokemonReturn } from '../../hooks/useSavedPokemon';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseDatabaseReturn } from '../../hooks/useDatabase';
+import type { UseVgcPastesCacheReturn } from '../../hooks/useVgcPastesCache';
+import type { UseVgcRealSetsCacheReturn } from '../../hooks/useVgcRealSetsCache';
+import { useCalcRealSetsLookup } from '../../hooks/useCalcRealSetsLookup';
 import { CALC_TEAM_POKEMON_DRAG_TYPE, type CalcTeamPokemonDragPayload } from '../../utils/calcDragTypes';
 import { getMegaAbility } from '../../config/megaAbilities';
-import { teamPokemonToCalcUpdates, opponentEntryToCalcUpdates } from '../../utils/calcTeamImport';
+import { teamPokemonToCalcUpdates, opponentEntryToCalcUpdates, realSetBundleToCalcUpdates } from '../../utils/calcTeamImport';
 import { calcStateToShowdownPokemon } from '../../utils/calcExport';
 import { enrichPokemonWithAPI } from '../../services/pokeapi';
 import { formatShowdownText } from '../../services/parser';
@@ -68,6 +87,7 @@ import SavedSetPicker from '../SavedSetPicker';
 import SaveToLibraryDialog from '../SaveToLibraryDialog';
 import CalcStatRows from './CalcStatRows';
 import CalcStatSpreadChips from './CalcStatSpreadChips';
+import CalcRealSetsSection from './CalcRealSetsSection';
 import CalcTeamTray from './CalcTeamTray';
 import CalcOpponentTray from './CalcOpponentTray';
 import FormeToggle from './FormeToggle';
@@ -95,6 +115,11 @@ interface CalcPokemonPanelProps {
   savedPokemonState: UseSavedPokemonReturn;
   gameDataState: UseGameDataReturn;
   databaseState: UseDatabaseReturn;
+  /** The current Calc tab's regulation, keying both caches below the same way useVgcPastesCache.ts/useVgcRealSetsCache.ts already do (RegulationLabel, not the internal RegulationId) - see CalcPage.tsx's getRegulationLabel(regulationId) call site. */
+  regulation: RegulationLabel;
+  /** Shared single instance (mounted once in CalcPage.tsx, not per-panel) - see this file's header comment for why a per-panel instance would race on its own persisted-cache writes. Read-only from this panel's perspective except for the Refresh Catalog action CalcRealSetsSection's empty state offers. */
+  vgcPastesState: UseVgcPastesCacheReturn;
+  vgcRealSetsState: UseVgcRealSetsCacheReturn;
   resolveSprite: (remoteUrl: string) => string;
   onChange: (updates: Partial<CalcPokemonState>) => void;
   /** Lifts this panel's usage-ranked move percentages (keyed by normalizeSlug(name)) up to CalcPage, which forwards them into the sibling CalcMoveGrid - see this file's header comment. */
@@ -107,7 +132,8 @@ const GENDER_CYCLE: Array<CalcPokemonState['gender']> = ['M', 'F', ''];
 
 export default function CalcPokemonPanel({
   title, state, speciesOptions, itemOptions, abilityOptions, natureOptions, moveOptions, formes, baseStats, boostedStats, natureEffect,
-  teams, preferredTeamId, opponentRoster, onLoadOpponentEntry, savedPokemonState, gameDataState, databaseState, resolveSprite, onChange, onMoveUsageChange,
+  teams, preferredTeamId, opponentRoster, onLoadOpponentEntry, savedPokemonState, gameDataState, databaseState,
+  regulation, vgcPastesState, vgcRealSetsState, resolveSprite, onChange, onMoveUsageChange,
 }: CalcPokemonPanelProps) {
   const [savedSetPickerSpecies, setSavedSetPickerSpecies] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -130,6 +156,10 @@ export default function CalcPokemonPanel({
   // Item/Ability pickers and Nature select can keep re-ranking against it on
   // every render - see this file's header comment.
   const [usage, setUsage] = useState<ChampionsUsageEntry | null>(null);
+
+  // VGCPastes real-set lookup state/logic lives in this dedicated hook - see
+  // this file's header comment and the hook's own header for why.
+  const realSets = useCalcRealSetsLookup(regulation, vgcPastesState, vgcRealSetsState);
 
   const autoFillFromUsage = async (species: string) => {
     const requestId = ++autoFillRequestRef.current;
@@ -193,6 +223,7 @@ export default function CalcPokemonPanel({
     const sets = savedPokemonState.getSavedSetsForSpecies(species);
     if (sets.length > 0) setSavedSetPickerSpecies(species);
     autoFillFromUsage(species);
+    realSets.lookup(species);
   };
 
   // Click handler for CalcOpponentTray - applies whatever the opponent entry
@@ -205,6 +236,7 @@ export default function CalcPokemonPanel({
   const handleLoadOpponent = async (entry: OpponentPokemonEntry) => {
     onChange(opponentEntryToCalcUpdates(entry));
     onLoadOpponentEntry?.(entry.id);
+    realSets.lookup(entry.species);
     const requestId = ++autoFillRequestRef.current;
     setUsage(null);
     const usageEntry = await gameDataState.getChampionsUsage(entry.species);
@@ -440,6 +472,20 @@ export default function CalcPokemonPanel({
           statSpreads={usage.statSpreads}
           currentSps={state.sps}
           onSelect={(sps) => onChange({ sps })}
+        />
+      )}
+
+      {state.species && (
+        <CalcRealSetsSection
+          species={state.species}
+          regulation={regulation}
+          hasCatalogRows={vgcPastesState.getRows(regulation).length > 0}
+          isCatalogRefreshing={vgcPastesState.isRefreshing}
+          onRefreshCatalog={() => realSets.refreshCatalogAndRetry(state.species)}
+          entry={realSets.entry}
+          isLoading={realSets.isLoading}
+          error={realSets.error}
+          onPickBundle={(bundle) => onChange(realSetBundleToCalcUpdates(bundle))}
         />
       )}
 

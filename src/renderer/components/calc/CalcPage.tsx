@@ -14,6 +14,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { useDamageCalc, ALL_REGULATION_IDS } from '../../hooks/useDamageCalc';
+import { useVgcPastesCache } from '../../hooks/useVgcPastesCache';
+import { useVgcRealSetsCache } from '../../hooks/useVgcRealSetsCache';
 import type { OpponentPokemonEntry } from '../../types/pokemon';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseTeamsReturn } from '../../hooks/useTeams';
@@ -70,6 +72,14 @@ export default function CalcPage({
   const [pokemon1MovePercentByName, setPokemon1MovePercentByName] = useState<Record<string, number>>({});
   const [pokemon2MovePercentByName, setPokemon2MovePercentByName] = useState<Record<string, number>>({});
   const calcState = useDamageCalc(gameDataState, toRegulationId(settingsState.settings.defaultRegulation));
+  // Mounted once here (not per-panel) and threaded down to both
+  // CalcPokemonPanel instances as a shared instance, matching how
+  // gameDataState/databaseState are already threaded in from App.tsx -
+  // VGCPastes Per-Species Real-Set Extraction: Calc Panel Real Sets UI, see
+  // CalcPokemonPanel.tsx's header comment for why a per-panel instance would
+  // race on its own persisted-cache writes instead.
+  const vgcPastesState = useVgcPastesCache();
+  const vgcRealSetsState = useVgcRealSetsCache();
   const {
     regulationId, setRegulationId,
     pokemon1, pokemon2, setPokemon1, setPokemon2, setPokemon1Move, setPokemon2Move,
@@ -193,6 +203,9 @@ export default function CalcPage({
           savedPokemonState={savedPokemonState}
           gameDataState={gameDataState}
           databaseState={databaseState}
+          regulation={getRegulationLabel(regulationId)}
+          vgcPastesState={vgcPastesState}
+          vgcRealSetsState={vgcRealSetsState}
           resolveSprite={spriteCacheState.resolveSprite}
           onChange={setPokemon1}
           onMoveUsageChange={setPokemon1MovePercentByName}
@@ -225,6 +238,9 @@ export default function CalcPage({
           savedPokemonState={savedPokemonState}
           gameDataState={gameDataState}
           databaseState={databaseState}
+          regulation={getRegulationLabel(regulationId)}
+          vgcPastesState={vgcPastesState}
+          vgcRealSetsState={vgcRealSetsState}
           resolveSprite={spriteCacheState.resolveSprite}
           onChange={setPokemon2}
           onMoveUsageChange={setPokemon2MovePercentByName}

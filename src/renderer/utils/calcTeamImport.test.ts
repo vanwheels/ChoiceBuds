@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { teamPokemonToCalcUpdates } from './calcTeamImport';
-import type { ImportedPokemonInfo, ShowdownPokemon } from '../types/pokemon';
+import { teamPokemonToCalcUpdates, realSetBundleToCalcUpdates } from './calcTeamImport';
+import type { ImportedPokemonInfo, ShowdownPokemon, VgcRealSetBundle } from '../types/pokemon';
 
 const ZERO_EVS = { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 };
 
@@ -73,5 +73,54 @@ describe('teamPokemonToCalcUpdates', () => {
   it('starts every boost stage at zero regardless of input', () => {
     const result = teamPokemonToCalcUpdates(makePokemon());
     expect(result.boosts).toEqual({ hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 });
+  });
+});
+
+function makeBundle(overrides: Partial<VgcRealSetBundle> = {}): VgcRealSetBundle {
+  return {
+    item: 'Safety Goggles',
+    ability: 'Intimidate',
+    nature: 'Adamant',
+    moves: ['Fake Out', 'Flare Blitz', 'Knock Off', 'U-turn'],
+    evs: { hp: 4, attack: 252, defense: 0, specialAttack: 0, specialDefense: 0, speed: 252 },
+    occurrences: 3,
+    ...overrides,
+  };
+}
+
+describe('realSetBundleToCalcUpdates', () => {
+  it('maps evs directly into sps with no scale conversion', () => {
+    const result = realSetBundleToCalcUpdates(makeBundle());
+    expect(result.sps).toEqual({ hp: 4, atk: 252, def: 0, spa: 0, spd: 0, spe: 252 });
+  });
+
+  it('pads the move list to exactly 4 slots, filling missing ones with empty strings', () => {
+    const result = realSetBundleToCalcUpdates(makeBundle({ moves: ['Fake Out', 'Flare Blitz'] }));
+    expect(result.moves).toEqual([
+      { name: 'Fake Out', isCrit: false },
+      { name: 'Flare Blitz', isCrit: false },
+      { name: '', isCrit: false },
+      { name: '', isCrit: false },
+    ]);
+  });
+
+  it('defaults nature to Hardy when unset', () => {
+    const result = realSetBundleToCalcUpdates(makeBundle({ nature: undefined }));
+    expect(result.nature).toBe('Hardy');
+  });
+
+  it('defaults item/ability to empty string when unset', () => {
+    const result = realSetBundleToCalcUpdates(makeBundle({ item: undefined, ability: undefined }));
+    expect(result.item).toBe('');
+    expect(result.ability).toBe('');
+  });
+
+  it('does not touch species, gender, level, status, or boosts - a bundle carries none of those', () => {
+    const result = realSetBundleToCalcUpdates(makeBundle());
+    expect(result.species).toBeUndefined();
+    expect(result.gender).toBeUndefined();
+    expect(result.level).toBeUndefined();
+    expect(result.status).toBeUndefined();
+    expect(result.boosts).toBeUndefined();
   });
 });
