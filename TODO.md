@@ -29,8 +29,8 @@ splitting into a Sample Team Catalog leg and a Per-Species Real-Set
 Extraction leg (see `COMPLETED.md`). Sample Team Catalog Legs 1, 2, 3, and 4
 shipped the same day (see `COMPLETED.md`). Per-Species Real-Set Extraction's
 own scoping pass finished 2026-09-15, splitting into an Extraction Pipeline &
-Cache leg and a Calc Panel Real Sets UI leg; the Extraction Pipeline & Cache
-leg shipped the same day (see `COMPLETED.md`).
+Cache leg and a Calc Panel Real Sets UI leg; both shipped 2026-09-15 (see
+`COMPLETED.md`).
 
 ## Current Milestone: VGCPastes Real-Set Sourcing
 
@@ -38,16 +38,6 @@ Once all legs below are done, revisit scoping
 [Calc Doubles Support] — Leg 1 (still in Unscheduled) before closing this
 milestone - not pulled in now, but flagged 2026-09-14 for reconsideration
 at that point.
-
-- **[VGCPastes Per-Species Real-Set Extraction: Calc Panel Real Sets UI] —
-  Leg 4** *(Last touched: 2026-09-15 · Re-checks: 0)*
-  Wires Leg 3's hook into `CalcPokemonPanel.tsx`. Real sets surface as their
-  own separate "real sets seen" section - deliberately not blended into the
-  existing `ChampionsUsageEntry`-based ranked candidate list (Regular Calc
-  Usage-Data Auto-Populate Leg 1), per the 2026-09-15 scoping decision (see
-  investigation doc above) - with loading/empty/error states and a
-  pick-a-bundle-to-fill-the-whole-panel interaction. Symmetric across both
-  Pokemon 1 and Pokemon 2 panels, not opponent-exclusive.
 
 - **[Calc/Live Calc Tailwind & Terrain-Ability Speed Modeling] — Leg 1**
   *(Last touched: 2026-09-13 · Re-checks: 0)*

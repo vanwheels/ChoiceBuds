@@ -18,6 +18,20 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[VGCPastes Per-Species Real-Set Extraction: Calc Panel Real Sets UI] —
+  Leg 4** (2026-09-15) - see commit `c7cab0f`. Wires Leg 3's
+  `useVgcRealSetsCache` into `CalcPokemonPanel.tsx`: a species pick (or
+  Battle Log opponent load) kicks off a real-set lookup rendered as its own
+  `CalcRealSetsSection` "real sets seen" list, deliberately separate from the
+  existing `ChampionsUsageEntry` ranking. Picking a bundle fills item/
+  ability/nature/moves/Stat Points via a new `realSetBundleToCalcUpdates`
+  mapper. `useVgcPastesCache`/`useVgcRealSetsCache` are mounted once in
+  `CalcPage.tsx` and threaded down to both panels as shared props (avoids a
+  persisted-cache write race between two independent instances), while each
+  panel's own loading/error UI is tracked locally via a new
+  `useCalcRealSetsLookup` hook so the two panels' in-flight fetches can't
+  cross-contaminate each other's spinner.
+
 - **[VGCPastes Per-Species Real-Set Extraction: Extraction Pipeline &
   Cache] — Leg 3** (2026-09-15) - see commit `c4d9ca9`. Headless plumbing:
   given a regulation + species, filters the already-cached
