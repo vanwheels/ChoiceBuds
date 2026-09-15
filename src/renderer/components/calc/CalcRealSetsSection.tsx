@@ -19,8 +19,16 @@
  * yet from the Teams tab - extraction has nothing to sample against until
  * then, so this offers the same Refresh action inline instead of just
  * silently showing nothing.
+ *
+ * Visual Polish (see TODO.md's Calc Real Sets Section: Visual Polish leg):
+ * the bundle list collapses behind a toggle by default, labeled with the
+ * bundle count (e.g. "Show 7"), so a species with many real sets doesn't
+ * push the rest of the Calc panel down on every load. Expanding wraps the
+ * same full-card rows in a fixed-height scroll container instead of letting
+ * the panel grow unbounded.
  */
 
+import { useState } from 'react';
 import type { RegulationLabel, VgcRealSetBundle, VgcRealSetsEntry } from '../../types/pokemon';
 
 interface CalcRealSetsSectionProps {
@@ -43,11 +51,25 @@ function formatEvs(bundle: VgcRealSetBundle): string {
 export default function CalcRealSetsSection({
   species, regulation, hasCatalogRows, isCatalogRefreshing, onRefreshCatalog, entry, isLoading, error, onPickBundle,
 }: CalcRealSetsSectionProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const bundles = entry?.bundles ?? [];
+
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-[10px] text-zinc-400 uppercase tracking-wide">
-        Real Sets Seen ({regulation})
-      </label>
+      <div className="flex items-center justify-between gap-2">
+        <label className="text-[10px] text-zinc-400 uppercase tracking-wide">
+          Real Sets Seen ({regulation})
+        </label>
+        {!error && hasCatalogRows && !isLoading && bundles.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setIsExpanded((prev) => !prev)}
+            className="shrink-0 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded transition-colors cursor-pointer bg-zinc-700 text-zinc-200 hover:bg-zinc-600"
+          >
+            {isExpanded ? 'Hide' : `Show ${bundles.length}`}
+          </button>
+        )}
+      </div>
 
       {error && (
         <p className="text-[10px] text-red-300 bg-red-900/40 border border-red-800/60 rounded px-2 py-1">{error}</p>
@@ -71,13 +93,13 @@ export default function CalcRealSetsSection({
         <p className="text-[10px] text-zinc-500 italic">Sampling real {species} sets from VGCPastes...</p>
       )}
 
-      {!error && hasCatalogRows && !isLoading && entry && entry.bundles.length === 0 && (
+      {!error && hasCatalogRows && !isLoading && entry && bundles.length === 0 && (
         <p className="text-[10px] text-zinc-500 italic">No confirmed real sets found for {species} in {regulation} yet.</p>
       )}
 
-      {!error && hasCatalogRows && !isLoading && entry && entry.bundles.length > 0 && (
-        <div className="flex flex-col gap-1">
-          {entry.bundles.map((bundle, index) => (
+      {!error && hasCatalogRows && !isLoading && entry && bundles.length > 0 && isExpanded && (
+        <div className="flex flex-col gap-1 max-h-72 overflow-y-auto">
+          {bundles.map((bundle, index) => (
             <button
               key={index}
               type="button"

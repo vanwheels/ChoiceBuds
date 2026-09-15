@@ -18,6 +18,14 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Calc Real Sets Section: Visual Polish] — Leg 2** (2026-09-15) - see
+  commit `5095b60`. Built to Leg 1's spec below:
+  `CalcRealSetsSection.tsx`'s bundle list now sits behind a collapsed-by-
+  default toggle in the existing "Real Sets Seen" label row ("Show N" /
+  "Hide"), and expanding it wraps the same full-card bundle rows in a
+  `max-h-72 overflow-y-auto` container instead of letting the panel grow
+  unbounded. No change to card content or click-to-fill behavior.
+
 - **[Calc Real Sets Section: Visual Polish: Scoping] — Leg 1** (2026-09-15) -
   Scoping-only, no code change. `CalcRealSetsSection.tsx` renders every real-
   set bundle as a full-height stacked card with no cap, pushing

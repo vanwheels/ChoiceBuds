@@ -30,22 +30,13 @@ Extraction leg (see `COMPLETED.md`). Sample Team Catalog Legs 1, 2, 3, and 4
 shipped the same day (see `COMPLETED.md`). Per-Species Real-Set Extraction's
 own scoping pass finished 2026-09-15, splitting into an Extraction Pipeline &
 Cache leg and a Calc Panel Real Sets UI leg; both shipped 2026-09-15 (see
-`COMPLETED.md`).
+`COMPLETED.md`). Calc Real Sets Section: Visual Polish Legs 1 and 2 shipped
+2026-09-15 (see `COMPLETED.md`).
 
 ## Current Milestone: VGCPastes Real-Set Sourcing
 
 Core legs are done (see `COMPLETED.md`); three follow-on legs pulled in from
 Unscheduled 2026-09-15 before closing it out.
-
-- **[Calc Real Sets Section: Visual Polish] — Leg 2** *(Last touched:
-  2026-09-15 · Re-checks: 0)*
-  Scoped via Leg 1 (see `COMPLETED.md`): `CalcRealSetsSection.tsx` collapses
-  by default behind a toggle labeled with the bundle count (e.g. "Show 7"),
-  matching the section's existing `label` row rather than adding a new one.
-  Expanding reveals the same full-card bundle rows as today, wrapped in a
-  fixed-height (`max-h`) `overflow-y-auto` container so the panel stops
-  growing unbounded once open. No change to card content/click-to-fill
-  behavior - presentation only.
 
 - **[Team Builder Real Sets Integration] — Leg 1** *(Last touched:
   2026-09-15 · Re-checks: 0)*
