@@ -106,6 +106,28 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
+- **[Calc Real Sets Section: Visual Polish] — Leg 1** *(Last touched:
+  2026-09-15 · Re-checks: 0)*
+  Flagged live right after using the just-shipped Calc Panel Real Sets UI
+  (see `COMPLETED.md`'s Leg 4): `CalcRealSetsSection.tsx` renders every
+  bundle as a full-height stacked card with no cap, so a species with many
+  distinct real sets pushes the whole `CalcPokemonPanel.tsx` panel to extend
+  indefinitely downward instead of staying a fixed size. Not scoped - needs
+  a decision on the actual presentation (a capped/scrollable list, a
+  collapsed-by-default section, a compact chip-row like
+  `CalcStatSpreadChips.tsx` uses for stat spreads, etc.) before touching code.
+
+- **[Team Builder Real Sets Integration] — Leg 1** *(Last touched:
+  2026-09-15 · Re-checks: 0)*
+  Raised alongside the Calc Panel Real Sets UI leg (see `COMPLETED.md`'s Leg
+  4) - VGCPastes real-set data is currently Calc-tab-only, but the same
+  "what do real tournament teams actually run for this species" question is
+  just as relevant while building/editing a Pokemon in the Team Builder
+  (`useActiveEditor`'s draft-editing flow). Not scoped - needs both a
+  placement decision (where in the edit overlay this would surface) and a
+  visual treatment decision, likely informed by whatever the Visual Polish
+  leg above settles on for the Calc tab's own version first.
+
 - **[Calc Doubles Support] — Leg 1** *(Last touched: 2026-09-14 ·
   Re-checks: 0)*
   Raised 2026-09-11 as "Live Calc Doubles Support" alongside that tab's own
