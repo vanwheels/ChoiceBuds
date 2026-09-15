@@ -36,6 +36,48 @@ Once all legs below are done, revisit scoping
 milestone - not pulled in now, but flagged 2026-09-14 for reconsideration
 at that point.
 
+- **[VGCPastes Sample Team Catalog: Row Display Rework] — Leg 2** *(Last
+  touched: 2026-09-14 · Re-checks: 0)*
+  Flagged during Leg 1's live verification. Catalog rows currently show
+  description/owner/tournament/rank/date text plus plain species-name
+  chips (`VgcPasteCatalogModal.tsx`'s `TeamRow`) - should instead match
+  the same visual format already used for a user's own teams (team name,
+  author, 6 species sprites), same as `TeamCard.tsx`. Also add an expand
+  affordance per row (next to the Import button) to preview a team's full
+  moves/EV spreads before importing - not decided yet whether that means
+  fetching the pokepaste eagerly per row or only on expand-click.
+
+- **[VGCPastes Sample Team Catalog: Import Field Fixes] — Leg 3** *(Last
+  touched: 2026-09-14 · Re-checks: 0)*
+  Three related correctness bugs found during Leg 1's live verification, all
+  in how `ImportTeamModal`'s prefill (`applyPokepasteData`) populates the
+  form for a catalog-picked row: (1) Team Name auto-fills from the
+  pokepaste's own `title` field, which includes a rental code suffix
+  (e.g. "...Top 16 Team 7C8RLWGQWV") - should be stripped, or the sheet's
+  own `description` (already available on the picked `VgcPasteTeamRow`)
+  used instead of the paste's title. (2) Author auto-fills to the literal
+  string "VGCPastes" (the pokepaste's own `author` field, since VGCPastes
+  itself publishes the paste) instead of the real player - should use the
+  row's own `owner` field (sheet column AJ) when importing via this path.
+  (3) The "Review Saved Builds" step (`ImportBuildReviewStep`) shouldn't
+  show for a catalog-sourced import - go straight to import. All three need
+  `ImportTeamModal` to know it's in "catalog import" mode (the
+  `prefillPokepasteUrl` prop, or a new one) so it can use the row's own
+  name/owner instead of the paste's, and skip the review step.
+
+- **[VGCPastes Sample Team Catalog: Notes Auto-Population] — Leg 4** *(Last
+  touched: 2026-09-14 · Re-checks: 0)*
+  Requested during Leg 1's live verification. When importing via the
+  catalog, the team's Notes should auto-populate from the sheet's
+  Tournament/Event (column AE) and Rank (column AF) columns, plus the
+  Link to Source/Report-Video/Other-Links columns (AG/AH/AI), each on its
+  own line, hyperlinked if possible. None of AE/AF/AG/AH/AI are captured by
+  `VgcPasteTeamRow`/`services/vgcPastes.ts` yet (Leg 1 only pulled
+  Tournament/Rank for card display, not AG-AI) - needs those 3 new columns
+  added to the row shape, plus checking whether the app's Notes field even
+  supports hyperlinks/rich text today or is plain text only (if plain text,
+  "hyperlinked" may mean nothing more than pasting the bare URL).
+
 - **[VGCPastes Per-Species Real-Set Extraction] — Leg 2** *(Last touched:
   2026-09-14 · Re-checks: 0)*
   Deliberately left thin per the 2026-09-14 scoping session (see
@@ -171,6 +213,20 @@ unblocked.
   yet - needs real ladder-usage volume/distribution to be visible live
   first; revisit once that data exists rather than re-checking this item on
   a schedule.
+
+- **[Dev Console GPU Overlay Error Noise] — Leg 1** *(Last touched:
+  2026-09-14 · Re-checks: 0)*
+  `npm run dev` prints `[...ERROR:ui\gl\direct_composition_support.cc:247]
+  GetGpuDriverOverlayInfo: Failed to retrieve video device` on every launch.
+  Cosmetic dev-console noise, not a functional issue (app launches/behaves
+  normally) - very likely the same GPU/driver situation `main.ts`'s existing
+  `app.disableHardwareAcceleration()` call already works around (a
+  DirectComposition video-overlay capability probe that fails gracefully
+  instead of crashing, on this machine's GPU/driver combo). Candidate fix:
+  `app.commandLine.appendSwitch('disable-direct-composition')` before
+  `disableHardwareAcceleration()` - untested, and touches GPU flags on a
+  line already sensitive to this exact driver's quirks, so verify live
+  rather than assuming safe. Low priority - purely cosmetic.
 
 - **[VGCPastes Sample Team Catalog: Search/Filter] — Leg 1** *(Last touched:
   2026-09-14 · Re-checks: 0)*
