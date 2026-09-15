@@ -26,7 +26,7 @@ for the full arc. VGCPastes Real-Set Sourcing promoted to current milestone
 2026-09-14 (folds in the Tailwind/Terrain-Ability Speed Modeling leg that
 had been sitting in Unscheduled); its own Scoping leg finished the same day,
 splitting into a Sample Team Catalog leg and a Per-Species Real-Set
-Extraction leg (see `COMPLETED.md`). Sample Team Catalog Legs 1, 2, and 3
+Extraction leg (see `COMPLETED.md`). Sample Team Catalog Legs 1, 2, 3, and 4
 shipped the same day (see `COMPLETED.md`).
 
 ## Current Milestone: VGCPastes Real-Set Sourcing
@@ -35,19 +35,6 @@ Once all legs below are done, revisit scoping
 [Calc Doubles Support] — Leg 1 (still in Unscheduled) before closing this
 milestone - not pulled in now, but flagged 2026-09-14 for reconsideration
 at that point.
-
-- **[VGCPastes Sample Team Catalog: Notes Auto-Population] — Leg 4** *(Last
-  touched: 2026-09-14 · Re-checks: 0)*
-  Requested during Leg 1's live verification. When importing via the
-  catalog, the team's Notes should auto-populate from the sheet's
-  Tournament/Event (column AE) and Rank (column AF) columns, plus the
-  Link to Source/Report-Video/Other-Links columns (AG/AH/AI), each on its
-  own line, hyperlinked if possible. None of AE/AF/AG/AH/AI are captured by
-  `VgcPasteTeamRow`/`services/vgcPastes.ts` yet (Leg 1 only pulled
-  Tournament/Rank for card display, not AG-AI) - needs those 3 new columns
-  added to the row shape, plus checking whether the app's Notes field even
-  supports hyperlinks/rich text today or is plain text only (if plain text,
-  "hyperlinked" may mean nothing more than pasting the bare URL).
 
 - **[VGCPastes Per-Species Real-Set Extraction] — Leg 2** *(Last touched:
   2026-09-14 · Re-checks: 0)*

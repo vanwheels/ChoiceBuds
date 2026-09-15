@@ -18,6 +18,17 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[VGCPastes Sample Team Catalog: Notes Auto-Population] — Leg 4**
+  (2026-09-14) - see commit `a8d6f33`. Catalog imports now auto-populate the
+  new team's Notes from the sheet's Tournament/Event, Rank, Link to Source,
+  Report/Video, and Other Links columns (AE-AI), one non-blank field per
+  line via `vgcPastes.ts`'s new `buildCatalogNotes()`. Added the 3
+  previously-unparsed columns (AG/AH/AI) to `VgcPasteTeamRow`, verified live
+  against the sheet that they hold what their headers claim and that "-" is
+  the sheet's own "not filled in" placeholder. Confirmed `Team.notes` is a
+  plain `<textarea>`-backed string with no rich-text rendering anywhere in
+  the app, so "hyperlinked if possible" resolves to a bare URL as text.
+
 - **[VGCPastes Sample Team Catalog: Import Field Fixes] — Leg 3**
   (2026-09-14) - see commit `ef09182`. Fixed 3 correctness bugs found during
   Leg 1's live verification: `VgcPasteCatalogModal`'s `onPickPaste` now
