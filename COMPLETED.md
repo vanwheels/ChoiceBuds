@@ -18,6 +18,21 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Calc Doubles Support] — Leg 1** (2026-09-15) - decision, no diff; see
+  `docs/investigations/calc-doubles-support-scope.md`. Flagged 2026-09-14 to
+  revisit scoping once VGCPastes Real-Set Sourcing's two legs shipped; the
+  revisit killed the item instead of scoping it. A reliable doubles calc
+  doesn't widely exist for good reason - it isn't a UI polish problem, it's
+  a targeting-model problem: this app's `CalcPage`/`useDamageCalc` are a
+  symmetric 1v1 model, and doubles needs 2 attackers × 2 defenders × an ally
+  per side, redirection that can send a move to a target you didn't pick,
+  per-target/per-category Protect variants, and ally-side state that affects
+  damage without the ally ever being the target - none of which reduces to
+  "add more fields to today's field state." A narrower slice (just the
+  0.75x spread-move reduction as a toggle, no ally/redirection modeling) was
+  raised and also passed on - the call was to kill doubles as a feature
+  outright, not ship a partial version of it.
+
 - **[Team Builder Stat Display: SP / Base / Real Total Toggle] — Leg 1**
   (2026-09-15) - see commits `1f7bbec`, `7a4b4c7`, `ea6173b`.
   `StatsColumn.tsx`'s stat grid now switches between **SP** (existing 0-32

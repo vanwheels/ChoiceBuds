@@ -46,12 +46,10 @@ Core legs are done (see `COMPLETED.md`); two follow-on legs pulled in from
 Unscheduled 2026-09-15 before closing it out. VGCPastes Sample Team Catalog:
 Search/Filter Leg 1 shipped the same day (see `COMPLETED.md`).
 
-Also still to revisit before closing: scoping [Calc Doubles Support] — Leg 1
-(still in Unscheduled) - not pulled in now, but flagged 2026-09-14 for
-reconsideration at this point.
-
 [Team Builder Stat Display: SP / Base / Real Total Toggle] — Leg 1 shipped
-2026-09-15 (see `COMPLETED.md`).
+2026-09-15 (see `COMPLETED.md`). [Calc Doubles Support] — Leg 1's flagged
+revisit happened the same day and killed the item outright rather than
+scoping it (see `COMPLETED.md`).
 
 ## Blocked
 
@@ -102,19 +100,6 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
-
-- **[Calc Doubles Support] — Leg 1** *(Last touched: 2026-09-14 ·
-  Re-checks: 0)*
-  Raised 2026-09-11 as "Live Calc Doubles Support" alongside that tab's own
-  scoping pass - 2 simultaneously-unknown opponents plus ally-side
-  interactions. Retargeted 2026-09-13 at the regular Calc/popup now that
-  Live Calc is being ripped. Deliberately kept out of the VGCPastes Real-Set
-  Sourcing milestone (Current Milestone) for now; flagged 2026-09-14 to
-  revisit scoping it once that milestone's two legs are done, before the
-  milestone closes. Not scoped. See
-  `docs/investigations/live-calc-layout-rework-scope.md` (historical
-  context) and `docs/investigations/regular-calc-popup-scope.md` (the
-  pivot).
 
 - **[Reg M-C Z-A-Exclusive Movepool Audit] — Leg 1** *(Last touched:
   2026-09-10 · Re-checks: 1)*
