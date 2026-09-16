@@ -18,6 +18,21 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Team Builder Real Sets Integration] — Leg 2** (2026-09-15) - see commit
+  `567b2de`. Built to Leg 1's scoping spec
+  (`docs/investigations/team-builder-real-sets-scope.md`): a new
+  `RealSetsButton` trigger on each roster `PokemonCard` opens a
+  `FloatingCardPanel` hosting `CalcRealSetsSection` (collapse toggle dropped
+  via a new `collapsible` prop, since the panel's own open/close is the
+  affordance now). Kept out of `EditOverlays`/`EditablePokemonCore` since
+  those are shared with the Saved Builds Box, which has no per-entry
+  regulation to look real sets up against.
+  `useVgcPastesCache`/`useVgcRealSetsCache` now mount once in `TeamsPage.tsx`
+  and thread through `TeamCard` to each `PokemonCard`, same shared-instance
+  fix Calc's own panels needed. New `realSetBundleToShowdownUpdates` mapper
+  (`utils/teamRealSetImport.ts`, with its own test) - a trivial field copy,
+  no SP-scale conversion needed.
+
 - **[Team Builder Real Sets Integration: Scoping] — Leg 1** (2026-09-15) -
   Scoping-only, no code change. VGCPastes real-set data was Calc-tab-only;
   this leg resolved the placement/visual-treatment decisions the item's own

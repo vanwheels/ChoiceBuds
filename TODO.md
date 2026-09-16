@@ -32,25 +32,13 @@ own scoping pass finished 2026-09-15, splitting into an Extraction Pipeline &
 Cache leg and a Calc Panel Real Sets UI leg; both shipped 2026-09-15 (see
 `COMPLETED.md`). Calc Real Sets Section: Visual Polish Legs 1 and 2 shipped
 2026-09-15 (see `COMPLETED.md`). Team Builder Real Sets Integration's own
-Scoping leg finished the same day, splitting into a build leg (see
-`COMPLETED.md`).
+Scoping leg finished the same day, splitting into a build leg; that build leg
+(Leg 2) also shipped 2026-09-15 (see `COMPLETED.md`).
 
 ## Current Milestone: VGCPastes Real-Set Sourcing
 
 Core legs are done (see `COMPLETED.md`); three follow-on legs pulled in from
 Unscheduled 2026-09-15 before closing it out.
-
-- **[Team Builder Real Sets Integration] — Leg 2** *(Last touched:
-  2026-09-15 · Re-checks: 0)*
-  Scoped 2026-09-15 (see `COMPLETED.md`'s Leg 1 and
-  `docs/investigations/team-builder-real-sets-scope.md`). Build: mount
-  `useVgcPastesCache`/`useVgcRealSetsCache` once in `TeamsPage.tsx` and
-  thread down to each `PokemonCard` (avoids the same cache write-race the
-  Calc panels already had to avoid); a new trigger button on the card opens
-  a `FloatingCardPanel` (same pattern as the item/ability/move pickers)
-  containing an adapted `CalcRealSetsSection` with its collapse toggle
-  dropped; new `realSetBundleToShowdownUpdates` mapper (trivial field copy,
-  no SP-scale conversion needed).
 
 - **[VGCPastes Sample Team Catalog: Search/Filter] — Leg 1** *(Last touched:
   2026-09-14 · Re-checks: 0)*
