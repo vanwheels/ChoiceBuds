@@ -352,6 +352,27 @@ export function computeBoostedStats(
   }
 }
 
+/**
+ * Base+SPs+nature for all 6 stats, no stage boost - what CalcStatRows.tsx's
+ * SP/Total toggle shows in place of the raw SP input when flipped to "show
+ * computed stat" mode. Distinct from `computeBoostedStats()`'s per-stat
+ * value (which also applies `state.boosts`/`getFinalSpeed()`) and from the
+ * existing read-only `Boost`/`Total` columns, which already cover the
+ * boosted number - this is the pre-boost number those columns are built
+ * from. `@smogon/calc`'s own `Pokemon.rawStats` already *is* exactly this
+ * (base+nature+EVs, no boost - see `computeBoostedStats()`'s header), so
+ * this just exposes it directly instead of recomputing anything.
+ */
+export function computeRawStats(gen: Generation, state: CalcPokemonState): StatsTable | null {
+  if (!state.species) return null;
+  try {
+    const pokemon = buildPokemon(gen, state);
+    return pokemon.rawStats as StatsTable;
+  } catch {
+    return null;
+  }
+}
+
 export function computeEffectiveSpeed(
   gen: Generation,
   state: CalcPokemonState,
