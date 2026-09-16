@@ -11,11 +11,15 @@
  * below it (Card Popup Consistency Leg 3 - see TODO.md).
  *
  * SP / Base / Real Total display mode (Team Builder Stat Display: SP / Base
- * / Real Total Toggle, see TODO.md): clicking the "SP" header label cycles
- * the whole grid (all 6 stats together, not per-cell) through three read
- * states - SP is the only editable one; Base and Real Total render every
- * cell as a plain read-only value, bypassing EVStatCell's edit affordances
- * entirely. Real Total's Base+SP+Nature math needs @smogon/calc, which is
+ * / Real Total Toggle, see TODO.md): a 3-segment button row (same pattern as
+ * calc/FormeToggle.tsx's forme-family toggle) picks the whole grid's display
+ * state directly - SP/Base/Real all named and visible at once, rather than
+ * a single unlabeled cycling control a viewer would have no way to discover
+ * (first shipped as a bare clickable "SP" label; re-done after live
+ * feedback that nothing signaled it was interactive at all). SP is the only
+ * editable state; Base and Real Total render every cell as a plain read-only
+ * value, bypassing EVStatCell's edit affordances entirely. Real Total's
+ * Base+SP+Nature math needs @smogon/calc, which is
  * lazy-imported (utils/realTotalStats.ts) the first time the grid is
  * flipped to that mode rather than statically imported here, so the runtime
  * `Pokemon` class doesn't enter the bundle for every card that never visits
@@ -39,8 +43,11 @@ import FloatingCardPanel from './FloatingCardPanel';
 
 type StatDisplayMode = 'sp' | 'base' | 'real';
 
-const NEXT_DISPLAY_MODE: Record<StatDisplayMode, StatDisplayMode> = { sp: 'base', base: 'real', real: 'sp' };
-const DISPLAY_MODE_LABEL: Record<StatDisplayMode, string> = { sp: 'SP', base: 'Base', real: 'Real' };
+const DISPLAY_MODES: Array<{ mode: StatDisplayMode; label: string; title: string }> = [
+  { mode: 'sp', label: 'SP', title: 'SP - editable Stat Points (0-32/stat, 66 total)' },
+  { mode: 'base', label: 'Base', title: 'Base - species base stat, read-only' },
+  { mode: 'real', label: 'Real', title: 'Real Total - Base + SP + Nature at Lv50, max IVs' },
+];
 
 interface StatsColumnProps {
   species: string;
@@ -95,8 +102,6 @@ export default function StatsColumn({ species, level, gender, baseStats, evs, na
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- realTotalKey already encodes every input this needs to react to
   }, [displayMode, realTotalKey]);
-
-  const cycleDisplayMode = () => setDisplayMode(mode => NEXT_DISPLAY_MODE[mode]);
 
   // Functional updates so hold-to-repeat always checks the true latest
   // state on every tick, rather than the totalEVs/localEVs closured from
@@ -161,13 +166,20 @@ export default function StatsColumn({ species, level, gender, baseStats, evs, na
   return (
     <div ref={ref} className="bg-zinc-800 rounded px-2 py-1.5 border border-zinc-600 min-w-0">
       <div className="mb-1 min-w-0">
-        <div className="flex justify-between items-center min-w-0">
-          <button
-            type="button"
-            onClick={cycleDisplayMode}
-            title="Click to cycle SP / Base stat / Real Total"
-            className="text-xs text-zinc-400 uppercase tracking-wide shrink-0 cursor-pointer hover:text-accent-gold transition-colors"
-          >{DISPLAY_MODE_LABEL[displayMode]}</button>
+        <div className="flex justify-between items-center min-w-0 gap-1">
+          <div className="flex items-center gap-0.5 shrink-0">
+            {DISPLAY_MODES.map(({ mode, label, title }) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setDisplayMode(mode)}
+                title={title}
+                className={`text-[9px] font-bold uppercase px-1 py-0.5 rounded transition-colors cursor-pointer ${
+                  displayMode === mode ? 'bg-accent-gold text-zinc-900' : 'bg-zinc-900 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-300'
+                }`}
+              >{label}</button>
+            ))}
+          </div>
           {displayMode === 'sp' ? (
             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
               totalEVs > 66
