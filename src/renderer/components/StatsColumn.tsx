@@ -9,11 +9,26 @@
  * pickers - see NaturePickerPanel.tsx) rather than a native <select>, which
  * had no positioning control and spilled over the notes textarea/toolbar
  * below it (Card Popup Consistency Leg 3 - see TODO.md).
+ *
+ * SP / Base / Real Total display mode (Team Builder Stat Display: SP / Base
+ * / Real Total Toggle, see TODO.md): clicking the "SP" header label cycles
+ * the whole grid (all 6 stats together, not per-cell) through three read
+ * states - SP is the only editable one; Base and Real Total render every
+ * cell as a plain read-only value, bypassing EVStatCell's edit affordances
+ * entirely. Real Total's Base+SP+Nature math needs @smogon/calc, which is
+ * lazy-imported (utils/realTotalStats.ts) the first time the grid is
+ * flipped to that mode rather than statically imported here, so the runtime
+ * `Pokemon` class doesn't enter the bundle for every card that never visits
+ * that mode - see that file's header for the exact lazy-load precedent it
+ * mirrors. `realTotalCache` memoizes the last computed result against a key
+ * of every input that could change it, so re-flipping the toggle back to
+ * Real Total without editing anything in between reuses the cached value
+ * instead of recomputing.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { MouseEvent } from 'react';
-import type { EVSpread, ShowdownPokemon } from '../types/pokemon';
+import type { EVSpread, PokemonStats, ShowdownPokemon } from '../types/pokemon';
 import { useDismissable } from '../hooks/useDismissable';
 import { getNatureEffect } from '../config/vgcData';
 import { getStatLabelColor } from '../config/pokemonTheme';
@@ -22,7 +37,16 @@ import EVStatCell from './EVStatCell';
 import NaturePickerPanel from './NaturePickerPanel';
 import FloatingCardPanel from './FloatingCardPanel';
 
+type StatDisplayMode = 'sp' | 'base' | 'real';
+
+const NEXT_DISPLAY_MODE: Record<StatDisplayMode, StatDisplayMode> = { sp: 'base', base: 'real', real: 'sp' };
+const DISPLAY_MODE_LABEL: Record<StatDisplayMode, string> = { sp: 'SP', base: 'Base', real: 'Real' };
+
 interface StatsColumnProps {
+  species: string;
+  level: number;
+  gender?: 'M' | 'F' | 'N' | '';
+  baseStats: PokemonStats;
   evs: EVSpread;
   nature?: string;
   onUpdatePokemon: (updates: Partial<ShowdownPokemon>) => void;
@@ -40,7 +64,7 @@ const STATS: Array<{ label: string; key: keyof EVSpread }> = [
 // Permanently editable (Always-On Editing Leg 1, see TODO.md) - no more
 // isEditing gate; the total-EV badge, nature picker, and stat cells below
 // are all unconditionally interactive now.
-export default function StatsColumn({ evs, nature, onUpdatePokemon }: StatsColumnProps) {
+export default function StatsColumn({ species, level, gender, baseStats, evs, nature, onUpdatePokemon }: StatsColumnProps) {
   const [localEVs, setLocalEVs] = useState(evs);
   const [activeStat, setActiveStat] = useState<keyof EVSpread | null>(null);
   const [natureMenuOpen, setNatureMenuOpen] = useState(false);
@@ -49,8 +73,30 @@ export default function StatsColumn({ evs, nature, onUpdatePokemon }: StatsColum
   const [natureMenuCardRect, setNatureMenuCardRect] = useState<DOMRect | null>(null);
   const ref = useDismissable<HTMLDivElement>(() => setActiveStat(null));
 
+  const [displayMode, setDisplayMode] = useState<StatDisplayMode>('sp');
+  const [realTotalCache, setRealTotalCache] = useState<{ key: string; stats: PokemonStats | null } | null>(null);
+
   const totalEVs = Object.values(localEVs).reduce((sum, val) => sum + val, 0);
   const natureEffect = getNatureEffect(nature);
+
+  // Recomputed on every render (cheap string concat) rather than stored in
+  // state - `realTotalCache.key` only needs comparing against this, not
+  // tracking independently.
+  const realTotalKey = `${species}|${level}|${gender}|${nature}|${localEVs.hp},${localEVs.attack},${localEVs.defense},${localEVs.specialAttack},${localEVs.specialDefense},${localEVs.speed}`;
+  const isRealTotalCurrent = realTotalCache?.key === realTotalKey;
+
+  useEffect(() => {
+    if (displayMode !== 'real' || isRealTotalCurrent) return;
+    let cancelled = false;
+    import('../utils/realTotalStats').then(({ computeRealTotalStats }) => {
+      if (cancelled) return;
+      setRealTotalCache({ key: realTotalKey, stats: computeRealTotalStats(species, { level, gender, nature, evs: localEVs }) });
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- realTotalKey already encodes every input this needs to react to
+  }, [displayMode, realTotalKey]);
+
+  const cycleDisplayMode = () => setDisplayMode(mode => NEXT_DISPLAY_MODE[mode]);
 
   // Functional updates so hold-to-repeat always checks the true latest
   // state on every tick, rather than the totalEVs/localEVs closured from
@@ -107,18 +153,34 @@ export default function StatsColumn({ evs, nature, onUpdatePokemon }: StatsColum
     });
   };
 
+  const baseTotal = Object.values(baseStats).reduce((sum, v) => sum + v, 0);
+  const realTotal = isRealTotalCurrent && realTotalCache?.stats
+    ? Object.values(realTotalCache.stats).reduce((sum, v) => sum + v, 0)
+    : null;
+
   return (
     <div ref={ref} className="bg-zinc-800 rounded px-2 py-1.5 border border-zinc-600 min-w-0">
       <div className="mb-1 min-w-0">
         <div className="flex justify-between items-center min-w-0">
-          <p className="text-xs text-zinc-400 uppercase tracking-wide shrink-0">SP</p>
-          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-            totalEVs > 66
-              ? 'bg-red-600 text-white border border-red-400'
-              : totalEVs === 66
-                ? 'bg-emerald-500 text-white'
-                : 'bg-zinc-700 text-zinc-400'
-          }`}>{totalEVs > 66 ? '⚠ ' : ''}{totalEVs}/66</span>
+          <button
+            type="button"
+            onClick={cycleDisplayMode}
+            title="Click to cycle SP / Base stat / Real Total"
+            className="text-xs text-zinc-400 uppercase tracking-wide shrink-0 cursor-pointer hover:text-accent-gold transition-colors"
+          >{DISPLAY_MODE_LABEL[displayMode]}</button>
+          {displayMode === 'sp' ? (
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+              totalEVs > 66
+                ? 'bg-red-600 text-white border border-red-400'
+                : totalEVs === 66
+                  ? 'bg-emerald-500 text-white'
+                  : 'bg-zinc-700 text-zinc-400'
+            }`}>{totalEVs > 66 ? '⚠ ' : ''}{totalEVs}/66</span>
+          ) : (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-zinc-700 text-zinc-400">
+              {displayMode === 'base' ? baseTotal : (realTotal !== null ? realTotal : '…')}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
           <div
@@ -139,20 +201,36 @@ export default function StatsColumn({ evs, nature, onUpdatePokemon }: StatsColum
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginTop: '0.5rem' }}>
         {STATS.map(stat => {
-          const val = localEVs[stat.key];
+          if (displayMode === 'sp') {
+            const val = localEVs[stat.key];
+            return (
+              <EVStatCell
+                key={stat.label}
+                label={stat.label}
+                value={val}
+                isActive={activeStat === stat.key}
+                exceedsMax={val > 32}
+                canIncrement={val < 32 && totalEVs < 66}
+                onActivate={() => setActiveStat(stat.key)}
+                onIncrement={() => handleIncrement(stat.key)}
+                onDecrement={() => handleDecrement(stat.key)}
+                onDirectInput={(value) => handleDirectInput(stat.key, value)}
+              />
+            );
+          }
+          // Base / Real Total are read-only display states - rendered as
+          // plain values rather than through EVStatCell, whose whole shape
+          // (activate-to-edit, hold-to-repeat +/-) only makes sense for SP.
+          const readOnlyValue = displayMode === 'base'
+            ? baseStats[stat.key]
+            : isRealTotalCurrent
+              ? (realTotalCache?.stats ? realTotalCache.stats[stat.key] : '—')
+              : '…';
           return (
-            <EVStatCell
-              key={stat.label}
-              label={stat.label}
-              value={val}
-              isActive={activeStat === stat.key}
-              exceedsMax={val > 32}
-              canIncrement={val < 32 && totalEVs < 66}
-              onActivate={() => setActiveStat(stat.key)}
-              onIncrement={() => handleIncrement(stat.key)}
-              onDecrement={() => handleDecrement(stat.key)}
-              onDirectInput={(value) => handleDirectInput(stat.key, value)}
-            />
+            <div key={stat.label} className="flex flex-col items-center gap-0.5 rounded px-1 py-0.5">
+              <span className={`text-[10px] font-bold uppercase ${getStatLabelColor(stat.label)}`}>{stat.label}</span>
+              <span className="text-sm font-mono font-bold text-zinc-100 px-1.5 py-0.5">{readOnlyValue}</span>
+            </div>
           );
         })}
       </div>

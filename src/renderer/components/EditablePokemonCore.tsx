@@ -257,8 +257,20 @@ export default function EditablePokemonCore({ pokemon, onUpdatePokemon, gameData
           movement and suppresses click when a drag actually occurred. */}
       <EditOverlays pokemon={pokemon} gameDataState={gameDataState} rulesetId={rulesetId} resolveSprite={resolveSprite} onUpdatePokemon={updateShowdownData} />
 
-      {/* EVs Grid Block - permanently editable (Always-On Editing Leg 1, see TODO.md) */}
-      <StatsColumn evs={showdownData.evs} nature={showdownData.nature} onUpdatePokemon={updateShowdownData} />
+      {/* EVs Grid Block - permanently editable (Always-On Editing Leg 1, see
+          TODO.md). Also cycles a read-only Base/Real Total display mode
+          (Team Builder Stat Display: SP / Base / Real Total Toggle, see
+          TODO.md) - species/level/gender/baseStats are what that Real Total
+          math needs beyond the SP editing StatsColumn already did. */}
+      <StatsColumn
+        species={showdownData.species}
+        level={showdownData.level}
+        gender={showdownData.gender}
+        baseStats={pokemon.baseStats}
+        evs={showdownData.evs}
+        nature={showdownData.nature}
+        onUpdatePokemon={updateShowdownData}
+      />
     </>
   );
 }
