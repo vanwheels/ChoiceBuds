@@ -19,7 +19,7 @@ Entries prior to this file's oldest are in:
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
 - **[Calc Stat Rows: SP / Stat Total Toggle] — Leg 1** (2026-09-15) - see
-  commit `<pending>`. Built to the TODO scoping spec: `CalcStatRows.tsx`'s SP
+  commit `07bdb5c`. Built to the TODO scoping spec: `CalcStatRows.tsx`'s SP
   column header is now a toggle button (component-local `useState`, no
   lifting needed) switching between the raw SP `<input>` and a read-only
   Base+SP+Nature value per stat, sourced from a new `computeRawStats()`
