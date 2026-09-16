@@ -96,6 +96,52 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
+- **[Team Builder Stat Display: SP / Base / Real Total Toggle] — Leg 1**
+  *(Last touched: 2026-09-15 · Re-checks: 0)*
+  Scoped 2026-09-15 (unlike most of this section, ready to build - listed
+  here rather than under Current Milestone since it's unrelated to VGCPastes
+  Real-Set Sourcing). Re-scoped after a miscommunication built this in the
+  Calc tab instead, then reverted (see commit `6d9d3ee`, which reverts
+  `07bdb5c`/`b739033` in full). The actual ask: `StatsColumn.tsx` (the SP
+  grid used via `EditablePokemonCore.tsx`, shared by Team Builder roster
+  cards and the Saved Builds Box) gets a per-stat three-state cycle - **SP**
+  (current 0-32 editable input) → **Base** (species base stat, read-only) →
+  **Real Total** (Base + SP + Nature at Lv50, max IVs, no stage boost - Team
+  Builder has no battle stage-boost concept) → back to SP.
+  Decisions made (via user Q&A):
+  - Lives in the shared `StatsColumn.tsx` itself, not forked per card type -
+    Team Builder and Saved Builds Box both get it for free since neither
+    diverges from this component today.
+  - Three states (SP/Base/Real Total), not a two-way toggle.
+  - Real Total is computed via a dynamic `import('@smogon/calc')` fired the
+    first time a card is flipped to that state, mirroring
+    `TeamSheetPdfModal.tsx`'s exact lazy-load pattern (see below) - not a
+    hand-rolled formula.
+  Architecture notes found while scoping:
+  - `baseStats` already exists on `ImportedPokemonInfo` but isn't threaded
+    to `StatsColumn` today - `EditablePokemonCore.tsx` only passes
+    `evs`/`nature`/`onUpdatePokemon` currently, so a new prop is needed.
+  - `ImportedPokemonInfo.calculatedStats?: PokemonStats` already exists as a
+    field (cloned through `clonePokemon.ts`/`useActiveEditor.ts`) but is
+    never actually populated anywhere in the app today - worth checking
+    whether this leg should populate/use that existing slot for the Real
+    Total value rather than computing it fresh inline every render, but not
+    decided.
+  - `@smogon/calc`'s `Pokemon.rawStats` is exactly the Base+SP+Nature number
+    needed (same fact `damageCalcEngine.ts`'s `computeBoostedStats` and
+    `teamSheetPdf.ts`'s `computeRealStats` already rely on) - both of those
+    existing call sites keep `@smogon/calc` out of the main bundle via a lazy
+    boundary (`CalcPage.tsx`'s `React.lazy`, `TeamSheetPdfModal.tsx`'s
+    dynamic `import()`), which `StatsColumn.tsx` doesn't have today since it
+    renders inline on every card immediately - the chosen dynamic-import-on-
+    toggle approach needs its own per-card memoization so re-flipping the
+    toggle doesn't redundantly reimport/recompute.
+  - `championsStats.ts`'s `spsToEvs`/`MAX_IVS` (SP→EV, max IVs) are already
+    shared, type-only-safe helpers (only import `StatsTable`'s type from
+    `@smogon/calc/dist/data/interface`, not its runtime `Pokemon` class) -
+    safe to reuse here without triggering the same bundle-size concern.
+  Not yet built - ready to build, no further scoping decisions outstanding.
+
 - **[Calc Doubles Support] — Leg 1** *(Last touched: 2026-09-14 ·
   Re-checks: 0)*
   Raised 2026-09-11 as "Live Calc Doubles Support" alongside that tab's own
