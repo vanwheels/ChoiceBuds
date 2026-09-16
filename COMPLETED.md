@@ -18,6 +18,11 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[VGCPastes Sample Team Catalog: Search/Filter] — Leg 1** (2026-09-15) -
+  see commit `bd976cc`. A single text box filters `VgcPasteCatalogModal.tsx`'s
+  row list case-insensitively by species/owner/description, client-side over
+  the active tab's already-cached rows.
+
 - **[Team Builder Real Sets Integration] — Leg 2** (2026-09-15) - see commit
   `567b2de`. Built to Leg 1's scoping spec
   (`docs/investigations/team-builder-real-sets-scope.md`): a new
