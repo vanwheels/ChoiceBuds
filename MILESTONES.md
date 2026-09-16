@@ -34,3 +34,5 @@ milestone.
   [post-mortem](docs/postmortems/building-flow-tweaks.md)
 - **Regular Calc Popup** — 2026-09-11 to 2026-09-13 — Shipped —
   [post-mortem](docs/postmortems/regular-calc-popup.md)
+- **VGCPastes Real-Set Sourcing** — 2026-09-14 to 2026-09-15 — Shipped —
+  [post-mortem](docs/postmortems/vgcpastes-real-set-sourcing.md)

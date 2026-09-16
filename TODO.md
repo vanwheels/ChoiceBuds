@@ -38,18 +38,10 @@ Catalog: Search/Filter Leg 1 shipped 2026-09-15 (see `COMPLETED.md`). Team
 Builder Stat Display: SP / Base / Real Total Toggle Leg 1 - unrelated in
 topic, just pulled into this milestone's current-milestone slot per Vanny's
 call since only one milestone can be "current" at a time - also shipped
-2026-09-15 (see `COMPLETED.md`).
-
-## Current Milestone: VGCPastes Real-Set Sourcing
-
-Core legs are done (see `COMPLETED.md`); two follow-on legs pulled in from
-Unscheduled 2026-09-15 before closing it out. VGCPastes Sample Team Catalog:
-Search/Filter Leg 1 shipped the same day (see `COMPLETED.md`).
-
-[Team Builder Stat Display: SP / Base / Real Total Toggle] — Leg 1 shipped
-2026-09-15 (see `COMPLETED.md`). [Calc Doubles Support] — Leg 1's flagged
-revisit happened the same day and killed the item outright rather than
-scoping it (see `COMPLETED.md`).
+2026-09-15 (see `COMPLETED.md`). VGCPastes Real-Set Sourcing milestone
+shipped 2026-09-15 (see `MILESTONES.md` and
+[docs/postmortems/vgcpastes-real-set-sourcing.md](docs/postmortems/vgcpastes-real-set-sourcing.md)).
+No milestone currently in progress - see Future Milestones below.
 
 ## Blocked
 
@@ -175,7 +167,7 @@ promoted to current and have since shipped (see `MILESTONES.md`). Live Calc
 Tuning, the last of the four, was promoted 2026-09-11 and later retired in
 favor of Regular Calc Popup (see `MILESTONES.md`). VGCPastes real-set
 sourcing, deferred out of Regular Calc Popup, was itself promoted to
-current 2026-09-14 (see `## Current Milestone` above).
+current 2026-09-14 and shipped 2026-09-15 (see `MILESTONES.md`).
 
 None currently queued.
 
