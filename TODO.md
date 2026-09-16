@@ -34,7 +34,11 @@ Cache leg and a Calc Panel Real Sets UI leg; both shipped 2026-09-15 (see
 2026-09-15 (see `COMPLETED.md`). Team Builder Real Sets Integration's own
 Scoping leg finished the same day, splitting into a build leg; that build leg
 (Leg 2) also shipped 2026-09-15 (see `COMPLETED.md`). VGCPastes Sample Team
-Catalog: Search/Filter Leg 1 shipped 2026-09-15 (see `COMPLETED.md`).
+Catalog: Search/Filter Leg 1 shipped 2026-09-15 (see `COMPLETED.md`). Team
+Builder Stat Display: SP / Base / Real Total Toggle Leg 1 - unrelated in
+topic, just pulled into this milestone's current-milestone slot per Vanny's
+call since only one milestone can be "current" at a time - also shipped
+2026-09-15 (see `COMPLETED.md`).
 
 ## Current Milestone: VGCPastes Real-Set Sourcing
 
@@ -46,35 +50,8 @@ Also still to revisit before closing: scoping [Calc Doubles Support] — Leg 1
 (still in Unscheduled) - not pulled in now, but flagged 2026-09-14 for
 reconsideration at this point.
 
-- **[Team Builder Stat Display: SP / Base / Real Total Toggle] — Leg 1**
-  *(Last touched: 2026-09-15 · Re-checks: 0)*
-  Pulled in from Unscheduled 2026-09-15 and built the same day - unrelated in
-  topic to VGCPastes Real-Set Sourcing itself, just riding in this
-  milestone's slot since only one milestone can be "current" at a time.
-  Re-scoped after a miscommunication built this in the Calc tab instead,
-  then reverted (see commit `6d9d3ee`, which reverts `07bdb5c`/`b739033` in
-  full). `StatsColumn.tsx`'s stat grid switches display mode via **SP**
-  (existing 0-32 editable input) / **Base** (species base stat, read-only) /
-  **Real Total** (Base + SP + Nature at Lv50, max IVs, no stage boost).
-  First built as a single unlabeled clickable "SP" text that cycled through
-  all three - live-verified working, but flagged right after as
-  undiscoverable (nothing signaled it was interactive at all). Redone as a
-  3-segment button row naming all three states directly (SP/Base/Real, same
-  pattern as `calc/FormeToggle.tsx`'s existing forme-family toggle), each
-  directly selectable rather than only cycle-forward. Real Total is computed
-  via a new lazy-imported `utils/realTotalStats.ts` (mirrors
-  `TeamSheetPdfModal.tsx`'s dynamic-`import()` pattern so `@smogon/calc`'s
-  runtime `Pokemon` class doesn't enter the main bundle), memoized per-card
-  against an input key so re-selecting Real Total doesn't recompute unless
-  evs/nature/level/gender actually changed. `baseStats`/`level`/`gender` are
-  now threaded through `EditablePokemonCore.tsx` into `StatsColumn` as new
-  props to support this. `ImportedPokemonInfo.calculatedStats` (the existing
-  unused field) was deliberately NOT used for this - Real Total stays
-  component-local derived state, not persisted.
-  Original cycle-toggle version was built and live-verified (user confirmed
-  working) before the discoverability feedback came in; the segmented-toggle
-  redo above hasn't had its own live pass yet, though `type-check`/`lint`/
-  `test` all still pass clean (761 tests) after it.
+[Team Builder Stat Display: SP / Base / Real Total Toggle] — Leg 1 shipped
+2026-09-15 (see `COMPLETED.md`).
 
 ## Blocked
 

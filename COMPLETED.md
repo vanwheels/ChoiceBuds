@@ -18,6 +18,19 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Team Builder Stat Display: SP / Base / Real Total Toggle] — Leg 1**
+  (2026-09-15) - see commits `1f7bbec`, `7a4b4c7`, `ea6173b`.
+  `StatsColumn.tsx`'s stat grid now switches between **SP** (existing 0-32
+  editable input), **Base** (species base stat, read-only), and **Real
+  Total** (Base + SP + Nature at Lv50, max IVs, no stage boost) via a
+  3-segment button row (same pattern as `calc/FormeToggle.tsx`'s forme-family
+  toggle) - redone from an initial bare-clickable-"SP"-text cycle version
+  after live feedback that nothing signaled it was interactive. Real Total
+  is computed via a new lazy-imported `utils/realTotalStats.ts` (mirrors
+  `TeamSheetPdfModal.tsx`'s dynamic-`import()` pattern so `@smogon/calc`'s
+  runtime `Pokemon` class doesn't enter the main bundle), memoized per-card
+  against an input key.
+
 - **[VGCPastes Sample Team Catalog: Search/Filter] — Leg 1** (2026-09-15) -
   see commit `bd976cc`. A single text box filters `VgcPasteCatalogModal.tsx`'s
   row list case-insensitively by species/owner/description, client-side over
