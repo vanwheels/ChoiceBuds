@@ -33,21 +33,14 @@ Cache leg and a Calc Panel Real Sets UI leg; both shipped 2026-09-15 (see
 `COMPLETED.md`). Calc Real Sets Section: Visual Polish Legs 1 and 2 shipped
 2026-09-15 (see `COMPLETED.md`). Team Builder Real Sets Integration's own
 Scoping leg finished the same day, splitting into a build leg; that build leg
-(Leg 2) also shipped 2026-09-15 (see `COMPLETED.md`).
+(Leg 2) also shipped 2026-09-15 (see `COMPLETED.md`). VGCPastes Sample Team
+Catalog: Search/Filter Leg 1 shipped 2026-09-15 (see `COMPLETED.md`).
 
 ## Current Milestone: VGCPastes Real-Set Sourcing
 
-Core legs are done (see `COMPLETED.md`); three follow-on legs pulled in from
-Unscheduled 2026-09-15 before closing it out.
-
-- **[VGCPastes Sample Team Catalog: Search/Filter] — Leg 1** *(Last touched:
-  2026-09-14 · Re-checks: 0)*
-  Flagged as scope creep during Sample Team Catalog Leg 1 rather than added
-  silently - that leg's own catalog is a plain scrollable list per
-  regulation tab, no search/filter, matching exactly what was scoped. A
-  regulation tab can hold 200+ rows, so a text filter (by species/owner/
-  description) over `VgcPasteCatalogModal.tsx`'s row list would be a
-  natural fast-follow once there's a real usage signal that it's needed.
+Core legs are done (see `COMPLETED.md`); two follow-on legs pulled in from
+Unscheduled 2026-09-15 before closing it out. VGCPastes Sample Team Catalog:
+Search/Filter Leg 1 shipped the same day (see `COMPLETED.md`).
 
 Also still to revisit before closing: scoping [Calc Doubles Support] — Leg 1
 (still in Unscheduled) - not pulled in now, but flagged 2026-09-14 for

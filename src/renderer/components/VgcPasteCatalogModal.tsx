@@ -16,9 +16,16 @@
  * separately scoped). Row rendering itself
  * (name/author/sprites/expand-to-preview) lives in VgcPasteCatalogRow.tsx -
  * see that file's header for the Row Display Rework Leg 2 details.
+ *
+ * Search/filter (Search/Filter Leg 1, see TODO.md) - a single text box
+ * matched case-insensitively against each row's species list/owner/
+ * description, client-side over the active tab's already-cached rows (no
+ * refetch). Flagged as a fast-follow during the original Leg 1 rather than
+ * built speculatively, once a 200+-row regulation tab made a plain
+ * scrollable list unwieldy.
  */
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { RegulationLabel, VgcPasteTeamRow } from '../types/pokemon';
 import type { UseVgcPastesCacheReturn } from '../hooks/useVgcPastesCache';
 import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
@@ -59,9 +66,19 @@ export default function VgcPasteCatalogModal({
   spriteCacheState,
 }: VgcPasteCatalogModalProps) {
   const [activeTab, setActiveTab] = useState<RegulationLabel>(defaultRegulation);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const rows = vgcPastesState.getRows(activeTab);
   const lastFetchedLabel = formatLastFetched(vgcPastesState.getLastFetchedAt(activeTab));
+
+  const filteredRows = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return rows;
+    return rows.filter(row => {
+      const haystack = [row.owner, row.description, ...row.species].join(' ').toLowerCase();
+      return haystack.includes(query);
+    });
+  }, [rows, searchQuery]);
 
   return (
     <Modal panelClassName="max-w-2xl max-h-[85vh]">
@@ -104,6 +121,17 @@ export default function VgcPasteCatalogModal({
         </div>
       </div>
 
+      {/* Search */}
+      <div className="px-6 pt-3">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search by species, owner, or description..."
+          className="w-full px-3 py-2 text-sm text-white bg-zinc-700 border border-zinc-600 rounded-lg outline-none focus:border-accent-gold placeholder:text-zinc-500"
+        />
+      </div>
+
       {/* Modal Body */}
       <div className="flex-1 overflow-y-auto p-6 space-y-2">
         {vgcPastesState.error && (
@@ -120,7 +148,13 @@ export default function VgcPasteCatalogModal({
           </p>
         )}
 
-        {rows.map(row => (
+        {rows.length > 0 && filteredRows.length === 0 && (
+          <p className="text-sm text-zinc-400 text-center py-8">
+            No sample teams match "{searchQuery}".
+          </p>
+        )}
+
+        {filteredRows.map(row => (
           <VgcPasteCatalogRow
             key={row.id}
             row={row}
