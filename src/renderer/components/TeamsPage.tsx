@@ -20,6 +20,7 @@ import type { UseSavedPokemonReturn } from '../hooks/useSavedPokemon';
 import { readTeamFromClipboard } from '../utils/clipboardPayload';
 import { buildPastedTeam } from '../utils/teamPaste';
 import { useVgcPastesCache } from '../hooks/useVgcPastesCache';
+import { useVgcRealSetsCache } from '../hooks/useVgcRealSetsCache';
 import ImportTeamModal from './ImportTeamModal';
 import VgcPasteCatalogModal from './VgcPasteCatalogModal';
 import TeamCard from './TeamCard';
@@ -64,6 +65,12 @@ export default function TeamsPage({
   // doesn't inherit a stale prefill.
   const [importPrefillRow, setImportPrefillRow] = useState<VgcPasteTeamRow | null>(null);
   const vgcPastesState = useVgcPastesCache();
+  // Mounted once here (not per-PokemonCard) and threaded down through
+  // TeamCard - a roster can hold up to 6 cards, and a per-card instance of
+  // either hook would race on its own persisted-cache writes, same reasoning
+  // as CalcPage.tsx's own shared mount (see docs/investigations/
+  // team-builder-real-sets-scope.md and RealSetsButton.tsx).
+  const vgcRealSetsState = useVgcRealSetsCache();
   // "Paste as New Team" from anywhere in the page's empty space, not just by
   // right-clicking an existing TeamCard's own header (Quick Copy/Paste
   // Pokémon & Teams via Right-Click Leg 2, see TODO.md). TeamCard's own
@@ -218,6 +225,8 @@ export default function TeamsPage({
                 spriteCacheState={spriteCacheState}
                 settingsState={settingsState}
                 savedPokemonState={savedPokemonState}
+                vgcPastesState={vgcPastesState}
+                vgcRealSetsState={vgcRealSetsState}
               />
             ))}
           </div>

@@ -26,6 +26,14 @@
  * push the rest of the Calc panel down on every load. Expanding wraps the
  * same full-card rows in a fixed-height scroll container instead of letting
  * the panel grow unbounded.
+ *
+ * `collapsible` (default true) is what Team Builder Real Sets Integration
+ * (see TODO.md/docs/investigations/team-builder-real-sets-scope.md) turns
+ * off - RealSetsButton.tsx already hosts this inside an on-demand
+ * FloatingCardPanel, so the panel's own open/close is the affordance now;
+ * a second collapse toggle nested inside it would be redundant. `false`
+ * always renders the bundle list (still inside the same scroll container)
+ * with no Show/Hide button at all.
  */
 
 import { useState } from 'react';
@@ -41,6 +49,7 @@ interface CalcRealSetsSectionProps {
   isLoading: boolean;
   error: string | null;
   onPickBundle: (bundle: VgcRealSetBundle) => void;
+  collapsible?: boolean;
 }
 
 function formatEvs(bundle: VgcRealSetBundle): string {
@@ -49,10 +58,11 @@ function formatEvs(bundle: VgcRealSetBundle): string {
 }
 
 export default function CalcRealSetsSection({
-  species, regulation, hasCatalogRows, isCatalogRefreshing, onRefreshCatalog, entry, isLoading, error, onPickBundle,
+  species, regulation, hasCatalogRows, isCatalogRefreshing, onRefreshCatalog, entry, isLoading, error, onPickBundle, collapsible = true,
 }: CalcRealSetsSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const bundles = entry?.bundles ?? [];
+  const showBundles = !collapsible || isExpanded;
 
   return (
     <div className="flex flex-col gap-1">
@@ -60,7 +70,7 @@ export default function CalcRealSetsSection({
         <label className="text-[10px] text-zinc-400 uppercase tracking-wide">
           Real Sets Seen ({regulation})
         </label>
-        {!error && hasCatalogRows && !isLoading && bundles.length > 0 && (
+        {collapsible && !error && hasCatalogRows && !isLoading && bundles.length > 0 && (
           <button
             type="button"
             onClick={() => setIsExpanded((prev) => !prev)}
@@ -97,7 +107,7 @@ export default function CalcRealSetsSection({
         <p className="text-[10px] text-zinc-500 italic">No confirmed real sets found for {species} in {regulation} yet.</p>
       )}
 
-      {!error && hasCatalogRows && !isLoading && entry && bundles.length > 0 && isExpanded && (
+      {!error && hasCatalogRows && !isLoading && entry && bundles.length > 0 && showBundles && (
         <div className="flex flex-col gap-1 max-h-72 overflow-y-auto">
           {bundles.map((bundle, index) => (
             <button

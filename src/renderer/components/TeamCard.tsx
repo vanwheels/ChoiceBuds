@@ -9,6 +9,8 @@ import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
 import type { UseSettingsReturn } from '../hooks/useSettings';
 import type { UseSavedPokemonReturn } from '../hooks/useSavedPokemon';
+import type { UseVgcPastesCacheReturn } from '../hooks/useVgcPastesCache';
+import type { UseVgcRealSetsCacheReturn } from '../hooks/useVgcRealSetsCache';
 import { useRosterActions } from '../hooks/useRosterActions';
 import { toRegulationId } from '../utils/pokemonRules';
 import { getRegulationTheme } from '../config/pokemonTheme';
@@ -40,6 +42,10 @@ interface TeamCardProps {
   spriteCacheState: UseSpriteCacheReturn;
   settingsState: UseSettingsReturn;
   savedPokemonState: UseSavedPokemonReturn;
+  /** Shared single instances (mounted once in TeamsPage.tsx) threaded down
+      to each PokemonCard - see PokemonCard.tsx's own prop doc for why. */
+  vgcPastesState: UseVgcPastesCacheReturn;
+  vgcRealSetsState: UseVgcRealSetsCacheReturn;
 }
 
 // Card expand/collapse (animation/motion leg 2, see TODO.md): animates height
@@ -78,7 +84,7 @@ const cardExpandVariants = {
   },
 };
 
-export default function TeamCard({ team, onDelete, teamsState, databaseState, gameDataState, speciesRosterState, spriteCacheState, settingsState, savedPokemonState }: TeamCardProps) {
+export default function TeamCard({ team, onDelete, teamsState, databaseState, gameDataState, speciesRosterState, spriteCacheState, settingsState, savedPokemonState, vgcPastesState, vgcRealSetsState }: TeamCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   // Collapse-flicker fix (Team Card Collapse Animation Flicker Leg 1, see
   // TODO.md): col-span-full used to be driven directly off isExpanded, so
@@ -522,6 +528,8 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
                     spriteCacheState={spriteCacheState}
                     rosterActions={rosterActions}
                     savedPokemonState={savedPokemonState}
+                    vgcPastesState={vgcPastesState}
+                    vgcRealSetsState={vgcRealSetsState}
                     showAnimatedSprites={settingsState.settings.showAnimatedSprites}
                   />
                 ))}

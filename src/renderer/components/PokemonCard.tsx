@@ -18,20 +18,24 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { CSSProperties, DragEvent, MouseEvent as ReactMouseEvent } from 'react';
-import type { ImportedPokemonInfo, SavedPokemonEntry, Team, SpeciesRosterEntry } from '../types/pokemon';
+import type { ImportedPokemonInfo, SavedPokemonEntry, Team, SpeciesRosterEntry, VgcRealSetBundle } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
 import type { UseRosterActionsReturn } from '../hooks/useRosterActions';
 import type { UseSavedPokemonReturn } from '../hooks/useSavedPokemon';
+import type { UseVgcPastesCacheReturn } from '../hooks/useVgcPastesCache';
+import type { UseVgcRealSetsCacheReturn } from '../hooks/useVgcRealSetsCache';
 import { getTypeGlowColors } from '../config/pokemonTheme';
 import EditablePokemonCore from './EditablePokemonCore';
 import SpeciesPickerCard from './SpeciesPickerCard';
 import SavedSetPicker from './SavedSetPicker';
+import RealSetsButton from './RealSetsButton';
 import ExportTeamModal from './ExportTeamModal';
 import SaveToLibraryDialog from './SaveToLibraryDialog';
 import ContextMenu from './ContextMenu';
 import { toRegulationId } from '../utils/pokemonRules';
+import { realSetBundleToShowdownUpdates } from '../utils/teamRealSetImport';
 import { TEAM_ROSTER_DRAG_TYPE, type TeamRosterDragPayload } from '../utils/teamRosterDragTypes';
 import { DRAG_REORDER_TRANSITION } from '../config/motion';
 import { copyPokemonToClipboard, readPokemonFromClipboard } from '../utils/clipboardPayload';
@@ -46,10 +50,16 @@ interface PokemonCardProps {
   spriteCacheState: UseSpriteCacheReturn;
   rosterActions: UseRosterActionsReturn;
   savedPokemonState: UseSavedPokemonReturn;
+  /** Shared single instances (mounted once in TeamsPage.tsx, not per-card) -
+      see RealSetsButton.tsx's header for why a per-card instance would race
+      on its own persisted-cache writes, same reasoning as Calc's own shared
+      mount in CalcPage.tsx. */
+  vgcPastesState: UseVgcPastesCacheReturn;
+  vgcRealSetsState: UseVgcRealSetsCacheReturn;
   showAnimatedSprites: boolean;
 }
 
-export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, gameDataState, speciesRosterState, spriteCacheState, rosterActions, savedPokemonState, showAnimatedSprites }: PokemonCardProps) {
+export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, gameDataState, speciesRosterState, spriteCacheState, rosterActions, savedPokemonState, vgcPastesState, vgcRealSetsState, showAnimatedSprites }: PokemonCardProps) {
   const { showdownData, types } = pokemon;
   const [isSwapPickerOpen, setIsSwapPickerOpen] = useState(false);
   // Set the instant a Roster Swap lands on a species with 1+ saved builds
@@ -128,6 +138,12 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
 
   const handleSaveToLibrary = async (label: string): Promise<boolean> => {
     return savedPokemonState.addSavedPokemonBatch([pokemon], [label]);
+  };
+
+  // RealSetsButton's pick-a-bundle-to-fill-this-slot action - see
+  // utils/teamRealSetImport.ts for why this is a trivial field copy.
+  const handlePickRealSet = async (bundle: VgcRealSetBundle) => {
+    await updatePokemon({ showdownData: { ...pokemon.showdownData, ...realSetBundleToShowdownUpdates(bundle) } });
   };
 
   const handlePastePokemon = async () => {
@@ -275,6 +291,19 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
               />
             )
           }
+        />
+
+        {/* Real Sets Seen trigger (Team Builder Real Sets Integration Leg 2,
+            see TODO.md) - opens a FloatingCardPanel with real tournament
+            sets sampled from VGCPastes for this exact species/regulation.
+            Placed after the core's item/ability/moves/EVs since picking a
+            bundle overwrites all of them at once. */}
+        <RealSetsButton
+          species={showdownData.species}
+          regulation={team.format}
+          vgcPastesState={vgcPastesState}
+          vgcRealSetsState={vgcRealSetsState}
+          onPickBundle={handlePickRealSet}
         />
 
         <AnimatePresence>

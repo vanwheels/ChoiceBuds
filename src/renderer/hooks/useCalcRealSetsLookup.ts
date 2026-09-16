@@ -14,6 +14,11 @@
  * isLoading/error, since that underlying hook instance is shared between
  * both Pokemon panels - a single shared flag would cross-contaminate one
  * panel's spinner with the other panel's in-flight lookup.
+ *
+ * Also reused as-is by Team Builder's RealSetsButton.tsx (one instance per
+ * PokemonCard) - despite the "Calc" name, nothing here is actually
+ * Calc-specific (species/regulation in, cached-or-extracted entry out), so
+ * a second near-identical hook wasn't worth the duplication.
  */
 
 import { useCallback, useRef, useState } from 'react';
