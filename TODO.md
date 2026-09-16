@@ -38,10 +38,9 @@ Catalog: Search/Filter Leg 1 shipped 2026-09-15 (see `COMPLETED.md`).
 
 ## Current Milestone: VGCPastes Real-Set Sourcing
 
-Core legs are done (see `COMPLETED.md`); follow-on legs pulled in from
-Unscheduled before closing it out. VGCPastes Sample Team Catalog:
-Search/Filter Leg 1 and Calc Stat Rows: SP / Stat Total Toggle Leg 1 shipped
-2026-09-15 (see `COMPLETED.md`).
+Core legs are done (see `COMPLETED.md`); two follow-on legs pulled in from
+Unscheduled 2026-09-15 before closing it out. VGCPastes Sample Team Catalog:
+Search/Filter Leg 1 shipped the same day (see `COMPLETED.md`).
 
 Also still to revisit before closing: scoping [Calc Doubles Support] — Leg 1
 (still in Unscheduled) - not pulled in now, but flagged 2026-09-14 for
@@ -164,6 +163,17 @@ unblocked.
   `disableHardwareAcceleration()` - untested, and touches GPU flags on a
   line already sensitive to this exact driver's quirks, so verify live
   rather than assuming safe. Low priority - purely cosmetic.
+
+- **[Calc Stat Rows: SP / Stat Total Toggle] — Leg 1** *(Last touched:
+  2026-09-15 · Re-checks: 0)*
+  Requested 2026-09-15: `CalcStatRows.tsx`'s SP column (the raw 0-32 Stat
+  Point input, one row per stat alongside the read-only base stat and boost)
+  should be toggleable to instead display each stat's computed total (base +
+  SP + nature) so the player doesn't have to do that math by hand. Not
+  scoped - needs a decision on toggle placement/control (per-row vs. a
+  single panel-level switch) and exactly which computed value to show
+  relative to the boost column already shown separately in the row (with vs.
+  without the stage boost folded in).
 
 ## Future Milestones (unscheduled)
 

@@ -86,7 +86,7 @@ export default function CalcPage({
     field, setField, setPokemon1Side, setPokemon2Side,
     speciesOptions, pokemon1MoveOptions, pokemon2MoveOptions, itemOptions, abilityOptions, natureOptions,
     pokemon1Formes, pokemon2Formes, pokemon1BaseStats, pokemon2BaseStats,
-    pokemon1BoostedStats, pokemon2BoostedStats, pokemon1RawStats, pokemon2RawStats,
+    pokemon1BoostedStats, pokemon2BoostedStats,
     pokemon1NatureEffect, pokemon2NatureEffect, pokemon1Speed, pokemon2Speed,
     p1Results, p2Results, selectedResult, setSelectedResult, selectedEntry,
   } = calcState;
@@ -197,7 +197,6 @@ export default function CalcPage({
           formes={pokemon1Formes}
           baseStats={pokemon1BaseStats}
           boostedStats={pokemon1BoostedStats}
-          rawStats={pokemon1RawStats}
           natureEffect={pokemon1NatureEffect}
           teams={teamsState.teams}
           preferredTeamId={battleLogPlayerTeamId}
@@ -232,7 +231,6 @@ export default function CalcPage({
           formes={pokemon2Formes}
           baseStats={pokemon2BaseStats}
           boostedStats={pokemon2BoostedStats}
-          rawStats={pokemon2RawStats}
           natureEffect={pokemon2NatureEffect}
           teams={teamsState.teams}
           opponentRoster={battleLogOpponentRoster}

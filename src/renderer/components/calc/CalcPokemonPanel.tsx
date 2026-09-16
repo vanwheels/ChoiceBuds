@@ -104,7 +104,6 @@ interface CalcPokemonPanelProps {
   formes: FormeFamily;
   baseStats: StatsTable | null;
   boostedStats: StatsTable | null;
-  rawStats: StatsTable | null;
   natureEffect: NatureStatEffect;
   teams: Team[];
   /** The preferred team id to default this panel's "Load from Team" tray to (Regular Calc Battle Log Integration Leg 4) - only passed to the Pokemon 1 panel, as the Battle Log session's own selected team. Undefined on Pokemon 2 and outside a Battle Log session, where the tray just starts on its own "Select a team..." placeholder. */
@@ -132,7 +131,7 @@ const CONFIRMATION_MS = 2000;
 const GENDER_CYCLE: Array<CalcPokemonState['gender']> = ['M', 'F', ''];
 
 export default function CalcPokemonPanel({
-  title, state, speciesOptions, itemOptions, abilityOptions, natureOptions, moveOptions, formes, baseStats, boostedStats, rawStats, natureEffect,
+  title, state, speciesOptions, itemOptions, abilityOptions, natureOptions, moveOptions, formes, baseStats, boostedStats, natureEffect,
   teams, preferredTeamId, opponentRoster, onLoadOpponentEntry, savedPokemonState, gameDataState, databaseState,
   regulation, vgcPastesState, vgcRealSetsState, resolveSprite, onChange, onMoveUsageChange,
 }: CalcPokemonPanelProps) {
@@ -461,7 +460,6 @@ export default function CalcPokemonPanel({
       <CalcStatRows
         baseStats={baseStats}
         boostedStats={boostedStats}
-        rawStats={rawStats}
         sps={state.sps}
         boosts={state.boosts}
         natureEffect={natureEffect}

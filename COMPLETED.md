@@ -18,17 +18,6 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
-- **[Calc Stat Rows: SP / Stat Total Toggle] — Leg 1** (2026-09-15) - see
-  commit `07bdb5c`. Built to the TODO scoping spec: `CalcStatRows.tsx`'s SP
-  column header is now a toggle button (component-local `useState`, no
-  lifting needed) switching between the raw SP `<input>` and a read-only
-  Base+SP+Nature value per stat, sourced from a new `computeRawStats()`
-  export in `damageCalcEngine.ts` that just returns `@smogon/calc`'s own
-  `Pokemon.rawStats` - no new stat math. Threaded through as `pokemon1RawStats`/
-  `pokemon2RawStats` (`useDamageCalc.ts`) → `rawStats` prop
-  (`CalcPokemonPanel.tsx` → `CalcStatRows.tsx`), same shape as the existing
-  `boostedStats` plumbing.
-
 - **[VGCPastes Sample Team Catalog: Search/Filter] — Leg 1** (2026-09-15) -
   see commit `bd976cc`. A single text box filters `VgcPasteCatalogModal.tsx`'s
   row list case-insensitively by species/owner/description, client-side over

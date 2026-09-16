@@ -40,7 +40,6 @@ import {
   defaultPokemonState,
   defaultFieldState,
   computeBoostedStats,
-  computeRawStats,
   computeEffectiveSpeed,
   computeSideResults,
   type NatureStatEffect,
@@ -99,8 +98,6 @@ export interface UseDamageCalcReturn {
   pokemon2BaseStats: StatsTable | null;
   pokemon1BoostedStats: StatsTable | null;
   pokemon2BoostedStats: StatsTable | null;
-  pokemon1RawStats: StatsTable | null;
-  pokemon2RawStats: StatsTable | null;
   pokemon1NatureEffect: NatureStatEffect;
   pokemon2NatureEffect: NatureStatEffect;
   pokemon1Speed: number | null;
@@ -144,8 +141,6 @@ export function useDamageCalc(gameDataState: UseGameDataReturn, defaultRegulatio
 
   const pokemon1BoostedStats = useMemo(() => computeBoostedStats(gen, pokemon1, field.weather, field.terrain, field.pokemon1Side), [gen, pokemon1, field.weather, field.terrain, field.pokemon1Side]);
   const pokemon2BoostedStats = useMemo(() => computeBoostedStats(gen, pokemon2, field.weather, field.terrain, field.pokemon2Side), [gen, pokemon2, field.weather, field.terrain, field.pokemon2Side]);
-  const pokemon1RawStats = useMemo(() => computeRawStats(gen, pokemon1), [gen, pokemon1]);
-  const pokemon2RawStats = useMemo(() => computeRawStats(gen, pokemon2), [gen, pokemon2]);
 
   const pokemon1BaseStats = useMemo(
     () => (pokemon1.species ? gen.species.get(toID(resolveCalcSpecies(pokemon1.species)))?.baseStats ?? null : null),
@@ -264,8 +259,6 @@ export function useDamageCalc(gameDataState: UseGameDataReturn, defaultRegulatio
     pokemon2BaseStats,
     pokemon1BoostedStats,
     pokemon2BoostedStats,
-    pokemon1RawStats,
-    pokemon2RawStats,
     pokemon1NatureEffect,
     pokemon2NatureEffect,
     pokemon1Speed,
