@@ -41,9 +41,81 @@ call since only one milestone can be "current" at a time - also shipped
 2026-09-15 (see `COMPLETED.md`). VGCPastes Real-Set Sourcing milestone
 shipped 2026-09-15 (see `MILESTONES.md` and
 [docs/postmortems/vgcpastes-real-set-sourcing.md](docs/postmortems/vgcpastes-real-set-sourcing.md)).
-No milestone currently in progress - see Future Milestones below.
 [Calc Stat Rows: SP / Stat Total Toggle] — Leg 1 was killed 2026-09-16
-instead of scoped - see `COMPLETED.md`.
+instead of scoped - see `COMPLETED.md`. Maintenance & Bug Fix Sweep promoted
+to current milestone 2026-09-16, pulling in three previously-Unscheduled
+items plus a newly-reported Real Sets bug.
+
+## Current Milestone: Maintenance & Bug Fix Sweep
+
+- **[Real Sets: Mega Evolution Species Matching Bug] — Leg 1** *(Last
+  touched: 2026-09-16 · Re-checks: 0)*
+  User-reported 2026-09-16 (screenshot: a Mega Salamence team card showing
+  "No confirmed real sets found" despite the Reg M-C sample pool having
+  numerous Salamence entries) and root-caused live the same day - see
+  [docs/investigations/mega-real-sets-matching-bug.md](docs/investigations/mega-real-sets-matching-bug.md).
+  `parser.ts`'s `normalizeMegaSpeciesOnImport()` intentionally strips the
+  `-Mega` suffix from a team member's stored `species` at import (base
+  species + Mega Stone item, for team-validation purposes), but
+  `services/vgcRealSets.ts`'s species matching deliberately keeps the Mega
+  suffix (a prior, separately-reasonable scoping decision - the sheet/paste
+  data keys Mega and base sets apart). `RealSetsButton.tsx` passes the
+  already-Mega-stripped `showdownData.species` straight into the lookup, so
+  any Mega-capable team member queries its base species name and can never
+  match the sheet's `-Mega`-suffixed rows - reproduces for any Mega, not
+  just Salamence. Fix direction: reconstruct the Mega-suffixed key via
+  `getMegaApiSlug(item, species)` (same helper `useMegaSprite.ts` already
+  uses) before calling `realSets.lookup()`. Also check whether
+  `CalcPokemonPanel.tsx`'s own Mega toggle re-triggers its real-sets lookup
+  at all when switching formes - not confirmed either way this session, see
+  the investigation doc's last section.
+
+- **[Reg M-C Z-A-Exclusive Movepool Audit] — Leg 1** *(Last touched:
+  2026-09-10 · Re-checks: 1)*
+  Deferred out of Regulation M-C Prep's Leg 2 (see COMPLETED.md/postmortem)
+  rather than forced into that pass. Whether Rillaboom/Baxcalibur/Salamence
+  gained any Legends Z-A-exclusive moves PokeAPI's Gen 9 SV learnset
+  pipeline wouldn't surface on its own is still unconfirmed - a spot
+  WebFetch against Serebii's per-species pages couldn't reliably tell
+  genuinely-new moves apart from existing ones it just flagged as
+  "unusual." Needs the app's own live-PokeAPI `hasChampionsMoveData` audit
+  methodology (`config/championsMovepoolChanges.ts`'s header) applied to
+  these 3 species specifically, not a Serebii read. Golisopod (originally
+  the 4th) is resolved - see COMPLETED.md's Champions M-C Balance Patch
+  Corrections entry.
+  2026-09-10 re-check: live-queried PokeAPI directly for all 6 Reg M-C new
+  species (rillaboom, baxcalibur, salamence, cinderace, pincurchin,
+  golisopod) - still 0 "champions"-tagged moves for every one of them (vs.
+  51 for an already-covered species like archaludon, confirming the query
+  methodology itself works). No backfill yet, so this audit still can't run
+  the `hasChampionsMoveData` methodology the way Golisopod's fix did -
+  genuinely blocked on PokeAPI, not on effort spent here. One more
+  no-new-info re-check and this needs to either move to Known Exceptions or
+  get flagged for a decision (e.g. hand-curating from user-provided source
+  text the way Golisopod's fix did, rather than waiting on PokeAPI further).
+
+- **[Team Gap Analysis: Usage Cutoff Tuning] — Leg 1** *(Last touched:
+  2026-09-08 · Re-checks: 0)*
+  From Team Gap Analysis Re-evaluation's scoping pass (see `COMPLETED.md`).
+  `USAGE_THREAT_RANK_CUTOFF = 50` (`utils/usageThreats.ts`) is a hand-picked
+  constant, flagged as unmeasured in its own code comment. Not actionable
+  yet - needs real ladder-usage volume/distribution to be visible live
+  first; revisit once that data exists rather than re-checking this item on
+  a schedule.
+
+- **[Dev Console GPU Overlay Error Noise] — Leg 1** *(Last touched:
+  2026-09-14 · Re-checks: 0)*
+  `npm run dev` prints `[...ERROR:ui\gl\direct_composition_support.cc:247]
+  GetGpuDriverOverlayInfo: Failed to retrieve video device` on every launch.
+  Cosmetic dev-console noise, not a functional issue (app launches/behaves
+  normally) - very likely the same GPU/driver situation `main.ts`'s existing
+  `app.disableHardwareAcceleration()` call already works around (a
+  DirectComposition video-overlay capability probe that fails gracefully
+  instead of crashing, on this machine's GPU/driver combo). Candidate fix:
+  `app.commandLine.appendSwitch('disable-direct-composition')` before
+  `disableHardwareAcceleration()` - untested, and touches GPU flags on a
+  line already sensitive to this exact driver's quirks, so verify live
+  rather than assuming safe. Low priority - purely cosmetic.
 
 ## Blocked
 
@@ -95,30 +167,6 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-- **[Reg M-C Z-A-Exclusive Movepool Audit] — Leg 1** *(Last touched:
-  2026-09-10 · Re-checks: 1)*
-  Deferred out of Regulation M-C Prep's Leg 2 (see COMPLETED.md/postmortem)
-  rather than forced into that pass. Whether Rillaboom/Baxcalibur/Salamence
-  gained any Legends Z-A-exclusive moves PokeAPI's Gen 9 SV learnset
-  pipeline wouldn't surface on its own is still unconfirmed — a spot
-  WebFetch against Serebii's per-species pages couldn't reliably tell
-  genuinely-new moves apart from existing ones it just flagged as
-  "unusual." Needs the app's own live-PokeAPI `hasChampionsMoveData` audit
-  methodology (`config/championsMovepoolChanges.ts`'s header) applied to
-  these 3 species specifically, not a Serebii read. Golisopod (originally
-  the 4th) is resolved — see COMPLETED.md's Champions M-C Balance Patch
-  Corrections entry.
-  2026-09-10 re-check: live-queried PokeAPI directly for all 6 Reg M-C new
-  species (rillaboom, baxcalibur, salamence, cinderace, pincurchin,
-  golisopod) — still 0 "champions"-tagged moves for every one of them (vs.
-  51 for an already-covered species like archaludon, confirming the query
-  methodology itself works). No backfill yet, so this audit still can't run
-  the `hasChampionsMoveData` methodology the way Golisopod's fix did —
-  genuinely blocked on PokeAPI, not on effort spent here. One more
-  no-new-info re-check and this needs to either move to Known Exceptions or
-  get flagged for a decision (e.g. hand-curating from user-provided source
-  text the way Golisopod's fix did, rather than waiting on PokeAPI further).
-
 - **[UI Shift Assessment Sweep — Post Card UI Polish] — Leg 1** *(Last
   touched: 2026-09-08 · Re-checks: 0)*
   Continue scoping/assessing UI shifts and changes to the rest of the app,
@@ -126,29 +174,6 @@ unblocked.
   `MILESTONES.md`). Open-ended — needs a pass identifying which
   screens/components haven't had a UI-focused pass yet before it turns
   into concrete legs.
-
-- **[Team Gap Analysis: Usage Cutoff Tuning] — Leg 1** *(Last touched:
-  2026-09-08 · Re-checks: 0)*
-  From Team Gap Analysis Re-evaluation's scoping pass (see `COMPLETED.md`).
-  `USAGE_THREAT_RANK_CUTOFF = 50` (`utils/usageThreats.ts`) is a hand-picked
-  constant, flagged as unmeasured in its own code comment. Not actionable
-  yet - needs real ladder-usage volume/distribution to be visible live
-  first; revisit once that data exists rather than re-checking this item on
-  a schedule.
-
-- **[Dev Console GPU Overlay Error Noise] — Leg 1** *(Last touched:
-  2026-09-14 · Re-checks: 0)*
-  `npm run dev` prints `[...ERROR:ui\gl\direct_composition_support.cc:247]
-  GetGpuDriverOverlayInfo: Failed to retrieve video device` on every launch.
-  Cosmetic dev-console noise, not a functional issue (app launches/behaves
-  normally) - very likely the same GPU/driver situation `main.ts`'s existing
-  `app.disableHardwareAcceleration()` call already works around (a
-  DirectComposition video-overlay capability probe that fails gracefully
-  instead of crashing, on this machine's GPU/driver combo). Candidate fix:
-  `app.commandLine.appendSwitch('disable-direct-composition')` before
-  `disableHardwareAcceleration()` - untested, and touches GPU flags on a
-  line already sensitive to this exact driver's quirks, so verify live
-  rather than assuming safe. Low priority - purely cosmetic.
 
 ## Future Milestones (unscheduled)
 
