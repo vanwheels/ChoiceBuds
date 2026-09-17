@@ -18,6 +18,21 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Calc Stat Rows: SP / Stat Total Toggle] — Leg 1** (2026-09-16) -
+  decision, no diff. Killed on revisit rather than scoped: the underlying
+  need (see the computed stat total instead of doing base+SP+nature math by
+  hand) is already met on both fronts it was compared against - `CalcStatRows.tsx`
+  already has an always-visible Total column (base+SP+nature+stage boost,
+  no toggle needed), and the actual originating ask was separately built and
+  shipped as the Team Builder roster-card toggle below. This item was a
+  leftover from that miscommunication (see the `6d9d3ee` revert commit's
+  message): the Calc-tab toggle got built first by mistake, was reverted,
+  and got re-added to TODO.md as if still a distinct ask, when the Total
+  column already covered it. The only gap versus the item's literal wording
+  is that Total includes the stage boost where the ask specified
+  pre-boost - a narrow edge case (only diverges when a stage boost is
+  actually set) judged not worth a dedicated toggle.
+
 - **[Calc Doubles Support] — Leg 1** (2026-09-15) - decision, no diff; see
   `docs/investigations/calc-doubles-support-scope.md`. Flagged 2026-09-14 to
   revisit scoping once VGCPastes Real-Set Sourcing's two legs shipped; the

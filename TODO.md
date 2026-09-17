@@ -42,6 +42,8 @@ call since only one milestone can be "current" at a time - also shipped
 shipped 2026-09-15 (see `MILESTONES.md` and
 [docs/postmortems/vgcpastes-real-set-sourcing.md](docs/postmortems/vgcpastes-real-set-sourcing.md)).
 No milestone currently in progress - see Future Milestones below.
+[Calc Stat Rows: SP / Stat Total Toggle] — Leg 1 was killed 2026-09-16
+instead of scoped - see `COMPLETED.md`.
 
 ## Blocked
 
@@ -147,17 +149,6 @@ unblocked.
   `disableHardwareAcceleration()` - untested, and touches GPU flags on a
   line already sensitive to this exact driver's quirks, so verify live
   rather than assuming safe. Low priority - purely cosmetic.
-
-- **[Calc Stat Rows: SP / Stat Total Toggle] — Leg 1** *(Last touched:
-  2026-09-15 · Re-checks: 0)*
-  Requested 2026-09-15: `CalcStatRows.tsx`'s SP column (the raw 0-32 Stat
-  Point input, one row per stat alongside the read-only base stat and boost)
-  should be toggleable to instead display each stat's computed total (base +
-  SP + nature) so the player doesn't have to do that math by hand. Not
-  scoped - needs a decision on toggle placement/control (per-row vs. a
-  single panel-level switch) and exactly which computed value to show
-  relative to the boost column already shown separately in the row (with vs.
-  without the stage boost folded in).
 
 ## Future Milestones (unscheduled)
 
