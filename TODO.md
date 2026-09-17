@@ -44,31 +44,10 @@ shipped 2026-09-15 (see `MILESTONES.md` and
 [Calc Stat Rows: SP / Stat Total Toggle] — Leg 1 was killed 2026-09-16
 instead of scoped - see `COMPLETED.md`. Maintenance & Bug Fix Sweep promoted
 to current milestone 2026-09-16, pulling in three previously-Unscheduled
-items plus a newly-reported Real Sets bug.
+items plus a newly-reported Real Sets bug. [Real Sets: Mega Evolution
+Species Matching Bug] — Leg 1 shipped the same day (see `COMPLETED.md`).
 
 ## Current Milestone: Maintenance & Bug Fix Sweep
-
-- **[Real Sets: Mega Evolution Species Matching Bug] — Leg 1** *(Last
-  touched: 2026-09-16 · Re-checks: 0)*
-  User-reported 2026-09-16 (screenshot: a Mega Salamence team card showing
-  "No confirmed real sets found" despite the Reg M-C sample pool having
-  numerous Salamence entries) and root-caused live the same day - see
-  [docs/investigations/mega-real-sets-matching-bug.md](docs/investigations/mega-real-sets-matching-bug.md).
-  `parser.ts`'s `normalizeMegaSpeciesOnImport()` intentionally strips the
-  `-Mega` suffix from a team member's stored `species` at import (base
-  species + Mega Stone item, for team-validation purposes), but
-  `services/vgcRealSets.ts`'s species matching deliberately keeps the Mega
-  suffix (a prior, separately-reasonable scoping decision - the sheet/paste
-  data keys Mega and base sets apart). `RealSetsButton.tsx` passes the
-  already-Mega-stripped `showdownData.species` straight into the lookup, so
-  any Mega-capable team member queries its base species name and can never
-  match the sheet's `-Mega`-suffixed rows - reproduces for any Mega, not
-  just Salamence. Fix direction: reconstruct the Mega-suffixed key via
-  `getMegaApiSlug(item, species)` (same helper `useMegaSprite.ts` already
-  uses) before calling `realSets.lookup()`. Also check whether
-  `CalcPokemonPanel.tsx`'s own Mega toggle re-triggers its real-sets lookup
-  at all when switching formes - not confirmed either way this session, see
-  the investigation doc's last section.
 
 - **[Reg M-C Z-A-Exclusive Movepool Audit] — Leg 1** *(Last touched:
   2026-09-10 · Re-checks: 1)*

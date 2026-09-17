@@ -18,6 +18,20 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Real Sets: Mega Evolution Species Matching Bug] — Leg 1** (2026-09-16) -
+  see commit `e51eef6` and
+  [docs/investigations/mega-real-sets-matching-bug.md](docs/investigations/mega-real-sets-matching-bug.md)
+  for the original root-cause. Fixed both the surfaced bug (RealSetsButton.tsx
+  passing the already-Mega-stripped species into the lookup) and a second,
+  deeper instance the investigation hadn't caught: `extractRealSetsForSpecies()`
+  re-parses each sampled paste through the same parser that strips Mega
+  suffixes, so even the corrected caller couldn't match anything pulled out
+  of a fetched paste - live testing (before this fix landed) still returned
+  zero bundles for a Mega Salamence lookup despite 113 matching sheet rows,
+  which is what surfaced it. Also fixed `CalcPokemonPanel.tsx`'s Mega toggle
+  not re-triggering the lookup at all, per the investigation's flagged
+  follow-up. Live-verified via `run-desktop` for both Team Builder and Calc.
+
 - **[Calc Stat Rows: SP / Stat Total Toggle] — Leg 1** (2026-09-16) -
   decision, no diff. Killed on revisit rather than scoped: the underlying
   need (see the computed stat total instead of doing base+SP+nature math by
