@@ -37,10 +37,13 @@
 import { type DefendingSlot, getDefensiveMultiplier } from './typeCoverage';
 
 /**
- * Top-N ladder usage cutoff (lower columnPosition = more used). Hand-picked
- * default, not measured against real distribution yet - revisit once the
- * list is live and populated with real numbers if 50 feels too
- * sparse/noisy (see TODO.md).
+ * Top-N ladder usage cutoff (lower columnPosition = more used). Checked
+ * live against useUsageSync's real cached data 2026-09-16 (see
+ * COMPLETED.md): ranks 2-60 are nearly gapless (about one species per
+ * integer rank), so there's no natural cliff sitting at 50 specifically -
+ * 50 lands mid-way through the dense, contested part of the ladder, which
+ * is as good a justification as the data (rank order only, no usage-share
+ * percentage) can give. Kept at 50 rather than retuned.
  */
 export const USAGE_THREAT_RANK_CUTOFF = 50;
 

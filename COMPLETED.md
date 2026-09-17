@@ -18,6 +18,21 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Team Gap Analysis: Usage Cutoff Tuning] — Leg 1** (2026-09-16) -
+  decision, no diff to the cutoff itself (doc-comment update only, see
+  commit below). The item's premise was stale: `useUsageSync` has bulk-
+  populated real `columnPosition` ladder-usage ranks for every legal-roster
+  species since 2026-09-01 (its own Leg 1, a different item - see
+  `docs/archive/completed-2026-07-09-to-2026-09-01.md`), it just hadn't
+  been checked against. Pulled the live `game-data-cache.json` and found
+  253 legal species ranked 2-261 with no unresolved fallbacks. Ranks 2-60
+  are nearly gapless (about one species per integer rank), so there's no
+  natural cliff at 50 specifically to retune around - the API only exposes
+  ordinal rank, not a usage-share percentage, so rank density is the best
+  justification available. Kept `USAGE_THREAT_RANK_CUTOFF = 50` as-is;
+  `utils/usageThreats.ts`'s doc comment now records the finding instead of
+  flagging it unmeasured.
+
 - **[Real Sets: Mega Evolution Species Matching Bug] — Leg 1** (2026-09-16) -
   see commit `e51eef6` and
   [docs/investigations/mega-real-sets-matching-bug.md](docs/investigations/mega-real-sets-matching-bug.md)

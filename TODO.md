@@ -46,41 +46,10 @@ instead of scoped - see `COMPLETED.md`. Maintenance & Bug Fix Sweep promoted
 to current milestone 2026-09-16, pulling in three previously-Unscheduled
 items plus a newly-reported Real Sets bug. [Real Sets: Mega Evolution
 Species Matching Bug] — Leg 1 shipped the same day (see `COMPLETED.md`).
+[Team Gap Analysis: Usage Cutoff Tuning] — Leg 1 resolved (decision, no
+diff to the cutoff) 2026-09-16 (see `COMPLETED.md`).
 
 ## Current Milestone: Maintenance & Bug Fix Sweep
-
-- **[Reg M-C Z-A-Exclusive Movepool Audit] — Leg 1** *(Last touched:
-  2026-09-10 · Re-checks: 1)*
-  Deferred out of Regulation M-C Prep's Leg 2 (see COMPLETED.md/postmortem)
-  rather than forced into that pass. Whether Rillaboom/Baxcalibur/Salamence
-  gained any Legends Z-A-exclusive moves PokeAPI's Gen 9 SV learnset
-  pipeline wouldn't surface on its own is still unconfirmed - a spot
-  WebFetch against Serebii's per-species pages couldn't reliably tell
-  genuinely-new moves apart from existing ones it just flagged as
-  "unusual." Needs the app's own live-PokeAPI `hasChampionsMoveData` audit
-  methodology (`config/championsMovepoolChanges.ts`'s header) applied to
-  these 3 species specifically, not a Serebii read. Golisopod (originally
-  the 4th) is resolved - see COMPLETED.md's Champions M-C Balance Patch
-  Corrections entry.
-  2026-09-10 re-check: live-queried PokeAPI directly for all 6 Reg M-C new
-  species (rillaboom, baxcalibur, salamence, cinderace, pincurchin,
-  golisopod) - still 0 "champions"-tagged moves for every one of them (vs.
-  51 for an already-covered species like archaludon, confirming the query
-  methodology itself works). No backfill yet, so this audit still can't run
-  the `hasChampionsMoveData` methodology the way Golisopod's fix did -
-  genuinely blocked on PokeAPI, not on effort spent here. One more
-  no-new-info re-check and this needs to either move to Known Exceptions or
-  get flagged for a decision (e.g. hand-curating from user-provided source
-  text the way Golisopod's fix did, rather than waiting on PokeAPI further).
-
-- **[Team Gap Analysis: Usage Cutoff Tuning] — Leg 1** *(Last touched:
-  2026-09-08 · Re-checks: 0)*
-  From Team Gap Analysis Re-evaluation's scoping pass (see `COMPLETED.md`).
-  `USAGE_THREAT_RANK_CUTOFF = 50` (`utils/usageThreats.ts`) is a hand-picked
-  constant, flagged as unmeasured in its own code comment. Not actionable
-  yet - needs real ladder-usage volume/distribution to be visible live
-  first; revisit once that data exists rather than re-checking this item on
-  a schedule.
 
 - **[Dev Console GPU Overlay Error Noise] — Leg 1** *(Last touched:
   2026-09-14 · Re-checks: 0)*
@@ -102,6 +71,31 @@ Items where the whole item (not just a sub-part) is stalled on something
 outside this project — a person, a dependency, or an external decision.
 Exempt from the re-check counter; they move back to "In progress" once
 unblocked.
+
+- **[Reg M-C Z-A-Exclusive Movepool Audit] — Leg 1** *(Last touched:
+  2026-09-16 · Re-checks: exempt, blocked)*
+  Blocked: waiting on PokeAPI to backfill "champions"-tagged move data more
+  broadly, the same way it eventually did for Reg M-B's 22 species (see
+  `config/championsMovepoolChanges.ts`'s header). Deferred out of
+  Regulation M-C Prep's Leg 2 (see COMPLETED.md/postmortem) rather than
+  forced into that pass.
+  Scope correction 2026-09-16 (per Vanny): Rillaboom/Baxcalibur/Salamence
+  are not the actual audit target, they're cheap indicator species used to
+  check whether PokeAPI has caught up yet (currently 0 champions-tagged
+  moves each, vs. 51 for already-backfilled archaludon as control - checked
+  live 2026-09-10 and again 2026-09-16, no change). The real scope is a
+  full Champions movepool sweep across *all* Champions-legal species once
+  PokeAPI's backfill catches up - not just these 3, and not just Reg M-C's
+  roster. Golisopod (originally a 4th indicator) is separately resolved via
+  hand-curation from user-provided source text - see COMPLETED.md's
+  Champions M-C Balance Patch Corrections entry - but that was a one-off,
+  not a template to repeat per-species while waiting; the plan is to wait
+  for PokeAPI rather than hand-curate the rest.
+  Next step: periodically re-run the live champions-tag query against
+  Rillaboom/Baxcalibur/Salamence (indicator species); once any of them
+  shows non-zero champions-tagged moves, PokeAPI has started backfilling
+  Reg M-C and it's time to run the full sweep across all Champions-legal
+  species, not just these 3.
 
 - **[Team Card Grid Layout Re-check] — Leg 1** *(Last touched: 2026-08-31 ·
   Re-checks: 0)*
