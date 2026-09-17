@@ -36,3 +36,5 @@ milestone.
   [post-mortem](docs/postmortems/regular-calc-popup.md)
 - **VGCPastes Real-Set Sourcing** — 2026-09-14 to 2026-09-15 — Shipped —
   [post-mortem](docs/postmortems/vgcpastes-real-set-sourcing.md)
+- **Maintenance & Bug Fix Sweep** — 2026-09-16 — Shipped —
+  [post-mortem](docs/postmortems/maintenance-bug-fix-sweep.md)

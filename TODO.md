@@ -49,8 +49,13 @@ Species Matching Bug] — Leg 1 shipped the same day (see `COMPLETED.md`).
 [Team Gap Analysis: Usage Cutoff Tuning] — Leg 1 resolved (decision, no
 diff to the cutoff) 2026-09-16 (see `COMPLETED.md`). [Dev Console GPU
 Overlay Error Noise] — Leg 1 shipped the same day (see `COMPLETED.md`).
-
-## Current Milestone: Maintenance & Bug Fix Sweep
+Maintenance & Bug Fix Sweep milestone shipped 2026-09-16 (see
+`MILESTONES.md` and
+[docs/postmortems/maintenance-bug-fix-sweep.md](docs/postmortems/maintenance-bug-fix-sweep.md)) —
+its 4th item, Reg M-C Z-A-Exclusive Movepool Audit, stays in `Blocked`
+below rather than closing with the rest, since it's still waiting on
+PokeAPI. No milestone is currently "current" — the next one to promote
+comes from `Unscheduled` or `Future Milestones` below.
 
 ## Blocked
 
