@@ -16,6 +16,12 @@ import { registerPokepasteHandlers } from './ipc/pokepasteHandlers';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Suppresses a cosmetic dev-console error on this machine's GPU/driver combo
+// ("GetGpuDriverOverlayInfo: Failed to retrieve video device") by skipping
+// the DirectComposition video-overlay capability probe that fails on it.
+// Must be called before app.whenReady() / any BrowserWindow is created.
+app.commandLine.appendSwitch('disable-direct-composition');
+
 // Works around a real Chromium GPU process crash seen on this machine at
 // startup ("GPU state invalid after WaitForGetOffsetInRange" /
 // "Failed to send GpuControl.CreateCommandBuffer") - the GPU command buffer
