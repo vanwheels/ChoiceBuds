@@ -18,6 +18,14 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Dev Console GPU Overlay Error Noise] — Leg 1** (2026-09-16) - see
+  commit `0112f6d`. Added `app.commandLine.appendSwitch('disable-direct-composition')`
+  before the existing `disableHardwareAcceleration()` call in `main.ts` to
+  skip the DirectComposition video-overlay capability probe that was
+  failing (harmlessly) on this machine's GPU/driver combo. Live-verified
+  by restarting `npm run dev` - the `GetGpuDriverOverlayInfo` error no
+  longer appears.
+
 - **[Team Gap Analysis: Usage Cutoff Tuning] — Leg 1** (2026-09-16) -
   decision, no diff to the cutoff itself (doc-comment update only, see
   commit below). The item's premise was stale: `useUsageSync` has bulk-

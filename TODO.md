@@ -47,23 +47,10 @@ to current milestone 2026-09-16, pulling in three previously-Unscheduled
 items plus a newly-reported Real Sets bug. [Real Sets: Mega Evolution
 Species Matching Bug] — Leg 1 shipped the same day (see `COMPLETED.md`).
 [Team Gap Analysis: Usage Cutoff Tuning] — Leg 1 resolved (decision, no
-diff to the cutoff) 2026-09-16 (see `COMPLETED.md`).
+diff to the cutoff) 2026-09-16 (see `COMPLETED.md`). [Dev Console GPU
+Overlay Error Noise] — Leg 1 shipped the same day (see `COMPLETED.md`).
 
 ## Current Milestone: Maintenance & Bug Fix Sweep
-
-- **[Dev Console GPU Overlay Error Noise] — Leg 1** *(Last touched:
-  2026-09-14 · Re-checks: 0)*
-  `npm run dev` prints `[...ERROR:ui\gl\direct_composition_support.cc:247]
-  GetGpuDriverOverlayInfo: Failed to retrieve video device` on every launch.
-  Cosmetic dev-console noise, not a functional issue (app launches/behaves
-  normally) - very likely the same GPU/driver situation `main.ts`'s existing
-  `app.disableHardwareAcceleration()` call already works around (a
-  DirectComposition video-overlay capability probe that fails gracefully
-  instead of crashing, on this machine's GPU/driver combo). Candidate fix:
-  `app.commandLine.appendSwitch('disable-direct-composition')` before
-  `disableHardwareAcceleration()` - untested, and touches GPU flags on a
-  line already sensitive to this exact driver's quirks, so verify live
-  rather than assuming safe. Low priority - purely cosmetic.
 
 ## Blocked
 
