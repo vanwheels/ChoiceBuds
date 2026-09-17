@@ -393,6 +393,12 @@ export default function CalcPokemonPanel({
                 preMegaAbilityRef.current = null;
                 onChange(revert !== null ? { species, ability: revert } : { species });
               }
+              // Unlike handleSpeciesSelect/handleLoadOpponent (the only other
+              // two realSets.lookup call sites), toggling Mega on/off changes
+              // state.species directly without going through either of those
+              // - re-trigger here too, or the panel keeps showing whichever
+              // forme's real sets were last looked up.
+              realSets.lookup(species);
             }}
           />
         )}

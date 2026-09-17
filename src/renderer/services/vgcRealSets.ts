@@ -22,6 +22,7 @@
 import { parseShowdownText } from './parser';
 import { fetchPokepaste, extractPokepasteId } from './pokepaste';
 import { normalizeUsageCacheKey } from './championsBattleData';
+import { getMegaApiSlug } from '../config/megaEvolution';
 import type { ShowdownPokemon, VgcPasteTeamRow, VgcRealSetBundle, VgcRealSetsEntry } from '../types/pokemon';
 
 /** True when one of a row's own species tokens matches `targetSpecies` (key-normalized on both sides). */
@@ -98,8 +99,15 @@ export async function extractRealSetsForSpecies(
 
     try {
       const paste = await fetchPokepaste(pasteId);
+      // parseShowdownText normalizes a Mega-Evolved member's species back to
+      // its base form the same way Team Builder import does (see
+      // normalizeMegaSpeciesOnImport) - reconstruct the Mega-suffixed slug
+      // from the held item before comparing, or a Mega `targetKey` (matched
+      // against the sheet's own un-parsed, still-Mega-suffixed species list
+      // in filterRowsBySpecies above) would never match anything parsed out
+      // of the fetched paste text itself.
       const { pokemon } = parseShowdownText(paste.paste);
-      const match = pokemon.find(p => normalizeUsageCacheKey(p.species) === targetKey);
+      const match = pokemon.find(p => normalizeUsageCacheKey(getMegaApiSlug(p.item, p.species) ?? p.species) === targetKey);
       if (!match) continue;
 
       sampledTeamCount++;

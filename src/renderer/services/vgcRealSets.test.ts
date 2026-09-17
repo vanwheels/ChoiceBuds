@@ -143,6 +143,17 @@ Careful Nature
 - Parting Shot
 - Flare Blitz`;
 
+const SALAMENCE_MEGA_PASTE = `Salamence-Mega @ Salamencite
+Ability: Intimidate
+Level: 50
+Tera Type: Fire
+EVs: 4 HP / 252 Atk / 252 Spe
+Jolly Nature
+- Dragon Dance
+- Dragon Claw
+- Earthquake
+- Protect`;
+
 const RILLABOOM_ONLY_PASTE = `Rillaboom @ Assault Vest
 Ability: Grassy Surge
 Level: 50
@@ -185,6 +196,17 @@ describe('extractRealSetsForSpecies', () => {
     expect(entry.bundles).toHaveLength(1);
     expect(entry.bundles[0].occurrences).toBe(2);
     expect(entry.bundles[0].item).toBe('Assault Vest');
+  });
+
+  it('matches a Mega-Evolved target species despite parseShowdownText normalizing the fetched paste back to its base species (Real Sets: Mega Evolution Species Matching Bug fix)', async () => {
+    stubFetch({ deadbeef01: { paste: SALAMENCE_MEGA_PASTE } });
+    const rows = [buildRow({ id: 'MC010', pokepasteUrl: 'https://pokepast.es/deadbeef01', species: ['Salamence-Mega'] })];
+
+    const entry = await extractRealSetsForSpecies('Salamence-Mega', rows);
+
+    expect(entry.sampledTeamCount).toBe(1);
+    expect(entry.bundles).toHaveLength(1);
+    expect(entry.bundles[0].item).toBe('Salamencite');
   });
 
   it('skips a row whose paste does not actually contain the target species', async () => {

@@ -30,23 +30,32 @@ import type { UseVgcPastesCacheReturn } from '../hooks/useVgcPastesCache';
 import type { UseVgcRealSetsCacheReturn } from '../hooks/useVgcRealSetsCache';
 import { useCalcRealSetsLookup } from '../hooks/useCalcRealSetsLookup';
 import { useDismissable } from '../hooks/useDismissable';
+import { getMegaApiSlug } from '../config/megaEvolution';
 import CalcRealSetsSection from './calc/CalcRealSetsSection';
 import FloatingCardPanel from './FloatingCardPanel';
 
 interface RealSetsButtonProps {
   species: string;
+  item: string | undefined;
   regulation: RegulationLabel;
   vgcPastesState: UseVgcPastesCacheReturn;
   vgcRealSetsState: UseVgcRealSetsCacheReturn;
   onPickBundle: (bundle: VgcRealSetBundle) => void;
 }
 
-export default function RealSetsButton({ species, regulation, vgcPastesState, vgcRealSetsState, onPickBundle }: RealSetsButtonProps) {
+export default function RealSetsButton({ species, item, regulation, vgcPastesState, vgcRealSetsState, onPickBundle }: RealSetsButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
   const [cardRect, setCardRect] = useState<DOMRect | null>(null);
   const realSets = useCalcRealSetsLookup(regulation, vgcPastesState, vgcRealSetsState);
   const dismissRef = useDismissable<HTMLDivElement>(() => setIsOpen(false));
+
+  // Team Builder import strips a Mega-Evolved member's species back to its
+  // base form (see config/megaEvolution.ts's normalizeMegaSpeciesOnImport),
+  // but the VGCPastes sheet/pastes key Mega sets under their own -Mega
+  // suffix. Reconstruct that suffix the same way useMegaSprite's callers do,
+  // so this queries the same key the real-set catalog actually uses.
+  const effectiveSpecies = getMegaApiSlug(item, species) ?? species;
 
   const handleToggle = (e: MouseEvent<HTMLButtonElement>) => {
     if (isOpen) {
@@ -56,7 +65,7 @@ export default function RealSetsButton({ species, regulation, vgcPastesState, vg
     setAnchorRect(e.currentTarget.getBoundingClientRect());
     setCardRect(e.currentTarget.closest<HTMLElement>('[data-pokemon-card]')?.getBoundingClientRect() ?? null);
     setIsOpen(true);
-    realSets.lookup(species);
+    realSets.lookup(effectiveSpecies);
   };
 
   const handlePickBundle = (bundle: VgcRealSetBundle) => {
@@ -80,11 +89,11 @@ export default function RealSetsButton({ species, regulation, vgcPastesState, vg
         <FloatingCardPanel anchorRect={anchorRect} cardRect={cardRect}>
           <div ref={dismissRef} className="w-full bg-zinc-800 border-2 border-accent-gold rounded-lg p-2">
             <CalcRealSetsSection
-              species={species}
+              species={effectiveSpecies}
               regulation={regulation}
               hasCatalogRows={vgcPastesState.getRows(regulation).length > 0}
               isCatalogRefreshing={vgcPastesState.isRefreshing}
-              onRefreshCatalog={() => realSets.refreshCatalogAndRetry(species)}
+              onRefreshCatalog={() => realSets.refreshCatalogAndRetry(effectiveSpecies)}
               entry={realSets.entry}
               isLoading={realSets.isLoading}
               error={realSets.error}

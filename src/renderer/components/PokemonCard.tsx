@@ -300,6 +300,7 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
             bundle overwrites all of them at once. */}
         <RealSetsButton
           species={showdownData.species}
+          item={showdownData.item}
           regulation={team.format}
           vgcPastesState={vgcPastesState}
           vgcRealSetsState={vgcRealSetsState}
