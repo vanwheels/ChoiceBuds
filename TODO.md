@@ -58,6 +58,8 @@ PokeAPI. Web Version: Teams & Box MVP promoted to current milestone
 2026-09-29; its own Scoping leg finished the same day, splitting into 7
 build legs (see `COMPLETED.md` and
 [docs/investigations/web-version-scope.md](docs/investigations/web-version-scope.md)).
+[Sync Accounts: Username + Password] — Leg 1 shipped the same day (see
+`COMPLETED.md`).
 
 ## Current Milestone: Web Version: Teams & Box MVP
 
@@ -67,15 +69,6 @@ Full architecture reasoning (accounts, sync model, hosting, deferred
 follow-ons like password reset and public profile pages) is in
 [docs/investigations/web-version-scope.md](docs/investigations/web-version-scope.md) —
 item bodies below stay short and link back to it rather than repeating it.
-
-- **[Sync Accounts: Username + Password] — Leg 1** *(Last touched:
-  2026-09-29 · Re-checks: 0)*
-  Replace the `username#XXXX` shared-secret identifier with real accounts:
-  unique public username (no more discriminator) + password hashed via
-  Web Crypto (PBKDF2/scrypt) in the Worker, plus an optional email field
-  captured at signup for a future reset flow (reset itself is out of
-  scope here). Also fix the Worker's `GET` endpoint having no rate
-  limiting, while this auth surface is already being reworked.
 
 - **[Sync Data Model: Per-Record Merge & Auto Sync] — Leg 1** *(Last
   touched: 2026-09-29 · Re-checks: 0)*
@@ -89,10 +82,11 @@ item bodies below stay short and link back to it rather than repeating it.
 
 - **[Existing Account Migration] — Leg 1** *(Last touched: 2026-09-29 ·
   Re-checks: 0)*
-  Blocked: needs the accounts leg shipped first.
-  One-off manual copy of the ~4-6 existing friends' `username#XXXX`-keyed
-  KV blobs into their new accounts (a throwaway `wrangler kv` copy or
-  small script per person, coordinated directly) - not a built feature.
+  Unblocked now that Sync Accounts: Username + Password shipped (see
+  `COMPLETED.md`). One-off manual copy of the ~4-6 existing friends'
+  `username#XXXX`-keyed KV blobs into their new accounts (a throwaway
+  `wrangler kv` copy or small script per person, coordinated directly) -
+  not a built feature.
 
 - **[Web App Scaffold: Storage Adapter] — Leg 1** *(Last touched:
   2026-09-29 · Re-checks: 0)*

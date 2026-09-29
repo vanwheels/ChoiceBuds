@@ -18,6 +18,16 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Sync Accounts: Username + Password] — Leg 1** (2026-09-29) - Replaced
+  the `username#XXXX` shared-secret sync identifier with real username +
+  password accounts on the Worker, authenticated per device via a
+  server-issued opaque bearer token (not the password itself) so multiple
+  devices can stay signed in independently. Fixed the Worker's missing
+  `GET` rate limiting by relocating the actual brute-forceable secret: the
+  password is now only checked at `POST /login`, which has a real
+  failed-attempt lockout, while `GET`/`PUT /sync/:username` require an
+  unguessable bearer token. See commit `eb3653c`.
+
 - **[Web Version: Teams & Box MVP: Scoping] — Leg 1** (2026-09-29) -
   Scoping-only, no code change. Reopened a web-version discussion previously
   deferred here and on GW2Squaded; resolved five open forks (Vanny's calls,
