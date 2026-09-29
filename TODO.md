@@ -54,8 +54,76 @@ Maintenance & Bug Fix Sweep milestone shipped 2026-09-16 (see
 [docs/postmortems/maintenance-bug-fix-sweep.md](docs/postmortems/maintenance-bug-fix-sweep.md)) —
 its 4th item, Reg M-C Z-A-Exclusive Movepool Audit, stays in `Blocked`
 below rather than closing with the rest, since it's still waiting on
-PokeAPI. No milestone is currently "current" — the next one to promote
-comes from `Unscheduled` or `Future Milestones` below.
+PokeAPI. Web Version: Teams & Box MVP promoted to current milestone
+2026-09-29; its own Scoping leg finished the same day, splitting into 7
+build legs (see `COMPLETED.md` and
+[docs/investigations/web-version-scope.md](docs/investigations/web-version-scope.md)).
+
+## Current Milestone: Web Version: Teams & Box MVP
+
+Minimum scope is Teams + Box working on the web with automatic account
+sync; the rest of the app's features come later as their own milestones.
+Full architecture reasoning (accounts, sync model, hosting, deferred
+follow-ons like password reset and public profile pages) is in
+[docs/investigations/web-version-scope.md](docs/investigations/web-version-scope.md) —
+item bodies below stay short and link back to it rather than repeating it.
+
+- **[Sync Accounts: Username + Password] — Leg 1** *(Last touched:
+  2026-09-29 · Re-checks: 0)*
+  Replace the `username#XXXX` shared-secret identifier with real accounts:
+  unique public username (no more discriminator) + password hashed via
+  Web Crypto (PBKDF2/scrypt) in the Worker, plus an optional email field
+  captured at signup for a future reset flow (reset itself is out of
+  scope here). Also fix the Worker's `GET` endpoint having no rate
+  limiting, while this auth surface is already being reworked.
+
+- **[Sync Data Model: Per-Record Merge & Auto Sync] — Leg 1** *(Last
+  touched: 2026-09-29 · Re-checks: 0)*
+  Add `updatedAt` timestamps + delete tombstones to `Team`/
+  `SavedPokemonEntry`, rework the Worker to merge per-record (last-write-
+  wins) instead of overwriting the whole blob, and wire `useSync.ts` to
+  trigger automatically (on mutation debounce, on reconnect, on an
+  interval) instead of the current manual push/pull button - keep a
+  manual "sync now" as a fallback. Ships for desktop alone; doesn't depend
+  on the web app existing.
+
+- **[Existing Account Migration] — Leg 1** *(Last touched: 2026-09-29 ·
+  Re-checks: 0)*
+  Blocked: needs the accounts leg shipped first.
+  One-off manual copy of the ~4-6 existing friends' `username#XXXX`-keyed
+  KV blobs into their new accounts (a throwaway `wrangler kv` copy or
+  small script per person, coordinated directly) - not a built feature.
+
+- **[Web App Scaffold: Storage Adapter] — Leg 1** *(Last touched:
+  2026-09-29 · Re-checks: 0)*
+  Introduce a storage-adapter interface behind `useTeams`/`useDatabase`
+  with two implementations (existing Electron IPC, new IndexedDB), plus a
+  new `web/` folder (sibling to `worker/`) with its own Vite entry and a
+  trimmed `App` shell (Teams + Box nav only). Plumbing only, no feature
+  work.
+
+- **[Web Teams Parity] — Leg 1** *(Last touched: 2026-09-29 · Re-checks:
+  0)*
+  Blocked: needs the scaffold leg shipped first.
+  Get the Teams tab working end-to-end on web against the IndexedDB
+  adapter: import (Showdown paste text + pokepast.es link - verify the
+  pokepast.es read endpoint's CORS headers allow a direct browser fetch,
+  since that's only been proven from Electron's process today), CRUD,
+  display - wired to the new auto-sync layer.
+
+- **[Web Box Parity] — Leg 1** *(Last touched: 2026-09-29 · Re-checks: 0)*
+  Blocked: needs the scaffold leg shipped first.
+  Saved-builds Box CRUD on web, same shape as the Teams parity leg but for
+  `SavedPokemonDatabase`.
+
+- **[Web Hosting & Domain] — Leg 1** *(Last touched: 2026-09-29 ·
+  Re-checks: 0)*
+  Blocked: needs a working web app to deploy.
+  Deploy to Cloudflare Pages, wire a vannyproductions.com subdomain via an
+  IONOS CNAME record (exact subdomain name still TBD), and build the
+  first-run login/signup UX for web - the entry point, not an opt-in
+  Settings feature, since a device needs an account before it has any
+  data.
 
 ## Blocked
 
@@ -150,5 +218,12 @@ favor of Regular Calc Popup (see `MILESTONES.md`). VGCPastes real-set
 sourcing, deferred out of Regular Calc Popup, was itself promoted to
 current 2026-09-14 and shipped 2026-09-15 (see `MILESTONES.md`).
 
-None currently queued.
+Two fast-follows deferred out of Web Version: Teams & Box MVP's scoping
+(2026-09-29, see `docs/investigations/web-version-scope.md`) - not yet
+worth their own legs until the MVP milestone ships:
+- Password reset flow (needs a transactional email API + SPF/DKIM
+  deliverability setup on a dedicated vannyproductions.com subdomain).
+- Public profile / team-sharing pages (the account model's username design
+  already accommodates this, but the public routes/per-team visibility
+  toggle need their own scoping pass).
 

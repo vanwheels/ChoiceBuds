@@ -18,6 +18,27 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Web Version: Teams & Box MVP: Scoping] — Leg 1** (2026-09-29) -
+  Scoping-only, no code change. Reopened a web-version discussion previously
+  deferred here and on GW2Squaded; resolved five open forks (Vanny's calls,
+  worked through in conversation): local storage stays canonical with sync
+  as an automatic background mirror rather than the source of truth; sync
+  moves from whole-blob overwrite to per-record last-write-wins (needs
+  `updatedAt` timestamps + delete tombstones); the existing `username#XXXX`
+  shared-secret identifier is replaced with real username+password accounts
+  (no reset flow yet, but an optional email field is collected at signup to
+  avoid a later backfill) since Vanny wants public profile pages as a real
+  feature and the current identifier is unsafe to display on stream/in
+  Settings; the renderer stays one shared codebase with a storage-adapter
+  interface (Electron IPC vs. IndexedDB) rather than a forked web app;
+  hosting on Cloudflare Pages with a vannyproductions.com subdomain via an
+  IONOS CNAME. Also surfaced a live bug while reading `worker/src/index.ts`:
+  the sync Worker's `GET` endpoint has no rate limiting, so brute-forcing a
+  known username's 4-digit discriminator is ~10k plain requests - folded
+  into the accounts leg's scope rather than filed separately since it's the
+  same auth surface. Split into 7 legs in `TODO.md`. Full reasoning in
+  [docs/investigations/web-version-scope.md](docs/investigations/web-version-scope.md).
+
 - **[Dev Console GPU Overlay Error Noise] — Leg 1** (2026-09-16) - see
   commit `0112f6d`. Added `app.commandLine.appendSwitch('disable-direct-composition')`
   before the existing `disableHardwareAcceleration()` call in `main.ts` to
