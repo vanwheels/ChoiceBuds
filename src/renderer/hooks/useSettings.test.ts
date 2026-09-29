@@ -76,11 +76,11 @@ describe('useSettings', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {
-      await result.current.updateSettings({ syncUsername: 'trainer', lastPushedAt: 999 });
+      await result.current.updateSettings({ syncUsername: 'trainer', lastSyncedAt: 999 });
     });
 
     expect(result.current.settings.syncUsername).toBe('trainer');
-    expect(result.current.settings.lastPushedAt).toBe(999);
+    expect(result.current.settings.lastSyncedAt).toBe(999);
     expect(window.electron.writeSettings).toHaveBeenCalledTimes(1);
   });
 });

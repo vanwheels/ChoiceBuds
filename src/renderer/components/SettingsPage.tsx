@@ -6,13 +6,12 @@
 
 import type { UseSettingsReturn } from '../hooks/useSettings';
 import type { UseTeamsReturn } from '../hooks/useTeams';
-import type { UseBattlesReturn } from '../hooks/useBattles';
 import type { UseUpdateCheckReturn } from '../hooks/useUpdateCheck';
 import type { UseReleaseNotesReturn } from '../hooks/useReleaseNotes';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
 import type { UseGameDataReturn } from '../hooks/useGameData';
+import type { UseSyncReturn } from '../hooks/useSync';
 import { ALL_REGULATION_IDS, getRegulationLabel, toRegulationId } from '../utils/pokemonRules';
-import { useSync } from '../hooks/useSync';
 import { useSeasonDataCheck } from '../hooks/useSeasonDataCheck';
 import { useChampionsDataCheck } from '../hooks/useChampionsDataCheck';
 import SyncSection from './SyncSection';
@@ -26,18 +25,17 @@ import AppStatusSection from './AppStatusSection';
 
 interface SettingsPageProps {
   settingsState: UseSettingsReturn;
+  syncState: UseSyncReturn;
   teamsState: UseTeamsReturn;
-  battlesState: UseBattlesReturn;
   updateCheckState: UseUpdateCheckReturn;
   releaseNotesState: UseReleaseNotesReturn;
   databaseState: UseDatabaseReturn;
   gameDataState: UseGameDataReturn;
 }
 
-export default function SettingsPage({ settingsState, teamsState, battlesState, updateCheckState, releaseNotesState, databaseState, gameDataState }: SettingsPageProps) {
+export default function SettingsPage({ settingsState, syncState, teamsState, updateCheckState, releaseNotesState, databaseState, gameDataState }: SettingsPageProps) {
   const { settings, setDefaultRegulation, updateSettings } = settingsState;
   const currentId = toRegulationId(settings.defaultRegulation);
-  const syncState = useSync(settingsState, teamsState, battlesState);
   const seasonDataCheckState = useSeasonDataCheck(settings, updateSettings);
   const championsDataCheckState = useChampionsDataCheck(settings, updateSettings);
 

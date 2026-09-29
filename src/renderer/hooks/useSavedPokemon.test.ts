@@ -42,6 +42,7 @@ describe('useSavedPokemon', () => {
     const database: SavedPokemonDatabase = {
       version: 1,
       savedPokemon: [{ id: 'a', label: 'Gengar', pokemon: makePokemon(), savedAt: 1, updatedAt: 1 }],
+      tombstones: [],
       lastModified: 1,
     };
     vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce(database);
@@ -49,6 +50,18 @@ describe('useSavedPokemon', () => {
     const { result } = renderHook(() => useSavedPokemon());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.savedPokemon).toHaveLength(1);
+  });
+
+  it('backfills an empty tombstones list for a database persisted before tombstones existed', async () => {
+    vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
+      version: 1,
+      savedPokemon: [{ id: 'a', label: 'Gengar', pokemon: makePokemon(), savedAt: 1, updatedAt: 1 }],
+      lastModified: 1,
+    });
+
+    const { result } = renderHook(() => useSavedPokemon());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.tombstones).toEqual([]);
   });
 
   it('reports an error when loading throws', async () => {
@@ -196,13 +209,14 @@ describe('useSavedPokemon', () => {
     expect(result.current.error).toContain('nope');
   });
 
-  it('deleteSavedPokemon removes only the targeted entry', async () => {
+  it('deleteSavedPokemon removes only the targeted entry and records a tombstone', async () => {
     vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
       version: 1,
       savedPokemon: [
         { id: 'a', label: 'Gengar', pokemon: makePokemon(), savedAt: 0, updatedAt: 0 },
         { id: 'b', label: 'Rillaboom', pokemon: makePokemon({ species: 'Rillaboom' }), savedAt: 0, updatedAt: 0 },
       ],
+      tombstones: [],
       lastModified: 0,
     });
     const { result } = renderHook(() => useSavedPokemon());
@@ -213,6 +227,31 @@ describe('useSavedPokemon', () => {
     });
 
     expect(result.current.savedPokemon.map(e => e.id)).toEqual(['b']);
+    expect(result.current.tombstones).toEqual([{ id: 'a', deletedAt: expect.any(Number) }]);
+  });
+
+  it('applySyncedState overwrites savedPokemon with the given records and clears pending tombstones', async () => {
+    vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
+      version: 1,
+      savedPokemon: [{ id: 'a', label: 'Gengar', pokemon: makePokemon(), savedAt: 0, updatedAt: 0 }],
+      tombstones: [],
+      lastModified: 0,
+    });
+    const { result } = renderHook(() => useSavedPokemon());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.deleteSavedPokemon('a'); // leaves a pending tombstone behind
+    });
+    expect(result.current.tombstones).not.toEqual([]);
+
+    const merged = { id: 'from-server', label: 'Zapdos', pokemon: makePokemon({ species: 'Zapdos' }), savedAt: 0, updatedAt: 0 };
+    await act(async () => {
+      await result.current.applySyncedState([merged]);
+    });
+
+    expect(result.current.savedPokemon).toEqual([merged]);
+    expect(result.current.tombstones).toEqual([]);
   });
 
   it('refreshSavedPokemon reloads from disk', async () => {

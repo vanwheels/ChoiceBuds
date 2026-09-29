@@ -18,6 +18,7 @@ import { useInitialSync } from './hooks/useInitialSync';
 import { useUsageSync } from './hooks/useUsageSync';
 import { useBattles } from './hooks/useBattles';
 import { useSettings } from './hooks/useSettings';
+import { useSync } from './hooks/useSync';
 import { useUpdateCheck } from './hooks/useUpdateCheck';
 import { useReleaseNotes } from './hooks/useReleaseNotes';
 import TeamsPage from './components/TeamsPage';
@@ -107,6 +108,11 @@ export default function App() {
   const spriteCacheState = useSpriteCache();
   const battlesState = useBattles();
   const settingsState = useSettings();
+  // Lives here (not inside SettingsPage) specifically so its auto-sync
+  // triggers run from launch regardless of whether the user ever opens
+  // Settings - SettingsPage/SyncSection just render this state, they don't
+  // own it. See useSync.ts's own header comment.
+  const syncState = useSync(settingsState, teamsState, battlesState, savedPokemonState);
   const updateCheckState = useUpdateCheck();
   const releaseNotesState = useReleaseNotes(settingsState.settings, settingsState.isLoading, settingsState.updateSettings);
   const { isDone: isInitialSyncDone, progress: initialSyncProgress } = useInitialSync(gameDataState, speciesRosterState, spriteCacheState, databaseState);
@@ -222,7 +228,7 @@ export default function App() {
           {visitedTabs.has('settings') && (
             <div style={{ display: activeTab === 'settings' ? 'block' : 'none' }}>
               <Suspense fallback={<div className="text-zinc-400 text-sm">Loading settings...</div>}>
-                <SettingsPage settingsState={settingsState} teamsState={teamsState} battlesState={battlesState} updateCheckState={updateCheckState} releaseNotesState={releaseNotesState} databaseState={databaseState} gameDataState={gameDataState} />
+                <SettingsPage settingsState={settingsState} syncState={syncState} teamsState={teamsState} updateCheckState={updateCheckState} releaseNotesState={releaseNotesState} databaseState={databaseState} gameDataState={gameDataState} />
               </Suspense>
             </div>
           )}

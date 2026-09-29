@@ -6,7 +6,7 @@
  * still live (useBattles.ts persists them, useSync.ts syncs them).
  */
 
-import type { EVSpread, StatStages, Team } from './pokemon';
+import type { EVSpread, StatStages, SyncTombstone, Team } from './pokemon';
 
 export type BattleSide = 'player' | 'opponent';
 
@@ -256,5 +256,6 @@ export interface Battle {
 export interface BattlesDatabase {
   version: number;
   battles: Battle[];
+  tombstones: SyncTombstone[];
   lastModified: number; // Unix timestamp
 }

@@ -130,12 +130,24 @@ export interface Team {
 }
 
 /**
+ * A record deleted locally but not yet confirmed synced - included in the
+ * next sync push so the Worker's merge knows this id was intentionally
+ * removed (rather than just never seen), then cleared once that push
+ * succeeds. See TODO.md's Sync Data Model leg / worker/src/index.ts's merge.
+ */
+export interface SyncTombstone {
+  id: string;
+  deletedAt: number; // Unix timestamp
+}
+
+/**
  * Database schema state for teams storage
  * Represents the persisted state in userData directory
  */
 export interface TeamsDatabase {
   version: number;
   teams: Team[];
+  tombstones: SyncTombstone[];
   lastModified: number; // Unix timestamp
 }
 
@@ -166,6 +178,7 @@ export interface SavedPokemonEntry {
 export interface SavedPokemonDatabase {
   version: number;
   savedPokemon: SavedPokemonEntry[];
+  tombstones: SyncTombstone[];
   lastModified: number; // Unix timestamp
 }
 

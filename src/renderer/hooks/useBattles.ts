@@ -7,7 +7,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import type { Battle, BattleAction, BattlesDatabase, BroughtPokemonSnapshot, OpponentPokemonEntry } from '../types/pokemon';
+import type { Battle, BattleAction, BattlesDatabase, BroughtPokemonSnapshot, OpponentPokemonEntry, SyncTombstone } from '../types/pokemon';
 
 /** A BattleAction's target as it may exist on disk before `target` became an array. */
 type LegacyTarget = NonNullable<BattleAction['target']> | { side: BattleAction['side']; pokemonId: string };
@@ -85,16 +85,23 @@ export interface UseBattlesReturn {
   isLoading: boolean;
   error: string | null;
 
+  // Pending deletes not yet confirmed synced (see TODO.md's Sync Data Model
+  // leg) - included in the next sync push, then cleared by applySyncedState.
+  tombstones: SyncTombstone[];
+
   addBattle: (battle: Battle) => Promise<boolean>;
   updateBattle: (battleId: string, updates: Partial<Battle>) => Promise<boolean>;
   deleteBattle: (battleId: string) => Promise<boolean>;
 
   refreshBattles: () => Promise<void>;
   getBattleById: (battleId: string) => Battle | undefined;
+  /** Overwrites battles with a sync merge's authoritative result and clears pending tombstones - mirrors useTeams.ts::applySyncedState. */
+  applySyncedState: (records: Battle[]) => Promise<boolean>;
 }
 
 export function useBattles(): UseBattlesReturn {
   const [battles, setBattles] = useState<Battle[]>([]);
+  const [tombstones, setTombstones] = useState<SyncTombstone[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -112,8 +119,10 @@ export function useBattles(): UseBattlesReturn {
 
       if (database) {
         setBattles(database.battles.map(normalizeBattle));
+        setTombstones(database.tombstones ?? []);
       } else {
         setBattles([]);
+        setTombstones([]);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load battles';
@@ -144,8 +153,10 @@ export function useBattles(): UseBattlesReturn {
 
         if (database) {
           setBattles(database.battles.map(normalizeBattle));
+          setTombstones(database.tombstones ?? []);
         } else {
           setBattles([]);
+          setTombstones([]);
         }
       } catch (err) {
         if (ignore) return;
@@ -162,11 +173,12 @@ export function useBattles(): UseBattlesReturn {
     };
   }, []);
 
-  const persistBattlesToDisk = async (updatedBattles: Battle[]): Promise<boolean> => {
+  const persistBattlesToDisk = async (updatedBattles: Battle[], updatedTombstones: SyncTombstone[]): Promise<boolean> => {
     try {
       const database: BattlesDatabase = {
         version: 1,
         battles: updatedBattles,
+        tombstones: updatedTombstones,
         lastModified: Date.now(),
       };
 
@@ -187,7 +199,7 @@ export function useBattles(): UseBattlesReturn {
 
   const addBattle = useCallback(async (battle: Battle): Promise<boolean> => {
     const updatedBattles = [battle, ...battles];
-    const success = await persistBattlesToDisk(updatedBattles);
+    const success = await persistBattlesToDisk(updatedBattles, tombstones);
 
     if (success) {
       setBattles(updatedBattles);
@@ -195,7 +207,7 @@ export function useBattles(): UseBattlesReturn {
     }
 
     return success;
-  }, [battles]);
+  }, [battles, tombstones]);
 
   const updateBattle = useCallback(async (
     battleId: string,
@@ -215,7 +227,7 @@ export function useBattles(): UseBattlesReturn {
       updatedAt: Date.now(),
     };
 
-    const success = await persistBattlesToDisk(updatedBattles);
+    const success = await persistBattlesToDisk(updatedBattles, tombstones);
 
     if (success) {
       setBattles(updatedBattles);
@@ -223,19 +235,26 @@ export function useBattles(): UseBattlesReturn {
     }
 
     return success;
-  }, [battles]);
+  }, [battles, tombstones]);
 
+  /**
+   * Also records a tombstone (see TODO.md's Sync Data Model leg) so a future
+   * sync merge knows this id was intentionally removed here - cleared once
+   * confirmed synced (applySyncedState below).
+   */
   const deleteBattle = useCallback(async (battleId: string): Promise<boolean> => {
     const updatedBattles = battles.filter(b => b.id !== battleId);
-    const success = await persistBattlesToDisk(updatedBattles);
+    const updatedTombstones = [...tombstones, { id: battleId, deletedAt: Date.now() }];
+    const success = await persistBattlesToDisk(updatedBattles, updatedTombstones);
 
     if (success) {
       setBattles(updatedBattles);
+      setTombstones(updatedTombstones);
       setError(null);
     }
 
     return success;
-  }, [battles]);
+  }, [battles, tombstones]);
 
   const refreshBattles = useCallback(async (): Promise<void> => {
     await loadBattlesFromDisk();
@@ -245,14 +264,26 @@ export function useBattles(): UseBattlesReturn {
     return battles.find(b => b.id === battleId);
   }, [battles]);
 
+  const applySyncedState = useCallback(async (records: Battle[]): Promise<boolean> => {
+    const success = await persistBattlesToDisk(records, []);
+    if (success) {
+      setBattles(records);
+      setTombstones([]);
+      setError(null);
+    }
+    return success;
+  }, []);
+
   return {
     battles,
     isLoading,
     error,
+    tombstones,
     addBattle,
     updateBattle,
     deleteBattle,
     refreshBattles,
     getBattleById,
+    applySyncedState,
   };
 }

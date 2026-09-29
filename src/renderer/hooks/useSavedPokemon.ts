@@ -8,7 +8,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import type { ImportedPokemonInfo, SavedPokemonEntry, SavedPokemonDatabase } from '../types/pokemon';
+import type { ImportedPokemonInfo, SavedPokemonEntry, SavedPokemonDatabase, SyncTombstone } from '../types/pokemon';
 
 export interface UseSavedPokemonReturn {
   savedPokemon: SavedPokemonEntry[];
@@ -97,6 +97,12 @@ export interface UseSavedPokemonReturn {
   deleteSavedPokemon: (id: string) => Promise<boolean>;
   refreshSavedPokemon: () => Promise<void>;
   getSavedSetsForSpecies: (species: string) => SavedPokemonEntry[];
+
+  // Pending deletes not yet confirmed synced (see TODO.md's Sync Data Model
+  // leg) - included in the next sync push, then cleared by applySyncedState.
+  tombstones: SyncTombstone[];
+  /** Overwrites savedPokemon with a sync merge's authoritative result and clears pending tombstones - mirrors useTeams.ts::applySyncedState. */
+  applySyncedState: (records: SavedPokemonEntry[]) => Promise<boolean>;
 }
 
 /** "Dracovish" -> "Dracovish (2)" -> "Dracovish (3)"... - same smallest-unused-suffix pattern as ImportTeamModal.tsx::nextGenericTeamName. */
@@ -110,6 +116,7 @@ function nextAvailableLabel(base: string, existingLabels: string[]): string {
 
 export function useSavedPokemon(): UseSavedPokemonReturn {
   const [savedPokemon, setSavedPokemon] = useState<SavedPokemonEntry[]>([]);
+  const [tombstones, setTombstones] = useState<SyncTombstone[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedCardIds, setExpandedCardIds] = useState<Set<string>>(new Set());
@@ -128,8 +135,10 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
 
       if (database) {
         setSavedPokemon(database.savedPokemon);
+        setTombstones(database.tombstones ?? []);
       } else {
         setSavedPokemon([]);
+        setTombstones([]);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load saved Pokemon sets';
@@ -160,8 +169,10 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
 
         if (database) {
           setSavedPokemon(database.savedPokemon);
+          setTombstones(database.tombstones ?? []);
         } else {
           setSavedPokemon([]);
+          setTombstones([]);
         }
       } catch (err) {
         if (ignore) return;
@@ -178,11 +189,12 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     };
   }, []);
 
-  const persistSavedPokemonToDisk = async (updated: SavedPokemonEntry[]): Promise<boolean> => {
+  const persistSavedPokemonToDisk = async (updated: SavedPokemonEntry[], updatedTombstones: SyncTombstone[]): Promise<boolean> => {
     try {
       const database: SavedPokemonDatabase = {
         version: 1,
         savedPokemon: updated,
+        tombstones: updatedTombstones,
         lastModified: Date.now(),
       };
 
@@ -213,7 +225,7 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     });
 
     const updated = [...newEntries, ...savedPokemon];
-    const success = await persistSavedPokemonToDisk(updated);
+    const success = await persistSavedPokemonToDisk(updated, tombstones);
 
     if (success) {
       setSavedPokemon(updated);
@@ -221,7 +233,7 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     }
 
     return success;
-  }, [savedPokemon]);
+  }, [savedPokemon, tombstones]);
 
   const renameSavedPokemon = useCallback(async (id: string, label: string): Promise<boolean> => {
     const index = savedPokemon.findIndex(e => e.id === id);
@@ -233,7 +245,7 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     const updated = [...savedPokemon];
     updated[index] = { ...updated[index], label, updatedAt: Date.now() };
 
-    const success = await persistSavedPokemonToDisk(updated);
+    const success = await persistSavedPokemonToDisk(updated, tombstones);
 
     if (success) {
       setSavedPokemon(updated);
@@ -241,7 +253,7 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     }
 
     return success;
-  }, [savedPokemon]);
+  }, [savedPokemon, tombstones]);
 
   const toggleSavedPokemonFavorite = useCallback(async (id: string): Promise<boolean> => {
     const index = savedPokemon.findIndex(e => e.id === id);
@@ -253,7 +265,7 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     const updated = [...savedPokemon];
     updated[index] = { ...updated[index], favorite: !updated[index].favorite, updatedAt: Date.now() };
 
-    const success = await persistSavedPokemonToDisk(updated);
+    const success = await persistSavedPokemonToDisk(updated, tombstones);
 
     if (success) {
       setSavedPokemon(updated);
@@ -261,7 +273,7 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     }
 
     return success;
-  }, [savedPokemon]);
+  }, [savedPokemon, tombstones]);
 
   const updateSavedPokemon = useCallback(async (id: string, updates: Partial<ImportedPokemonInfo>): Promise<boolean> => {
     const index = savedPokemon.findIndex(e => e.id === id);
@@ -273,7 +285,7 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     const updated = [...savedPokemon];
     updated[index] = { ...updated[index], pokemon: { ...updated[index].pokemon, ...updates }, updatedAt: Date.now() };
 
-    const success = await persistSavedPokemonToDisk(updated);
+    const success = await persistSavedPokemonToDisk(updated, tombstones);
 
     if (success) {
       setSavedPokemon(updated);
@@ -281,7 +293,7 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     }
 
     return success;
-  }, [savedPokemon]);
+  }, [savedPokemon, tombstones]);
 
   const duplicateSavedPokemon = useCallback(async (id: string): Promise<boolean> => {
     const source = savedPokemon.find(e => e.id === id);
@@ -300,7 +312,7 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     };
 
     const updated = [newEntry, ...savedPokemon];
-    const success = await persistSavedPokemonToDisk(updated);
+    const success = await persistSavedPokemonToDisk(updated, tombstones);
 
     if (success) {
       setSavedPokemon(updated);
@@ -308,7 +320,7 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     }
 
     return success;
-  }, [savedPokemon]);
+  }, [savedPokemon, tombstones]);
 
   const reorderSavedPokemon = useCallback(async (draggedId: string, targetId: string): Promise<boolean> => {
     if (draggedId === targetId) return false;
@@ -322,13 +334,13 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     const updated = [...withoutDragged];
     updated.splice(targetIndex, 0, dragged);
 
-    const success = await persistSavedPokemonToDisk(updated);
+    const success = await persistSavedPokemonToDisk(updated, tombstones);
     if (success) {
       setSavedPokemon(updated);
       setError(null);
     }
     return success;
-  }, [savedPokemon]);
+  }, [savedPokemon, tombstones]);
 
   const setSavedPokemonOrder = useCallback(async (orderedIds: string[]): Promise<boolean> => {
     const byId = new Map(savedPokemon.map(e => [e.id, e]));
@@ -337,13 +349,13 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     const leftover = savedPokemon.filter(e => !orderedIdSet.has(e.id));
     const updated = [...ordered, ...leftover];
 
-    const success = await persistSavedPokemonToDisk(updated);
+    const success = await persistSavedPokemonToDisk(updated, tombstones);
     if (success) {
       setSavedPokemon(updated);
       setError(null);
     }
     return success;
-  }, [savedPokemon]);
+  }, [savedPokemon, tombstones]);
 
   const toggleCardExpansion = useCallback((id: string): void => {
     setExpandedCardIds(prev => {
@@ -357,17 +369,24 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     });
   }, []);
 
+  /**
+   * Also records a tombstone (see TODO.md's Sync Data Model leg) so a future
+   * sync merge knows this id was intentionally removed here - cleared once
+   * confirmed synced (applySyncedState below).
+   */
   const deleteSavedPokemon = useCallback(async (id: string): Promise<boolean> => {
     const updated = savedPokemon.filter(e => e.id !== id);
-    const success = await persistSavedPokemonToDisk(updated);
+    const updatedTombstones = [...tombstones, { id, deletedAt: Date.now() }];
+    const success = await persistSavedPokemonToDisk(updated, updatedTombstones);
 
     if (success) {
       setSavedPokemon(updated);
+      setTombstones(updatedTombstones);
       setError(null);
     }
 
     return success;
-  }, [savedPokemon]);
+  }, [savedPokemon, tombstones]);
 
   const refreshSavedPokemon = useCallback(async (): Promise<void> => {
     await loadSavedPokemonFromDisk();
@@ -377,6 +396,16 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     const normalized = species.toLowerCase().trim();
     return savedPokemon.filter(e => e.pokemon.showdownData.species.toLowerCase().trim() === normalized);
   }, [savedPokemon]);
+
+  const applySyncedState = useCallback(async (records: SavedPokemonEntry[]): Promise<boolean> => {
+    const success = await persistSavedPokemonToDisk(records, []);
+    if (success) {
+      setSavedPokemon(records);
+      setTombstones([]);
+      setError(null);
+    }
+    return success;
+  }, []);
 
   return {
     savedPokemon,
@@ -394,5 +423,7 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     deleteSavedPokemon,
     refreshSavedPokemon,
     getSavedSetsForSpecies,
+    tombstones,
+    applySyncedState,
   };
 }

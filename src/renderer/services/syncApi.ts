@@ -68,7 +68,13 @@ export async function login(username: string, password: string): Promise<{ token
   return { token: body.token };
 }
 
-export async function pushSyncData(username: string, token: string, payload: SyncPayload): Promise<void> {
+/**
+ * PUTs this device's local state and returns the Worker's merged result
+ * (see worker/src/index.ts) - the Worker merges per-record instead of
+ * overwriting, so this doubles as a pull: the response is the full
+ * authoritative post-merge SyncPayload, not just an acknowledgement.
+ */
+export async function pushSyncData(username: string, token: string, payload: SyncPayload): Promise<SyncPayload> {
   const response = await fetchWithTimeout(`${SYNC_WORKER_URL}/sync/${encodeURIComponent(username)}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -76,8 +82,10 @@ export async function pushSyncData(username: string, token: string, payload: Syn
   });
 
   if (!response.ok) {
-    throw new Error(await readErrorMessage(response, `Push failed (${response.status})`));
+    throw new Error(await readErrorMessage(response, `Sync failed (${response.status})`));
   }
+
+  return response.json();
 }
 
 /** Returns null if no data has ever been pushed under this account */

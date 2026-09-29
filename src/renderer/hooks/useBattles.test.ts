@@ -39,12 +39,20 @@ describe('useBattles', () => {
   });
 
   it('loads and normalizes persisted battles on mount', async () => {
-    const database: BattlesDatabase = { version: 1, battles: [makeBattle()], lastModified: 0 };
+    const database: BattlesDatabase = { version: 1, battles: [makeBattle()], tombstones: [], lastModified: 0 };
     vi.mocked(window.electron.readBattlesDatabase).mockResolvedValueOnce(database);
 
     const { result } = renderHook(() => useBattles());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.battles).toEqual([makeBattle()]);
+  });
+
+  it('backfills an empty tombstones list for a database persisted before tombstones existed', async () => {
+    vi.mocked(window.electron.readBattlesDatabase).mockResolvedValueOnce({ version: 1, battles: [makeBattle()], lastModified: 0 });
+
+    const { result } = renderHook(() => useBattles());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.tombstones).toEqual([]);
   });
 
   it('reports an error when loading throws', async () => {
@@ -116,10 +124,11 @@ describe('useBattles', () => {
     expect(result.current.error).toContain('missing');
   });
 
-  it('deleteBattle removes the battle', async () => {
+  it('deleteBattle removes the battle and records a tombstone', async () => {
     vi.mocked(window.electron.readBattlesDatabase).mockResolvedValueOnce({
       version: 1,
       battles: [makeBattle()],
+      tombstones: [],
       lastModified: 0,
     });
     const { result } = renderHook(() => useBattles());
@@ -130,6 +139,31 @@ describe('useBattles', () => {
     });
 
     expect(result.current.battles).toEqual([]);
+    expect(result.current.tombstones).toEqual([{ id: 'battle-1', deletedAt: expect.any(Number) }]);
+  });
+
+  it('applySyncedState overwrites battles with the given records and clears pending tombstones', async () => {
+    vi.mocked(window.electron.readBattlesDatabase).mockResolvedValueOnce({
+      version: 1,
+      battles: [makeBattle()],
+      tombstones: [],
+      lastModified: 0,
+    });
+    const { result } = renderHook(() => useBattles());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.deleteBattle('battle-1'); // leaves a pending tombstone behind
+    });
+    expect(result.current.tombstones).not.toEqual([]);
+
+    const mergedBattle = makeBattle({ id: 'from-server' });
+    await act(async () => {
+      await result.current.applySyncedState([mergedBattle]);
+    });
+
+    expect(result.current.battles).toEqual([mergedBattle]);
+    expect(result.current.tombstones).toEqual([]);
   });
 
   it('refreshBattles reloads from disk and getBattleById looks up by id', async () => {

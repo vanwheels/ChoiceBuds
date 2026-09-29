@@ -1,10 +1,11 @@
 /**
  * SyncSection.tsx - Cross-Device Sync UI
  * Sign up / log in against the user's own Cloudflare Worker (see
- * services/syncApi.ts, worker/README.md), then manual Push/Pull. Extracted
- * from SettingsPage.tsx as its own component since it's a meaningfully
- * separate, more complex concern than the Default Regulation setting next
- * to it.
+ * services/syncApi.ts, worker/README.md) - sync itself then runs
+ * automatically in the background (useSync.ts), with "Sync Now" here as a
+ * manual fallback. Extracted from SettingsPage.tsx as its own component
+ * since it's a meaningfully separate, more complex concern than the Default
+ * Regulation setting next to it.
  */
 
 import { useState } from 'react';
@@ -15,20 +16,14 @@ interface SyncSectionProps {
 }
 
 const STATUS_LABEL: Record<UseSyncReturn['status'], string> = {
-  'never-synced': 'Never synced',
-  'up-to-date': 'Up to date',
-  'unpushed-changes': 'Unpushed local changes',
-  'unpulled-changes': 'Unpulled changes available',
-  unknown: "Status unknown - couldn't reach the sync server",
+  'signed-out': 'Not signed in',
+  idle: 'Up to date',
+  syncing: 'Syncing...',
+  error: "Couldn't reach the sync server",
 };
 
-type BlockedAction =
-  | { type: 'push'; message: string }
-  | { type: 'pull'; message: string }
-  | null;
-
 export default function SyncSection({ syncState }: SyncSectionProps) {
-  const { syncUsername, lastPushedAt, lastPulledAt, isBusy, error, status, signUp, logIn, logOut, push, pull } = syncState;
+  const { syncUsername, lastSyncedAt, error, status, signUp, logIn, logOut, syncNow } = syncState;
 
   const [signupUsername, setSignupUsername] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
@@ -37,7 +32,6 @@ export default function SyncSection({ syncState }: SyncSectionProps) {
   const [loginUsername, setLoginUsername] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [setupError, setSetupError] = useState<string | null>(null);
-  const [blocked, setBlocked] = useState<BlockedAction>(null);
 
   const handleSignUp = async () => {
     setSetupError(null);
@@ -67,27 +61,12 @@ export default function SyncSection({ syncState }: SyncSectionProps) {
     }
   };
 
-  const handlePush = async (force = false) => {
-    setBlocked(null);
-    const result = await push({ force });
-    if (!result.ok && result.reason === 'needs-pull-first') {
-      setBlocked({ type: 'push', message: `The remote data is newer than what you've pulled (saved ${new Date(result.remoteSavedAt).toLocaleString()}). Pull first to avoid losing it.` });
-    }
-  };
-
-  const handlePull = async (force = false) => {
-    setBlocked(null);
-    const result = await pull({ force });
-    if (!result.ok && result.reason === 'needs-push-first') {
-      setBlocked({ type: 'pull', message: `You have local changes that haven't been pushed (as of ${new Date(result.localModifiedAt).toLocaleString()}). Push first to avoid losing them.` });
-    }
-  };
-
   return (
     <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-4">
       <h2 className="text-sm font-semibold text-zinc-200">Cross-Device Sync</h2>
       <p className="mt-1 text-xs text-zinc-400">
-        Manually push/pull your teams and battle logs to your own sync server. Nothing syncs automatically.
+        Your teams, battle logs, and Box syncs automatically to your own sync
+        server in the background. "Sync Now" below is a manual fallback.
       </p>
 
       {!syncUsername ? (
@@ -174,49 +153,20 @@ export default function SyncSection({ syncState }: SyncSectionProps) {
 
           <div className="flex items-center gap-2 text-xs">
             <span className="text-zinc-400">Status:</span>
-            <span className={status === 'up-to-date' ? 'text-green-400' : status === 'unknown' ? 'text-zinc-500' : 'text-yellow-400'}>
+            <span className={status === 'idle' ? 'text-green-400' : status === 'error' ? 'text-red-400' : 'text-zinc-500'}>
               {STATUS_LABEL[status]}
             </span>
           </div>
 
-          <div className="flex gap-2">
-            <button
-              onClick={() => handlePush()}
-              disabled={isBusy}
-              className="px-3 py-1.5 text-xs font-bold rounded bg-accent-gold text-zinc-900 hover:bg-accent-gold-deep disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
-            >
-              {isBusy ? 'Working...' : 'Push'}
-            </button>
-            <button
-              onClick={() => handlePull()}
-              disabled={isBusy}
-              className="px-3 py-1.5 text-xs font-bold rounded bg-zinc-700 text-zinc-200 hover:bg-zinc-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
-            >
-              {isBusy ? 'Working...' : 'Pull'}
-            </button>
-          </div>
+          <button
+            onClick={() => syncNow()}
+            disabled={status === 'syncing'}
+            className="px-3 py-1.5 text-xs font-bold rounded bg-accent-gold text-zinc-900 hover:bg-accent-gold-deep disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer self-start"
+          >
+            {status === 'syncing' ? 'Syncing...' : 'Sync Now'}
+          </button>
 
-          {lastPushedAt && <p className="text-[11px] text-zinc-500">Last pushed: {new Date(lastPushedAt).toLocaleString()}</p>}
-          {lastPulledAt && <p className="text-[11px] text-zinc-500">Last pulled: {new Date(lastPulledAt).toLocaleString()}</p>}
-
-          {blocked && (
-            <div className="rounded border border-yellow-700 bg-yellow-900/30 p-2 flex flex-col gap-2">
-              <p className="text-xs text-yellow-300">{blocked.message}</p>
-              <div className="flex gap-2">
-                {blocked.type === 'push' ? (
-                  <>
-                    <button onClick={() => handlePull()} className="px-2 py-1 text-[11px] font-bold rounded bg-zinc-700 text-zinc-200 hover:bg-zinc-600 cursor-pointer">Pull first</button>
-                    <button onClick={() => handlePush(true)} className="px-2 py-1 text-[11px] font-bold rounded bg-red-900 text-red-200 hover:bg-red-800 cursor-pointer">Push anyway</button>
-                  </>
-                ) : (
-                  <>
-                    <button onClick={() => handlePush()} className="px-2 py-1 text-[11px] font-bold rounded bg-zinc-700 text-zinc-200 hover:bg-zinc-600 cursor-pointer">Push first</button>
-                    <button onClick={() => handlePull(true)} className="px-2 py-1 text-[11px] font-bold rounded bg-red-900 text-red-200 hover:bg-red-800 cursor-pointer">Pull anyway</button>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
+          {lastSyncedAt && <p className="text-[11px] text-zinc-500">Last synced: {new Date(lastSyncedAt).toLocaleString()}</p>}
 
           {error && <p className="text-xs text-red-400">{error}</p>}
         </div>

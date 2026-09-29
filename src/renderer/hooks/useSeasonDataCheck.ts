@@ -3,7 +3,7 @@
  * Season/regulation dates can't be fetched live (no-scrape policy, see
  * CLAUDE.md) - this only computes whether the hand-maintained table looks
  * stale and tracks when a human last verified it, mirroring the
- * lastPushedAt/lastPulledAt timestamp pattern on AppSettings (SyncSection).
+ * lastSyncedAt timestamp pattern on AppSettings (SyncSection).
  */
 
 import { useMemo, useState } from 'react';

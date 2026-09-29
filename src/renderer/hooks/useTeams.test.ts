@@ -25,12 +25,20 @@ describe('useTeams', () => {
   });
 
   it('loads persisted teams on mount', async () => {
-    const database: TeamsDatabase = { version: 1, teams: [makeTeam()], lastModified: 0 };
+    const database: TeamsDatabase = { version: 1, teams: [makeTeam()], tombstones: [], lastModified: 0 };
     vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce(database);
 
     const { result } = renderHook(() => useTeams());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.teams).toEqual([makeTeam()]);
+  });
+
+  it('backfills an empty tombstones list for a database persisted before tombstones existed', async () => {
+    vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({ version: 1, teams: [makeTeam()], lastModified: 0 });
+
+    const { result } = renderHook(() => useTeams());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.tombstones).toEqual([]);
   });
 
   it('strips a stale "Reg M-A/B/C " prefix from a team name on load', async () => {
@@ -43,6 +51,7 @@ describe('useTeams', () => {
         makeTeam({ id: 'd', name: 'Reg M-D Trick Room' }),
         makeTeam({ id: 'e', name: 'My Reg M-A Team' }),
       ],
+      tombstones: [],
       lastModified: 0,
     };
     vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce(database);
@@ -128,10 +137,11 @@ describe('useTeams', () => {
     expect(result.current.error).toContain('missing');
   });
 
-  it('deleteTeam removes the team and clears its expansion state', async () => {
+  it('deleteTeam removes the team, clears its expansion state, and records a tombstone', async () => {
     vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({
       version: 1,
       teams: [makeTeam()],
+      tombstones: [],
       lastModified: 0,
     });
     const { result } = renderHook(() => useTeams());
@@ -146,6 +156,37 @@ describe('useTeams', () => {
 
     expect(result.current.teams).toEqual([]);
     expect(result.current.expandedCardIds.has('team-1')).toBe(false);
+    expect(result.current.tombstones).toEqual([{ id: 'team-1', deletedAt: expect.any(Number) }]);
+    expect(window.electron.writeTeamsDatabase).toHaveBeenLastCalledWith(
+      expect.objectContaining({ teams: [], tombstones: [{ id: 'team-1', deletedAt: expect.any(Number) }] })
+    );
+  });
+
+  it('applySyncedState overwrites teams with the given records and clears pending tombstones', async () => {
+    vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({
+      version: 1,
+      teams: [makeTeam()],
+      tombstones: [],
+      lastModified: 0,
+    });
+    const { result } = renderHook(() => useTeams());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.deleteTeam('team-1'); // leaves a pending tombstone behind
+    });
+    expect(result.current.tombstones).not.toEqual([]);
+
+    const mergedTeam = makeTeam({ id: 'from-server' });
+    await act(async () => {
+      await result.current.applySyncedState([mergedTeam]);
+    });
+
+    expect(result.current.teams).toEqual([mergedTeam]);
+    expect(result.current.tombstones).toEqual([]);
+    expect(window.electron.writeTeamsDatabase).toHaveBeenLastCalledWith(
+      expect.objectContaining({ teams: [mergedTeam], tombstones: [] })
+    );
   });
 
   it('reorderTeam is a no-op for identical ids or an unknown target', async () => {

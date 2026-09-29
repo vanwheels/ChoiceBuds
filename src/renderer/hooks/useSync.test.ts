@@ -1,24 +1,23 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { renderHook, waitFor, act, cleanup } from '@testing-library/react';
 import { useSync } from './useSync';
 import type { UseSettingsReturn } from './useSettings';
 import type { UseTeamsReturn } from './useTeams';
 import type { UseBattlesReturn } from './useBattles';
-import type { AppSettings, Team } from '../types/pokemon';
+import type { UseSavedPokemonReturn } from './useSavedPokemon';
+import type { AppSettings, SavedPokemonEntry, SyncPayload, Team } from '../types/pokemon';
 
 vi.mock('../services/syncApi', () => ({
   signup: vi.fn(),
   login: vi.fn(),
   pushSyncData: vi.fn(),
-  pullSyncData: vi.fn(),
 }));
 
-import { signup, login, pushSyncData, pullSyncData } from '../services/syncApi';
+import { signup, login, pushSyncData } from '../services/syncApi';
 
 const mockedSignup = vi.mocked(signup);
 const mockedLogin = vi.mocked(login);
 const mockedPush = vi.mocked(pushSyncData);
-const mockedPull = vi.mocked(pullSyncData);
 
 const PLAYER_PROFILE = {
   playerName: '', ageDivision: '' as const, trainerNameInGame: '', playerId: '',
@@ -31,8 +30,7 @@ function makeSettings(overrides: Partial<AppSettings> = {}): AppSettings {
     defaultRegulation: 'Reg M-A',
     syncUsername: null,
     syncToken: null,
-    lastPushedAt: null,
-    lastPulledAt: null,
+    lastSyncedAt: null,
     lastSeasonDataCheckedAt: null,
     championsDataChecks: {},
     showAnimatedSprites: false,
@@ -49,6 +47,16 @@ function makeTeam(overrides: Partial<Team> = {}): Team {
   return { id: 'team-1', name: 'Test Team', format: 'Reg M-B', pokemon: [], createdAt: Date.now(), updatedAt: Date.now(), ...overrides };
 }
 
+function emptyMergedPayload(overrides: Partial<SyncPayload> = {}): SyncPayload {
+  return {
+    teams: [], teamTombstones: [],
+    battles: [], battleTombstones: [],
+    savedPokemon: [], savedPokemonTombstones: [],
+    savedAt: Date.now(),
+    ...overrides,
+  };
+}
+
 function setup(settingsOverrides: Partial<AppSettings> = {}) {
   const settings = makeSettings(settingsOverrides);
   const updateSettings = vi.fn().mockResolvedValue(true);
@@ -60,12 +68,12 @@ function setup(settingsOverrides: Partial<AppSettings> = {}) {
     updateSettings,
   };
 
-  const refreshTeams = vi.fn().mockResolvedValue(undefined);
   const teamsState: UseTeamsReturn = {
     teams: [makeTeam()],
     isLoading: false,
     error: null,
     expandedCardIds: new Set(),
+    tombstones: [],
     addTeam: vi.fn(),
     updateTeam: vi.fn(),
     deleteTeam: vi.fn(),
@@ -74,80 +82,74 @@ function setup(settingsOverrides: Partial<AppSettings> = {}) {
     expandCard: vi.fn(),
     collapseCard: vi.fn(),
     collapseAllCards: vi.fn(),
-    refreshTeams,
+    refreshTeams: vi.fn().mockResolvedValue(undefined),
     getTeamById: vi.fn(),
+    applySyncedState: vi.fn().mockResolvedValue(true),
   };
 
-  const refreshBattles = vi.fn().mockResolvedValue(undefined);
   const battlesState: UseBattlesReturn = {
     battles: [],
     isLoading: false,
     error: null,
+    tombstones: [],
     addBattle: vi.fn(),
     updateBattle: vi.fn(),
     deleteBattle: vi.fn(),
-    refreshBattles,
+    refreshBattles: vi.fn().mockResolvedValue(undefined),
     getBattleById: vi.fn(),
+    applySyncedState: vi.fn().mockResolvedValue(true),
   };
 
-  const { result } = renderHook(() => useSync(settingsState, teamsState, battlesState));
-  return { result, updateSettings, refreshTeams, refreshBattles, teamsState, battlesState };
+  const savedPokemonState: UseSavedPokemonReturn = {
+    savedPokemon: [] as SavedPokemonEntry[],
+    isLoading: false,
+    error: null,
+    expandedCardIds: new Set(),
+    toggleCardExpansion: vi.fn(),
+    addSavedPokemonBatch: vi.fn(),
+    renameSavedPokemon: vi.fn(),
+    toggleSavedPokemonFavorite: vi.fn(),
+    duplicateSavedPokemon: vi.fn(),
+    reorderSavedPokemon: vi.fn(),
+    setSavedPokemonOrder: vi.fn(),
+    updateSavedPokemon: vi.fn(),
+    deleteSavedPokemon: vi.fn(),
+    refreshSavedPokemon: vi.fn().mockResolvedValue(undefined),
+    getSavedSetsForSpecies: vi.fn().mockReturnValue([]),
+    tombstones: [],
+    applySyncedState: vi.fn().mockResolvedValue(true),
+  };
+
+  const { result, rerender } = renderHook(() => useSync(settingsState, teamsState, battlesState, savedPokemonState));
+  return { result, rerender, updateSettings, teamsState, battlesState, savedPokemonState };
 }
 
 describe('useSync', () => {
   beforeEach(() => {
     mockedSignup.mockReset();
     mockedLogin.mockReset();
-    mockedPush.mockReset().mockResolvedValue(undefined);
-    mockedPull.mockReset().mockResolvedValue(null);
+    mockedPush.mockReset().mockResolvedValue(emptyMergedPayload());
+  });
+
+  // Not configured globally (see vitest.config.ts/setupElectronMock.ts) - most
+  // hooks don't need it, but useSync's effects register a global 'online'
+  // listener and an interval, which would otherwise leak across tests and
+  // keep firing from every previously-rendered (but never unmounted) hook
+  // instance in this file.
+  afterEach(() => {
+    cleanup();
   });
 
   describe('status', () => {
-    it('is never-synced with no account signed in', async () => {
+    it('is signed-out with no account signed in', () => {
       const { result } = setup();
-      await waitFor(() => expect(result.current.status).toBe('never-synced'));
+      expect(result.current.status).toBe('signed-out');
     });
 
-    it('is never-synced when signed in but nothing has ever been pushed or pulled', async () => {
+    it('auto-syncs on mount when already signed in, landing on idle', async () => {
       const { result } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
-      await waitFor(() => expect(result.current.status).toBe('never-synced'));
-      expect(mockedPull).not.toHaveBeenCalled(); // both-null short-circuits before any network call
-    });
-
-    it('is up-to-date when local storage and the remote both match what was last pushed/pulled', async () => {
-      const now = Date.now();
-      vi.mocked(window.electron.readTeamsDatabase).mockResolvedValue({ version: 1, teams: [], lastModified: now - 5000 });
-      vi.mocked(window.electron.readBattlesDatabase).mockResolvedValue({ version: 1, battles: [], lastModified: now - 5000 });
-      mockedPull.mockResolvedValue({ teams: [], battles: [], savedAt: now - 5000 });
-
-      const { result } = setup({ syncUsername: 'ethan', syncToken: 'tok', lastPushedAt: now, lastPulledAt: now });
-      await waitFor(() => expect(result.current.status).toBe('up-to-date'));
-    });
-
-    it('is unpulled-changes when the remote was saved after the last local pull', async () => {
-      const now = Date.now();
-      mockedPull.mockResolvedValue({ teams: [], battles: [], savedAt: now + 10_000 });
-
-      const { result } = setup({ syncUsername: 'ethan', syncToken: 'tok', lastPushedAt: now, lastPulledAt: now });
-      await waitFor(() => expect(result.current.status).toBe('unpulled-changes'));
-    });
-
-    it('is unpushed-changes when local data changed after the last push', async () => {
-      const now = Date.now();
-      vi.mocked(window.electron.readTeamsDatabase).mockResolvedValue({ version: 1, teams: [], lastModified: now + 10_000 });
-
-      const { result } = setup({ syncUsername: 'ethan', syncToken: 'tok', lastPushedAt: now, lastPulledAt: now });
-      await waitFor(() => expect(result.current.status).toBe('unpushed-changes'));
-    });
-
-    it('falls back to unknown without throwing when the status refresh errors', async () => {
-      vi.mocked(window.electron.readTeamsDatabase).mockRejectedValue(new Error('disk error'));
-      const now = Date.now();
-
-      const { result } = setup({ syncUsername: 'ethan', syncToken: 'tok', lastPushedAt: now, lastPulledAt: now });
-      await waitFor(() => expect(window.electron.readTeamsDatabase).toHaveBeenCalled());
-      await waitFor(() => expect(result.current.status).toBe('unknown'));
-      expect(result.current.error).toBeNull(); // status-refresh failures are silent, not surfaced as the sync error
+      await waitFor(() => expect(mockedPush).toHaveBeenCalledTimes(1));
+      await waitFor(() => expect(result.current.status).toBe('idle'));
     });
   });
 
@@ -190,8 +192,7 @@ describe('useSync', () => {
       expect(updateSettings).toHaveBeenCalledWith({
         syncUsername: 'ethan',
         syncToken: 'new-token',
-        lastPushedAt: null,
-        lastPulledAt: null,
+        lastSyncedAt: null,
       });
     });
 
@@ -208,7 +209,7 @@ describe('useSync', () => {
       expect(updateSettings).not.toHaveBeenCalled();
     });
 
-    it('reports failure without changing status when persisting the new credentials fails', async () => {
+    it('reports failure when persisting the new credentials fails', async () => {
       mockedSignup.mockResolvedValue({ token: 'new-token' });
       const { result, updateSettings } = setup();
       updateSettings.mockResolvedValueOnce(false);
@@ -250,8 +251,7 @@ describe('useSync', () => {
       expect(updateSettings).toHaveBeenCalledWith({
         syncUsername: 'ethan',
         syncToken: 'device-2-token',
-        lastPushedAt: null,
-        lastPulledAt: null,
+        lastSyncedAt: null,
       });
     });
 
@@ -267,178 +267,161 @@ describe('useSync', () => {
       expect(outcome).toEqual({ ok: false, message: 'Invalid username or password' });
       expect(updateSettings).not.toHaveBeenCalled();
     });
-
-    it('reports failure when persisting the logged-in credentials fails', async () => {
-      mockedLogin.mockResolvedValue({ token: 'device-2-token' });
-      const { result, updateSettings } = setup();
-      updateSettings.mockResolvedValueOnce(false);
-
-      let outcome;
-      await act(async () => {
-        outcome = await result.current.logIn('ethan', 'password123');
-      });
-
-      expect(outcome).toEqual({ ok: false, message: 'Failed to save sync credentials' });
-    });
   });
 
   describe('logOut', () => {
-    it('clears the account/token/timestamps and resets status to never-synced', async () => {
-      const { result, updateSettings } = setup({ syncUsername: 'ethan', syncToken: 'tok', lastPushedAt: Date.now(), lastPulledAt: Date.now() });
-      await waitFor(() => expect(result.current.status).not.toBe('unknown')); // let the mount-time status refresh settle first
+    it('clears the account/token/timestamp and resets status to signed-out', async () => {
+      const { result, updateSettings } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
+      await waitFor(() => expect(result.current.status).toBe('idle')); // let the mount-time auto-sync settle first
 
       await act(async () => {
         await result.current.logOut();
       });
 
-      expect(updateSettings).toHaveBeenCalledWith({ syncUsername: null, syncToken: null, lastPushedAt: null, lastPulledAt: null });
-      expect(result.current.status).toBe('never-synced');
+      expect(updateSettings).toHaveBeenCalledWith({ syncUsername: null, syncToken: null, lastSyncedAt: null });
+      expect(result.current.status).toBe('signed-out');
     });
   });
 
-  describe('push', () => {
+  describe('syncNow', () => {
     it('errors immediately when not signed in', async () => {
       const { result } = setup();
 
       let outcome;
       await act(async () => {
-        outcome = await result.current.push();
+        outcome = await result.current.syncNow();
       });
 
-      expect(outcome).toEqual({ ok: false, reason: 'error', message: 'Not signed in to sync yet' });
+      expect(outcome).toEqual({ ok: false, message: 'Not signed in to sync yet' });
       expect(mockedPush).not.toHaveBeenCalled();
     });
 
-    it('refuses to push when the remote has data this device has not seen', async () => {
-      const now = Date.now();
-      mockedPull.mockResolvedValue({ teams: [], battles: [], savedAt: now + 10_000 });
-      const { result } = setup({ syncUsername: 'ethan', syncToken: 'tok', lastPushedAt: now, lastPulledAt: now });
+    it('pushes the current teams/battles/savedPokemon + tombstones snapshot and applies the merged result back', async () => {
+      const remoteTeam = makeTeam({ id: 'remote-team' });
+      const merged = emptyMergedPayload({ teams: [remoteTeam], savedAt: 42_000 });
+      mockedPush.mockResolvedValue(merged);
+
+      const { result, updateSettings, teamsState, battlesState, savedPokemonState } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
+      await waitFor(() => expect(mockedPush).toHaveBeenCalledTimes(1)); // mount-triggered auto-sync
 
       let outcome;
       await act(async () => {
-        outcome = await result.current.push();
-      });
-
-      expect(outcome).toEqual({ ok: false, reason: 'needs-pull-first', remoteSavedAt: now + 10_000 });
-      expect(mockedPush).not.toHaveBeenCalled();
-    });
-
-    it('force skips the remote-freshness check entirely', async () => {
-      // Configured as if the remote is always newer, so a non-force push
-      // would be refused with needs-pull-first (proven by the test above) -
-      // force must succeed anyway, proving the check itself was never applied.
-      mockedPull.mockResolvedValue({ teams: [], battles: [], savedAt: Date.now() + 999_999 });
-      const { result, updateSettings } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
-
-      let outcome;
-      await act(async () => {
-        outcome = await result.current.push({ force: true });
+        outcome = await result.current.syncNow();
       });
 
       expect(outcome).toEqual({ ok: true });
-      expect(mockedPush).toHaveBeenCalledTimes(1);
-      expect(updateSettings).toHaveBeenCalledWith({ lastPushedAt: expect.any(Number) });
-    });
-
-    it('pushes the current teams/battles snapshot and records lastPushedAt', async () => {
-      const { result, updateSettings, teamsState, battlesState } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
-
-      let outcome;
-      await act(async () => {
-        outcome = await result.current.push();
-      });
-
-      expect(outcome).toEqual({ ok: true });
-      expect(mockedPush).toHaveBeenCalledWith('ethan', 'tok', {
+      expect(mockedPush).toHaveBeenLastCalledWith('ethan', 'tok', {
         teams: teamsState.teams,
+        teamTombstones: teamsState.tombstones,
         battles: battlesState.battles,
+        battleTombstones: battlesState.tombstones,
+        savedPokemon: savedPokemonState.savedPokemon,
+        savedPokemonTombstones: savedPokemonState.tombstones,
         savedAt: expect.any(Number),
       });
-      expect(updateSettings).toHaveBeenCalledWith({ lastPushedAt: expect.any(Number) });
+      expect(teamsState.applySyncedState).toHaveBeenLastCalledWith([remoteTeam]);
+      expect(battlesState.applySyncedState).toHaveBeenLastCalledWith([]);
+      expect(savedPokemonState.applySyncedState).toHaveBeenLastCalledWith([]);
+      expect(updateSettings).toHaveBeenLastCalledWith({ lastSyncedAt: 42_000 });
     });
 
-    it('sets the error state and returns reason error when the push itself fails', async () => {
-      mockedPush.mockRejectedValueOnce(new Error('push exploded'));
+    it('sets the error state and status when the push itself fails', async () => {
+      mockedPush.mockResolvedValueOnce(emptyMergedPayload()); // mount-triggered auto-sync succeeds first
       const { result } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
+      await waitFor(() => expect(result.current.status).toBe('idle'));
+
+      mockedPush.mockRejectedValueOnce(new Error('sync exploded'));
 
       let outcome;
       await act(async () => {
-        outcome = await result.current.push();
+        outcome = await result.current.syncNow();
       });
 
-      expect(outcome).toEqual({ ok: false, reason: 'error', message: 'push exploded' });
-      expect(result.current.error).toBe('push exploded');
-      expect(result.current.isBusy).toBe(false);
+      expect(outcome).toEqual({ ok: false, message: 'sync exploded' });
+      expect(result.current.error).toBe('sync exploded');
+      expect(result.current.status).toBe('error');
+    });
+
+    it('shares one in-flight run across concurrent callers instead of double-pushing', async () => {
+      let resolvePush: (payload: SyncPayload) => void;
+      mockedPush.mockReturnValue(new Promise(resolve => { resolvePush = resolve; }));
+
+      const { result } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
+      await waitFor(() => expect(mockedPush).toHaveBeenCalledTimes(1)); // the pending mount-triggered call
+
+      let outcomeA: unknown;
+      let outcomeB: unknown;
+      const callPromise = act(async () => {
+        const [a, b] = await Promise.all([result.current.syncNow(), result.current.syncNow()]);
+        outcomeA = a;
+        outcomeB = b;
+      });
+
+      resolvePush!(emptyMergedPayload());
+      await callPromise;
+
+      expect(mockedPush).toHaveBeenCalledTimes(1); // still just the mount-triggered call - both syncNow() calls shared it
+      expect(outcomeA).toEqual({ ok: true });
+      expect(outcomeB).toEqual({ ok: true });
     });
   });
 
-  describe('pull', () => {
-    it('errors immediately when not signed in', async () => {
-      const { result } = setup();
-
-      let outcome;
-      await act(async () => {
-        outcome = await result.current.pull();
-      });
-
-      expect(outcome).toEqual({ ok: false, reason: 'error', message: 'Not signed in to sync yet' });
+  describe('auto-sync triggers', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
     });
 
-    it('refuses to pull when local data has changed since the last push', async () => {
-      vi.mocked(window.electron.readTeamsDatabase).mockResolvedValue({ version: 1, teams: [], lastModified: 5000 });
-      const { result } = setup({ syncUsername: 'ethan', syncToken: 'tok', lastPushedAt: 1000 });
-
-      let outcome;
-      await act(async () => {
-        outcome = await result.current.pull();
-      });
-
-      expect(outcome).toEqual({ ok: false, reason: 'needs-push-first', localModifiedAt: 5000 });
-      expect(window.electron.writeTeamsDatabase).not.toHaveBeenCalled();
+    afterEach(() => {
+      vi.useRealTimers();
     });
 
-    it('reports an error when the account has no data pushed yet', async () => {
-      mockedPull.mockResolvedValueOnce(null);
+    it('syncs again after local data changes, once things settle (debounced)', async () => {
+      const { rerender, teamsState } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
+      await vi.waitFor(() => expect(mockedPush).toHaveBeenCalledTimes(1)); // mount-triggered
+
+      mockedPush.mockClear();
+      teamsState.teams = [makeTeam({ id: 'a-new-team' })]; // simulate a mutation changing the array reference
+      rerender();
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5_000);
+      });
+
+      expect(mockedPush).toHaveBeenCalledTimes(1);
+    });
+
+    it('syncs again on an interval fallback', async () => {
+      setup({ syncUsername: 'ethan', syncToken: 'tok' });
+      await vi.waitFor(() => expect(mockedPush).toHaveBeenCalledTimes(1)); // mount-triggered
+
+      mockedPush.mockClear();
+
+      await act(async () => {
+        // Also crosses the 5s mutation-debounce mark, which fires too (the
+        // mount-triggered data-load itself counts as a "change") - that's
+        // accepted redundancy, not what this test is isolating, so it
+        // asserts "at least once" rather than an exact count.
+        await vi.advanceTimersByTimeAsync(5 * 60 * 1000);
+      });
+
+      expect(mockedPush).toHaveBeenCalled();
+    });
+
+    it('syncs again when the browser comes back online', async () => {
       const { result } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
+      // Wait for the mount-triggered sync to fully settle (not just for
+      // pushSyncData to have been *called*) - otherwise the in-flight guard
+      // would make the 'online' trigger below share that still-pending run
+      // instead of starting a new, separately-observable one.
+      await vi.waitFor(() => expect(result.current.status).toBe('idle'));
 
-      let outcome;
+      mockedPush.mockClear();
+
       await act(async () => {
-        outcome = await result.current.pull();
+        window.dispatchEvent(new Event('online'));
       });
 
-      expect(outcome).toEqual({ ok: false, reason: 'error', message: 'No data found for this account yet' });
-    });
-
-    it('writes down the remote payload, refreshes teams/battles, and records lastPulledAt', async () => {
-      const remoteTeam = makeTeam({ id: 'remote-team' });
-      mockedPull.mockResolvedValueOnce({ teams: [remoteTeam], battles: [], savedAt: 42_000 });
-      const { result, updateSettings, refreshTeams, refreshBattles } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
-
-      let outcome;
-      await act(async () => {
-        outcome = await result.current.pull();
-      });
-
-      expect(outcome).toEqual({ ok: true });
-      expect(window.electron.writeTeamsDatabase).toHaveBeenCalledWith(expect.objectContaining({ teams: [remoteTeam] }));
-      expect(window.electron.writeBattlesDatabase).toHaveBeenCalledWith(expect.objectContaining({ battles: [] }));
-      expect(refreshTeams).toHaveBeenCalled();
-      expect(refreshBattles).toHaveBeenCalled();
-      expect(updateSettings).toHaveBeenCalledWith({ lastPulledAt: 42_000 });
-    });
-
-    it('sets the error state and returns reason error when the pull itself fails', async () => {
-      mockedPull.mockRejectedValueOnce(new Error('pull exploded'));
-      const { result } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
-
-      let outcome;
-      await act(async () => {
-        outcome = await result.current.pull();
-      });
-
-      expect(outcome).toEqual({ ok: false, reason: 'error', message: 'pull exploded' });
-      expect(result.current.error).toBe('pull exploded');
-      expect(result.current.isBusy).toBe(false);
+      expect(mockedPush).toHaveBeenCalledTimes(1);
     });
   });
 });

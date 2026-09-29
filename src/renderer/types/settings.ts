@@ -4,7 +4,7 @@
  * Architecture section).
  */
 
-import type { Team, RegulationLabel } from './pokemon';
+import type { SavedPokemonEntry, SyncTombstone, Team, RegulationLabel } from './pokemon';
 import type { Battle } from './battle';
 
 /**
@@ -50,8 +50,7 @@ export interface AppSettings {
   defaultRegulation: RegulationLabel;
   syncUsername: string | null; // account username, once signed up/logged in
   syncToken: string | null; // this device's opaque bearer token for the sync Worker - never the password itself
-  lastPushedAt: number | null; // Unix timestamp of this device's last successful Push
-  lastPulledAt: number | null; // Unix timestamp of this device's last successful Pull
+  lastSyncedAt: number | null; // Unix timestamp of this device's last successful sync (server-stamped, from the Worker's merge response)
   lastSeasonDataCheckedAt: number | null; // Unix timestamp config/seasons.ts was last manually verified against Bulbapedia/Serebii
   // Per-file "last verified against regulation X" state for the hand-authored
   // Champions balance tables (championsMoveOverrides.ts/
@@ -83,12 +82,19 @@ export interface AppSettings {
 }
 
 /**
- * Bundled payload synced as a single blob via the cross-device sync Worker -
- * pokeapi-cache.json/game-data-cache.json/the sprite cache are pure
- * rebuildable caches and deliberately never included.
+ * Bundled payload synced via the cross-device sync Worker's per-record merge
+ * (see worker/src/index.ts) - pokeapi-cache.json/game-data-cache.json/the
+ * sprite cache are pure rebuildable caches and deliberately never included.
+ * Each collection travels with its own pending tombstones so the Worker's
+ * merge can tell "deleted here" apart from "never seen here" - see
+ * types/pokemon.ts's SyncTombstone.
  */
 export interface SyncPayload {
   teams: Team[];
+  teamTombstones: SyncTombstone[];
   battles: Battle[];
-  savedAt: number; // Unix timestamp this payload was pushed
+  battleTombstones: SyncTombstone[];
+  savedPokemon: SavedPokemonEntry[];
+  savedPokemonTombstones: SyncTombstone[];
+  savedAt: number; // Unix timestamp the Worker computed this merge - client-supplied values are ignored/overwritten
 }

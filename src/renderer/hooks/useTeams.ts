@@ -5,7 +5,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import type { ImportedPokemonInfo, Team, TeamsDatabase } from '../types/pokemon';
+import type { ImportedPokemonInfo, SyncTombstone, Team, TeamsDatabase } from '../types/pokemon';
 
 /**
  * Leading "Reg M-A "/"Reg M-B "/"Reg M-C " prefix this app used to stamp
@@ -38,22 +38,34 @@ export interface UseTeamsReturn {
   isLoading: boolean;
   error: string | null;
   expandedCardIds: Set<string>;
-  
+
+  // Pending deletes not yet confirmed synced (see TODO.md's Sync Data Model
+  // leg) - included in the next sync push, then cleared by applySyncedState.
+  tombstones: SyncTombstone[];
+
   // CRUD operations
   addTeam: (team: Team) => Promise<boolean>;
   updateTeam: (teamId: string, updates: Partial<Team>) => Promise<boolean>;
   deleteTeam: (teamId: string) => Promise<boolean>;
   reorderTeam: (draggedTeamId: string, targetTeamId: string) => Promise<boolean>;
-  
+
   // UI state management
   toggleCardExpansion: (teamId: string) => void;
   expandCard: (teamId: string) => void;
   collapseCard: (teamId: string) => void;
   collapseAllCards: () => void;
-  
+
   // Utility
   refreshTeams: () => Promise<void>;
   getTeamById: (teamId: string) => Team | undefined;
+  /**
+   * Overwrites the full local team list with the server-merged result from a
+   * sync (useSync.ts::syncNow) - the given records are stored exactly as
+   * given (no updatedAt/createdAt rewriting, since they're already the
+   * authoritative merged values) and tombstones is cleared, since the Worker
+   * has now durably recorded whatever was pending.
+   */
+  applySyncedState: (records: Team[]) => Promise<boolean>;
 }
 
 /**
@@ -62,6 +74,7 @@ export interface UseTeamsReturn {
  */
 export function useTeams(): UseTeamsReturn {
   const [teams, setTeams] = useState<Team[]>([]);
+  const [tombstones, setTombstones] = useState<SyncTombstone[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedCardIds, setExpandedCardIds] = useState<Set<string>>(new Set());
@@ -80,9 +93,11 @@ export function useTeams(): UseTeamsReturn {
 
       if (database) {
         setTeams(database.teams.map(normalizeTeam));
+        setTombstones(database.tombstones ?? []);
       } else {
         // Initialize empty database if none exists
         setTeams([]);
+        setTombstones([]);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load teams';
@@ -114,9 +129,11 @@ export function useTeams(): UseTeamsReturn {
 
         if (database) {
           setTeams(database.teams.map(normalizeTeam));
+          setTombstones(database.tombstones ?? []);
         } else {
           // Initialize empty database if none exists
           setTeams([]);
+          setTombstones([]);
         }
       } catch (err) {
         if (ignore) return;
@@ -134,16 +151,17 @@ export function useTeams(): UseTeamsReturn {
   }, []);
 
   /**
-   * Internal: Persist current teams state to disk
+   * Internal: Persist current teams + pending tombstones state to disk
    */
-  const persistTeamsToDisk = async (updatedTeams: Team[]): Promise<boolean> => {
+  const persistTeamsToDisk = async (updatedTeams: Team[], updatedTombstones: SyncTombstone[]): Promise<boolean> => {
     try {
       const database: TeamsDatabase = {
         version: 1,
         teams: updatedTeams,
+        tombstones: updatedTombstones,
         lastModified: Date.now(),
       };
-      
+
       const success = await window.electron.writeTeamsDatabase(database);
       
       if (!success) {
@@ -164,15 +182,15 @@ export function useTeams(): UseTeamsReturn {
    */
   const addTeam = useCallback(async (team: Team): Promise<boolean> => {
     const updatedTeams = [team, ...teams];
-    const success = await persistTeamsToDisk(updatedTeams);
-    
+    const success = await persistTeamsToDisk(updatedTeams, tombstones);
+
     if (success) {
       setTeams(updatedTeams);
       setError(null);
     }
-    
+
     return success;
-  }, [teams]);
+  }, [teams, tombstones]);
 
   /**
    * Update an existing team configuration
@@ -194,28 +212,33 @@ export function useTeams(): UseTeamsReturn {
       ...updates,
       updatedAt: Date.now(),
     };
-    
-    const success = await persistTeamsToDisk(updatedTeams);
-    
+
+    const success = await persistTeamsToDisk(updatedTeams, tombstones);
+
     if (success) {
       setTeams(updatedTeams);
       setError(null);
     }
-    
+
     return success;
-  }, [teams]);
+  }, [teams, tombstones]);
 
   /**
-   * Delete a targeted team configuration from disk storage
+   * Delete a targeted team configuration from disk storage. Also records a
+   * tombstone (see TODO.md's Sync Data Model leg) so a future sync merge
+   * knows this id was intentionally removed here, rather than just never
+   * seen - cleared once that's confirmed synced (applySyncedState below).
    */
   const deleteTeam = useCallback(async (teamId: string): Promise<boolean> => {
     const updatedTeams = teams.filter(t => t.id !== teamId);
-    const success = await persistTeamsToDisk(updatedTeams);
-    
+    const updatedTombstones = [...tombstones, { id: teamId, deletedAt: Date.now() }];
+    const success = await persistTeamsToDisk(updatedTeams, updatedTombstones);
+
     if (success) {
       setTeams(updatedTeams);
+      setTombstones(updatedTombstones);
       setError(null);
-      
+
       // Clean up expansion state for deleted team
       setExpandedCardIds(prev => {
         const next = new Set(prev);
@@ -223,9 +246,9 @@ export function useTeams(): UseTeamsReturn {
         return next;
       });
     }
-    
+
     return success;
-  }, [teams]);
+  }, [teams, tombstones]);
 
   /**
    * Reorder teams by dragging one onto another - operates on the full
@@ -247,13 +270,13 @@ export function useTeams(): UseTeamsReturn {
     const updatedTeams = [...withoutDragged];
     updatedTeams.splice(targetIndex, 0, dragged);
 
-    const success = await persistTeamsToDisk(updatedTeams);
+    const success = await persistTeamsToDisk(updatedTeams, tombstones);
     if (success) {
       setTeams(updatedTeams);
       setError(null);
     }
     return success;
-  }, [teams]);
+  }, [teams, tombstones]);
 
   /**
    * Toggle expansion state for a specific team card
@@ -309,11 +332,26 @@ export function useTeams(): UseTeamsReturn {
     return teams.find(t => t.id === teamId);
   }, [teams]);
 
+  /**
+   * Overwrites teams with a sync merge's authoritative result and clears
+   * pendingtombstones (see UseTeamsReturn's doc comment).
+   */
+  const applySyncedState = useCallback(async (records: Team[]): Promise<boolean> => {
+    const success = await persistTeamsToDisk(records, []);
+    if (success) {
+      setTeams(records);
+      setTombstones([]);
+      setError(null);
+    }
+    return success;
+  }, []);
+
   return {
     teams,
     isLoading,
     error,
     expandedCardIds,
+    tombstones,
     addTeam,
     updateTeam,
     deleteTeam,
@@ -324,5 +362,6 @@ export function useTeams(): UseTeamsReturn {
     collapseAllCards,
     refreshTeams,
     getTeamById,
+    applySyncedState,
   };
 }

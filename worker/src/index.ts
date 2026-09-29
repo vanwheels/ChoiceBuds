@@ -12,11 +12,21 @@
  * Endpoints:
  *   POST /signup            - {username, password, email?} -> {ok, token}
  *   POST /login              - {username, password} -> {ok, token}
- *   PUT  /sync/:username     - Bearer token + body {teams, battles, savedAt}
- *   GET  /sync/:username     - Bearer token -> stored SyncPayload, 404 if none
+ *   PUT  /sync/:username     - Bearer token + body: this device's full local
+ *                              SyncPayload (each collection + its pending
+ *                              tombstones) -> the full merged SyncPayload,
+ *                              same shape GET returns. PUT doubles as pull:
+ *                              the Worker merges per-record (last-write-wins
+ *                              by updatedAt, see merge.ts) instead of
+ *                              overwriting, persists the result, and hands
+ *                              it straight back so the pushing client
+ *                              reconciles in one round trip.
+ *   GET  /sync/:username     - Bearer token -> stored (already-merged)
+ *                              SyncPayload, 404 if none
  */
 
 import { hashPassword, verifyPassword, generateToken, hashToken, constantTimeEqual, isValidUsername, isValidPassword, type PasswordHash } from './crypto';
+import { mergeCollection, type SyncTombstone } from './merge';
 
 export interface Env {
   SYNC_KV: KVNamespace;
@@ -29,6 +39,31 @@ interface Account {
   email: string | null;
   createdAt: number;
 }
+
+/** Mirrors the renderer's types/settings.ts::SyncPayload - kept in sync by hand, same as the Account/TokenEntry shapes above mirror the renderer's own concerns. */
+interface SyncPayload {
+  teams: HasIdAndUpdatedAt[];
+  teamTombstones: SyncTombstone[];
+  battles: HasIdAndUpdatedAt[];
+  battleTombstones: SyncTombstone[];
+  savedPokemon: HasIdAndUpdatedAt[];
+  savedPokemonTombstones: SyncTombstone[];
+  savedAt: number;
+}
+
+/** The Worker only ever needs `id`/`updatedAt` to merge a record - the rest of each collection's shape (Team/Battle/SavedPokemonEntry) is opaque to it. */
+interface HasIdAndUpdatedAt {
+  id: string;
+  updatedAt: number;
+  [key: string]: unknown;
+}
+
+const EMPTY_SYNC_PAYLOAD: SyncPayload = {
+  teams: [], teamTombstones: [],
+  battles: [], battleTombstones: [],
+  savedPokemon: [], savedPokemonTombstones: [],
+  savedAt: 0,
+};
 
 interface TokenEntry {
   tokenHash: string;
@@ -230,27 +265,64 @@ async function handleSyncPut(env: Env, lowerUsername: string, request: Request):
     return errorResponse('Payload too large', 413);
   }
 
-  let parsed: { savedAt?: unknown };
+  let parsed: Partial<SyncPayload>;
   try {
     parsed = JSON.parse(bodyText);
   } catch {
     return errorResponse('Body must be valid JSON', 400);
   }
 
-  if (typeof parsed.savedAt !== 'number') {
-    return errorResponse('Body must include a numeric "savedAt"', 400);
+  if (
+    !isRecordArray(parsed.teams) || !isTombstoneArray(parsed.teamTombstones) ||
+    !isRecordArray(parsed.battles) || !isTombstoneArray(parsed.battleTombstones) ||
+    !isRecordArray(parsed.savedPokemon) || !isTombstoneArray(parsed.savedPokemonTombstones)
+  ) {
+    return errorResponse('Body must include teams/battles/savedPokemon arrays and their tombstone arrays', 400);
   }
+  const incoming = parsed as SyncPayload;
 
   // Throttle on the server's own record of when it last accepted a write for
-  // this account (KV metadata, never sent by the client) - using the
-  // client-supplied savedAt would let a client bypass the throttle by lying.
-  const { metadata } = await env.SYNC_KV.getWithMetadata<{ receivedAt: number }>(syncKey(lowerUsername));
+  // this account (KV metadata, never sent by the client) - using a
+  // client-supplied timestamp would let a client bypass the throttle by lying.
+  const { value: storedText, metadata } = await env.SYNC_KV.getWithMetadata<{ receivedAt: number }>(syncKey(lowerUsername));
   if (metadata && Date.now() - metadata.receivedAt < MIN_WRITE_INTERVAL_MS) {
     return errorResponse('Writing too frequently - try again shortly', 429);
   }
 
-  await env.SYNC_KV.put(syncKey(lowerUsername), bodyText, { metadata: { receivedAt: Date.now() } });
-  return jsonResponse({ ok: true });
+  const existing: SyncPayload = storedText ? JSON.parse(storedText) : EMPTY_SYNC_PAYLOAD;
+
+  const teamsMerge = mergeCollection(existing.teams, existing.teamTombstones, incoming.teams, incoming.teamTombstones);
+  const battlesMerge = mergeCollection(existing.battles, existing.battleTombstones, incoming.battles, incoming.battleTombstones);
+  const savedPokemonMerge = mergeCollection(existing.savedPokemon, existing.savedPokemonTombstones, incoming.savedPokemon, incoming.savedPokemonTombstones);
+
+  const merged: SyncPayload = {
+    teams: teamsMerge.records,
+    teamTombstones: teamsMerge.tombstones,
+    battles: battlesMerge.records,
+    battleTombstones: battlesMerge.tombstones,
+    savedPokemon: savedPokemonMerge.records,
+    savedPokemonTombstones: savedPokemonMerge.tombstones,
+    savedAt: Date.now(),
+  };
+
+  const mergedText = JSON.stringify(merged);
+  await env.SYNC_KV.put(syncKey(lowerUsername), mergedText, { metadata: { receivedAt: Date.now() } });
+  return new Response(mergedText, {
+    status: 200,
+    headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+  });
+}
+
+function isRecordArray(value: unknown): value is HasIdAndUpdatedAt[] {
+  return Array.isArray(value) && value.every((v): v is HasIdAndUpdatedAt =>
+    typeof v === 'object' && v !== null && typeof (v as Record<string, unknown>).id === 'string' && typeof (v as Record<string, unknown>).updatedAt === 'number'
+  );
+}
+
+function isTombstoneArray(value: unknown): value is SyncTombstone[] {
+  return Array.isArray(value) && value.every((v): v is SyncTombstone =>
+    typeof v === 'object' && v !== null && typeof (v as Record<string, unknown>).id === 'string' && typeof (v as Record<string, unknown>).deletedAt === 'number'
+  );
 }
 
 export default {
