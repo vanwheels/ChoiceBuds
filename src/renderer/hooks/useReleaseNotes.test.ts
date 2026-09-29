@@ -15,7 +15,8 @@ function makeSettings(overrides: Partial<AppSettings> = {}): AppSettings {
   return {
     version: 1,
     defaultRegulation: 'Reg M-B',
-    syncIdentifier: null,
+    syncUsername: null,
+    syncToken: null,
     lastPushedAt: null,
     lastPulledAt: null,
     lastSeasonDataCheckedAt: null,

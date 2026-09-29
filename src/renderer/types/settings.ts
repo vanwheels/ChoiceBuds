@@ -48,7 +48,8 @@ export type BoxSortMode = 'alphabetical' | 'custom';
 export interface AppSettings {
   version: number;
   defaultRegulation: RegulationLabel;
-  syncIdentifier: string | null; // "username#XXXX" pairing identifier, once set up
+  syncUsername: string | null; // account username, once signed up/logged in
+  syncToken: string | null; // this device's opaque bearer token for the sync Worker - never the password itself
   lastPushedAt: number | null; // Unix timestamp of this device's last successful Push
   lastPulledAt: number | null; // Unix timestamp of this device's last successful Pull
   lastSeasonDataCheckedAt: number | null; // Unix timestamp config/seasons.ts was last manually verified against Bulbapedia/Serebii

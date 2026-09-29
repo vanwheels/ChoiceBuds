@@ -1,9 +1,10 @@
 /**
  * SyncSection.tsx - Cross-Device Sync UI
- * Manual Push/Pull against the user's own Cloudflare Worker (see
- * services/syncApi.ts, worker/README.md). Extracted from SettingsPage.tsx
- * as its own component since it's a meaningfully separate, more complex
- * concern than the Default Regulation setting next to it.
+ * Sign up / log in against the user's own Cloudflare Worker (see
+ * services/syncApi.ts, worker/README.md), then manual Push/Pull. Extracted
+ * from SettingsPage.tsx as its own component since it's a meaningfully
+ * separate, more complex concern than the Default Regulation setting next
+ * to it.
  */
 
 import { useState } from 'react';
@@ -27,30 +28,42 @@ type BlockedAction =
   | null;
 
 export default function SyncSection({ syncState }: SyncSectionProps) {
-  const { syncIdentifier, lastPushedAt, lastPulledAt, isBusy, error, status, createIdentifier, pairExistingIdentifier, forgetIdentifier, push, pull } = syncState;
+  const { syncUsername, lastPushedAt, lastPulledAt, isBusy, error, status, signUp, logIn, logOut, push, pull } = syncState;
 
-  const [newUsername, setNewUsername] = useState('');
-  const [pairInput, setPairInput] = useState('');
+  const [signupUsername, setSignupUsername] = useState('');
+  const [signupPassword, setSignupPassword] = useState('');
+  const [signupPasswordConfirm, setSignupPasswordConfirm] = useState('');
+  const [signupEmail, setSignupEmail] = useState('');
+  const [loginUsername, setLoginUsername] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
   const [setupError, setSetupError] = useState<string | null>(null);
   const [blocked, setBlocked] = useState<BlockedAction>(null);
 
-  const handleCreate = async () => {
+  const handleSignUp = async () => {
     setSetupError(null);
-    const result = await createIdentifier(newUsername);
+    if (signupPassword !== signupPasswordConfirm) {
+      setSetupError('Passwords do not match');
+      return;
+    }
+    const result = await signUp(signupUsername, signupPassword, signupEmail.trim() || undefined);
     if (!result.ok) {
       setSetupError(result.message);
     } else {
-      setNewUsername('');
+      setSignupUsername('');
+      setSignupPassword('');
+      setSignupPasswordConfirm('');
+      setSignupEmail('');
     }
   };
 
-  const handlePair = async () => {
+  const handleLogIn = async () => {
     setSetupError(null);
-    const result = await pairExistingIdentifier(pairInput);
+    const result = await logIn(loginUsername, loginPassword);
     if (!result.ok) {
       setSetupError(result.message);
     } else {
-      setPairInput('');
+      setLoginUsername('');
+      setLoginPassword('');
     }
   };
 
@@ -77,41 +90,68 @@ export default function SyncSection({ syncState }: SyncSectionProps) {
         Manually push/pull your teams and battle logs to your own sync server. Nothing syncs automatically.
       </p>
 
-      {!syncIdentifier ? (
-        <div className="mt-3 flex flex-col gap-3">
+      {!syncUsername ? (
+        <div className="mt-3 flex flex-col gap-4">
           <div>
-            <label className="block text-xs font-medium text-zinc-300 mb-1">Create a new sync identifier</label>
-            <div className="flex gap-2">
+            <label className="block text-xs font-medium text-zinc-300 mb-1">Sign up</label>
+            <div className="flex flex-col gap-2">
               <input
-                value={newUsername}
-                onChange={e => setNewUsername(e.target.value)}
+                value={signupUsername}
+                onChange={e => setSignupUsername(e.target.value)}
                 placeholder="username"
-                className="flex-1 px-3 py-1.5 text-sm bg-zinc-900 border border-zinc-600 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
+                className="px-3 py-1.5 text-sm bg-zinc-900 border border-zinc-600 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
+              />
+              <input
+                type="password"
+                value={signupPassword}
+                onChange={e => setSignupPassword(e.target.value)}
+                placeholder="password (min 8 characters)"
+                className="px-3 py-1.5 text-sm bg-zinc-900 border border-zinc-600 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
+              />
+              <input
+                type="password"
+                value={signupPasswordConfirm}
+                onChange={e => setSignupPasswordConfirm(e.target.value)}
+                placeholder="confirm password"
+                className="px-3 py-1.5 text-sm bg-zinc-900 border border-zinc-600 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
+              />
+              <input
+                value={signupEmail}
+                onChange={e => setSignupEmail(e.target.value)}
+                placeholder="email (optional, for a future password reset)"
+                className="px-3 py-1.5 text-sm bg-zinc-900 border border-zinc-600 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
               />
               <button
-                onClick={handleCreate}
-                disabled={!newUsername.trim()}
-                className="px-3 py-1.5 text-xs font-bold rounded bg-accent-gold text-zinc-900 hover:bg-accent-gold-deep disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                onClick={handleSignUp}
+                disabled={!signupUsername.trim() || !signupPassword}
+                className="px-3 py-1.5 text-xs font-bold rounded bg-accent-gold text-zinc-900 hover:bg-accent-gold-deep disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer self-start"
               >
-                Create
+                Sign up
               </button>
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-zinc-300 mb-1">Or pair with an identifier from another device</label>
-            <div className="flex gap-2">
+            <label className="block text-xs font-medium text-zinc-300 mb-1">Or log in on this device</label>
+            <div className="flex flex-col gap-2">
               <input
-                value={pairInput}
-                onChange={e => setPairInput(e.target.value)}
-                placeholder="username#1234"
-                className="flex-1 px-3 py-1.5 text-sm bg-zinc-900 border border-zinc-600 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
+                value={loginUsername}
+                onChange={e => setLoginUsername(e.target.value)}
+                placeholder="username"
+                className="px-3 py-1.5 text-sm bg-zinc-900 border border-zinc-600 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
+              />
+              <input
+                type="password"
+                value={loginPassword}
+                onChange={e => setLoginPassword(e.target.value)}
+                placeholder="password"
+                className="px-3 py-1.5 text-sm bg-zinc-900 border border-zinc-600 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
               />
               <button
-                onClick={handlePair}
-                disabled={!pairInput.trim()}
-                className="px-3 py-1.5 text-xs font-bold rounded bg-zinc-700 text-zinc-200 hover:bg-zinc-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                onClick={handleLogIn}
+                disabled={!loginUsername.trim() || !loginPassword}
+                className="px-3 py-1.5 text-xs font-bold rounded bg-zinc-700 text-zinc-200 hover:bg-zinc-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer self-start"
               >
-                Pair
+                Log in
               </button>
             </div>
           </div>
@@ -121,14 +161,14 @@ export default function SyncSection({ syncState }: SyncSectionProps) {
         <div className="mt-3 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-xs text-zinc-400">Identifier: </span>
-              <span className="text-sm font-mono text-zinc-100">{syncIdentifier}</span>
+              <span className="text-xs text-zinc-400">Signed in as: </span>
+              <span className="text-sm font-mono text-zinc-100">{syncUsername}</span>
             </div>
             <button
-              onClick={forgetIdentifier}
+              onClick={logOut}
               className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
             >
-              Forget
+              Log out
             </button>
           </div>
 

@@ -4,16 +4,21 @@
  * services/syncApi.ts - deliberately not continuous background sync (no
  * backend arbitrating real conflicts). See TODO.md's cross-device sync
  * design note for the full rationale.
+ *
+ * Accounts are real username/password (see worker/src/index.ts) - this
+ * device authenticates with an opaque bearer token issued at signup/login,
+ * never the password itself.
  */
 
 import { useState, useCallback, useEffect } from 'react';
 import type { UseSettingsReturn } from './useSettings';
 import type { UseTeamsReturn } from './useTeams';
 import type { UseBattlesReturn } from './useBattles';
-import { pushSyncData, pullSyncData } from '../services/syncApi';
+import { signup, login, pushSyncData, pullSyncData } from '../services/syncApi';
 import type { SyncPayload, TeamsDatabase, BattlesDatabase } from '../types/pokemon';
 
-const IDENTIFIER_PATTERN = /^[a-zA-Z0-9_]{2,32}#\d{4}$/;
+const USERNAME_PATTERN = /^[a-zA-Z0-9_]{2,32}$/;
+const MIN_PASSWORD_LENGTH = 8;
 
 export type SyncStatus = 'never-synced' | 'up-to-date' | 'unpushed-changes' | 'unpulled-changes' | 'unknown';
 
@@ -28,27 +33,18 @@ export type PullResult =
   | { ok: false; reason: 'error'; message: string };
 
 export interface UseSyncReturn {
-  syncIdentifier: string | null;
+  syncUsername: string | null;
   lastPushedAt: number | null;
   lastPulledAt: number | null;
   isBusy: boolean;
   error: string | null;
   status: SyncStatus;
-  createIdentifier: (username: string) => Promise<{ ok: true } | { ok: false; message: string }>;
-  pairExistingIdentifier: (identifier: string) => Promise<{ ok: true } | { ok: false; message: string }>;
-  forgetIdentifier: () => Promise<void>;
+  signUp: (username: string, password: string, email?: string) => Promise<{ ok: true } | { ok: false; message: string }>;
+  logIn: (username: string, password: string) => Promise<{ ok: true } | { ok: false; message: string }>;
+  logOut: () => Promise<void>;
   push: (opts?: { force?: boolean }) => Promise<PushResult>;
   pull: (opts?: { force?: boolean }) => Promise<PullResult>;
 }
-
-function generateDiscriminator(): string {
-  const array = new Uint32Array(1);
-  crypto.getRandomValues(array);
-  return String(array[0] % 10000).padStart(4, '0');
-}
-
-/** Only the discriminator is retried on collision - usernames are shared by design (many people can be "ethan"). */
-const MAX_DISCRIMINATOR_ATTEMPTS = 5;
 
 /**
  * Pure status computation, no setState - lets both the mount effect and
@@ -58,15 +54,17 @@ const MAX_DISCRIMINATOR_ATTEMPTS = 5;
  * See docs/investigations/set-state-in-effect-lint-fix.md.
  */
 async function computeSyncStatus({
-  identifier,
+  syncUsername,
+  syncToken,
   effectivePushedAt,
   effectivePulledAt,
 }: {
-  identifier: string | null;
+  syncUsername: string | null;
+  syncToken: string | null;
   effectivePushedAt: number | null;
   effectivePulledAt: number | null;
 }): Promise<SyncStatus> {
-  if (!identifier) {
+  if (!syncUsername || !syncToken) {
     return 'never-synced';
   }
 
@@ -78,7 +76,7 @@ async function computeSyncStatus({
     const [teamsDb, battlesDb, remote] = await Promise.all([
       window.electron.readTeamsDatabase() as Promise<TeamsDatabase | null>,
       window.electron.readBattlesDatabase() as Promise<BattlesDatabase | null>,
-      pullSyncData(identifier).catch(() => null),
+      pullSyncData(syncUsername, syncToken).catch(() => null),
     ]);
 
     const localModifiedAt = Math.max(teamsDb?.lastModified ?? 0, battlesDb?.lastModified ?? 0);
@@ -101,7 +99,7 @@ export function useSync(
   battlesState: UseBattlesReturn
 ): UseSyncReturn {
   const { settings, updateSettings } = settingsState;
-  const { syncIdentifier, lastPushedAt, lastPulledAt } = settings;
+  const { syncUsername, syncToken, lastPushedAt, lastPulledAt } = settings;
 
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -111,7 +109,7 @@ export function useSync(
    * Best-effort status refresh: one local disk read (for "do I have
    * unpushed local edits") plus one remote peek fetch (for "does the
    * remote have data I haven't pulled") - not a poll loop, only run on
-   * mount and right after an identifier is set up or a push/pull completes.
+   * mount and right after login/signup or a push/pull completes.
    */
   const refreshStatus = useCallback(async (overrides?: {
     lastPushedAt?: number | null;
@@ -125,9 +123,9 @@ export function useSync(
     // (e.g. "Never synced" right after a successful first Push).
     const effectivePushedAt = overrides?.lastPushedAt !== undefined ? overrides.lastPushedAt : lastPushedAt;
     const effectivePulledAt = overrides?.lastPulledAt !== undefined ? overrides.lastPulledAt : lastPulledAt;
-    const result = await computeSyncStatus({ identifier: syncIdentifier, effectivePushedAt, effectivePulledAt });
+    const result = await computeSyncStatus({ syncUsername, syncToken, effectivePushedAt, effectivePulledAt });
     setStatus(result);
-  }, [syncIdentifier, lastPushedAt, lastPulledAt]);
+  }, [syncUsername, syncToken, lastPushedAt, lastPulledAt]);
 
   // Mount-only refresh, inlined (rather than calling refreshStatus by
   // reference) to match React's accepted fetch-in-effect shape - an effect
@@ -140,7 +138,8 @@ export function useSync(
     let ignore = false;
     (async () => {
       const result = await computeSyncStatus({
-        identifier: syncIdentifier,
+        syncUsername,
+        syncToken,
         effectivePushedAt: lastPushedAt,
         effectivePulledAt: lastPulledAt,
       });
@@ -152,66 +151,64 @@ export function useSync(
       ignore = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [syncIdentifier]);
+  }, [syncUsername, syncToken]);
 
-  const createIdentifier = useCallback(async (username: string) => {
-    const sanitized = username.trim().replace(/#.*$/, '');
-    if (!/^[a-zA-Z0-9_]{2,32}$/.test(sanitized)) {
+  const signUp = useCallback(async (username: string, password: string, email?: string) => {
+    const trimmedUsername = username.trim();
+    if (!USERNAME_PATTERN.test(trimmedUsername)) {
       return { ok: false as const, message: 'Username must be 2-32 letters, numbers, or underscores' };
     }
-
-    // Usernames aren't unique on their own (many people can be "ethan") -
-    // only the full username#XXXX combination needs to be free. The Worker
-    // has no separate "taken identifiers" registry, so "does this exact
-    // identifier already have data pushed to it" (a plain GET) is the only
-    // available signal - re-roll just the discriminator on a collision.
-    let identifier: string | null = null;
-    for (let attempt = 0; attempt < MAX_DISCRIMINATOR_ATTEMPTS; attempt++) {
-      const candidate = `${sanitized}#${generateDiscriminator()}`;
-      try {
-        const existing = await pullSyncData(candidate);
-        if (!existing) {
-          identifier = candidate;
-          break;
-        }
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'Could not verify identifier availability';
-        return { ok: false as const, message };
-      }
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      return { ok: false as const, message: `Password must be at least ${MIN_PASSWORD_LENGTH} characters` };
     }
 
-    if (!identifier) {
-      return { ok: false as const, message: 'Could not find a free identifier for that username - try a different username' };
+    let token: string;
+    try {
+      ({ token } = await signup(trimmedUsername, password, email));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Sign up failed';
+      return { ok: false as const, message };
     }
 
-    const success = await updateSettings({ syncIdentifier: identifier, lastPushedAt: null, lastPulledAt: null });
+    const success = await updateSettings({ syncUsername: trimmedUsername, syncToken: token, lastPushedAt: null, lastPulledAt: null });
     if (!success) {
-      return { ok: false as const, message: 'Failed to save sync identifier' };
+      return { ok: false as const, message: 'Failed to save sync credentials' };
     }
     return { ok: true as const };
   }, [updateSettings]);
 
-  const pairExistingIdentifier = useCallback(async (identifier: string) => {
-    const trimmed = identifier.trim();
-    if (!IDENTIFIER_PATTERN.test(trimmed)) {
-      return { ok: false as const, message: 'Expected the exact "username#XXXX" identifier from your other device' };
+  const logIn = useCallback(async (username: string, password: string) => {
+    const trimmedUsername = username.trim();
+    if (!trimmedUsername || !password) {
+      return { ok: false as const, message: 'Username and password are required' };
     }
 
-    const success = await updateSettings({ syncIdentifier: trimmed, lastPushedAt: null, lastPulledAt: null });
+    let token: string;
+    try {
+      ({ token } = await login(trimmedUsername, password));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Log in failed';
+      return { ok: false as const, message };
+    }
+
+    const success = await updateSettings({ syncUsername: trimmedUsername, syncToken: token, lastPushedAt: null, lastPulledAt: null });
     if (!success) {
-      return { ok: false as const, message: 'Failed to save sync identifier' };
+      return { ok: false as const, message: 'Failed to save sync credentials' };
     }
     return { ok: true as const };
   }, [updateSettings]);
 
-  const forgetIdentifier = useCallback(async (): Promise<void> => {
-    await updateSettings({ syncIdentifier: null, lastPushedAt: null, lastPulledAt: null });
+  const logOut = useCallback(async (): Promise<void> => {
+    // Client-side only, same as before: this device's token simply stops
+    // being used locally. Other signed-in devices are unaffected, and there's
+    // no server-side revoke endpoint in this leg.
+    await updateSettings({ syncUsername: null, syncToken: null, lastPushedAt: null, lastPulledAt: null });
     setStatus('never-synced');
   }, [updateSettings]);
 
   const push = useCallback(async (opts?: { force?: boolean }): Promise<PushResult> => {
-    if (!syncIdentifier) {
-      return { ok: false, reason: 'error', message: 'No sync identifier set up yet' };
+    if (!syncUsername || !syncToken) {
+      return { ok: false, reason: 'error', message: 'Not signed in to sync yet' };
     }
 
     setIsBusy(true);
@@ -219,7 +216,7 @@ export function useSync(
 
     try {
       if (!opts?.force) {
-        const remote = await pullSyncData(syncIdentifier);
+        const remote = await pullSyncData(syncUsername, syncToken);
         // Compared against whichever of lastPushedAt/lastPulledAt is more
         // recent, not lastPulledAt alone - this device's own earlier Push
         // already means it has "seen" that data, so pushing again from the
@@ -237,7 +234,7 @@ export function useSync(
         savedAt: Date.now(),
       };
 
-      await pushSyncData(syncIdentifier, payload);
+      await pushSyncData(syncUsername, syncToken, payload);
       await updateSettings({ lastPushedAt: payload.savedAt });
       await refreshStatus({ lastPushedAt: payload.savedAt });
       return { ok: true };
@@ -248,11 +245,11 @@ export function useSync(
     } finally {
       setIsBusy(false);
     }
-  }, [syncIdentifier, lastPushedAt, lastPulledAt, teamsState.teams, battlesState.battles, updateSettings, refreshStatus]);
+  }, [syncUsername, syncToken, lastPushedAt, lastPulledAt, teamsState.teams, battlesState.battles, updateSettings, refreshStatus]);
 
   const pull = useCallback(async (opts?: { force?: boolean }): Promise<PullResult> => {
-    if (!syncIdentifier) {
-      return { ok: false, reason: 'error', message: 'No sync identifier set up yet' };
+    if (!syncUsername || !syncToken) {
+      return { ok: false, reason: 'error', message: 'Not signed in to sync yet' };
     }
 
     setIsBusy(true);
@@ -270,9 +267,9 @@ export function useSync(
         }
       }
 
-      const remote = await pullSyncData(syncIdentifier);
+      const remote = await pullSyncData(syncUsername, syncToken);
       if (!remote) {
-        return { ok: false, reason: 'error', message: 'No data found for this identifier yet' };
+        return { ok: false, reason: 'error', message: 'No data found for this account yet' };
       }
 
       const teamsDb: TeamsDatabase = { version: 1, teams: remote.teams, lastModified: Date.now() };
@@ -292,18 +289,18 @@ export function useSync(
     } finally {
       setIsBusy(false);
     }
-  }, [syncIdentifier, lastPushedAt, teamsState, battlesState, updateSettings, refreshStatus]);
+  }, [syncUsername, syncToken, lastPushedAt, teamsState, battlesState, updateSettings, refreshStatus]);
 
   return {
-    syncIdentifier,
+    syncUsername,
     lastPushedAt,
     lastPulledAt,
     isBusy,
     error,
     status,
-    createIdentifier,
-    pairExistingIdentifier,
-    forgetIdentifier,
+    signUp,
+    logIn,
+    logOut,
     push,
     pull,
   };

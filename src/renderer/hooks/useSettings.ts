@@ -29,7 +29,8 @@ const CHAMPIONS_DATA_CHECKS_DEFAULT: AppSettings['championsDataChecks'] = {
 const DEFAULT_SETTINGS: AppSettings = {
   version: 1,
   defaultRegulation: 'Reg M-A',
-  syncIdentifier: null,
+  syncUsername: null,
+  syncToken: null,
   lastPushedAt: null,
   lastPulledAt: null,
   lastSeasonDataCheckedAt: null,
@@ -142,7 +143,7 @@ export function useSettings(): UseSettingsReturn {
 
   /**
    * Generic multi-field update, used by the sync feature to persist
-   * syncIdentifier/lastPushedAt/lastPulledAt together in one write
+   * syncUsername/syncToken/lastPushedAt/lastPulledAt together in one write
    */
   const updateSettings = useCallback(async (
     partial: Partial<Omit<AppSettings, 'version' | 'lastModified'>>

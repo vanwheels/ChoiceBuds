@@ -10,7 +10,7 @@ describe('useSettings', () => {
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.settings.defaultRegulation).toBe('Reg M-A');
-    expect(result.current.settings.syncIdentifier).toBeNull();
+    expect(result.current.settings.syncUsername).toBeNull();
     expect(result.current.error).toBeNull();
   });
 
@@ -25,7 +25,7 @@ describe('useSettings', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.settings.defaultRegulation).toBe('Reg M-B');
-    expect(result.current.settings.syncIdentifier).toBeNull(); // backfilled from defaults
+    expect(result.current.settings.syncUsername).toBeNull(); // backfilled from defaults
     expect(result.current.settings.lastModified).toBe(12345); // real field preserved, not overwritten
   });
 
@@ -76,10 +76,10 @@ describe('useSettings', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {
-      await result.current.updateSettings({ syncIdentifier: 'trainer#1234', lastPushedAt: 999 });
+      await result.current.updateSettings({ syncUsername: 'trainer', lastPushedAt: 999 });
     });
 
-    expect(result.current.settings.syncIdentifier).toBe('trainer#1234');
+    expect(result.current.settings.syncUsername).toBe('trainer');
     expect(result.current.settings.lastPushedAt).toBe(999);
     expect(window.electron.writeSettings).toHaveBeenCalledTimes(1);
   });

@@ -7,12 +7,16 @@ import type { UseBattlesReturn } from './useBattles';
 import type { AppSettings, Team } from '../types/pokemon';
 
 vi.mock('../services/syncApi', () => ({
+  signup: vi.fn(),
+  login: vi.fn(),
   pushSyncData: vi.fn(),
   pullSyncData: vi.fn(),
 }));
 
-import { pushSyncData, pullSyncData } from '../services/syncApi';
+import { signup, login, pushSyncData, pullSyncData } from '../services/syncApi';
 
+const mockedSignup = vi.mocked(signup);
+const mockedLogin = vi.mocked(login);
 const mockedPush = vi.mocked(pushSyncData);
 const mockedPull = vi.mocked(pullSyncData);
 
@@ -25,7 +29,8 @@ function makeSettings(overrides: Partial<AppSettings> = {}): AppSettings {
   return {
     version: 1,
     defaultRegulation: 'Reg M-A',
-    syncIdentifier: null,
+    syncUsername: null,
+    syncToken: null,
     lastPushedAt: null,
     lastPulledAt: null,
     lastSeasonDataCheckedAt: null,
@@ -91,18 +96,20 @@ function setup(settingsOverrides: Partial<AppSettings> = {}) {
 
 describe('useSync', () => {
   beforeEach(() => {
+    mockedSignup.mockReset();
+    mockedLogin.mockReset();
     mockedPush.mockReset().mockResolvedValue(undefined);
     mockedPull.mockReset().mockResolvedValue(null);
   });
 
   describe('status', () => {
-    it('is never-synced with no identifier configured', async () => {
+    it('is never-synced with no account signed in', async () => {
       const { result } = setup();
       await waitFor(() => expect(result.current.status).toBe('never-synced'));
     });
 
-    it('is never-synced when an identifier exists but nothing has ever been pushed or pulled', async () => {
-      const { result } = setup({ syncIdentifier: 'ethan#1234' });
+    it('is never-synced when signed in but nothing has ever been pushed or pulled', async () => {
+      const { result } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
       await waitFor(() => expect(result.current.status).toBe('never-synced'));
       expect(mockedPull).not.toHaveBeenCalled(); // both-null short-circuits before any network call
     });
@@ -113,7 +120,7 @@ describe('useSync', () => {
       vi.mocked(window.electron.readBattlesDatabase).mockResolvedValue({ version: 1, battles: [], lastModified: now - 5000 });
       mockedPull.mockResolvedValue({ teams: [], battles: [], savedAt: now - 5000 });
 
-      const { result } = setup({ syncIdentifier: 'ethan#1234', lastPushedAt: now, lastPulledAt: now });
+      const { result } = setup({ syncUsername: 'ethan', syncToken: 'tok', lastPushedAt: now, lastPulledAt: now });
       await waitFor(() => expect(result.current.status).toBe('up-to-date'));
     });
 
@@ -121,7 +128,7 @@ describe('useSync', () => {
       const now = Date.now();
       mockedPull.mockResolvedValue({ teams: [], battles: [], savedAt: now + 10_000 });
 
-      const { result } = setup({ syncIdentifier: 'ethan#1234', lastPushedAt: now, lastPulledAt: now });
+      const { result } = setup({ syncUsername: 'ethan', syncToken: 'tok', lastPushedAt: now, lastPulledAt: now });
       await waitFor(() => expect(result.current.status).toBe('unpulled-changes'));
     });
 
@@ -129,7 +136,7 @@ describe('useSync', () => {
       const now = Date.now();
       vi.mocked(window.electron.readTeamsDatabase).mockResolvedValue({ version: 1, teams: [], lastModified: now + 10_000 });
 
-      const { result } = setup({ syncIdentifier: 'ethan#1234', lastPushedAt: now, lastPulledAt: now });
+      const { result } = setup({ syncUsername: 'ethan', syncToken: 'tok', lastPushedAt: now, lastPulledAt: now });
       await waitFor(() => expect(result.current.status).toBe('unpushed-changes'));
     });
 
@@ -137,158 +144,160 @@ describe('useSync', () => {
       vi.mocked(window.electron.readTeamsDatabase).mockRejectedValue(new Error('disk error'));
       const now = Date.now();
 
-      const { result } = setup({ syncIdentifier: 'ethan#1234', lastPushedAt: now, lastPulledAt: now });
+      const { result } = setup({ syncUsername: 'ethan', syncToken: 'tok', lastPushedAt: now, lastPulledAt: now });
       await waitFor(() => expect(window.electron.readTeamsDatabase).toHaveBeenCalled());
       await waitFor(() => expect(result.current.status).toBe('unknown'));
       expect(result.current.error).toBeNull(); // status-refresh failures are silent, not surfaced as the sync error
     });
   });
 
-  describe('createIdentifier', () => {
+  describe('signUp', () => {
     it('rejects a malformed username without touching the network', async () => {
       const { result } = setup();
 
       let outcome;
       await act(async () => {
-        outcome = await result.current.createIdentifier('a');
+        outcome = await result.current.signUp('a', 'password123');
       });
 
       expect(outcome).toEqual({ ok: false, message: expect.stringContaining('2-32 letters') });
-      expect(mockedPull).not.toHaveBeenCalled();
+      expect(mockedSignup).not.toHaveBeenCalled();
     });
 
-    it('sanitizes a pasted "name#XXXX" down to the username and pairs a free discriminator', async () => {
-      mockedPull.mockResolvedValue(null); // no existing data under any candidate - always available
+    it('rejects a too-short password without touching the network', async () => {
+      const { result } = setup();
+
+      let outcome;
+      await act(async () => {
+        outcome = await result.current.signUp('ethan', 'short');
+      });
+
+      expect(outcome).toEqual({ ok: false, message: expect.stringContaining('at least 8 characters') });
+      expect(mockedSignup).not.toHaveBeenCalled();
+    });
+
+    it('signs up and persists the returned token', async () => {
+      mockedSignup.mockResolvedValue({ token: 'new-token' });
       const { result, updateSettings } = setup();
 
       let outcome;
       await act(async () => {
-        outcome = await result.current.createIdentifier('ethan#9999');
+        outcome = await result.current.signUp('ethan', 'password123', 'ethan@example.com');
       });
 
       expect(outcome).toEqual({ ok: true });
-      expect(mockedPull).toHaveBeenCalledWith(expect.stringMatching(/^ethan#\d{4}$/));
+      expect(mockedSignup).toHaveBeenCalledWith('ethan', 'password123', 'ethan@example.com');
       expect(updateSettings).toHaveBeenCalledWith({
-        syncIdentifier: expect.stringMatching(/^ethan#\d{4}$/),
+        syncUsername: 'ethan',
+        syncToken: 'new-token',
         lastPushedAt: null,
         lastPulledAt: null,
       });
     });
 
-    it('re-rolls just the discriminator when the first candidate collides', async () => {
-      mockedPull
-        .mockResolvedValueOnce({ teams: [], battles: [], savedAt: 1 }) // first candidate taken
-        .mockResolvedValueOnce(null); // second candidate free
+    it('surfaces the server error when signup fails (e.g. username taken)', async () => {
+      mockedSignup.mockRejectedValueOnce(new Error('Username is already taken'));
       const { result, updateSettings } = setup();
 
       let outcome;
       await act(async () => {
-        outcome = await result.current.createIdentifier('ethan');
+        outcome = await result.current.signUp('ethan', 'password123');
       });
 
-      expect(outcome).toEqual({ ok: true });
-      expect(mockedPull).toHaveBeenCalledTimes(2);
-      const [firstCandidate] = mockedPull.mock.calls[0];
-      const [secondCandidate] = mockedPull.mock.calls[1];
-      expect(secondCandidate).not.toBe(firstCandidate);
-      expect(updateSettings).toHaveBeenCalledWith(expect.objectContaining({ syncIdentifier: secondCandidate }));
-    });
-
-    it('gives up after exhausting every discriminator attempt', async () => {
-      mockedPull.mockResolvedValue({ teams: [], battles: [], savedAt: 1 }); // every candidate always taken
-      const { result, updateSettings } = setup();
-
-      let outcome;
-      await act(async () => {
-        outcome = await result.current.createIdentifier('ethan');
-      });
-
-      expect(outcome).toEqual({ ok: false, message: expect.stringContaining('Could not find a free identifier') });
-      expect(mockedPull).toHaveBeenCalledTimes(5); // MAX_DISCRIMINATOR_ATTEMPTS
+      expect(outcome).toEqual({ ok: false, message: 'Username is already taken' });
       expect(updateSettings).not.toHaveBeenCalled();
     });
 
-    it('surfaces the error message when checking availability throws', async () => {
-      mockedPull.mockRejectedValueOnce(new Error('sync server unreachable'));
-      const { result, updateSettings } = setup();
-
-      let outcome;
-      await act(async () => {
-        outcome = await result.current.createIdentifier('ethan');
-      });
-
-      expect(outcome).toEqual({ ok: false, message: 'sync server unreachable' });
-      expect(updateSettings).not.toHaveBeenCalled();
-    });
-
-    it('reports failure without changing status when persisting the new identifier fails', async () => {
-      mockedPull.mockResolvedValue(null);
+    it('reports failure without changing status when persisting the new credentials fails', async () => {
+      mockedSignup.mockResolvedValue({ token: 'new-token' });
       const { result, updateSettings } = setup();
       updateSettings.mockResolvedValueOnce(false);
 
       let outcome;
       await act(async () => {
-        outcome = await result.current.createIdentifier('ethan');
+        outcome = await result.current.signUp('ethan', 'password123');
       });
 
-      expect(outcome).toEqual({ ok: false, message: 'Failed to save sync identifier' });
+      expect(outcome).toEqual({ ok: false, message: 'Failed to save sync credentials' });
     });
   });
 
-  describe('pairExistingIdentifier', () => {
-    it('rejects an identifier not shaped like "username#XXXX"', async () => {
+  describe('logIn', () => {
+    it('rejects an empty username or password without touching the network', async () => {
       const { result, updateSettings } = setup();
 
       let outcome;
       await act(async () => {
-        outcome = await result.current.pairExistingIdentifier('not-an-identifier');
+        outcome = await result.current.logIn('', '');
       });
 
-      expect(outcome).toEqual({ ok: false, message: expect.stringContaining('exact "username#XXXX"') });
+      expect(outcome).toEqual({ ok: false, message: expect.stringContaining('required') });
+      expect(mockedLogin).not.toHaveBeenCalled();
       expect(updateSettings).not.toHaveBeenCalled();
     });
 
-    it('trims and persists a validly-shaped identifier', async () => {
+    it('trims the username and persists the returned token', async () => {
+      mockedLogin.mockResolvedValue({ token: 'device-2-token' });
       const { result, updateSettings } = setup();
 
       let outcome;
       await act(async () => {
-        outcome = await result.current.pairExistingIdentifier('  ethan#1234  ');
+        outcome = await result.current.logIn('  ethan  ', 'password123');
       });
 
       expect(outcome).toEqual({ ok: true });
-      expect(updateSettings).toHaveBeenCalledWith({ syncIdentifier: 'ethan#1234', lastPushedAt: null, lastPulledAt: null });
+      expect(mockedLogin).toHaveBeenCalledWith('ethan', 'password123');
+      expect(updateSettings).toHaveBeenCalledWith({
+        syncUsername: 'ethan',
+        syncToken: 'device-2-token',
+        lastPushedAt: null,
+        lastPulledAt: null,
+      });
     });
 
-    it('reports failure when persisting the paired identifier fails', async () => {
+    it('surfaces the server error when login fails', async () => {
+      mockedLogin.mockRejectedValueOnce(new Error('Invalid username or password'));
+      const { result, updateSettings } = setup();
+
+      let outcome;
+      await act(async () => {
+        outcome = await result.current.logIn('ethan', 'wrong-password');
+      });
+
+      expect(outcome).toEqual({ ok: false, message: 'Invalid username or password' });
+      expect(updateSettings).not.toHaveBeenCalled();
+    });
+
+    it('reports failure when persisting the logged-in credentials fails', async () => {
+      mockedLogin.mockResolvedValue({ token: 'device-2-token' });
       const { result, updateSettings } = setup();
       updateSettings.mockResolvedValueOnce(false);
 
       let outcome;
       await act(async () => {
-        outcome = await result.current.pairExistingIdentifier('ethan#1234');
+        outcome = await result.current.logIn('ethan', 'password123');
       });
 
-      expect(outcome).toEqual({ ok: false, message: 'Failed to save sync identifier' });
+      expect(outcome).toEqual({ ok: false, message: 'Failed to save sync credentials' });
     });
   });
 
-  describe('forgetIdentifier', () => {
-    it('clears the identifier/timestamps and resets status to never-synced', async () => {
-      const { result, updateSettings } = setup({ syncIdentifier: 'ethan#1234', lastPushedAt: Date.now(), lastPulledAt: Date.now() });
+  describe('logOut', () => {
+    it('clears the account/token/timestamps and resets status to never-synced', async () => {
+      const { result, updateSettings } = setup({ syncUsername: 'ethan', syncToken: 'tok', lastPushedAt: Date.now(), lastPulledAt: Date.now() });
       await waitFor(() => expect(result.current.status).not.toBe('unknown')); // let the mount-time status refresh settle first
 
       await act(async () => {
-        await result.current.forgetIdentifier();
+        await result.current.logOut();
       });
 
-      expect(updateSettings).toHaveBeenCalledWith({ syncIdentifier: null, lastPushedAt: null, lastPulledAt: null });
+      expect(updateSettings).toHaveBeenCalledWith({ syncUsername: null, syncToken: null, lastPushedAt: null, lastPulledAt: null });
       expect(result.current.status).toBe('never-synced');
     });
   });
 
   describe('push', () => {
-    it('errors immediately when no identifier is set up', async () => {
+    it('errors immediately when not signed in', async () => {
       const { result } = setup();
 
       let outcome;
@@ -296,14 +305,14 @@ describe('useSync', () => {
         outcome = await result.current.push();
       });
 
-      expect(outcome).toEqual({ ok: false, reason: 'error', message: 'No sync identifier set up yet' });
+      expect(outcome).toEqual({ ok: false, reason: 'error', message: 'Not signed in to sync yet' });
       expect(mockedPush).not.toHaveBeenCalled();
     });
 
     it('refuses to push when the remote has data this device has not seen', async () => {
       const now = Date.now();
       mockedPull.mockResolvedValue({ teams: [], battles: [], savedAt: now + 10_000 });
-      const { result } = setup({ syncIdentifier: 'ethan#1234', lastPushedAt: now, lastPulledAt: now });
+      const { result } = setup({ syncUsername: 'ethan', syncToken: 'tok', lastPushedAt: now, lastPulledAt: now });
 
       let outcome;
       await act(async () => {
@@ -319,7 +328,7 @@ describe('useSync', () => {
       // would be refused with needs-pull-first (proven by the test above) -
       // force must succeed anyway, proving the check itself was never applied.
       mockedPull.mockResolvedValue({ teams: [], battles: [], savedAt: Date.now() + 999_999 });
-      const { result, updateSettings } = setup({ syncIdentifier: 'ethan#1234' });
+      const { result, updateSettings } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
 
       let outcome;
       await act(async () => {
@@ -332,7 +341,7 @@ describe('useSync', () => {
     });
 
     it('pushes the current teams/battles snapshot and records lastPushedAt', async () => {
-      const { result, updateSettings, teamsState, battlesState } = setup({ syncIdentifier: 'ethan#1234' });
+      const { result, updateSettings, teamsState, battlesState } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
 
       let outcome;
       await act(async () => {
@@ -340,7 +349,7 @@ describe('useSync', () => {
       });
 
       expect(outcome).toEqual({ ok: true });
-      expect(mockedPush).toHaveBeenCalledWith('ethan#1234', {
+      expect(mockedPush).toHaveBeenCalledWith('ethan', 'tok', {
         teams: teamsState.teams,
         battles: battlesState.battles,
         savedAt: expect.any(Number),
@@ -350,7 +359,7 @@ describe('useSync', () => {
 
     it('sets the error state and returns reason error when the push itself fails', async () => {
       mockedPush.mockRejectedValueOnce(new Error('push exploded'));
-      const { result } = setup({ syncIdentifier: 'ethan#1234' });
+      const { result } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
 
       let outcome;
       await act(async () => {
@@ -364,7 +373,7 @@ describe('useSync', () => {
   });
 
   describe('pull', () => {
-    it('errors immediately when no identifier is set up', async () => {
+    it('errors immediately when not signed in', async () => {
       const { result } = setup();
 
       let outcome;
@@ -372,12 +381,12 @@ describe('useSync', () => {
         outcome = await result.current.pull();
       });
 
-      expect(outcome).toEqual({ ok: false, reason: 'error', message: 'No sync identifier set up yet' });
+      expect(outcome).toEqual({ ok: false, reason: 'error', message: 'Not signed in to sync yet' });
     });
 
     it('refuses to pull when local data has changed since the last push', async () => {
       vi.mocked(window.electron.readTeamsDatabase).mockResolvedValue({ version: 1, teams: [], lastModified: 5000 });
-      const { result } = setup({ syncIdentifier: 'ethan#1234', lastPushedAt: 1000 });
+      const { result } = setup({ syncUsername: 'ethan', syncToken: 'tok', lastPushedAt: 1000 });
 
       let outcome;
       await act(async () => {
@@ -388,22 +397,22 @@ describe('useSync', () => {
       expect(window.electron.writeTeamsDatabase).not.toHaveBeenCalled();
     });
 
-    it('reports an error when the identifier has no data pushed yet', async () => {
+    it('reports an error when the account has no data pushed yet', async () => {
       mockedPull.mockResolvedValueOnce(null);
-      const { result } = setup({ syncIdentifier: 'ethan#1234' });
+      const { result } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
 
       let outcome;
       await act(async () => {
         outcome = await result.current.pull();
       });
 
-      expect(outcome).toEqual({ ok: false, reason: 'error', message: 'No data found for this identifier yet' });
+      expect(outcome).toEqual({ ok: false, reason: 'error', message: 'No data found for this account yet' });
     });
 
     it('writes down the remote payload, refreshes teams/battles, and records lastPulledAt', async () => {
       const remoteTeam = makeTeam({ id: 'remote-team' });
       mockedPull.mockResolvedValueOnce({ teams: [remoteTeam], battles: [], savedAt: 42_000 });
-      const { result, updateSettings, refreshTeams, refreshBattles } = setup({ syncIdentifier: 'ethan#1234' });
+      const { result, updateSettings, refreshTeams, refreshBattles } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
 
       let outcome;
       await act(async () => {
@@ -420,7 +429,7 @@ describe('useSync', () => {
 
     it('sets the error state and returns reason error when the pull itself fails', async () => {
       mockedPull.mockRejectedValueOnce(new Error('pull exploded'));
-      const { result } = setup({ syncIdentifier: 'ethan#1234' });
+      const { result } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
 
       let outcome;
       await act(async () => {
