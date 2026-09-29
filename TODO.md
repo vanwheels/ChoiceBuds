@@ -59,7 +59,11 @@ PokeAPI. Web Version: Teams & Box MVP promoted to current milestone
 build legs (see `COMPLETED.md` and
 [docs/investigations/web-version-scope.md](docs/investigations/web-version-scope.md)).
 [Sync Accounts: Username + Password] — Leg 1 shipped the same day (see
-`COMPLETED.md`).
+`COMPLETED.md`). [Sync Data Model: Per-Record Merge & Auto Sync] — Leg 1
+shipped 2026-09-29 (see `COMPLETED.md`) — per its own note, this is the
+Worker deploy point: run `npx wrangler deploy` for both this leg's and the
+accounts leg's Worker changes together, then do the Existing Account
+Migration leg in the same window.
 
 ## Current Milestone: Web Version: Teams & Box MVP
 
@@ -70,30 +74,12 @@ follow-ons like password reset and public profile pages) is in
 [docs/investigations/web-version-scope.md](docs/investigations/web-version-scope.md) —
 item bodies below stay short and link back to it rather than repeating it.
 
-- **[Sync Data Model: Per-Record Merge & Auto Sync] — Leg 1** *(Last
-  touched: 2026-09-29 · Re-checks: 0)*
-  Add `updatedAt` timestamps + delete tombstones to `Team`/
-  `SavedPokemonEntry`, rework the Worker to merge per-record (last-write-
-  wins) instead of overwriting the whole blob, and wire `useSync.ts` to
-  trigger automatically (on mutation debounce, on reconnect, on an
-  interval) instead of the current manual push/pull button - keep a
-  manual "sync now" as a fallback. Ships for desktop alone; doesn't depend
-  on the web app existing.
-  Once this ships, it's the deploy point: run `npx wrangler deploy` for
-  both this leg's and the accounts leg's Worker changes together, then do
-  the Existing Account Migration leg in the same window (deploying without
-  migrating breaks every installed desktop client's sync immediately,
-  since the new accounts endpoints have no back-compat shim for the old
-  `username#XXXX` ones). Legs 4-7 below never touch the Worker again, so
-  there's no reason to wait for the rest of the milestone - remind Vanny
-  of this when this leg finishes.
-
 - **[Existing Account Migration] — Leg 1** *(Last touched: 2026-09-29 ·
   Re-checks: 0)*
   Unblocked now that Sync Accounts: Username + Password shipped (see
-  `COMPLETED.md`) - do this alongside the Worker deploy noted in the Sync
-  Data Model leg above, not standalone. One-off manual copy of the ~4-6
-  existing friends' `username#XXXX`-keyed KV blobs into their new
+  `COMPLETED.md`) - do this alongside the Worker deploy noted above (the
+  Sync Data Model leg's deploy point), not standalone. One-off manual copy
+  of the ~4-6 existing friends' `username#XXXX`-keyed KV blobs into their new
   accounts (a throwaway `wrangler kv` copy or small script per person,
   coordinated directly) - not a built feature.
 

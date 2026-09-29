@@ -18,6 +18,19 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Sync Data Model: Per-Record Merge & Auto Sync] — Leg 1** (2026-09-29) -
+  Replaced whole-blob push/pull (safe only because a human picked direction
+  by hand) with per-record last-write-wins merge on the Worker, keyed by each
+  record's existing `updatedAt` plus a new `SyncTombstone` (id + deletedAt)
+  per collection so a merge can tell "deleted on one side" apart from "never
+  seen there." Box (`SavedPokemonEntry`) joins sync for the first time.
+  `useSync` now runs automatically (sign-in/reconnect, a 5s post-mutation
+  debounce, a 5-minute fallback interval) instead of needing a manual
+  push/pull button, and moved from `SettingsPage` into `App.tsx` so those
+  triggers run from launch. Desktop-only - the Worker isn't deployed live
+  yet; see `TODO.md`'s note on this being the coordinated deploy point
+  alongside the accounts leg. See commit `8f8fffa`.
+
 - **[Sync Accounts: Username + Password] — Leg 1** (2026-09-29) - Replaced
   the `username#XXXX` shared-secret sync identifier with real username +
   password accounts on the Worker, authenticated per device via a
