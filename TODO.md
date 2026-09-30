@@ -316,6 +316,18 @@ pages/components need touch-friendly rework, breakpoints, tap targets vs.
 hover-dependent UI) once Web Version: Teams & Box MVP's feature set is
 stable enough to design against - deliberately not started now.
 
+General web content-area padding gap (flagged 2026-09-30 by Vanny during
+live verification of Battle Log & Statistics Parity): `AppWeb.tsx`'s
+`<main>` has no padding at all, unlike `App.tsx`'s desktop `<main>`
+(2rem/1.5rem inline styles), so ported pages render edge-to-edge in the
+browser - visible on the Battle Log page's card grid butting against the
+viewport edges. Distinct from the mobile-friendliness pass above (that one's
+about touch/breakpoints for phone-sized viewports; this is a plain desktop-
+browser layout gap). Not fixed now per Vanny's call to worry about it later
+- likely a quick fix (mirror `App.tsx`'s `<main>` padding) whenever a web UI
+polish pass happens, but worth confirming it doesn't collide with any
+page's own assumption that `<main>` has zero padding first.
+
 Teams tab search bar (proposed 2026-09-29): search for a specific Pokémon
 by name and surface which of the user's saved teams include it. Needs its
 own scoping pass (exact vs. partial name match, whether it also searches
