@@ -239,25 +239,43 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-- **[Sync Worker: Shared Free-Tier Capacity Ceiling] — Leg 1** *(Last
-  touched: 2026-09-30 · Re-checks: 0)*
-  Flagged during the debounce-loop fix below (see `COMPLETED.md`): the
-  shipped app hardcodes `SYNC_WORKER_URL` in `syncApi.ts` to Vanny's own
-  Worker (`choicebuds-sync.vanwheelstheman.workers.dev`), not a per-user
-  deployment - despite `worker/README.md` documenting a bring-your-own-
-  Worker model, nobody downloading the release installer is going to clone
-  the repo and deploy their own. Every signed-in user everywhere shares one
-  Cloudflare account's free-tier quota: Workers KV caps out at 1,000
-  writes/day, globally, not per-user. Even with the debounce-loop bug fixed
-  (was pushing every ~5s per open+signed-in client; now ~288 writes/day
-  baseline per idle device from the 5-min fallback poll, plus one per real
-  edit burst), a handful of friends leaving the app open simultaneously
-  already approaches that global cap. Needs Vanny's call on a direction
-  before scoping: Workers Paid plan (~$5/mo, removes the caps, keeps the
-  single-hosted-by-Vanny model), a configurable per-install Worker URL
-  (matches the README's original intent, shifts load onto whoever
-  self-hosts), or further cutting the idle poll to push the free-tier
-  ceiling out further without fixing the shared-quota problem itself.
+- **[Sync Worker: KV→R2 Hybrid Storage] — Leg 1** *(Last touched:
+  2026-09-30 · Re-checks: 0)*
+  Scoped 2026-09-30 (Vanny's call: R2 over a paid plan or a configurable
+  per-install URL). Root problem: `SYNC_WORKER_URL` is hardcoded in
+  `syncApi.ts` to Vanny's own Worker, so every signed-in user everywhere
+  shares one Cloudflare account's free-tier KV budget - 1,000 writes/day,
+  globally, not per-user (see the debounce-loop fix above for how close to
+  that this already got). Fix: move only the high-frequency
+  `sync:<username>` blob (the read-modify-write payload every push/pull
+  touches) from KV to an R2 bucket, whose free tier is ~1M writes/month
+  instead of 1,000/day. Leave `account:`/`tokens:`/`loginfail:`/
+  `signupthrottle:` on KV - low-volume, comfortably inside the cap, and
+  KV's `expirationTtl` is load-bearing for those (60s signup cooldown,
+  15-min login lockout) with no R2 equivalent.
+  Concrete steps: (1) `wrangler r2 bucket create`, add an `SYNC_R2` binding
+  to `wrangler.toml` alongside the existing `SYNC_KV` one; (2) in
+  `worker/src/index.ts`, repoint `handleSyncGet`/`handleSyncPut`'s
+  `syncKey(lowerUsername)` read/write at `env.SYNC_R2` instead of
+  `env.SYNC_KV`, and rework the write-throttle check (currently
+  `getWithMetadata`'s KV `metadata` param) onto R2's `customMetadata`
+  (string-only, so `receivedAt` needs stringifying); (3) on a GET/PUT where
+  R2 has no object yet, fall back to reading the account's existing KV
+  `sync:<username>` blob so already-signed-up accounts (Vanny's own data,
+  plus any friends already migrated per `[Existing Account Migration]`
+  above) land on R2 automatically on their next sync, no bulk-copy script -
+  same "deploy whenever, migrate people as they get to it" approach already
+  used for the accounts migration; (4) update `worker/README.md`'s data-
+  keys and Costs/limits sections to describe the split; (5) verify locally
+  via `wrangler dev` + curl (matches this file's existing no-HTTP-test-
+  harness precedent - not adding Miniflare test coverage as part of this
+  leg unless it turns out cheap once in progress); (6) `wrangler deploy` -
+  same bundled code+deploy shape as `[Sync Data Model: Per-Record Merge &
+  Auto Sync]` above. Bonus, not the point of this leg: R2 is strongly
+  consistent, unlike KV's eventual consistency, which should also close the
+  known race condition in `[Existing Account Migration]` above (confirm
+  live once deployed rather than assuming). No client-side changes -
+  `syncApi.ts` only ever talks to the Worker's HTTP API.
 
 - **[UI Shift Assessment Sweep — Post Card UI Polish] — Leg 1** *(Last
   touched: 2026-09-08 · Re-checks: 0)*
