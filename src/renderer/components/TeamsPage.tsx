@@ -127,8 +127,8 @@ export default function TeamsPage({
   return (
     <div className="h-full flex flex-col">
       {/* Header Control Bar */}
-      <header className="bg-zinc-800 border-b border-zinc-700 px-6 py-4" style={{ paddingLeft: '2rem', paddingRight: '2rem' }}>
-        <div className="flex items-center justify-between">
+      <header className="bg-zinc-800 border-b border-zinc-700 px-4 md:px-8 py-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div>
             <h2 className="text-2xl font-bold text-zinc-100">My Teams</h2>
             <p className="text-sm text-zinc-400 mt-1">
@@ -137,7 +137,7 @@ export default function TeamsPage({
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             {/* Browse Sample Teams Button - VGCPastes real-team catalog (TODO.md's VGCPastes Sample Team Catalog leg) */}
             <button
               onClick={() => setIsCatalogModalOpen(true)}
@@ -158,7 +158,7 @@ export default function TeamsPage({
         </div>
 
         {/* Format Filter Buttons */}
-        <div className="flex gap-2 mt-4" style={{ paddingLeft: '0.75rem', paddingRight: '0.75rem' }}>
+        <div className="flex gap-2 mt-4 flex-wrap">
           {filterButtons.map(filter => (
             <button
               key={filter}
@@ -189,7 +189,7 @@ export default function TeamsPage({
           the DOM ancestor chain and diffing scrollHeight/clientHeight per
           ancestor before/after opening the dropdown - this was the only one
           whose clientHeight was exceeded. */}
-      <div className="flex-1 overflow-y-auto px-8 py-6 @container" style={{ scrollbarGutter: 'stable' }} onContextMenu={handleContentContextMenu}>
+      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-6 @container" style={{ scrollbarGutter: 'stable' }} onContextMenu={handleContentContextMenu}>
         {teamsState.isLoading ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-zinc-400">Loading teams...</div>
@@ -210,7 +210,6 @@ export default function TeamsPage({
             values={orderedTeamIds}
             onReorder={setOrderedTeamIds}
             className="grid grid-cols-1 @[1700px]:grid-cols-2 gap-4 w-full"
-            style={{ paddingLeft: '2rem', paddingRight: '2rem' }}
           >
             {/* Responsive teams grid (carousel/grid rework leg 4, see TODO.md):
                 1 column by default, 2 once this wrapper's own @container width

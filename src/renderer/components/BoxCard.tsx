@@ -259,7 +259,7 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
           draggable={false}
           className="w-16 h-16 object-contain [image-rendering:pixelated]"
         />
-        {favoriteButton('absolute -top-1 -right-1 z-10 w-5 h-5 bg-zinc-800/90')}
+        {favoriteButton('absolute -top-1 -right-1 z-10 w-7 h-7 md:w-5 md:h-5 bg-zinc-800/90')}
       </div>
     );
 
@@ -342,7 +342,7 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
         <button
           onClick={onToggleExpand}
           title="Collapse"
-          className="absolute -top-2.5 -right-2.5 z-10 w-6 h-6 flex items-center justify-center rounded-full bg-zinc-800 border border-zinc-600 text-zinc-500 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer text-sm"
+          className="absolute -top-2.5 -right-2.5 z-10 w-8 h-8 md:w-6 md:h-6 flex items-center justify-center rounded-full bg-zinc-800 border border-zinc-600 text-zinc-500 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer text-sm"
         >
           ×
         </button>
@@ -357,7 +357,7 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
           <div
             onPointerDown={handleGripPointerDown}
             title="Drag to reorder"
-            className="absolute -top-2.5 -left-2.5 z-10 w-6 h-6 flex items-center justify-center rounded-full bg-zinc-800 border border-zinc-600 text-zinc-400 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-grab select-none"
+            className="absolute -top-2.5 -left-2.5 z-10 w-8 h-8 md:w-6 md:h-6 flex items-center justify-center rounded-full bg-zinc-800 border border-zinc-600 text-zinc-400 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-grab select-none"
           >
             <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
               <circle cx="9" cy="6" r="1.4" />
@@ -374,7 +374,7 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
             left is unclaimed in every sort mode (top-right is Collapse,
             top-left is the Custom-mode-only drag handle above), so favorite
             lives here instead of competing with the handle for top-left. */}
-        {favoriteButton('absolute -bottom-2.5 -left-2.5 z-10 w-6 h-6 border border-zinc-600 bg-zinc-800 hover:border-accent-gold')}
+        {favoriteButton('absolute -bottom-2.5 -left-2.5 z-10 w-8 h-8 md:w-6 md:h-6 border border-zinc-600 bg-zinc-800 hover:border-accent-gold')}
 
         {isRenaming ? (
           <input

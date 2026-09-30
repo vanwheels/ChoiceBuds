@@ -116,7 +116,7 @@ export default function TeamOverflowMenu({ team, rulesetId, onExport, onExportIm
         ref={triggerRef}
         onClick={() => setIsOpen(!isOpen)}
         title="More"
-        className={`w-8 h-8 flex items-center justify-center rounded-full text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 transition-colors cursor-pointer ${
+        className={`w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-full text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 transition-colors cursor-pointer ${
           isOpen ? 'bg-zinc-700 text-zinc-200' : ''
         }`}
       >

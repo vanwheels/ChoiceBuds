@@ -245,7 +245,7 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
         <button
           onClick={handleDelete}
           title="Remove from roster"
-          className="absolute -top-2.5 -right-2.5 z-10 w-6 h-6 flex items-center justify-center rounded-full bg-zinc-800 border border-zinc-600 text-zinc-500 hover:text-red-400 hover:border-red-500 transition-colors cursor-pointer text-sm"
+          className="absolute -top-2.5 -right-2.5 z-10 w-8 h-8 md:w-6 md:h-6 flex items-center justify-center rounded-full bg-zinc-800 border border-zinc-600 text-zinc-500 hover:text-red-400 hover:border-red-500 transition-colors cursor-pointer text-sm"
         >
           ×
         </button>

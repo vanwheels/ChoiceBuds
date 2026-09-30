@@ -329,8 +329,8 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
 
   return (
     <div className="h-full flex flex-col">
-      <header className="bg-zinc-800 border-b border-zinc-700 px-6 py-4" style={{ paddingLeft: '2rem', paddingRight: '2rem' }}>
-        <div className="flex items-center justify-between">
+      <header className="bg-zinc-800 border-b border-zinc-700 px-4 md:px-8 py-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div>
             <h2 className="text-2xl font-bold text-zinc-100">Box</h2>
             <p className="text-sm text-zinc-400 mt-1">
@@ -338,7 +338,7 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
             </p>
           </div>
 
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center flex-wrap">
             {/* Search (Box Tab: Search Leg 8, see TODO.md) - same '#tag'
                 chain SpeciesPickerCard.tsx's own search bar supports. */}
             <input
@@ -346,7 +346,7 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search builds... (#fire, #dragon dance, ...)"
-              className="w-64 px-3 py-2 text-sm text-white bg-zinc-700 border border-zinc-600 rounded-lg outline-none focus:border-accent-gold placeholder:text-zinc-500"
+              className="w-full md:w-64 px-3 py-2 text-sm text-white bg-zinc-700 border border-zinc-600 rounded-lg outline-none focus:border-accent-gold placeholder:text-zinc-500"
             />
 
             {/* Sort-mode toggle (Box Tab: Reorder Leg 7, see TODO.md) - same
@@ -369,7 +369,7 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-8 py-6" style={{ scrollbarGutter: 'stable' }}>
+      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-6" style={{ scrollbarGutter: 'stable' }}>
         {savedPokemonState.isLoading ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-zinc-400">Loading box...</div>

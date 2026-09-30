@@ -277,13 +277,17 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
           tooltips/popovers from expanded cards below are never cut off) */}
       <div
         onContextMenu={handleTeamContextMenu}
-        className="w-full flex flex-row items-center min-h-[116px] py-4 px-6 bg-zinc-950/40 rounded-t-xl transition-colors"
-        style={{ paddingLeft: '1.25rem', paddingRight: '1.25rem' }}
+        className="w-full flex flex-col md:flex-row md:items-center md:min-h-[116px] gap-3 md:gap-0 py-4 px-3 md:px-5 bg-zinc-950/40 rounded-t-xl transition-colors"
       >
         {/* Identity column (header/controls rework leg 2, see TODO.md) - regulation
             badge, team name, and author all moved here from the old far-right
-            button cluster, matching the approved mockup's left-column grouping. */}
-        <div className="flex flex-col gap-1 min-w-[190px] max-w-[190px] shrink-0">
+            button cluster, matching the approved mockup's left-column grouping.
+            Full width and its own stacked row below `md` (Responsive Layout
+            Audit: Teams & Box Leg 1, see TODO.md) - the fixed 190px column
+            this row shares with the sprite strip/controls pill has no room on
+            a phone viewport, so below `md` each of the three becomes its own
+            full-width row instead. */}
+        <div className="flex flex-col gap-1 w-full md:min-w-[190px] md:max-w-[190px] md:shrink-0">
           <RegulationBadge team={team} onChange={(format) => updateTeam(team.id, { format })} />
 
           {/* Team name - permanently editable (Always-On Editing Leg 1, see
@@ -354,9 +358,13 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
             content width (6 * 56px + 5 * 8px gaps = 376px) is well past the
             coverflow's old fixed 240px box that TeamsPage.tsx's 2-column
             breakpoint comment measured its floor against - that breakpoint
-            hasn't been re-verified live against this new width. */}
-        <div className="flex-1 flex items-center justify-center">
-          <div className="flex flex-row items-center gap-2">
+            hasn't been re-verified live against this new width. flex-wrap
+            below `md` (Responsive Layout Audit: Teams & Box Leg 1, see
+            TODO.md) - even a full-width mobile row isn't reliably wide
+            enough for the strip's 376px content, so it wraps into 2 rows of
+            3 there instead of overflowing. */}
+        <div className="w-full md:flex-1 flex items-center justify-center">
+          <div className="flex flex-row items-center gap-2 flex-wrap justify-center">
             {Array.from({ length: 6 }, (_, idx) => team.pokemon?.[idx]).map((p, idx) => {
               if (!p) return <div key={idx} className="w-14 h-14 shrink-0" />;
               // Same "own Mega Stone" gate PokemonCard.tsx's main sprite
@@ -402,8 +410,11 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
             swap, and add-Pokemon get theirs down in the roster grid instead,
             since they're per-Pokemon/per-slot rather than team-level.
             Everything else (Validate/Export/Export Image/Export PDF/Delete)
-            still lives in TeamOverflowMenu.tsx's "⋮" dropdown. */}
-        <div className="flex items-center gap-0.5 bg-zinc-800 border border-zinc-700 rounded-full p-1 shrink-0">
+            still lives in TeamOverflowMenu.tsx's "⋮" dropdown. Centered as
+            its own full-width row below `md` (Responsive Layout Audit:
+            Teams & Box Leg 1, see TODO.md), same stacking as the identity
+            column/sprite strip above it. */}
+        <div className="flex items-center justify-center md:justify-start gap-0.5 bg-zinc-800 border border-zinc-700 rounded-full p-1 w-full md:w-auto shrink-0">
           {/* Favorite toggle (Favorite Teams, see TODO.md) - favorited teams
               always sort to the top of the Teams page (TeamsPage.tsx's own
               sort), independent of the drag-reorder position setTeamOrder
@@ -413,7 +424,7 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
           <button
             onClick={() => updateTeam(team.id, { favorite: !team.favorite })}
             title={team.favorite ? 'Unfavorite' : 'Favorite'}
-            className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors cursor-pointer ${
+            className={`w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-full transition-colors cursor-pointer ${
               team.favorite ? 'text-accent-gold hover:text-accent-gold-deep' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700'
             }`}
           >
@@ -436,7 +447,7 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
           <div
             onPointerDown={handleGripPointerDown}
             title={canReorder ? 'Drag to reorder' : 'Clear the format filter to reorder teams'}
-            className={`w-8 h-8 flex items-center justify-center rounded-full text-zinc-400 transition-colors select-none ${
+            className={`w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-full text-zinc-400 transition-colors select-none ${
               canReorder ? 'hover:text-zinc-200 hover:bg-zinc-700 cursor-grab' : 'opacity-40 cursor-not-allowed'
             }`}
           >
@@ -463,7 +474,7 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
               // the collapse animation has actually finished.
               if (next) setIsFullWidth(true);
             }}
-            className={`w-8 h-8 flex items-center justify-center rounded-full text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 transition-colors cursor-pointer ${
+            className={`w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-full text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 transition-colors cursor-pointer ${
               isExpanded ? 'bg-zinc-700 text-zinc-200' : ''
             }`}
             title={isExpanded ? 'Collapse' : 'Expand'}
@@ -503,24 +514,32 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
             animate="expanded"
             exit="collapsed"
           >
-            <div className="p-6 border-t border-zinc-800/60 bg-zinc-900/10 rounded-b-xl">
-              {/* Two clean states, not a continuous reflow: 3 columns (2x3 for a full
-                  6-mon roster) until the container itself is wide enough, then snaps to
-                  6 (1x6). The original 1760px breakpoint (6*280px + 5*1rem gaps, treating
-                  280px as a hard requirement rather than PokemonCard's actual max-w-[280px]
-                  cap) was never reachable on a real laptop. Measured live via run-desktop
-                  (see TODO.md) on the reporter's actual setup - 14" MacBook, sidebar
-                  expanded (default), 2 real teams, single-column Teams-page layout - this
-                  grid only gets 1043px of real container width, well short of even a first
-                  attempted 1100px breakpoint. 1040px (a small margin under that measured
-                  number) is what's actually reachable there; cards land around ~160px wide
-                  at 6 columns, confirmed live to still clear PokemonCard's ~158px
-                  fixed-content floor (134px sprite box + padding) without squishing.
-                  Doesn't help a 13" MacBook (measured 818px there, sidebar expanded) - not
-                  a target device for this fix. @[1040px]: is a container-query variant
-                  (keyed off the @container ancestor above), not a viewport media query -
-                  unlike the old xl:grid-cols-6 this can't misfire from raw viewport width
-                  alone. */}
+            <div className="p-3 md:p-6 border-t border-zinc-800/60 bg-zinc-900/10 rounded-b-xl">
+              {/* Column-count tiers, not a continuous reflow: 1 column on a
+                  phone-narrow container, up through 2 and 3, until the
+                  container is wide enough to snap to 6 (1x6). The original
+                  1760px breakpoint (6*280px + 5*1rem gaps, treating 280px as
+                  a hard requirement rather than PokemonCard's actual
+                  max-w-[280px] cap) was never reachable on a real laptop.
+                  Measured live via run-desktop (see TODO.md) on the
+                  reporter's actual setup - 14" MacBook, sidebar expanded
+                  (default), 2 real teams, single-column Teams-page layout -
+                  this grid only gets 1043px of real container width, well
+                  short of even a first attempted 1100px breakpoint. 1040px
+                  (a small margin under that measured number) is what's
+                  actually reachable there; cards land around ~160px wide at
+                  6 columns, confirmed live to still clear PokemonCard's
+                  ~158px fixed-content floor (134px sprite box + padding)
+                  without squishing. Doesn't help a 13" MacBook (measured
+                  818px there, sidebar expanded) - not a target device for
+                  this fix. The 380px/600px tiers below (Responsive Layout
+                  Audit: Teams & Box Leg 1, see TODO.md) were measured the
+                  same way, live via run-desktop at a 375px phone viewport
+                  with the drawer nav closed, against the same ~158-280px
+                  PokemonCard footprint. @[Npx]: is a container-query variant
+                  (keyed off the @container ancestor above), not a viewport
+                  media query - unlike the old xl:grid-cols-6 this can't
+                  misfire from raw viewport width alone. */}
               {/* Reorder.Group (Touch Drag-and-Drop: Framer Motion Reorder Leg 1,
                   see TODO.md) replaces the old plain grid div - values are
                   pokemon ids (orderedPokemonIds above), not the pokemon objects
@@ -543,7 +562,7 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
                 axis="x"
                 values={orderedPokemonIds}
                 onReorder={setOrderedPokemonIds}
-                className="grid grid-cols-3 @[1040px]:grid-cols-6 gap-4 w-full"
+                className="grid grid-cols-1 @[380px]:grid-cols-2 @[600px]:grid-cols-3 @[1040px]:grid-cols-6 gap-4 w-full"
                 onContextMenu={handlePokemonAreaContextMenu}
               >
                 {orderedPokemonIds.map(id => {
