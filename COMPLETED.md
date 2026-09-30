@@ -18,6 +18,37 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Full Web Feature Parity: Scoping] — Leg 1** (2026-09-29) - Surveyed every
+  desktop-only tab (Battle Log, Statistics, Type Matchup, Speed Tiers,
+  Settings, Calc Popup) for actual `window.electron` dependencies rather than
+  assuming each needed its own storage-adapter port. Found Calc/Type
+  Matchup/Speed Tiers are already storage-adapter-clean (zero porting cost),
+  only `useBattles.ts` needs a real hook port, and Settings needs two small
+  `openExternal` fallbacks plus excluding the auto-update section (no web
+  equivalent). Also decided to replace `AppWeb.tsx`'s hand-rolled nav with
+  the real `Sidebar.tsx` now that the tab list is about to match desktop's.
+  Split into 5 build legs - see `TODO.md`'s Current Milestone section and
+  [docs/investigations/web-feature-parity-scope.md](docs/investigations/web-feature-parity-scope.md).
+
+- **Vanny's Own Account Migration** (2026-09-29) - Migrated Vanny's real
+  local data (17 teams, 31 battles, 8 saved Pokémon in
+  `%APPDATA%\choicebuds`) into his new `vanny` account. No code diff - his
+  installed app (v0.8.1) predates the accounts system, so the app was built
+  from source and launched with the real Electron binary (working around an
+  `ELECTRON_RUN_AS_NODE=1` env var leaking from Claude Code's own host
+  process into spawned child processes, which had been silently forcing
+  `npm run dev`'s Electron child to run as plain Node instead of a real
+  Electron app - unrelated to the `vite-plugin-electron`@1.1.0/`vite`@8.1.4
+  version mismatch also hit along the way, which independently breaks
+  `npm run dev`'s own Electron spawn and still needs a real fix, not done
+  here). Surfaced a real KV-consistency race live: a second device
+  (Vanny's own browser, freshly signed up with empty local state)
+  auto-synced moments after the real push and clobbered it by
+  read-modify-writing against a stale pre-push KV snapshot - recovered by
+  re-pushing directly against the Worker's `PUT /sync/:username` with the
+  browser tab closed. See `TODO.md`'s Existing Account Migration item for
+  the workaround and the open follow-up (not yet fixed).
+
 - **[Web Login/Signup UX] — Leg 1** (2026-09-29) - Wired `useSync`'s
   auto-sync into `AppWeb.tsx`, opt-in via a new sidebar "Sign in to sync"
   prompt that opens a dismissible `WebAuthScreen` modal - Teams/Box/the calc

@@ -100,34 +100,82 @@ is `v0.8.1` (`bd5a171`), which predates the accounts leg entirely, so every
 installed app today (including Vanny's own) is still on the old shared-
 secret push/pull UI regardless of what the Worker is running. Deploying the
 Worker now is fine (see the re-scoping note above), but the next app release
-is deliberately being held back until further into this milestone, so
-existing users transition straight from the old push/pull UI to a build
-that already has more of the web-sync story done, rather than a standalone
-release for just the accounts/merge changes. This means [Existing Account
-Migration] below is transitively blocked on that future release existing
-(nobody can sign up without the new SyncSection UI in an actual installed
-build) - not just on individual friends getting around to it.
+is deliberately being held back so existing users transition straight from
+the old push/pull UI to a build that already has more of the web-sync story
+done, rather than a standalone release for just the accounts/merge changes.
 
-## Current Milestone: Web Version: Teams & Box MVP
+Web Version: Teams & Box MVP milestone shipped 2026-09-29 (see
+`MILESTONES.md` and
+[docs/postmortems/web-version-teams-box-mvp.md](docs/postmortems/web-version-teams-box-mvp.md)),
+closed without waiting on [Existing Account Migration], which moved to
+`Blocked` below rather than holding the milestone open - it has no natural
+closing moment of its own (it's gated on friends messaging their IDs and on
+a future release, both outside this codebase), matching the lesson from
+Maintenance & Bug Fix Sweep's postmortem about not letting a `Blocked` item
+hold a milestone's `Current Milestone:` section open indefinitely.
 
-Minimum scope is Teams + Box working on the web with automatic account
-sync; the rest of the app's features come later as their own milestones.
-Full architecture reasoning (accounts, sync model, hosting, deferred
-follow-ons like password reset and public profile pages) is in
-[docs/investigations/web-version-scope.md](docs/investigations/web-version-scope.md) —
-item bodies below stay short and link back to it rather than repeating it.
+Full Web Feature Parity promoted to current milestone 2026-09-29 (Vanny's
+call), the natural next step on the web track now that Teams & Box MVP is
+live - continue porting the app's remaining features to the web build via
+the same hook-by-hook storage-adapter approach. Its own Scoping leg finished
+the same day, splitting into 5 build legs (see `COMPLETED.md` and
+[docs/investigations/web-feature-parity-scope.md](docs/investigations/web-feature-parity-scope.md)).
+Survey turned up less porting work than expected: `CalcPopup`/
+`TypeMatchupPage`/`SpeedTiersPage` have zero Electron dependency of their
+own (every hook they need is already storage-adapter-clean from Teams/Box
+Parity) - only Battle Log/Statistics need a real hook port
+(`useBattles.ts`). Also decided live during scoping: `AppWeb.tsx`'s
+hand-rolled 2-button nav gets replaced with the real `Sidebar.tsx` + `App.tsx`'s
+lazy-tab pattern now that the tab list is about to match desktop's, rather
+than continuing to grow a second nav implementation.
 
-- **[Existing Account Migration] — Leg 1** *(Last touched: 2026-09-29 ·
+## Current Milestone: Full Web Feature Parity
+
+Port the app's remaining features (beyond Teams/Box, already live) to the
+web build. Ordered so the nav-shell rework lands first (everything else
+plugs into it), then cheapest/most self-contained legs first. See the
+scoping doc linked above for the full survey behind this ordering.
+
+- **[Web Nav Shell: Adopt Sidebar.tsx] — Leg 1** *(Last touched: 2026-09-29 ·
   Re-checks: 0)*
-  Blocked: waiting on the next app release (see the note above this
-  milestone section) - no installed app has the Sign Up UI yet, so no
-  friend can create a new account to migrate into regardless of the Worker
-  being deployed. Once that release is out: per friend, once they've
-  signed up under the new username+password system, one-off manual copy of
-  their old `username#XXXX`-keyed KV blob into their new account (a
-  throwaway `wrangler kv` copy or small script), coordinated directly.
-  Trickles in as each of the ~4-6 friends gets around to signing up - not a
-  single all-at-once pass.
+  Rework `AppWeb.tsx` to use the real `Sidebar.tsx` component + `App.tsx`'s
+  lazy-load/visited-tabs pattern in place of its current hand-rolled
+  2-button nav. Still only Teams+Box functionally wired at the end of this
+  leg - pure shell/structure change, no new feature surface. `Sidebar.tsx`
+  has no Electron dependency (confirmed during scoping); it only
+  type-imports `ActiveTab` from `App.tsx`.
+
+- **[Web Calc & Matchup Tools Parity] — Leg 1** *(Last touched: 2026-09-29 ·
+  Re-checks: 0)*
+  Wire `CalcPopup`, `TypeMatchupPage`, `SpeedTiersPage` into the
+  now-generalized nav (depends on the Nav Shell leg above). No hook porting
+  needed - all three are already storage-adapter-clean, confirmed during
+  scoping.
+
+- **[Web Battle Log Storage Adapter Port] — Leg 1** *(Last touched:
+  2026-09-29 · Re-checks: 0)*
+  Port `useBattles.ts` to the storage adapter, mirroring `useTeams`/
+  `useDatabase`'s own port from Web App Scaffold: Storage Adapter. Swap
+  `AppWeb.tsx`'s `useWebBattlesStub` for the real hook in `useSync`'s
+  wiring. Data-layer only, no new UI.
+
+- **[Web Battle Log & Statistics Parity] — Leg 1** *(Last touched:
+  2026-09-29 · Re-checks: 0)*
+  Wire `BattleLogPage` + `StatisticsPage` into the nav. Depends on the
+  Storage Adapter Port leg above - `StatisticsPage` itself has no Electron
+  dependency (derives everything client-side from the `battles` array), so
+  once `useBattles` is ported this is pure UI wiring.
+
+- **[Web Settings Parity] — Leg 1** *(Last touched: 2026-09-29 ·
+  Re-checks: 0)*
+  Wire `SettingsPage` into the nav, excluding `UpdateCheckSection` entirely
+  (auto-update has no web equivalent - a web app is always whatever's
+  currently deployed). Fix `ReleaseNotesMarkdown.tsx`/`ExportTeamModal.tsx`'s
+  `window.electron.openExternal` calls with a plain `<a target="_blank"
+  rel="noopener">` fallback on web. Leave the Pokepaste-create button's
+  existing null-fallback error path as-is (already handled gracefully per
+  `services/pokepaste.ts`'s doc comment) - making it actually work on web
+  would need a new CORS proxy (e.g. a Worker route), out of scope here.
 
 ## Blocked
 
@@ -135,6 +183,31 @@ Items where the whole item (not just a sub-part) is stalled on something
 outside this project — a person, a dependency, or an external decision.
 Exempt from the re-check counter; they move back to "In progress" once
 unblocked.
+
+- **[Existing Account Migration] — Leg 1** *(Last touched: 2026-09-29 ·
+  Re-checks: exempt, blocked)*
+  Blocked: waiting on friends to message their old `username#XXXX` (Vanny
+  is collecting these up front, 2026-09-29) and on the next app release
+  cutting (deliberately held back for now - see the note above `## Blocked`
+  in this file's intro section). Once both are in hand: cut the release,
+  each friend signs up under the new username+password system once they
+  update, then a one-off manual copy of their old `username#XXXX`-keyed KV
+  blob into their new account (a throwaway `wrangler kv` copy or small
+  script) per friend, coordinated directly. Trickles in as each of the
+  ~4-6 friends gets around to updating - not a single all-at-once pass.
+  Known risk (hit live during Vanny's own migration 2026-09-29, see
+  `COMPLETED.md`): the Worker's merge does a read-modify-write against KV,
+  which is only eventually consistent - two devices pushing within
+  Workers KV's replication window (observed up to ~60s) can race, with the
+  second push reading a stale pre-first-push snapshot and overwriting real
+  data with its own (e.g. an empty local state). Concretely hit when a
+  freshly-signed-up device with empty local state auto-synced moments after
+  the real data was pushed from another device. Workaround for now: don't
+  have two devices signed into the same account syncing at the same moment
+  right after a migration push - push once, wait ~60s with no other device
+  active, then let the second device pull. Real fix would be strengthening
+  the Worker's KV read (e.g. `cacheTtl: 0`) or adding a resettlement delay -
+  not done yet, needs Vanny's call on which approach.
 
 - **[Reg M-C Z-A-Exclusive Movepool Audit] — Leg 1** *(Last touched:
   2026-09-16 · Re-checks: exempt, blocked)*
@@ -229,7 +302,12 @@ worth their own legs until the MVP milestone ships:
   deliverability setup on a dedicated vannyproductions.com subdomain).
 - Public profile / team-sharing pages (the account model's username design
   already accommodates this, but the public routes/per-team visibility
-  toggle need their own scoping pass).
+  toggle need their own scoping pass). Scope widened 2026-09-29 (Vanny) to
+  cover profile search and a shared team database where users can upload
+  teams for others to browse in-app, not just per-team visibility toggles -
+  needs a privacy-model decision (what's public by default) and abuse/
+  moderation considerations for a public upload database before it's ready
+  to scope into legs.
 
 Download/landing page for choicebuds.vannyproductions.com (proposed
 2026-09-29, out of Web Hosting & Domain's Leg 1): make the new site the
@@ -251,4 +329,22 @@ genuinely different concern. Needs its own scoping pass (which
 pages/components need touch-friendly rework, breakpoints, tap targets vs.
 hover-dependent UI) once Web Version: Teams & Box MVP's feature set is
 stable enough to design against - deliberately not started now.
+
+Teams tab search bar (proposed 2026-09-29): search for a specific Pokémon
+by name and surface which of the user's saved teams include it. Needs its
+own scoping pass (exact vs. partial name match, whether it also searches
+the Box or is Teams-only, UI placement) - not yet worth a leg.
+
+Battle Logging: special events / Global Challenge (proposed 2026-09-29):
+let a logged battle be tagged to a specific event so a user can filter/
+view matches for that event specifically. Global Challenge is online,
+dated, and officially endorsed by The Pokémon Company, so it's a plausible
+source of truth to track. In-person Regionals are also official but (a)
+there's no clear source for a complete/reliable schedule to pull from and
+(b) players are unlikely to log in-person tournament games in the app
+anyway (no external devices allowed at the event), so Regionals may not be
+worth pursuing even once scoped. Open question from Vanny that needs a
+decision before this can be scoped further: let users freeform-create
+their own named events, vs. only tracking a curated list of official ones
+(e.g. just GC).
 

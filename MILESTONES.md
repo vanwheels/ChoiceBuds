@@ -38,3 +38,5 @@ milestone.
   [post-mortem](docs/postmortems/vgcpastes-real-set-sourcing.md)
 - **Maintenance & Bug Fix Sweep** — 2026-09-16 — Shipped —
   [post-mortem](docs/postmortems/maintenance-bug-fix-sweep.md)
+- **Web Version: Teams & Box MVP** — 2026-09-29 — Shipped —
+  [post-mortem](docs/postmortems/web-version-teams-box-mvp.md)
