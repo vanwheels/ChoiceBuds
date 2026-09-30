@@ -190,14 +190,18 @@ legs below now have a real reclaimed-width nav shell to design against.
 instead of overflowing outright, and its expanded roster grid gained two new
 container-query tiers ahead of the existing 1040px one. Surfaced a real,
 pre-existing "Maximum update depth exceeded" bug unrelated to this leg's CSS
-work - see its own new entry below. Live mobile testing the same day turned
-up two more issues, both fixed immediately rather than queued:
-[TeamOverflowMenu Viewport Clamp] — Leg 1 (the team "..." menu had no
-bottom-of-viewport clamp and dismissed itself on any scroll, so overflow
-content was genuinely unreachable) and [Mobile Calc Launcher Placement] —
-Leg 1 (the floating Calc button covered page content at the bottom of a
-phone viewport - moved to the mobile top bar, desktop unchanged). See
-`COMPLETED.md` for both.
+work - see its own new entry below. Live mobile testing the same day (Vanny,
+on an iPhone 16) turned up three more issues, all fixed immediately rather
+than queued: [TeamOverflowMenu Viewport Clamp] — Leg 1 (the team "..." menu
+had no bottom-of-viewport clamp and dismissed itself on any scroll, so
+overflow content was genuinely unreachable), [Mobile Calc Launcher
+Placement] — Leg 1 (the floating Calc button covered page content at the
+bottom of a phone viewport - moved to the mobile top bar, desktop
+unchanged), and [Short-List Scroll Stuck on iOS Safari] — Leg 1 (a single
+empty team/very short Box left zero scroll overflow, which iOS Safari's
+touch-scroll handling gets stuck on - a first bottom-padding attempt didn't
+work for a real CSS reason, see its own entry; fixed with a forced 1px
+min-height overflow instead). See `COMPLETED.md` for all three.
 
 - **[Responsive Layout Audit: Calc & Modals] — Leg 1** *(Last touched:
   2026-09-30 · Re-checks: 0)*

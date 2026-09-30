@@ -18,6 +18,21 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Short-List Scroll Stuck on iOS Safari] — Leg 1** (2026-09-30) - see
+  commit `0d26c44`. Vanny verified live on an iPhone 16: a single empty team
+  (or very short Box) produces content whose height exactly matches the
+  scroll container's own height, and touch-scroll gets stuck/unresponsive in
+  that exact zero-overflow state on iOS Safari specifically. A first attempt
+  added bottom padding and didn't work - `scrollHeight` is `max(own height,
+  content height)`, and padding counts toward content height rather than
+  extending past the container's own flex-determined height, so it can never
+  push `scrollHeight` past `clientHeight` when content already fit. Fixed
+  with a percentage-based `min-h-[calc(100%+1px)]` on the content wrapper
+  inside each of `TeamsPage`/`BoxPage`'s scroll containers instead, forcing
+  genuine 1px of permanent, imperceptible overflow regardless of real
+  content length. Verified live via Playwright (451px scrollHeight vs. 450px
+  clientHeight for a single empty team, no visible layout change).
+
 - **[Mobile Calc Launcher Placement] — Leg 1** (2026-09-30) - see commit
   `85a3195`. Flagged live right after Responsive Layout Audit: Teams & Box
   (below): the floating `fixed bottom-6 right-6` Calc button covers whatever
