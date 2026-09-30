@@ -43,31 +43,30 @@
  * call `stopPropagation` so the click doesn't also fire `onToggleExpand`
  * (collapsed) or bubble into the card's own `onContextMenu` region.
  *
- * Drag-to-reorder (Box Tab: Reorder Leg 7, see TODO.md) only has an effect
- * in BoxPage.tsx's Custom sort mode - `sortMode` gates both the drag
- * *source* (collapsed tile / expanded grip handle aren't `draggable` in
- * Alphabetical mode) and the drop target (handleDragOver bails immediately
- * if not Custom, same as it would anyway once nothing sets the payload, but
- * explicit rather than relying on that). Drag affordance is split by card
- * state: the collapsed tile (w-28, sprite+label, single click action) is
- * draggable as a whole - low click-ambiguity, unlike TeamCard's richer
- * header, so no dedicated handle is needed there. The expanded card (a
- * busier interactive surface: rename, context menu, editable fields) gets a
- * dedicated grip handle instead, mirroring TeamCard.tsx's controls-pill
- * handle - same grip-icon glyph, same "only the handle is a drag source, any
- * part of the card can still be a drop target" split.
+ * Drag-to-reorder (Box Tab: Reorder Leg 7, see TODO.md) - now via
+ * framer-motion's Reorder.Item (Touch Drag-and-Drop: Framer Motion Reorder
+ * Leg 1, see TODO.md), replacing the old native HTML5 draggable
+ * implementation which never fired on touch at all. Only has an effect when
+ * `canReorder` is true (BoxPage.tsx's Custom sort mode with no search filter
+ * active - see its own header comment for why search disables it). Drag
+ * affordance is split by card state: the collapsed tile (w-28, sprite+label,
+ * single click action) is draggable as a whole - low click-ambiguity, unlike
+ * TeamCard's richer header, so no dedicated handle is needed there. The
+ * expanded card (a busier interactive surface: rename, context menu,
+ * editable fields) gets a dedicated grip handle instead, mirroring
+ * TeamCard.tsx's controls-pill handle - same grip-icon glyph, same "only the
+ * handle is a drag source" split.
  */
 
 import { useState } from 'react';
-import type { CSSProperties, DragEvent, MouseEvent as ReactMouseEvent } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import type { BoxSortMode, ImportedPokemonInfo, SavedPokemonEntry } from '../types/pokemon';
+import type { CSSProperties, PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent } from 'react';
+import { AnimatePresence, Reorder, useDragControls } from 'framer-motion';
+import type { ImportedPokemonInfo, SavedPokemonEntry } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { RegulationId } from '../utils/pokemonRules';
 import { getTypeGlowColors } from '../config/pokemonTheme';
 import { getPixelSpriteUrl } from '../utils/spriteUrl';
 import { copyPokemonToClipboard } from '../utils/clipboardPayload';
-import { BOX_DRAG_TYPE, type BoxDragPayload } from '../utils/boxDragTypes';
 import { DRAG_REORDER_TRANSITION } from '../config/motion';
 import EditablePokemonCore from './EditablePokemonCore';
 import ExportTeamModal from './ExportTeamModal';
@@ -83,50 +82,30 @@ interface BoxCardProps {
   onDuplicate: () => Promise<boolean>;
   onToggleFavorite: () => Promise<boolean>;
   onDelete: () => Promise<boolean>;
-  onReorder: (draggedId: string, targetId: string) => void;
-  sortMode: BoxSortMode;
+  // BoxPage.tsx owns the Reorder.Group's local order state (it wraps every
+  // BoxCard), so this card only starts/commits its own drag - see its
+  // header comment above.
+  canReorder: boolean;
+  onReorderDragEnd: () => void;
   gameDataState: UseGameDataReturn;
   rulesetId: RegulationId;
   resolveSprite: (remoteUrl: string) => string;
   showAnimatedSprites: boolean;
 }
 
-export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePokemon, onAddToTeam, onRename, onDuplicate, onToggleFavorite, onDelete, onReorder, sortMode, gameDataState, rulesetId, resolveSprite, showAnimatedSprites }: BoxCardProps) {
+export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePokemon, onAddToTeam, onRename, onDuplicate, onToggleFavorite, onDelete, canReorder, onReorderDragEnd, gameDataState, rulesetId, resolveSprite, showAnimatedSprites }: BoxCardProps) {
   const { pokemon, label, favorite } = entry;
-  const isCustomOrder = sortMode === 'custom';
 
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameDraft, setRenameDraft] = useState(label);
   const [isExportOpen, setIsExportOpen] = useState(false);
-  const [isDragOver, setIsDragOver] = useState(false);
+  const dragControls = useDragControls();
 
-  const handleDragStart = (e: DragEvent<HTMLDivElement>) => {
-    const payload: BoxDragPayload = { draggedId: entry.id };
-    e.dataTransfer.setData(BOX_DRAG_TYPE, JSON.stringify(payload));
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
-    if (!isCustomOrder || !e.dataTransfer.types.includes(BOX_DRAG_TYPE)) return;
-    e.preventDefault();
-    setIsDragOver(true);
-  };
-
-  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
-    if (!isCustomOrder) return;
-    e.preventDefault();
-    setIsDragOver(false);
-    const raw = e.dataTransfer.getData(BOX_DRAG_TYPE);
-    if (!raw) return;
-    try {
-      const payload: BoxDragPayload = JSON.parse(raw);
-      if (payload.draggedId !== entry.id) {
-        onReorder(payload.draggedId, entry.id);
-      }
-    } catch {
-      // malformed/foreign drag payload - ignore
-    }
+  // Expanded card's dedicated grip handle - only rendered when canReorder
+  // (see its own render site below), so no extra gate needed here.
+  const handleGripPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    dragControls.start(e);
   };
 
   // stopPropagation (Box Tab: Import via Right-Click Leg 5, see TODO.md)
@@ -285,23 +264,26 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
     );
 
     return (
-      // motion.div wraps purely for the layout="position" FLIP animation -
-      // the native HTML5 drag handlers (draggable/onDragStart in particular)
-      // live on the plain inner div instead since framer-motion's own
-      // onDragStart prop (for its pan/drag gesture, unused here) has an
-      // incompatible signature and would conflict on the motion.div itself.
-      <motion.div layout="position" transition={DRAG_REORDER_TRANSITION}>
+      // Reorder.Item (Touch Drag-and-Drop: Framer Motion Reorder Leg 1, see
+      // TODO.md) provides its own FLIP animation on reorder, replacing the
+      // old plain motion.div + layout="position" pairing. dragListener stays
+      // on its default (true) rather than the manual dragControls.start()
+      // pattern the expanded card's dedicated grip handle uses below - this
+      // tile is a *dual-purpose* element (tap to expand AND press-drag to
+      // reorder, same physical area, same as MoveBubbleGrid.tsx's move
+      // bubbles), so it needs framer's own built-in tap-vs-drag movement
+      // threshold to disambiguate the two, not an exclusion list. Confirmed
+      // live via run-desktop: forcing dragControls.start() unconditionally
+      // on pointerdown (this card's own earlier attempt) has no movement
+      // threshold at all and swallowed the plain click-to-expand outright.
+      // canReorder/isRenaming still gate whether dragging can start at all.
+      <Reorder.Item as="div" value={entry.id} dragListener={canReorder && !isRenaming} transition={DRAG_REORDER_TRANSITION} onDragEnd={onReorderDragEnd}>
         <div
-          draggable={isCustomOrder && !isRenaming}
-          onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
-          onDragLeave={() => setIsDragOver(false)}
-          onDrop={handleDrop}
           onContextMenu={handleContextMenu}
           title={isRenaming ? undefined : label}
-          className={`flex flex-col items-center gap-1 w-28 shrink-0 p-2 rounded-lg bg-zinc-700 border border-zinc-600 hover:border-accent-gold hover:bg-zinc-600 transition-colors ${
-            isCustomOrder ? 'cursor-grab' : ''
-          } ${isDragOver ? 'ring-2 ring-inset ring-accent-gold' : ''}`}
+          className={`flex flex-col items-center gap-1 w-28 shrink-0 p-2 rounded-lg bg-zinc-700 border border-zinc-600 hover:border-accent-gold hover:bg-zinc-600 transition-colors select-none ${
+            canReorder && !isRenaming ? 'cursor-grab' : ''
+          }`}
         >
           {isRenaming ? (
             <>
@@ -332,25 +314,30 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
           {contextMenu}
           {exportModal}
         </div>
-      </motion.div>
+      </Reorder.Item>
     );
   }
 
   const [glowC1, glowC2] = getTypeGlowColors(pokemon.types);
 
   return (
-    <motion.div
-      layout="position"
+    // Reorder.Item (Touch Drag-and-Drop: Framer Motion Reorder Leg 1, see
+    // TODO.md) provides its own FLIP animation on reorder, replacing the old
+    // plain motion.div + layout="position" pairing. dragListener is off -
+    // only the grip handle below starts a drag.
+    <Reorder.Item
+      as="div"
+      value={entry.id}
+      dragListener={false}
+      dragControls={dragControls}
       transition={DRAG_REORDER_TRANSITION}
+      onDragEnd={onReorderDragEnd}
       className="type-glow-ring w-[280px] shrink-0"
       style={{ '--glow-c1': glowC1, '--glow-c2': glowC2 } as CSSProperties}
     >
       <div
-        className={`relative bg-zinc-700 rounded-[11px] p-3 flex flex-col gap-3 min-w-0 ${isDragOver ? 'ring-2 ring-inset ring-accent-gold' : ''}`}
+        className="relative bg-zinc-700 rounded-[11px] p-3 flex flex-col gap-3 min-w-0"
         onContextMenu={handleContextMenu}
-        onDragOver={handleDragOver}
-        onDragLeave={() => setIsDragOver(false)}
-        onDrop={handleDrop}
       >
         <button
           onClick={onToggleExpand}
@@ -361,16 +348,16 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
         </button>
 
         {/* Drag handle (Box Tab: Reorder Leg 7, see TODO.md) - mirrors
-            TeamCard.tsx's controls-pill handle. Only rendered in Custom
-            order mode; the expanded card's busier surface (rename, context
-            menu, editable fields) means the whole card can't double as a
-            drag source the way the collapsed tile does. */}
-        {isCustomOrder && (
+            TeamCard.tsx's controls-pill handle. Only rendered when canReorder
+            (Custom order mode, no search filter active); the expanded card's
+            busier surface (rename, context menu, editable fields) means the
+            whole card can't double as a drag source the way the collapsed
+            tile does. */}
+        {canReorder && (
           <div
-            draggable
-            onDragStart={handleDragStart}
+            onPointerDown={handleGripPointerDown}
             title="Drag to reorder"
-            className="absolute -top-2.5 -left-2.5 z-10 w-6 h-6 flex items-center justify-center rounded-full bg-zinc-800 border border-zinc-600 text-zinc-400 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-grab"
+            className="absolute -top-2.5 -left-2.5 z-10 w-6 h-6 flex items-center justify-center rounded-full bg-zinc-800 border border-zinc-600 text-zinc-400 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-grab select-none"
           >
             <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
               <circle cx="9" cy="6" r="1.4" />
@@ -418,6 +405,6 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
         {contextMenu}
         {exportModal}
       </div>
-    </motion.div>
+    </Reorder.Item>
   );
 }

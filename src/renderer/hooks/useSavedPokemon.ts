@@ -66,24 +66,21 @@ export interface UseSavedPokemonReturn {
    */
   duplicateSavedPokemon: (id: string) => Promise<boolean>;
   /**
-   * Reorder Box entries by dragging one onto another (Box Tab: Reorder, see
-   * TODO.md) - same insert-before-target semantics as
-   * useTeams.ts::reorderTeam, operating directly on savedPokemon's own array
-   * order since Custom mode's persisted order *is* that array order (no
-   * dedicated order field, mirroring TeamsDatabase.teams). Only meaningful
-   * when BoxPage.tsx's sort mode is 'custom' - dragging while Alphabetical is
-   * selected is gated at the UI layer (BoxCard.tsx), not here.
-   */
-  reorderSavedPokemon: (draggedId: string, targetId: string) => Promise<boolean>;
-  /**
    * Overwrites the full stored order to match `orderedIds` (Box Tab:
-   * Reorder, see TODO.md) - used once, by BoxPage.tsx's sort-mode toggle, to
-   * seed Custom mode's first-ever order from whatever the Alphabetical view
-   * was showing at the moment of the switch (see
-   * AppSettings.boxCustomOrderSeeded) so flipping modes doesn't visually
-   * jump the grid. Any id not present in orderedIds (shouldn't happen in
-   * practice) keeps its existing relative order, appended after the given
-   * ids, so nothing is silently dropped.
+   * Reorder, see TODO.md). Two callers: BoxPage.tsx's sort-mode toggle seeds
+   * Custom mode's first-ever order from whatever the Alphabetical view was
+   * showing at the moment of the switch (see AppSettings.boxCustomOrderSeeded)
+   * so flipping modes doesn't visually jump the grid; BoxCard.tsx's
+   * framer-motion Reorder.Group (Touch Drag-and-Drop: Framer Motion Reorder
+   * Leg 1, see TODO.md) calls it once per completed drag with the grid's
+   * full new visual order. Only meaningful when BoxPage.tsx's sort mode is
+   * 'custom' - dragging while Alphabetical is selected is gated at the UI
+   * layer (BoxCard.tsx/BoxPage.tsx), not here. Any id not present in
+   * orderedIds (shouldn't happen in practice) keeps its existing relative
+   * order, appended after the given ids, so nothing is silently dropped -
+   * this is also why the drag-based caller only wires up when nothing's
+   * hidden by an active search filter (see BoxPage.tsx), so "the given ids"
+   * always means "every entry".
    */
   setSavedPokemonOrder: (orderedIds: string[]) => Promise<boolean>;
   /**
@@ -323,26 +320,6 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     return success;
   }, [savedPokemon, tombstones]);
 
-  const reorderSavedPokemon = useCallback(async (draggedId: string, targetId: string): Promise<boolean> => {
-    if (draggedId === targetId) return false;
-    const dragged = savedPokemon.find(e => e.id === draggedId);
-    if (!dragged) return false;
-
-    const withoutDragged = savedPokemon.filter(e => e.id !== draggedId);
-    const targetIndex = withoutDragged.findIndex(e => e.id === targetId);
-    if (targetIndex === -1) return false;
-
-    const updated = [...withoutDragged];
-    updated.splice(targetIndex, 0, dragged);
-
-    const success = await persistSavedPokemonToDisk(updated, tombstones);
-    if (success) {
-      setSavedPokemon(updated);
-      setError(null);
-    }
-    return success;
-  }, [savedPokemon, tombstones]);
-
   const setSavedPokemonOrder = useCallback(async (orderedIds: string[]): Promise<boolean> => {
     const byId = new Map(savedPokemon.map(e => [e.id, e]));
     const ordered = orderedIds.map(id => byId.get(id)).filter((e): e is SavedPokemonEntry => e !== undefined);
@@ -418,7 +395,6 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     renameSavedPokemon,
     toggleSavedPokemonFavorite,
     duplicateSavedPokemon,
-    reorderSavedPokemon,
     setSavedPokemonOrder,
     updateSavedPokemon,
     deleteSavedPokemon,

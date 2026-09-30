@@ -5,7 +5,7 @@
  */
 
 import { useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, Reorder } from 'framer-motion';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import type { RegulationLabel, VgcPasteTeamRow } from '../types/pokemon';
 import { sortTeamsByFavorite } from '../utils/teamSort';
@@ -101,6 +101,26 @@ export default function TeamsPage({
   // group's existing relative (drag-reorderable) order - see teamSort.ts.
   const sortedTeams = sortTeamsByFavorite(filteredTeams);
 
+  // Teams-list reorder (Touch Drag-and-Drop: Framer Motion Reorder Leg 1,
+  // see TODO.md) - local visual order of team ids for the Reorder.Group
+  // below, synced from sortedTeams via the "adjust state during render"
+  // pattern (CalcTeamTray.tsx's preferredTeamId uses the same shape) rather
+  // than an effect, since sortedTeams is a fresh array every render and an
+  // effect keyed on it directly would re-fire (and stomp a live drag's own
+  // in-progress reorder) on every incidental re-render, not just a real
+  // change. Only meaningful with no format filter active - dragging a
+  // partial view has no well-defined "moved to the very end" target, so
+  // TeamCard.tsx's grip handle is disabled via canReorder below whenever
+  // activeFilter isn't 'All'.
+  const sortedTeamIdsKey = sortedTeams.map(t => t.id).join('|');
+  const [orderedTeamIds, setOrderedTeamIds] = useState(() => sortedTeams.map(t => t.id));
+  const [prevSortedTeamIdsKey, setPrevSortedTeamIdsKey] = useState(sortedTeamIdsKey);
+  if (sortedTeamIdsKey !== prevSortedTeamIdsKey) {
+    setPrevSortedTeamIdsKey(sortedTeamIdsKey);
+    setOrderedTeamIds(sortedTeams.map(t => t.id));
+  }
+  const canReorderTeams = activeFilter === 'All';
+
   // Format filter buttons configuration
   const filterButtons: FormatFilter[] = ['All', 'Reg M-A', 'Reg M-B', 'Reg M-C'];
 
@@ -184,7 +204,11 @@ export default function TeamsPage({
             <p className="text-sm mt-2">Click "Add New Team" to import your first team</p>
           </div>
         ) : (
-          <div
+          <Reorder.Group
+            as="div"
+            axis="y"
+            values={orderedTeamIds}
+            onReorder={setOrderedTeamIds}
             className="grid grid-cols-1 @[1700px]:grid-cols-2 gap-4 w-full"
             style={{ paddingLeft: '2rem', paddingRight: '2rem' }}
           >
@@ -213,23 +237,29 @@ export default function TeamsPage({
                 single-column widths, not this 2-column state, so 2 teams
                 side-by-side may render 2x3 even where 1 team alone would
                 reach 1x6. */}
-            {sortedTeams.map(team => (
-              <TeamCard
-                key={team.id}
-                team={team}
-                onDelete={() => teamsState.deleteTeam(team.id)}
-                teamsState={teamsState}
-                databaseState={databaseState}
-                gameDataState={gameDataState}
-                speciesRosterState={speciesRosterState}
-                spriteCacheState={spriteCacheState}
-                settingsState={settingsState}
-                savedPokemonState={savedPokemonState}
-                vgcPastesState={vgcPastesState}
-                vgcRealSetsState={vgcRealSetsState}
-              />
-            ))}
-          </div>
+            {orderedTeamIds.map(id => {
+              const team = sortedTeams.find(t => t.id === id);
+              if (!team) return null;
+              return (
+                <TeamCard
+                  key={id}
+                  team={team}
+                  onDelete={() => teamsState.deleteTeam(team.id)}
+                  teamsState={teamsState}
+                  databaseState={databaseState}
+                  gameDataState={gameDataState}
+                  speciesRosterState={speciesRosterState}
+                  spriteCacheState={spriteCacheState}
+                  settingsState={settingsState}
+                  savedPokemonState={savedPokemonState}
+                  vgcPastesState={vgcPastesState}
+                  vgcRealSetsState={vgcRealSetsState}
+                  canReorder={canReorderTeams}
+                  onReorderDragEnd={() => teamsState.setTeamOrder(orderedTeamIds)}
+                />
+              );
+            })}
+          </Reorder.Group>
         )}
       </div>
 

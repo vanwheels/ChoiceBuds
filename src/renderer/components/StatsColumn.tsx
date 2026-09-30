@@ -195,7 +195,15 @@ export default function StatsColumn({ species, level, gender, baseStats, evs, na
           )}
         </div>
         <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
+          {/* data-no-drag (Touch Drag-and-Drop: Framer Motion Reorder Leg 1,
+              see TODO.md) - PokemonCard.tsx's roster-reorder drag source
+              excludes this exact selector before starting a card drag; this
+              was the one gap found live via run-desktop (a plain click here
+              was being swallowed as a card-drag start instead of opening the
+              Nature picker), same exclusion ItemSpriteBox.tsx/
+              AbilityCapsule.tsx already carry for the same reason. */}
           <div
+            data-no-drag
             onClick={toggleNatureMenu}
             title="Nature"
             className="min-w-0 text-[10px] bg-zinc-900 border border-zinc-600 rounded px-1 py-0 text-zinc-200 truncate cursor-pointer hover:border-accent-gold transition-colors"

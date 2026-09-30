@@ -189,21 +189,7 @@ describe('useTeams', () => {
     );
   });
 
-  it('reorderTeam is a no-op for identical ids or an unknown target', async () => {
-    vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({
-      version: 1,
-      teams: [makeTeam({ id: 'a' }), makeTeam({ id: 'b' })],
-      lastModified: 0,
-    });
-    const { result } = renderHook(() => useTeams());
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-    expect(await result.current.reorderTeam('a', 'a')).toBe(false);
-    expect(await result.current.reorderTeam('a', 'missing-target')).toBe(false);
-    expect(window.electron.writeTeamsDatabase).not.toHaveBeenCalled();
-  });
-
-  it('reorderTeam inserts the dragged team immediately before the target', async () => {
+  it('setTeamOrder reorders to match the given ids, appending any leftover teams untouched', async () => {
     vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({
       version: 1,
       teams: [makeTeam({ id: 'a' }), makeTeam({ id: 'b' }), makeTeam({ id: 'c' })],
@@ -213,10 +199,11 @@ describe('useTeams', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {
-      await result.current.reorderTeam('a', 'c');
+      await result.current.setTeamOrder(['c', 'a']);
     });
 
-    expect(result.current.teams.map(t => t.id)).toEqual(['b', 'a', 'c']);
+    // 'b' wasn't named in orderedIds - kept, appended after the given ones.
+    expect(result.current.teams.map(t => t.id)).toEqual(['c', 'a', 'b']);
   });
 
   it('toggleCardExpansion, collapseCard and collapseAllCards manage the expansion set', async () => {

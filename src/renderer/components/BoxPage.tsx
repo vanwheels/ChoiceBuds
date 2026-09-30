@@ -65,11 +65,13 @@
  * vs. Custom order, persisted as `settingsState.settings.boxSortMode`.
  * Custom order is plain array order in `savedPokemonState.savedPokemon`
  * itself - no dedicated order field, same as `TeamsDatabase.teams` via
- * `reorderTeam` - so in Custom mode the grid renders that array as-is and
- * `BoxCard.tsx`'s drag handles call `reorderSavedPokemon` to rearrange it.
- * The very first switch to Custom mode seeds that array order from the
- * current Alphabetical view (`handleSetSortMode` below) so flipping modes
- * doesn't visually jump the grid; `settingsState.settings.boxCustomOrderSeeded`
+ * `setTeamOrder` - so in Custom mode the grid renders that array as-is,
+ * wrapped in a framer-motion `Reorder.Group` (Touch Drag-and-Drop: Framer
+ * Motion Reorder Leg 1, see TODO.md) whose `BoxCard.tsx` items call
+ * `setSavedPokemonOrder` with the full new order once a drag completes. The
+ * very first switch to Custom mode seeds that array order from the current
+ * Alphabetical view (`handleSetSortMode` below) so flipping modes doesn't
+ * visually jump the grid; `settingsState.settings.boxCustomOrderSeeded`
  * gates that to a one-time seed so a later toggle back to Custom never
  * clobbers an already-dragged order.
  *
@@ -77,18 +79,18 @@
  * the sort-mode toggle, filtering `displayedEntries` *after* sort-mode
  * selection is applied - so in Custom mode the surviving matches still
  * render in whatever drag order they hold in the underlying array, just
- * with non-matching entries hidden rather than removed. Reordering while
- * filtered isn't given any special handling: `BoxCard.tsx`'s drag handles
- * always insert the dragged entry immediately before the drop target in
- * the full underlying array (see `reorderSavedPokemon`), same well-defined
- * behavior as an unfiltered drag - it's just less visually obvious which
- * index a drop lands on while some entries in between are hidden.
- * Search behavior is a straight port of `SpeciesPickerCard.tsx`'s own
- * '#tag'-chain resolution (no '#tag' -> plain substring match against
- * label OR species; one or more '#tag's -> type -> move -> ability
- * resolution per tag, ANDed together, matched against the entry's
- * underlying species) rather than a reimplementation, so the two search
- * bars behave identically.
+ * with non-matching entries hidden rather than removed. Dragging is
+ * disabled outright while a search filter is active (`isSearching` below) -
+ * `setSavedPokemonOrder` persists whatever full order the Reorder.Group
+ * hands it, so reordering a filtered subset would silently move every
+ * matching entry ahead of every hidden one, unlike the old target-based
+ * `reorderSavedPokemon` this replaced (which located the drop target in the
+ * full underlying array, so hidden entries never moved). Search behavior
+ * itself is a straight port of `SpeciesPickerCard.tsx`'s own '#tag'-chain
+ * resolution (no '#tag' -> plain substring match against label OR species;
+ * one or more '#tag's -> type -> move -> ability resolution per tag, ANDed
+ * together, matched against the entry's underlying species) rather than a
+ * reimplementation, so the two search bars behave identically.
  *
  * Favoriting (Box Tab: Favoriting Leg 1, see TODO.md): `SavedPokemonEntry.
  * favorite`, toggled via `BoxCard.tsx`'s own corner-star buttons, sorts
@@ -100,7 +102,7 @@
  */
 
 import { useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, Reorder } from 'framer-motion';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import type { BoxSortMode, ImportedPokemonInfo, SavedPokemonEntry, SpeciesRosterEntry } from '../types/pokemon';
 import type { UseSavedPokemonReturn } from '../hooks/useSavedPokemon';
@@ -245,6 +247,25 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
 
   const isSearching = search.trim().length > 0;
 
+  // Box grid reorder (Touch Drag-and-Drop: Framer Motion Reorder Leg 1, see
+  // TODO.md) - local visual order of entry ids for the Reorder.Group below,
+  // synced from displayedEntries via the "adjust state during render"
+  // pattern (CalcTeamTray.tsx's preferredTeamId uses the same shape) rather
+  // than an effect, since displayedEntries is a fresh array every render and
+  // an effect keyed on it directly would re-fire (and stomp a live drag's
+  // own in-progress reorder) on every incidental re-render, not just a real
+  // change. Only meaningful in Custom mode with no search filter active -
+  // see the header comment's Search section for why dragging is disabled
+  // outright while isSearching.
+  const displayedEntryIdsKey = displayedEntries.map(e => e.id).join('|');
+  const [orderedEntryIds, setOrderedEntryIds] = useState(() => displayedEntries.map(e => e.id));
+  const [prevDisplayedEntryIdsKey, setPrevDisplayedEntryIdsKey] = useState(displayedEntryIdsKey);
+  if (displayedEntryIdsKey !== prevDisplayedEntryIdsKey) {
+    setPrevDisplayedEntryIdsKey(displayedEntryIdsKey);
+    setOrderedEntryIds(displayedEntries.map(e => e.id));
+  }
+  const canReorderBox = sortMode === 'custom' && !isSearching;
+
   const handleSetSortMode = async (mode: BoxSortMode) => {
     if (mode === 'custom' && !settingsState.settings.boxCustomOrderSeeded) {
       // First-ever switch to Custom: seed the stored array order from the
@@ -358,7 +379,22 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
             <div className="text-red-400">Error: {savedPokemonState.error}</div>
           </div>
         ) : (
-          <div className="flex flex-wrap gap-4 items-start" onContextMenu={handleGridContextMenu}>
+          /* axis="x" (confirmed live via run-desktop against TeamCard.tsx's
+             own roster grid - "y" silently never triggered a swap at all,
+             same root cause here) since Reorder only measures drag offset
+             along one axis to detect a swap, and this flex-wrap grid is
+             predominantly horizontal. A wrapped second row can still only
+             swap within its own row via horizontal drag - a known
+             1D-vs-2D-grid limitation of the Reorder primitive itself, not
+             something either axis choice fixes. */
+          <Reorder.Group
+            as="div"
+            axis="x"
+            values={orderedEntryIds}
+            onReorder={setOrderedEntryIds}
+            className="flex flex-wrap gap-4 items-start"
+            onContextMenu={handleGridContextMenu}
+          >
             <button
               onClick={() => setIsPickerOpen(true)}
               disabled={isBuildingSpecies}
@@ -382,27 +418,31 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
               </div>
             )}
 
-            {displayedEntries.map(entry => (
-              <BoxCard
-                key={entry.id}
-                entry={entry}
-                isExpanded={savedPokemonState.expandedCardIds.has(entry.id)}
-                onToggleExpand={() => savedPokemonState.toggleCardExpansion(entry.id)}
-                onUpdatePokemon={(updates) => savedPokemonState.updateSavedPokemon(entry.id, updates)}
-                onAddToTeam={() => setAddToTeamEntryId(entry.id)}
-                onRename={(label) => savedPokemonState.renameSavedPokemon(entry.id, label)}
-                onDuplicate={() => savedPokemonState.duplicateSavedPokemon(entry.id)}
-                onToggleFavorite={() => savedPokemonState.toggleSavedPokemonFavorite(entry.id)}
-                onDelete={() => savedPokemonState.deleteSavedPokemon(entry.id)}
-                onReorder={(draggedId, targetId) => savedPokemonState.reorderSavedPokemon(draggedId, targetId)}
-                sortMode={sortMode}
-                gameDataState={gameDataState}
-                rulesetId={rulesetId}
-                resolveSprite={spriteCacheState.resolveSprite}
-                showAnimatedSprites={settingsState.settings.showAnimatedSprites}
-              />
-            ))}
-          </div>
+            {orderedEntryIds.map(id => {
+              const entry = displayedEntries.find(e => e.id === id);
+              if (!entry) return null;
+              return (
+                <BoxCard
+                  key={id}
+                  entry={entry}
+                  isExpanded={savedPokemonState.expandedCardIds.has(entry.id)}
+                  onToggleExpand={() => savedPokemonState.toggleCardExpansion(entry.id)}
+                  onUpdatePokemon={(updates) => savedPokemonState.updateSavedPokemon(entry.id, updates)}
+                  onAddToTeam={() => setAddToTeamEntryId(entry.id)}
+                  onRename={(label) => savedPokemonState.renameSavedPokemon(entry.id, label)}
+                  onDuplicate={() => savedPokemonState.duplicateSavedPokemon(entry.id)}
+                  onToggleFavorite={() => savedPokemonState.toggleSavedPokemonFavorite(entry.id)}
+                  onDelete={() => savedPokemonState.deleteSavedPokemon(entry.id)}
+                  canReorder={canReorderBox}
+                  onReorderDragEnd={() => savedPokemonState.setSavedPokemonOrder(orderedEntryIds)}
+                  gameDataState={gameDataState}
+                  rulesetId={rulesetId}
+                  resolveSprite={spriteCacheState.resolveSprite}
+                  showAnimatedSprites={settingsState.settings.showAnimatedSprites}
+                />
+              );
+            })}
+          </Reorder.Group>
         )}
       </div>
 

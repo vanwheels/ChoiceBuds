@@ -23,7 +23,7 @@ const REG_PREFIX_PATTERN = /^Reg M-[ABC] /;
  * ImportedPokemonInfo's own doc comment), at the read boundary - same
  * pattern as useBattles.ts's normalizeBattle. Never written back to disk
  * proactively; a team just picks up real ids the next time it's saved
- * through any normal mutation (addTeam/updateTeam/reorderTeam all persist
+ * through any normal mutation (addTeam/updateTeam/setTeamOrder all persist
  * the full `teams` array state, which holds these backfilled ids).
  */
 function normalizeTeam(team: Team & { pokemon: (ImportedPokemonInfo & { id?: string })[] }): Team {
@@ -48,7 +48,18 @@ export interface UseTeamsReturn {
   addTeam: (team: Team) => Promise<boolean>;
   updateTeam: (teamId: string, updates: Partial<Team>) => Promise<boolean>;
   deleteTeam: (teamId: string) => Promise<boolean>;
-  reorderTeam: (draggedTeamId: string, targetTeamId: string) => Promise<boolean>;
+  /**
+   * Overwrites the full stored team order to match `orderedIds` (Touch
+   * Drag-and-Drop: Framer Motion Reorder Leg 1, see TODO.md) - called once
+   * per completed drag by TeamsPage.tsx's framer-motion Reorder.Group, same
+   * shape as useSavedPokemon.ts::setSavedPokemonOrder. Operates on the full
+   * (unfiltered) `teams` array by ID, not by position in whatever filtered
+   * view TeamsPage.tsx happens to be showing - dragging is gated off there
+   * whenever a format filter is hiding any teams, so in practice `orderedIds`
+   * always names every team; any id it doesn't name (shouldn't happen)
+   * keeps its existing relative order, appended after the given ones.
+   */
+  setTeamOrder: (orderedIds: string[]) => Promise<boolean>;
 
   // UI state management
   toggleCardExpansion: (teamId: string) => void;
@@ -251,25 +262,12 @@ export function useTeams(): UseTeamsReturn {
     return success;
   }, [teams, tombstones]);
 
-  /**
-   * Reorder teams by dragging one onto another - operates on the full
-   * (unfiltered) `teams` array by ID, not by position in whatever filtered
-   * view TeamsPage.tsx happens to be showing, so hidden teams keep their
-   * exact relative order. The dragged team always lands immediately before
-   * the target team's current position, same insert-before-target
-   * semantics as useRosterActions.ts::reorderSlot.
-   */
-  const reorderTeam = useCallback(async (draggedTeamId: string, targetTeamId: string): Promise<boolean> => {
-    if (draggedTeamId === targetTeamId) return false;
-    const dragged = teams.find(t => t.id === draggedTeamId);
-    if (!dragged) return false;
-
-    const withoutDragged = teams.filter(t => t.id !== draggedTeamId);
-    const targetIndex = withoutDragged.findIndex(t => t.id === targetTeamId);
-    if (targetIndex === -1) return false;
-
-    const updatedTeams = [...withoutDragged];
-    updatedTeams.splice(targetIndex, 0, dragged);
+  const setTeamOrder = useCallback(async (orderedIds: string[]): Promise<boolean> => {
+    const byId = new Map(teams.map(t => [t.id, t]));
+    const ordered = orderedIds.map(id => byId.get(id)).filter((t): t is Team => t !== undefined);
+    const orderedIdSet = new Set(ordered.map(t => t.id));
+    const leftover = teams.filter(t => !orderedIdSet.has(t.id));
+    const updatedTeams = [...ordered, ...leftover];
 
     const success = await persistTeamsToDisk(updatedTeams, tombstones);
     if (success) {
@@ -356,7 +354,7 @@ export function useTeams(): UseTeamsReturn {
     addTeam,
     updateTeam,
     deleteTeam,
-    reorderTeam,
+    setTeamOrder,
     toggleCardExpansion,
     expandCard,
     collapseCard,

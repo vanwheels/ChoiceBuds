@@ -37,8 +37,8 @@ export type ChampionsDataCheckId = 'moves' | 'abilities' | 'movepool';
  * 'alphabetical' is BoxPage.tsx's original always-on species+label sort;
  * 'custom' switches to a drag-reordered order held directly in
  * SavedPokemonDatabase.savedPokemon's own array order (see
- * useSavedPokemon.ts::reorderSavedPokemon) rather than a dedicated order
- * field, same as TeamsDatabase.teams already works via reorderTeam.
+ * useSavedPokemon.ts::setSavedPokemonOrder) rather than a dedicated order
+ * field, same as TeamsDatabase.teams already works via useTeams.ts::setTeamOrder.
  */
 export type BoxSortMode = 'alphabetical' | 'custom';
 

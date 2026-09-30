@@ -27,7 +27,6 @@ export interface UseRosterActionsReturn {
   swapSlot: (team: Team, index: number, species: string) => Promise<boolean>;
   addSlot: (team: Team, species: string, itemOverride?: string) => Promise<boolean>;
   removeSlot: (team: Team, index: number) => Promise<boolean>;
-  reorderSlot: (team: Team, fromIndex: number, toIndex: number) => Promise<boolean>;
   loadSavedSet: (team: Team, index: number, entry: SavedPokemonEntry) => Promise<boolean>;
   /**
    * Exposed standalone (not just used internally by swapSlot/addSlot) so a
@@ -127,14 +126,6 @@ export function useRosterActions(
     return updateTeam(team.id, { pokemon: updatedPokemon });
   }, [updateTeam]);
 
-  const reorderSlot = useCallback(async (team: Team, fromIndex: number, toIndex: number): Promise<boolean> => {
-    if (fromIndex === toIndex) return false;
-    const updatedPokemon = [...team.pokemon];
-    const [moved] = updatedPokemon.splice(fromIndex, 1);
-    updatedPokemon.splice(toIndex, 0, moved);
-    return updateTeam(team.id, { pokemon: updatedPokemon });
-  }, [updateTeam]);
-
   /**
    * Reuse a saved build (useSavedPokemon.ts) directly into a roster slot,
    * in place of swapSlot's fresh usage-based default - see SavedSetPicker.tsx
@@ -148,5 +139,5 @@ export function useRosterActions(
     return updateTeam(team.id, { pokemon: updatedPokemon });
   }, [updateTeam]);
 
-  return { swapSlot, addSlot, removeSlot, reorderSlot, loadSavedSet, buildSlot };
+  return { swapSlot, addSlot, removeSlot, loadSavedSet, buildSlot };
 }

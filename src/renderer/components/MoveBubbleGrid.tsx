@@ -8,36 +8,40 @@
  */
 
 import { useMemo, useRef, useState } from 'react';
-import type { DragEvent, MouseEvent } from 'react';
+import type { MouseEvent, PointerEvent } from 'react';
+import { Reorder } from 'framer-motion';
 import type { MoveData } from '../types/pokemon';
 import { getTypeTheme, type TypeTheme } from '../config/pokemonTheme';
-import { MOVE_REORDER_DRAG_TYPE, type MoveReorderDragPayload } from '../utils/moveReorderDragTypes';
+import { DRAG_REORDER_TRANSITION } from '../config/motion';
 
 const NEUTRAL_THEME: TypeTheme = { bg: 'bg-zinc-800', text: 'text-zinc-400' };
+const IDENTITY_ORDER = [0, 1, 2, 3] as const;
 
 export type HoverKey = 'item' | 'ability' | `move${0 | 1 | 2 | 3}` | null;
 
 interface MoveBubbleGridProps {
   moveDataSlots: Array<MoveData | null>;
   selectedMoves: string[];
-  // Drag-to-reorder is permanently on (Move-Slot Drag Handle Leg 1, see
-  // TODO.md) - reuses the mechanism that already shipped once under the old
-  // global edit-mode toggle. A bubble is simultaneously the click target
-  // (opens its move picker) and the drag source, disambiguated natively
-  // since HTML5 only fires dragstart after real pointer movement and
-  // suppresses the click event when a drag actually occurred. No isEditing
-  // prop anymore - it was always true with no caller ever passing false.
-  ownerId: string;
   onToggleMenu: (key: string, e: MouseEvent<HTMLDivElement>) => void;
   onHoverEnter: (key: HoverKey, triggerEl: HTMLElement) => void;
   onHoverLeave: (key: HoverKey) => void;
-  onReorderMoves: (fromIndex: number, toIndex: number) => void;
+  // Drag-to-reorder is permanently on (Move-Slot Drag Handle Leg 1, see
+  // TODO.md) - now via framer-motion's Reorder.Group/Item (Touch
+  // Drag-and-Drop: Framer Motion Reorder Leg 1, see TODO.md) instead of
+  // native HTML5 drag, which never fired on touch at all. A bubble is
+  // simultaneously the click target (opens its move picker) and the drag
+  // source, disambiguated by framer's own drag-vs-tap gesture detection
+  // (same click/drag split HTML5 used to provide natively).
+  // Called once per completed drag with the full new slot order (e.g.
+  // [2, 0, 1, 3] means slot 0 now shows what was originally at index 2) -
+  // not a single from/to pair, since Reorder.Group always resolves to a
+  // complete final order rather than a single swap.
+  onReorderMoves: (newOrder: number[]) => void;
 }
 
 export default function MoveBubbleGrid({
   moveDataSlots,
   selectedMoves,
-  ownerId,
   onToggleMenu,
   onHoverEnter,
   onHoverLeave,
@@ -50,66 +54,60 @@ export default function MoveBubbleGrid({
     [moveDataSlots]
   );
 
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  // Local visual order of original slot indices, permuted live during a
+  // drag by Reorder.Group's onReorder. Resets to identity once a completed
+  // drag is committed upstream (EditOverlays.tsx's handleMoveReorder
+  // re-indexes moveDataSlots/selectedMoves themselves to match), so this
+  // never drifts out of sync with the real slot content.
+  const [order, setOrder] = useState<number[]>([...IDENTITY_ORDER]);
 
   // Tooltip anchors to the whole grid's own rect, not the individual hovered
   // bubble's - see onMouseEnter below.
   const gridRef = useRef<HTMLDivElement>(null);
 
-  // Each bubble is its own drag source (not just the outer card) so that
-  // starting a drag here doesn't bubble up into PokemonCard's own
-  // draggable card div and pick up the whole Pokemon slot instead -
-  // stopPropagation on dragstart is what actually prevents that, since
-  // the outer card would otherwise still receive the bubbled event.
-  const handleDragStart = (index: number) => (e: DragEvent<HTMLDivElement>) => {
-    e.stopPropagation();
-    const payload: MoveReorderDragPayload = { ownerId, fromIndex: index };
-    e.dataTransfer.setData(MOVE_REORDER_DRAG_TYPE, JSON.stringify(payload));
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleDragOver = (index: number) => (e: DragEvent<HTMLDivElement>) => {
-    if (!e.dataTransfer.types.includes(MOVE_REORDER_DRAG_TYPE)) return;
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOverIndex(index);
-  };
-
-  const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
-    e.stopPropagation();
-    setDragOverIndex(null);
-  };
-
-  const handleDrop = (index: number) => (e: DragEvent<HTMLDivElement>) => {
-    if (!e.dataTransfer.types.includes(MOVE_REORDER_DRAG_TYPE)) return;
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOverIndex(null);
-    const raw = e.dataTransfer.getData(MOVE_REORDER_DRAG_TYPE);
-    if (!raw) return;
-    try {
-      const payload: MoveReorderDragPayload = JSON.parse(raw);
-      if (payload.ownerId === ownerId && payload.fromIndex !== index) {
-        onReorderMoves(payload.fromIndex, index);
-      }
-    } catch {
-      // malformed/foreign drag payload - ignore
+  const handleDragEnd = () => {
+    if (order.some((slot, i) => slot !== i)) {
+      onReorderMoves(order);
     }
+    setOrder([...IDENTITY_ORDER]);
   };
 
   return (
-    <div ref={gridRef} className="grid grid-cols-2 gap-2 w-full">
-      {([0, 1, 2, 3] as const).map(index => {
-        const theme = themes[index];
-        const key = `move${index}` as const;
+    // axis="x" (confirmed live via run-desktop, same root cause as
+    // TeamCard.tsx's own roster grid fix) since Reorder only measures drag
+    // offset along one axis to detect a swap - "y" never registered a
+    // same-row swap (slot 0 -> slot 1) at all. This is a genuine 2D grid
+    // with no single "predominant" direction (2 rows of 2), so either axis
+    // choice only correctly supports swaps along that one axis (same-row
+    // for "x", same-column for "y") - a known 1D-vs-2D-grid limitation of
+    // the Reorder primitive itself, same as TeamCard.tsx/BoxPage.tsx's own
+    // grids.
+    <Reorder.Group
+      as="div"
+      axis="x"
+      values={order}
+      onReorder={setOrder}
+      ref={gridRef}
+      className="grid grid-cols-2 gap-2 w-full"
+    >
+      {order.map(originalIndex => {
+        const theme = themes[originalIndex];
+        const key = `move${originalIndex}` as `move${0 | 1 | 2 | 3}`;
         return (
-          <div
-            key={index}
-            draggable
-            onDragStart={handleDragStart(index)}
-            onDragOver={handleDragOver(index)}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop(index)}
+          <Reorder.Item
+            as="div"
+            key={originalIndex}
+            value={originalIndex}
+            transition={DRAG_REORDER_TRANSITION}
+            whileDrag={{ scale: 1.05, zIndex: 1, boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}
+            onDragEnd={handleDragEnd}
+            // Each bubble is its own drag source (not just the outer
+            // PokemonCard) - stopPropagation on pointerdown is what stops a
+            // bubble drag from also bubbling up into PokemonCard's own
+            // handlePointerDown and picking up the whole roster slot at the
+            // same time (same fix shape the old native-HTML5 implementation
+            // needed via dragstart's own stopPropagation).
+            onPointerDown={(e: PointerEvent<HTMLDivElement>) => e.stopPropagation()}
             onMouseEnter={() => {
               // Anchor the shared Tooltip to the whole 2x2 grid's rect, not
               // this individual bubble's - keeps the tooltip in the same
@@ -119,13 +117,13 @@ export default function MoveBubbleGrid({
               if (gridRef.current) onHoverEnter(key, gridRef.current);
             }}
             onMouseLeave={() => onHoverLeave(key)}
-            onClick={(e) => onToggleMenu(key, e)}
-            className={`w-full min-h-[2.75rem] flex items-center justify-center text-center whitespace-normal break-words p-1 rounded-xl text-xs font-bold transition-colors ${theme.bg} ${theme.text} hover:opacity-80 cursor-grab ${dragOverIndex === index ? 'ring-2 ring-accent-gold' : ''}`}
+            onClick={(e: MouseEvent<HTMLDivElement>) => onToggleMenu(key, e)}
+            className={`w-full min-h-[2.75rem] flex items-center justify-center text-center whitespace-normal break-words p-1 rounded-xl text-xs font-bold transition-colors select-none ${theme.bg} ${theme.text} hover:opacity-80 cursor-grab`}
           >
-            {selectedMoves[index] || `Move ${index + 1}`}
-          </div>
+            {selectedMoves[originalIndex] || `Move ${originalIndex + 1}`}
+          </Reorder.Item>
         );
       })}
-    </div>
+    </Reorder.Group>
   );
 }

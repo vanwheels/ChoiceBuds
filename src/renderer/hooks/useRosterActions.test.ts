@@ -136,26 +136,6 @@ describe('useRosterActions', () => {
     expect(updates.pokemon.map((p: ImportedPokemonInfo) => p.showdownData.species)).toEqual(['A', 'C']);
   });
 
-  it('reorderSlot is a no-op when the indices are the same', async () => {
-    const team = makeTeam([makePokemon(), makePokemon()]);
-    const { result, updateTeam } = setup();
-
-    const success = await result.current.reorderSlot(team, 0, 0);
-
-    expect(success).toBe(false);
-    expect(updateTeam).not.toHaveBeenCalled();
-  });
-
-  it('reorderSlot moves the Pokemon at fromIndex to toIndex', async () => {
-    const team = makeTeam([makePokemon({ species: 'A' }), makePokemon({ species: 'B' }), makePokemon({ species: 'C' })]);
-    const { result, updateTeam } = setup();
-
-    await result.current.reorderSlot(team, 0, 2);
-
-    const [, updates] = updateTeam.mock.calls[0];
-    expect(updates.pokemon.map((p: ImportedPokemonInfo) => p.showdownData.species)).toEqual(['B', 'C', 'A']);
-  });
-
   it('loadSavedSet places a saved entry\'s Pokemon into the slot, without touching other slots', async () => {
     const savedPokemon = makePokemon({ species: 'Rillaboom', ability: 'Grassy Surge', moves: ['Fake Out', 'Wood Hammer'] });
     const entry: SavedPokemonEntry = { id: 'saved-1', label: 'Defensive Rilla', pokemon: savedPokemon, savedAt: Date.now(), updatedAt: Date.now() };

@@ -18,7 +18,7 @@
  * clears any open tooltip so the two floats never stack.
  */
 
-import { useState, useEffect, useId, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { MouseEvent } from 'react';
 import type { ImportedPokemonInfo, ItemData, MoveData, AbilityData, ShowdownPokemon, ChampionsUsageRankedEntry } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
@@ -46,8 +46,6 @@ interface EditOverlaysProps {
 
 export default function EditOverlays({ pokemon, gameDataState, rulesetId, resolveSprite, onUpdatePokemon }: EditOverlaysProps) {
   const { items, getItemData, getAbilityData, getMoveData, getEnrichedSpeciesOptions, getChampionsUsage } = gameDataState;
-  // Scopes a move-slot drag to this specific card's own MoveBubbleGrid - see moveReorderDragTypes.ts
-  const moveDragOwnerId = useId();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [activeMenuMaxHeight, setActiveMenuMaxHeight] = useState(400);
   const [activeMenuAnchorRect, setActiveMenuAnchorRect] = useState<DOMRect | null>(null);
@@ -132,18 +130,17 @@ export default function EditOverlays({ pokemon, gameDataState, rulesetId, resolv
     closeMenu();
   };
 
-  const handleMoveReorder = (fromIndex: number, toIndex: number) => {
+  // newOrder[i] is the original slot index now shown at position i (see
+  // MoveBubbleGrid.tsx's onReorderMoves doc) - re-indexing both arrays by it
+  // is what lets MoveBubbleGrid reset its own local drag order back to
+  // identity once this commits.
+  const handleMoveReorder = (newOrder: number[]) => {
     setSelectedMoves(prev => {
-      const next = [...prev];
-      [next[fromIndex], next[toIndex]] = [next[toIndex], next[fromIndex]];
+      const next = newOrder.map(i => prev[i]);
       onUpdatePokemon({ moves: next });
       return next;
     });
-    setMoveDataSlots(prev => {
-      const next = [...prev];
-      [next[fromIndex], next[toIndex]] = [next[toIndex], next[fromIndex]];
-      return next;
-    });
+    setMoveDataSlots(prev => newOrder.map(i => prev[i]));
   };
 
   // Real legal movepool + ability pool for this species (never a per-Pokemon fallback)
@@ -281,7 +278,6 @@ export default function EditOverlays({ pokemon, gameDataState, rulesetId, resolv
       <MoveBubbleGrid
         moveDataSlots={moveDataSlots}
         selectedMoves={selectedMoves}
-        ownerId={moveDragOwnerId}
         onToggleMenu={toggleMenu}
         onHoverEnter={hoverEnter}
         onHoverLeave={hoverLeave}

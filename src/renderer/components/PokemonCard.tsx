@@ -16,8 +16,8 @@
  */
 
 import { useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import type { CSSProperties, DragEvent, MouseEvent as ReactMouseEvent } from 'react';
+import { AnimatePresence, Reorder, useDragControls } from 'framer-motion';
+import type { CSSProperties, PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent } from 'react';
 import type { ImportedPokemonInfo, SavedPokemonEntry, Team, SpeciesRosterEntry, VgcRealSetBundle } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
@@ -36,7 +36,6 @@ import SaveToLibraryDialog from './SaveToLibraryDialog';
 import ContextMenu from './ContextMenu';
 import { toRegulationId } from '../utils/pokemonRules';
 import { realSetBundleToShowdownUpdates } from '../utils/teamRealSetImport';
-import { TEAM_ROSTER_DRAG_TYPE, type TeamRosterDragPayload } from '../utils/teamRosterDragTypes';
 import { DRAG_REORDER_TRANSITION } from '../config/motion';
 import { copyPokemonToClipboard, readPokemonFromClipboard } from '../utils/clipboardPayload';
 
@@ -57,9 +56,14 @@ interface PokemonCardProps {
   vgcPastesState: UseVgcPastesCacheReturn;
   vgcRealSetsState: UseVgcRealSetsCacheReturn;
   showAnimatedSprites: boolean;
+  // Fired once when a roster-reorder drag on this card completes (Touch
+  // Drag-and-Drop: Framer Motion Reorder Leg 1, see TODO.md) - TeamCard.tsx
+  // owns the Reorder.Group's local order state and persists it here, since
+  // committing needs the whole roster's final order, not just this card's.
+  onReorderDragEnd: () => void;
 }
 
-export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, gameDataState, speciesRosterState, spriteCacheState, rosterActions, savedPokemonState, vgcPastesState, vgcRealSetsState, showAnimatedSprites }: PokemonCardProps) {
+export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, gameDataState, speciesRosterState, spriteCacheState, rosterActions, savedPokemonState, vgcPastesState, vgcRealSetsState, showAnimatedSprites, onReorderDragEnd }: PokemonCardProps) {
   const { showdownData, types } = pokemon;
   const [isSwapPickerOpen, setIsSwapPickerOpen] = useState(false);
   // Set the instant a Roster Swap lands on a species with 1+ saved builds
@@ -74,7 +78,14 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
   // Pokémon (unlike Calc's) is already a real ImportedPokemonInfo with no
   // enrichment step needed first.
   const [isSaveToLibraryOpen, setIsSaveToLibraryOpen] = useState(false);
-  const [isDragOver, setIsDragOver] = useState(false);
+  // Roster reorder drag source (Touch Drag-and-Drop: Framer Motion Reorder
+  // Leg 1, see TODO.md) - dragListener is off on the Reorder.Item below so
+  // starting a drag is gated through this instead of firing from anywhere on
+  // the card, same exclusion this card always needed for its natively-
+  // draggable/text-selectable descendants (nickname input, delete button,
+  // sprite/swap box, gender/shiny badges, EditOverlays' item/ability pills -
+  // all still marked input/button/[data-no-drag]).
+  const dragControls = useDragControls();
   // Export moved out of the corner into a right-click context menu (Card
   // Action Button Placement Leg 1, see TODO.md) - null when closed, the
   // click's own coordinates (not the card's rect) while open, since
@@ -166,54 +177,19 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
     setContextMenuPos({ x: e.clientX, y: e.clientY });
   };
 
-  // Roster reorder via drag-and-drop (Always-On Editing Leg 2, see TODO.md) -
-  // draggable now lives on the whole card div below rather than a dedicated
-  // grip-handle icon (Pokémon Card Drag Without Handle Leg 1, see TODO.md).
-  // The prior whole-card attempt was reverted for click/drag ambiguity, but
-  // the actual cause wasn't HTML5's own click-vs-drag disambiguation (that
-  // already works cleanly for MoveBubbleGrid.tsx's move-bubble drag, which
-  // is simultaneously a click target and a drag source) - it was `draggable`
-  // on a container with no exclusion logic for its natively-draggable/
-  // text-selectable descendants. Bailing out here when the drag actually
-  // started on an input/button/[data-no-drag] element is what fixes that:
-  // nickname input and the delete button are native `input`/`button`
-  // elements already covered by the selector; the sprite/swap box and
-  // gender/shiny corner badges and EditOverlays' item/ability pills carry
-  // `data-no-drag` explicitly. Same MIME-type-payload pattern as the Battle
-  // Logger roster drag (utils/dragTypes.ts) and Calc team tray drag
-  // (utils/calcDragTypes.ts). teamId travels in the payload (not the type
-  // string itself) since a mismatched-team drop is checked on `drop`, not
-  // shown live during `dragover` - unlike those two, dragging between two
-  // different teams' cards has no valid outcome to preview either way.
-  const handleDragStart = (e: DragEvent<HTMLDivElement>) => {
-    if ((e.target as HTMLElement).closest('input, button, [data-no-drag]')) {
-      e.preventDefault();
-      return;
-    }
-    const payload: TeamRosterDragPayload = { teamId: team.id, fromIndex: pokemonIndex };
-    e.dataTransfer.setData(TEAM_ROSTER_DRAG_TYPE, JSON.stringify(payload));
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
-    if (!e.dataTransfer.types.includes(TEAM_ROSTER_DRAG_TYPE)) return;
-    e.preventDefault();
-    setIsDragOver(true);
-  };
-
-  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    const raw = e.dataTransfer.getData(TEAM_ROSTER_DRAG_TYPE);
-    if (!raw) return;
-    try {
-      const payload: TeamRosterDragPayload = JSON.parse(raw);
-      if (payload.teamId === team.id && payload.fromIndex !== pokemonIndex) {
-        rosterActions.reorderSlot(team, payload.fromIndex, pokemonIndex);
-      }
-    } catch {
-      // malformed/foreign drag payload - ignore
-    }
+  // Roster reorder via framer-motion's Reorder.Item (Touch Drag-and-Drop:
+  // Framer Motion Reorder Leg 1, see TODO.md) - replaces the old native
+  // HTML5 draggable/dragstart implementation, which never fired on touch at
+  // all. dragListener is off on the Reorder.Item below, so a drag only
+  // starts through this pointerdown handler - same exclusion this card
+  // always needed for its natively-draggable/text-selectable descendants
+  // (nickname input, delete button are native input/button elements; the
+  // sprite/swap box, gender/shiny corner badges, and EditOverlays' item/
+  // ability pills carry `data-no-drag` explicitly), just wired through
+  // framer's imperative drag controls instead of dragstart's preventDefault.
+  const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if ((e.target as HTMLElement).closest('input, button, [data-no-drag]')) return;
+    dragControls.start(e);
   };
 
   // Roster Swap fills this slot with an in-card species picker rather than
@@ -236,20 +212,30 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
     // a dual-type Pokemon blends both type colors via one shared gradient.
     // This replaces the card's own flat border; the inner card below carries
     // no border of its own, only its background/radius/padding.
-    // layout="position" (leg 4, see TODO.md): animates this card sliding to its
-    // new grid slot when reorderSlot changes roster order (position delta only -
-    // NOT plain `layout`, which would also try to FLIP-animate this card's own
-    // size if its content ever changes height).
-    <motion.div layout="position" transition={DRAG_REORDER_TRANSITION} className="type-glow-ring max-w-[280px] min-w-0" style={glowRingStyle}>
+    // Reorder.Item (Touch Drag-and-Drop: Framer Motion Reorder Leg 1, see
+    // TODO.md) provides its own layout="position"-equivalent FLIP animation
+    // when TeamCard.tsx's Reorder.Group changes roster order, replacing the
+    // old plain motion.div + layout="position" pairing - value must match
+    // whatever identity TeamCard.tsx's Reorder.Group tracks its items by
+    // (pokemon.id). dragListener is off - handlePointerDown below is the
+    // only thing that starts a drag, so it can exclude inputs/buttons/
+    // [data-no-drag] first.
+    <Reorder.Item
+      as="div"
+      value={pokemon.id}
+      dragListener={false}
+      dragControls={dragControls}
+      transition={DRAG_REORDER_TRANSITION}
+      whileDrag={{ scale: 1.03, zIndex: 1, boxShadow: '0 8px 24px rgba(0,0,0,0.45)' }}
+      onDragEnd={onReorderDragEnd}
+      className="type-glow-ring max-w-[280px] min-w-0"
+      style={glowRingStyle}
+    >
       <div
         data-pokemon-card
-        draggable
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDragLeave={() => setIsDragOver(false)}
-        onDrop={handleDrop}
+        onPointerDown={handlePointerDown}
         onContextMenu={handleContextMenu}
-        className={`relative bg-zinc-700 rounded-[11px] p-3 flex flex-col gap-3 min-w-0 transition-colors cursor-grab ${isDragOver ? 'ring-2 ring-accent-gold' : ''}`}
+        className="relative bg-zinc-700 rounded-[11px] p-3 flex flex-col gap-3 min-w-0 transition-colors cursor-grab select-none"
       >
         {/* Left-Shifting Slot Deletion - permanently on (Always-On Editing Leg 2,
             see TODO.md). Centered on the card's top-right corner with a negative
@@ -379,6 +365,6 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
           )}
         </AnimatePresence>
       </div>
-    </motion.div>
+    </Reorder.Item>
   );
 }
