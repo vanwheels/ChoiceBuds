@@ -47,7 +47,14 @@ Entries prior to this file's oldest are in:
   `useBattles` (unported, Battle Logger has no web UI) and there's no
   sign-up/log-in UI on web yet either (that's Web Hosting & Domain's job);
   wiring it with nothing to trigger it would be premature. See commit
-  `7fa9130`.
+  `7fa9130`. Follow-up fix the same day once Vanny checked it live: the page
+  rendered fully unstyled (no crash, so nothing showed in console) - Tailwind
+  v4's automatic content-detection bases its scan on the active Vite
+  config's own `root`, which for `web/vite.config.ts` is the `web/` folder
+  itself, two levels above where every actual component lives
+  (`src/renderer/`), so it silently found nothing to generate utility
+  classes for. Fixed with an explicit `@source "./";` in `index.css`. See
+  commit `43f3385`.
 
 - **[Web App Scaffold: Storage Adapter] — Leg 1** (2026-09-29) - Introduced
   a `StorageAdapter` interface (`src/renderer/services/storage/`) with two
