@@ -142,7 +142,19 @@ export default function App() {
           {releaseNotesState.showPopup && <ReleaseNotesModal releaseNotesState={releaseNotesState} />}
         </AnimatePresence>
 
-        <Sidebar activeTab={activeTab} onTabChange={goToTab} />
+        <Sidebar
+          activeTab={activeTab}
+          onTabChange={goToTab}
+          mobileTopBarEnd={
+            <button
+              onClick={openCalcPopup}
+              aria-label="Open Calc"
+              className="flex items-center justify-center rounded-lg p-2 text-accent-gold transition-colors cursor-pointer hover:bg-zinc-700"
+            >
+              <CalcIcon />
+            </button>
+          }
+        />
 
         {/* Primary Content Viewport - Right Side */}
         {/* Each visited tab stays mounted (display:none when inactive) rather
@@ -243,11 +255,16 @@ export default function App() {
         {/* Rendered outside <main> so it survives tab switches - visible
             regardless of which tab is active or whether the sidebar is
             collapsed, since the Calc tab it replaces no longer exists to
-            double as the trigger (Regular Calc Popup Launcher Leg 1). */}
+            double as the trigger (Regular Calc Popup Launcher Leg 1).
+            Desktop/tablet only (`hidden md:flex`) - below `md` this covered
+            whatever page content sat at the bottom of a phone viewport
+            (reported live), so Sidebar.tsx's mobile top bar gets a compact
+            version instead (`mobileTopBarEnd` above) rather than this one
+            being duplicated or repositioned in place. */}
         <button
           onClick={() => openCalcPopup()}
           aria-label="Open Calc"
-          className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-accent-gold px-4 py-3 font-bold text-zinc-900 shadow-lg transition-transform cursor-pointer hover:scale-105"
+          className="hidden md:flex fixed bottom-6 right-6 z-40 items-center gap-2 rounded-full bg-accent-gold px-4 py-3 font-bold text-zinc-900 shadow-lg transition-transform cursor-pointer hover:scale-105"
         >
           <CalcIcon />
           Calc

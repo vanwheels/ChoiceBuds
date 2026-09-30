@@ -78,6 +78,18 @@ interface SidebarProps {
    * AppWeb.tsx's header comment.
    */
   renderFooter?: (collapsed: boolean) => ReactNode;
+  /**
+   * Extra content pinned to the right end of the mobile top bar, alongside
+   * the hamburger trigger (Responsive Layout Audit follow-up, see TODO.md) -
+   * both App.tsx and AppWeb.tsx use this for a compact Calc launcher there,
+   * since the floating `fixed bottom-6 right-6` button both files also
+   * render collides with page content at the bottom of a phone viewport
+   * (reported live - the bottom-left area of whatever's on screen gets
+   * covered). Unused on desktop/tablet - the rail there has no equivalent
+   * top-bar row to pin into, so the floating button stays as the desktop
+   * launcher, just hidden below `md` instead of duplicated.
+   */
+  mobileTopBarEnd?: ReactNode;
 }
 
 const MAIN_NAV_ITEMS: { tab: ActiveTab; label: string; Icon: typeof TeamsIcon }[] = [
@@ -107,7 +119,7 @@ const drawerVariants = {
   visible: { x: 0, transition: DRAWER_PANEL_ENTER_TRANSITION },
 };
 
-export default function Sidebar({ activeTab, onTabChange, renderFooter }: SidebarProps) {
+export default function Sidebar({ activeTab, onTabChange, renderFooter, mobileTopBarEnd }: SidebarProps) {
   const { collapsed, toggleCollapsed } = useSidebarCollapsed();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -219,7 +231,7 @@ export default function Sidebar({ activeTab, onTabChange, renderFooter }: Sideba
         headers are visible together; the drawer keeps the brand, this bar
         is just the trigger.
       */}
-      <div className="md:hidden flex items-center border-b border-zinc-700 bg-zinc-800 px-4 py-3">
+      <div className="md:hidden flex items-center justify-between border-b border-zinc-700 bg-zinc-800 px-4 py-3">
         <button
           onClick={() => setDrawerOpen(true)}
           aria-label="Open navigation menu"
@@ -227,6 +239,7 @@ export default function Sidebar({ activeTab, onTabChange, renderFooter }: Sideba
         >
           <MenuIcon />
         </button>
+        {mobileTopBarEnd}
       </div>
 
       {/* Mobile off-canvas drawer, portaled so it isn't constrained by any transformed ancestor - same reasoning as Modal.tsx's own portal. */}

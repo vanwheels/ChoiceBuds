@@ -180,6 +180,15 @@ export default function AppWeb() {
             )}
           </div>
         )}
+        mobileTopBarEnd={
+          <button
+            onClick={() => { setIsCalcPopupOpen(true); setHasOpenedCalcPopup(true); }}
+            aria-label="Open Calc"
+            className="flex items-center justify-center rounded-lg p-2 text-accent-gold transition-colors cursor-pointer hover:bg-zinc-700"
+          >
+            <CalcIcon />
+          </button>
+        }
       />
 
       {showAuthModal && (
@@ -275,10 +284,14 @@ export default function AppWeb() {
         )}
       </main>
 
+      {/* Desktop/tablet only (`hidden md:flex`) - below `md` this covered
+          whatever page content sat at the bottom of a phone viewport
+          (reported live), so Sidebar.tsx's mobile top bar gets a compact
+          version instead (`mobileTopBarEnd` above). */}
       <button
         onClick={() => { setIsCalcPopupOpen(true); setHasOpenedCalcPopup(true); }}
         aria-label="Open Calc"
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-accent-gold px-4 py-3 font-bold text-zinc-900 shadow-lg transition-transform cursor-pointer hover:scale-105"
+        className="hidden md:flex fixed bottom-6 right-6 z-40 items-center gap-2 rounded-full bg-accent-gold px-4 py-3 font-bold text-zinc-900 shadow-lg transition-transform cursor-pointer hover:scale-105"
       >
         <CalcIcon />
         Calc
