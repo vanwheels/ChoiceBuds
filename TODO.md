@@ -239,6 +239,26 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
+- **[Sync Worker: Shared Free-Tier Capacity Ceiling] — Leg 1** *(Last
+  touched: 2026-09-30 · Re-checks: 0)*
+  Flagged during the debounce-loop fix below (see `COMPLETED.md`): the
+  shipped app hardcodes `SYNC_WORKER_URL` in `syncApi.ts` to Vanny's own
+  Worker (`choicebuds-sync.vanwheelstheman.workers.dev`), not a per-user
+  deployment - despite `worker/README.md` documenting a bring-your-own-
+  Worker model, nobody downloading the release installer is going to clone
+  the repo and deploy their own. Every signed-in user everywhere shares one
+  Cloudflare account's free-tier quota: Workers KV caps out at 1,000
+  writes/day, globally, not per-user. Even with the debounce-loop bug fixed
+  (was pushing every ~5s per open+signed-in client; now ~288 writes/day
+  baseline per idle device from the 5-min fallback poll, plus one per real
+  edit burst), a handful of friends leaving the app open simultaneously
+  already approaches that global cap. Needs Vanny's call on a direction
+  before scoping: Workers Paid plan (~$5/mo, removes the caps, keeps the
+  single-hosted-by-Vanny model), a configurable per-install Worker URL
+  (matches the README's original intent, shifts load onto whoever
+  self-hosts), or further cutting the idle poll to push the free-tier
+  ceiling out further without fixing the shared-quota problem itself.
+
 - **[UI Shift Assessment Sweep — Post Card UI Polish] — Leg 1** *(Last
   touched: 2026-09-08 · Re-checks: 0)*
   Continue scoping/assessing UI shifts and changes to the rest of the app,

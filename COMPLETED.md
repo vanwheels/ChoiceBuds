@@ -18,6 +18,17 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Sync Debounce Loop Fix] — Leg 1** (2026-09-30) - `useSync`'s debounced
+  mutation-sync effect couldn't tell its own `applySyncedState` write apart
+  from a real local edit (both change the `teams`/`battles`/`savedPokemon`
+  array references it watches), so every sync scheduled another sync 5
+  seconds later, forever - roughly one Worker push every 5s per open,
+  signed-in client instead of the intended debounce-on-edit/5-min-poll
+  behavior. This is what blew through 50%+ of the Worker's daily KV write
+  budget. See commit `457f467`. Surfaced a bigger, separate scaling
+  question while investigating - see `TODO.md`'s new [Sync Worker: Shared
+  Free-Tier Capacity Ceiling] entry.
+
 - **[Web Settings Parity] — Leg 1** (2026-09-30) - Wired `SettingsPage` into
   `AppWeb.tsx`'s nav. Made `updateCheckState` an optional `SettingsPage`
   prop (skipping `UpdateCheckSection` entirely when absent, since
