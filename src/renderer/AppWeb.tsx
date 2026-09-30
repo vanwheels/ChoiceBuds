@@ -60,16 +60,18 @@ import TeamsPage from './components/TeamsPage';
 import WebAuthScreen from './components/WebAuthScreen';
 import WebComingSoon from './components/WebComingSoon';
 import Sidebar from './components/Sidebar';
+import { CalcIcon } from './components/icons/SidebarIcons';
 
 const BoxPage = lazy(() => import('./components/BoxPage'));
+const CalcPopup = lazy(() => import('./components/CalcPopup'));
+const TypeMatchupPage = lazy(() => import('./components/typematchup/TypeMatchupPage'));
+const SpeedTiersPage = lazy(() => import('./components/speedtiers/SpeedTiersPage'));
 
 // Tabs Sidebar.tsx renders that don't have a ported web page yet - each
 // shows WebComingSoon with this label until its own parity leg lands.
 const COMING_SOON_LABELS: Partial<Record<ActiveTab, string>> = {
   battles: 'Battle Log',
   statistics: 'Statistics',
-  typeMatchup: 'Type Matchup',
-  speedTiers: 'Speed Tiers',
   settings: 'Settings',
 };
 
@@ -88,6 +90,10 @@ export default function AppWeb() {
     setVisitedTabs(prev => prev.has(tab) ? prev : new Set(prev).add(tab));
   };
   const [showAuthModal, setShowAuthModal] = useState(false);
+  // Same lazy-once/hidden-after-first-open lifecycle as visitedTabs above,
+  // mirroring App.tsx's CalcPopup wiring - see that file's header comment.
+  const [isCalcPopupOpen, setIsCalcPopupOpen] = useState(false);
+  const [hasOpenedCalcPopup, setHasOpenedCalcPopup] = useState(false);
   const teamsState = useTeams();
   const databaseState = useDatabase();
   const savedPokemonState = useSavedPokemon();
@@ -179,12 +185,61 @@ export default function AppWeb() {
             </Suspense>
           </div>
         )}
+        {visitedTabs.has('typeMatchup') && (
+          <div style={{ display: activeTab === 'typeMatchup' ? 'block' : 'none' }} className="h-full">
+            <Suspense fallback={<div className="p-8 text-sm text-zinc-400">Loading type matchup...</div>}>
+              <TypeMatchupPage
+                teamsState={teamsState}
+                gameDataState={gameDataState}
+                databaseState={databaseState}
+                spriteCacheState={spriteCacheState}
+              />
+            </Suspense>
+          </div>
+        )}
+        {visitedTabs.has('speedTiers') && (
+          <div style={{ display: activeTab === 'speedTiers' ? 'block' : 'none' }} className="h-full">
+            <Suspense fallback={<div className="p-8 text-sm text-zinc-400">Loading speed tiers...</div>}>
+              <SpeedTiersPage
+                teamsState={teamsState}
+                gameDataState={gameDataState}
+                databaseState={databaseState}
+                spriteCacheState={spriteCacheState}
+                speciesRosterState={speciesRosterState}
+              />
+            </Suspense>
+          </div>
+        )}
         {Object.entries(COMING_SOON_LABELS).map(([tab, label]) => visitedTabs.has(tab as ActiveTab) && (
           <div key={tab} style={{ display: activeTab === tab ? 'block' : 'none' }} className="h-full">
             <WebComingSoon feature={label} />
           </div>
         ))}
       </main>
+
+      <button
+        onClick={() => { setIsCalcPopupOpen(true); setHasOpenedCalcPopup(true); }}
+        aria-label="Open Calc"
+        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-accent-gold px-4 py-3 font-bold text-zinc-900 shadow-lg transition-transform cursor-pointer hover:scale-105"
+      >
+        <CalcIcon />
+        Calc
+      </button>
+
+      {hasOpenedCalcPopup && (
+        <Suspense fallback={null}>
+          <CalcPopup
+            isOpen={isCalcPopupOpen}
+            onClose={() => setIsCalcPopupOpen(false)}
+            gameDataState={gameDataState}
+            teamsState={teamsState}
+            databaseState={databaseState}
+            savedPokemonState={savedPokemonState}
+            spriteCacheState={spriteCacheState}
+            settingsState={settingsState}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
