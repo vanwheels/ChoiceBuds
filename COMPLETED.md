@@ -39,7 +39,10 @@ Entries prior to this file's oldest are in:
   stacks (`flex-col`) below `md`, so the trigger renders as a real top-bar
   row above `<main>` and pushes content down rather than sitting on top of
   it (no longer self-contained to just `Sidebar.tsx` as a result - the
-  outer shells needed the direction change too). See `56680da`.
+  outer shells needed the direction change too). See `56680da`. Also swapped
+  the top bar's row order (hamburger left, brand right, was the reverse) -
+  flagged the same day as disorienting to open a left-sliding drawer from a
+  right-side trigger. See `c1584df`.
 
 - **[Touch-Accessible Hover Content] — Leg 1** (2026-09-30) - Added
   `useLongPress.ts` as touch's analog to mouse hover for the item/ability/
