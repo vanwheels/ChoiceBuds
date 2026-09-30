@@ -6,10 +6,16 @@
  * ItemPickerPanel over this component via FloatingCardPanel while picking,
  * rather than this component managing its own popover. Extracted from
  * EditOverlays.tsx to keep it under the project's 250-line component cap.
+ *
+ * Long-pressing is touch's analog to the mouse hover this component also
+ * wires up - it shows the same tooltip without opening the picker a plain
+ * tap does (Touch-Accessible Hover Content Leg 1, see TODO.md).
  */
 
+import { useRef } from 'react';
 import type { MouseEvent } from 'react';
 import type { ItemData } from '../types/pokemon';
+import { useLongPress } from '../hooks/useLongPress';
 
 const FAIRY_FEATHER_FALLBACK_SPRITE = 'https://www.serebii.net/itemdex/sprites/fairyfeather.png';
 
@@ -21,7 +27,7 @@ interface ItemSpriteBoxProps {
   resolveSprite: (remoteUrl: string) => string;
   onSpriteError: () => void;
   onFallbackSpriteError: () => void;
-  onHoverEnter: (e: MouseEvent<HTMLDivElement>) => void;
+  onHoverEnter: (triggerEl: HTMLElement) => void;
   onHoverLeave: () => void;
   onToggleMenu: (e: MouseEvent<HTMLDivElement>) => void;
 }
@@ -41,13 +47,20 @@ export default function ItemSpriteBox({
   onToggleMenu,
 }: ItemSpriteBoxProps) {
   const isFairyFeather = selectedItem.trim().toLowerCase() === 'fairy feather';
+  const ref = useRef<HTMLDivElement>(null);
+  const longPress = useLongPress(
+    () => { if (ref.current) onHoverEnter(ref.current); },
+    onHoverLeave
+  );
 
   return (
     <div
+      ref={ref}
       data-no-drag
-      onMouseEnter={onHoverEnter}
+      onMouseEnter={(e) => onHoverEnter(e.currentTarget)}
       onMouseLeave={onHoverLeave}
       onClick={onToggleMenu}
+      {...longPress}
       className="w-14 h-14 bg-zinc-800 rounded-lg border border-zinc-600 flex items-center justify-center overflow-hidden transition-colors cursor-pointer hover:border-accent-gold"
     >
       {itemData?.spriteUrl && !spriteFailed ? (

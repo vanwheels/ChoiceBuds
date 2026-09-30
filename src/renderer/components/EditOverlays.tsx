@@ -7,7 +7,11 @@
  * (the same trigger's closest `[data-pokemon-card]` ancestor, for Tooltip's
  * card-width lock - see measureDropdownHeight.ts for the same lookup pattern);
  * one shared <Tooltip> renders `position: fixed` next to whatever was actually
- * hovered.
+ * hovered. Each child also wires up a touch long-press (useLongPress.ts) as
+ * mouse hover's touch analog - holding calls the same hoverEnter/hoverLeave
+ * this component passes down, and preventDefaults the trailing tap so it
+ * doesn't also open the picker (Touch-Accessible Hover Content Leg 1, see
+ * TODO.md).
  *
  * The active item/ability/move picker panel works the same way: `activeMenu`
  * pairs with `activeMenuAnchorRect`/`activeMenuCardRect` (captured once on
@@ -261,7 +265,7 @@ export default function EditOverlays({ pokemon, gameDataState, rulesetId, resolv
         resolveSprite={resolveSprite}
         onSpriteError={() => setItemSpriteFailed(true)}
         onFallbackSpriteError={() => setItemFallbackSpriteFailed(true)}
-        onHoverEnter={(e) => hoverEnter('item', e.currentTarget)}
+        onHoverEnter={(el) => hoverEnter('item', el)}
         onHoverLeave={() => hoverLeave('item')}
         onToggleMenu={(e) => toggleMenu('item', e)}
       />
@@ -269,7 +273,7 @@ export default function EditOverlays({ pokemon, gameDataState, rulesetId, resolv
       {/* Ability Capsule */}
       <AbilityCapsule
         selectedAbility={selectedAbility}
-        onHoverEnter={(e) => hoverEnter('ability', e.currentTarget)}
+        onHoverEnter={(el) => hoverEnter('ability', el)}
         onHoverLeave={() => hoverLeave('ability')}
         onToggleMenu={(e) => toggleMenu('ability', e)}
       />

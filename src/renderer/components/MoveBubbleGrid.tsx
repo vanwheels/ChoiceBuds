@@ -5,14 +5,22 @@
  * FloatingCardPanel (see EditOverlays.tsx) rather than this component
  * managing its own popover. Extracted from EditOverlays.tsx to keep it
  * under the project's 250-line component cap.
+ *
+ * Each bubble is its own MoveBubble subcomponent rather than inline JSX
+ * inside the .map() below, so it can call useLongPress (touch's analog to
+ * the mouse hover wired up alongside it - shows the same tooltip without
+ * opening the picker a plain tap does; Touch-Accessible Hover Content Leg 1,
+ * see TODO.md) - Hooks can only be called from a real component, not a bare
+ * callback passed to .map().
  */
 
 import { useMemo, useRef, useState } from 'react';
-import type { MouseEvent, PointerEvent } from 'react';
+import type { MouseEvent, PointerEvent, RefObject } from 'react';
 import { Reorder } from 'framer-motion';
 import type { MoveData } from '../types/pokemon';
 import { getTypeTheme, type TypeTheme } from '../config/pokemonTheme';
 import { DRAG_REORDER_TRANSITION } from '../config/motion';
+import { useLongPress } from '../hooks/useLongPress';
 
 const NEUTRAL_THEME: TypeTheme = { bg: 'bg-zinc-800', text: 'text-zinc-400' };
 const IDENTITY_ORDER = [0, 1, 2, 3] as const;
@@ -37,6 +45,57 @@ interface MoveBubbleGridProps {
   // not a single from/to pair, since Reorder.Group always resolves to a
   // complete final order rather than a single swap.
   onReorderMoves: (newOrder: number[]) => void;
+}
+
+interface MoveBubbleProps {
+  originalIndex: number;
+  theme: TypeTheme;
+  label: string;
+  gridRef: RefObject<HTMLDivElement | null>;
+  onToggleMenu: (key: string, e: MouseEvent<HTMLDivElement>) => void;
+  onHoverEnter: (key: HoverKey, triggerEl: HTMLElement) => void;
+  onHoverLeave: (key: HoverKey) => void;
+  onDragEnd: () => void;
+}
+
+function MoveBubble({ originalIndex, theme, label, gridRef, onToggleMenu, onHoverEnter, onHoverLeave, onDragEnd }: MoveBubbleProps) {
+  const key = `move${originalIndex}` as `move${0 | 1 | 2 | 3}`;
+  // Same grid-rect anchoring as onMouseEnter below.
+  const longPress = useLongPress(
+    () => { if (gridRef.current) onHoverEnter(key, gridRef.current); },
+    () => onHoverLeave(key)
+  );
+
+  return (
+    <Reorder.Item
+      as="div"
+      value={originalIndex}
+      transition={DRAG_REORDER_TRANSITION}
+      whileDrag={{ scale: 1.05, zIndex: 1, boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}
+      onDragEnd={onDragEnd}
+      // Each bubble is its own drag source (not just the outer PokemonCard)
+      // - stopPropagation on pointerdown is what stops a bubble drag from
+      // also bubbling up into PokemonCard's own handlePointerDown and
+      // picking up the whole roster slot at the same time (same fix shape
+      // the old native-HTML5 implementation needed via dragstart's own
+      // stopPropagation).
+      onPointerDown={(e: PointerEvent<HTMLDivElement>) => e.stopPropagation()}
+      onMouseEnter={() => {
+        // Anchor the shared Tooltip to the whole 2x2 grid's rect, not this
+        // individual bubble's - keeps the tooltip in the same fixed spot
+        // whichever row is hovered, instead of jumping between rows and
+        // covering row 1 when row 2 is hovered (also stops it from blocking
+        // a slot mid drag-and-drop reorder).
+        if (gridRef.current) onHoverEnter(key, gridRef.current);
+      }}
+      onMouseLeave={() => onHoverLeave(key)}
+      onClick={(e: MouseEvent<HTMLDivElement>) => onToggleMenu(key, e)}
+      {...longPress}
+      className={`w-full min-h-[2.75rem] flex items-center justify-center text-center whitespace-normal break-words p-1 rounded-xl text-xs font-bold transition-colors select-none ${theme.bg} ${theme.text} hover:opacity-80 cursor-grab`}
+    >
+      {label}
+    </Reorder.Item>
+  );
 }
 
 export default function MoveBubbleGrid({
@@ -90,40 +149,19 @@ export default function MoveBubbleGrid({
       ref={gridRef}
       className="grid grid-cols-2 gap-2 w-full"
     >
-      {order.map(originalIndex => {
-        const theme = themes[originalIndex];
-        const key = `move${originalIndex}` as `move${0 | 1 | 2 | 3}`;
-        return (
-          <Reorder.Item
-            as="div"
-            key={originalIndex}
-            value={originalIndex}
-            transition={DRAG_REORDER_TRANSITION}
-            whileDrag={{ scale: 1.05, zIndex: 1, boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}
-            onDragEnd={handleDragEnd}
-            // Each bubble is its own drag source (not just the outer
-            // PokemonCard) - stopPropagation on pointerdown is what stops a
-            // bubble drag from also bubbling up into PokemonCard's own
-            // handlePointerDown and picking up the whole roster slot at the
-            // same time (same fix shape the old native-HTML5 implementation
-            // needed via dragstart's own stopPropagation).
-            onPointerDown={(e: PointerEvent<HTMLDivElement>) => e.stopPropagation()}
-            onMouseEnter={() => {
-              // Anchor the shared Tooltip to the whole 2x2 grid's rect, not
-              // this individual bubble's - keeps the tooltip in the same
-              // fixed spot whichever row is hovered, instead of jumping
-              // between rows and covering row 1 when row 2 is hovered (also
-              // stops it from blocking a slot mid drag-and-drop reorder).
-              if (gridRef.current) onHoverEnter(key, gridRef.current);
-            }}
-            onMouseLeave={() => onHoverLeave(key)}
-            onClick={(e: MouseEvent<HTMLDivElement>) => onToggleMenu(key, e)}
-            className={`w-full min-h-[2.75rem] flex items-center justify-center text-center whitespace-normal break-words p-1 rounded-xl text-xs font-bold transition-colors select-none ${theme.bg} ${theme.text} hover:opacity-80 cursor-grab`}
-          >
-            {selectedMoves[originalIndex] || `Move ${originalIndex + 1}`}
-          </Reorder.Item>
-        );
-      })}
+      {order.map(originalIndex => (
+        <MoveBubble
+          key={originalIndex}
+          originalIndex={originalIndex}
+          theme={themes[originalIndex]}
+          label={selectedMoves[originalIndex] || `Move ${originalIndex + 1}`}
+          gridRef={gridRef}
+          onToggleMenu={onToggleMenu}
+          onHoverEnter={onHoverEnter}
+          onHoverLeave={onHoverLeave}
+          onDragEnd={handleDragEnd}
+        />
+      ))}
     </Reorder.Group>
   );
 }
