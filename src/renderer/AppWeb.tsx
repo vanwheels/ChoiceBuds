@@ -17,13 +17,19 @@
  * app over an account. WebAuthScreen renders as a dismissible modal (opened
  * from the sidebar's "Sign in to sync" prompt) rather than a full-screen
  * blocker. useBattles is now ported to the storage adapter (Web Battle Log
- * Storage Adapter Port leg, see TODO.md) and wired into useSync directly -
- * Battle Logger still has no web UI of its own (see COMING_SOON_LABELS
- * below), but synced battle data now round-trips through this browser's
- * IndexedDB like Teams/Box already do. Still NOT wired: useInitialSync/
- * useUsageSync (bulk first-launch dex sync - a perf pre-warm, not a
- * functional requirement, since useGameData already fetches lazily on
- * cache miss).
+ * Storage Adapter Port leg, see TODO.md) and wired into useSync directly.
+ * Still NOT wired: useInitialSync/useUsageSync (bulk first-launch dex sync -
+ * a perf pre-warm, not a functional requirement, since useGameData already
+ * fetches lazily on cache miss).
+ *
+ * Battle Log + Statistics (Web Battle Log & Statistics Parity leg, see
+ * TODO.md) now render the same BattleLogPage/StatisticsPage.tsx the desktop
+ * app does, mirroring App.tsx's wiring verbatim - including the
+ * battleLogSession state that links an in-progress RecordMatchForm session
+ * to the floating Calc popup's opponent tray (see App.tsx's own comment on
+ * that state for why it lives up here rather than inside BattleLogPage).
+ * StatisticsPage itself had no Electron dependency of its own (derives
+ * everything client-side from the battles array).
  *
  * Box (Web Box Parity leg) reuses the same BoxPage.tsx the desktop app
  * renders, passing the same hook states already instantiated above for
@@ -37,16 +43,17 @@
  * dependency of its own (confirmed during scoping), it only type-imports
  * `ActiveTab` from App.tsx. Sidebar's nav list is hardcoded to all 7 desktop
  * tabs, not just Teams/Box, so every tab now shows up in the web nav too;
- * the ones without a ported page yet (Battle Log, Statistics, Type Matchup,
- * Speed Tiers, Settings) render `WebComingSoon` instead until their own
- * parity legs land (see TODO.md's Current Milestone section) - pure shell/
- * structure change, no new feature surface. The sync-status/sign-in footer
- * that used to live in this file's own hand-rolled sidebar now goes through
- * Sidebar's new `renderFooter` slot instead (added by this same leg) so it
- * keeps working with no Settings tab wired yet to host it.
+ * Settings is the only one left without a ported page (see
+ * COMING_SOON_LABELS below) until its own parity leg lands (see TODO.md's
+ * Current Milestone section) - pure shell/structure change, no new feature
+ * surface. The sync-status/sign-in footer that used to live in this file's
+ * own hand-rolled sidebar now goes through Sidebar's new `renderFooter` slot
+ * instead (added by this same leg) so it keeps working with no Settings tab
+ * wired yet to host it.
  */
 
 import { lazy, Suspense, useState } from 'react';
+import type { OpponentPokemonEntry } from './types/pokemon';
 import { useTeams } from './hooks/useTeams';
 import { useDatabase } from './hooks/useDatabase';
 import { useSavedPokemon } from './hooks/useSavedPokemon';
@@ -66,14 +73,14 @@ import { CalcIcon } from './components/icons/SidebarIcons';
 
 const BoxPage = lazy(() => import('./components/BoxPage'));
 const CalcPopup = lazy(() => import('./components/CalcPopup'));
+const BattleLogPage = lazy(() => import('./components/battlelog/BattleLogPage'));
+const StatisticsPage = lazy(() => import('./components/statistics/StatisticsPage'));
 const TypeMatchupPage = lazy(() => import('./components/typematchup/TypeMatchupPage'));
 const SpeedTiersPage = lazy(() => import('./components/speedtiers/SpeedTiersPage'));
 
 // Tabs Sidebar.tsx renders that don't have a ported web page yet - each
 // shows WebComingSoon with this label until its own parity leg lands.
 const COMING_SOON_LABELS: Partial<Record<ActiveTab, string>> = {
-  battles: 'Battle Log',
-  statistics: 'Statistics',
   settings: 'Settings',
 };
 
@@ -96,6 +103,13 @@ export default function AppWeb() {
   // mirroring App.tsx's CalcPopup wiring - see that file's header comment.
   const [isCalcPopupOpen, setIsCalcPopupOpen] = useState(false);
   const [hasOpenedCalcPopup, setHasOpenedCalcPopup] = useState(false);
+  // Mirrors App.tsx's battleLogSession wiring - see that file's header
+  // comment for why this lives up here rather than inside BattleLogPage.
+  const [battleLogSession, setBattleLogSession] = useState<{
+    roster: OpponentPokemonEntry[];
+    onUpdateEntry: (entryId: string, updates: Partial<OpponentPokemonEntry>) => void;
+    teamId?: string;
+  } | null>(null);
   const teamsState = useTeams();
   const databaseState = useDatabase();
   const savedPokemonState = useSavedPokemon();
@@ -212,6 +226,26 @@ export default function AppWeb() {
             </Suspense>
           </div>
         )}
+        {visitedTabs.has('battles') && (
+          <div style={{ display: activeTab === 'battles' ? 'block' : 'none' }} className="h-full">
+            <Suspense fallback={<div className="p-8 text-sm text-zinc-400">Loading battle log...</div>}>
+              <BattleLogPage
+                battlesState={battlesState}
+                teamsState={teamsState}
+                speciesRosterState={speciesRosterState}
+                spriteCacheState={spriteCacheState}
+                registerBattleLogSession={setBattleLogSession}
+              />
+            </Suspense>
+          </div>
+        )}
+        {visitedTabs.has('statistics') && (
+          <div style={{ display: activeTab === 'statistics' ? 'block' : 'none' }} className="h-full">
+            <Suspense fallback={<div className="p-8 text-sm text-zinc-400">Loading statistics...</div>}>
+              <StatisticsPage battlesState={battlesState} spriteCacheState={spriteCacheState} />
+            </Suspense>
+          </div>
+        )}
         {Object.entries(COMING_SOON_LABELS).map(([tab, label]) => visitedTabs.has(tab as ActiveTab) && (
           <div key={tab} style={{ display: activeTab === tab ? 'block' : 'none' }} className="h-full">
             <WebComingSoon feature={label} />
@@ -239,6 +273,9 @@ export default function AppWeb() {
             savedPokemonState={savedPokemonState}
             spriteCacheState={spriteCacheState}
             settingsState={settingsState}
+            battleLogOpponentRoster={battleLogSession?.roster}
+            onUpdateOpponentEntry={battleLogSession?.onUpdateEntry}
+            battleLogPlayerTeamId={battleLogSession?.teamId}
           />
         </Suspense>
       )}
