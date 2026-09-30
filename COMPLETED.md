@@ -18,6 +18,23 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Web App Scaffold: Storage Adapter] — Leg 1** (2026-09-29) - Introduced
+  a `StorageAdapter` interface (`src/renderer/services/storage/`) with two
+  implementations - `ElectronStorageAdapter` (delegates to the existing
+  `window.electron` bridge) and `IndexedDBStorageAdapter` (new, one
+  `choicebuds`/`kv` IndexedDB store) - selected lazily by `getStorageAdapter()`
+  so Vitest's `window.electron` mock (installed in a `beforeEach`, after
+  module import) still resolves correctly. `useTeams`/`useDatabase` now
+  persist through it instead of calling `window.electron` directly; every
+  other data hook (`useSavedPokemon`, `useGameData`, `useSettings`, etc.)
+  is still Electron-only, deferred to the Teams/Box Parity legs. Added a
+  second Vite entry at `web/` (shares the root `package.json`, unlike the
+  fully standalone `worker/`) with a trimmed `AppWeb.tsx` shell - a
+  Teams/Box nav where Teams shows a live team-name list read through the
+  adapter and Box is a placeholder, proving the round-trip without building
+  out either page's real UI. Plumbing only, per plan. See commit
+  `68b2e0a`.
+
 - **[Sync Data Model: Per-Record Merge & Auto Sync] — Leg 1** (2026-09-29) -
   Replaced whole-blob push/pull (safe only because a human picked direction
   by hand) with per-record last-write-wins merge on the Worker, keyed by each

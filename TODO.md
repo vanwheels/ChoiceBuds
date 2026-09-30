@@ -66,7 +66,8 @@ changes together. Re-scoped 2026-09-29: migration does NOT need to happen in
 the same window as the deploy - local storage stays canonical (per
 `docs/investigations/web-version-scope.md`), so an un-migrated friend's data
 is never at risk, only their cross-device sync stops working until they sign
-up and get migrated. Deploy whenever, migrate people as they get to it.
+up and get migrated. Deploy whenever, migrate people as they get to it. [Web App Scaffold: Storage
+Adapter] — Leg 1 shipped 2026-09-29 (see `COMPLETED.md`).
 
 Decided 2026-09-29 (Vanny): the Worker deploy and the app release are two
 separate gates, not one - the Sign Up UI (`SyncSection.tsx`) only exists on
@@ -104,27 +105,29 @@ item bodies below stay short and link back to it rather than repeating it.
   Trickles in as each of the ~4-6 friends gets around to signing up - not a
   single all-at-once pass.
 
-- **[Web App Scaffold: Storage Adapter] — Leg 1** *(Last touched:
-  2026-09-29 · Re-checks: 0)*
-  Introduce a storage-adapter interface behind `useTeams`/`useDatabase`
-  with two implementations (existing Electron IPC, new IndexedDB), plus a
-  new `web/` folder (sibling to `worker/`) with its own Vite entry and a
-  trimmed `App` shell (Teams + Box nav only). Plumbing only, no feature
-  work.
-
 - **[Web Teams Parity] — Leg 1** *(Last touched: 2026-09-29 · Re-checks:
   0)*
-  Blocked: needs the scaffold leg shipped first.
+  Scaffold leg shipped (see `COMPLETED.md`) - no longer blocked.
   Get the Teams tab working end-to-end on web against the IndexedDB
   adapter: import (Showdown paste text + pokepast.es link - verify the
   pokepast.es read endpoint's CORS headers allow a direct browser fetch,
   since that's only been proven from Electron's process today), CRUD,
-  display - wired to the new auto-sync layer.
+  display - wired to the new auto-sync layer. Also needs porting whichever
+  of `TeamsPage`'s other hook dependencies (`useGameData`,
+  `useSpeciesRoster`, `useSpriteCache`, `useSettings`, etc.) it actually
+  touches through the storage-adapter interface
+  (`src/renderer/services/storage/`) - the scaffold leg only ported
+  `useTeams`/`useDatabase`, and `AppWeb.tsx` currently renders a placeholder
+  Teams tab, not the real `TeamsPage`.
 
 - **[Web Box Parity] — Leg 1** *(Last touched: 2026-09-29 · Re-checks: 0)*
-  Blocked: needs the scaffold leg shipped first.
+  Scaffold leg shipped (see `COMPLETED.md`) - no longer blocked.
   Saved-builds Box CRUD on web, same shape as the Teams parity leg but for
-  `SavedPokemonDatabase`.
+  `SavedPokemonDatabase` - needs `useSavedPokemon` ported to the storage
+  adapter (`src/renderer/services/storage/`) too, same as Teams Parity's
+  note on `useTeams`/`useDatabase` being the only two hooks the scaffold
+  leg actually ported. `AppWeb.tsx` currently renders a "Coming soon"
+  placeholder for Box.
 
 - **[Web Hosting & Domain] — Leg 1** *(Last touched: 2026-09-29 ·
   Re-checks: 0)*
