@@ -238,23 +238,20 @@ Box gets both a compact sprite/favorite/name grid *and* the same swipe deck
 (tap a tile to enter it), and each page's mobile header collapses into
 `Sidebar.tsx`'s existing hamburger top bar instead of keeping its own
 stacked `<header>`.
-
-- **[Full-Screen Swipeable Pokémon Card + Teams List View] — Leg 1** *(Last
-  touched: 2026-09-30 · Re-checks: 0)*
-  The core new primitive: a full-viewport `PokemonCard` with horizontal
-  swipe/paging and a close affordance, plus reworking Teams' mobile view into
-  a compact team-preview list (name/format/small sprite strip, no inline
-  Pokémon grid) that opens it on tap. Likely the largest of the three legs -
-  split further mid-leg if the swipe primitive and the list rework don't turn
-  out to be one cohesive unit of work.
+[Full-Screen Swipeable Pokémon Card + Teams List View] — Leg 1 shipped
+2026-09-30 (see `COMPLETED.md`).
 
 - **[Box Mobile: Compact Grid + Swipe Deck] — Leg 1** *(Last touched:
   2026-09-30 · Re-checks: 0)*
   Box's small 2-3 column sprite/favorite/name grid (~3 rows visible per
   screen - a shrunk `BoxCard.tsx` collapsed tile), plus wiring a tapped tile
-  into the same full-screen swipe deck from the leg above, paging through the
-  currently filtered/sorted list rather than a fixed team roster. Depends on
-  that leg's primitive existing first.
+  into the same full-screen swipe deck Leg 1 shipped (`MobileTeamSwipeOverlay`/
+  `MobilePokemonCard`), paging through the currently filtered/sorted list
+  rather than a fixed team roster. That primitive is built on
+  `EditablePokemonCore` (team-agnostic), so a Box entry should be able to
+  reuse it directly - the real remaining work here is wiring the paging
+  sequence off the filtered/sorted Box list instead of `team.pokemon`, not
+  building a second deck.
 
 ## Blocked
 

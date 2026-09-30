@@ -18,6 +18,33 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Full-Screen Swipeable Pokémon Card + Teams List View] — Leg 1**
+  (2026-09-30) - see commit `150be1c`. The core new mobile primitive:
+  `MobileTeamSwipeOverlay.tsx` fills the viewport with one
+  `MobilePokemonCard.tsx` per team member, paging via horizontal drag-swipe
+  (arrow-button fallback for non-touch input) - built on the same
+  team-agnostic `EditablePokemonCore` `PokemonCard.tsx`/`BoxCard.tsx` already
+  share, rather than bolting a "fullscreen mode" onto `PokemonCard.tsx`
+  itself (that component's `Reorder.Item`/drag-start scaffolding is specific
+  to the desktop roster grid's drag-to-reorder, which has no equivalent
+  here). `TeamsPage.tsx` now renders a new compact `MobileTeamsList.tsx`
+  (via `MobileTeamRow.tsx` - name/format/sprite strip, reusing
+  `RegulationBadge`/`TeamOverflowMenu` as-is) below `md` instead of the
+  desktop `TeamCard` grid, which is untouched above `md`. Caught and fixed a
+  real crash live via run-desktop before shipping: removing the
+  last-indexed Pokémon while viewing it threw ("Cannot read properties of
+  undefined (reading 'id')") because the render-time roster-length clamp
+  called `setCurrentIndex` for the *next* render but kept reading the stale
+  index for the *current* one - fixed by deriving a `safeIndex` during the
+  same render pass. Also added a `zoom` command to the run-desktop driver
+  (`webContents.setZoomFactor`) since Electron's `minWidth: 1280` clamps
+  `setContentSize`, leaving no way to reach the app's `md` (768px)
+  breakpoints in the desktop shell otherwise - needed to verify this leg at
+  all. Narrowed from the scoping doc: no mobile "+ Add Pokémon" flow yet
+  (teams are created with pokemon already via import, so this wasn't
+  reachable in practice) and no drag-reorder in the compact list (scoping
+  doc only specified name/format/sprite strip for it).
+
 - **[Mobile Compact Top Bar: Teams & Box] — Leg 1** (2026-09-30) - see commit
   `438a871`. Replaced `TeamsPage`/`BoxPage`'s stacked mobile `<header>`
   (which ate 1/4+ of a phone screen's height) with Sidebar.tsx's existing
