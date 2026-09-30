@@ -218,6 +218,48 @@ min-height overflow instead). See `COMPLETED.md` for all three.
   that basis. Split further mid-leg if any one of them turns out to need
   disproportionate work.
 
+Mobile Teams & Box Card View raised by Vanny 2026-09-30, right after
+Responsive Layout Audit: Teams & Box shipped - a different ask than that
+leg's overflow/squishing fixes: the grid/list-of-cards pattern itself isn't
+right for mobile, not just cramped. Its own Scoping leg finished the same
+day, splitting into 3 build legs (see `COMPLETED.md` and
+[docs/investigations/mobile-teams-box-card-view-scope.md](docs/investigations/mobile-teams-box-card-view-scope.md)).
+Key decisions: mobile-only (desktop grid untouched), a full-screen
+swipeable Pokémon card replaces vertical scrolling through a team's roster,
+Box gets both a compact sprite/favorite/name grid *and* the same swipe deck
+(tap a tile to enter it), and each page's mobile header collapses into
+`Sidebar.tsx`'s existing hamburger top bar instead of keeping its own
+stacked `<header>`.
+
+- **[Mobile Compact Top Bar: Teams & Box] — Leg 1** *(Last touched:
+  2026-09-30 · Re-checks: 0)*
+  Replace `TeamsPage`/`BoxPage`'s stacked mobile `<header>` with a single
+  hamburger-bar row (hamburger · title · page actions · Calc), reusing
+  `Sidebar.tsx`'s `mobileTopBarEnd` slot. That slot isn't page-aware today
+  (wired once at the `App.tsx`/`AppWeb.tsx` shell level as a static Calc
+  button) - needs a small mechanism for the active page to register its own
+  buttons there (e.g. a `useMobileHeaderActions`-style context/hook). Desktop
+  header untouched. See the scoping doc for the exact icon layout per page;
+  how "Filter" maps onto each page's existing filter UI is left to be
+  finalized live during this leg.
+
+- **[Full-Screen Swipeable Pokémon Card + Teams List View] — Leg 1** *(Last
+  touched: 2026-09-30 · Re-checks: 0)*
+  The core new primitive: a full-viewport `PokemonCard` with horizontal
+  swipe/paging and a close affordance, plus reworking Teams' mobile view into
+  a compact team-preview list (name/format/small sprite strip, no inline
+  Pokémon grid) that opens it on tap. Likely the largest of the three legs -
+  split further mid-leg if the swipe primitive and the list rework don't turn
+  out to be one cohesive unit of work.
+
+- **[Box Mobile: Compact Grid + Swipe Deck] — Leg 1** *(Last touched:
+  2026-09-30 · Re-checks: 0)*
+  Box's small 2-3 column sprite/favorite/name grid (~3 rows visible per
+  screen - a shrunk `BoxCard.tsx` collapsed tile), plus wiring a tapped tile
+  into the same full-screen swipe deck from the leg above, paging through the
+  currently filtered/sorted list rather than a fixed team roster. Depends on
+  that leg's primitive existing first.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something

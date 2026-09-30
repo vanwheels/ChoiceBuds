@@ -18,6 +18,18 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Mobile Teams & Box Card View: Scoping] — Leg 1** (2026-09-30) - Vanny
+  raised, right after Responsive Layout Audit: Teams & Box shipped, that the
+  grid/list-of-cards pattern itself isn't right for mobile (not just
+  cramped): the page header eats 1/4+ of a phone screen's height, and a
+  single Pokémon card should fill the screen with horizontal swipe between a
+  team's mons instead of vertical scrolling. Scoped live into 3 decisions
+  (mobile-only, a full-screen swipe deck for both Teams-within-a-team and
+  Box's whole filtered list, Box additionally keeps a compact sprite/
+  favorite/name grid as its default view) and 3 build legs - see
+  [docs/investigations/mobile-teams-box-card-view-scope.md](docs/investigations/mobile-teams-box-card-view-scope.md)
+  and the new entries under `TODO.md`'s current milestone.
+
 - **[Short-List Scroll Stuck on iOS Safari] — Leg 1** (2026-09-30) - see
   commit `0d26c44`. Vanny verified live on an iPhone 16: a single empty team
   (or very short Box) produces content whose height exactly matches the
