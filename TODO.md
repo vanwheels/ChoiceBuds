@@ -136,8 +136,77 @@ and
 [Web Battle Log Storage Adapter Port], [Web Battle Log & Statistics
 Parity], and [Web Settings Parity] all shipped as Leg 1s (see
 `COMPLETED.md`). Every Sidebar tab now renders its real page on both
-desktop and web. No next milestone promoted yet - needs Vanny's call on
-which of the Future Milestones (unscheduled) items below to scope next.
+desktop and web.
+
+Mobile-Friendliness Pass promoted to current milestone 2026-09-30 (Vanny's
+call) - its gating condition (web feature set stable enough to design
+against) was met the same day Full Web Feature Parity shipped. Its own
+Scoping leg finished the same day, splitting into 6 build legs (see
+`COMPLETED.md` and
+[docs/investigations/mobile-friendliness-scope.md](docs/investigations/mobile-friendliness-scope.md)).
+Survey found almost zero existing responsive-breakpoint usage anywhere in
+the renderer, and two functionality-breaking (not just cramped) touch
+gaps: native HTML5 drag-and-drop never fires on touch at all (affects
+roster/move/Calc-tray reordering in 6 files), and the shared
+`Tooltip`/`FloatingCardPanel` hover popups are unreachable without a mouse
+(affects 7 files). Decided live during scoping: swap touch drag-and-drop
+to framer-motion's `Reorder` primitive (already a dependency, no new
+package) rather than `dnd-kit` or touch-only fallback controls; mobile nav
+becomes a hamburger/slide-out drawer built from `Sidebar.tsx`'s existing
+content rather than a bottom tab bar or an auto-collapsed icon rail.
+[Touch Drag-and-Drop: Framer Motion Reorder] — Leg 1 shipped the same day
+(see `COMPLETED.md`) - narrowed mid-leg to 5 files, not 6:
+`CalcTeamTray.tsx` turned out to be a drag-*to-transfer* (tray onto a Calc
+panel), not a reorder, so `Reorder` doesn't apply there at all - left
+untouched, since tap-to-load already covers touch fully.
+
+## Current Milestone: Mobile-Friendliness Pass
+
+Make the renderer usable on a phone-sized touch viewport - today it's a
+from-scratch pass, not a tuning one (see the scoping doc for the full
+survey). Ordered by severity first (the two functionality-breaking touch
+gaps before any layout work), then by what's foundational (reclaiming nav
+width before auditing page layouts that assume it), then remaining layout
+audits in traffic-priority order.
+
+- **[Touch-Accessible Hover Content] — Leg 1** *(Last touched: 2026-09-30 ·
+  Re-checks: 0)*
+  Add a tap-to-toggle equivalent to `Tooltip.tsx`/`FloatingCardPanel.tsx`
+  (currently `onMouseEnter`-only) so touch users can reach the content
+  they gate - across `MoveBubbleGrid.tsx`, `AbilityCapsule.tsx`,
+  `ItemSpriteBox.tsx`, `RealSetsButton.tsx`, `StatsColumn.tsx`,
+  `EditOverlays.tsx`, `TooltipContent.tsx`. Self-contained, no dependency
+  on the other legs here.
+
+- **[Mobile Nav Shell: Drawer] — Leg 1** *(Last touched: 2026-09-30 ·
+  Re-checks: 0)*
+  Rework `Sidebar.tsx` to collapse into an off-canvas drawer below a
+  chosen breakpoint, opened by a hamburger trigger, reusing its existing
+  nav-item list and `renderFooter` slot rather than building a new layout
+  pattern. Foundational for the layout-audit legs below, which are
+  auditing against a nav shell about to reclaim most of its fixed width on
+  small viewports.
+
+- **[Responsive Layout Audit: Teams & Box] — Leg 1** *(Last touched:
+  2026-09-30 · Re-checks: 0)*
+  The two highest-traffic surfaces: `TeamsPage`/`TeamCard`/`PokemonCard`'s
+  card grid and edit overlays, and `BoxPage`/`BoxCard`. Depends on the Nav
+  Shell leg above for a real nav width to design against.
+
+- **[Responsive Layout Audit: Calc & Modals] — Leg 1** *(Last touched:
+  2026-09-30 · Re-checks: 0)*
+  `CalcPopup` and the shared `Modal.tsx`-based modals (Import/Export/PDF/
+  Image, the item/move/ability/nature pickers). `Modal.tsx`'s overlay
+  shell already shrinks to viewport width via its `w-full` panel, so the
+  real risk is internal fixed-width content (stat tables, picker grids)
+  forcing horizontal scroll at phone widths, not the modal shell itself.
+
+- **[Responsive Layout Audit: Remaining Pages] — Leg 1** *(Last touched:
+  2026-09-30 · Re-checks: 0)*
+  Battle Log, Statistics, Settings, Type Matchup, Speed Tiers - lower
+  traffic and less data-dense than Teams/Box/Calc, grouped into one leg on
+  that basis. Split further mid-leg if any one of them turns out to need
+  disproportionate work.
 
 ## Blocked
 
@@ -311,16 +380,6 @@ linking to that release's OS-appropriate asset is enough; GitHub Releases
 stays the actual file host. Needs its own scoping pass (OS detection UI,
 where the page lives relative to the app shell, page design) - not yet
 worth a leg on its own.
-
-Mobile-friendliness pass for the web app (flagged 2026-09-29 by Vanny as
-his biggest concern for the web version, once features are in): the
-renderer's components/layouts were built desktop-first for the Electron
-app, and the Team Card Grid Layout Re-check item elsewhere in this file is
-about small *desktop* window widths, not phone-sized viewports - a
-genuinely different concern. Needs its own scoping pass (which
-pages/components need touch-friendly rework, breakpoints, tap targets vs.
-hover-dependent UI) once Web Version: Teams & Box MVP's feature set is
-stable enough to design against - deliberately not started now.
 
 General web content-area padding gap (flagged 2026-09-30 by Vanny during
 live verification of Battle Log & Statistics Parity): `AppWeb.tsx`'s

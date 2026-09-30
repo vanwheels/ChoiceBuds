@@ -18,6 +18,30 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Mobile-Friendliness Pass: Scoping] — Leg 1** (2026-09-30) - Surveyed the
+  whole live renderer for responsive-breakpoint usage (almost none found -
+  the app was built with a single desktop layout throughout) and found two
+  functionality-breaking touch gaps, not just layout cramping: native HTML5
+  drag-and-drop (used for roster/move/Calc-tray reordering in 6 files) never
+  fires on touch at all, and the shared `Tooltip`/`FloatingCardPanel` hover
+  popups (7 files) are unreachable without a mouse. Decided live: swap touch
+  drag-and-drop to framer-motion's `Reorder` primitive (already a
+  dependency) over `dnd-kit` or touch-only fallback controls; build mobile
+  nav as a hamburger/drawer over a bottom tab bar or auto-collapsed rail.
+  Split into 6 build legs - see `TODO.md`'s Current Milestone section and
+  [docs/investigations/mobile-friendliness-scope.md](docs/investigations/mobile-friendliness-scope.md).
+
+- **[Touch Drag-and-Drop: Framer Motion Reorder] — Leg 1** (2026-09-30) -
+  Swapped native HTML5 drag-and-drop for framer-motion's `Reorder.Group`/
+  `Reorder.Item` across the roster, teams list, Box grid, and move-slot
+  grid; `CalcTeamTray.tsx` dropped from scope (it's a drag-*to-transfer*,
+  not a reorder - see the note above). Live `run-desktop` testing (not
+  just unit tests, per this leg's own persisted-state-mutation risk)
+  caught several real bugs static review missed - wrong `Reorder.Group`
+  axis on every horizontally-arranged grid, a missing `stopPropagation` on
+  move-bubble drag, and a click-vs-drag regression on Box's collapsed
+  tile. See commit `4f17467`.
+
 - **[Sync Debounce Loop Fix] — Leg 1** (2026-09-30) - `useSync`'s debounced
   mutation-sync effect couldn't tell its own `applySyncedState` write apart
   from a real local edit (both change the `teams`/`battles`/`savedPokemon`
