@@ -19,13 +19,13 @@
     "isolatedModules": true,
     "types": ["node", "vite/client"],
     "noEmit": true,
-    "rootDir": "./src",
     "paths": {
       "@/*": ["./src/*"]
     }
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "web/**/*"
   ],
   "exclude": [
     "node_modules",

@@ -9,7 +9,9 @@ ChoiceBuds — an Electron + React + TypeScript desktop app for importing and ma
 ## Commands
 
 - `npm run dev` — start Vite + Electron in development (renderer at `http://localhost:5173`, hot reload)
+- `npm run dev:web` — start the web build's own Vite dev server (`http://localhost:5174`) — see Architecture's Web build section
 - `npm run build` — type-check (`tsc`) then production build via `vite build`
+- `npm run build:web` — type-check then production build of the web entry, output to `dist/web/`
 - `npm run type-check` — `tsc --noEmit` only
 - `npm run lint` — ESLint over `src` for `.ts`/`.tsx`
 - `npm run test` — Vitest, single run (`test:watch` for watch mode). Config
@@ -45,8 +47,8 @@ ChoiceBuds — an Electron + React + TypeScript desktop app for importing and ma
 
   Add new fields to whichever domain file actually owns the type — team/roster shapes in `pokemon.ts`, battle-log shapes in `battle.ts`, settings/sync-payload shapes in `settings.ts`, cached game-data shapes in `gameData.ts` — never import from anything but `types/pokemon` at call sites.
 - `src/renderer/hooks/` — all state lives here; components stay presentational. Notable hooks:
-  - `useTeams` — CRUD over the teams array, persists to disk through `window.electron` on every mutation, also owns UI-only expanded-card-id state.
-  - `useDatabase` — persisted cache of PokeAPI species data (`pokeapi-cache.json`). Entries never expire once cached (`utils/cacheExpiry.ts`'s `NEVER_EXPIRES`) — see `useInitialSync` below for how the app stays offline-capable without periodic re-validation.
+  - `useTeams` — CRUD over the teams array, persists through the storage-adapter interface (see Web build below) on every mutation, also owns UI-only expanded-card-id state.
+  - `useDatabase` — persisted cache of PokeAPI species data (`pokeapi-cache.json`), also through the storage adapter. Entries never expire once cached (`utils/cacheExpiry.ts`'s `NEVER_EXPIRES`) — see `useInitialSync` below for how the app stays offline-capable without periodic re-validation.
   - `useGameData` — persisted cache of move/item/ability/learnset/Champions-usage lookups (`game-data-cache.json`), fetched live from PokeAPI/championsbattledata.com on demand. Everything except usage data (`ChampionsUsageEntry`, still a 5-day TTL) never expires once cached, same as `useDatabase`.
   - `useInitialSync` — on every launch, diffs the current legal species roster against `GameDataCache.lastSyncedSpeciesNames` and bulk-syncs (sprites, moves/abilities/learnset, species stats) whatever's missing - the full legal roster on a fresh install, just the delta after a future regulation update adds species. Gates the app behind a `LoadingScreen` until that pass (if any) completes. This is the *only* thing that needs network after first launch besides Champions usage data's own 5-day refresh - there is no other background re-validation.
   - `useActiveEditor` — scratchpad/draft state for the Pokémon edit overlay; mutations only apply to the draft clone and are committed to `useTeams` explicitly on save.
@@ -69,6 +71,12 @@ ChoiceBuds — an Electron + React + TypeScript desktop app for importing and ma
 - `src/renderer/hooks/useSync.ts` — orchestrates sync. Deliberately manual and one-directional-at-a-time (push *or* pull, user-triggered) rather than continuous background sync, since there's no backend arbitrating real conflicts. Status computation is factored into a pure, setState-free `computeSyncStatus()` so both the mount effect and `refreshStatus()` can share it without tripping the `set-state-in-effect` lint rule — see `docs/investigations/set-state-in-effect-lint-fix.md`.
 - `src/renderer/components/SyncSection.tsx` — the Settings-page UI for pairing an identifier and triggering push/pull.
 - Unrelated despite the similar name: `useUsageSync.ts` keeps `ChampionsUsageEntry` ladder-usage data fresh from championsbattledata.com (see `useGameData` above) — it has nothing to do with this cross-device Worker sync.
+
+### Web build
+
+- `src/renderer/services/storage/` — the `StorageAdapter` interface (`read<T>(key)`/`write<T>(key, value)`, keyed by a closed `StorageKey` union) that `useTeams`/`useDatabase` persist through, plus its two implementations: `electronAdapter.ts` (delegates to `window.electron`, used whenever it exists — desktop app and Vitest's `setupElectronMock.ts`) and `indexedDBAdapter.ts` (one `choicebuds` IndexedDB database, one `kv` object store keyed by `StorageKey`, used on web). `index.ts`'s `getStorageAdapter()` lazily picks between them on first call rather than at module-eval time, since Vitest's mock isn't installed until a `beforeEach` runs, after the module graph is first imported. Other hooks that touch `window.electron` directly (`useSavedPokemon`, `useGameData`, `useSettings`, etc.) haven't been ported yet — see `TODO.md`'s Web Teams/Box Parity legs.
+- `web/` — a second Vite entry (`web/index.html`/`main.tsx`/`vite.config.ts`) sibling to `worker/`, but unlike `worker/` it shares the root `package.json`'s `node_modules` rather than being a standalone project — it's an alternate front door onto the same `src/renderer/` code, not a separate runtime. Builds to `dist/web/`, dev server on port 5174 (Electron's Vite dev server stays on 5173, so both can run at once).
+- `src/renderer/AppWeb.tsx` — the web shell, sibling to `App.tsx` (not a modification of it). Only wires up `useTeams`/`useDatabase` (the two hooks ported to the storage adapter so far) with a minimal Teams/Box nav — real `TeamsPage`/`BoxPage` parity is deferred to their own legs, since those components transitively depend on several more `window.electron`-calling hooks that aren't ported yet.
 
 ### Gender/form handling
 

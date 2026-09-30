@@ -6,6 +6,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import type { ImportedPokemonInfo, SyncTombstone, Team, TeamsDatabase } from '../types/pokemon';
+import { getStorageAdapter } from '../services/storage';
 
 /**
  * Leading "Reg M-A "/"Reg M-B "/"Reg M-C " prefix this app used to stamp
@@ -89,7 +90,7 @@ export function useTeams(): UseTeamsReturn {
     setError(null);
 
     try {
-      const database = await window.electron.readTeamsDatabase();
+      const database = await getStorageAdapter().read<TeamsDatabase>('teams-database');
 
       if (database) {
         setTeams(database.teams.map(normalizeTeam));
@@ -124,7 +125,7 @@ export function useTeams(): UseTeamsReturn {
       setError(null);
 
       try {
-        const database = await window.electron.readTeamsDatabase();
+        const database = await getStorageAdapter().read<TeamsDatabase>('teams-database');
         if (ignore) return;
 
         if (database) {
@@ -162,7 +163,7 @@ export function useTeams(): UseTeamsReturn {
         lastModified: Date.now(),
       };
 
-      const success = await window.electron.writeTeamsDatabase(database);
+      const success = await getStorageAdapter().write('teams-database', database);
       
       if (!success) {
         throw new Error('Failed to write teams database');

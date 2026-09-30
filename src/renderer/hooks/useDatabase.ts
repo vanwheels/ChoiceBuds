@@ -8,6 +8,7 @@ import { useState, useEffect, useCallback } from 'react';
 import type { PokeAPICache, PokeAPICacheEntry } from '../types/pokemon';
 import { NEVER_EXPIRES } from '../utils/cacheExpiry';
 import { useDebouncedWrite } from './useDebouncedWrite';
+import { getStorageAdapter } from '../services/storage';
 
 export interface UseDatabaseReturn {
   cache: PokeAPICache | null;
@@ -124,7 +125,7 @@ export function useDatabase(): UseDatabaseReturn {
   const initializeCacheWithSWR = useCallback(async (): Promise<void> => {
     try {
       // Step 1: Instantly serve stale cache from disk
-      const cachedData = await window.electron.readPokeAPICache();
+      const cachedData = await getStorageAdapter().read<PokeAPICache>('pokeapi-cache');
 
       if (cachedData) {
         setDiskSnapshot(JSON.stringify(cachedData));
@@ -178,12 +179,8 @@ export function useDatabase(): UseDatabaseReturn {
 
     (async () => {
       try {
-        // Step 1: Instantly serve stale cache from disk. Explicitly typed
-        // (per CLAUDE.md's window.electron-casting convention) rather than
-        // left as the preload bridge's `any` - needed here so the
-        // Object.entries(cachedData.entries) call below can infer
-        // PokeAPICacheEntry instead of unknown.
-        const cachedData: PokeAPICache | null = await window.electron.readPokeAPICache();
+        // Step 1: Instantly serve stale cache from disk.
+        const cachedData = await getStorageAdapter().read<PokeAPICache>('pokeapi-cache');
         if (ignore) return;
 
         if (cachedData) {
@@ -266,7 +263,7 @@ export function useDatabase(): UseDatabaseReturn {
   // each call site's own immediate write - and diskSnapshot's header
   // above for why it's passed through, to skip the redundant rewrite of a
   // cache loaded unchanged.
-  useDebouncedWrite(cache, isInitialized, window.electron.writePokeAPICache, 'Error persisting PokeAPI cache:', undefined, diskSnapshot);
+  useDebouncedWrite(cache, isInitialized, (value) => getStorageAdapter().write('pokeapi-cache', value), 'Error persisting PokeAPI cache:', undefined, diskSnapshot);
 
   /**
    * Get a cached entry for a specific species
