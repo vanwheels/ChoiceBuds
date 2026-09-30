@@ -215,36 +215,6 @@ outside this project — a person, a dependency, or an external decision.
 Exempt from the re-check counter; they move back to "In progress" once
 unblocked.
 
-- **[Sync Worker: KV→R2 Hybrid Storage] — Leg 1** *(Last touched:
-  2026-09-30 · Re-checks: exempt, blocked)*
-  Blocked: `wrangler r2 bucket create` fails with Cloudflare error code
-  10042 ("Please enable R2 through the Cloudflare Dashboard") - R2 needs a
-  one-time account-level opt-in in the dashboard before a bucket can be
-  created, and Vanny's GitHub-SSO login into the Cloudflare dashboard isn't
-  working right now, so he can't get to that toggle yet.
-  All the code/config work that doesn't require a real bucket is done and
-  verified: `worker/wrangler.toml` has the `SYNC_R2` binding
-  (`bucket_name = "choicebuds-sync"`); `worker/src/index.ts`'s
-  `handleSyncGet`/`handleSyncPut` read/write `env.SYNC_R2` first, falling
-  back to the legacy KV `sync:<username>` blob when no R2 object exists yet
-  (migrates an account forward on its next PUT, no bulk-copy script); the
-  write-throttle check now reads R2's `customMetadata.receivedAt` (stringified)
-  instead of KV's typed `metadata` param; `worker/README.md`'s deploy steps/
-  data-keys/Costs-limits sections describe the split. `npm run type-check`
-  and `npm test` (23 tests, unchanged) both pass. Verified live via
-  `wrangler dev` + curl (local R2/KV emulation needs no real Cloudflare
-  account access, so this worked despite the dashboard block): a PUT creates
-  an R2 object and returns it; a second PUT inside the 3s window correctly
-  429s off R2's `customMetadata`; a GET reads straight from R2; a
-  hand-seeded legacy KV `sync:<username>` blob (simulating a pre-migration
-  account) is correctly read on GET when no R2 object exists, and a
-  subsequent PUT merges that legacy data forward with new data and writes
-  the merged result to R2 (confirmed by reading the R2 object directly via
-  `wrangler r2 object get --local`).
-  Remaining steps once R2 is enabled: `npx wrangler r2 bucket create
-  choicebuds-sync`, then `npx wrangler deploy` (bundles this leg's code
-  changes with the deploy, same shape as prior Worker legs).
-
 - **[Existing Account Migration] — Leg 1** *(Last touched: 2026-09-29 ·
   Re-checks: exempt, blocked)*
   Blocked: waiting on friends to message their old `username#XXXX` (Vanny

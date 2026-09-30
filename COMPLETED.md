@@ -18,6 +18,22 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Sync Worker: KV→R2 Hybrid Storage] — Leg 1** (2026-09-30) - Unblocked
+  once Vanny completed R2's one-time dashboard opt-in on his end; ran the
+  two remaining steps noted in the item's last update: `wrangler r2 bucket
+  create choicebuds-sync` then `wrangler deploy`, both live-confirmed
+  (deploy output lists both `SYNC_KV` and `SYNC_R2` bindings attached). The
+  code/config side was already done and verified via local `wrangler dev` -
+  see `1f1e44a`. A full live prod smoke test (signup → token → sync PUT)
+  hit the KV daily free-tier write cap (1,000/day - `Error: KV put() limit
+  exceeded for the day` in `wrangler tail`, at `handleSignup`) rather than
+  anything R2-related; expected per `worker/README.md`'s Costs/limits
+  section, not a new issue - this migration exists specifically to keep the
+  high-frequency sync blob off that capped KV path, account/token writes
+  are just low-volume enough that hitting the cap during a heavy testing day
+  was still possible. Resets daily; no code change needed, so not tracked as
+  a separate TODO item.
+
 - **[Mobile-Friendliness Pass: Scoping] — Leg 1** (2026-09-30) - Surveyed the
   whole live renderer for responsive-breakpoint usage (almost none found -
   the app was built with a single desktop layout throughout) and found two
