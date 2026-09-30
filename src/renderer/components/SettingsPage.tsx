@@ -27,7 +27,11 @@ interface SettingsPageProps {
   settingsState: UseSettingsReturn;
   syncState: UseSyncReturn;
   teamsState: UseTeamsReturn;
-  updateCheckState: UseUpdateCheckReturn;
+  // Undefined on web - there's no in-app auto-update there (a web app is
+  // always whatever's currently deployed), so AppWeb.tsx never instantiates
+  // useUpdateCheck (it talks to window.electron.onUpdateStatus directly,
+  // which doesn't exist on web) or passes this prop.
+  updateCheckState?: UseUpdateCheckReturn;
   releaseNotesState: UseReleaseNotesReturn;
   databaseState: UseDatabaseReturn;
   gameDataState: UseGameDataReturn;
@@ -94,7 +98,7 @@ export default function SettingsPage({ settingsState, syncState, teamsState, upd
 
       <GameDataResetSection databaseState={databaseState} gameDataState={gameDataState} />
 
-      <UpdateCheckSection updateCheckState={updateCheckState} />
+      {updateCheckState && <UpdateCheckSection updateCheckState={updateCheckState} />}
 
       <ReleaseNotesSection releaseNotesState={releaseNotesState} />
 

@@ -42,14 +42,22 @@
  * of the old hand-rolled 2-button nav - Sidebar.tsx has no Electron
  * dependency of its own (confirmed during scoping), it only type-imports
  * `ActiveTab` from App.tsx. Sidebar's nav list is hardcoded to all 7 desktop
- * tabs, not just Teams/Box, so every tab now shows up in the web nav too;
- * Settings is the only one left without a ported page (see
- * COMING_SOON_LABELS below) until its own parity leg lands (see TODO.md's
- * Current Milestone section) - pure shell/structure change, no new feature
- * surface. The sync-status/sign-in footer that used to live in this file's
- * own hand-rolled sidebar now goes through Sidebar's new `renderFooter` slot
- * instead (added by this same leg) so it keeps working with no Settings tab
- * wired yet to host it.
+ * tabs, so every tab shows up in the web nav. The sync-status/sign-in footer
+ * that used to live in this file's own hand-rolled sidebar now goes through
+ * Sidebar's new `renderFooter` slot instead (added by this same leg).
+ *
+ * Settings (Web Settings Parity leg, see TODO.md) renders the same
+ * SettingsPage.tsx the desktop app does, minus `updateCheckState` -
+ * `useUpdateCheck` talks to `window.electron.onUpdateStatus` directly (no
+ * web equivalent, and no in-app auto-update concept for a web app: it's
+ * always whatever's currently deployed), so it's simply never instantiated
+ * here. SettingsPage treats `updateCheckState` as optional and skips
+ * `UpdateCheckSection` entirely when it's absent. `ReleaseNotesMarkdown.tsx`/
+ * `ExportTeamModal.tsx`'s `window.electron.openExternal` calls (used by
+ * Settings' release-notes history and the team-export Pokepaste link) fall
+ * back to a plain `<a target="_blank">` on web instead. This was the last
+ * tab still showing `WebComingSoon` (now deleted, nothing references it) -
+ * every Sidebar tab now renders its real page on web.
  */
 
 import { lazy, Suspense, useState } from 'react';
@@ -64,10 +72,10 @@ import { useSpriteCache } from './hooks/useSpriteCache';
 import { useSettings } from './hooks/useSettings';
 import { useSync } from './hooks/useSync';
 import { useBattles } from './hooks/useBattles';
+import { useReleaseNotes } from './hooks/useReleaseNotes';
 import type { ActiveTab } from './App';
 import TeamsPage from './components/TeamsPage';
 import WebAuthScreen from './components/WebAuthScreen';
-import WebComingSoon from './components/WebComingSoon';
 import Sidebar from './components/Sidebar';
 import { CalcIcon } from './components/icons/SidebarIcons';
 
@@ -77,12 +85,7 @@ const BattleLogPage = lazy(() => import('./components/battlelog/BattleLogPage'))
 const StatisticsPage = lazy(() => import('./components/statistics/StatisticsPage'));
 const TypeMatchupPage = lazy(() => import('./components/typematchup/TypeMatchupPage'));
 const SpeedTiersPage = lazy(() => import('./components/speedtiers/SpeedTiersPage'));
-
-// Tabs Sidebar.tsx renders that don't have a ported web page yet - each
-// shows WebComingSoon with this label until its own parity leg lands.
-const COMING_SOON_LABELS: Partial<Record<ActiveTab, string>> = {
-  settings: 'Settings',
-};
+const SettingsPage = lazy(() => import('./components/SettingsPage'));
 
 const SYNC_STATUS_LABEL: Record<ReturnType<typeof useSync>['status'], string> = {
   'signed-out': 'Not signed in',
@@ -120,6 +123,12 @@ export default function AppWeb() {
   const settingsState = useSettings();
   const battlesState = useBattles();
   const syncState = useSync(settingsState, teamsState, battlesState, savedPokemonState);
+  // No useUpdateCheck() here (unlike App.tsx) - it talks to
+  // window.electron.onUpdateStatus directly, which doesn't exist on web, and
+  // there's no in-app auto-update concept for a web app anyway. SettingsPage
+  // treats updateCheckState as optional and skips UpdateCheckSection
+  // entirely when it's absent - see SettingsPage.tsx.
+  const releaseNotesState = useReleaseNotes(settingsState.settings, settingsState.isLoading, settingsState.updateSettings);
 
   return (
     <div className="flex h-screen bg-zinc-900 text-zinc-100">
@@ -246,11 +255,20 @@ export default function AppWeb() {
             </Suspense>
           </div>
         )}
-        {Object.entries(COMING_SOON_LABELS).map(([tab, label]) => visitedTabs.has(tab as ActiveTab) && (
-          <div key={tab} style={{ display: activeTab === tab ? 'block' : 'none' }} className="h-full">
-            <WebComingSoon feature={label} />
+        {visitedTabs.has('settings') && (
+          <div style={{ display: activeTab === 'settings' ? 'block' : 'none' }} className="h-full">
+            <Suspense fallback={<div className="p-8 text-sm text-zinc-400">Loading settings...</div>}>
+              <SettingsPage
+                settingsState={settingsState}
+                syncState={syncState}
+                teamsState={teamsState}
+                releaseNotesState={releaseNotesState}
+                databaseState={databaseState}
+                gameDataState={gameDataState}
+              />
+            </Suspense>
           </div>
-        ))}
+        )}
       </main>
 
       <button

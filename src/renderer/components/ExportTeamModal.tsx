@@ -108,13 +108,27 @@ export default function ExportTeamModal({ pokemonList, title, pasteTitle, pasteA
 
         {pokepasteUrl && (
           <div className="mt-4 flex items-center gap-2 px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg">
-            <a
-              href={pokepasteUrl}
-              onClick={(e) => { e.preventDefault(); window.electron.openExternal(pokepasteUrl); }}
-              className="flex-1 text-sm text-accent-gold hover:underline truncate"
-            >
-              {pokepasteUrl}
-            </a>
+            {/* window.electron doesn't exist on web - not actually reachable there today
+                since createPokepaste() resolves null on web (see pokepaste.ts), but this
+                falls back to a plain target="_blank" link rather than assuming Electron. */}
+            {window.electron ? (
+              <a
+                href={pokepasteUrl}
+                onClick={(e) => { e.preventDefault(); window.electron.openExternal(pokepasteUrl); }}
+                className="flex-1 text-sm text-accent-gold hover:underline truncate"
+              >
+                {pokepasteUrl}
+              </a>
+            ) : (
+              <a
+                href={pokepasteUrl}
+                target="_blank"
+                rel="noopener"
+                className="flex-1 text-sm text-accent-gold hover:underline truncate"
+              >
+                {pokepasteUrl}
+              </a>
+            )}
             <button
               onClick={handleCopyPasteUrl}
               className="px-3 py-1 text-sm bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded-lg transition-colors shrink-0"

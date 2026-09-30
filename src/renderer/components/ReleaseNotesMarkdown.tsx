@@ -27,7 +27,10 @@ export default function ReleaseNotesMarkdown({ body }: ReleaseNotesMarkdownProps
         ul: ({ children }) => <ul className="mb-2 list-disc space-y-1 pl-5 text-xs text-zinc-300">{children}</ul>,
         ol: ({ children }) => <ol className="mb-2 list-decimal space-y-1 pl-5 text-xs text-zinc-300">{children}</ol>,
         li: ({ children }) => <li className="leading-snug">{children}</li>,
-        a: ({ children, href }) => (
+        // window.electron doesn't exist on web - falls back to a plain
+        // target="_blank" link there instead of the desktop app's
+        // openExternal IPC call (see AppWeb.tsx's own leg for why).
+        a: ({ children, href }) => window.electron ? (
           <a
             href={href}
             className="text-accent-gold hover:underline cursor-pointer"
@@ -36,6 +39,10 @@ export default function ReleaseNotesMarkdown({ body }: ReleaseNotesMarkdownProps
               if (href) window.electron.openExternal(href);
             }}
           >
+            {children}
+          </a>
+        ) : (
+          <a href={href} target="_blank" rel="noopener" className="text-accent-gold hover:underline cursor-pointer">
             {children}
           </a>
         ),
