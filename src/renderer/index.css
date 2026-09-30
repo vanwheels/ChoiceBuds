@@ -4,6 +4,21 @@
  */
 @import "tailwindcss";
 
+/*
+ * Explicit @source rather than relying on Tailwind v4's automatic content
+ * detection: that heuristic bases its scan on the Vite config's own `root`,
+ * which for the web build (web/vite.config.ts) is the `web/` folder itself
+ * - a couple levels above this file. Since every actual component/hook
+ * lives under this directory (src/renderer/), not under web/, the auto-scan
+ * silently found zero of them there, producing a near-empty stylesheet (no
+ * crash, just an unstyled page - confirmed live: dist/web's built CSS was
+ * 4.87kB vs. the Electron build's 55.99kB for the same components). The
+ * Electron build's own Vite root already covers this directory, so this is
+ * a no-op there - kept here rather than only in web/'s own config so any
+ * future third build root doesn't need to remember this same fix.
+ */
+@source "./";
+
 /**
  * Design tokens - color palette (2026-08-29 palette rework, see TODO.md)
  * Primary accent -> gold (sampled from the Gholdengo sprite), secondary
