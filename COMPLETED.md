@@ -31,6 +31,15 @@ Entries prior to this file's oldest are in:
   applies the enter transition to the exit animation too, since it's
   evaluated on the last render before unmount - switched to Framer Motion
   variants instead, same pattern `Modal.tsx` already uses. See `a8256d9`.
+  Vanny's live check on his phone caught what static review/type-check/lint
+  missed: the trigger's original `position: fixed` top-left corner placement
+  unconditionally covered each page's own title ("My Teams"/"Box"), since
+  `<main>` had no reserved space for it. Fixed by making it part of the
+  layout instead of an overlay - `App.tsx`/`AppWeb.tsx`'s outer shell now
+  stacks (`flex-col`) below `md`, so the trigger renders as a real top-bar
+  row above `<main>` and pushes content down rather than sitting on top of
+  it (no longer self-contained to just `Sidebar.tsx` as a result - the
+  outer shells needed the direction change too). See `56680da`.
 
 - **[Touch-Accessible Hover Content] — Leg 1** (2026-09-30) - Added
   `useLongPress.ts` as touch's analog to mouse hover for the item/ability/
