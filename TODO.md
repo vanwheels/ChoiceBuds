@@ -159,6 +159,17 @@ content rather than a bottom tab bar or an auto-collapsed icon rail.
 `CalcTeamTray.tsx` turned out to be a drag-*to-transfer* (tray onto a Calc
 panel), not a reorder, so `Reorder` doesn't apply there at all - left
 untouched, since tap-to-load already covers touch fully.
+[Touch-Accessible Hover Content] — Leg 1 shipped 2026-09-30 (see
+`COMPLETED.md`) - asked Vanny live to pin down the tap-interaction model
+(long-press, the recommended option, over a two-tap pattern or a dedicated
+info icon) before implementing, since the TODO item specified the problem
+but not that design call. Narrowed from the scoped 7 files to 4 real
+changes: `RealSetsButton.tsx`/`StatsColumn.tsx`/`TooltipContent.tsx` turned
+out not to need touching (the first two only consume `FloatingCardPanel`
+via `onClick`, already tap-friendly; the third just renders content handed
+to it, no hover wiring of its own) - the actual `onMouseEnter` sites were
+only `MoveBubbleGrid.tsx`/`AbilityCapsule.tsx`/`ItemSpriteBox.tsx`, plus
+`EditOverlays.tsx`'s shared hover-state wiring.
 
 ## Current Milestone: Mobile-Friendliness Pass
 
@@ -168,15 +179,6 @@ survey). Ordered by severity first (the two functionality-breaking touch
 gaps before any layout work), then by what's foundational (reclaiming nav
 width before auditing page layouts that assume it), then remaining layout
 audits in traffic-priority order.
-
-- **[Touch-Accessible Hover Content] — Leg 1** *(Last touched: 2026-09-30 ·
-  Re-checks: 0)*
-  Add a tap-to-toggle equivalent to `Tooltip.tsx`/`FloatingCardPanel.tsx`
-  (currently `onMouseEnter`-only) so touch users can reach the content
-  they gate - across `MoveBubbleGrid.tsx`, `AbilityCapsule.tsx`,
-  `ItemSpriteBox.tsx`, `RealSetsButton.tsx`, `StatsColumn.tsx`,
-  `EditOverlays.tsx`, `TooltipContent.tsx`. Self-contained, no dependency
-  on the other legs here.
 
 - **[Mobile Nav Shell: Drawer] — Leg 1** *(Last touched: 2026-09-30 ·
   Re-checks: 0)*

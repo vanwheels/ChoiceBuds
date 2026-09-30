@@ -18,6 +18,17 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Touch-Accessible Hover Content] — Leg 1** (2026-09-30) - Added
+  `useLongPress.ts` as touch's analog to mouse hover for the item/ability/
+  move tooltips on `EditOverlays.tsx`, which were previously unreachable
+  without a mouse. Asked Vanny live to settle the tap-interaction model
+  first (long-press vs. a two-tap pattern vs. a dedicated info icon), since
+  the TODO item scoped the problem but not that design call. Turned out to
+  need only 4 of the 7 files the scoping pass had flagged -
+  `RealSetsButton.tsx`/`StatsColumn.tsx` already open their panels via
+  `onClick` (already tap-friendly) and `TooltipContent.tsx` has no hover
+  wiring of its own. See `96f9797`.
+
 - **[Sync Worker: KV→R2 Hybrid Storage] — Leg 1** (2026-09-30) - Unblocked
   once Vanny completed R2's one-time dashboard opt-in on his end; ran the
   two remaining steps noted in the item's last update: `wrangler r2 bucket
