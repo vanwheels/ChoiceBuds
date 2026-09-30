@@ -18,6 +18,20 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Web Nav Shell: Adopt Sidebar.tsx] — Leg 1** (2026-09-30) - Replaced
+  `AppWeb.tsx`'s hand-rolled 2-button nav with the real `Sidebar.tsx` +
+  `App.tsx`'s lazy-load/visited-tabs pattern. Since `Sidebar.tsx` hardcodes
+  all 7 desktop tabs internally, every tab now shows in the web nav even
+  though only Teams/Box are functionally wired - added a small
+  `WebComingSoon.tsx` placeholder for the other 5 (Battle Log, Statistics,
+  Type Matchup, Speed Tiers, Settings) rather than let those tabs render
+  blank until their own parity legs land. Also added an optional
+  `renderFooter` slot to `Sidebar.tsx` (collapse-aware, unused by desktop)
+  so web's existing sync-status/sign-in footer - previously part of the
+  hand-rolled sidebar - has somewhere to live with no Settings tab wired
+  yet to host it. Pure shell/structure change, no new feature surface. See
+  commit `<pending>`.
+
 - **[Full Web Feature Parity: Scoping] — Leg 1** (2026-09-29) - Surveyed every
   desktop-only tab (Battle Log, Statistics, Type Matchup, Speed Tiers,
   Settings, Calc Popup) for actual `window.electron` dependencies rather than

@@ -28,12 +28,23 @@
  * Teams - BoxPage's own dependencies (useRosterActions, the type/move/
  * ability filter hooks, clipboardPayload.ts) have no Electron dependency of
  * their own, so no further porting was needed.
- * Not using Sidebar.tsx here: it hardcodes all 7 of the desktop app's tabs
- * via its own ActiveTab type from App.tsx, which isn't worth generalizing
- * for a two-item nav.
+ *
+ * Nav shell (Web Nav Shell: Adopt Sidebar.tsx leg, see TODO.md): now uses
+ * the real Sidebar.tsx + App.tsx's lazy-load/visited-tabs pattern in place
+ * of the old hand-rolled 2-button nav - Sidebar.tsx has no Electron
+ * dependency of its own (confirmed during scoping), it only type-imports
+ * `ActiveTab` from App.tsx. Sidebar's nav list is hardcoded to all 7 desktop
+ * tabs, not just Teams/Box, so every tab now shows up in the web nav too;
+ * the ones without a ported page yet (Battle Log, Statistics, Type Matchup,
+ * Speed Tiers, Settings) render `WebComingSoon` instead until their own
+ * parity legs land (see TODO.md's Current Milestone section) - pure shell/
+ * structure change, no new feature surface. The sync-status/sign-in footer
+ * that used to live in this file's own hand-rolled sidebar now goes through
+ * Sidebar's new `renderFooter` slot instead (added by this same leg) so it
+ * keeps working with no Settings tab wired yet to host it.
  */
 
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { useTeams } from './hooks/useTeams';
 import { useDatabase } from './hooks/useDatabase';
 import { useSavedPokemon } from './hooks/useSavedPokemon';
@@ -44,12 +55,23 @@ import { useSpriteCache } from './hooks/useSpriteCache';
 import { useSettings } from './hooks/useSettings';
 import { useSync } from './hooks/useSync';
 import { useWebBattlesStub } from './hooks/useWebBattlesStub';
+import type { ActiveTab } from './App';
 import TeamsPage from './components/TeamsPage';
-import BoxPage from './components/BoxPage';
 import WebAuthScreen from './components/WebAuthScreen';
-import { TeamsIcon, BoxIcon } from './components/icons/SidebarIcons';
+import WebComingSoon from './components/WebComingSoon';
+import Sidebar from './components/Sidebar';
 
-type WebTab = 'teams' | 'box';
+const BoxPage = lazy(() => import('./components/BoxPage'));
+
+// Tabs Sidebar.tsx renders that don't have a ported web page yet - each
+// shows WebComingSoon with this label until its own parity leg lands.
+const COMING_SOON_LABELS: Partial<Record<ActiveTab, string>> = {
+  battles: 'Battle Log',
+  statistics: 'Statistics',
+  typeMatchup: 'Type Matchup',
+  speedTiers: 'Speed Tiers',
+  settings: 'Settings',
+};
 
 const SYNC_STATUS_LABEL: Record<ReturnType<typeof useSync>['status'], string> = {
   'signed-out': 'Not signed in',
@@ -59,7 +81,12 @@ const SYNC_STATUS_LABEL: Record<ReturnType<typeof useSync>['status'], string> = 
 };
 
 export default function AppWeb() {
-  const [activeTab, setActiveTab] = useState<WebTab>('teams');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('teams');
+  const [visitedTabs, setVisitedTabs] = useState<Set<ActiveTab>>(() => new Set(['teams']));
+  const goToTab = (tab: ActiveTab) => {
+    setActiveTab(tab);
+    setVisitedTabs(prev => prev.has(tab) ? prev : new Set(prev).add(tab));
+  };
   const [showAuthModal, setShowAuthModal] = useState(false);
   const teamsState = useTeams();
   const databaseState = useDatabase();
@@ -74,56 +101,51 @@ export default function AppWeb() {
 
   return (
     <div className="flex h-screen bg-zinc-900 text-zinc-100">
-      <aside className="flex w-52 flex-col gap-1 border-r border-zinc-700 bg-zinc-800 p-3">
-        <h1 className="mb-3 px-2 text-[15px] font-bold text-zinc-100">ChoiceBuds</h1>
-        <button
-          onClick={() => setActiveTab('teams')}
-          className={`flex items-center gap-2.5 rounded-lg px-2.5 py-[9px] text-[13.5px] font-semibold transition-colors cursor-pointer ${
-            activeTab === 'teams' ? 'text-accent-gold bg-accent-gold/15' : 'text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200'
-          }`}
-        >
-          <TeamsIcon />
-          Teams
-        </button>
-        <button
-          onClick={() => setActiveTab('box')}
-          className={`flex items-center gap-2.5 rounded-lg px-2.5 py-[9px] text-[13.5px] font-semibold transition-colors cursor-pointer ${
-            activeTab === 'box' ? 'text-accent-gold bg-accent-gold/15' : 'text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200'
-          }`}
-        >
-          <BoxIcon />
-          Box
-        </button>
-
-        <div className="mt-auto flex flex-col gap-1 border-t border-zinc-700 pt-3 px-2">
-          {syncState.syncUsername ? (
-            <>
-              <span className="truncate text-xs font-mono text-zinc-300" title={syncState.syncUsername}>
-                {syncState.syncUsername}
-              </span>
-              <span className={`text-[11px] ${syncState.status === 'error' ? 'text-red-400' : 'text-zinc-500'}`}>
-                {SYNC_STATUS_LABEL[syncState.status]}
-              </span>
-              <button
-                onClick={() => { syncState.logOut(); }}
-                className="mt-1 self-start text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
-              >
-                Log out
-              </button>
-            </>
-          ) : (
-            <>
-              <span className="text-[11px] text-zinc-500">Not signed in</span>
-              <button
-                onClick={() => setShowAuthModal(true)}
-                className="self-start text-[11px] font-semibold text-accent-gold hover:text-accent-gold-deep transition-colors cursor-pointer"
-              >
-                Sign in to sync
-              </button>
-            </>
-          )}
-        </div>
-      </aside>
+      <Sidebar
+        activeTab={activeTab}
+        onTabChange={goToTab}
+        renderFooter={(collapsed) => collapsed ? (
+          <div
+            className="flex justify-center"
+            title={syncState.syncUsername ? `${syncState.syncUsername} - ${SYNC_STATUS_LABEL[syncState.status]}` : 'Not signed in'}
+          >
+            <span
+              className={`h-2 w-2 rounded-full ${
+                !syncState.syncUsername ? 'bg-zinc-500' : syncState.status === 'error' ? 'bg-red-400' : 'bg-accent-gold'
+              }`}
+            />
+          </div>
+        ) : (
+          <div className="flex flex-col gap-1 px-1.5">
+            {syncState.syncUsername ? (
+              <>
+                <span className="truncate text-xs font-mono text-zinc-300" title={syncState.syncUsername}>
+                  {syncState.syncUsername}
+                </span>
+                <span className={`text-[11px] ${syncState.status === 'error' ? 'text-red-400' : 'text-zinc-500'}`}>
+                  {SYNC_STATUS_LABEL[syncState.status]}
+                </span>
+                <button
+                  onClick={() => { syncState.logOut(); }}
+                  className="mt-1 self-start text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+                >
+                  Log out
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="text-[11px] text-zinc-500">Not signed in</span>
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="self-start text-[11px] font-semibold text-accent-gold hover:text-accent-gold-deep transition-colors cursor-pointer"
+                >
+                  Sign in to sync
+                </button>
+              </>
+            )}
+          </div>
+        )}
+      />
 
       {showAuthModal && (
         <WebAuthScreen syncState={syncState} onClose={() => setShowAuthModal(false)} />
@@ -142,17 +164,26 @@ export default function AppWeb() {
             savedPokemonState={savedPokemonState}
           />
         </div>
-        <div style={{ display: activeTab === 'box' ? 'block' : 'none' }} className="h-full">
-          <BoxPage
-            savedPokemonState={savedPokemonState}
-            gameDataState={gameDataState}
-            databaseState={databaseState}
-            speciesRosterState={speciesRosterState}
-            spriteCacheState={spriteCacheState}
-            settingsState={settingsState}
-            teamsState={teamsState}
-          />
-        </div>
+        {visitedTabs.has('box') && (
+          <div style={{ display: activeTab === 'box' ? 'block' : 'none' }} className="h-full">
+            <Suspense fallback={<div className="p-8 text-sm text-zinc-400">Loading box...</div>}>
+              <BoxPage
+                savedPokemonState={savedPokemonState}
+                gameDataState={gameDataState}
+                databaseState={databaseState}
+                speciesRosterState={speciesRosterState}
+                spriteCacheState={spriteCacheState}
+                settingsState={settingsState}
+                teamsState={teamsState}
+              />
+            </Suspense>
+          </div>
+        )}
+        {Object.entries(COMING_SOON_LABELS).map(([tab, label]) => visitedTabs.has(tab as ActiveTab) && (
+          <div key={tab} style={{ display: activeTab === tab ? 'block' : 'none' }} className="h-full">
+            <WebComingSoon feature={label} />
+          </div>
+        ))}
       </main>
     </div>
   );

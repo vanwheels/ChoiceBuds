@@ -29,6 +29,7 @@
  * pass's own note that the micro-interaction bucket wasn't worth porting.
  */
 
+import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import type { ActiveTab } from '../App';
 import { SIDEBAR_WIDTH_TRANSITION } from '../config/motion';
@@ -47,6 +48,14 @@ import {
 interface SidebarProps {
   activeTab: ActiveTab;
   onTabChange: (tab: ActiveTab) => void;
+  /**
+   * Extra content pinned below the bottom nav group (Settings), collapse-aware
+   * via the passed flag. Unused on desktop (App.tsx passes nothing); AppWeb
+   * uses it for the sync-status/sign-in footer that used to live in its own
+   * hand-rolled sidebar before this component was adopted there - see
+   * AppWeb.tsx's header comment.
+   */
+  renderFooter?: (collapsed: boolean) => ReactNode;
 }
 
 const MAIN_NAV_ITEMS: { tab: ActiveTab; label: string; Icon: typeof TeamsIcon }[] = [
@@ -62,7 +71,7 @@ const BOTTOM_NAV_ITEMS: { tab: ActiveTab; label: string; Icon: typeof TeamsIcon 
   { tab: 'settings', label: 'Settings', Icon: SettingsIcon },
 ];
 
-export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
+export default function Sidebar({ activeTab, onTabChange, renderFooter }: SidebarProps) {
   const { collapsed, toggleCollapsed } = useSidebarCollapsed();
 
   const renderNavItem = ({ tab, label, Icon }: { tab: ActiveTab; label: string; Icon: typeof TeamsIcon }) => {
@@ -136,6 +145,12 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
       <div className="mt-auto w-full border-t border-zinc-700 pt-2">
         {BOTTOM_NAV_ITEMS.map(renderNavItem)}
       </div>
+
+      {renderFooter && (
+        <div className="mt-2 w-full border-t border-zinc-700 pt-2">
+          {renderFooter(collapsed)}
+        </div>
+      )}
     </motion.aside>
   );
 }

@@ -136,14 +136,10 @@ web build. Ordered so the nav-shell rework lands first (everything else
 plugs into it), then cheapest/most self-contained legs first. See the
 scoping doc linked above for the full survey behind this ordering.
 
-- **[Web Nav Shell: Adopt Sidebar.tsx] — Leg 1** *(Last touched: 2026-09-29 ·
-  Re-checks: 0)*
-  Rework `AppWeb.tsx` to use the real `Sidebar.tsx` component + `App.tsx`'s
-  lazy-load/visited-tabs pattern in place of its current hand-rolled
-  2-button nav. Still only Teams+Box functionally wired at the end of this
-  leg - pure shell/structure change, no new feature surface. `Sidebar.tsx`
-  has no Electron dependency (confirmed during scoping); it only
-  type-imports `ActiveTab` from `App.tsx`.
+[Web Nav Shell: Adopt Sidebar.tsx] — Leg 1 shipped 2026-09-30 (see
+`COMPLETED.md`). `AppWeb.tsx` now uses the real `Sidebar.tsx` + `App.tsx`'s
+lazy-load/visited-tabs pattern; tabs without a ported page yet show a
+`WebComingSoon` placeholder instead of the real feature.
 
 - **[Web Calc & Matchup Tools Parity] — Leg 1** *(Last touched: 2026-09-29 ·
   Re-checks: 0)*
