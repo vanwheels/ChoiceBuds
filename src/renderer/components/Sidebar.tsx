@@ -201,16 +201,32 @@ export default function Sidebar({ activeTab, onTabChange, renderFooter }: Sideba
         )}
       </motion.aside>
 
-      {/* Mobile hamburger trigger - below md only, hidden once the drawer itself is open. */}
-      {!drawerOpen && (
+      {/*
+        Mobile top bar - below md only. In-flow (not `fixed`), so it takes a
+        real row in the shell's flex layout instead of overlaying whatever
+        each page renders at its own top-left corner (App.tsx/AppWeb.tsx's
+        outer shell stacks to flex-col below md for exactly this reason -
+        see their own header comments). A `fixed` hamburger was the original
+        shape here and covered the "My Teams"/"Box" page titles, found live
+        2026-09-30 - this replaces it rather than just repositioning it,
+        since anything `fixed` in a screen corner will always cover
+        whichever page renders content there.
+      */}
+      <div className="md:hidden flex items-center justify-between border-b border-zinc-700 bg-zinc-800 px-4 py-3">
+        <div className="flex items-center gap-2.5">
+          <div className="h-7 w-7 shrink-0 overflow-hidden rounded-lg">
+            <img src={`${import.meta.env.BASE_URL}mascot.png`} alt="ChoiceBuds" className="h-full w-full object-cover" />
+          </div>
+          <h1 className="text-[15px] font-bold text-zinc-100">ChoiceBuds</h1>
+        </div>
         <button
           onClick={() => setDrawerOpen(true)}
           aria-label="Open navigation menu"
-          className="md:hidden fixed top-4 left-4 z-30 flex items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800 p-2.5 text-zinc-300 shadow-lg cursor-pointer"
+          className="flex items-center justify-center rounded-lg p-2 text-zinc-300 transition-colors cursor-pointer hover:bg-zinc-700"
         >
           <MenuIcon />
         </button>
-      )}
+      </div>
 
       {/* Mobile off-canvas drawer, portaled so it isn't constrained by any transformed ancestor - same reasoning as Modal.tsx's own portal. */}
       {createPortal(

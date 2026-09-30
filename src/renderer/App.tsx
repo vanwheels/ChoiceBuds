@@ -2,6 +2,12 @@
  * App.tsx - Primary Application Shell
  * Fixed navigation sidebar on left, primary content viewport on right
  * Provides core data contexts via custom hooks down the component tree
+ *
+ * The outer shell stacks (`flex-col`) below `md` instead of its normal row
+ * layout, so Sidebar.tsx's mobile top bar renders as a real row above
+ * `<main>` rather than needing `position: fixed` to sit somewhere over it -
+ * see Sidebar.tsx's own comment on why a fixed hamburger corner button
+ * covered page content (found live 2026-09-30, Mobile Nav Shell: Drawer leg).
  */
 
 import { lazy, Suspense, useState } from 'react';
@@ -131,7 +137,7 @@ export default function App() {
     // collapses toward near-instant when the OS-level prefers-reduced-motion
     // setting is on, rather than each component having to check for it itself.
     <MotionConfig reducedMotion="user">
-      <div className="flex h-screen bg-zinc-900 text-zinc-100">
+      <div className="flex flex-col md:flex-row h-screen bg-zinc-900 text-zinc-100">
         <AnimatePresence>
           {releaseNotesState.showPopup && <ReleaseNotesModal releaseNotesState={releaseNotesState} />}
         </AnimatePresence>

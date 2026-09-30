@@ -58,6 +58,10 @@
  * back to a plain `<a target="_blank">` on web instead. This was the last
  * tab still showing `WebComingSoon` (now deleted, nothing references it) -
  * every Sidebar tab now renders its real page on web.
+ *
+ * Mobile Nav Shell: Drawer leg (see TODO.md): the outer shell stacks
+ * (`flex-col`) below `md` instead of its normal row layout, mirroring
+ * App.tsx's own shell - see that file's header comment for why.
  */
 
 import { lazy, Suspense, useState } from 'react';
@@ -131,7 +135,7 @@ export default function AppWeb() {
   const releaseNotesState = useReleaseNotes(settingsState.settings, settingsState.isLoading, settingsState.updateSettings);
 
   return (
-    <div className="flex h-screen bg-zinc-900 text-zinc-100">
+    <div className="flex flex-col md:flex-row h-screen bg-zinc-900 text-zinc-100">
       <Sidebar
         activeTab={activeTab}
         onTabChange={goToTab}
