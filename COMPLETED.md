@@ -18,17 +18,17 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
-- **[Web Login/Signup UX] — Leg 1** (2026-09-29) - Gated the web app behind
-  a full-screen sign-up/log-in entry point (`WebAuthScreen.tsx`) instead of
-  leaving sync as an opt-in Settings feature, since a fresh browser's
-  IndexedDB starts empty and has nothing worth showing until an account
-  pulls real data down. Wired `useSync`'s auto-sync into `AppWeb.tsx` so it
-  now runs the same way it already does on desktop. `useBattles.ts` isn't
-  ported to the storage adapter yet and Battle Logger has no web UI, so
-  `useSync`'s required battles state is a new stub (`useWebBattlesStub.ts`)
-  that always reports zero battles/tombstones - confirmed safe against the
-  Worker's merge (`worker/src/merge.ts`), which only overwrites ids it's
-  actually given. See commit `1210b69`.
+- **[Web Login/Signup UX] — Leg 1** (2026-09-29) - Wired `useSync`'s
+  auto-sync into `AppWeb.tsx`, opt-in via a new sidebar "Sign in to sync"
+  prompt that opens a dismissible `WebAuthScreen` modal - Teams/Box/the calc
+  work fully signed-out on web, same as desktop, per Vanny's Showdown-style
+  correction to this leg's first pass (which had wrongly gated the whole app
+  behind sign-in; see commit `3da0937`). `useBattles.ts` isn't ported to the
+  storage adapter yet and Battle Logger has no web UI, so `useSync`'s
+  required battles state is a new stub (`useWebBattlesStub.ts`) that always
+  reports zero battles/tombstones - confirmed safe against the Worker's
+  merge (`worker/src/merge.ts`), which only overwrites ids it's actually
+  given. See commits `1210b69` and `3da0937`.
 
 - **[Web Hosting & Domain] — Leg 1** (2026-09-29) - Deployed the web build
   and wired up `choicebuds.vannyproductions.com`, narrowed to deploy+domain

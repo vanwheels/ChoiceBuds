@@ -87,10 +87,11 @@ CNAME record - too much risk to vannyproductions.com's existing
 IONOS-hosted email for what this leg needed. The site is live at
 https://choicebuds.vannyproductions.com. Login/signup UX split into its
 own [Web Login/Signup UX] — Leg 1, below. [Web Login/Signup UX] — Leg 1
-shipped 2026-09-29 (see `COMPLETED.md`) - the web app now gates Teams/Box
-behind a full-screen sign-up/log-in entry point (`WebAuthScreen.tsx`) and
-runs `useSync`'s auto-sync in the background once signed in, same as
-desktop.
+shipped 2026-09-29 (see `COMPLETED.md`) - signing in is opt-in on web, same
+as desktop (Showdown-style: never lock the player out of using the app over
+an account) - Teams/Box/the calc work fully signed-out, and a sidebar
+"Sign in to sync" prompt opens a dismissible `WebAuthScreen` modal that
+turns on `useSync`'s background auto-sync once signed in.
 
 Decided 2026-09-29 (Vanny): the Worker deploy and the app release are two
 separate gates, not one - the Sign Up UI (`SyncSection.tsx`) only exists on
