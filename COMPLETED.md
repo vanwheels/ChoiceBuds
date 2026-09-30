@@ -19,15 +19,10 @@ Entries prior to this file's oldest are in:
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
 - **[Web Box Parity] — Leg 1** (2026-09-29) - Wired the real `BoxPage` into
-  `AppWeb.tsx`, replacing the "Coming soon" placeholder, same tab-switch
-  shape as Web Teams Parity's `TeamsPage` wiring below. No further hook
-  porting was needed this time: `BoxPage`'s own dependencies
-  (`useRosterActions`, the type/move/ability filter hooks,
-  `clipboardPayload.ts`'s paste handlers) never touched `window.electron` to
-  begin with, and every hook state it takes as a prop was already ported by
-  the Teams Parity leg. Verified with `type-check`/`lint`/`build:web`/the
-  full Vitest suite (768 passing, no new test debt - no page component in
-  this codebase has its own test file yet, `TeamsPage` included).
+  `AppWeb.tsx`, replacing the "Coming soon" placeholder. No further hook
+  porting was needed (`BoxPage`'s own dependencies never touched
+  `window.electron`, and every hook state it takes as a prop was already
+  ported by the Teams Parity leg above). See commit `d9ed9c3`.
 
 - **[Web Teams Parity] — Leg 1** (2026-09-29) - Wired the real `TeamsPage`
   into `AppWeb.tsx` (import/CRUD/display), replacing the scaffold leg's
