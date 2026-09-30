@@ -18,6 +18,20 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Mobile Nav Shell: Drawer] — Leg 1** (2026-09-30) - `Sidebar.tsx`'s
+  fixed-width rail now hides entirely below the `md` (768px) breakpoint,
+  replaced by a hamburger trigger + off-canvas drawer (backdrop + slide-in
+  panel, portaled like `Modal.tsx`) that reuses the rail's own nav-item list
+  and `renderFooter` slot - self-contained in `Sidebar.tsx`, no wiring
+  changes needed in `App.tsx`/`AppWeb.tsx`. `renderNavItem` now takes an
+  explicit collapsed/onClick pair rather than reading the rail's own
+  `collapsed` state, since the drawer always renders full-width regardless
+  of the desktop collapse preference. Caught one bug before it shipped: a
+  conditional `transition` prop (`drawerOpen ? enter : exit`) silently
+  applies the enter transition to the exit animation too, since it's
+  evaluated on the last render before unmount - switched to Framer Motion
+  variants instead, same pattern `Modal.tsx` already uses. See `a8256d9`.
+
 - **[Touch-Accessible Hover Content] — Leg 1** (2026-09-30) - Added
   `useLongPress.ts` as touch's analog to mouse hover for the item/ability/
   move tooltips on `EditOverlays.tsx`, which were previously unreachable

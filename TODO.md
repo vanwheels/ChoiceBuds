@@ -180,14 +180,11 @@ gaps before any layout work), then by what's foundational (reclaiming nav
 width before auditing page layouts that assume it), then remaining layout
 audits in traffic-priority order.
 
-- **[Mobile Nav Shell: Drawer] — Leg 1** *(Last touched: 2026-09-30 ·
-  Re-checks: 0)*
-  Rework `Sidebar.tsx` to collapse into an off-canvas drawer below a
-  chosen breakpoint, opened by a hamburger trigger, reusing its existing
-  nav-item list and `renderFooter` slot rather than building a new layout
-  pattern. Foundational for the layout-audit legs below, which are
-  auditing against a nav shell about to reclaim most of its fixed width on
-  small viewports.
+[Mobile Nav Shell: Drawer] — Leg 1 shipped 2026-09-30 (see `COMPLETED.md`) -
+`Sidebar.tsx` now hides the rail entirely below `md` (768px) and replaces it
+with a hamburger trigger + off-canvas drawer, self-contained in that one
+component (no new wiring needed in `App.tsx`/`AppWeb.tsx`). The layout-audit
+legs below now have a real reclaimed-width nav shell to design against.
 
 - **[Responsive Layout Audit: Teams & Box] — Leg 1** *(Last touched:
   2026-09-30 · Re-checks: 0)*
