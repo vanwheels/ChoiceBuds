@@ -190,6 +190,23 @@ export default function TeamsPage({
           ancestor before/after opening the dropdown - this was the only one
           whose clientHeight was exceeded. */}
       <div className="flex-1 overflow-y-auto px-4 md:px-8 py-6 @container" style={{ scrollbarGutter: 'stable' }} onContextMenu={handleContentContextMenu}>
+        {/* min-h-[calc(100%+1px)] - guarantees this scroll container always
+            has at least 1px of real overflow (Responsive Layout Audit
+            follow-up, see TODO.md). Confirmed live on iPhone Safari: when a
+            short team list's content height happens to exactly match this
+            container's own height (one empty team, nothing else), touch-
+            scroll gets stuck/unresponsive even though there's technically
+            nothing to scroll to - a bottom-padding attempt at this didn't
+            work, since padding still counts toward "content height" and
+            scrollHeight only ever exceeds clientHeight when content
+            genuinely exceeds the container's own (flex-determined) height,
+            not from adding more space *inside* that same box. A percentage-
+            based min-height on this direct child, deliberately 1px over
+            100% of its (definite, flex-1-sized) parent, forces exactly
+            that - real, permanent, imperceptible overflow regardless of how
+            little actual content exists, without the dead space a fixed
+            large padding would add. */}
+        <div className="min-h-[calc(100%+1px)]">
         {teamsState.isLoading ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-zinc-400">Loading teams...</div>
@@ -260,6 +277,7 @@ export default function TeamsPage({
             })}
           </Reorder.Group>
         )}
+        </div>
       </div>
 
       {/* Import Team Modal */}

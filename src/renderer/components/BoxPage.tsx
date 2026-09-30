@@ -370,6 +370,11 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
       </header>
 
       <div className="flex-1 overflow-y-auto px-4 md:px-8 py-6" style={{ scrollbarGutter: 'stable' }}>
+        {/* min-h-[calc(100%+1px)] - same iOS Safari stuck-scroll fix as
+            TeamsPage.tsx's content container (see its own comment) - a box
+            with very few saved builds could hit the same exact-height
+            coincidence. */}
+        <div className="min-h-[calc(100%+1px)]">
         {savedPokemonState.isLoading ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-zinc-400">Loading box...</div>
@@ -444,6 +449,7 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
             })}
           </Reorder.Group>
         )}
+        </div>
       </div>
 
       <AnimatePresence>
