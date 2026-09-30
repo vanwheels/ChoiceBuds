@@ -68,19 +68,44 @@ function MenuRow({ icon, label, onClick, danger }: MenuRowProps) {
   );
 }
 
+interface MenuPos {
+  top?: number;
+  bottom?: number;
+  right: number;
+  maxHeight: number;
+}
+
+const VIEWPORT_MARGIN = 8;
+const MIN_MENU_HEIGHT = 140;
+
 export default function TeamOverflowMenu({ team, rulesetId, onExport, onExportImage, onExportPdf, onDelete }: TeamOverflowMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
+  const [menuPos, setMenuPos] = useState<MenuPos | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Computed fresh every time the menu opens, off the trigger's real screen
   // position - runs before paint (useLayoutEffect) so the menu never flashes
-  // at the wrong spot.
+  // at the wrong spot. Flips above the trigger + caps maxHeight to whichever
+  // side has more room (Responsive Layout Audit follow-up, see TODO.md) -
+  // previously always rendered below with no viewport-bottom clamp at all,
+  // so a team near the bottom of a tall mobile list (or one whose
+  // TeamValidationButton result popup made the menu taller) could spill
+  // past the screen edge with no way to reach the rest of it, since the
+  // close-on-scroll handler below closed the menu the instant a read-more
+  // scroll was attempted.
   useLayoutEffect(() => {
     if (!isOpen || !triggerRef.current) return;
     const rect = triggerRef.current.getBoundingClientRect();
-    setMenuPos({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
+    const spaceBelow = window.innerHeight - rect.bottom - VIEWPORT_MARGIN;
+    const spaceAbove = rect.top - VIEWPORT_MARGIN;
+    const placeAbove = spaceBelow < MIN_MENU_HEIGHT && spaceAbove > spaceBelow;
+    setMenuPos({
+      top: placeAbove ? undefined : rect.bottom + VIEWPORT_MARGIN,
+      bottom: placeAbove ? window.innerHeight - rect.top + VIEWPORT_MARGIN : undefined,
+      right: window.innerWidth - rect.right,
+      maxHeight: Math.max(MIN_MENU_HEIGHT, placeAbove ? spaceAbove : spaceBelow),
+    });
   }, [isOpen]);
 
   useEffect(() => {
@@ -93,7 +118,18 @@ export default function TeamOverflowMenu({ team, rulesetId, onExport, onExportIm
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setIsOpen(false);
     };
-    const handleScrollOrResize = () => setIsOpen(false);
+    // Exempts scrolling *inside* the menu's own now-scrollable body (below)
+    // from dismissal - only an external scroll (the underlying teams list,
+    // the page) should close it, since that's what would otherwise leave a
+    // stale-positioned menu behind. Without this check, scrolling to read
+    // overflow content the maxHeight/overflow-y-auto below now makes
+    // reachable would immediately close the menu again, since a capturing
+    // window listener also sees scroll events from descendant scrollable
+    // regions.
+    const handleScrollOrResize = (e: Event) => {
+      if (e.target instanceof Node && menuRef.current?.contains(e.target)) return;
+      setIsOpen(false);
+    };
     document.addEventListener('mousedown', handlePointerDown);
     document.addEventListener('keydown', handleKeyDown);
     // capture: true so this also catches scroll events firing on a nested
@@ -130,8 +166,8 @@ export default function TeamOverflowMenu({ team, rulesetId, onExport, onExportIm
       {isOpen && menuPos && createPortal(
         <div
           ref={menuRef}
-          className="fixed z-50 w-56 rounded-lg border border-zinc-800 bg-zinc-900 shadow-2xl p-1.5"
-          style={{ top: menuPos.top, right: menuPos.right }}
+          className="fixed z-50 w-56 rounded-lg border border-zinc-800 bg-zinc-900 shadow-2xl p-1.5 overflow-y-auto"
+          style={{ top: menuPos.top, bottom: menuPos.bottom, right: menuPos.right, maxHeight: menuPos.maxHeight }}
         >
           <TeamValidationButton team={team} rulesetId={rulesetId} />
 

@@ -50,7 +50,7 @@ export default function TeamValidationButton({ team, rulesetId }: TeamValidation
         <span>Validate Team</span>
       </button>
       {result && (
-        <div className="absolute z-50 top-full right-0 mt-1 w-72 rounded-lg border-2 bg-slate-900 shadow-xl p-3"
+        <div className="absolute z-50 top-full right-0 mt-1 w-full rounded-lg border-2 bg-slate-900 shadow-xl p-3"
           style={{ borderColor: result.valid ? '#10b981' : '#ef4444' }}
         >
           {result.valid ? (
