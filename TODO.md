@@ -142,14 +142,10 @@ lazy-load/visited-tabs pattern; tabs without a ported page yet show a
 `WebComingSoon` placeholder instead of the real feature. [Web Calc &
 Matchup Tools Parity] — Leg 1 shipped the same day (see `COMPLETED.md`) -
 `CalcPopup`/`TypeMatchupPage`/`SpeedTiersPage` now wired into the web nav,
-mirroring `App.tsx`'s desktop wiring verbatim.
-
-- **[Web Battle Log Storage Adapter Port] — Leg 1** *(Last touched:
-  2026-09-29 · Re-checks: 0)*
-  Port `useBattles.ts` to the storage adapter, mirroring `useTeams`/
-  `useDatabase`'s own port from Web App Scaffold: Storage Adapter. Swap
-  `AppWeb.tsx`'s `useWebBattlesStub` for the real hook in `useSync`'s
-  wiring. Data-layer only, no new UI.
+mirroring `App.tsx`'s desktop wiring verbatim. [Web Battle Log Storage
+Adapter Port] — Leg 1 shipped the same day (see `COMPLETED.md`) -
+`useBattles.ts` now goes through the storage adapter and `AppWeb.tsx`
+wires the real hook into `useSync` in place of the old stub.
 
 - **[Web Battle Log & Statistics Parity] — Leg 1** *(Last touched:
   2026-09-29 · Re-checks: 0)*

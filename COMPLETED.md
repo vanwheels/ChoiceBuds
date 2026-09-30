@@ -18,6 +18,15 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Web Battle Log Storage Adapter Port] — Leg 1** (2026-09-30) - Ported
+  `useBattles.ts` to the `StorageAdapter` interface (added a
+  `battles-database` `StorageKey`), mirroring `useTeams.ts`/`useDatabase.ts`'s
+  own port from Web App Scaffold: Storage Adapter. Swapped `AppWeb.tsx`'s
+  `useWebBattlesStub` (always-zero placeholder fed to `useSync`) for the
+  real hook, then deleted the stub and its test as dead code. Data-layer
+  only - no new UI; Battle Log/Statistics still show `WebComingSoon` until
+  their own parity leg. See commit `d9d5cd7`.
+
 - **[Web Calc & Matchup Tools Parity] — Leg 1** (2026-09-30) - Wired
   `CalcPopup`, `TypeMatchupPage`, and `SpeedTiersPage` into `AppWeb.tsx`'s
   now-generalized nav (the Nav Shell leg below), replacing their
