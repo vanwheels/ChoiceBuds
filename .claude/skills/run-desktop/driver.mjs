@@ -68,6 +68,28 @@ const COMMANDS = {
     console.log('resized to', w, 'x', h, '(content size)');
   },
 
+  // Electron's BrowserWindow enforces main.ts's minWidth: 1280/minHeight: 720
+  // on setContentSize itself (confirmed live: resize below that floor is
+  // silently clamped, window.innerWidth never drops), so there's no way to
+  // reach the app's `md:` (768px) mobile breakpoints via resize() alone in
+  // the desktop shell - only the web build (a real browser, no Electron
+  // window chrome to enforce a floor) could before this. webContents page
+  // zoom (distinct from CSS `zoom`) scales how many CSS pixels fit in the
+  // same physical content area without touching the window's actual size,
+  // so it sidesteps the minWidth floor entirely: window.innerWidth shrinks
+  // as the factor grows past 1. Pick a factor from the *current*
+  // window.innerWidth (not a hardcoded window size assumption) - e.g.
+  // factor 3.4 on a ~1264px-wide window lands just under 768px.
+  async zoom(args) {
+    if (!app) return console.log('ERROR: launch first');
+    const factor = Number(args);
+    if (!factor) return console.log('ERROR: usage - zoom <factor>');
+    await app.evaluate(({ BrowserWindow }, f) => {
+      BrowserWindow.getAllWindows()[0]?.webContents.setZoomFactor(f);
+    }, factor);
+    console.log('zoom factor set to', factor);
+  },
+
   async ss(name) {
     if (!page) return console.log('ERROR: launch first');
     const f = path.join(SHOT_DIR, (name || `ss-${Date.now()}`) + '.png');

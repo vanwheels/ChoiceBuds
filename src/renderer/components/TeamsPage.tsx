@@ -27,6 +27,7 @@ import VgcPasteCatalogModal from './VgcPasteCatalogModal';
 import TeamCard from './TeamCard';
 import ContextMenu from './ContextMenu';
 import MobileFilterPopover from './MobileFilterPopover';
+import MobileTeamsList from './MobileTeamsList';
 import { PlusIcon, CompassIcon, FilterIcon } from './icons/SidebarIcons';
 
 
@@ -272,12 +273,34 @@ export default function TeamsPage({
             <p className="text-sm mt-2">Click "Add New Team" to import your first team</p>
           </div>
         ) : (
+          <>
+          {/* Compact team-preview list - mobile only (Full-Screen Swipeable
+              Pokémon Card + Teams List View Leg 1, see TODO.md). Renders
+              instead of the desktop Reorder.Group grid below, not a
+              responsive variant of it - no drag-reorder here (out of scope,
+              see MobileTeamsList.tsx's header), tapping a row opens
+              MobileTeamSwipeOverlay.tsx at index 0. */}
+          <div className="md:hidden">
+            <MobileTeamsList
+              teams={sortedTeams}
+              teamsState={teamsState}
+              databaseState={databaseState}
+              gameDataState={gameDataState}
+              speciesRosterState={speciesRosterState}
+              spriteCacheState={spriteCacheState}
+              settingsState={settingsState}
+              savedPokemonState={savedPokemonState}
+              vgcPastesState={vgcPastesState}
+              vgcRealSetsState={vgcRealSetsState}
+            />
+          </div>
+
           <Reorder.Group
             as="div"
             axis="y"
             values={orderedTeamIds}
             onReorder={setOrderedTeamIds}
-            className="grid grid-cols-1 @[1700px]:grid-cols-2 gap-4 w-full"
+            className="hidden md:grid grid-cols-1 @[1700px]:grid-cols-2 gap-4 w-full"
           >
             {/* Responsive teams grid (carousel/grid rework leg 4, see TODO.md):
                 1 column by default, 2 once this wrapper's own @container width
@@ -327,6 +350,7 @@ export default function TeamsPage({
               );
             })}
           </Reorder.Group>
+          </>
         )}
         </div>
       </div>
