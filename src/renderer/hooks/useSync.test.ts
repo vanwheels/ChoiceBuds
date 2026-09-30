@@ -84,7 +84,11 @@ function setup(settingsOverrides: Partial<AppSettings> = {}) {
     collapseAllCards: vi.fn(),
     refreshTeams: vi.fn().mockResolvedValue(undefined),
     getTeamById: vi.fn(),
-    applySyncedState: vi.fn().mockResolvedValue(true),
+    // Mirrors the real useTeams.ts::applySyncedState, which unconditionally
+    // overwrites `teams` with the server's (always-fresh-reference) result -
+    // that reference change is exactly what the skip-next-mutation-sync
+    // mechanism under test exists to not mistake for a local edit.
+    applySyncedState: vi.fn(async (records: Team[]) => { teamsState.teams = records; return true; }),
   };
 
   const battlesState: UseBattlesReturn = {
@@ -97,7 +101,7 @@ function setup(settingsOverrides: Partial<AppSettings> = {}) {
     deleteBattle: vi.fn(),
     refreshBattles: vi.fn().mockResolvedValue(undefined),
     getBattleById: vi.fn(),
-    applySyncedState: vi.fn().mockResolvedValue(true),
+    applySyncedState: vi.fn(async (records) => { battlesState.battles = records; return true; }),
   };
 
   const savedPokemonState: UseSavedPokemonReturn = {
@@ -117,7 +121,7 @@ function setup(settingsOverrides: Partial<AppSettings> = {}) {
     refreshSavedPokemon: vi.fn().mockResolvedValue(undefined),
     getSavedSetsForSpecies: vi.fn().mockReturnValue([]),
     tombstones: [],
-    applySyncedState: vi.fn().mockResolvedValue(true),
+    applySyncedState: vi.fn(async (records) => { savedPokemonState.savedPokemon = records; return true; }),
   };
 
   const { result, rerender } = renderHook(() => useSync(settingsState, teamsState, battlesState, savedPokemonState));
@@ -378,6 +382,10 @@ describe('useSync', () => {
     it('syncs again after local data changes, once things settle (debounced)', async () => {
       const { rerender, teamsState } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
       await vi.waitFor(() => expect(mockedPush).toHaveBeenCalledTimes(1)); // mount-triggered
+      // Reflects the mount-triggered sync's own applySyncedState write (see
+      // its mock above) and lets it consume the skip-next-mutation-sync flag,
+      // so it's not mistaken later for the genuine edit this test simulates.
+      rerender();
 
       mockedPush.mockClear();
       teamsState.teams = [makeTeam({ id: 'a-new-team' })]; // simulate a mutation changing the array reference
@@ -388,6 +396,28 @@ describe('useSync', () => {
       });
 
       expect(mockedPush).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not re-sync off its own applySyncedState write (regression: this used to ping-pong forever)', async () => {
+      const remoteTeam = makeTeam({ id: 'remote-team' });
+      mockedPush.mockResolvedValue(emptyMergedPayload({ teams: [remoteTeam] }));
+
+      const { rerender } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
+      await vi.waitFor(() => expect(mockedPush).toHaveBeenCalledTimes(1)); // mount-triggered
+      // The mount sync's applySyncedState mock just overwrote teamsState.teams
+      // with a fresh reference (remoteTeam) - render so the debounce effect
+      // observes it.
+      rerender();
+
+      mockedPush.mockClear();
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5_000);
+      });
+
+      // A real edit would have scheduled another push here; a reference
+      // change that came from applying the sync's own result must not.
+      expect(mockedPush).not.toHaveBeenCalled();
     });
 
     it('syncs again on an interval fallback', async () => {

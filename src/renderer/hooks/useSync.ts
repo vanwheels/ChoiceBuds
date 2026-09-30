@@ -63,6 +63,14 @@ export function useSync(
   const [internalStatus, setStatus] = useState<SyncStatus>(() => (settings.syncUsername ? 'idle' : 'signed-out'));
   const [error, setError] = useState<string | null>(null);
   const inFlightRef = useRef<Promise<SyncResult> | null>(null);
+  // Set right before applySyncedState below writes the Worker's merged
+  // result back into teams/battles/savedPokemon state. That write changes
+  // those arrays' references the same way a real local edit would, which
+  // would otherwise re-trigger the debounced-mutation effect below and push
+  // right back to the Worker - an infinite ~5s sync loop with no actual
+  // local changes involved. Consumed (and cleared) by that effect so only
+  // the one render caused by this sync is skipped, not genuine edits after.
+  const skipNextMutationSyncRef = useRef(false);
 
   // Derived rather than effect-driven: being signed out always overrides
   // whatever syncNow last set (e.g. a stale 'error' from before logOut), and
@@ -149,6 +157,7 @@ export function useSync(
 
         const merged = await pushSyncData(syncUsername, syncToken, payload);
 
+        skipNextMutationSyncRef.current = true;
         await Promise.all([
           teamsState.applySyncedState(merged.teams),
           battlesState.applySyncedState(merged.battles),
@@ -209,6 +218,10 @@ export function useSync(
   // resets on an actual change, not on every render of this hook.
   useEffect(() => {
     if (!syncUsername || !syncToken) return;
+    if (skipNextMutationSyncRef.current) {
+      skipNextMutationSyncRef.current = false;
+      return;
+    }
     const timeoutId = setTimeout(() => { syncNowRef.current(); }, AUTO_SYNC_DEBOUNCE_MS);
     return () => clearTimeout(timeoutId);
   }, [syncUsername, syncToken, teamsState.teams, battlesState.battles, savedPokemonState.savedPokemon]);
