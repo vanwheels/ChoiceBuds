@@ -14,6 +14,12 @@
  * check-then-download for that URL exactly once. useInitialSync uses
  * downloadSprite() directly for the bulk first-launch pass; everyday
  * rendering only ever needs resolveSprite().
+ *
+ * On web there's no userData/sprites/ directory to download into, so both
+ * functions no-op there (resolveSprite always serves the remote URL
+ * unchanged, downloadSprite always resolves null) rather than going through
+ * the storage-adapter seam this hook has no other use for - sprites are
+ * always served straight from raw.githubusercontent.com on web.
  */
 
 import { useCallback, useRef, useState } from 'react';
@@ -28,13 +34,14 @@ export function useSpriteCache(): UseSpriteCacheReturn {
   const inFlight = useRef<Set<string>>(new Set());
 
   const downloadSprite = useCallback(async (remoteUrl: string): Promise<string | null> => {
+    if (!window.electron) return null;
     const localUrl = await window.electron.downloadSprite(remoteUrl);
     if (localUrl) setResolved(prev => (prev[remoteUrl] === localUrl ? prev : { ...prev, [remoteUrl]: localUrl }));
     return localUrl;
   }, []);
 
   const resolveSprite = useCallback((remoteUrl: string): string => {
-    if (!remoteUrl) return remoteUrl;
+    if (!remoteUrl || !window.electron) return remoteUrl;
     const cached = resolved[remoteUrl];
     if (cached) return cached;
 

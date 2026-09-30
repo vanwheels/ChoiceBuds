@@ -10,7 +10,14 @@
  * by a case in both adapters.
  */
 
-export type StorageKey = 'teams-database' | 'pokeapi-cache';
+export type StorageKey =
+  | 'teams-database'
+  | 'pokeapi-cache'
+  | 'game-data-cache'
+  | 'settings'
+  | 'saved-pokemon-database'
+  | 'vgc-pastes-cache'
+  | 'vgc-real-sets-cache';
 
 export interface StorageAdapter {
   read<T>(key: StorageKey): Promise<T | null>;

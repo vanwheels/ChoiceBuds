@@ -5,6 +5,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import type { AppSettings, PlayerProfile, RegulationLabel } from '../types/pokemon';
+import { getStorageAdapter } from '../services/storage';
 
 const DEFAULT_PLAYER_PROFILE: PlayerProfile = {
   playerName: '',
@@ -78,7 +79,7 @@ export function useSettings(): UseSettingsReturn {
       setError(null);
 
       try {
-        const database = await window.electron.readSettings();
+        const database = await getStorageAdapter().read<AppSettings>('settings');
         if (ignore) return;
 
         // Spread over DEFAULT_SETTINGS so a settings.json written before a
@@ -105,7 +106,7 @@ export function useSettings(): UseSettingsReturn {
    */
   const persistSettingsToDisk = async (updated: AppSettings): Promise<boolean> => {
     try {
-      const success = await window.electron.writeSettings(updated);
+      const success = await getStorageAdapter().write('settings', updated);
 
       if (!success) {
         throw new Error('Failed to write settings');

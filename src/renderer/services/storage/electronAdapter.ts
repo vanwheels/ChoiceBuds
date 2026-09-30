@@ -15,6 +15,16 @@ export class ElectronStorageAdapter implements StorageAdapter {
         return window.electron.readTeamsDatabase();
       case 'pokeapi-cache':
         return window.electron.readPokeAPICache();
+      case 'game-data-cache':
+        return window.electron.readGameDataCache();
+      case 'settings':
+        return window.electron.readSettings();
+      case 'saved-pokemon-database':
+        return window.electron.readSavedPokemonDatabase();
+      case 'vgc-pastes-cache':
+        return window.electron.readVgcPastesCache();
+      case 'vgc-real-sets-cache':
+        return window.electron.readVgcRealSetsCache();
     }
   }
 
@@ -24,6 +34,16 @@ export class ElectronStorageAdapter implements StorageAdapter {
         return window.electron.writeTeamsDatabase(value);
       case 'pokeapi-cache':
         return window.electron.writePokeAPICache(value);
+      case 'game-data-cache':
+        return window.electron.writeGameDataCache(value);
+      case 'settings':
+        return window.electron.writeSettings(value);
+      case 'saved-pokemon-database':
+        return window.electron.writeSavedPokemonDatabase(value);
+      case 'vgc-pastes-cache':
+        return window.electron.writeVgcPastesCache(value);
+      case 'vgc-real-sets-cache':
+        return window.electron.writeVgcRealSetsCache(value);
     }
   }
 }

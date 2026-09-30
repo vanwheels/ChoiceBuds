@@ -13,7 +13,11 @@
  * rather than called directly with fetch() here, because that endpoint's
  * response carries no CORS headers - see main.ts's pokepaste:create handler
  * for the full explanation and CLAUDE.md's external-integration policy for
- * the exception this falls under.
+ * the exception this falls under. There's no main process on web, so
+ * createPokepaste() resolves null there (ExportTeamModal.tsx's existing
+ * "Could not create the Pokepaste link" error path already covers a null
+ * result - see TODO.md's Web Teams Parity leg for why export itself isn't
+ * ported this leg).
  */
 
 import { formatShowdownText } from './parser';
@@ -66,6 +70,7 @@ export async function createPokepaste(
   author?: string,
   notes?: string
 ): Promise<string | null> {
+  if (!window.electron) return null;
   const paste = formatShowdownText(pokemonList);
   const result = await window.electron.createPokepaste({ paste, title, author, notes });
   return result as string | null;

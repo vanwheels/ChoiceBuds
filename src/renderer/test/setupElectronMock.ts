@@ -9,8 +9,23 @@
  * Default resolutions mirror what a fresh, empty userData directory looks
  * like (reads resolve null, writes resolve true) - individual tests override
  * whichever calls they actually care about.
+ *
+ * Also runs @testing-library/react's cleanup() after every test - none of
+ * the hook test files call unmount() themselves, so without this a
+ * renderHook() instance's effects (and any pending timer they scheduled,
+ * e.g. useDebouncedWrite's write-through) stay live into the next test
+ * instead of running their cleanup. That was mostly harmless while
+ * useGameData.ts/useSettings.ts/etc. captured window.electron's specific
+ * write function once at render time (a stale timer just re-fired the SAME
+ * already-torn-down test's mock), but the storage-adapter port (Web Teams
+ * Parity leg, see TODO.md) made every write re-read the live window.electron
+ * at call time - the same as production, where there's only ever one - so a
+ * dangling timer from test N now fires against test N+1's fresh mock
+ * instead, inflating its call count. Explicit cleanup avoids relying on
+ * `vitest.config.ts`'s `test.globals` (not set) to auto-register it.
  */
-import { beforeEach, vi } from 'vitest';
+import { beforeEach, afterEach, vi } from 'vitest';
+import { cleanup } from '@testing-library/react';
 
 function createElectronMock() {
   return {
@@ -39,4 +54,8 @@ function createElectronMock() {
 
 beforeEach(() => {
   window.electron = createElectronMock() as unknown as typeof window.electron;
+});
+
+afterEach(() => {
+  cleanup();
 });

@@ -9,6 +9,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import type { ImportedPokemonInfo, SavedPokemonEntry, SavedPokemonDatabase, SyncTombstone } from '../types/pokemon';
+import { getStorageAdapter } from '../services/storage';
 
 export interface UseSavedPokemonReturn {
   savedPokemon: SavedPokemonEntry[];
@@ -131,7 +132,7 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     setError(null);
 
     try {
-      const database = await window.electron.readSavedPokemonDatabase();
+      const database = await getStorageAdapter().read<SavedPokemonDatabase>('saved-pokemon-database');
 
       if (database) {
         setSavedPokemon(database.savedPokemon);
@@ -164,7 +165,7 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
       setError(null);
 
       try {
-        const database = await window.electron.readSavedPokemonDatabase();
+        const database = await getStorageAdapter().read<SavedPokemonDatabase>('saved-pokemon-database');
         if (ignore) return;
 
         if (database) {
@@ -198,7 +199,7 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
         lastModified: Date.now(),
       };
 
-      const success = await window.electron.writeSavedPokemonDatabase(database);
+      const success = await getStorageAdapter().write('saved-pokemon-database', database);
 
       if (!success) {
         throw new Error('Failed to write saved-Pokemon database');

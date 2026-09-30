@@ -19,6 +19,7 @@ import { fetchChampionsUsage, normalizeUsageCacheKey } from '../services/champio
 import { normalizeSlug } from '../utils/pokemonRules';
 import { readCacheEntry, runCachedFetch, withCacheEntry, createEmptyGameDataCache } from '../utils/cacheManager';
 import { useDebouncedWrite } from './useDebouncedWrite';
+import { getStorageAdapter } from '../services/storage';
 import { NEVER_EXPIRES } from '../utils/cacheExpiry';
 import { applyChampionsMoveOverride } from '../config/championsMoveOverrides';
 import { applyMoveFlags } from '../config/moveFlags';
@@ -90,7 +91,7 @@ export function useGameData(): UseGameDataReturn {
   // meaning move/item/ability/learnset data could never survive a restart.
   useEffect(() => {
     let cancelled = false;
-    window.electron.readGameDataCache()
+    getStorageAdapter().read<GameDataCache>('game-data-cache')
       .then((persisted: GameDataCache | null) => {
         if (cancelled) return;
         setDiskSnapshot(persisted ? JSON.stringify(persisted) : undefined);
@@ -120,7 +121,7 @@ export function useGameData(): UseGameDataReturn {
   // useUsageSync.ts's TTL-expiry wave, used to serialize into one full
   // multi-MB write per mutation) - and for why diskSnapshot is passed
   // through, to skip the redundant rewrite of a cache loaded unchanged.
-  useDebouncedWrite(cache, isInitialized, window.electron.writeGameDataCache, 'Error persisting game data cache:', undefined, diskSnapshot);
+  useDebouncedWrite(cache, isInitialized, (value) => getStorageAdapter().write('game-data-cache', value), 'Error persisting game data cache:', undefined, diskSnapshot);
 
   // Champions overrides are applied at this read boundary (not baked into
   // what's fetched/cached) so corrections are self-healing against data

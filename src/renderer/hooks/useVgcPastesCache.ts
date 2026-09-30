@@ -12,6 +12,7 @@ import { useState, useEffect, useCallback } from 'react';
 import type { RegulationLabel, VgcPasteTeamRow, VgcPastesCache } from '../types/pokemon';
 import { fetchVgcPasteRows } from '../services/vgcPastes';
 import { useDebouncedWrite } from './useDebouncedWrite';
+import { getStorageAdapter } from '../services/storage';
 
 export interface UseVgcPastesCacheReturn {
   cache: VgcPastesCache | null;
@@ -42,7 +43,7 @@ export function useVgcPastesCache(): UseVgcPastesCacheReturn {
   // ever reads what a prior manual refresh() already wrote.
   useEffect(() => {
     let cancelled = false;
-    window.electron.readVgcPastesCache()
+    getStorageAdapter().read<VgcPastesCache>('vgc-pastes-cache')
       .then((persisted: VgcPastesCache | null) => {
         if (cancelled) return;
         setDiskSnapshot(persisted ? JSON.stringify(persisted) : undefined);
@@ -59,7 +60,7 @@ export function useVgcPastesCache(): UseVgcPastesCacheReturn {
     return () => { cancelled = true; };
   }, []);
 
-  useDebouncedWrite(cache, isInitialized, window.electron.writeVgcPastesCache, 'Error persisting VGCPastes cache:', undefined, diskSnapshot);
+  useDebouncedWrite(cache, isInitialized, (value) => getStorageAdapter().write('vgc-pastes-cache', value), 'Error persisting VGCPastes cache:', undefined, diskSnapshot);
 
   const getRows = useCallback((regulation: RegulationLabel): VgcPasteTeamRow[] => {
     return cache?.rowsByRegulation[regulation] ?? [];

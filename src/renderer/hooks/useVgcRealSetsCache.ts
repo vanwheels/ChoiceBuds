@@ -20,6 +20,7 @@ import type { RegulationLabel, VgcPasteTeamRow, VgcRealSetsCache, VgcRealSetsEnt
 import { normalizeUsageCacheKey } from '../services/championsBattleData';
 import { filterRowsBySpecies, extractRealSetsForSpecies } from '../services/vgcRealSets';
 import { useDebouncedWrite } from './useDebouncedWrite';
+import { getStorageAdapter } from '../services/storage';
 
 export interface UseVgcRealSetsCacheReturn {
   cache: VgcRealSetsCache | null;
@@ -50,7 +51,7 @@ export function useVgcRealSetsCache(): UseVgcRealSetsCacheReturn {
 
   useEffect(() => {
     let cancelled = false;
-    window.electron.readVgcRealSetsCache()
+    getStorageAdapter().read<VgcRealSetsCache>('vgc-real-sets-cache')
       .then((persisted: VgcRealSetsCache | null) => {
         if (cancelled) return;
         setDiskSnapshot(persisted ? JSON.stringify(persisted) : undefined);
@@ -67,7 +68,7 @@ export function useVgcRealSetsCache(): UseVgcRealSetsCacheReturn {
     return () => { cancelled = true; };
   }, []);
 
-  useDebouncedWrite(cache, isInitialized, window.electron.writeVgcRealSetsCache, 'Error persisting VGC real-sets cache:', undefined, diskSnapshot);
+  useDebouncedWrite(cache, isInitialized, (value) => getStorageAdapter().write('vgc-real-sets-cache', value), 'Error persisting VGC real-sets cache:', undefined, diskSnapshot);
 
   const getCachedRealSets = useCallback((regulation: RegulationLabel, species: string): VgcRealSetsEntry | null => {
     const key = normalizeUsageCacheKey(species);
