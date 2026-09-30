@@ -1,13 +1,19 @@
 /**
  * ChoiceBuds cross-device sync Worker
  *
- * Real username + password accounts, keyed in Workers KV (single SYNC_KV
- * binding, prefixed keys - see README.md for the full key scheme). A device
- * authenticates with a server-issued opaque bearer token, not the password
- * itself: signup/login return a random token and the Worker stores only its
- * hash, so a compromised device never hands over a password the user might
- * have reused elsewhere. Multiple devices stay signed in independently -
- * login does not invalidate another device's token.
+ * Real username + password accounts. Low-volume account/token/lockout state
+ * lives in Workers KV (SYNC_KV, prefixed keys - see README.md for the full
+ * key scheme); the high-frequency per-account sync blob lives in an R2
+ * bucket (SYNC_R2) instead, since KV's 1,000 writes/day free-tier cap is
+ * shared across every account this Worker serves and a push/pull round trip
+ * writes that blob on every sync. A GET/PUT that finds no R2 object yet
+ * falls back to the account's legacy KV blob, so already-signed-up accounts
+ * migrate onto R2 automatically on their next sync - no bulk-copy step. A
+ * device authenticates with a server-issued opaque bearer token, not the
+ * password itself: signup/login return a random token and the Worker stores
+ * only its hash, so a compromised device never hands over a password the
+ * user might have reused elsewhere. Multiple devices stay signed in
+ * independently - login does not invalidate another device's token.
  *
  * Endpoints:
  *   POST /signup            - {username, password, email?} -> {ok, token}
@@ -30,6 +36,7 @@ import { mergeCollection, type SyncTombstone } from './merge';
 
 export interface Env {
   SYNC_KV: KVNamespace;
+  SYNC_R2: R2Bucket;
 }
 
 interface Account {
@@ -240,6 +247,17 @@ async function handleSyncGet(env: Env, lowerUsername: string, request: Request):
     return errorResponse('Invalid or missing token', 401);
   }
 
+  const r2Object = await env.SYNC_R2.get(syncKey(lowerUsername));
+  if (r2Object !== null) {
+    return new Response(await r2Object.text(), {
+      status: 200,
+      headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Not yet migrated to R2 (pre-hybrid-storage account) - fall back to the
+  // legacy KV blob. The next PUT for this account writes its merge result to
+  // R2, so this fallback stops being hit for them after that.
   const stored = await env.SYNC_KV.get(syncKey(lowerUsername));
   if (stored === null) {
     return errorResponse('No data found for this account', 404);
@@ -281,15 +299,29 @@ async function handleSyncPut(env: Env, lowerUsername: string, request: Request):
   }
   const incoming = parsed as SyncPayload;
 
+  const r2Key = syncKey(lowerUsername);
+  const r2Object = await env.SYNC_R2.get(r2Key);
+
   // Throttle on the server's own record of when it last accepted a write for
-  // this account (KV metadata, never sent by the client) - using a
-  // client-supplied timestamp would let a client bypass the throttle by lying.
-  const { value: storedText, metadata } = await env.SYNC_KV.getWithMetadata<{ receivedAt: number }>(syncKey(lowerUsername));
-  if (metadata && Date.now() - metadata.receivedAt < MIN_WRITE_INTERVAL_MS) {
+  // this account (R2 customMetadata, never sent by the client - string-only,
+  // unlike KV's typed metadata param) - using a client-supplied timestamp
+  // would let a client bypass the throttle by lying.
+  const receivedAt = Number(r2Object?.customMetadata?.receivedAt ?? '0');
+  if (r2Object && Date.now() - receivedAt < MIN_WRITE_INTERVAL_MS) {
     return errorResponse('Writing too frequently - try again shortly', 429);
   }
 
-  const existing: SyncPayload = storedText ? JSON.parse(storedText) : EMPTY_SYNC_PAYLOAD;
+  let existing: SyncPayload;
+  if (r2Object) {
+    existing = JSON.parse(await r2Object.text());
+  } else {
+    // No R2 object yet - either a brand-new account, or one not yet migrated
+    // off the legacy KV blob. Fall back to KV so an already-signed-up
+    // account's data merges forward instead of being overwritten; this
+    // write then lands the merge result on R2, completing the migration.
+    const kvStored = await env.SYNC_KV.get(r2Key);
+    existing = kvStored ? JSON.parse(kvStored) : EMPTY_SYNC_PAYLOAD;
+  }
 
   const teamsMerge = mergeCollection(existing.teams, existing.teamTombstones, incoming.teams, incoming.teamTombstones);
   const battlesMerge = mergeCollection(existing.battles, existing.battleTombstones, incoming.battles, incoming.battleTombstones);
@@ -306,7 +338,10 @@ async function handleSyncPut(env: Env, lowerUsername: string, request: Request):
   };
 
   const mergedText = JSON.stringify(merged);
-  await env.SYNC_KV.put(syncKey(lowerUsername), mergedText, { metadata: { receivedAt: Date.now() } });
+  await env.SYNC_R2.put(r2Key, mergedText, {
+    customMetadata: { receivedAt: String(Date.now()) },
+    httpMetadata: { contentType: 'application/json' },
+  });
   return new Response(mergedText, {
     status: 200,
     headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },

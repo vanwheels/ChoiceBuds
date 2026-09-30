@@ -3,7 +3,16 @@ main = "src/index.ts"
 compatibility_date = "2026-01-01"
 
 # Created via `wrangler kv namespace create SYNC_KV`. See README.md for the
-# full deployment walkthrough.
+# full deployment walkthrough. Low-volume keys only (account:/tokens:/
+# loginfail:/signupthrottle:) - the high-frequency sync:<username> blob moved
+# to the SYNC_R2 bucket below.
 [[kv_namespaces]]
 binding = "SYNC_KV"
 id = "c15de4f1212f4edc83e1aa5ecfbedd71"
+
+# Created via `wrangler r2 bucket create choicebuds-sync`. See README.md for
+# the full deployment walkthrough. Requires R2 to be enabled on the
+# Cloudflare account first (dashboard, one-time opt-in).
+[[r2_buckets]]
+binding = "SYNC_R2"
+bucket_name = "choicebuds-sync"

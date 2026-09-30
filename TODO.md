@@ -146,6 +146,36 @@ outside this project — a person, a dependency, or an external decision.
 Exempt from the re-check counter; they move back to "In progress" once
 unblocked.
 
+- **[Sync Worker: KV→R2 Hybrid Storage] — Leg 1** *(Last touched:
+  2026-09-30 · Re-checks: exempt, blocked)*
+  Blocked: `wrangler r2 bucket create` fails with Cloudflare error code
+  10042 ("Please enable R2 through the Cloudflare Dashboard") - R2 needs a
+  one-time account-level opt-in in the dashboard before a bucket can be
+  created, and Vanny's GitHub-SSO login into the Cloudflare dashboard isn't
+  working right now, so he can't get to that toggle yet.
+  All the code/config work that doesn't require a real bucket is done and
+  verified: `worker/wrangler.toml` has the `SYNC_R2` binding
+  (`bucket_name = "choicebuds-sync"`); `worker/src/index.ts`'s
+  `handleSyncGet`/`handleSyncPut` read/write `env.SYNC_R2` first, falling
+  back to the legacy KV `sync:<username>` blob when no R2 object exists yet
+  (migrates an account forward on its next PUT, no bulk-copy script); the
+  write-throttle check now reads R2's `customMetadata.receivedAt` (stringified)
+  instead of KV's typed `metadata` param; `worker/README.md`'s deploy steps/
+  data-keys/Costs-limits sections describe the split. `npm run type-check`
+  and `npm test` (23 tests, unchanged) both pass. Verified live via
+  `wrangler dev` + curl (local R2/KV emulation needs no real Cloudflare
+  account access, so this worked despite the dashboard block): a PUT creates
+  an R2 object and returns it; a second PUT inside the 3s window correctly
+  429s off R2's `customMetadata`; a GET reads straight from R2; a
+  hand-seeded legacy KV `sync:<username>` blob (simulating a pre-migration
+  account) is correctly read on GET when no R2 object exists, and a
+  subsequent PUT merges that legacy data forward with new data and writes
+  the merged result to R2 (confirmed by reading the R2 object directly via
+  `wrangler r2 object get --local`).
+  Remaining steps once R2 is enabled: `npx wrangler r2 bucket create
+  choicebuds-sync`, then `npx wrangler deploy` (bundles this leg's code
+  changes with the deploy, same shape as prior Worker legs).
+
 - **[Existing Account Migration] — Leg 1** *(Last touched: 2026-09-29 ·
   Re-checks: exempt, blocked)*
   Blocked: waiting on friends to message their old `username#XXXX` (Vanny
@@ -238,44 +268,6 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
-
-- **[Sync Worker: KV→R2 Hybrid Storage] — Leg 1** *(Last touched:
-  2026-09-30 · Re-checks: 0)*
-  Scoped 2026-09-30 (Vanny's call: R2 over a paid plan or a configurable
-  per-install URL). Root problem: `SYNC_WORKER_URL` is hardcoded in
-  `syncApi.ts` to Vanny's own Worker, so every signed-in user everywhere
-  shares one Cloudflare account's free-tier KV budget - 1,000 writes/day,
-  globally, not per-user (see the debounce-loop fix above for how close to
-  that this already got). Fix: move only the high-frequency
-  `sync:<username>` blob (the read-modify-write payload every push/pull
-  touches) from KV to an R2 bucket, whose free tier is ~1M writes/month
-  instead of 1,000/day. Leave `account:`/`tokens:`/`loginfail:`/
-  `signupthrottle:` on KV - low-volume, comfortably inside the cap, and
-  KV's `expirationTtl` is load-bearing for those (60s signup cooldown,
-  15-min login lockout) with no R2 equivalent.
-  Concrete steps: (1) `wrangler r2 bucket create`, add an `SYNC_R2` binding
-  to `wrangler.toml` alongside the existing `SYNC_KV` one; (2) in
-  `worker/src/index.ts`, repoint `handleSyncGet`/`handleSyncPut`'s
-  `syncKey(lowerUsername)` read/write at `env.SYNC_R2` instead of
-  `env.SYNC_KV`, and rework the write-throttle check (currently
-  `getWithMetadata`'s KV `metadata` param) onto R2's `customMetadata`
-  (string-only, so `receivedAt` needs stringifying); (3) on a GET/PUT where
-  R2 has no object yet, fall back to reading the account's existing KV
-  `sync:<username>` blob so already-signed-up accounts (Vanny's own data,
-  plus any friends already migrated per `[Existing Account Migration]`
-  above) land on R2 automatically on their next sync, no bulk-copy script -
-  same "deploy whenever, migrate people as they get to it" approach already
-  used for the accounts migration; (4) update `worker/README.md`'s data-
-  keys and Costs/limits sections to describe the split; (5) verify locally
-  via `wrangler dev` + curl (matches this file's existing no-HTTP-test-
-  harness precedent - not adding Miniflare test coverage as part of this
-  leg unless it turns out cheap once in progress); (6) `wrangler deploy` -
-  same bundled code+deploy shape as `[Sync Data Model: Per-Record Merge &
-  Auto Sync]` above. Bonus, not the point of this leg: R2 is strongly
-  consistent, unlike KV's eventual consistency, which should also close the
-  known race condition in `[Existing Account Migration]` above (confirm
-  live once deployed rather than assuming). No client-side changes -
-  `syncApi.ts` only ever talks to the Worker's HTTP API.
 
 - **[UI Shift Assessment Sweep — Post Card UI Polish] — Leg 1** *(Last
   touched: 2026-09-08 · Re-checks: 0)*
