@@ -210,15 +210,13 @@ export default function Sidebar({ activeTab, onTabChange, renderFooter }: Sideba
         shape here and covered the "My Teams"/"Box" page titles, found live
         2026-09-30 - this replaces it rather than just repositioning it,
         since anything `fixed` in a screen corner will always cover
-        whichever page renders content there.
+        whichever page renders content there. Hamburger sits on the left
+        (the side the drawer itself slides in from) and the brand on the
+        right, not the reverse - flagged by Vanny the same day as
+        disorienting when the trigger and its own drawer open on opposite
+        sides.
       */}
       <div className="md:hidden flex items-center justify-between border-b border-zinc-700 bg-zinc-800 px-4 py-3">
-        <div className="flex items-center gap-2.5">
-          <div className="h-7 w-7 shrink-0 overflow-hidden rounded-lg">
-            <img src={`${import.meta.env.BASE_URL}mascot.png`} alt="ChoiceBuds" className="h-full w-full object-cover" />
-          </div>
-          <h1 className="text-[15px] font-bold text-zinc-100">ChoiceBuds</h1>
-        </div>
         <button
           onClick={() => setDrawerOpen(true)}
           aria-label="Open navigation menu"
@@ -226,6 +224,12 @@ export default function Sidebar({ activeTab, onTabChange, renderFooter }: Sideba
         >
           <MenuIcon />
         </button>
+        <div className="flex items-center gap-2.5">
+          <h1 className="text-[15px] font-bold text-zinc-100">ChoiceBuds</h1>
+          <div className="h-7 w-7 shrink-0 overflow-hidden rounded-lg">
+            <img src={`${import.meta.env.BASE_URL}mascot.png`} alt="ChoiceBuds" className="h-full w-full object-cover" />
+          </div>
+        </div>
       </div>
 
       {/* Mobile off-canvas drawer, portaled so it isn't constrained by any transformed ancestor - same reasoning as Modal.tsx's own portal. */}
