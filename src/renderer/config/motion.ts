@@ -61,3 +61,13 @@ export const SIDEBAR_WIDTH_TRANSITION = { duration: DELIBERATE_DURATION, ease: '
  * transitions instead of fighting them for the same box.
  */
 export const DRAG_REORDER_TRANSITION = { duration: DELIBERATE_DURATION, ease: 'easeOut' } as const;
+
+/**
+ * Mobile nav drawer (Mobile Nav Shell: Drawer leg, see TODO.md): a slide-in
+ * panel that mounts/unmounts via AnimatePresence, same shape as the modal
+ * panel above (standard bucket, asymmetric enter/exit easing) rather than
+ * the sidebar-width toggle's symmetric easing - this is an overlay
+ * appearing/disappearing, not a steady-state resize.
+ */
+export const DRAWER_PANEL_ENTER_TRANSITION = { duration: STANDARD_ENTER_DURATION, ease: 'easeOut' } as const;
+export const DRAWER_PANEL_EXIT_TRANSITION = { duration: STANDARD_EXIT_DURATION, ease: 'easeIn' } as const;

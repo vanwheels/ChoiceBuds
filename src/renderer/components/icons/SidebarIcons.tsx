@@ -103,6 +103,27 @@ export function SettingsIcon({ className }: IconProps) {
   );
 }
 
+/** Hamburger trigger for the mobile nav drawer (Mobile Nav Shell: Drawer leg). */
+export function MenuIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 6h16" />
+      <path d="M4 12h16" />
+      <path d="M4 18h16" />
+    </svg>
+  );
+}
+
+/** Close glyph for the mobile nav drawer's header (Mobile Nav Shell: Drawer leg). */
+export function CloseIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 6l12 12" />
+      <path d="M18 6 6 18" />
+    </svg>
+  );
+}
+
 /**
  * The collapse-rail toggle glyph - a box with a vertical divider and an
  * arrowhead pointing in whichever direction the click will move the rail
