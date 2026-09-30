@@ -18,6 +18,36 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Responsive Layout Audit: Teams & Box] — Leg 1** (2026-09-30) - see
+  commit `b0c6581`. `TeamCard`'s collapsed header (identity column + 6-sprite
+  strip + controls pill, ~750px minimum in one row) now stacks vertically
+  below `md` instead of overflowing every phone viewport outright, per
+  Vanny's call over a horizontal-scroll or shrink-sprites alternative. The
+  expanded roster grid gained two new container-query tiers
+  (`grid-cols-1`/`@[380px]:grid-cols-2`/`@[600px]:grid-cols-3` ahead of the
+  existing `@[1040px]:grid-cols-6`) so `PokemonCard` no longer squishes below
+  its ~158px fixed-content floor at phone widths - measured live via a
+  Playwright-driven pass against the web build (`npm run dev:web`) rather
+  than guessed, same discipline as this grid's existing 1040px breakpoint.
+  Also fixed a real (not mobile-specific) double-padding bug in
+  `TeamsPage.tsx` - the content div's own `px-8` plus an extra inline `2rem`
+  on the `Reorder.Group` inside it were stacking, losing 128px total on any
+  viewport. `TeamsPage`/`BoxPage` headers stack their title and controls rows
+  below `md`, keeping full button text (Vanny's call over icon-only).
+  Touch-target bumps (favorite/grip/expand/overflow/delete/collapse icon
+  buttons) folded in per the scoping doc's cross-cutting note, mobile-only
+  via `md:` overrides. Verification needed a workaround: the desktop
+  Electron app enforces a 1280px minimum window width (`main.ts`), so
+  `run-desktop` can't reach phone widths at all - drove the web build
+  directly via `playwright-core` + system Edge instead.
+  Surfaced a real, pre-existing bug while verifying live (confirmed via
+  `git stash` + a clean rerun that this leg's changes aren't the cause):
+  expanding a `TeamCard` with 4+ Pokémon below 768px throws a React
+  "Maximum update depth exceeded" loop. Root cause not yet found - tracked
+  separately as `[Web TeamCard Expand Infinite-Loop Bug] — Leg 1` in
+  `TODO.md` (Vanny's call: don't extend this leg's scope to debug a
+  non-CSS/JS state bug).
+
 - **[Mobile Nav Shell: Drawer] — Leg 1** (2026-09-30) - `Sidebar.tsx`'s
   fixed-width rail now hides entirely below the `md` (768px) breakpoint,
   replaced by a hamburger trigger + off-canvas drawer (backdrop + slide-in

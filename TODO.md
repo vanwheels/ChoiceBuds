@@ -185,12 +185,12 @@ audits in traffic-priority order.
 with a hamburger trigger + off-canvas drawer, self-contained in that one
 component (no new wiring needed in `App.tsx`/`AppWeb.tsx`). The layout-audit
 legs below now have a real reclaimed-width nav shell to design against.
-
-- **[Responsive Layout Audit: Teams & Box] — Leg 1** *(Last touched:
-  2026-09-30 · Re-checks: 0)*
-  The two highest-traffic surfaces: `TeamsPage`/`TeamCard`/`PokemonCard`'s
-  card grid and edit overlays, and `BoxPage`/`BoxCard`. Depends on the Nav
-  Shell leg above for a real nav width to design against.
+[Responsive Layout Audit: Teams & Box] — Leg 1 shipped the same day (see
+`COMPLETED.md`) - `TeamCard`'s header now stacks vertically below `md`
+instead of overflowing outright, and its expanded roster grid gained two new
+container-query tiers ahead of the existing 1040px one. Surfaced a real,
+pre-existing "Maximum update depth exceeded" bug unrelated to this leg's CSS
+work - see its own new entry below.
 
 - **[Responsive Layout Audit: Calc & Modals] — Leg 1** *(Last touched:
   2026-09-30 · Re-checks: 0)*
@@ -306,6 +306,33 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+- **[Web TeamCard Expand Infinite-Loop Bug] — Leg 1** *(Last touched:
+  2026-09-30 · Re-checks: 0)*
+  Discovered live while verifying Responsive Layout Audit: Teams & Box Leg 1
+  (see `COMPLETED.md`). Expanding a `TeamCard` with **4+ Pokémon** at a
+  viewport **narrower than 768px** throws a React "Maximum update depth
+  exceeded" loop - doesn't crash outright but spams re-renders indefinitely
+  (burns CPU/battery, degrades the UI). Only reachable on the web build or a
+  resized browser - the desktop Electron app enforces a 1280px minimum
+  window width (`main.ts`), so this has never been visible there.
+  Confirmed via `git stash` + a clean rerun that it's pre-existing, not
+  caused by that leg's CSS changes - reproduces identically on unmodified
+  `main`. Bisected live via a Playwright-driven repro script (not yet
+  written down anywhere beyond this entry): 3 Pokémon never loops at any
+  width tested (375-1512px); 4 Pokémon loops reliably, but only below 768px
+  - the identical 4-6 mon roster expanded fine at 1512px with the same
+  timing. Root cause not yet identified - ruled out `ResizeObserver` (none
+  exist anywhere in `src/renderer`) and simple squish-driven remeasurement
+  (reproduces whether `PokemonCard` is squished to ~47px or rendering
+  healthy at ~276px, so it's not about card width itself). Leading
+  suspicion, not confirmed: something in `EditOverlays.tsx`'s per-card data-
+  fetch effects (`getEnrichedSpeciesOptions`/`getChampionsUsage`) or
+  `useGameData.ts`'s cache-update propagation misbehaving when 4+ instances
+  mount concurrently at a narrow width - needs real debugging (add a
+  `console.trace()`/React DevTools profiler pass at repro conditions), not a
+  CSS fix. Needs its own scoping/investigation pass before this can become a
+  concrete fix leg.
 
 - **[UI Shift Assessment Sweep — Post Card UI Polish] — Leg 1** *(Last
   touched: 2026-09-08 · Re-checks: 0)*
