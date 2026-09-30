@@ -1,10 +1,11 @@
 /**
- * WebAuthScreen.tsx - Web First-Run Sign Up / Log In Screen
- * The web app's entry point (see AppWeb.tsx) rather than an opt-in Settings
- * feature like desktop's SyncSection.tsx - a fresh browser has an empty
- * IndexedDB, so there's nothing to show until an account pulls real data in.
- * Reuses useSync.ts's signUp/logIn exactly as SyncSection.tsx does; this is
- * just a full-screen presentation instead of a Settings-page card.
+ * WebAuthScreen.tsx - Sign Up / Log In Modal
+ * Opened from AppWeb.tsx's sidebar "Sign in to sync" prompt - signing in is
+ * opt-in on web, same as desktop (Teams/Box/the calc all work fully
+ * signed-out, stored only in this browser's IndexedDB). This just turns on
+ * `useSync`'s background sync; it's never a gate on using the app. Reuses
+ * useSync.ts's signUp/logIn exactly as SyncSection.tsx does; this is a
+ * dismissible modal instead of a Settings-page card.
  */
 
 import { useState } from 'react';
@@ -12,11 +13,12 @@ import type { UseSyncReturn } from '../hooks/useSync';
 
 interface WebAuthScreenProps {
   syncState: UseSyncReturn;
+  onClose: () => void;
 }
 
 type Mode = 'signup' | 'login';
 
-export default function WebAuthScreen({ syncState }: WebAuthScreenProps) {
+export default function WebAuthScreen({ syncState, onClose }: WebAuthScreenProps) {
   const { signUp, logIn } = syncState;
 
   const [mode, setMode] = useState<Mode>('signup');
@@ -44,16 +46,33 @@ export default function WebAuthScreen({ syncState }: WebAuthScreenProps) {
 
     if (!result.ok) {
       setError(result.message);
+      return;
     }
+    onClose();
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-zinc-900 text-zinc-100">
-      <div className="w-full max-w-sm rounded-lg border border-zinc-700 bg-zinc-800 p-6">
-        <h1 className="text-lg font-bold text-zinc-100">ChoiceBuds</h1>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-sm rounded-lg border border-zinc-700 bg-zinc-800 p-6"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between">
+          <h1 className="text-lg font-bold text-zinc-100">Sign in to sync</h1>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
         <p className="mt-1 text-xs text-zinc-400">
           {mode === 'signup'
-            ? 'Create an account to sync your teams and Box to this device.'
+            ? 'Create an account to sync your teams, Box, and settings across devices.'
             : 'Log in to pull your teams and Box down to this device.'}
         </p>
 

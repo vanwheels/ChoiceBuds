@@ -8,16 +8,20 @@
  * Electron dependency, and useSpriteCache now no-ops on web (see its own
  * header comment) rather than needing a port.
  *
- * Wired here (Web Login/Signup UX leg, see TODO.md): useSync, gated behind
- * WebAuthScreen as the app's actual entry point rather than an opt-in
- * Settings feature - a fresh browser's IndexedDB starts empty, so there's
- * nothing worth showing until an account pulls real data in. useBattles
- * itself still isn't ported (Battle Logger has no web UI), so useSync gets
- * a stub battles state (useWebBattlesStub.ts) instead - see that file's own
- * comment for why that's safe against the Worker's merge. Still NOT wired:
- * useInitialSync/useUsageSync (bulk first-launch dex sync - a perf
- * pre-warm, not a functional requirement, since useGameData already
- * fetches lazily on cache miss).
+ * Wired here (Web Login/Signup UX leg, see TODO.md): useSync. Signing in is
+ * opt-in, not a gate - same as desktop, Teams/Box/the calc all work fully
+ * signed-out, stored only in this browser's IndexedDB (and at risk of being
+ * lost if that cache gets cleared). Signing in is what turns on syncing
+ * teams/Box/battle data/settings across sessions, devices, and platforms -
+ * takes a page from Showdown's book: never lock the player out of using the
+ * app over an account. WebAuthScreen renders as a dismissible modal (opened
+ * from the sidebar's "Sign in to sync" prompt) rather than a full-screen
+ * blocker. useBattles itself still isn't ported (Battle Logger has no web
+ * UI), so useSync gets a stub battles state (useWebBattlesStub.ts) instead -
+ * see that file's own comment for why that's safe against the Worker's
+ * merge. Still NOT wired: useInitialSync/useUsageSync (bulk first-launch
+ * dex sync - a perf pre-warm, not a functional requirement, since
+ * useGameData already fetches lazily on cache miss).
  *
  * Box (Web Box Parity leg) reuses the same BoxPage.tsx the desktop app
  * renders, passing the same hook states already instantiated above for
@@ -56,6 +60,7 @@ const SYNC_STATUS_LABEL: Record<ReturnType<typeof useSync>['status'], string> = 
 
 export default function AppWeb() {
   const [activeTab, setActiveTab] = useState<WebTab>('teams');
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const teamsState = useTeams();
   const databaseState = useDatabase();
   const savedPokemonState = useSavedPokemon();
@@ -66,14 +71,6 @@ export default function AppWeb() {
   const settingsState = useSettings();
   const battlesStub = useWebBattlesStub();
   const syncState = useSync(settingsState, teamsState, battlesStub, savedPokemonState);
-
-  if (settingsState.isLoading) {
-    return <div className="flex h-screen items-center justify-center bg-zinc-900" />;
-  }
-
-  if (!syncState.syncUsername) {
-    return <WebAuthScreen syncState={syncState} />;
-  }
 
   return (
     <div className="flex h-screen bg-zinc-900 text-zinc-100">
@@ -99,20 +96,38 @@ export default function AppWeb() {
         </button>
 
         <div className="mt-auto flex flex-col gap-1 border-t border-zinc-700 pt-3 px-2">
-          <span className="truncate text-xs font-mono text-zinc-300" title={syncState.syncUsername}>
-            {syncState.syncUsername}
-          </span>
-          <span className={`text-[11px] ${syncState.status === 'error' ? 'text-red-400' : 'text-zinc-500'}`}>
-            {SYNC_STATUS_LABEL[syncState.status]}
-          </span>
-          <button
-            onClick={() => { syncState.logOut(); }}
-            className="mt-1 self-start text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
-          >
-            Log out
-          </button>
+          {syncState.syncUsername ? (
+            <>
+              <span className="truncate text-xs font-mono text-zinc-300" title={syncState.syncUsername}>
+                {syncState.syncUsername}
+              </span>
+              <span className={`text-[11px] ${syncState.status === 'error' ? 'text-red-400' : 'text-zinc-500'}`}>
+                {SYNC_STATUS_LABEL[syncState.status]}
+              </span>
+              <button
+                onClick={() => { syncState.logOut(); }}
+                className="mt-1 self-start text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+              >
+                Log out
+              </button>
+            </>
+          ) : (
+            <>
+              <span className="text-[11px] text-zinc-500">Not signed in</span>
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="self-start text-[11px] font-semibold text-accent-gold hover:text-accent-gold-deep transition-colors cursor-pointer"
+              >
+                Sign in to sync
+              </button>
+            </>
+          )}
         </div>
       </aside>
+
+      {showAuthModal && (
+        <WebAuthScreen syncState={syncState} onClose={() => setShowAuthModal(false)} />
+      )}
 
       <main className="flex-1 overflow-y-auto">
         <div style={{ display: activeTab === 'teams' ? 'block' : 'none' }} className="h-full">
