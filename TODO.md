@@ -78,7 +78,15 @@ Parity below. [Web Box Parity] — Leg 1 shipped 2026-09-29 (see
 `COMPLETED.md`) - `BoxPage` wired into `AppWeb.tsx` with no further hook
 porting needed; its own dependencies (`useRosterActions`, the type/move/
 ability filter hooks, `clipboardPayload.ts`) had no Electron dependency to
-begin with.
+begin with. [Web Hosting & Domain] — Leg 1 shipped 2026-09-29 (see
+`COMPLETED.md`) - narrowed to deploy+domain only after a sequencing
+check-in, and pivoted from the originally-planned Cloudflare Pages to
+GitHub Pages mid-leg once a live attempt showed Cloudflare's Workers
+Custom Domains need the whole DNS zone moved to Cloudflare, not just a
+CNAME record - too much risk to vannyproductions.com's existing
+IONOS-hosted email for what this leg needed. The site is live at
+https://choicebuds.vannyproductions.com. Login/signup UX split into its
+own [Web Login/Signup UX] — Leg 1, below.
 
 Decided 2026-09-29 (Vanny): the Worker deploy and the app release are two
 separate gates, not one - the Sign Up UI (`SyncSection.tsx`) only exists on
@@ -116,14 +124,15 @@ item bodies below stay short and link back to it rather than repeating it.
   Trickles in as each of the ~4-6 friends gets around to signing up - not a
   single all-at-once pass.
 
-- **[Web Hosting & Domain] — Leg 1** *(Last touched: 2026-09-29 ·
+- **[Web Login/Signup UX] — Leg 1** *(Last touched: 2026-09-29 ·
   Re-checks: 0)*
-  Blocked: needs a working web app to deploy.
-  Deploy to Cloudflare Pages, wire a vannyproductions.com subdomain via an
-  IONOS CNAME record (exact subdomain name still TBD), and build the
-  first-run login/signup UX for web - the entry point, not an opt-in
-  Settings feature, since a device needs an account before it has any
-  data.
+  Split out of Web Hosting & Domain's original Leg 1 scope (see
+  `COMPLETED.md`) once that leg turned out to bundle three different kinds
+  of work and got narrowed to deploy+domain only. Build the first-run
+  login/signup screen for web - the entry point, not an opt-in Settings
+  feature, since a device needs an account before it has any data - and
+  wire `useSync`'s auto-sync into it now that there's a UI to trigger it
+  from.
 
 ## Blocked
 
@@ -226,4 +235,25 @@ worth their own legs until the MVP milestone ships:
 - Public profile / team-sharing pages (the account model's username design
   already accommodates this, but the public routes/per-team visibility
   toggle need their own scoping pass).
+
+Download/landing page for choicebuds.vannyproductions.com (proposed
+2026-09-29, out of Web Hosting & Domain's Leg 1): make the new site the
+default download entry point instead of sending people straight to the
+GitHub Releases page. No universal/self-fetching installer needed - a page
+calling `api.github.com/repos/vanwheels/ChoiceBuds/releases/latest` (the
+same call `services/github.ts`'s in-app update checker already makes) and
+linking to that release's OS-appropriate asset is enough; GitHub Releases
+stays the actual file host. Needs its own scoping pass (OS detection UI,
+where the page lives relative to the app shell, page design) - not yet
+worth a leg on its own.
+
+Mobile-friendliness pass for the web app (flagged 2026-09-29 by Vanny as
+his biggest concern for the web version, once features are in): the
+renderer's components/layouts were built desktop-first for the Electron
+app, and the Team Card Grid Layout Re-check item elsewhere in this file is
+about small *desktop* window widths, not phone-sized viewports - a
+genuinely different concern. Needs its own scoping pass (which
+pages/components need touch-friendly rework, breakpoints, tap targets vs.
+hover-dependent UI) once Web Version: Teams & Box MVP's feature set is
+stable enough to design against - deliberately not started now.
 

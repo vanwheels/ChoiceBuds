@@ -18,6 +18,35 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Web Hosting & Domain] — Leg 1** (2026-09-29) - Deployed the web build
+  and wired up `choicebuds.vannyproductions.com`, narrowed to deploy+domain
+  only (login/signup UX split into its own `TODO.md` leg after a
+  sequencing check-in, since the original leg bundled infra deploy,
+  external DNS, and a real code feature). Pivoted from the originally
+  planned Cloudflare Pages to GitHub Pages mid-leg: a live
+  `wrangler pages deploy` attempt showed Cloudflare's current CLI funnels
+  new projects into Workers-with-static-assets rather than classic Pages,
+  and Workers Custom Domains require the whole DNS zone to live on
+  Cloudflare (confirmed via the real `10082 Can't infer zone from route`
+  API error) - too big and risky a change for what this leg needed, since
+  `vannyproductions.com`'s zone is on IONOS with live email (MX/SPF/DMARC)
+  already. Switched to GitHub Pages instead - the same CNAME-subdomain
+  pattern `www.vannyproductions.com` already uses safely against the same
+  GitHub account. Added `.github/workflows/deploy-web.yml` (builds
+  `dist/web` via `actions/deploy-pages`, mirroring `release.yml`'s style -
+  see commit `d27b0cc`); Pages enablement and the custom domain were set
+  via `gh api` outside of git. Vanny added the CNAME record at IONOS and
+  approved/enforced HTTPS in the repo's Settings > Pages once GitHub's
+  cert finished provisioning.
+  Dead-end avoided along the way: an initial
+  `wrangler pages deploy dist/web --project-name=choicebuds` silently
+  created a plain Worker (not a Pages project) that deployed the wrong
+  build output (the Electron renderer's `dist/renderer`, not `dist/web`)
+  and mutated the root `vite.config.ts`/`package.json` with an unrelated
+  Cloudflare Vite plugin - all reverted locally and the stray Worker
+  deleted (with explicit approval, since deletion is irreversible) before
+  redoing the deploy cleanly.
+
 - **[Web Box Parity] — Leg 1** (2026-09-29) - Wired the real `BoxPage` into
   `AppWeb.tsx`, replacing the "Coming soon" placeholder. No further hook
   porting was needed (`BoxPage`'s own dependencies never touched
