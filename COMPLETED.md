@@ -18,6 +18,37 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Web Teams Parity] — Leg 1** (2026-09-29) - Wired the real `TeamsPage`
+  into `AppWeb.tsx` (import/CRUD/display), replacing the scaffold leg's
+  placeholder. Ported the five remaining hooks `TeamsPage` needed
+  (`useGameData`, `useSettings`, `useSavedPokemon`, `useVgcPastesCache`,
+  `useVgcRealSetsCache`) to `getStorageAdapter()`, adding matching
+  `StorageKey`/adapter cases; `useSpeciesRoster`/`useActiveEditor` needed no
+  changes (no Electron dependency already). `useSpriteCache` now no-ops on
+  web (no filesystem to cache sprites into there) instead of being ported.
+  `createPokepaste()` (Showdown export's Pokepaste-link button) resolves
+  null on web instead of throwing, since export itself isn't ported this
+  leg - ExportTeamModal.tsx's existing error path already covers a null
+  result. Confirmed live (curl) that pokepast.es's `/json` read endpoint
+  sends `Access-Control-Allow-Origin: *`, so the existing pokepast.es-link
+  import path needed no CORS workaround. Also fixed a test-isolation gap
+  the adapter port exposed - no hook test file unmounts its `renderHook()`
+  instances, so a dangling debounced-write timer from one test used to just
+  harmlessly re-fire against its own already-finished test's mock (the old
+  code captured `window.electron.writeXCache`'s reference once at render
+  time); the adapter re-reads live `window.electron` at call time instead
+  (correct for production, where there's only one), so the same dangling
+  timer now fires against whichever later test is running when
+  `window.electron` gets reassigned, previously observed as
+  `useGameData.test.ts` flaking under repeated runs. Added a shared
+  `afterEach(cleanup())` to `setupElectronMock.ts` to fix it file-wide.
+  Scoped down 2026-09-29 (Vanny, mid-leg): auto-sync (`useSync`) is
+  deliberately not wired into `AppWeb.tsx` this leg - it hard-requires
+  `useBattles` (unported, Battle Logger has no web UI) and there's no
+  sign-up/log-in UI on web yet either (that's Web Hosting & Domain's job);
+  wiring it with nothing to trigger it would be premature. See commit
+  `7fa9130`.
+
 - **[Web App Scaffold: Storage Adapter] — Leg 1** (2026-09-29) - Introduced
   a `StorageAdapter` interface (`src/renderer/services/storage/`) with two
   implementations - `ElectronStorageAdapter` (delegates to the existing
