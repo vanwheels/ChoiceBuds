@@ -86,7 +86,11 @@ Custom Domains need the whole DNS zone moved to Cloudflare, not just a
 CNAME record - too much risk to vannyproductions.com's existing
 IONOS-hosted email for what this leg needed. The site is live at
 https://choicebuds.vannyproductions.com. Login/signup UX split into its
-own [Web Login/Signup UX] — Leg 1, below.
+own [Web Login/Signup UX] — Leg 1, below. [Web Login/Signup UX] — Leg 1
+shipped 2026-09-29 (see `COMPLETED.md`) - the web app now gates Teams/Box
+behind a full-screen sign-up/log-in entry point (`WebAuthScreen.tsx`) and
+runs `useSync`'s auto-sync in the background once signed in, same as
+desktop.
 
 Decided 2026-09-29 (Vanny): the Worker deploy and the app release are two
 separate gates, not one - the Sign Up UI (`SyncSection.tsx`) only exists on
@@ -123,16 +127,6 @@ item bodies below stay short and link back to it rather than repeating it.
   throwaway `wrangler kv` copy or small script), coordinated directly.
   Trickles in as each of the ~4-6 friends gets around to signing up - not a
   single all-at-once pass.
-
-- **[Web Login/Signup UX] — Leg 1** *(Last touched: 2026-09-29 ·
-  Re-checks: 0)*
-  Split out of Web Hosting & Domain's original Leg 1 scope (see
-  `COMPLETED.md`) once that leg turned out to bundle three different kinds
-  of work and got narrowed to deploy+domain only. Build the first-run
-  login/signup screen for web - the entry point, not an opt-in Settings
-  feature, since a device needs an account before it has any data - and
-  wire `useSync`'s auto-sync into it now that there's a UI to trigger it
-  from.
 
 ## Blocked
 
