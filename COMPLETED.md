@@ -42,7 +42,10 @@ Entries prior to this file's oldest are in:
   outer shells needed the direction change too). See `56680da`. Also swapped
   the top bar's row order (hamburger left, brand right, was the reverse) -
   flagged the same day as disorienting to open a left-sliding drawer from a
-  right-side trigger. See `c1584df`.
+  right-side trigger. See `c1584df`. Then dropped the brand from the top bar
+  entirely (kept only in the drawer's own header) - flagged as redundant
+  once the drawer's open and both logo/name headers are visible together.
+  See `0d306a5`.
 
 - **[Touch-Accessible Hover Content] — Leg 1** (2026-09-30) - Added
   `useLongPress.ts` as touch's analog to mouse hover for the item/ability/
