@@ -68,6 +68,21 @@ the same window as the deploy - local storage stays canonical (per
 is never at risk, only their cross-device sync stops working until they sign
 up and get migrated. Deploy whenever, migrate people as they get to it.
 
+Decided 2026-09-29 (Vanny): the Worker deploy and the app release are two
+separate gates, not one - the Sign Up UI (`SyncSection.tsx`) only exists on
+`main`'s source, not in any built/distributed app. The last actual release
+is `v0.8.1` (`bd5a171`), which predates the accounts leg entirely, so every
+installed app today (including Vanny's own) is still on the old shared-
+secret push/pull UI regardless of what the Worker is running. Deploying the
+Worker now is fine (see the re-scoping note above), but the next app release
+is deliberately being held back until further into this milestone, so
+existing users transition straight from the old push/pull UI to a build
+that already has more of the web-sync story done, rather than a standalone
+release for just the accounts/merge changes. This means [Existing Account
+Migration] below is transitively blocked on that future release existing
+(nobody can sign up without the new SyncSection UI in an actual installed
+build) - not just on individual friends getting around to it.
+
 ## Current Milestone: Web Version: Teams & Box MVP
 
 Minimum scope is Teams + Box working on the web with automatic account
@@ -79,14 +94,15 @@ item bodies below stay short and link back to it rather than repeating it.
 
 - **[Existing Account Migration] — Leg 1** *(Last touched: 2026-09-29 ·
   Re-checks: 0)*
-  Unblocked now that both Sync Accounts and Sync Data Model shipped (see
-  `COMPLETED.md`) and the Worker's been deployed - not time-boxed to the
-  deploy itself (see the note above this milestone section). Per friend,
-  once they've signed up under the new username+password system: one-off
-  manual copy of their old `username#XXXX`-keyed KV blob into their new
-  account (a throwaway `wrangler kv` copy or small script), coordinated
-  directly. Trickles in as each of the ~4-6 friends gets around to signing
-  up - not a single all-at-once pass.
+  Blocked: waiting on the next app release (see the note above this
+  milestone section) - no installed app has the Sign Up UI yet, so no
+  friend can create a new account to migrate into regardless of the Worker
+  being deployed. Once that release is out: per friend, once they've
+  signed up under the new username+password system, one-off manual copy of
+  their old `username#XXXX`-keyed KV blob into their new account (a
+  throwaway `wrangler kv` copy or small script), coordinated directly.
+  Trickles in as each of the ~4-6 friends gets around to signing up - not a
+  single all-at-once pass.
 
 - **[Web App Scaffold: Storage Adapter] — Leg 1** *(Last touched:
   2026-09-29 · Re-checks: 0)*
