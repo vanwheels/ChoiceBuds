@@ -13,6 +13,8 @@ export class ElectronStorageAdapter implements StorageAdapter {
     switch (key) {
       case 'teams-database':
         return window.electron.readTeamsDatabase();
+      case 'battles-database':
+        return window.electron.readBattlesDatabase();
       case 'pokeapi-cache':
         return window.electron.readPokeAPICache();
       case 'game-data-cache':
@@ -32,6 +34,8 @@ export class ElectronStorageAdapter implements StorageAdapter {
     switch (key) {
       case 'teams-database':
         return window.electron.writeTeamsDatabase(value);
+      case 'battles-database':
+        return window.electron.writeBattlesDatabase(value);
       case 'pokeapi-cache':
         return window.electron.writePokeAPICache(value);
       case 'game-data-cache':

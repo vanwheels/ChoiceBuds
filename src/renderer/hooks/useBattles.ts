@@ -8,6 +8,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import type { Battle, BattleAction, BattlesDatabase, BroughtPokemonSnapshot, OpponentPokemonEntry, SyncTombstone } from '../types/pokemon';
+import { getStorageAdapter } from '../services/storage';
 
 /** A BattleAction's target as it may exist on disk before `target` became an array. */
 type LegacyTarget = NonNullable<BattleAction['target']> | { side: BattleAction['side']; pokemonId: string };
@@ -115,7 +116,7 @@ export function useBattles(): UseBattlesReturn {
     setError(null);
 
     try {
-      const database = await window.electron.readBattlesDatabase();
+      const database = await getStorageAdapter().read<BattlesDatabase>('battles-database');
 
       if (database) {
         setBattles(database.battles.map(normalizeBattle));
@@ -148,7 +149,7 @@ export function useBattles(): UseBattlesReturn {
       setError(null);
 
       try {
-        const database = await window.electron.readBattlesDatabase();
+        const database = await getStorageAdapter().read<BattlesDatabase>('battles-database');
         if (ignore) return;
 
         if (database) {
@@ -182,7 +183,7 @@ export function useBattles(): UseBattlesReturn {
         lastModified: Date.now(),
       };
 
-      const success = await window.electron.writeBattlesDatabase(database);
+      const success = await getStorageAdapter().write('battles-database', database);
 
       if (!success) {
         throw new Error('Failed to write battles database');

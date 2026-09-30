@@ -12,6 +12,7 @@
 
 export type StorageKey =
   | 'teams-database'
+  | 'battles-database'
   | 'pokeapi-cache'
   | 'game-data-cache'
   | 'settings'

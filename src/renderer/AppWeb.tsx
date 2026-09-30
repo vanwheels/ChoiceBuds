@@ -16,12 +16,14 @@
  * takes a page from Showdown's book: never lock the player out of using the
  * app over an account. WebAuthScreen renders as a dismissible modal (opened
  * from the sidebar's "Sign in to sync" prompt) rather than a full-screen
- * blocker. useBattles itself still isn't ported (Battle Logger has no web
- * UI), so useSync gets a stub battles state (useWebBattlesStub.ts) instead -
- * see that file's own comment for why that's safe against the Worker's
- * merge. Still NOT wired: useInitialSync/useUsageSync (bulk first-launch
- * dex sync - a perf pre-warm, not a functional requirement, since
- * useGameData already fetches lazily on cache miss).
+ * blocker. useBattles is now ported to the storage adapter (Web Battle Log
+ * Storage Adapter Port leg, see TODO.md) and wired into useSync directly -
+ * Battle Logger still has no web UI of its own (see COMING_SOON_LABELS
+ * below), but synced battle data now round-trips through this browser's
+ * IndexedDB like Teams/Box already do. Still NOT wired: useInitialSync/
+ * useUsageSync (bulk first-launch dex sync - a perf pre-warm, not a
+ * functional requirement, since useGameData already fetches lazily on
+ * cache miss).
  *
  * Box (Web Box Parity leg) reuses the same BoxPage.tsx the desktop app
  * renders, passing the same hook states already instantiated above for
@@ -54,7 +56,7 @@ import { useSpeciesRoster } from './hooks/useSpeciesRoster';
 import { useSpriteCache } from './hooks/useSpriteCache';
 import { useSettings } from './hooks/useSettings';
 import { useSync } from './hooks/useSync';
-import { useWebBattlesStub } from './hooks/useWebBattlesStub';
+import { useBattles } from './hooks/useBattles';
 import type { ActiveTab } from './App';
 import TeamsPage from './components/TeamsPage';
 import WebAuthScreen from './components/WebAuthScreen';
@@ -102,8 +104,8 @@ export default function AppWeb() {
   const speciesRosterState = useSpeciesRoster();
   const spriteCacheState = useSpriteCache();
   const settingsState = useSettings();
-  const battlesStub = useWebBattlesStub();
-  const syncState = useSync(settingsState, teamsState, battlesStub, savedPokemonState);
+  const battlesState = useBattles();
+  const syncState = useSync(settingsState, teamsState, battlesState, savedPokemonState);
 
   return (
     <div className="flex h-screen bg-zinc-900 text-zinc-100">

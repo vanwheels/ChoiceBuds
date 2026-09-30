@@ -18,6 +18,22 @@ describe('ElectronStorageAdapter', () => {
     expect(window.electron.writeTeamsDatabase).toHaveBeenCalledWith(database);
   });
 
+  it('reads battles-database through window.electron.readBattlesDatabase', async () => {
+    const database = { version: 1, battles: [], tombstones: [], lastModified: 0 };
+    vi.mocked(window.electron.readBattlesDatabase).mockResolvedValueOnce(database);
+
+    const result = await new ElectronStorageAdapter().read('battles-database');
+    expect(result).toEqual(database);
+  });
+
+  it('writes battles-database through window.electron.writeBattlesDatabase', async () => {
+    const database = { version: 1, battles: [], tombstones: [], lastModified: 0 };
+
+    const result = await new ElectronStorageAdapter().write('battles-database', database);
+    expect(result).toBe(true);
+    expect(window.electron.writeBattlesDatabase).toHaveBeenCalledWith(database);
+  });
+
   it('reads pokeapi-cache through window.electron.readPokeAPICache', async () => {
     const cache = { version: 1, entries: {}, lastCleaned: 0 };
     vi.mocked(window.electron.readPokeAPICache).mockResolvedValueOnce(cache);
