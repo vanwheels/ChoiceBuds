@@ -322,3 +322,52 @@ decision before this can be scoped further: let users freeform-create
 their own named events, vs. only tracking a curated list of official ones
 (e.g. just GC).
 
+Settings/Sync/Box/Battle Log feedback batch (flagged 2026-09-30 by Vanny
+after live-verifying Web Settings Parity, see the now-shipped Full Web
+Feature Parity milestone above). None started - each needs its own
+scoping pass:
+
+- Sync status visual noise: `useSync.ts`'s `AUTO_SYNC_DEBOUNCE_MS` (5s)
+  re-fires a sync after every local mutation while actively editing, which
+  flips the sidebar footer dot/`SyncSection.tsx`'s status text between
+  "Syncing..."/"Synced" every few seconds - visually distracting during a
+  normal editing session. Vanny also wants the sidebar's synced-status dot
+  removed outright, not just debounced further. Needs a decision: keep a
+  status indicator somewhere (just less twitchy) vs. drop it from the
+  sidebar entirely and leave sync status to Settings only.
+- Player Profile isn't synced at all today (`SyncPayload` in
+  `types/settings.ts` only carries teams/battles/savedPokemon, never
+  `settings`/`playerProfile`) - Vanny wants it synced across devices, but
+  `PlayerProfileSection.tsx` holds real PII (legal name, Support ID,
+  Player ID, birthday), so he wants it hidden behind a reveal button/toggle
+  rather than shown in the clear by default. Needs a decision on the
+  reveal UX (per-field vs. whole-section) and how `playerProfile` joins the
+  sync payload/merge model safely.
+- Season Data Check / Champions Data Check sections
+  (`SeasonDataCheckSection.tsx`/`ChampionsDataCheckSection.tsx`, their
+  "mark as checked" buttons and subtext) bother Vanny as manual busywork.
+  Needs a decision from him: remove the sections from Settings entirely, or
+  find a way to automate the underlying checks so "mark as checked" stops
+  being a manual step - two very different outcomes, not a UI tweak.
+- Rename `AppStatusSection.tsx`'s "App Status" heading to "Account Status"
+  and make its content more compact/inline - Vanny's concern is that this
+  is the settings page's last section and the floating Calc launcher
+  button (bottom-right, `fixed bottom-6 right-6` in both `App.tsx` and
+  `AppWeb.tsx`) sits over it.
+- Related: let the user reposition the floating Calc launcher button (at
+  least between screen corners, ideally freely) and persist the chosen
+  position per-device, accounting for window resize. Needs its own scoping
+  pass (storage key, corner-snap vs. freeform drag, how it behaves on a
+  resize).
+- Battle Log card grid (`components/battlelog/PastBattlesList.tsx`):
+  cards render at different heights depending on team-name length and
+  whether the battle has notes, which Vanny finds visually messy. Wants
+  uniform card height, team names truncated, a note icon (paper+pencil) on
+  cards that have notes instead of showing the note text inline, and a
+  re-evaluation of whether a grid is even the right layout here vs. a list.
+- Box's "+ New Build" tile (`BoxPage.tsx`) renders over 2x the size of a
+  collapsed saved-build tile next to it - visual mismatch Vanny wants
+  matched to the collapsed tile size.
+- When creating a new team, auto-fill the Author field with the signed-in
+  sync username (when signed in) instead of leaving it blank.
+
