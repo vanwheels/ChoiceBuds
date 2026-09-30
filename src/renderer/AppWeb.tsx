@@ -15,7 +15,11 @@
  * (bulk first-launch dex sync - a perf pre-warm, not a functional
  * requirement, since useGameData already fetches lazily on cache miss).
  *
- * Box still renders a placeholder - that's the separate Web Box Parity leg.
+ * Box (Web Box Parity leg) reuses the same BoxPage.tsx the desktop app
+ * renders, passing the same hook states already instantiated above for
+ * Teams - BoxPage's own dependencies (useRosterActions, the type/move/
+ * ability filter hooks, clipboardPayload.ts) have no Electron dependency of
+ * their own, so no further porting was needed.
  * Not using Sidebar.tsx here: it hardcodes all 7 of the desktop app's tabs
  * via its own ActiveTab type from App.tsx, which isn't worth generalizing
  * for a two-item nav.
@@ -31,6 +35,7 @@ import { useSpeciesRoster } from './hooks/useSpeciesRoster';
 import { useSpriteCache } from './hooks/useSpriteCache';
 import { useSettings } from './hooks/useSettings';
 import TeamsPage from './components/TeamsPage';
+import BoxPage from './components/BoxPage';
 import { TeamsIcon, BoxIcon } from './components/icons/SidebarIcons';
 
 type WebTab = 'teams' | 'box';
@@ -83,12 +88,17 @@ export default function AppWeb() {
             savedPokemonState={savedPokemonState}
           />
         </div>
-        {activeTab === 'box' && (
-          <div className="p-6">
-            <h2 className="mb-4 text-lg font-bold">Box</h2>
-            <p className="text-zinc-400">Coming soon.</p>
-          </div>
-        )}
+        <div style={{ display: activeTab === 'box' ? 'block' : 'none' }} className="h-full">
+          <BoxPage
+            savedPokemonState={savedPokemonState}
+            gameDataState={gameDataState}
+            databaseState={databaseState}
+            speciesRosterState={speciesRosterState}
+            spriteCacheState={spriteCacheState}
+            settingsState={settingsState}
+            teamsState={teamsState}
+          />
+        </div>
       </main>
     </div>
   );

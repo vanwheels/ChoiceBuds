@@ -74,7 +74,11 @@ wiring was deliberately deferred to land alongside Web Hosting & Domain's
 sign-up/log-in UI instead of wiring `useSync` in with no UI to trigger it
 yet. Also ported `useSavedPokemon` to the storage adapter as part of this
 leg (Teams Parity needed it too), which narrows what's left in Web Box
-Parity below.
+Parity below. [Web Box Parity] — Leg 1 shipped 2026-09-29 (see
+`COMPLETED.md`) - `BoxPage` wired into `AppWeb.tsx` with no further hook
+porting needed; its own dependencies (`useRosterActions`, the type/move/
+ability filter hooks, `clipboardPayload.ts`) had no Electron dependency to
+begin with.
 
 Decided 2026-09-29 (Vanny): the Worker deploy and the app release are two
 separate gates, not one - the Sign Up UI (`SyncSection.tsx`) only exists on
@@ -111,18 +115,6 @@ item bodies below stay short and link back to it rather than repeating it.
   throwaway `wrangler kv` copy or small script), coordinated directly.
   Trickles in as each of the ~4-6 friends gets around to signing up - not a
   single all-at-once pass.
-
-- **[Web Box Parity] — Leg 1** *(Last touched: 2026-09-29 · Re-checks: 0)*
-  Teams Parity leg shipped (see `COMPLETED.md`) - no longer blocked, and it
-  already ported `useSavedPokemon` to the storage adapter as a side effect
-  of needing it too, so that part of this leg is done.
-  Remaining: wire the real `BoxPage` into `AppWeb.tsx` (currently a "Coming
-  soon" placeholder) with saved-builds CRUD, same shape as how Teams Parity
-  wired `TeamsPage` in. Check `BoxPage`'s other hook dependencies the same
-  way that leg did for `TeamsPage` - most should already be covered
-  (`useGameData`/`useDatabase`/`useSpeciesRoster`/`useSpriteCache`/
-  `useSettings`/`useTeams` are all ported already), but verify rather than
-  assume.
 
 - **[Web Hosting & Domain] — Leg 1** *(Last touched: 2026-09-29 ·
   Re-checks: 0)*
