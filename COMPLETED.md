@@ -30,7 +30,7 @@ Entries prior to this file's oldest are in:
   so web's existing sync-status/sign-in footer - previously part of the
   hand-rolled sidebar - has somewhere to live with no Settings tab wired
   yet to host it. Pure shell/structure change, no new feature surface. See
-  commit `<pending>`.
+  commit `ccf4d57`.
 
 - **[Full Web Feature Parity: Scoping] — Leg 1** (2026-09-29) - Surveyed every
   desktop-only tab (Battle Log, Statistics, Type Matchup, Speed Tiers,
