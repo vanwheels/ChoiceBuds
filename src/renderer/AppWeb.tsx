@@ -82,6 +82,7 @@ import TeamsPage from './components/TeamsPage';
 import WebAuthScreen from './components/WebAuthScreen';
 import Sidebar from './components/Sidebar';
 import { CalcIcon } from './components/icons/SidebarIcons';
+import { MobileHeaderActionsProvider } from './hooks/useMobileHeaderActions';
 
 const BoxPage = lazy(() => import('./components/BoxPage'));
 const CalcPopup = lazy(() => import('./components/CalcPopup'));
@@ -135,6 +136,9 @@ export default function AppWeb() {
   const releaseNotesState = useReleaseNotes(settingsState.settings, settingsState.isLoading, settingsState.updateSettings);
 
   return (
+    // Mobile Compact Top Bar: Teams & Box leg (see TODO.md) - see App.tsx's
+    // matching comment for why this needs to wrap both Sidebar and <main>.
+    <MobileHeaderActionsProvider>
     <div className="flex flex-col md:flex-row h-screen bg-zinc-900 text-zinc-100">
       <Sidebar
         activeTab={activeTab}
@@ -315,5 +319,6 @@ export default function AppWeb() {
         </Suspense>
       )}
     </div>
+    </MobileHeaderActionsProvider>
   );
 }

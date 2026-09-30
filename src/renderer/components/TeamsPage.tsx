@@ -21,10 +21,13 @@ import { readTeamFromClipboard } from '../utils/clipboardPayload';
 import { buildPastedTeam } from '../utils/teamPaste';
 import { useVgcPastesCache } from '../hooks/useVgcPastesCache';
 import { useVgcRealSetsCache } from '../hooks/useVgcRealSetsCache';
+import { useMobileHeaderActions } from '../hooks/useMobileHeaderActions';
 import ImportTeamModal from './ImportTeamModal';
 import VgcPasteCatalogModal from './VgcPasteCatalogModal';
 import TeamCard from './TeamCard';
 import ContextMenu from './ContextMenu';
+import MobileFilterPopover from './MobileFilterPopover';
+import { PlusIcon, CompassIcon, FilterIcon } from './icons/SidebarIcons';
 
 
 interface TeamsPageProps {
@@ -124,11 +127,59 @@ export default function TeamsPage({
   // Format filter buttons configuration
   const filterButtons: FormatFilter[] = ['All', 'Reg M-A', 'Reg M-B', 'Reg M-C'];
 
+  // Mobile Compact Top Bar: Teams & Box leg (see TODO.md) - publishes this
+  // page's title/action buttons into Sidebar.tsx's mobile top bar in place
+  // of the stacked <header> below, which is hidden entirely below `md`.
+  // Team count/subtitle intentionally doesn't carry over to the compact bar
+  // (not part of the scoped icon layout) - the whole point was reclaiming
+  // that vertical space.
+  useMobileHeaderActions(
+    'teams',
+    'My Teams',
+    <>
+      <button
+        onClick={() => setIsImportModalOpen(true)}
+        aria-label="Add New Team"
+        className="flex items-center justify-center rounded-lg p-2 text-accent-gold transition-colors cursor-pointer hover:bg-zinc-700"
+      >
+        <PlusIcon />
+      </button>
+      <button
+        onClick={() => setIsCatalogModalOpen(true)}
+        aria-label="Browse Sample Teams"
+        className="flex items-center justify-center rounded-lg p-2 text-zinc-300 transition-colors cursor-pointer hover:bg-zinc-700"
+      >
+        <CompassIcon />
+      </button>
+      <MobileFilterPopover label="Filter teams" icon={<FilterIcon />} isActive={activeFilter !== 'All'}>
+        <div className="flex flex-col gap-1">
+          {filterButtons.map(filter => (
+            <button
+              key={filter}
+              onClick={() => setActiveFilter(filter)}
+              className={`px-3 py-2 rounded-md text-left text-sm font-medium transition-colors ${
+                activeFilter === filter
+                  ? 'bg-accent-gold text-zinc-900'
+                  : 'text-zinc-300 hover:bg-zinc-800'
+              }`}
+            >
+              {filter}
+            </button>
+          ))}
+        </div>
+      </MobileFilterPopover>
+    </>
+  );
+
   return (
     <div className="h-full flex flex-col">
-      {/* Header Control Bar */}
-      <header className="bg-zinc-800 border-b border-zinc-700 px-4 md:px-8 py-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      {/* Header Control Bar - desktop/tablet only (`md` and up). Below `md`
+          this is replaced entirely by Sidebar.tsx's mobile top bar, fed via
+          useMobileHeaderActions above (Mobile Compact Top Bar leg, see
+          TODO.md) - a stacked header here ate 1/4+ of a phone screen's
+          height before any team content rendered. */}
+      <header className="hidden md:block bg-zinc-800 border-b border-zinc-700 px-8 py-4">
+        <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-2xl font-bold text-zinc-100">My Teams</h2>
             <p className="text-sm text-zinc-400 mt-1">

@@ -124,6 +124,44 @@ export function CloseIcon({ className }: IconProps) {
   );
 }
 
+/** Add/create trigger (Mobile Compact Top Bar: Teams & Box leg - Teams' "Add Team" icon). */
+export function PlusIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
+
+/** Browse/discover trigger (Mobile Compact Top Bar leg - Teams' "Browse Sample Teams" icon). */
+export function CompassIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <path d="m15 9-4 2-2 4 4-2 2-4Z" />
+    </svg>
+  );
+}
+
+/** Filter trigger (Mobile Compact Top Bar leg - Teams' format filter, Box's sort-mode toggle). */
+export function FilterIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 5h16l-6 7.5V19l-4 2v-8.5L4 5Z" />
+    </svg>
+  );
+}
+
+/** Search trigger (Mobile Compact Top Bar leg - Box's search icon). */
+export function SearchIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
+    </svg>
+  );
+}
+
 /**
  * The collapse-rail toggle glyph - a box with a vertical divider and an
  * arrowhead pointing in whichever direction the click will move the rail

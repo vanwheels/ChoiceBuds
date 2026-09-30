@@ -32,6 +32,7 @@ import LoadingScreen from './components/LoadingScreen';
 import Sidebar from './components/Sidebar';
 import ReleaseNotesModal from './components/ReleaseNotesModal';
 import { CalcIcon } from './components/icons/SidebarIcons';
+import { MobileHeaderActionsProvider } from './hooks/useMobileHeaderActions';
 
 // Lazy-loaded so each tab's code is only fetched/parsed once a user actually
 // opens it, not on every app startup - CalcPopup in particular pulls in
@@ -137,6 +138,11 @@ export default function App() {
     // collapses toward near-instant when the OS-level prefers-reduced-motion
     // setting is on, rather than each component having to check for it itself.
     <MotionConfig reducedMotion="user">
+    {/* Mobile Compact Top Bar: Teams & Box leg (see TODO.md) - lets
+        TeamsPage/BoxPage publish their own mobile top-bar title/actions into
+        Sidebar's mobile bar below; needs to wrap both Sidebar (the reader)
+        and <main>'s pages (the registrants) since they're siblings here. */}
+    <MobileHeaderActionsProvider>
       <div className="flex flex-col md:flex-row h-screen bg-zinc-900 text-zinc-100">
         <AnimatePresence>
           {releaseNotesState.showPopup && <ReleaseNotesModal releaseNotesState={releaseNotesState} />}
@@ -288,6 +294,7 @@ export default function App() {
           </Suspense>
         )}
       </div>
+    </MobileHeaderActionsProvider>
     </MotionConfig>
   );
 }

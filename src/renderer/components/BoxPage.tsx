@@ -124,11 +124,14 @@ import { readPokemonFromClipboard } from '../utils/clipboardPayload';
 import { parseShowdownText } from '../services/parser';
 import { enrichPokemonWithAPI } from '../services/pokeapi';
 import { sortSavedPokemonByFavorite } from '../utils/savedPokemonSort';
+import { useMobileHeaderActions } from '../hooks/useMobileHeaderActions';
 import BoxCard from './BoxCard';
 import AddPokemonStatTable from './AddPokemonStatTable';
 import SaveToLibraryDialog from './SaveToLibraryDialog';
 import AddToTeamDialog from './AddToTeamDialog';
 import ContextMenu from './ContextMenu';
+import MobileFilterPopover from './MobileFilterPopover';
+import { SearchIcon, FilterIcon } from './icons/SidebarIcons';
 
 interface BoxPageProps {
   savedPokemonState: UseSavedPokemonReturn;
@@ -327,10 +330,48 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
     await savedPokemonState.addSavedPokemonBatch(enriched);
   };
 
+  // Mobile Compact Top Bar: Teams & Box leg (see TODO.md) - publishes this
+  // page's title/action buttons into Sidebar.tsx's mobile top bar in place
+  // of the stacked <header> below, which is hidden entirely below `md`.
+  // Saved-build count intentionally doesn't carry over to the compact bar,
+  // same reasoning as TeamsPage.tsx's own registration.
+  useMobileHeaderActions(
+    'box',
+    'Box',
+    <>
+      <MobileFilterPopover label="Search builds" icon={<SearchIcon />} isActive={isSearching}>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search builds... (#fire, #dragon dance, ...)"
+          className="w-full px-3 py-2 text-sm text-white bg-zinc-800 border border-zinc-700 rounded-md outline-none focus:border-accent-gold placeholder:text-zinc-500"
+        />
+      </MobileFilterPopover>
+      <MobileFilterPopover label="Sort builds" icon={<FilterIcon />} isActive={sortMode === 'custom'}>
+        <div className="flex flex-col gap-1">
+          {(['alphabetical', 'custom'] as const).map(mode => (
+            <button
+              key={mode}
+              onClick={() => handleSetSortMode(mode)}
+              className={`px-3 py-2 rounded-md text-left text-sm font-medium transition-colors ${
+                sortMode === mode
+                  ? 'bg-accent-gold text-zinc-900'
+                  : 'text-zinc-300 hover:bg-zinc-800'
+              }`}
+            >
+              {mode === 'alphabetical' ? 'Alphabetical' : 'Custom order'}
+            </button>
+          ))}
+        </div>
+      </MobileFilterPopover>
+    </>
+  );
+
   return (
     <div className="h-full flex flex-col">
-      <header className="bg-zinc-800 border-b border-zinc-700 px-4 md:px-8 py-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <header className="hidden md:block bg-zinc-800 border-b border-zinc-700 px-8 py-4">
+        <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-2xl font-bold text-zinc-100">Box</h2>
             <p className="text-sm text-zinc-400 mt-1">

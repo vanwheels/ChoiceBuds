@@ -54,6 +54,7 @@ import {
   DRAWER_PANEL_EXIT_TRANSITION,
 } from '../config/motion';
 import { useSidebarCollapsed } from '../hooks/useSidebarCollapsed';
+import { useActiveMobileHeaderEntry } from '../hooks/useMobileHeaderActions';
 import {
   TeamsIcon,
   BoxIcon,
@@ -87,7 +88,10 @@ interface SidebarProps {
    * (reported live - the bottom-left area of whatever's on screen gets
    * covered). Unused on desktop/tablet - the rail there has no equivalent
    * top-bar row to pin into, so the floating button stays as the desktop
-   * launcher, just hidden below `md` instead of duplicated.
+   * launcher, just hidden below `md` instead of duplicated. Renders after
+   * whichever tab-specific actions useActiveMobileHeaderEntry below returns,
+   * so the Calc launcher always sits at the very end of the bar regardless
+   * of which page is active.
    */
   mobileTopBarEnd?: ReactNode;
 }
@@ -122,6 +126,11 @@ const drawerVariants = {
 export default function Sidebar({ activeTab, onTabChange, renderFooter, mobileTopBarEnd }: SidebarProps) {
   const { collapsed, toggleCollapsed } = useSidebarCollapsed();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // Mobile Compact Top Bar: Teams & Box leg (see TODO.md) - whichever tab is
+  // active publishes its own title/action buttons here via
+  // useMobileHeaderActions, consumed by `activeTab` alone so this component
+  // never needs to know which pages actually register anything.
+  const mobileHeaderEntry = useActiveMobileHeaderEntry(activeTab);
 
   const renderNavItem = (
     { tab, label, Icon }: { tab: ActiveTab; label: string; Icon: typeof TeamsIcon },
@@ -230,16 +239,29 @@ export default function Sidebar({ activeTab, onTabChange, renderFooter, mobileTo
         header) - flagged as redundant once the drawer's open, since both
         headers are visible together; the drawer keeps the brand, this bar
         is just the trigger.
+
+        The title/action-button group in the middle and at the right end
+        comes from whichever tab is active (mobileHeaderEntry, above) -
+        Mobile Compact Top Bar: Teams & Box leg. A page that hasn't
+        registered anything (Battle Log, Statistics, etc. - not covered by
+        that leg) just leaves the title blank and the bar falls back to
+        hamburger + mobileTopBarEnd only, same as before this leg.
       */}
-      <div className="md:hidden flex items-center justify-between border-b border-zinc-700 bg-zinc-800 px-4 py-3">
+      <div className="md:hidden flex items-center gap-2 border-b border-zinc-700 bg-zinc-800 px-4 py-3">
         <button
           onClick={() => setDrawerOpen(true)}
           aria-label="Open navigation menu"
-          className="flex items-center justify-center rounded-lg p-2 text-zinc-300 transition-colors cursor-pointer hover:bg-zinc-700"
+          className="flex shrink-0 items-center justify-center rounded-lg p-2 text-zinc-300 transition-colors cursor-pointer hover:bg-zinc-700"
         >
           <MenuIcon />
         </button>
-        {mobileTopBarEnd}
+        <h2 className="flex-1 min-w-0 truncate text-[15px] font-bold text-zinc-100">
+          {mobileHeaderEntry?.title}
+        </h2>
+        <div className="flex shrink-0 items-center gap-1">
+          {mobileHeaderEntry?.actions}
+          {mobileTopBarEnd}
+        </div>
       </div>
 
       {/* Mobile off-canvas drawer, portaled so it isn't constrained by any transformed ancestor - same reasoning as Modal.tsx's own portal. */}
