@@ -18,6 +18,15 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Web Battle Log & Statistics Parity] — Leg 1** (2026-09-30) - Wired
+  `BattleLogPage`/`StatisticsPage` into `AppWeb.tsx`'s nav, mirroring
+  `App.tsx`'s lazy-load/visited-tabs wiring verbatim, including the
+  `battleLogSession` state that links an in-progress `RecordMatchForm`
+  session to the floating Calc popup's opponent tray. `StatisticsPage` had
+  no Electron dependency of its own; `useBattles` was already ported to the
+  storage adapter by the prior leg. Settings is now the only Sidebar tab
+  still showing `WebComingSoon`. See commit `d5003c4`.
+
 - **[Web Battle Log Storage Adapter Port] — Leg 1** (2026-09-30) - Ported
   `useBattles.ts` to the `StorageAdapter` interface (added a
   `battles-database` `StorageKey`), mirroring `useTeams.ts`/`useDatabase.ts`'s

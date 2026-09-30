@@ -145,14 +145,12 @@ Matchup Tools Parity] — Leg 1 shipped the same day (see `COMPLETED.md`) -
 mirroring `App.tsx`'s desktop wiring verbatim. [Web Battle Log Storage
 Adapter Port] — Leg 1 shipped the same day (see `COMPLETED.md`) -
 `useBattles.ts` now goes through the storage adapter and `AppWeb.tsx`
-wires the real hook into `useSync` in place of the old stub.
-
-- **[Web Battle Log & Statistics Parity] — Leg 1** *(Last touched:
-  2026-09-29 · Re-checks: 0)*
-  Wire `BattleLogPage` + `StatisticsPage` into the nav. Depends on the
-  Storage Adapter Port leg above - `StatisticsPage` itself has no Electron
-  dependency (derives everything client-side from the `battles` array), so
-  once `useBattles` is ported this is pure UI wiring.
+wires the real hook into `useSync` in place of the old stub. [Web Battle
+Log & Statistics Parity] — Leg 1 shipped the same day (see `COMPLETED.md`)
+- `BattleLogPage`/`StatisticsPage` now wired into the web nav, mirroring
+`App.tsx`'s wiring verbatim including the `battleLogSession` state linking
+a battle session to the floating Calc popup. Settings is now the only
+Sidebar tab left showing `WebComingSoon`.
 
 - **[Web Settings Parity] — Leg 1** *(Last touched: 2026-09-29 ·
   Re-checks: 0)*
