@@ -18,6 +18,19 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Web Settings Parity] — Leg 1** (2026-09-30) - Wired `SettingsPage` into
+  `AppWeb.tsx`'s nav. Made `updateCheckState` an optional `SettingsPage`
+  prop (skipping `UpdateCheckSection` entirely when absent, since
+  `useUpdateCheck` talks directly to `window.electron.onUpdateStatus` and
+  there's no in-app auto-update concept on web at all) rather than a
+  porting target. Gave `ReleaseNotesMarkdown.tsx`/`ExportTeamModal.tsx`'s
+  `window.electron.openExternal` calls a plain `<a target="_blank"
+  rel="noopener">` fallback for web. Left the Pokepaste-create button's
+  existing null-fallback error path as-is (already graceful - see
+  `services/pokepaste.ts`'s doc comment). Deleted `WebComingSoon.tsx` as
+  dead code - every Sidebar tab now renders its real page on web, closing
+  out the Full Web Feature Parity milestone. See commit `9131aef`.
+
 - **[Web Battle Log & Statistics Parity] — Leg 1** (2026-09-30) - Wired
   `BattleLogPage`/`StatisticsPage` into `AppWeb.tsx`'s nav, mirroring
   `App.tsx`'s lazy-load/visited-tabs wiring verbatim, including the

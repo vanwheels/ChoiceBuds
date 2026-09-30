@@ -129,39 +129,15 @@ hand-rolled 2-button nav gets replaced with the real `Sidebar.tsx` + `App.tsx`'s
 lazy-tab pattern now that the tab list is about to match desktop's, rather
 than continuing to grow a second nav implementation.
 
-## Current Milestone: Full Web Feature Parity
-
-Port the app's remaining features (beyond Teams/Box, already live) to the
-web build. Ordered so the nav-shell rework lands first (everything else
-plugs into it), then cheapest/most self-contained legs first. See the
-scoping doc linked above for the full survey behind this ordering.
-
-[Web Nav Shell: Adopt Sidebar.tsx] — Leg 1 shipped 2026-09-30 (see
-`COMPLETED.md`). `AppWeb.tsx` now uses the real `Sidebar.tsx` + `App.tsx`'s
-lazy-load/visited-tabs pattern; tabs without a ported page yet show a
-`WebComingSoon` placeholder instead of the real feature. [Web Calc &
-Matchup Tools Parity] — Leg 1 shipped the same day (see `COMPLETED.md`) -
-`CalcPopup`/`TypeMatchupPage`/`SpeedTiersPage` now wired into the web nav,
-mirroring `App.tsx`'s desktop wiring verbatim. [Web Battle Log Storage
-Adapter Port] — Leg 1 shipped the same day (see `COMPLETED.md`) -
-`useBattles.ts` now goes through the storage adapter and `AppWeb.tsx`
-wires the real hook into `useSync` in place of the old stub. [Web Battle
-Log & Statistics Parity] — Leg 1 shipped the same day (see `COMPLETED.md`)
-- `BattleLogPage`/`StatisticsPage` now wired into the web nav, mirroring
-`App.tsx`'s wiring verbatim including the `battleLogSession` state linking
-a battle session to the floating Calc popup. Settings is now the only
-Sidebar tab left showing `WebComingSoon`.
-
-- **[Web Settings Parity] — Leg 1** *(Last touched: 2026-09-29 ·
-  Re-checks: 0)*
-  Wire `SettingsPage` into the nav, excluding `UpdateCheckSection` entirely
-  (auto-update has no web equivalent - a web app is always whatever's
-  currently deployed). Fix `ReleaseNotesMarkdown.tsx`/`ExportTeamModal.tsx`'s
-  `window.electron.openExternal` calls with a plain `<a target="_blank"
-  rel="noopener">` fallback on web. Leave the Pokepaste-create button's
-  existing null-fallback error path as-is (already handled gracefully per
-  `services/pokepaste.ts`'s doc comment) - making it actually work on web
-  would need a new CORS proxy (e.g. a Worker route), out of scope here.
+Full Web Feature Parity milestone shipped 2026-09-30 (see `MILESTONES.md`
+and
+[docs/postmortems/full-web-feature-parity.md](docs/postmortems/full-web-feature-parity.md)) -
+[Web Nav Shell: Adopt Sidebar.tsx], [Web Calc & Matchup Tools Parity],
+[Web Battle Log Storage Adapter Port], [Web Battle Log & Statistics
+Parity], and [Web Settings Parity] all shipped as Leg 1s (see
+`COMPLETED.md`). Every Sidebar tab now renders its real page on both
+desktop and web. No next milestone promoted yet - needs Vanny's call on
+which of the Future Milestones (unscheduled) items below to scope next.
 
 ## Blocked
 
