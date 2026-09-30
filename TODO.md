@@ -60,10 +60,13 @@ build legs (see `COMPLETED.md` and
 [docs/investigations/web-version-scope.md](docs/investigations/web-version-scope.md)).
 [Sync Accounts: Username + Password] — Leg 1 shipped the same day (see
 `COMPLETED.md`). [Sync Data Model: Per-Record Merge & Auto Sync] — Leg 1
-shipped 2026-09-29 (see `COMPLETED.md`) — per its own note, this is the
-Worker deploy point: run `npx wrangler deploy` for both this leg's and the
-accounts leg's Worker changes together, then do the Existing Account
-Migration leg in the same window.
+shipped 2026-09-29 (see `COMPLETED.md`) — this is the Worker deploy point:
+`npx wrangler deploy` ships both this leg's and the accounts leg's Worker
+changes together. Re-scoped 2026-09-29: migration does NOT need to happen in
+the same window as the deploy - local storage stays canonical (per
+`docs/investigations/web-version-scope.md`), so an un-migrated friend's data
+is never at risk, only their cross-device sync stops working until they sign
+up and get migrated. Deploy whenever, migrate people as they get to it.
 
 ## Current Milestone: Web Version: Teams & Box MVP
 
@@ -76,12 +79,14 @@ item bodies below stay short and link back to it rather than repeating it.
 
 - **[Existing Account Migration] — Leg 1** *(Last touched: 2026-09-29 ·
   Re-checks: 0)*
-  Unblocked now that Sync Accounts: Username + Password shipped (see
-  `COMPLETED.md`) - do this alongside the Worker deploy noted above (the
-  Sync Data Model leg's deploy point), not standalone. One-off manual copy
-  of the ~4-6 existing friends' `username#XXXX`-keyed KV blobs into their new
-  accounts (a throwaway `wrangler kv` copy or small script per person,
-  coordinated directly) - not a built feature.
+  Unblocked now that both Sync Accounts and Sync Data Model shipped (see
+  `COMPLETED.md`) and the Worker's been deployed - not time-boxed to the
+  deploy itself (see the note above this milestone section). Per friend,
+  once they've signed up under the new username+password system: one-off
+  manual copy of their old `username#XXXX`-keyed KV blob into their new
+  account (a throwaway `wrangler kv` copy or small script), coordinated
+  directly. Trickles in as each of the ~4-6 friends gets around to signing
+  up - not a single all-at-once pass.
 
 - **[Web App Scaffold: Storage Adapter] — Leg 1** *(Last touched:
   2026-09-29 · Re-checks: 0)*
