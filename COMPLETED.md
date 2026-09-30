@@ -18,6 +18,39 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Mobile Calc Launcher Placement] — Leg 1** (2026-09-30) - see commit
+  `85a3195`. Flagged live right after Responsive Layout Audit: Teams & Box
+  (below): the floating `fixed bottom-6 right-6` Calc button covers whatever
+  page content sits at the bottom of a phone viewport, with no safe corner
+  left the way desktop usually has empty space around it. Moved to a compact
+  icon-only button in `Sidebar.tsx`'s mobile top bar (new `mobileTopBarEnd`
+  slot, next to the hamburger trigger) via `App.tsx`/`AppWeb.tsx`, with the
+  original floating button hidden below `md` (`hidden md:flex`) rather than
+  duplicated. Mobile-only - deliberately not touching desktop/tablet's
+  placement, per Vanny's call, since a broader "let the user reposition the
+  Calc button" TODO item already covers the separate desktop Settings-page
+  overlap this wasn't trying to solve.
+
+- **[TeamOverflowMenu Viewport Clamp] — Leg 1** (2026-09-30) - see commit
+  `782ed74`. Flagged live during Responsive Layout Audit: Teams & Box
+  verification (below) as two symptoms of the same bug: the "..." menu's
+  dropdown had no bottom-of-viewport clamp at all (always rendered below its
+  trigger), and it dismissed itself on any scroll - including a scroll
+  attempt aimed at reading whatever had spilled off-screen, so there was
+  genuinely no way to reach it. `TeamValidationButton`'s result popup
+  (nested inside, `w-72` vs. the menu's own `w-56`) compounded this for a
+  team surfacing validation issues. Now flips above the trigger and caps
+  max-height to whichever side has more room, with its own
+  `overflow-y-auto`; the scroll-dismiss handler exempts scroll events
+  targeting the menu's own internal scroll region, so only an external
+  scroll (the underlying list) still closes it. Shrank the validation
+  popup to `w-full` to fit the menu's new forced `overflow-x: auto` (per the
+  CSS one-axis-forces-both-auto spec rule this same file's own header
+  comment already flagged once before, for a different clipping bug).
+  Verified live via Playwright against the web build, including a direct
+  synthetic-scroll-event test distinguishing "scroll inside the menu" (stays
+  open) from "scroll of the underlying list" (closes, as before).
+
 - **[Responsive Layout Audit: Teams & Box] — Leg 1** (2026-09-30) - see
   commit `b0c6581`. `TeamCard`'s collapsed header (identity column + 6-sprite
   strip + controls pill, ~750px minimum in one row) now stacks vertically
