@@ -18,6 +18,17 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Web Calc & Matchup Tools Parity] — Leg 1** (2026-09-30) - Wired
+  `CalcPopup`, `TypeMatchupPage`, and `SpeedTiersPage` into `AppWeb.tsx`'s
+  now-generalized nav (the Nav Shell leg below), replacing their
+  `WebComingSoon` placeholders. Ported `App.tsx`'s existing wiring
+  verbatim - lazy-loaded visited-tabs for the two matchup-tool pages, and
+  the same lazy-once/hidden-after-first-open floating launcher pattern for
+  `CalcPopup` - since scoping had already confirmed none of the three carry
+  an Electron dependency of their own. Omitted the Battle-Log-session props
+  on `CalcPopup` (optional, and no Battle Log UI exists on web yet). See
+  commit `f6fd79d`.
+
 - **[Web Nav Shell: Adopt Sidebar.tsx] — Leg 1** (2026-09-30) - Replaced
   `AppWeb.tsx`'s hand-rolled 2-button nav with the real `Sidebar.tsx` +
   `App.tsx`'s lazy-load/visited-tabs pattern. Since `Sidebar.tsx` hardcodes

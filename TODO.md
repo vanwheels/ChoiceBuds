@@ -139,14 +139,10 @@ scoping doc linked above for the full survey behind this ordering.
 [Web Nav Shell: Adopt Sidebar.tsx] — Leg 1 shipped 2026-09-30 (see
 `COMPLETED.md`). `AppWeb.tsx` now uses the real `Sidebar.tsx` + `App.tsx`'s
 lazy-load/visited-tabs pattern; tabs without a ported page yet show a
-`WebComingSoon` placeholder instead of the real feature.
-
-- **[Web Calc & Matchup Tools Parity] — Leg 1** *(Last touched: 2026-09-29 ·
-  Re-checks: 0)*
-  Wire `CalcPopup`, `TypeMatchupPage`, `SpeedTiersPage` into the
-  now-generalized nav (depends on the Nav Shell leg above). No hook porting
-  needed - all three are already storage-adapter-clean, confirmed during
-  scoping.
+`WebComingSoon` placeholder instead of the real feature. [Web Calc &
+Matchup Tools Parity] — Leg 1 shipped the same day (see `COMPLETED.md`) -
+`CalcPopup`/`TypeMatchupPage`/`SpeedTiersPage` now wired into the web nav,
+mirroring `App.tsx`'s desktop wiring verbatim.
 
 - **[Web Battle Log Storage Adapter Port] — Leg 1** *(Last touched:
   2026-09-29 · Re-checks: 0)*
