@@ -170,6 +170,14 @@ via `onClick`, already tap-friendly; the third just renders content handed
 to it, no hover wiring of its own) - the actual `onMouseEnter` sites were
 only `MoveBubbleGrid.tsx`/`AbilityCapsule.tsx`/`ItemSpriteBox.tsx`, plus
 `EditOverlays.tsx`'s shared hover-state wiring.
+[Mobile Compact Top Bar: Teams & Box] — Leg 1 shipped 2026-09-30 (see
+`COMPLETED.md`) - `TeamsPage`/`BoxPage`'s stacked mobile `<header>` is now
+hidden entirely below `md`, replaced by a page-aware extension to
+`Sidebar.tsx`'s mobile top bar (`useMobileHeaderActions.tsx`, a new context/
+hook pair) that lets the active tab publish its own title + icon-only
+action buttons there. Caught and fixed a real infinite-render-loop bug live
+via run-desktop before shipping - see the commit for the root cause and
+fix.
 
 ## Current Milestone: Mobile-Friendliness Pass
 
@@ -230,18 +238,6 @@ Box gets both a compact sprite/favorite/name grid *and* the same swipe deck
 (tap a tile to enter it), and each page's mobile header collapses into
 `Sidebar.tsx`'s existing hamburger top bar instead of keeping its own
 stacked `<header>`.
-
-- **[Mobile Compact Top Bar: Teams & Box] — Leg 1** *(Last touched:
-  2026-09-30 · Re-checks: 0)*
-  Replace `TeamsPage`/`BoxPage`'s stacked mobile `<header>` with a single
-  hamburger-bar row (hamburger · title · page actions · Calc), reusing
-  `Sidebar.tsx`'s `mobileTopBarEnd` slot. That slot isn't page-aware today
-  (wired once at the `App.tsx`/`AppWeb.tsx` shell level as a static Calc
-  button) - needs a small mechanism for the active page to register its own
-  buttons there (e.g. a `useMobileHeaderActions`-style context/hook). Desktop
-  header untouched. See the scoping doc for the exact icon layout per page;
-  how "Filter" maps onto each page's existing filter UI is left to be
-  finalized live during this leg.
 
 - **[Full-Screen Swipeable Pokémon Card + Teams List View] — Leg 1** *(Last
   touched: 2026-09-30 · Re-checks: 0)*

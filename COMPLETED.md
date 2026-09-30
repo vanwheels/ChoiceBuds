@@ -18,6 +18,25 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Mobile Compact Top Bar: Teams & Box] — Leg 1** (2026-09-30) - see commit
+  `438a871`. Replaced `TeamsPage`/`BoxPage`'s stacked mobile `<header>`
+  (which ate 1/4+ of a phone screen's height) with Sidebar.tsx's existing
+  mobile top bar, extended via a new `useMobileHeaderActions` context/hook
+  pair so the active tab can publish its own title + icon-only action
+  buttons there instead of Sidebar hardcoding page knowledge. Filter/Search/
+  Sort each open a small anchored popover (new `MobileFilterPopover.tsx`,
+  ported from `TeamOverflowMenu.tsx`'s positioning logic) rather than
+  showing pills inline. Desktop/tablet header unchanged. Caught and fixed a
+  real "Maximum update depth exceeded" bug live via run-desktop before
+  shipping: bundling the registry state and its setter into one context
+  made every registering page re-render (and re-fire its registration
+  effect) whenever any tab's entry changed - fixed by splitting the stable
+  setter into its own context. Verified live: the desktop Electron app
+  can't actually reach `md` width itself (main.ts enforces a 1280px
+  minimum), so this was verified against the web build (`npm run dev:web`)
+  via a throwaway Playwright/Electron harness instead of the usual
+  run-desktop skill.
+
 - **[Mobile Teams & Box Card View: Scoping] — Leg 1** (2026-09-30) - Vanny
   raised, right after Responsive Layout Audit: Teams & Box shipped, that the
   grid/list-of-cards pattern itself isn't right for mobile (not just
