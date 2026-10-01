@@ -42,3 +42,5 @@ milestone.
   [post-mortem](docs/postmortems/web-version-teams-box-mvp.md)
 - **Full Web Feature Parity** — 2026-09-29 to 2026-09-30 — Shipped —
   [post-mortem](docs/postmortems/full-web-feature-parity.md)
+- **Mobile-Friendliness Pass** — 2026-09-30 — Shipped —
+  [post-mortem](docs/postmortems/mobile-friendliness-pass.md)

@@ -183,79 +183,19 @@ action buttons there. Caught and fixed a real infinite-render-loop bug live
 via run-desktop before shipping - see the commit for the root cause and
 fix.
 
-## Current Milestone: Mobile-Friendliness Pass
-
-Make the renderer usable on a phone-sized touch viewport - today it's a
-from-scratch pass, not a tuning one (see the scoping doc for the full
-survey). Ordered by severity first (the two functionality-breaking touch
-gaps before any layout work), then by what's foundational (reclaiming nav
-width before auditing page layouts that assume it), then remaining layout
-audits in traffic-priority order.
-
-[Mobile Nav Shell: Drawer] — Leg 1 shipped 2026-09-30 (see `COMPLETED.md`) -
-`Sidebar.tsx` now hides the rail entirely below `md` (768px) and replaces it
-with a hamburger trigger + off-canvas drawer, self-contained in that one
-component (no new wiring needed in `App.tsx`/`AppWeb.tsx`). The layout-audit
-legs below now have a real reclaimed-width nav shell to design against.
-[Responsive Layout Audit: Teams & Box] — Leg 1 shipped the same day (see
-`COMPLETED.md`) - `TeamCard`'s header now stacks vertically below `md`
-instead of overflowing outright, and its expanded roster grid gained two new
-container-query tiers ahead of the existing 1040px one. Surfaced a real,
-pre-existing "Maximum update depth exceeded" bug unrelated to this leg's CSS
-work - see its own new entry below. Live mobile testing the same day (Vanny,
-on an iPhone 16) turned up three more issues, all fixed immediately rather
-than queued: [TeamOverflowMenu Viewport Clamp] — Leg 1 (the team "..." menu
-had no bottom-of-viewport clamp and dismissed itself on any scroll, so
-overflow content was genuinely unreachable), [Mobile Calc Launcher
-Placement] — Leg 1 (the floating Calc button covered page content at the
-bottom of a phone viewport - moved to the mobile top bar, desktop
-unchanged), and [Short-List Scroll Stuck on iOS Safari] — Leg 1 (a single
-empty team/very short Box left zero scroll overflow, which iOS Safari's
-touch-scroll handling gets stuck on - a first bottom-padding attempt didn't
-work for a real CSS reason, see its own entry; fixed with a forced 1px
-min-height overflow instead). See `COMPLETED.md` for all three.
-
-[Responsive Layout Audit: Calc & Modals] — Leg 1 shipped 2026-09-30 (see
-`COMPLETED.md`) - survey turned up two real fixed-width overflow culprits,
-not the modal shells themselves: `CalcMoveGrid.tsx`'s move rows (fixed
-160px/112px elements in one non-wrapping flex row) and
-`TeamExportImageModal.tsx`'s 6-column poster grid, whose tiles' fixed 80px
-sprites overlapped once squeezed into a phone-width column. Everything else
-surveyed (`Modal.tsx`, Import/Export/PDF modals, item/move/ability/nature
-pickers) was already fluid. Verified live via DOM geometry at a zoomed
-~383px effective width (screenshots at that zoom level only capture a
-cropped corner, not the full page, so geometry checks were used instead).
-
-[Responsive Layout Audit: Remaining Pages] — Leg 1 shipped 2026-09-30 (see
-`COMPLETED.md`) - Settings and Speed Tiers were already fluid; real fixes
-landed in Battle Log (a fixed-minmax grid overflowing phone widths) and
-Statistics/Type Matchup (missing `min-w-0` on truncating name spans, plus
-two rows whose other fixed-width elements needed narrowing/replacing once
-`min-w-0` exposed how little room they left).
-
-Mobile Teams & Box Card View raised by Vanny 2026-09-30, right after
-Responsive Layout Audit: Teams & Box shipped - a different ask than that
-leg's overflow/squishing fixes: the grid/list-of-cards pattern itself isn't
-right for mobile, not just cramped. Its own Scoping leg finished the same
-day, splitting into 3 build legs (see `COMPLETED.md` and
-[docs/investigations/mobile-teams-box-card-view-scope.md](docs/investigations/mobile-teams-box-card-view-scope.md)).
-Key decisions: mobile-only (desktop grid untouched), a full-screen
-swipeable Pokémon card replaces vertical scrolling through a team's roster,
-Box gets both a compact sprite/favorite/name grid *and* the same swipe deck
-(tap a tile to enter it), and each page's mobile header collapses into
-`Sidebar.tsx`'s existing hamburger top bar instead of keeping its own
-stacked `<header>`.
-[Full-Screen Swipeable Pokémon Card + Teams List View] — Leg 1 shipped
-2026-09-30 (see `COMPLETED.md`).
-
-[Box Mobile: Compact Grid + Swipe Deck] — Leg 1 shipped 2026-09-30 (see
-`COMPLETED.md`) - new `MobileBoxGrid.tsx` (3-column compact sprite/favorite/
-name tiles + its own "+ New Build" tile, replacing `BoxPage.tsx`'s desktop
-grid below `md`), `MobileBoxSwipeOverlay.tsx`/`MobileBoxPokemonCard.tsx` (a
-Box-flavored sibling to Teams' swipe deck, not a reuse of it - a Box entry's
-action set is BoxCard.tsx's own, not a roster slot's). Caught and fixed a
-real render-time-clamp bug live via run-desktop before shipping: see the
-commit for the root cause and fix.
+Mobile-Friendliness Pass milestone shipped 2026-09-30 (see `MILESTONES.md`
+and
+[docs/postmortems/mobile-friendliness-pass.md](docs/postmortems/mobile-friendliness-pass.md)) -
+all 6 originally-scoped legs ([Mobile Nav Shell: Drawer], [Responsive Layout
+Audit: Teams & Box] + its 3 live-fixed bonus bugs, [Responsive Layout Audit:
+Calc & Modals], [Responsive Layout Audit: Remaining Pages], [Touch
+Drag-and-Drop: Framer Motion Reorder], [Touch-Accessible Hover Content]) plus
+the mid-milestone [Mobile Teams & Box Card View] addition (its own Scoping
+leg + 3 build legs: [Mobile Compact Top Bar: Teams & Box], [Full-Screen
+Swipeable Pokémon Card + Teams List View], [Box Mobile: Compact Grid + Swipe
+Deck]) all shipped - see `COMPLETED.md` for each leg's own entry. One item
+discovered live during this milestone stays open below rather than holding
+it closed: [Web TeamCard Expand Infinite-Loop Bug] in Unscheduled.
 
 ## Blocked
 
