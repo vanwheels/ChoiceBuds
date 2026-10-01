@@ -30,6 +30,7 @@ function makeSettings(overrides: Partial<AppSettings> = {}): AppSettings {
       dateOfBirth: '',
       supportId: '',
       switchProfileName: '',
+      updatedAt: 0,
     },
     lastModified: Date.now(),
     ...overrides,

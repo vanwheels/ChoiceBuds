@@ -36,34 +36,61 @@ export default function PlayerProfileSection({ settingsState }: PlayerProfileSec
   const [localSwitchProfileName, setLocalSwitchProfileName] = useState(playerProfile.switchProfileName);
   const [localDateOfBirth, setLocalDateOfBirth] = useState(playerProfile.dateOfBirth);
 
+  const [revealed, setRevealed] = useState(false);
+
   const commitField = async (field: keyof PlayerProfile, value: string) => {
     if (value !== playerProfile[field]) {
-      await updateSettings({ playerProfile: { ...playerProfile, [field]: value } });
+      await updateSettings({ playerProfile: { ...playerProfile, [field]: value, updatedAt: Date.now() } });
     }
   };
 
   const setAgeDivision = (division: PlayerProfile['ageDivision']) => {
-    updateSettings({ playerProfile: { ...playerProfile, ageDivision: playerProfile.ageDivision === division ? '' : division } });
+    const nextDivision = playerProfile.ageDivision === division ? '' : division;
+    // react-hooks/purity misattributes this Date.now() call as happening
+    // during render because setAgeDivision is only ever invoked from inside
+    // AGE_DIVISIONS.map() below - it's actually just building an onClick
+    // closure per button, same as commitField's onBlur closures elsewhere in
+    // this file (which aren't flagged, since they're not built inside a
+    // .map()). Confirmed via an isolated repro outside this file.
+    // eslint-disable-next-line react-hooks/purity
+    updateSettings({ playerProfile: { ...playerProfile, ageDivision: nextDivision, updatedAt: Date.now() } });
   };
+
+  const maskedClass = `${inputClass} opacity-50 cursor-not-allowed select-none`;
 
   return (
     <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-4">
-      <h2 className="text-sm font-semibold text-zinc-200">Player Profile</h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold text-zinc-200">Player Profile</h2>
+        <button
+          type="button"
+          onClick={() => setRevealed(r => !r)}
+          className="text-xs font-medium text-accent-gold hover:underline cursor-pointer"
+        >
+          {revealed ? 'Hide personal info' : 'Reveal personal info'}
+        </button>
+      </div>
       <p className="mt-1 text-xs text-zinc-400">
         Entered once and reused on every VGC Team Sheet PDF export (Teams page, per-team export button) -
-        a team's own Battle Team Number/Name is entered separately at export time.
+        a team's own Battle Team Number/Name is entered separately at export time. Legal name, Player ID,
+        Support ID, and date of birth stay hidden on screen until revealed, since this Settings page is
+        easy to end up on camera during a stream or screen share.
       </p>
 
       <div className="mt-3 grid grid-cols-2 gap-3">
         <div>
           <label className={labelClass}>Player Name</label>
-          <input
-            type="text"
-            value={localPlayerName}
-            onChange={e => setLocalPlayerName(e.target.value)}
-            onBlur={() => commitField('playerName', localPlayerName)}
-            className={inputClass}
-          />
+          {revealed ? (
+            <input
+              type="text"
+              value={localPlayerName}
+              onChange={e => setLocalPlayerName(e.target.value)}
+              onBlur={() => commitField('playerName', localPlayerName)}
+              className={inputClass}
+            />
+          ) : (
+            <div className={maskedClass}>{localPlayerName ? '••••••••' : ''}</div>
+          )}
         </div>
         <div>
           <label className={labelClass}>Trainer Name in Game</label>
@@ -77,23 +104,31 @@ export default function PlayerProfileSection({ settingsState }: PlayerProfileSec
         </div>
         <div>
           <label className={labelClass}>Player ID</label>
-          <input
-            type="text"
-            value={localPlayerId}
-            onChange={e => setLocalPlayerId(e.target.value)}
-            onBlur={() => commitField('playerId', localPlayerId)}
-            className={inputClass}
-          />
+          {revealed ? (
+            <input
+              type="text"
+              value={localPlayerId}
+              onChange={e => setLocalPlayerId(e.target.value)}
+              onBlur={() => commitField('playerId', localPlayerId)}
+              className={inputClass}
+            />
+          ) : (
+            <div className={maskedClass}>{localPlayerId ? '••••••••' : ''}</div>
+          )}
         </div>
         <div>
           <label className={labelClass}>Support ID</label>
-          <input
-            type="text"
-            value={localSupportId}
-            onChange={e => setLocalSupportId(e.target.value)}
-            onBlur={() => commitField('supportId', localSupportId)}
-            className={inputClass}
-          />
+          {revealed ? (
+            <input
+              type="text"
+              value={localSupportId}
+              onChange={e => setLocalSupportId(e.target.value)}
+              onBlur={() => commitField('supportId', localSupportId)}
+              className={inputClass}
+            />
+          ) : (
+            <div className={maskedClass}>{localSupportId ? '••••••••' : ''}</div>
+          )}
         </div>
         <div>
           <label className={labelClass}>Switch Profile Name</label>
@@ -107,13 +142,17 @@ export default function PlayerProfileSection({ settingsState }: PlayerProfileSec
         </div>
         <div>
           <label className={labelClass}>Date of Birth</label>
-          <input
-            type="date"
-            value={localDateOfBirth}
-            onChange={e => setLocalDateOfBirth(e.target.value)}
-            onBlur={() => commitField('dateOfBirth', localDateOfBirth)}
-            className={inputClass}
-          />
+          {revealed ? (
+            <input
+              type="date"
+              value={localDateOfBirth}
+              onChange={e => setLocalDateOfBirth(e.target.value)}
+              onBlur={() => commitField('dateOfBirth', localDateOfBirth)}
+              className={inputClass}
+            />
+          ) : (
+            <div className={maskedClass}>{localDateOfBirth ? '••••••••' : ''}</div>
+          )}
         </div>
         <div className="col-span-2">
           <label className={labelClass}>Age Division</label>

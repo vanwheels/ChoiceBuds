@@ -58,7 +58,7 @@ export function useSync(
   savedPokemonState: UseSavedPokemonReturn
 ): UseSyncReturn {
   const { settings, updateSettings } = settingsState;
-  const { syncUsername, syncToken, lastSyncedAt } = settings;
+  const { syncUsername, syncToken, lastSyncedAt, playerProfile } = settings;
 
   const [internalStatus, setStatus] = useState<SyncStatus>(() => (settings.syncUsername ? 'idle' : 'signed-out'));
   const [error, setError] = useState<string | null>(null);
@@ -152,6 +152,7 @@ export function useSync(
           battleTombstones: battlesState.tombstones,
           savedPokemon: savedPokemonState.savedPokemon,
           savedPokemonTombstones: savedPokemonState.tombstones,
+          playerProfile,
           savedAt: Date.now(),
         };
 
@@ -164,7 +165,14 @@ export function useSync(
           savedPokemonState.applySyncedState(merged.savedPokemon),
         ]);
 
-        await updateSettings({ lastSyncedAt: merged.savedAt });
+        // merged.playerProfile is missing when the account's Worker hasn't
+        // been redeployed with profile-sync support yet (see SyncPayload's
+        // comment) - leave the local profile alone rather than treating a
+        // field the old Worker never echoed back as "deleted."
+        await updateSettings({
+          lastSyncedAt: merged.savedAt,
+          ...(merged.playerProfile ? { playerProfile: merged.playerProfile } : {}),
+        });
         setStatus('idle');
         return { ok: true };
       } catch (err) {
@@ -184,7 +192,7 @@ export function useSync(
     // fields, so this recreates on every render - fine, since every trigger
     // effect below reads it through syncNowRef instead of depending on it
     // directly.
-  }, [syncUsername, syncToken, updateSettings, teamsState, battlesState, savedPokemonState]);
+  }, [syncUsername, syncToken, updateSettings, teamsState, battlesState, savedPokemonState, playerProfile]);
 
   // Always-current ref so the trigger effects below (keyed only on
   // syncUsername/syncToken, not on syncNow's own frequently-churning
@@ -224,6 +232,11 @@ export function useSync(
     }
     const timeoutId = setTimeout(() => { syncNowRef.current(); }, AUTO_SYNC_DEBOUNCE_MS);
     return () => clearTimeout(timeoutId);
+    // Deliberately excludes playerProfile: unlike teams/battles/savedPokemon,
+    // an edit there isn't debounce-triggered - it still reaches the Worker
+    // via the next mount sync, the 5-minute fallback poll, or whichever of
+    // these three collections' own debounced sync fires next. Not worth a
+    // second debounce effect/skip-ref pair for a field that changes rarely.
   }, [syncUsername, syncToken, teamsState.teams, battlesState.battles, savedPokemonState.savedPokemon]);
 
   return {

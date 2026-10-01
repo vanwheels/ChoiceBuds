@@ -23,6 +23,14 @@ export interface PlayerProfile {
   dateOfBirth: string; // ISO "YYYY-MM-DD" from a native <input type="date">, split into the form's own MM/DD/YYYY 3-blank layout at draw time, see teamSheetPdf.ts
   supportId: string;
   switchProfileName: string;
+  // Bumped on every field edit (PlayerProfileSection.tsx), separate from
+  // AppSettings.lastModified (which bumps on *any* settings change, including
+  // unrelated per-device fields like boxSortMode) - the sync Worker's
+  // last-write-wins merge for this singleton object (worker/src/merge.ts's
+  // mergeSingleton) needs a timestamp scoped to this object alone, or an edit
+  // to an unrelated setting on one device would falsely win over a real
+  // profile edit made on another.
+  updatedAt: number;
 }
 
 /**
@@ -80,5 +88,12 @@ export interface SyncPayload {
   battleTombstones: SyncTombstone[];
   savedPokemon: SavedPokemonEntry[];
   savedPokemonTombstones: SyncTombstone[];
+  // A singleton, not a collection - merged by the Worker via its own
+  // last-write-wins-by-updatedAt path (mergeSingleton), not mergeCollection.
+  // Optional on the wire: an un-redeployed Worker still running pre-profile-
+  // sync code ignores this field entirely rather than erroring (it only
+  // validates the fields it knows about), so its merge response omits it -
+  // useSync.ts must tolerate that and leave the local profile untouched.
+  playerProfile?: PlayerProfile;
   savedAt: number; // Unix timestamp the Worker computed this merge - client-supplied values are ignored/overwritten
 }

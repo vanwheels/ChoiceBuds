@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mergeCollection } from './merge';
+import { mergeCollection, mergeSingleton } from './merge';
 
 interface Record_ {
   id: string;
@@ -70,5 +70,33 @@ describe('mergeCollection', () => {
     const result = mergeCollection([], [], [], incomingTombstones);
     expect(result.records).toEqual([]);
     expect(result.tombstones).toEqual([{ id: 'never-existed', deletedAt: 100 }]);
+  });
+});
+
+describe('mergeSingleton', () => {
+  it('keeps the newer side', () => {
+    const existing = { updatedAt: 100, name: 'old' };
+    const incoming = { updatedAt: 200, name: 'new' };
+    expect(mergeSingleton(existing, incoming)).toEqual(incoming);
+  });
+
+  it('keeps the existing side when incoming is older', () => {
+    const existing = { updatedAt: 200, name: 'server' };
+    const incoming = { updatedAt: 100, name: 'stale' };
+    expect(mergeSingleton(existing, incoming)).toEqual(existing);
+  });
+
+  it('returns incoming when existing is missing (first sync for this account)', () => {
+    const incoming = { updatedAt: 100, name: 'new' };
+    expect(mergeSingleton(undefined, incoming)).toEqual(incoming);
+  });
+
+  it('returns existing when incoming is missing (a pre-profile-sync client payload)', () => {
+    const existing = { updatedAt: 100, name: 'server' };
+    expect(mergeSingleton(existing, undefined)).toEqual(existing);
+  });
+
+  it('returns undefined when neither side has it', () => {
+    expect(mergeSingleton(undefined, undefined)).toBeUndefined();
   });
 });

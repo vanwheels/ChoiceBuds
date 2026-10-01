@@ -21,7 +21,7 @@ const mockedPush = vi.mocked(pushSyncData);
 
 const PLAYER_PROFILE = {
   playerName: '', ageDivision: '' as const, trainerNameInGame: '', playerId: '',
-  dateOfBirth: '', supportId: '', switchProfileName: '',
+  dateOfBirth: '', supportId: '', switchProfileName: '', updatedAt: 0,
 };
 
 function makeSettings(overrides: Partial<AppSettings> = {}): AppSettings {
@@ -318,11 +318,38 @@ describe('useSync', () => {
         battleTombstones: battlesState.tombstones,
         savedPokemon: savedPokemonState.savedPokemon,
         savedPokemonTombstones: savedPokemonState.tombstones,
+        playerProfile: PLAYER_PROFILE,
         savedAt: expect.any(Number),
       });
       expect(teamsState.applySyncedState).toHaveBeenLastCalledWith([remoteTeam]);
       expect(battlesState.applySyncedState).toHaveBeenLastCalledWith([]);
       expect(savedPokemonState.applySyncedState).toHaveBeenLastCalledWith([]);
+      expect(updateSettings).toHaveBeenLastCalledWith({ lastSyncedAt: 42_000 });
+    });
+
+    it('applies the merged playerProfile back when the Worker returns one', async () => {
+      const remoteProfile = { ...PLAYER_PROFILE, playerName: 'Remote Name', updatedAt: 99_000 };
+      mockedPush.mockResolvedValue(emptyMergedPayload({ playerProfile: remoteProfile, savedAt: 42_000 }));
+
+      const { result, updateSettings } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
+      await waitFor(() => expect(mockedPush).toHaveBeenCalledTimes(1)); // mount-triggered auto-sync
+
+      await act(async () => {
+        await result.current.syncNow();
+      });
+
+      expect(updateSettings).toHaveBeenLastCalledWith({ lastSyncedAt: 42_000, playerProfile: remoteProfile });
+    });
+
+    it('leaves the local playerProfile untouched when the Worker omits it (un-redeployed account)', async () => {
+      mockedPush.mockResolvedValue(emptyMergedPayload({ savedAt: 42_000 })); // no playerProfile key, same as an old Worker's response
+      const { result, updateSettings } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
+      await waitFor(() => expect(mockedPush).toHaveBeenCalledTimes(1)); // mount-triggered auto-sync
+
+      await act(async () => {
+        await result.current.syncNow();
+      });
+
       expect(updateSettings).toHaveBeenLastCalledWith({ lastSyncedAt: 42_000 });
     });
 

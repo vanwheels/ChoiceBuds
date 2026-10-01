@@ -15,6 +15,7 @@ const DEFAULT_PLAYER_PROFILE: PlayerProfile = {
   dateOfBirth: '',
   supportId: '',
   switchProfileName: '',
+  updatedAt: 0, // "never touched" - a real edit from any device (a real Date.now()) always wins the sync merge over this
 };
 
 const DEFAULT_SETTINGS: AppSettings = {

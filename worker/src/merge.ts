@@ -74,3 +74,20 @@ export function mergeCollection<T extends HasIdAndUpdatedAt>(
     tombstones: Array.from(tombstonesById.values()),
   };
 }
+
+interface HasUpdatedAt {
+  updatedAt: number;
+}
+
+/**
+ * Merges a singleton object (one per account, not a collection of records
+ * keyed by id - e.g. the renderer's PlayerProfile) by plain last-write-wins
+ * on `updatedAt`. Either side may be missing it entirely: a pre-profile-sync
+ * client/stored blob simply never sent one, which isn't a conflict to
+ * resolve, just "no data yet on that side."
+ */
+export function mergeSingleton<T extends HasUpdatedAt>(existing: T | undefined, incoming: T | undefined): T | undefined {
+  if (!existing) return incoming;
+  if (!incoming) return existing;
+  return incoming.updatedAt >= existing.updatedAt ? incoming : existing;
+}

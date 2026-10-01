@@ -32,7 +32,7 @@
  */
 
 import { hashPassword, verifyPassword, generateToken, hashToken, constantTimeEqual, isValidUsername, isValidPassword, type PasswordHash } from './crypto';
-import { mergeCollection, type SyncTombstone } from './merge';
+import { mergeCollection, mergeSingleton, type SyncTombstone } from './merge';
 
 export interface Env {
   SYNC_KV: KVNamespace;
@@ -55,12 +55,22 @@ interface SyncPayload {
   battleTombstones: SyncTombstone[];
   savedPokemon: HasIdAndUpdatedAt[];
   savedPokemonTombstones: SyncTombstone[];
+  // Optional, unlike the collections above: a payload from before profile
+  // sync existed (an older client, or a blob stored before this field was
+  // introduced) simply won't have one - see mergeSingleton.
+  playerProfile?: HasUpdatedAt;
   savedAt: number;
 }
 
 /** The Worker only ever needs `id`/`updatedAt` to merge a record - the rest of each collection's shape (Team/Battle/SavedPokemonEntry) is opaque to it. */
 interface HasIdAndUpdatedAt {
   id: string;
+  updatedAt: number;
+  [key: string]: unknown;
+}
+
+/** Same idea as HasIdAndUpdatedAt, but for a singleton (no `id` to key by) - see PlayerProfile. */
+interface HasUpdatedAt {
   updatedAt: number;
   [key: string]: unknown;
 }
@@ -293,7 +303,8 @@ async function handleSyncPut(env: Env, lowerUsername: string, request: Request):
   if (
     !isRecordArray(parsed.teams) || !isTombstoneArray(parsed.teamTombstones) ||
     !isRecordArray(parsed.battles) || !isTombstoneArray(parsed.battleTombstones) ||
-    !isRecordArray(parsed.savedPokemon) || !isTombstoneArray(parsed.savedPokemonTombstones)
+    !isRecordArray(parsed.savedPokemon) || !isTombstoneArray(parsed.savedPokemonTombstones) ||
+    !isOptionalSingleton(parsed.playerProfile)
   ) {
     return errorResponse('Body must include teams/battles/savedPokemon arrays and their tombstone arrays', 400);
   }
@@ -326,6 +337,7 @@ async function handleSyncPut(env: Env, lowerUsername: string, request: Request):
   const teamsMerge = mergeCollection(existing.teams, existing.teamTombstones, incoming.teams, incoming.teamTombstones);
   const battlesMerge = mergeCollection(existing.battles, existing.battleTombstones, incoming.battles, incoming.battleTombstones);
   const savedPokemonMerge = mergeCollection(existing.savedPokemon, existing.savedPokemonTombstones, incoming.savedPokemon, incoming.savedPokemonTombstones);
+  const playerProfile = mergeSingleton(existing.playerProfile, incoming.playerProfile);
 
   const merged: SyncPayload = {
     teams: teamsMerge.records,
@@ -334,6 +346,7 @@ async function handleSyncPut(env: Env, lowerUsername: string, request: Request):
     battleTombstones: battlesMerge.tombstones,
     savedPokemon: savedPokemonMerge.records,
     savedPokemonTombstones: savedPokemonMerge.tombstones,
+    ...(playerProfile ? { playerProfile } : {}),
     savedAt: Date.now(),
   };
 
@@ -358,6 +371,11 @@ function isTombstoneArray(value: unknown): value is SyncTombstone[] {
   return Array.isArray(value) && value.every((v): v is SyncTombstone =>
     typeof v === 'object' && v !== null && typeof (v as Record<string, unknown>).id === 'string' && typeof (v as Record<string, unknown>).deletedAt === 'number'
   );
+}
+
+function isOptionalSingleton(value: unknown): value is HasUpdatedAt | undefined {
+  if (value === undefined) return true;
+  return typeof value === 'object' && value !== null && typeof (value as Record<string, unknown>).updatedAt === 'number';
 }
 
 export default {
