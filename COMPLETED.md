@@ -22,6 +22,28 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[Web TeamCard Expand Infinite-Loop Bug] — Leg 1** (2026-09-30). Pure
+  root-causing pass, no app code changed - full reasoning is in
+  `docs/investigations/web-teamcard-expand-infinite-loop.md` since no single
+  diff captures it. Confirmed live (stack-trace capture in a disposable
+  Playwright script against the web build) that the looping `setState` call
+  originates inside `EditOverlays.tsx`'s per-Pokémon data-fetch effects, and
+  confirmed via direct code reading that `useGameData.ts`'s
+  `getEnrichedSpeciesOptions`/`getChampionsUsage` (and their whole dependency
+  chain) get a brand-new identity on every single `setCache` call anywhere
+  in the app - since those functions are listed in `EditOverlays.tsx`'s
+  effect dependency arrays, one cache write from any mounted `PokemonCard`
+  re-fires every other mounted `EditOverlays` instance's effects too. With
+  4+ concurrently-mounted cards holding freshly-imported, never-cached
+  species, that cascades. The narrow-width correlation isn't a second cause
+  - no `ResizeObserver`/`matchMedia`/`IntersectionObserver` exists anywhere
+  in `src/renderer` to branch on width - it's a timing effect: fewer grid
+  columns below certain widths stacks more cards (and their Framer Motion
+  layout-animation work) into the same render window as the cache-churn
+  cascade, which is what tips total re-renders over React's loop-detection
+  threshold. Leg 2 (the actual fix, not yet decided/implemented) is in
+  `TODO.md`.
+
 - **[Reg M-C Z-A-Exclusive Movepool Audit] — Leg 1** (2026-09-30) - see
   commit `b990967`. Re-ran Leg 4b's PokeAPI-vs-`learnsets.ts` diff
   methodology (see `docs/investigations/champions-showdown-mod-audit.md`)

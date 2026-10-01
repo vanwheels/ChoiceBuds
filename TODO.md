@@ -22,32 +22,52 @@ Scoped 2026-09-30, pulling two already-ready items out of Unscheduled below.
 Post-Parity Polish shipped 2026-09-30 (all 8 legs - see `MILESTONES.md` and
 its [post-mortem](docs/postmortems/post-parity-polish.md)).
 
-- **[Web TeamCard Expand Infinite-Loop Bug] — Leg 1** *(Last touched:
+- **[Web TeamCard Expand Infinite-Loop Bug] — Leg 2** *(Last touched:
   2026-09-30 · Re-checks: 0)*
-  Discovered live while verifying Responsive Layout Audit: Teams & Box Leg 1
-  (see `COMPLETED.md`). Expanding a `TeamCard` with **4+ Pokémon** at a
-  viewport **narrower than 768px** throws a React "Maximum update depth
-  exceeded" loop - doesn't crash outright but spams re-renders indefinitely
-  (burns CPU/battery, degrades the UI). Only reachable on the web build or a
-  resized browser - the desktop Electron app enforces a 1280px minimum
-  window width (`main.ts`), so this has never been visible there.
-  Confirmed via `git stash` + a clean rerun that it's pre-existing, not
-  caused by that leg's CSS changes - reproduces identically on unmodified
-  `main`. Bisected live via a Playwright-driven repro script (not yet
-  written down anywhere beyond this entry): 3 Pokémon never loops at any
-  width tested (375-1512px); 4 Pokémon loops reliably, but only below 768px
-  - the identical 4-6 mon roster expanded fine at 1512px with the same
-  timing. Root cause not yet identified - ruled out `ResizeObserver` (none
-  exist anywhere in `src/renderer`) and simple squish-driven remeasurement
-  (reproduces whether `PokemonCard` is squished to ~47px or rendering
-  healthy at ~276px, so it's not about card width itself). Leading
-  suspicion, not confirmed: something in `EditOverlays.tsx`'s per-card data-
-  fetch effects (`getEnrichedSpeciesOptions`/`getChampionsUsage`) or
-  `useGameData.ts`'s cache-update propagation misbehaving when 4+ instances
-  mount concurrently at a narrow width - needs real debugging (add a
-  `console.trace()`/React DevTools profiler pass at repro conditions), not a
-  CSS fix. This leg is that scoping/investigation pass - root-causing the
-  loop; the actual fix is a follow-up leg once the cause is confirmed.
+  Leg 1 root-caused this live (see
+  `docs/investigations/web-teamcard-expand-infinite-loop.md` for the full
+  repro trail) - this leg is the fix, scoped but not yet implemented.
+  Confirmed mechanism, straight from `useGameData.ts`'s own source: every
+  public getter it returns (`getCachedMove`/`getMoveData`/`getCachedItem`/
+  `getItemData`/`getCachedAbility`/`getAbilityData`/
+  `getCachedSpeciesLearnset`/`getSpeciesLearnset`/`getCachedChampionsUsage`/
+  `getChampionsUsage`/`getEnrichedSpeciesOptions`) is `useCallback`'d with a
+  dependency chain that bottoms out on the single `cache` state object -
+  `getEnrichedSpeciesOptions`/`getChampionsUsage` get a brand-new identity on
+  *every* `setCache` call anywhere in the app, not just ones touching their
+  own species. `EditOverlays.tsx`'s two per-Pokémon data-fetch effects
+  (learnset/moves+abilities at line ~151, Champions usage at line ~172) list
+  those functions in their dependency arrays, so one `setCache` write from
+  any mounted `PokemonCard` re-fires every other mounted `EditOverlays`
+  instance's effects too. With several concurrently-mounted cards hitting
+  real first-time cache misses (fresh/never-before-seen species), resolving
+  fetches keep re-triggering each other's effects in a cascade. Live-verified
+  the exact trigger: patching `console.error` in a Chromium tab (via a
+  disposable Playwright script, not committed) to capture `new Error().stack`
+  at the "Maximum update depth exceeded" call confirmed the looping
+  `dispatchSetState` call originates inside one of `EditOverlays.tsx`'s two
+  `.then()` callbacks. The narrow-width/4+-Pokémon correlation isn't a
+  separate code path - grepped `src/renderer` for `ResizeObserver`/
+  `matchMedia`/`IntersectionObserver`, none exist, so nothing branches on
+  width in JS. It's a timing effect: `TeamCard.tsx`'s `@container` grid
+  collapses to fewer columns below certain widths, stacking more
+  `PokemonCard`s (and their Framer Motion `Reorder.Item` layout animations)
+  into the same tight render window as the cache-churn cascade above, which
+  is what pushes total re-renders over React's internal loop-detection
+  threshold - reproduced reliably resizing to <768px *while already
+  expanded* with a freshly-imported, not-yet-cached 4-species team; did not
+  reproduce starting already-narrow before expanding, in 3/3 trials (a
+  timing-sensitive trigger, not a hard requirement - matches why it felt
+  inconsistent during Leg 1's original bisection too).
+  Fix direction (not yet decided): the public getters in `useGameData.ts`
+  need to stop changing identity on every unrelated cache write - e.g. read
+  through a ref for the actual cache lookup instead of closing over `cache`
+  directly in each `useCallback`, or otherwise decouple "a getter's identity
+  is stable" from "the cache it reads has mutated." Whatever shape this
+  takes, needs to preserve every one of the self-healing forced-miss
+  behaviors documented inline in `useGameData.ts` (hasChampionsMoveData,
+  target/meta presence, spriteUrl placeholder) - those are deliberate and
+  still need to work once a miss is later filled in.
 
 ## Blocked
 
