@@ -241,17 +241,14 @@ stacked `<header>`.
 [Full-Screen Swipeable Pokémon Card + Teams List View] — Leg 1 shipped
 2026-09-30 (see `COMPLETED.md`).
 
-- **[Box Mobile: Compact Grid + Swipe Deck] — Leg 1** *(Last touched:
-  2026-09-30 · Re-checks: 0)*
-  Box's small 2-3 column sprite/favorite/name grid (~3 rows visible per
-  screen - a shrunk `BoxCard.tsx` collapsed tile), plus wiring a tapped tile
-  into the same full-screen swipe deck Leg 1 shipped (`MobileTeamSwipeOverlay`/
-  `MobilePokemonCard`), paging through the currently filtered/sorted list
-  rather than a fixed team roster. That primitive is built on
-  `EditablePokemonCore` (team-agnostic), so a Box entry should be able to
-  reuse it directly - the real remaining work here is wiring the paging
-  sequence off the filtered/sorted Box list instead of `team.pokemon`, not
-  building a second deck.
+[Box Mobile: Compact Grid + Swipe Deck] — Leg 1 shipped 2026-09-30 (see
+`COMPLETED.md`) - new `MobileBoxGrid.tsx` (3-column compact sprite/favorite/
+name tiles + its own "+ New Build" tile, replacing `BoxPage.tsx`'s desktop
+grid below `md`), `MobileBoxSwipeOverlay.tsx`/`MobileBoxPokemonCard.tsx` (a
+Box-flavored sibling to Teams' swipe deck, not a reuse of it - a Box entry's
+action set is BoxCard.tsx's own, not a roster slot's). Caught and fixed a
+real render-time-clamp bug live via run-desktop before shipping: see the
+commit for the root cause and fix.
 
 ## Blocked
 

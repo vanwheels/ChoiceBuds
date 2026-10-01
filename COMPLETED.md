@@ -18,6 +18,19 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Box Mobile: Compact Grid + Swipe Deck] — Leg 1** (2026-09-30) - see
+  commit `004b389`. New `MobileBoxGrid.tsx` (3-column compact sprite/
+  favorite/name tiles + its own "+ New Build" tile) replaces `BoxPage.tsx`'s
+  desktop grid below `md`; tapping a tile opens `MobileBoxSwipeOverlay.tsx`/
+  `MobileBoxPokemonCard.tsx`, a Box-flavored sibling to Teams' own swipe deck
+  rather than a reuse of it (a Box entry has no roster-slot context, so its
+  action set is `BoxCard.tsx`'s own - Rename/Duplicate/Add to Team/Favorite/
+  Delete - not Roster Swap/RealSetsButton). Caught and fixed a real bug live
+  via run-desktop: the grid's render guard re-checked the tap-time tile
+  index against the live entry count on every render, so deleting the
+  alphabetically-last entry unmounted the overlay outright instead of
+  letting its own clamp-and-repage logic run - see the commit for the fix.
+
 - **[Full-Screen Swipeable Pokémon Card + Teams List View] — Leg 1**
   (2026-09-30) - see commit `150be1c`. The core new mobile primitive:
   `MobileTeamSwipeOverlay.tsx` fills the viewport with one
