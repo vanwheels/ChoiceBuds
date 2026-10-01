@@ -12,13 +12,9 @@ import type { UseDatabaseReturn } from '../hooks/useDatabase';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSyncReturn } from '../hooks/useSync';
 import { ALL_REGULATION_IDS, getRegulationLabel, toRegulationId } from '../utils/pokemonRules';
-import { useSeasonDataCheck } from '../hooks/useSeasonDataCheck';
-import { useChampionsDataCheck } from '../hooks/useChampionsDataCheck';
 import SyncSection from './SyncSection';
 import UpdateCheckSection from './UpdateCheckSection';
 import ReleaseNotesSection from './ReleaseNotesSection';
-import SeasonDataCheckSection from './SeasonDataCheckSection';
-import ChampionsDataCheckSection from './ChampionsDataCheckSection';
 import PlayerProfileSection from './PlayerProfileSection';
 import GameDataResetSection from './GameDataResetSection';
 import AppStatusSection from './AppStatusSection';
@@ -40,8 +36,6 @@ interface SettingsPageProps {
 export default function SettingsPage({ settingsState, syncState, teamsState, updateCheckState, releaseNotesState, databaseState, gameDataState }: SettingsPageProps) {
   const { settings, setDefaultRegulation, updateSettings } = settingsState;
   const currentId = toRegulationId(settings.defaultRegulation);
-  const seasonDataCheckState = useSeasonDataCheck(settings, updateSettings);
-  const championsDataCheckState = useChampionsDataCheck(settings, updateSettings);
 
   return (
     <div className="flex flex-col gap-4">
@@ -91,10 +85,6 @@ export default function SettingsPage({ settingsState, syncState, teamsState, upd
       <PlayerProfileSection settingsState={settingsState} />
 
       <SyncSection syncState={syncState} />
-
-      <SeasonDataCheckSection seasonDataCheckState={seasonDataCheckState} />
-
-      <ChampionsDataCheckSection championsDataCheckState={championsDataCheckState} />
 
       <GameDataResetSection databaseState={databaseState} gameDataState={gameDataState} />
 

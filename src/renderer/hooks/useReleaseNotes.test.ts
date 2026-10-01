@@ -18,8 +18,6 @@ function makeSettings(overrides: Partial<AppSettings> = {}): AppSettings {
     syncUsername: null,
     syncToken: null,
     lastSyncedAt: null,
-    lastSeasonDataCheckedAt: null,
-    championsDataChecks: {},
     showAnimatedSprites: false,
     boxSortMode: 'alphabetical',
     boxCustomOrderSeeded: false,
