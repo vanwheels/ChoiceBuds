@@ -18,6 +18,18 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Box New-Build Tile Sizing] — Leg 1** (2026-09-30) - `BoxPage.tsx`'s
+  desktop "+ New Build" tile was hardcoded `w-[280px] min-h-[280px]`, over 2x
+  the `w-28` collapsed `BoxCard` tile beside it. Matched it to `w-28 min-h-28`
+  (dropping the font size to `text-xs` so the label still fits) and shrank
+  the paired empty-state message container's height the same way, since it
+  sits in the same flex row and was sized off the same 280px value.
+
+- **[Existing Account Migration] — Leg 1** (2026-09-30) - all ~4-6 friends
+  have updated to v0.9.0 and signed up; `useSync.ts`'s sign-in effect
+  auto-pushed each one's local teams/battles/saved Pokémon into their new
+  account with no manual KV copy needed. Nothing left to do from this end.
+
 - **[Responsive Layout Audit: Remaining Pages] — Leg 1** (2026-09-30) - see
   commit `ada485c`. Covered Battle Log, Statistics, Settings, Type Matchup,
   Speed Tiers in one leg per the item's own grouping call. Settings and Speed

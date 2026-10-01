@@ -483,13 +483,13 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
             <button
               onClick={() => setIsPickerOpen(true)}
               disabled={isBuildingSpecies}
-              className="w-[280px] min-h-[280px] flex items-center justify-center rounded-lg border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-wait"
+              className="w-28 min-h-28 shrink-0 flex items-center justify-center text-center rounded-lg border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-wait"
             >
-              <span className="text-sm font-semibold">{isBuildingSpecies ? 'Building…' : '+ New Build'}</span>
+              <span className="text-xs font-semibold px-1">{isBuildingSpecies ? 'Building…' : '+ New Build'}</span>
             </button>
 
             {emptyStateContent && (
-              <div className="flex flex-col justify-center text-zinc-400 px-2 min-h-[280px]">
+              <div className="flex flex-col justify-center text-zinc-400 px-2 min-h-28">
                 {emptyStateContent}
               </div>
             )}

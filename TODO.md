@@ -16,186 +16,85 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-Saved Builds Box shipped 2026-09-11 (all 8 legs - see `COMPLETED.md` and
-`MILESTONES.md`). Building Flow Tweaks shipped 2026-09-11 (see
-`COMPLETED.md` and `MILESTONES.md`). Regular Calc Popup shipped 2026-09-13
-(see `COMPLETED.md` and `MILESTONES.md`) - includes the retired Live Calc
-Tuning work that preceded its pivot; see
-[docs/postmortems/regular-calc-popup.md](docs/postmortems/regular-calc-popup.md)
-for the full arc. VGCPastes Real-Set Sourcing promoted to current milestone
-2026-09-14 (folds in the Tailwind/Terrain-Ability Speed Modeling leg that
-had been sitting in Unscheduled); its own Scoping leg finished the same day,
-splitting into a Sample Team Catalog leg and a Per-Species Real-Set
-Extraction leg (see `COMPLETED.md`). Sample Team Catalog Legs 1, 2, 3, and 4
-shipped the same day (see `COMPLETED.md`). Per-Species Real-Set Extraction's
-own scoping pass finished 2026-09-15, splitting into an Extraction Pipeline &
-Cache leg and a Calc Panel Real Sets UI leg; both shipped 2026-09-15 (see
-`COMPLETED.md`). Calc Real Sets Section: Visual Polish Legs 1 and 2 shipped
-2026-09-15 (see `COMPLETED.md`). Team Builder Real Sets Integration's own
-Scoping leg finished the same day, splitting into a build leg; that build leg
-(Leg 2) also shipped 2026-09-15 (see `COMPLETED.md`). VGCPastes Sample Team
-Catalog: Search/Filter Leg 1 shipped 2026-09-15 (see `COMPLETED.md`). Team
-Builder Stat Display: SP / Base / Real Total Toggle Leg 1 - unrelated in
-topic, just pulled into this milestone's current-milestone slot per Vanny's
-call since only one milestone can be "current" at a time - also shipped
-2026-09-15 (see `COMPLETED.md`). VGCPastes Real-Set Sourcing milestone
-shipped 2026-09-15 (see `MILESTONES.md` and
-[docs/postmortems/vgcpastes-real-set-sourcing.md](docs/postmortems/vgcpastes-real-set-sourcing.md)).
-[Calc Stat Rows: SP / Stat Total Toggle] — Leg 1 was killed 2026-09-16
-instead of scoped - see `COMPLETED.md`. Maintenance & Bug Fix Sweep promoted
-to current milestone 2026-09-16, pulling in three previously-Unscheduled
-items plus a newly-reported Real Sets bug. [Real Sets: Mega Evolution
-Species Matching Bug] — Leg 1 shipped the same day (see `COMPLETED.md`).
-[Team Gap Analysis: Usage Cutoff Tuning] — Leg 1 resolved (decision, no
-diff to the cutoff) 2026-09-16 (see `COMPLETED.md`). [Dev Console GPU
-Overlay Error Noise] — Leg 1 shipped the same day (see `COMPLETED.md`).
-Maintenance & Bug Fix Sweep milestone shipped 2026-09-16 (see
-`MILESTONES.md` and
-[docs/postmortems/maintenance-bug-fix-sweep.md](docs/postmortems/maintenance-bug-fix-sweep.md)) —
-its 4th item, Reg M-C Z-A-Exclusive Movepool Audit, stays in `Blocked`
-below rather than closing with the rest, since it's still waiting on
-PokeAPI. Web Version: Teams & Box MVP promoted to current milestone
-2026-09-29; its own Scoping leg finished the same day, splitting into 7
-build legs (see `COMPLETED.md` and
-[docs/investigations/web-version-scope.md](docs/investigations/web-version-scope.md)).
-[Sync Accounts: Username + Password] — Leg 1 shipped the same day (see
-`COMPLETED.md`). [Sync Data Model: Per-Record Merge & Auto Sync] — Leg 1
-shipped 2026-09-29 (see `COMPLETED.md`) — this is the Worker deploy point:
-`npx wrangler deploy` ships both this leg's and the accounts leg's Worker
-changes together. Re-scoped 2026-09-29: migration does NOT need to happen in
-the same window as the deploy - local storage stays canonical (per
-`docs/investigations/web-version-scope.md`), so an un-migrated friend's data
-is never at risk, only their cross-device sync stops working until they sign
-up and get migrated. Deploy whenever, migrate people as they get to it. [Web App Scaffold: Storage
-Adapter] — Leg 1 shipped 2026-09-29 (see `COMPLETED.md`). [Web Teams
-Parity] — Leg 1 shipped the same day (see `COMPLETED.md`) — Teams import/
-CRUD/display now work on web against the IndexedDB adapter; auto-sync
-wiring was deliberately deferred to land alongside Web Hosting & Domain's
-sign-up/log-in UI instead of wiring `useSync` in with no UI to trigger it
-yet. Also ported `useSavedPokemon` to the storage adapter as part of this
-leg (Teams Parity needed it too), which narrows what's left in Web Box
-Parity below. [Web Box Parity] — Leg 1 shipped 2026-09-29 (see
-`COMPLETED.md`) - `BoxPage` wired into `AppWeb.tsx` with no further hook
-porting needed; its own dependencies (`useRosterActions`, the type/move/
-ability filter hooks, `clipboardPayload.ts`) had no Electron dependency to
-begin with. [Web Hosting & Domain] — Leg 1 shipped 2026-09-29 (see
-`COMPLETED.md`) - narrowed to deploy+domain only after a sequencing
-check-in, and pivoted from the originally-planned Cloudflare Pages to
-GitHub Pages mid-leg once a live attempt showed Cloudflare's Workers
-Custom Domains need the whole DNS zone moved to Cloudflare, not just a
-CNAME record - too much risk to vannyproductions.com's existing
-IONOS-hosted email for what this leg needed. The site is live at
-https://choicebuds.vannyproductions.com. Login/signup UX split into its
-own [Web Login/Signup UX] — Leg 1, below. [Web Login/Signup UX] — Leg 1
-shipped 2026-09-29 (see `COMPLETED.md`) - signing in is opt-in on web, same
-as desktop (Showdown-style: never lock the player out of using the app over
-an account) - Teams/Box/the calc work fully signed-out, and a sidebar
-"Sign in to sync" prompt opens a dismissible `WebAuthScreen` modal that
-turns on `useSync`'s background auto-sync once signed in.
+## Current Milestone: Post-Parity Polish
 
-Decided 2026-09-29 (Vanny): the Worker deploy and the app release are two
-separate gates, not one - the Sign Up UI (`SyncSection.tsx`) only exists on
-`main`'s source, not in any built/distributed app. The last actual release
-is `v0.8.1` (`bd5a171`), which predates the accounts leg entirely, so every
-installed app today (including Vanny's own) is still on the old shared-
-secret push/pull UI regardless of what the Worker is running. Deploying the
-Worker now is fine (see the re-scoping note above), but the next app release
-is deliberately being held back so existing users transition straight from
-the old push/pull UI to a build that already has more of the web-sync story
-done, rather than a standalone release for just the accounts/merge changes.
-That release cut 2026-09-30 as `v0.9.0`
-(https://github.com/vanwheels/ChoiceBuds/releases/tag/v0.9.0), once Full Web
-Feature Parity had shipped - see [Existing Account Migration] in `Blocked`
-below for what's left.
+Settings/Sync/Box/Battle Log feedback batch flagged 2026-09-30 by Vanny after
+live-verifying Web Settings Parity (Full Web Feature Parity milestone).
+Scoped 2026-09-30 - decisions resolved: sync status indicator drops from the
+sidebar entirely (Settings page is the sole status source), Season/Champions
+Data Check sections are removed outright (not automated), and Player Profile
+sync uses a whole-section reveal toggle. Sequenced decision-free fixes first
+per Vanny's call.
 
-Web Version: Teams & Box MVP milestone shipped 2026-09-29 (see
-`MILESTONES.md` and
-[docs/postmortems/web-version-teams-box-mvp.md](docs/postmortems/web-version-teams-box-mvp.md)),
-closed without waiting on [Existing Account Migration], which moved to
-`Blocked` below rather than holding the milestone open - it has no natural
-closing moment of its own (it's gated on friends messaging their IDs and on
-a future release, both outside this codebase), matching the lesson from
-Maintenance & Bug Fix Sweep's postmortem about not letting a `Blocked` item
-hold a milestone's `Current Milestone:` section open indefinitely.
+- **[Account Status Section Cleanup] — Leg 1** *(Last touched: 2026-09-30 ·
+  Re-checks: 0)*
+  Rename `AppStatusSection.tsx:22`'s "App Status" heading to "Account
+  Status" and make the section more compact/inline. Motivated by the
+  floating Calc launcher button (see Leg 5 below) sitting over this,
+  Settings' last section - this leg is just the heading/layout half of that
+  complaint, not the button fix itself.
 
-Full Web Feature Parity promoted to current milestone 2026-09-29 (Vanny's
-call), the natural next step on the web track now that Teams & Box MVP is
-live - continue porting the app's remaining features to the web build via
-the same hook-by-hook storage-adapter approach. Its own Scoping leg finished
-the same day, splitting into 5 build legs (see `COMPLETED.md` and
-[docs/investigations/web-feature-parity-scope.md](docs/investigations/web-feature-parity-scope.md)).
-Survey turned up less porting work than expected: `CalcPopup`/
-`TypeMatchupPage`/`SpeedTiersPage` have zero Electron dependency of their
-own (every hook they need is already storage-adapter-clean from Teams/Box
-Parity) - only Battle Log/Statistics need a real hook port
-(`useBattles.ts`). Also decided live during scoping: `AppWeb.tsx`'s
-hand-rolled 2-button nav gets replaced with the real `Sidebar.tsx` + `App.tsx`'s
-lazy-tab pattern now that the tab list is about to match desktop's, rather
-than continuing to grow a second nav implementation.
+- **[Team Author Autofill from Sync Username] — Leg 1** *(Last touched:
+  2026-09-30 · Re-checks: 0)*
+  `ImportTeamModal.tsx:67` initializes `author` to `''`. Default it from the
+  signed-in sync username (`useSync.ts`'s `syncUsername`) when one exists
+  and the field is still empty, same "only fill if empty" pattern the
+  catalog/paste autofill at lines 105-107 already uses.
 
-Full Web Feature Parity milestone shipped 2026-09-30 (see `MILESTONES.md`
-and
-[docs/postmortems/full-web-feature-parity.md](docs/postmortems/full-web-feature-parity.md)) -
-[Web Nav Shell: Adopt Sidebar.tsx], [Web Calc & Matchup Tools Parity],
-[Web Battle Log Storage Adapter Port], [Web Battle Log & Statistics
-Parity], and [Web Settings Parity] all shipped as Leg 1s (see
-`COMPLETED.md`). Every Sidebar tab now renders its real page on both
-desktop and web.
+- **[Battle Log Card Grid Cleanup] — Leg 1** *(Last touched: 2026-09-30 ·
+  Re-checks: 0)*
+  `PastBattlesList.tsx`'s `BattleRow`: cards render at different heights
+  depending on team-name length and whether `battle.notes` is set, which
+  Vanny finds visually messy. Wants uniform card height, truncated team
+  names, a note icon (paper+pencil) replacing the inline notes text, and a
+  re-evaluation of whether the `grid-template-columns: repeat(auto-fill,
+  ...)` layout (lines 94/113) is even the right shape here vs. a plain list.
 
-Mobile-Friendliness Pass promoted to current milestone 2026-09-30 (Vanny's
-call) - its gating condition (web feature set stable enough to design
-against) was met the same day Full Web Feature Parity shipped. Its own
-Scoping leg finished the same day, splitting into 6 build legs (see
-`COMPLETED.md` and
-[docs/investigations/mobile-friendliness-scope.md](docs/investigations/mobile-friendliness-scope.md)).
-Survey found almost zero existing responsive-breakpoint usage anywhere in
-the renderer, and two functionality-breaking (not just cramped) touch
-gaps: native HTML5 drag-and-drop never fires on touch at all (affects
-roster/move/Calc-tray reordering in 6 files), and the shared
-`Tooltip`/`FloatingCardPanel` hover popups are unreachable without a mouse
-(affects 7 files). Decided live during scoping: swap touch drag-and-drop
-to framer-motion's `Reorder` primitive (already a dependency, no new
-package) rather than `dnd-kit` or touch-only fallback controls; mobile nav
-becomes a hamburger/slide-out drawer built from `Sidebar.tsx`'s existing
-content rather than a bottom tab bar or an auto-collapsed icon rail.
-[Touch Drag-and-Drop: Framer Motion Reorder] — Leg 1 shipped the same day
-(see `COMPLETED.md`) - narrowed mid-leg to 5 files, not 6:
-`CalcTeamTray.tsx` turned out to be a drag-*to-transfer* (tray onto a Calc
-panel), not a reorder, so `Reorder` doesn't apply there at all - left
-untouched, since tap-to-load already covers touch fully.
-[Touch-Accessible Hover Content] — Leg 1 shipped 2026-09-30 (see
-`COMPLETED.md`) - asked Vanny live to pin down the tap-interaction model
-(long-press, the recommended option, over a two-tap pattern or a dedicated
-info icon) before implementing, since the TODO item specified the problem
-but not that design call. Narrowed from the scoped 7 files to 4 real
-changes: `RealSetsButton.tsx`/`StatsColumn.tsx`/`TooltipContent.tsx` turned
-out not to need touching (the first two only consume `FloatingCardPanel`
-via `onClick`, already tap-friendly; the third just renders content handed
-to it, no hover wiring of its own) - the actual `onMouseEnter` sites were
-only `MoveBubbleGrid.tsx`/`AbilityCapsule.tsx`/`ItemSpriteBox.tsx`, plus
-`EditOverlays.tsx`'s shared hover-state wiring.
-[Mobile Compact Top Bar: Teams & Box] — Leg 1 shipped 2026-09-30 (see
-`COMPLETED.md`) - `TeamsPage`/`BoxPage`'s stacked mobile `<header>` is now
-hidden entirely below `md`, replaced by a page-aware extension to
-`Sidebar.tsx`'s mobile top bar (`useMobileHeaderActions.tsx`, a new context/
-hook pair) that lets the active tab publish its own title + icon-only
-action buttons there. Caught and fixed a real infinite-render-loop bug live
-via run-desktop before shipping - see the commit for the root cause and
-fix.
+- **[Floating Calc Button Repositioning] — Leg 1** *(Last touched:
+  2026-09-30 · Re-checks: 0)*
+  `App.tsx:273` and `AppWeb.tsx:298` both hardcode the Calc launcher at
+  `fixed bottom-6 right-6`, which can sit over Settings' last section (see
+  Leg 2). Let the user reposition it (at least between corners, ideally
+  freeform) and persist the choice per-device, accounting for window
+  resize. Still needs its own design pass before implementation - storage
+  key, corner-snap vs. freeform drag, resize behavior - that wasn't one of
+  the decisions resolved in this scoping pass.
 
-Mobile-Friendliness Pass milestone shipped 2026-09-30 (see `MILESTONES.md`
-and
-[docs/postmortems/mobile-friendliness-pass.md](docs/postmortems/mobile-friendliness-pass.md)) -
-all 6 originally-scoped legs ([Mobile Nav Shell: Drawer], [Responsive Layout
-Audit: Teams & Box] + its 3 live-fixed bonus bugs, [Responsive Layout Audit:
-Calc & Modals], [Responsive Layout Audit: Remaining Pages], [Touch
-Drag-and-Drop: Framer Motion Reorder], [Touch-Accessible Hover Content]) plus
-the mid-milestone [Mobile Teams & Box Card View] addition (its own Scoping
-leg + 3 build legs: [Mobile Compact Top Bar: Teams & Box], [Full-Screen
-Swipeable Pokémon Card + Teams List View], [Box Mobile: Compact Grid + Swipe
-Deck]) all shipped - see `COMPLETED.md` for each leg's own entry. One item
-discovered live during this milestone stays open below rather than holding
-it closed: [Web TeamCard Expand Infinite-Loop Bug] in Unscheduled.
+- **[Sidebar Sync Status Indicator Removal] — Leg 1** *(Last touched:
+  2026-09-30 · Re-checks: 0)*
+  Decision (2026-09-30, Vanny): drop the sync status indicator from the
+  sidebar entirely rather than just debounce it further. Scoped to
+  `AppWeb.tsx:95-167`: remove `SYNC_STATUS_LABEL`, the colored dot, and the
+  "Synced"/"Syncing..."/error status text from the `renderFooter` slot.
+  Keep `syncUsername` + the log-out button in that footer - that's identity,
+  not sync status. `SyncSection.tsx` on the Settings page stays the sole
+  place sync status is shown.
+
+- **[Season/Champions Data Check Removal] — Leg 1** *(Last touched:
+  2026-09-30 · Re-checks: 0)*
+  Decision (2026-09-30, Vanny): remove the manual "mark as checked" sections
+  entirely rather than automate them. Cleanly isolated - both hooks and both
+  section components are only wired in `SettingsPage.tsx` (imports at
+  lines 15-16/20-21, instantiation at 43-44, render at 95/97). Delete
+  `SeasonDataCheckSection.tsx`, `ChampionsDataCheckSection.tsx`,
+  `useSeasonDataCheck.ts`, `useChampionsDataCheck.ts` (+ their tests), and
+  `config/championsDataChecks.ts`; remove the now-dead check-state fields
+  from `AppSettings` in `types/settings.ts`.
+
+- **[Player Profile Cross-Device Sync] — Leg 1** *(Last touched: 2026-09-30
+  · Re-checks: 0)*
+  Decision (2026-09-30, Vanny): whole-section reveal toggle, not per-field.
+  Biggest leg in this batch. `SyncPayload` (`types/settings.ts:92`) has no
+  `playerProfile` field; the Worker (`worker/src/index.ts`) merges every
+  existing collection as an array of id/updatedAt records via
+  `mergeCollection`, but `playerProfile` is a single object, so it needs its
+  own last-write-wins-by-timestamp merge path, not that helper. Worker is
+  infra each user deploys themselves (see `worker/README.md`) - an
+  un-redeployed Worker will silently ignore the new field rather than error
+  (it only validates the fields it knows about), so this must degrade
+  gracefully rather than assume every deployment is current. UI side: add
+  the reveal toggle to `PlayerProfileSection.tsx` gating the PII fields
+  (legal name, Support ID, Player ID, birthday).
 
 ## Blocked
 
@@ -203,20 +102,6 @@ Items where the whole item (not just a sub-part) is stalled on something
 outside this project — a person, a dependency, or an external decision.
 Exempt from the re-check counter; they move back to "In progress" once
 unblocked.
-
-- **[Existing Account Migration] — Leg 1** *(Last touched: 2026-09-30 ·
-  Re-checks: 0)*
-  Blocked: waiting on each friend to update and sign up on their own time -
-  v0.9.0 shipped 2026-09-30 (https://github.com/vanwheels/ChoiceBuds/releases/tag/v0.9.0),
-  carrying the accounts/sync rework and full web parity, so the release-gate
-  half of this item is resolved. No coordination or per-friend script
-  needed: Vanny confirmed all ~4-6 friends have only ever used one device,
-  so `useSync.ts`'s sign-in effect auto-pushing local state the moment a
-  friend signs up is enough to carry their teams/battles/saved Pokémon into
-  the new account - no manual KV copy, and no KV eventual-consistency race
-  risk (that was specific to a manual copy racing a device's own push).
-  Trickles in as each friend gets around to updating, not a single
-  all-at-once pass - nothing left to do from this end per friend.
 
 - **[Reg M-C Z-A-Exclusive Movepool Audit] — Leg 1** *(Last touched:
   2026-09-16 · Re-checks: exempt, blocked)*
@@ -386,52 +271,7 @@ decision before this can be scoped further: let users freeform-create
 their own named events, vs. only tracking a curated list of official ones
 (e.g. just GC).
 
-Settings/Sync/Box/Battle Log feedback batch (flagged 2026-09-30 by Vanny
-after live-verifying Web Settings Parity, see the now-shipped Full Web
-Feature Parity milestone above). None started - each needs its own
-scoping pass:
-
-- Sync status visual noise: `useSync.ts`'s `AUTO_SYNC_DEBOUNCE_MS` (5s)
-  re-fires a sync after every local mutation while actively editing, which
-  flips the sidebar footer dot/`SyncSection.tsx`'s status text between
-  "Syncing..."/"Synced" every few seconds - visually distracting during a
-  normal editing session. Vanny also wants the sidebar's synced-status dot
-  removed outright, not just debounced further. Needs a decision: keep a
-  status indicator somewhere (just less twitchy) vs. drop it from the
-  sidebar entirely and leave sync status to Settings only.
-- Player Profile isn't synced at all today (`SyncPayload` in
-  `types/settings.ts` only carries teams/battles/savedPokemon, never
-  `settings`/`playerProfile`) - Vanny wants it synced across devices, but
-  `PlayerProfileSection.tsx` holds real PII (legal name, Support ID,
-  Player ID, birthday), so he wants it hidden behind a reveal button/toggle
-  rather than shown in the clear by default. Needs a decision on the
-  reveal UX (per-field vs. whole-section) and how `playerProfile` joins the
-  sync payload/merge model safely.
-- Season Data Check / Champions Data Check sections
-  (`SeasonDataCheckSection.tsx`/`ChampionsDataCheckSection.tsx`, their
-  "mark as checked" buttons and subtext) bother Vanny as manual busywork.
-  Needs a decision from him: remove the sections from Settings entirely, or
-  find a way to automate the underlying checks so "mark as checked" stops
-  being a manual step - two very different outcomes, not a UI tweak.
-- Rename `AppStatusSection.tsx`'s "App Status" heading to "Account Status"
-  and make its content more compact/inline - Vanny's concern is that this
-  is the settings page's last section and the floating Calc launcher
-  button (bottom-right, `fixed bottom-6 right-6` in both `App.tsx` and
-  `AppWeb.tsx`) sits over it.
-- Related: let the user reposition the floating Calc launcher button (at
-  least between screen corners, ideally freely) and persist the chosen
-  position per-device, accounting for window resize. Needs its own scoping
-  pass (storage key, corner-snap vs. freeform drag, how it behaves on a
-  resize).
-- Battle Log card grid (`components/battlelog/PastBattlesList.tsx`):
-  cards render at different heights depending on team-name length and
-  whether the battle has notes, which Vanny finds visually messy. Wants
-  uniform card height, team names truncated, a note icon (paper+pencil) on
-  cards that have notes instead of showing the note text inline, and a
-  re-evaluation of whether a grid is even the right layout here vs. a list.
-- Box's "+ New Build" tile (`BoxPage.tsx`) renders over 2x the size of a
-  collapsed saved-build tile next to it - visual mismatch Vanny wants
-  matched to the collapsed tile size.
-- When creating a new team, auto-fill the Author field with the signed-in
-  sync username (when signed in) instead of leaving it blank.
+Settings/Sync/Box/Battle Log feedback batch flagged 2026-09-30 by Vanny -
+scoped into concrete legs 2026-09-30, see `## Current Milestone: Post-Parity
+Polish` above.
 
