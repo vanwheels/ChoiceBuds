@@ -16,17 +16,13 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Post-Parity Polish
+## Current Milestone: none scoped
 
-Settings/Sync/Box/Battle Log feedback batch flagged 2026-09-30 by Vanny after
-live-verifying Web Settings Parity (Full Web Feature Parity milestone).
-Scoped 2026-09-30 - decisions resolved: sync status indicator drops from the
-sidebar entirely (Settings page is the sole status source), Season/Champions
-Data Check sections are removed outright (not automated), and Player Profile
-sync uses a whole-section reveal toggle. Sequenced decision-free fixes first
-per Vanny's call.
-
-(Player Profile Cross-Device Sync shipped 2026-09-30, see COMPLETED.md.)
+Post-Parity Polish shipped 2026-09-30 (all 8 legs - see `MILESTONES.md` and
+its [post-mortem](docs/postmortems/post-parity-polish.md)). No milestone is
+currently in progress; the next one needs a scoping pass over the candidates
+below (Unscheduled and Future Milestones) before it gets its own `## Current
+Milestone:` section.
 
 ## Blocked
 
@@ -202,8 +198,4 @@ worth pursuing even once scoped. Open question from Vanny that needs a
 decision before this can be scoped further: let users freeform-create
 their own named events, vs. only tracking a curated list of official ones
 (e.g. just GC).
-
-Settings/Sync/Box/Battle Log feedback batch flagged 2026-09-30 by Vanny -
-scoped into concrete legs 2026-09-30, see `## Current Milestone: Post-Parity
-Polish` above.
 

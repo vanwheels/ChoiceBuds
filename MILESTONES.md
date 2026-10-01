@@ -44,3 +44,5 @@ milestone.
   [post-mortem](docs/postmortems/full-web-feature-parity.md)
 - **Mobile-Friendliness Pass** — 2026-09-30 — Shipped —
   [post-mortem](docs/postmortems/mobile-friendliness-pass.md)
+- **Post-Parity Polish** — 2026-09-30 — Shipped —
+  [post-mortem](docs/postmortems/post-parity-polish.md)
