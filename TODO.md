@@ -26,20 +26,7 @@ Data Check sections are removed outright (not automated), and Player Profile
 sync uses a whole-section reveal toggle. Sequenced decision-free fixes first
 per Vanny's call.
 
-- **[Player Profile Cross-Device Sync] — Leg 1** *(Last touched: 2026-09-30
-  · Re-checks: 0)*
-  Decision (2026-09-30, Vanny): whole-section reveal toggle, not per-field.
-  Biggest leg in this batch. `SyncPayload` (`types/settings.ts:92`) has no
-  `playerProfile` field; the Worker (`worker/src/index.ts`) merges every
-  existing collection as an array of id/updatedAt records via
-  `mergeCollection`, but `playerProfile` is a single object, so it needs its
-  own last-write-wins-by-timestamp merge path, not that helper. Worker is
-  infra each user deploys themselves (see `worker/README.md`) - an
-  un-redeployed Worker will silently ignore the new field rather than error
-  (it only validates the fields it knows about), so this must degrade
-  gracefully rather than assume every deployment is current. UI side: add
-  the reveal toggle to `PlayerProfileSection.tsx` gating the PII fields
-  (legal name, Support ID, Player ID, birthday).
+(Player Profile Cross-Device Sync shipped 2026-09-30, see COMPLETED.md.)
 
 ## Blocked
 

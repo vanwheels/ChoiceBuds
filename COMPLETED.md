@@ -18,6 +18,20 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Player Profile Cross-Device Sync] — Leg 1** (2026-09-30) - see commit
+  `bffb9fc`. Added `playerProfile` to `SyncPayload` as a singleton merged by
+  its own last-write-wins-by-`updatedAt` path (`worker/src/merge.ts`'s new
+  `mergeSingleton`, distinct from the existing per-record `mergeCollection`)
+  - `PlayerProfile` gained its own `updatedAt` field for this, bumped on
+  every field edit, kept separate from `AppSettings.lastModified` so an
+  unrelated settings change on one device can't out-rank a real profile edit
+  from another. The field is optional end-to-end so an un-redeployed Worker
+  degrades gracefully (ignores it rather than erroring; `useSync.ts` leaves
+  the local profile untouched if a merge response omits it). Per Vanny's
+  2026-09-30 decision, `PlayerProfileSection.tsx` also got a whole-section
+  reveal toggle masking the PII fields (legal name, Player ID, Support ID,
+  date of birth) by default.
+
 - **[Season/Champions Data Check Removal] — Leg 1** (2026-09-30) - see
   commit `4289fd8`. Removed the manual "Mark as Checked" sections for
   `config/seasons.ts` and the Champions balance-patch tables from Settings
