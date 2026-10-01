@@ -257,30 +257,21 @@ outside this project — a person, a dependency, or an external decision.
 Exempt from the re-check counter; they move back to "In progress" once
 unblocked.
 
-- **[Existing Account Migration] — Leg 1** *(Last touched: 2026-09-29 ·
-  Re-checks: exempt, blocked)*
-  Blocked: waiting on friends to message their old `username#XXXX` (Vanny
-  is collecting these up front, 2026-09-29) and on the next app release
-  cutting (deliberately held back for now - see the note above `## Blocked`
-  in this file's intro section). Once both are in hand: cut the release,
-  each friend signs up under the new username+password system once they
-  update, then a one-off manual copy of their old `username#XXXX`-keyed KV
-  blob into their new account (a throwaway `wrangler kv` copy or small
-  script) per friend, coordinated directly. Trickles in as each of the
-  ~4-6 friends gets around to updating - not a single all-at-once pass.
-  Known risk (hit live during Vanny's own migration 2026-09-29, see
-  `COMPLETED.md`): the Worker's merge does a read-modify-write against KV,
-  which is only eventually consistent - two devices pushing within
-  Workers KV's replication window (observed up to ~60s) can race, with the
-  second push reading a stale pre-first-push snapshot and overwriting real
-  data with its own (e.g. an empty local state). Concretely hit when a
-  freshly-signed-up device with empty local state auto-synced moments after
-  the real data was pushed from another device. Workaround for now: don't
-  have two devices signed into the same account syncing at the same moment
-  right after a migration push - push once, wait ~60s with no other device
-  active, then let the second device pull. Real fix would be strengthening
-  the Worker's KV read (e.g. `cacheTtl: 0`) or adding a resettlement delay -
-  not done yet, needs Vanny's call on which approach.
+- **[Existing Account Migration] — Leg 1** *(Last touched: 2026-09-30 ·
+  Re-checks: 0)*
+  Blocked: waiting on the next app release cutting (deliberately held back
+  for now - see the note above `## Blocked` in this file's intro section).
+  Simplified 2026-09-30 (Vanny confirmed all ~4-6 friends have only ever
+  used one device): no manual KV copy needed. Local storage is canonical
+  and untouched by the client update, and `useSync.ts`'s sign-in effect
+  auto-pushes whatever's in local state the moment a friend signs up under
+  the new username+password system - that alone carries their teams/
+  battles/saved Pokémon into the new account. Once the release cuts, each
+  friend just updates and signs up; no coordination or per-friend script
+  needed. Drops the KV eventual-consistency race risk previously noted here
+  too (see `COMPLETED.md` for the original single-device incident during
+  Vanny's own migration) - that was specific to a manual copy racing a
+  device's own push, which no longer happens here.
 
 - **[Reg M-C Z-A-Exclusive Movepool Audit] — Leg 1** *(Last touched:
   2026-09-16 · Re-checks: exempt, blocked)*
