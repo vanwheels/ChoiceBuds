@@ -215,13 +215,16 @@ touch-scroll handling gets stuck on - a first bottom-padding attempt didn't
 work for a real CSS reason, see its own entry; fixed with a forced 1px
 min-height overflow instead). See `COMPLETED.md` for all three.
 
-- **[Responsive Layout Audit: Calc & Modals] — Leg 1** *(Last touched:
-  2026-09-30 · Re-checks: 0)*
-  `CalcPopup` and the shared `Modal.tsx`-based modals (Import/Export/PDF/
-  Image, the item/move/ability/nature pickers). `Modal.tsx`'s overlay
-  shell already shrinks to viewport width via its `w-full` panel, so the
-  real risk is internal fixed-width content (stat tables, picker grids)
-  forcing horizontal scroll at phone widths, not the modal shell itself.
+[Responsive Layout Audit: Calc & Modals] — Leg 1 shipped 2026-09-30 (see
+`COMPLETED.md`) - survey turned up two real fixed-width overflow culprits,
+not the modal shells themselves: `CalcMoveGrid.tsx`'s move rows (fixed
+160px/112px elements in one non-wrapping flex row) and
+`TeamExportImageModal.tsx`'s 6-column poster grid, whose tiles' fixed 80px
+sprites overlapped once squeezed into a phone-width column. Everything else
+surveyed (`Modal.tsx`, Import/Export/PDF modals, item/move/ability/nature
+pickers) was already fluid. Verified live via DOM geometry at a zoomed
+~383px effective width (screenshots at that zoom level only capture a
+cropped corner, not the full page, so geometry checks were used instead).
 
 - **[Responsive Layout Audit: Remaining Pages] — Leg 1** *(Last touched:
   2026-09-30 · Re-checks: 0)*

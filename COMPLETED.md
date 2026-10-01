@@ -18,6 +18,17 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Responsive Layout Audit: Calc & Modals] — Leg 1** (2026-09-30) - see
+  commit `eace312`. Survey (subagent-driven) confirmed `Modal.tsx` and most
+  of its modals (Import/Export/PDF, item/move/ability/nature pickers) were
+  already fluid; the two real overflow culprits were `CalcMoveGrid.tsx`'s
+  non-wrapping move rows and `TeamExportImageModal.tsx`'s fixed 6-column
+  poster grid overlapping its tiles' fixed-size sprites at phone widths.
+  Verified live via DOM geometry at a zoomed ~383px effective width -
+  `page.screenshot()` at that zoom factor only captures a cropped corner of
+  the page, not the full view, so geometry checks (grid column count, tile
+  bounding rects, row wrap position) were used instead.
+
 - **[Box Mobile: Compact Grid + Swipe Deck] — Leg 1** (2026-09-30) - see
   commit `004b389`. New `MobileBoxGrid.tsx` (3-column compact sprite/
   favorite/name tiles + its own "+ New Build" tile) replaces `BoxPage.tsx`'s
