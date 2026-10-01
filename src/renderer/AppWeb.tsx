@@ -93,13 +93,6 @@ const TypeMatchupPage = lazy(() => import('./components/typematchup/TypeMatchupP
 const SpeedTiersPage = lazy(() => import('./components/speedtiers/SpeedTiersPage'));
 const SettingsPage = lazy(() => import('./components/SettingsPage'));
 
-const SYNC_STATUS_LABEL: Record<ReturnType<typeof useSync>['status'], string> = {
-  'signed-out': 'Not signed in',
-  idle: 'Synced',
-  syncing: 'Syncing...',
-  error: "Couldn't reach the sync server",
-};
-
 export default function AppWeb() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('teams');
   const [visitedTabs, setVisitedTabs] = useState<Set<ActiveTab>>(() => new Set(['teams']));
@@ -144,26 +137,12 @@ export default function AppWeb() {
       <Sidebar
         activeTab={activeTab}
         onTabChange={goToTab}
-        renderFooter={(collapsed) => collapsed ? (
-          <div
-            className="flex justify-center"
-            title={syncState.syncUsername ? `${syncState.syncUsername} - ${SYNC_STATUS_LABEL[syncState.status]}` : 'Not signed in'}
-          >
-            <span
-              className={`h-2 w-2 rounded-full ${
-                !syncState.syncUsername ? 'bg-zinc-500' : syncState.status === 'error' ? 'bg-red-400' : 'bg-accent-gold'
-              }`}
-            />
-          </div>
-        ) : (
+        renderFooter={(collapsed) => collapsed ? null : (
           <div className="flex flex-col gap-1 px-1.5">
             {syncState.syncUsername ? (
               <>
                 <span className="truncate text-xs font-mono text-zinc-300" title={syncState.syncUsername}>
                   {syncState.syncUsername}
-                </span>
-                <span className={`text-[11px] ${syncState.status === 'error' ? 'text-red-400' : 'text-zinc-500'}`}>
-                  {SYNC_STATUS_LABEL[syncState.status]}
                 </span>
                 <button
                   onClick={() => { syncState.logOut(); }}
