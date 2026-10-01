@@ -18,6 +18,16 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Team Author Autofill from Sync Username] — Leg 1** (2026-09-30) - see
+  commit `6fde9e4`. `ImportTeamModal.tsx`'s Author field now defaults to
+  the signed-in sync username (`settingsState.settings.syncUsername`) when
+  one exists and the field is still empty, matching the catalog/paste
+  autofill's "only fill if empty" pattern. Deliberately skipped when
+  `catalogRow` is set - a VGCPastes import is someone else's real
+  tournament team, and `applyPokepasteData`'s own owner/author precedence
+  already handles that attribution; defaulting to the signed-in user there
+  would silently pre-fill the field before that logic runs.
+
 - **[Account Status Section Cleanup] — Leg 1** (2026-09-30) - see commit
   `004dd12`. Renamed Settings' last section's "App Status" heading to
   "Account Status" and collapsed its three stacked Cache/Teams/Version rows

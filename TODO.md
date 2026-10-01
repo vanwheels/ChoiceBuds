@@ -26,13 +26,6 @@ Data Check sections are removed outright (not automated), and Player Profile
 sync uses a whole-section reveal toggle. Sequenced decision-free fixes first
 per Vanny's call.
 
-- **[Team Author Autofill from Sync Username] — Leg 1** *(Last touched:
-  2026-09-30 · Re-checks: 0)*
-  `ImportTeamModal.tsx:67` initializes `author` to `''`. Default it from the
-  signed-in sync username (`useSync.ts`'s `syncUsername`) when one exists
-  and the field is still empty, same "only fill if empty" pattern the
-  catalog/paste autofill at lines 105-107 already uses.
-
 - **[Battle Log Card Grid Cleanup] — Leg 1** *(Last touched: 2026-09-30 ·
   Re-checks: 0)*
   `PastBattlesList.tsx`'s `BattleRow`: cards render at different heights
