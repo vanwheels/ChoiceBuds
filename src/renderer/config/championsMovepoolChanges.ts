@@ -186,6 +186,51 @@
  * `useGameData.ts::getCachedSpeciesLearnset`'s companion self-heal fix from
  * the same leg: a cached `hasChampionsMoveData: false` entry now forces a
  * re-fetch instead of trusting a stale `NEVER_EXPIRES` false forever.
+ *
+ * REG M-C Z-A-EXCLUSIVE MOVEPOOL AUDIT, Leg 1 (2026-09-30): re-ran this
+ * same hasChampionsMoveData live check against the full current legal
+ * roster (266 roster entries, 262 unique PokeAPI resources, per
+ * utils/pokemonRules.ts's REG_MA/REG_MB/REG_MC species lists) rather than
+ * just the hand-picked indicator species (Rillaboom/Baxcalibur/Salamence)
+ * TODO.md had been re-checking. Result: all 22 Reg M-B species plus Floette
+ * remain correctly back-filled (0 zero-tag species outside Reg M-C,
+ * confirming the PRUNE above is still accurate) - the *entire* 25-species
+ * Reg M-C addition is the zero-tag set, with no exceptions and no species
+ * outside Reg M-C newly regressing. Squawkabilly has no bare PokeAPI
+ * resource (see utils/pokemonRules.ts) so all 4 plumage-color varieties
+ * were queried/keyed identically below - purely cosmetic, same move data.
+ *
+ * For each of the 25, computed its real PokeAPI all-time movepool (every
+ * version group PokeAPI has ever recorded, the same `fetchSpeciesLearnset`
+ * fallback baseline Leg 4b used) with `GLOBALLY_REMOVED_MOVES` applied, then
+ * diffed the result against that species' real `data/mods/champions/
+ * learnsets.ts` entry (raw-fetched, not summarized - same discipline as
+ * every prior leg in docs/investigations/champions-showdown-mod-audit.md).
+ * All 25 species have their own `learnsets.ts` entry (none use `inherit:
+ * true`), so this is the same complete-standalone-movepool comparison Leg 4b
+ * proved sound on annihilape/the 22 Reg M-B species.
+ *
+ * This supersedes the 5 single-move entries added piecemeal during Reg M-C
+ * Prep (baxcalibur/rillaboom/cinderace/pincurchin/golisopod) with the full
+ * per-species gap lists the real methodology turns up - each of those 5
+ * original single-move entries is confirmed present in its species' fuller
+ * list below. One exception: Golisopod's `superpower` isn't in Showdown's
+ * `learnsets.ts` entry for it at all (same as it was absent from Golisopod's
+ * PokeAPI all-time movepool when that entry was first added) - kept as a
+ * manually-preserved addition since it was a direct, dated user confirmation
+ * - a reminder that Showdown's `learnsets.ts`, like `moves.ts`'s "Past" flag
+ * (Leg 4a), may simply not capture every real in-game-teachable move. The
+ * much longer
+ * per-species removal lists below (e.g. Wigglytuff's 22) are the same shape
+ * Leg 4b already found for the 22 Reg M-B species (see that leg's table in
+ * the investigation doc) - old-game egg/tutor-only moves in PokeAPI's
+ * all-time baseline that Champions' own narrower tutor/TM catalogue doesn't
+ * carry forward for that specific species. Spot-checked that frequently-
+ * removed moves like `attract`/`toxic` are genuine per-species removals, not
+ * globally absent from Champions: `attract` still appears as a learnable
+ * move for 73 other `learnsets.ts` species, `toxic` for 31, so both were
+ * correctly left out of `GLOBALLY_REMOVED_MOVES` and handled per-species
+ * here instead, same reasoning Leg 4b already established.
  */
 
 const GLOBALLY_REMOVED_MOVES = [
@@ -231,60 +276,76 @@ const GLOBALLY_REMOVED_MOVES = [
   'zing-zap',
 ];
 
-// Both maps were empty as of the 2026-09-01 prune - see the header comment's
-// PRUNE section for why. Populate per-species here again if a future
-// regulation (M-C's new species are the likely next case) adds a species
-// PokeAPI hasn't yet back-filled real "champions"-tagged move data for.
-//
-// baxcalibur ADDED 2026-09-05 (Reg M-C roster addition, pre-release - see
-// TODO.md's "Regulation M-C Prep" Leg 2): PokeAPI has zero "champions"-tagged
-// moves for baxcalibur (confirmed live), so `applyMovepoolChangesIfNeeded`
-// falls into this file's fallback path and applies `GLOBALLY_REMOVED_MOVES`
-// wholesale - which includes 'glaive-rush', Baxcalibur's own signature move
-// (confirmed live via Showdown's `data/mods/champions/moves.ts`: `glaiverush`
-// carries `isNonstandard: "Past"`, same as most of that globally-removed
-// list). Per this file's own header (Leg 4a's Shell Trap/Turtonator
-// counter-example), a "Past" flag means "not TM/Tutor-teachable elsewhere,"
-// not "absent from the game" - a species keeps its own signature move
-// regardless. Re-check when Leg 2 resolves: once PokeAPI back-fills
-// baxcalibur's champions tag, `hasChampionsMoveData` flips true and this
-// entry stops being consulted (same as the 22 Reg M-B species already did) -
-// safe to leave in place rather than remove at that point.
-//
-// rillaboom/cinderace/pincurchin ADDED 2026-09-09 (Reg M-C Prep Leg 2, dump
-// 2's "no Previous: block" move list): live-checked all 26 of Reg M-C's
-// newly-added species against PokeAPI and found these 3, like baxcalibur,
-// have zero "champions"-tagged moves (confirmed live) - same fallback-path
-// exposure. Each of their own signature moves is in `GLOBALLY_REMOVED_MOVES`
-// (drum-beating, pyro-ball, zing-zap respectively) and would otherwise be
-// silently stripped, same failure mode as the baxcalibur/glaive-rush bug
-// above. The rest of dump 2's "no Previous:" move list was cross-checked
-// too: grapploct/octolock, inteleon/snipe-shot, and sirfetchd/meteor-assault
-// are also signature-move pairings among the new roster, but none of those
-// 3 moves are in `GLOBALLY_REMOVED_MOVES` to begin with, so no entry is
-// needed for them even though those species are also on the zero-champions-
-// tag list. Octazooka, Milk Drink, Shift Gear, Jaw Lock, Court Change, and
-// Slash don't correspond to any signature move of a Reg M-C roster addition
-// and needed no action either way. See TODO.md's Leg 2 entry.
-// golisopod ADDED 2026-09-09 (provided directly by the user, confirmed live):
-// U-Turn/Gunk Shot/Night Slash/Superpower are all absent from Golisopod's
-// PokeAPI all-time movepool entirely (confirmed live - none of the 4 appear
-// in its `moves` list regardless of version group), so unlike the
-// baxcalibur/rillaboom/cinderace/pincurchin entries above (which restore a
-// move PokeAPI has but GLOBALLY_REMOVED_MOVES strips), these are moves
-// PokeAPI's Gen 9 SV learnset pipeline never had to begin with - likely
-// Legends Z-A-exclusive, per the "Reg M-C Z-A-Exclusive Movepool Audit"
-// TODO.md item this resolves for Golisopod specifically (Rillaboom/
-// Baxcalibur/Salamence remain unconfirmed there).
+// Full per-species sweep (Reg M-C Z-A-Exclusive Movepool Audit, Leg 1,
+// 2026-09-30) - see the header comment's matching dated section for the
+// methodology. Covers all 25 Reg M-C-added species, the only species on the
+// current roster with hasChampionsMoveData still false; supersedes the 5
+// single-move entries hand-added during Reg M-C Prep (baxcalibur/rillaboom/
+// cinderace/pincurchin/golisopod - each confirmed still present in its
+// fuller list below). Squawkabilly has no bare PokeAPI resource, so all 4
+// plumage-color varieties are keyed identically (purely cosmetic - see
+// utils/pokemonRules.ts). Re-check (and prune, same as the 22 Reg M-B
+// species before them) once PokeAPI back-fills real "champions"-tagged move
+// data for these 25 - `useGameData.ts::getCachedSpeciesLearnset`'s
+// `hasChampionsMoveData !== true` self-heal already forces that re-fetch
+// rather than trusting a stale cached `false` forever.
 export const CHAMPIONS_MOVEPOOL_ADDITIONS: Record<string, string[]> = {
-  baxcalibur: ['glaive-rush'],
+  wigglytuff: ['heal-pulse', 'moonblast', 'perish-song', 'wish'],
+  persian: ['flail', 'slash'],
+  'persian-alola': ['flail', 'flatter', 'parting-shot', 'slash'],
+  farfetchd: ['slash', 'trailblaze'],
+  swalot: ['acid-armor', 'clear-smog', 'corrosive-gas', 'destiny-bond', 'skitter-smack', 'stuff-cheeks'],
+  salamence: ['dragon-rush', 'slash', 'thrash'],
+  gogoat: ['megahorn', 'milk-drink'],
+  // superpower is absent from Showdown's learnsets.ts entry for Golisopod
+  // too (same as it was absent from PokeAPI's all-time movepool when this
+  // entry was first added 2026-09-09) - kept as a manually-preserved
+  // addition on the strength of the original direct user confirmation
+  // rather than dropped for lacking a written source. The other 10 are new,
+  // Showdown-confirmed findings from this sweep.
+  golisopod: ['agility', 'aqua-jet', 'chilling-water', 'double-hit', 'gunk-shot', 'night-slash', 'pounce', 'slash', 'superpower', 'u-turn', 'wide-guard'],
   rillaboom: ['drum-beating'],
-  cinderace: ['pyro-ball'],
+  cinderace: ['court-change', 'pyro-ball'],
+  thievul: ['double-team', 'first-impression', 'howl', 'knock-off', 'quick-guard', 'roar', 'torment', 'trailblaze'],
+  'toxtricity-amped': ['overdrive', 'shift-gear', 'zap-cannon'],
+  'toxtricity-low-key': ['overdrive', 'parabolic-charge'],
+  grapploct: ['chilling-water', 'circle-throw', 'mach-punch', 'pain-split', 'seismic-toss', 'soak', 'storm-throw', 'sucker-punch'],
+  perrserker: ['aerial-ace', 'bite', 'bulk-up', 'covet', 'flail', 'flash-cannon', 'night-slash', 'slash', 'spikes', 'thunder-wave'],
+  sirfetchd: ['aerial-ace', 'counter', 'covet', 'curse', 'double-edge', 'feather-dance', 'feint', 'flail', 'night-slash', 'quick-attack', 'quick-guard', 'simple-beam', 'sky-attack', 'slash'],
   pincurchin: ['zing-zap'],
-  golisopod: ['u-turn', 'gunk-shot', 'night-slash', 'superpower'],
+  'indeedee-male': ['wish'],
+  'indeedee-female': ['alluring-voice', 'sing', 'wish'],
+  pawmot: ['fake-out', 'mach-punch', 'sweet-kiss', 'wish'],
+  'squawkabilly-green-plumage': ['lunge', 'seed-bomb'],
+  'squawkabilly-blue-plumage': ['lunge', 'seed-bomb'],
+  'squawkabilly-yellow-plumage': ['lunge', 'seed-bomb'],
+  'squawkabilly-white-plumage': ['lunge', 'seed-bomb'],
+  mabosstiff: ['destiny-bond', 'focus-energy', 'jaw-lock'],
+  baxcalibur: ['aqua-tail', 'dragon-rush', 'freeze-dry', 'frost-breath', 'glaive-rush'],
 };
 
-export const CHAMPIONS_MOVEPOOL_REMOVALS: Record<string, string[]> = {};
+export const CHAMPIONS_MOVEPOOL_REMOVALS: Record<string, string[]> = {
+  wigglytuff: ['ally-switch', 'attract', 'charge-beam', 'counter', 'curse', 'detect', 'double-slap', 'double-team', 'dynamic-punch', 'heal-bell', 'magic-coat', 'minimize', 'mud-slap', 'nightmare', 'pound', 'recycle', 'role-play', 'seismic-toss', 'submission', 'swagger', 'toxic', 'zap-cannon'],
+  persian: ['attract', 'curse', 'detect', 'mud-slap', 'night-slash', 'nightmare', 'swagger', 'torment', 'toxic', 'zap-cannon'],
+  'persian-alola': ['attract', 'last-resort', 'swagger', 'torment', 'toxic'],
+  farfetchd: ['defog', 'detect', 'double-edge', 'double-team', 'last-resort', 'mud-slap', 'pluck', 'psych-up', 'razor-wind', 'reflect', 'swagger', 'tailwind', 'toxic', 'trump-card', 'whirlwind'],
+  'mr-mime': ['aerial-ace', 'barrier', 'counter', 'covet', 'curse', 'double-edge', 'double-slap', 'double-team', 'dynamic-punch', 'focus-punch', 'follow-me', 'infestation', 'magic-coat', 'meditate', 'mud-slap', 'nightmare', 'pound', 'psych-up', 'seismic-toss', 'submission', 'swagger', 'toxic', 'wake-up-slap', 'zap-cannon'],
+  swalot: ['attract', 'block', 'counter', 'double-team', 'dynamic-punch', 'explosion', 'infestation', 'nightmare', 'pound', 'swagger', 'wring-out'],
+  salamence: ['air-cutter', 'aqua-tail', 'attract', 'defog', 'double-team', 'refresh', 'swagger', 'toxic'],
+  gogoat: ['attract', 'bounce', 'double-team', 'swagger', 'toxic'],
+  golisopod: ['aerial-ace', 'double-team', 'endeavor', 'frost-breath', 'knock-off', 'pain-split', 'psych-up', 'swagger', 'toxic', 'water-pulse'],
+  rillaboom: ['attract', 'darkest-lariat'],
+  cinderace: ['ally-switch', 'attract'],
+  inteleon: ['attract', 'pound', 'safeguard'],
+  'toxtricity-amped': ['attract'],
+  'toxtricity-low-key': ['attract'],
+  grapploct: ['octazooka', 'submission'],
+  perrserker: ['attract'],
+  pincurchin: ['attract'],
+  'indeedee-male': ['ally-switch', 'attract'],
+  'indeedee-female': ['ally-switch', 'attract', 'expanding-force', 'gravity', 'psychic-noise', 'psycho-shift'],
+  mabosstiff: ['charm'],
+};
 
 export function applyChampionsMovepoolChanges(speciesSlug: string, moves: string[]): string[] {
   const additions = CHAMPIONS_MOVEPOOL_ADDITIONS[speciesSlug];

@@ -710,6 +710,51 @@ the "Remaining Champions Mega Ability Audit" backlog item - `megaAbilities.ts`
 now has a guaranteed-ability entry for every Mega form in
 `MEGA_STONE_TO_SPECIES`, mainline and Champions-invented alike.
 
+## Reg M-C Z-A-Exclusive Movepool Audit, Leg 1 (2026-09-30)
+
+Re-ran this doc's Leg 4b diff methodology against the full current legal
+roster (266 roster entries across `REG_MA_SPECIES`/`REG_MB_ADDED_SPECIES`/
+`REG_MC_ADDED_SPECIES`, 262 unique PokeAPI resources after resolving
+aliases - bare `aegislash`/`tauros-paldea-{combat,blaze,aqua}` collapse to
+their already-listed `-shield`/`-breed` slugs, `squawkabilly` queried via one
+plumage variant since all 4 share identical move data). Live-checked each
+species' `hasChampionsMoveData` (PokeAPI `champions`-tagged move count)
+rather than re-checking only the hand-picked indicator species TODO.md had
+been tracking.
+
+**Result**: all 22 Reg M-B species plus Floette remain correctly
+back-filled (zero regressions) - the zero-tag set is exactly and only the
+full 25-species Reg M-C addition, no more, no less.
+
+**Method, same as Leg 4b**: for each of the 25, computed PokeAPI's real
+all-time movepool (every version group ever recorded) with
+`GLOBALLY_REMOVED_MOVES` applied, then diffed against that species' real
+`data/mods/champions/learnsets.ts` entry (raw-fetched, not summarized - all
+25 have their own standalone entry, none use `inherit: true`). Full
+additions/removals lists applied to `config/championsMovepoolChanges.ts` -
+see that file for the final per-species tables; not duplicated here.
+
+Confirms the 5 single-move entries hand-added during Reg M-C Prep
+(baxcalibur/rillaboom/cinderace/pincurchin/golisopod) were each correct as
+far as they went - every one of those 5 moves reappears in this sweep's
+fuller per-species list - just incomplete, since that prep pass only
+checked for the Past-flag/signature-move failure mode (Leg 4a's shape), not
+the full learnsets.ts diff (Leg 4b's shape). One exception preserved rather
+than dropped: Golisopod's `superpower` isn't in Showdown's `learnsets.ts`
+entry for it either (same as PokeAPI), so it stays as a manually-preserved
+addition on the strength of the original direct user confirmation alone.
+
+Sanity-checked that the long per-species removal lists (Wigglytuff's 22,
+Mr. Mime's 24) aren't accidentally-global: `attract` still appears as a
+learnable move for 73 other `learnsets.ts` species, `toxic` for 31 - real
+per-species gaps, same shape Leg 4b already proved out for the 22 Reg M-B
+species, not a sign the diff method is overreaching.
+
+Scratchpad scripts (PokeAPI batch-fetch, `learnsets.ts` parser, the diff
+itself) were session-local and not preserved - re-fetch/rewrite if this
+needs re-deriving later; the moves actually applied are a permanent record
+in `championsMovepoolChanges.ts` itself.
+
 ## Recommended Leg 2+ breakdown
 
 Per the "smaller working slice per leg" convention, splitting rather than

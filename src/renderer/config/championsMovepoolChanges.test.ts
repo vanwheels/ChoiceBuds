@@ -6,10 +6,12 @@
  * stays real data (covers the Leg 4b findings: the game-wide removal list
  * and the moves it strips that used to be carved out for Floette, see
  * docs/investigations/champions-showdown-mod-audit.md's Leg 4b section),
- * and `CHAMPIONS_MOVEPOOL_ADDITIONS` now holds real entries (baxcalibur,
- * added 2026-09-05; rillaboom/cinderace/pincurchin, added 2026-09-09 - see
- * file header for both) alongside the generic per-species mechanism test
- * exercised against a throwaway 'test-species' key.
+ * and both `CHAMPIONS_MOVEPOOL_ADDITIONS`/`CHAMPIONS_MOVEPOOL_REMOVALS` now
+ * hold real entries for all 25 Reg M-C-added species (Reg M-C
+ * Z-A-Exclusive Movepool Audit Leg 1, 2026-09-30 - see file header), not
+ * just the 5 single-move entries added piecemeal during Reg M-C Prep,
+ * alongside the generic per-species mechanism test exercised against a
+ * throwaway 'test-species' key.
  */
 
 import { afterEach, describe, expect, it } from 'vitest';
@@ -52,6 +54,21 @@ describe('applyChampionsMovepoolChanges', () => {
   it('adds back Golisopod moves absent from its PokeAPI all-time movepool entirely (likely Legends Z-A-exclusive)', () => {
     const result = applyChampionsMovepoolChanges('golisopod', ['first-impression', 'liquidation']);
     expect(result).toEqual(expect.arrayContaining(['u-turn', 'gunk-shot', 'night-slash', 'superpower', 'first-impression', 'liquidation']));
+  });
+
+  it("applies Wigglytuff's full Leg 1 sweep result (additions + a large per-species removal list)", () => {
+    const result = applyChampionsMovepoolChanges('wigglytuff', ['toxic', 'attract', 'double-edge', 'thunderbolt']);
+    expect(result).toEqual(expect.arrayContaining(['heal-pulse', 'moonblast', 'perish-song', 'wish', 'double-edge', 'thunderbolt']));
+    expect(result).not.toContain('toxic');
+    expect(result).not.toContain('attract');
+  });
+
+  it('applies identical corrections to all 4 cosmetic Squawkabilly plumage-color varieties', () => {
+    const base = ['tackle', 'leafage'];
+    const green = applyChampionsMovepoolChanges('squawkabilly-green-plumage', base);
+    const blue = applyChampionsMovepoolChanges('squawkabilly-blue-plumage', base);
+    expect(green).toEqual(blue);
+    expect(green).toEqual(expect.arrayContaining(['lunge', 'seed-bomb']));
   });
 
   describe('per-species addition/removal mechanism (generic cases beyond the real baxcalibur entry above)', () => {
