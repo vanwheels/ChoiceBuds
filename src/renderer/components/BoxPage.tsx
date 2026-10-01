@@ -126,6 +126,7 @@ import { enrichPokemonWithAPI } from '../services/pokeapi';
 import { sortSavedPokemonByFavorite } from '../utils/savedPokemonSort';
 import { useMobileHeaderActions } from '../hooks/useMobileHeaderActions';
 import BoxCard from './BoxCard';
+import MobileBoxGrid from './MobileBoxGrid';
 import AddPokemonStatTable from './AddPokemonStatTable';
 import SaveToLibraryDialog from './SaveToLibraryDialog';
 import AddToTeamDialog from './AddToTeamDialog';
@@ -249,6 +250,22 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
     : sortedEntries.filter(entry => matchesTags(entry.pokemon.showdownData.species));
 
   const isSearching = search.trim().length > 0;
+
+  // Shared between the desktop grid and MobileBoxGrid.tsx (Box Mobile:
+  // Compact Grid + Swipe Deck leg, see TODO.md) so both surfaces render the
+  // exact same empty-state copy without duplicating the tag-pending check.
+  const emptyStateContent = displayedEntries.length === 0 ? (
+    isSearching ? (
+      <p className="text-lg">
+        {tags.length > 0 && anyTagPending ? 'Loading…' : 'No builds match search'}
+      </p>
+    ) : (
+      <>
+        <p className="text-lg">No saved builds yet</p>
+        <p className="text-sm mt-2">Save a Pokémon to the library from Teams or Calc, or start one with "+ New Build"</p>
+      </>
+    )
+  ) : null;
 
   // Box grid reorder (Touch Drag-and-Drop: Framer Motion Reorder Leg 1, see
   // TODO.md) - local visual order of entry ids for the Reorder.Group below,
@@ -425,20 +442,42 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
             <div className="text-red-400">Error: {savedPokemonState.error}</div>
           </div>
         ) : (
-          /* axis="x" (confirmed live via run-desktop against TeamCard.tsx's
+          <>
+          {/* Compact sprite/favorite/name grid - mobile only (Box Mobile:
+              Compact Grid + Swipe Deck leg, see TODO.md). Renders instead of
+              the desktop Reorder.Group grid below, not a responsive variant
+              of it - no drag-reorder here (out of scope, see
+              MobileBoxGrid.tsx's header), tapping a tile opens
+              MobileBoxSwipeOverlay.tsx at that tile's index. */}
+          <div className="md:hidden">
+            <MobileBoxGrid
+              entries={displayedEntries}
+              savedPokemonState={savedPokemonState}
+              gameDataState={gameDataState}
+              rulesetId={rulesetId}
+              resolveSprite={spriteCacheState.resolveSprite}
+              showAnimatedSprites={settingsState.settings.showAnimatedSprites}
+              onAddToTeam={(entryId) => setAddToTeamEntryId(entryId)}
+              onNewBuild={() => setIsPickerOpen(true)}
+              isBuildingSpecies={isBuildingSpecies}
+              emptyStateContent={emptyStateContent}
+            />
+          </div>
+
+          {/* axis="x" (confirmed live via run-desktop against TeamCard.tsx's
              own roster grid - "y" silently never triggered a swap at all,
              same root cause here) since Reorder only measures drag offset
              along one axis to detect a swap, and this flex-wrap grid is
              predominantly horizontal. A wrapped second row can still only
              swap within its own row via horizontal drag - a known
              1D-vs-2D-grid limitation of the Reorder primitive itself, not
-             something either axis choice fixes. */
+             something either axis choice fixes. */}
           <Reorder.Group
             as="div"
             axis="x"
             values={orderedEntryIds}
             onReorder={setOrderedEntryIds}
-            className="flex flex-wrap gap-4 items-start"
+            className="hidden md:flex flex-wrap gap-4 items-start"
             onContextMenu={handleGridContextMenu}
           >
             <button
@@ -449,18 +488,9 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
               <span className="text-sm font-semibold">{isBuildingSpecies ? 'Building…' : '+ New Build'}</span>
             </button>
 
-            {displayedEntries.length === 0 && (
+            {emptyStateContent && (
               <div className="flex flex-col justify-center text-zinc-400 px-2 min-h-[280px]">
-                {isSearching ? (
-                  <p className="text-lg">
-                    {tags.length > 0 && anyTagPending ? 'Loading…' : 'No builds match search'}
-                  </p>
-                ) : (
-                  <>
-                    <p className="text-lg">No saved builds yet</p>
-                    <p className="text-sm mt-2">Save a Pokémon to the library from Teams or Calc, or start one with "+ New Build"</p>
-                  </>
-                )}
+                {emptyStateContent}
               </div>
             )}
 
@@ -489,6 +519,7 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
               );
             })}
           </Reorder.Group>
+          </>
         )}
         </div>
       </div>
