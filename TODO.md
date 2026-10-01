@@ -16,58 +16,11 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Data Audit & Bug Fix Sweep
-
-Scoped 2026-09-30, pulling two already-ready items out of Unscheduled below.
-Post-Parity Polish shipped 2026-09-30 (all 8 legs - see `MILESTONES.md` and
-its [post-mortem](docs/postmortems/post-parity-polish.md)).
-
-- **[Web TeamCard Expand Infinite-Loop Bug] — Leg 2** *(Last touched:
-  2026-09-30 · Re-checks: 0)*
-  Leg 1 root-caused this live (see
-  `docs/investigations/web-teamcard-expand-infinite-loop.md` for the full
-  repro trail) - this leg is the fix, scoped but not yet implemented.
-  Confirmed mechanism, straight from `useGameData.ts`'s own source: every
-  public getter it returns (`getCachedMove`/`getMoveData`/`getCachedItem`/
-  `getItemData`/`getCachedAbility`/`getAbilityData`/
-  `getCachedSpeciesLearnset`/`getSpeciesLearnset`/`getCachedChampionsUsage`/
-  `getChampionsUsage`/`getEnrichedSpeciesOptions`) is `useCallback`'d with a
-  dependency chain that bottoms out on the single `cache` state object -
-  `getEnrichedSpeciesOptions`/`getChampionsUsage` get a brand-new identity on
-  *every* `setCache` call anywhere in the app, not just ones touching their
-  own species. `EditOverlays.tsx`'s two per-Pokémon data-fetch effects
-  (learnset/moves+abilities at line ~151, Champions usage at line ~172) list
-  those functions in their dependency arrays, so one `setCache` write from
-  any mounted `PokemonCard` re-fires every other mounted `EditOverlays`
-  instance's effects too. With several concurrently-mounted cards hitting
-  real first-time cache misses (fresh/never-before-seen species), resolving
-  fetches keep re-triggering each other's effects in a cascade. Live-verified
-  the exact trigger: patching `console.error` in a Chromium tab (via a
-  disposable Playwright script, not committed) to capture `new Error().stack`
-  at the "Maximum update depth exceeded" call confirmed the looping
-  `dispatchSetState` call originates inside one of `EditOverlays.tsx`'s two
-  `.then()` callbacks. The narrow-width/4+-Pokémon correlation isn't a
-  separate code path - grepped `src/renderer` for `ResizeObserver`/
-  `matchMedia`/`IntersectionObserver`, none exist, so nothing branches on
-  width in JS. It's a timing effect: `TeamCard.tsx`'s `@container` grid
-  collapses to fewer columns below certain widths, stacking more
-  `PokemonCard`s (and their Framer Motion `Reorder.Item` layout animations)
-  into the same tight render window as the cache-churn cascade above, which
-  is what pushes total re-renders over React's internal loop-detection
-  threshold - reproduced reliably resizing to <768px *while already
-  expanded* with a freshly-imported, not-yet-cached 4-species team; did not
-  reproduce starting already-narrow before expanding, in 3/3 trials (a
-  timing-sensitive trigger, not a hard requirement - matches why it felt
-  inconsistent during Leg 1's original bisection too).
-  Fix direction (not yet decided): the public getters in `useGameData.ts`
-  need to stop changing identity on every unrelated cache write - e.g. read
-  through a ref for the actual cache lookup instead of closing over `cache`
-  directly in each `useCallback`, or otherwise decouple "a getter's identity
-  is stable" from "the cache it reads has mutated." Whatever shape this
-  takes, needs to preserve every one of the self-healing forced-miss
-  behaviors documented inline in `useGameData.ts` (hasChampionsMoveData,
-  target/meta presence, spriteUrl placeholder) - those are deliberate and
-  still need to work once a miss is later filled in.
+No milestone is currently in progress - Data Audit & Bug Fix Sweep shipped
+2026-09-30 (both items - see `MILESTONES.md` and its
+[post-mortem](docs/postmortems/data-audit-bug-fix-sweep.md)). Next session
+should scope one of the Unscheduled/Future Milestones candidates below into
+a leg list before opening a new `## Current Milestone:` section.
 
 ## Blocked
 

@@ -46,3 +46,5 @@ milestone.
   [post-mortem](docs/postmortems/mobile-friendliness-pass.md)
 - **Post-Parity Polish** — 2026-09-30 — Shipped —
   [post-mortem](docs/postmortems/post-parity-polish.md)
+- **Data Audit & Bug Fix Sweep** — 2026-09-30 — Shipped —
+  [post-mortem](docs/postmortems/data-audit-bug-fix-sweep.md)

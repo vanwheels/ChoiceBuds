@@ -22,6 +22,17 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[Web TeamCard Expand Infinite-Loop Bug] — Leg 2** (2026-09-30) - see
+  commit `31b425e`. The fix Leg 1 scoped: `useGameData.ts`'s getters now
+  read the cache through a ref (synced via a plain effect) instead of
+  closing over the `cache` state value in each `useCallback`, so they no
+  longer need `cache` in their own dependency arrays and keep a stable
+  identity across renders - the self-healing forced-miss checks
+  (hasChampionsMoveData, target/meta presence, spriteUrl placeholder) are
+  unchanged since they read the same cache shape, just via the ref. Closes
+  the item outright - both legs of this milestone's items are now shipped,
+  closing out the Data Audit & Bug Fix Sweep milestone (see `MILESTONES.md`).
+
 - **[Web TeamCard Expand Infinite-Loop Bug] — Leg 1** (2026-09-30). Pure
   root-causing pass, no app code changed - full reasoning is in
   `docs/investigations/web-teamcard-expand-infinite-loop.md` since no single
