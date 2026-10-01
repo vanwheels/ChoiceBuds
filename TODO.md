@@ -103,6 +103,10 @@ Worker now is fine (see the re-scoping note above), but the next app release
 is deliberately being held back so existing users transition straight from
 the old push/pull UI to a build that already has more of the web-sync story
 done, rather than a standalone release for just the accounts/merge changes.
+That release cut 2026-09-30 as `v0.9.0`
+(https://github.com/vanwheels/ChoiceBuds/releases/tag/v0.9.0), once Full Web
+Feature Parity had shipped - see [Existing Account Migration] in `Blocked`
+below for what's left.
 
 Web Version: Teams & Box MVP milestone shipped 2026-09-29 (see
 `MILESTONES.md` and
@@ -259,19 +263,17 @@ unblocked.
 
 - **[Existing Account Migration] — Leg 1** *(Last touched: 2026-09-30 ·
   Re-checks: 0)*
-  Blocked: waiting on the next app release cutting (deliberately held back
-  for now - see the note above `## Blocked` in this file's intro section).
-  Simplified 2026-09-30 (Vanny confirmed all ~4-6 friends have only ever
-  used one device): no manual KV copy needed. Local storage is canonical
-  and untouched by the client update, and `useSync.ts`'s sign-in effect
-  auto-pushes whatever's in local state the moment a friend signs up under
-  the new username+password system - that alone carries their teams/
-  battles/saved Pokémon into the new account. Once the release cuts, each
-  friend just updates and signs up; no coordination or per-friend script
-  needed. Drops the KV eventual-consistency race risk previously noted here
-  too (see `COMPLETED.md` for the original single-device incident during
-  Vanny's own migration) - that was specific to a manual copy racing a
-  device's own push, which no longer happens here.
+  Blocked: waiting on each friend to update and sign up on their own time -
+  v0.9.0 shipped 2026-09-30 (https://github.com/vanwheels/ChoiceBuds/releases/tag/v0.9.0),
+  carrying the accounts/sync rework and full web parity, so the release-gate
+  half of this item is resolved. No coordination or per-friend script
+  needed: Vanny confirmed all ~4-6 friends have only ever used one device,
+  so `useSync.ts`'s sign-in effect auto-pushing local state the moment a
+  friend signs up is enough to carry their teams/battles/saved Pokémon into
+  the new account - no manual KV copy, and no KV eventual-consistency race
+  risk (that was specific to a manual copy racing a device's own push).
+  Trickles in as each friend gets around to updating, not a single
+  all-at-once pass - nothing left to do from this end per friend.
 
 - **[Reg M-C Z-A-Exclusive Movepool Audit] — Leg 1** *(Last touched:
   2026-09-16 · Re-checks: exempt, blocked)*
