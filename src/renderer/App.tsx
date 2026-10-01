@@ -31,6 +31,7 @@ import TeamsPage from './components/TeamsPage';
 import LoadingScreen from './components/LoadingScreen';
 import Sidebar from './components/Sidebar';
 import ReleaseNotesModal from './components/ReleaseNotesModal';
+import { CalcLauncherButton } from './components/CalcLauncherButton';
 import { CalcIcon } from './components/icons/SidebarIcons';
 import { MobileHeaderActionsProvider } from './hooks/useMobileHeaderActions';
 
@@ -262,19 +263,14 @@ export default function App() {
             regardless of which tab is active or whether the sidebar is
             collapsed, since the Calc tab it replaces no longer exists to
             double as the trigger (Regular Calc Popup Launcher Leg 1).
-            Desktop/tablet only (`hidden md:flex`) - below `md` this covered
+            Corner-snap draggable (Floating Calc Button Repositioning Leg 1) -
+            see CalcLauncherButton.tsx. Desktop/tablet only (`hidden md:flex`,
+            handled inside that component) - below `md` this covered
             whatever page content sat at the bottom of a phone viewport
             (reported live), so Sidebar.tsx's mobile top bar gets a compact
             version instead (`mobileTopBarEnd` above) rather than this one
             being duplicated or repositioned in place. */}
-        <button
-          onClick={() => openCalcPopup()}
-          aria-label="Open Calc"
-          className="hidden md:flex fixed bottom-6 right-6 z-40 items-center gap-2 rounded-full bg-accent-gold px-4 py-3 font-bold text-zinc-900 shadow-lg transition-transform cursor-pointer hover:scale-105"
-        >
-          <CalcIcon />
-          Calc
-        </button>
+        <CalcLauncherButton onOpen={openCalcPopup} />
 
         {hasOpenedCalcPopup && (
           <Suspense fallback={null}>

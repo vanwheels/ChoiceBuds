@@ -26,24 +26,19 @@ Data Check sections are removed outright (not automated), and Player Profile
 sync uses a whole-section reveal toggle. Sequenced decision-free fixes first
 per Vanny's call.
 
-- **[Battle Log Card Grid Cleanup] — Leg 1** *(Last touched: 2026-09-30 ·
-  Re-checks: 0)*
-  `PastBattlesList.tsx`'s `BattleRow`: cards render at different heights
-  depending on team-name length and whether `battle.notes` is set, which
-  Vanny finds visually messy. Wants uniform card height, truncated team
-  names, a note icon (paper+pencil) replacing the inline notes text, and a
-  re-evaluation of whether the `grid-template-columns: repeat(auto-fill,
-  ...)` layout (lines 94/113) is even the right shape here vs. a plain list.
-
 - **[Floating Calc Button Repositioning] — Leg 1** *(Last touched:
   2026-09-30 · Re-checks: 0)*
-  `App.tsx:273` and `AppWeb.tsx:298` both hardcode the Calc launcher at
-  `fixed bottom-6 right-6`, which can sit over Settings' last section (see
-  Leg 2). Let the user reposition it (at least between corners, ideally
-  freeform) and persist the choice per-device, accounting for window
-  resize. Still needs its own design pass before implementation - storage
-  key, corner-snap vs. freeform drag, resize behavior - that wasn't one of
-  the decisions resolved in this scoping pass.
+  Implemented 2026-09-30: extracted shared `components/CalcLauncherButton.tsx`
+  (pointer down/move/up drag handling, 5px threshold to disambiguate click
+  from drag, snaps to nearest of 4 corners by comparing release
+  `clientX`/`clientY` against viewport midpoints) and
+  `hooks/useCalcButtonCorner.ts` (raw `localStorage` key
+  `choicebuds:calcButtonCorner`, same not-synced pattern as
+  `useSidebarCollapsed.ts`). Wired into both `App.tsx` and `AppWeb.tsx` in
+  place of their previously-duplicated inline buttons. `type-check`/`lint`/
+  `test` all pass. Not yet live-verified by Vanny (dragging/corner-snap is
+  an interactive gesture - manual check needed before this moves to
+  `COMPLETED.md`).
 
 - **[Sidebar Sync Status Indicator Removal] — Leg 1** *(Last touched:
   2026-09-30 · Re-checks: 0)*

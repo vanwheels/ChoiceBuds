@@ -81,6 +81,7 @@ import type { ActiveTab } from './App';
 import TeamsPage from './components/TeamsPage';
 import WebAuthScreen from './components/WebAuthScreen';
 import Sidebar from './components/Sidebar';
+import { CalcLauncherButton } from './components/CalcLauncherButton';
 import { CalcIcon } from './components/icons/SidebarIcons';
 import { MobileHeaderActionsProvider } from './hooks/useMobileHeaderActions';
 
@@ -288,18 +289,13 @@ export default function AppWeb() {
         )}
       </main>
 
-      {/* Desktop/tablet only (`hidden md:flex`) - below `md` this covered
-          whatever page content sat at the bottom of a phone viewport
-          (reported live), so Sidebar.tsx's mobile top bar gets a compact
-          version instead (`mobileTopBarEnd` above). */}
-      <button
-        onClick={() => { setIsCalcPopupOpen(true); setHasOpenedCalcPopup(true); }}
-        aria-label="Open Calc"
-        className="hidden md:flex fixed bottom-6 right-6 z-40 items-center gap-2 rounded-full bg-accent-gold px-4 py-3 font-bold text-zinc-900 shadow-lg transition-transform cursor-pointer hover:scale-105"
-      >
-        <CalcIcon />
-        Calc
-      </button>
+      {/* Corner-snap draggable (Floating Calc Button Repositioning Leg 1) -
+          see CalcLauncherButton.tsx. Desktop/tablet only (`hidden md:flex`,
+          handled inside that component) - below `md` this covered whatever
+          page content sat at the bottom of a phone viewport (reported live),
+          so Sidebar.tsx's mobile top bar gets a compact version instead
+          (`mobileTopBarEnd` above). */}
+      <CalcLauncherButton onOpen={() => { setIsCalcPopupOpen(true); setHasOpenedCalcPopup(true); }} />
 
       {hasOpenedCalcPopup && (
         <Suspense fallback={null}>
