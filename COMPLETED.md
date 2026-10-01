@@ -18,6 +18,36 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Floating Calc Button Repositioning] — Leg 1** (2026-09-30) - see commits
+  `4d2267c`, `0ed96f1`, `37a1942`. Extracted the previously-duplicated Calc
+  launcher button (`App.tsx`/`AppWeb.tsx`) into a shared
+  `components/CalcLauncherButton.tsx` with pointer down/move/up drag
+  handling - a plain click still opens Calc, a drag past a 5px threshold
+  follows the pointer and snaps to the nearest of the 4 corners on
+  release. The chosen corner persists per-device via a new
+  `hooks/useCalcButtonCorner.ts`, backed by a raw `localStorage` key kept
+  outside `AppSettings`/`SyncPayload` so it never travels through
+  cross-device sync. Two follow-up fixes smoothed the snap itself: a CSS
+  transition on `top`/`bottom`/`left`/`right` only fixed releasing back
+  onto the *same* corner - switching corners still jumped, since whichever
+  inset pair isn't set falls back to `auto`, and a transition to/from
+  `auto` isn't animatable. Replaced with a transform-based snap instead:
+  on drop, compute the target corner's resting pixel position directly,
+  hold the button at the drop point with an inline `transform` while the
+  corner class swaps underneath it (invisible - the transform cancels it
+  out), then animate that transform back to zero next frame. Live-verified
+  by Vanny.
+
+- **[Battle Log Card Grid Cleanup] — Leg 1** (2026-09-30) - see commit
+  `58c0394`. `PastBattlesList.tsx`'s `BattleRow` cards now render at a fixed
+  height - team name and the format/date/opponent line truncate to one line
+  each (full text via `title` tooltip), and `battle.notes` is a paper+pencil
+  icon (tooltip) instead of an inline paragraph. Grid layout was kept over a
+  plain list - uneven height was the grid's only real problem, and a
+  multi-column layout fits more battles per screen - but its `minmax` floor
+  was tightened (420px→360px top-level, 380px→320px nested) since the now-
+  compact cards need less width. Live-verified by Vanny.
+
 - **[Team Author Autofill from Sync Username] — Leg 1** (2026-09-30) - see
   commit `6fde9e4`. `ImportTeamModal.tsx`'s Author field now defaults to
   the signed-in sync username (`settingsState.settings.syncUsername`) when

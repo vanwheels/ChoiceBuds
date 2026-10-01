@@ -26,20 +26,6 @@ Data Check sections are removed outright (not automated), and Player Profile
 sync uses a whole-section reveal toggle. Sequenced decision-free fixes first
 per Vanny's call.
 
-- **[Floating Calc Button Repositioning] — Leg 1** *(Last touched:
-  2026-09-30 · Re-checks: 0)*
-  Implemented 2026-09-30: extracted shared `components/CalcLauncherButton.tsx`
-  (pointer down/move/up drag handling, 5px threshold to disambiguate click
-  from drag, snaps to nearest of 4 corners by comparing release
-  `clientX`/`clientY` against viewport midpoints) and
-  `hooks/useCalcButtonCorner.ts` (raw `localStorage` key
-  `choicebuds:calcButtonCorner`, same not-synced pattern as
-  `useSidebarCollapsed.ts`). Wired into both `App.tsx` and `AppWeb.tsx` in
-  place of their previously-duplicated inline buttons. `type-check`/`lint`/
-  `test` all pass. Not yet live-verified by Vanny (dragging/corner-snap is
-  an interactive gesture - manual check needed before this moves to
-  `COMPLETED.md`).
-
 - **[Sidebar Sync Status Indicator Removal] — Leg 1** *(Last touched:
   2026-09-30 · Re-checks: 0)*
   Decision (2026-09-30, Vanny): drop the sync status indicator from the
