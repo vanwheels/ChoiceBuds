@@ -18,6 +18,13 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Account Status Section Cleanup] — Leg 1** (2026-09-30) - see commit
+  `004dd12`. Renamed Settings' last section's "App Status" heading to
+  "Account Status" and collapsed its three stacked Cache/Teams/Version rows
+  into one compact inline row, so it's shorter where the floating Calc
+  launcher button sits over it. Button repositioning itself is still open
+  (see `TODO.md`'s Floating Calc Button Repositioning item).
+
 - **[Box New-Build Tile Sizing] — Leg 1** (2026-09-30) - `BoxPage.tsx`'s
   desktop "+ New Build" tile was hardcoded `w-[280px] min-h-[280px]`, over 2x
   the `w-28` collapsed `BoxCard` tile beside it. Matched it to `w-28 min-h-28`

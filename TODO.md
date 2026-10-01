@@ -26,14 +26,6 @@ Data Check sections are removed outright (not automated), and Player Profile
 sync uses a whole-section reveal toggle. Sequenced decision-free fixes first
 per Vanny's call.
 
-- **[Account Status Section Cleanup] — Leg 1** *(Last touched: 2026-09-30 ·
-  Re-checks: 0)*
-  Rename `AppStatusSection.tsx:22`'s "App Status" heading to "Account
-  Status" and make the section more compact/inline. Motivated by the
-  floating Calc launcher button (see Leg 5 below) sitting over this,
-  Settings' last section - this leg is just the heading/layout half of that
-  complaint, not the button fix itself.
-
 - **[Team Author Autofill from Sync Username] — Leg 1** *(Last touched:
   2026-09-30 · Re-checks: 0)*
   `ImportTeamModal.tsx:67` initializes `author` to `''`. Default it from the
