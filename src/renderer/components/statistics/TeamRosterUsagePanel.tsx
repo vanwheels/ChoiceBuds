@@ -34,11 +34,11 @@ export default function TeamRosterUsagePanel({ usage, resolveSprite }: TeamRoste
             {team.pokemon.map(stat => (
               <div key={stat.species} className="flex items-center gap-2">
                 <img src={resolveSprite(stat.spriteUrl)} alt={stat.species} className="w-8 h-8" />
-                <span className="flex-1 text-sm text-zinc-200 truncate">{stat.species}</span>
-                <div className="w-24 h-2 rounded-full bg-zinc-700/50 overflow-hidden">
+                <span className="flex-1 min-w-0 text-sm text-zinc-200 truncate">{stat.species}</span>
+                <div className="w-12 sm:w-24 h-2 rounded-full bg-zinc-700/50 overflow-hidden shrink-0">
                   <div className="h-full bg-accent-gold" style={{ width: `${stat.rate * 100}%` }} />
                 </div>
-                <span className="w-28 text-right text-xs text-zinc-400">
+                <span className="w-16 sm:w-28 shrink-0 text-right text-xs text-zinc-400">
                   {stat.broughtCount}/{stat.battleCount} ({Math.round(stat.rate * 100)}%)
                 </span>
               </div>

@@ -91,7 +91,7 @@ export default function PastBattlesList({ battles, onEdit, onDelete }: PastBattl
   return (
     <div className="flex flex-col gap-2">
       <h2 className="text-sm font-bold text-zinc-300 uppercase tracking-wide">Past Battles</h2>
-      <div className="grid items-start gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))' }}>
+      <div className="grid items-start gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(420px, 100%), 1fr))' }}>
         {groups.map(group => {
           if (group.battles.length === 1) {
             return <BattleRow key={group.setId} battle={group.battles[0]} onEdit={onEdit} onDelete={onDelete} />;
@@ -110,7 +110,7 @@ export default function PastBattlesList({ battles, onEdit, onDelete }: PastBattl
               <span className="px-2 text-xs font-bold text-zinc-300">
                 {teamName} vs {group.opponentName} - Set {outcome.wins}-{outcome.losses}{!outcome.decided ? ' (in progress)' : ''}
               </span>
-              <div className="grid gap-1.5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))' }}>
+              <div className="grid gap-1.5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(380px, 100%), 1fr))' }}>
                 {group.battles.map((battle, i) => (
                   <BattleRow key={battle.id} battle={battle} gameLabel={`Game ${i + 1}`} onEdit={onEdit} onDelete={onDelete} />
                 ))}

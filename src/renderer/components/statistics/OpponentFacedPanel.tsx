@@ -26,7 +26,7 @@ export default function OpponentFacedPanel({ stats, resolveSprite }: OpponentFac
             {stats.map(stat => (
               <div key={stat.species} className="flex items-center gap-2">
                 <img src={resolveSprite(stat.spriteUrl)} alt={stat.species} className="w-8 h-8" />
-                <span className="flex-1 text-sm text-zinc-200 truncate">{stat.species}</span>
+                <span className="flex-1 min-w-0 text-sm text-zinc-200 truncate">{stat.species}</span>
                 <span className="text-xs text-zinc-400">
                   {stat.count} time{stat.count === 1 ? '' : 's'} - {stat.wins}-{stat.losses}
                 </span>

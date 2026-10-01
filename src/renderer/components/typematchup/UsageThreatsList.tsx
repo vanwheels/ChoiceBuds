@@ -27,7 +27,7 @@ import { USAGE_THREAT_RANK_CUTOFF } from '../../utils/usageThreats';
 import type { MovesetCoverageGapThreat } from '../../utils/usageCoverageGaps';
 import { COVERAGE_GAP_MOVE_CUTOFF } from '../../utils/usageCoverageGaps';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
-import TypeBadge from '../TypeBadge';
+import { getTypeTheme } from '../../config/pokemonTheme';
 
 interface UsageThreatsListProps {
   threats: UsageThreat[];
@@ -40,6 +40,26 @@ interface UsageThreatsListProps {
 
 /** Common shape rendered by ThreatRow - UsageThreat, PartiallyCoveredUsageThreat, and MovesetCoverageGapThreat all satisfy it (the latter's `types` holds move-effective types rather than species types - see usageCoverageGaps.ts). */
 type ThreatRowData = Pick<UsageThreat, 'species' | 'types' | 'columnPosition' | 'spriteUrl' | 'speed'>;
+
+/**
+ * Content-sized type pill, not CoverageTable's shared `TypeBadge` - that
+ * component is fixed `w-20` for header column alignment in a table, which is
+ * both unnecessary here (a plain list row, no columns to align) and, at two
+ * badges per row alongside a species name/speed annotation/rank number,
+ * ate most of a phone-width row's space, squeezing the species name down to
+ * unreadable (confirmed live via run-desktop at ~280px row width - the name
+ * span measured 0px wide, flex-1's 0 flex-basis means it gets none of the
+ * negative free space once the other fixed-width siblings alone exceed the
+ * row).
+ */
+function TypePill({ type }: { type: string }) {
+  const theme = getTypeTheme(type);
+  return (
+    <span className={`inline-block shrink-0 px-1.5 py-0.5 text-[9px] font-bold rounded-sm uppercase tracking-wider whitespace-nowrap ${theme.bg} ${theme.text}`}>
+      {type}
+    </span>
+  );
+}
 
 function ThreatRow({
   threat,
@@ -59,18 +79,21 @@ function ThreatRow({
         alt={threat.species}
         className="w-8 h-8 object-contain [image-rendering:pixelated]"
       />
-      <span className="flex-1 text-sm text-zinc-200 truncate">{threat.species}</span>
-      <div className="flex gap-1">
+      <span className="flex-1 min-w-0 text-sm text-zinc-200 truncate">{threat.species}</span>
+      <div className="flex gap-1 shrink-0">
         {threat.types.map(t => (
-          <TypeBadge key={t} type={t} />
+          <TypePill key={t} type={t} />
         ))}
       </div>
       {teamSpeedRange && (
-        <span className="text-[10px] text-zinc-500 shrink-0" title="Threat's base Speed vs. your team's own base-Speed range">
+        <span
+          className="hidden md:inline text-[10px] text-zinc-500 shrink-0"
+          title="Threat's base Speed vs. your team's own base-Speed range"
+        >
           Spe {threat.speed} vs {teamSpeedRange.min}-{teamSpeedRange.max}
         </span>
       )}
-      {note && <span className="text-[10px] text-zinc-500 shrink-0">{note}</span>}
+      {note && <span className="hidden md:inline text-[10px] text-zinc-500 shrink-0">{note}</span>}
       <span className="text-xs text-zinc-400 w-10 text-right shrink-0">#{threat.columnPosition}</span>
     </div>
   );
