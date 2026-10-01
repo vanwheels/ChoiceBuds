@@ -4,7 +4,7 @@
  * services/pokeapiService and cache read/merge/fetch handling to utils/cacheManager
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { GameDataCache, MoveData, ItemData, AbilityData, SpeciesLearnsetEntry, ChampionsUsageEntry, SpeciesRosterEntry } from '../types/pokemon';
 import { VGC_ITEMS } from '../config/vgcData';
 import { normalizeSpeciesForAPI } from '../services/pokeapi';
@@ -86,6 +86,26 @@ export function useGameData(): UseGameDataReturn {
   // the write-through effect first runs.
   const [diskSnapshot, setDiskSnapshot] = useState<string | undefined>(undefined);
 
+  // Latest-value ref so the getters below can read the current cache without
+  // closing over the `cache` state value itself - every public getter
+  // (getCachedMove/getMoveData/etc.) used to list `cache` as a useCallback
+  // dependency, which gave each one a brand-new identity on *every* setCache
+  // call anywhere in the app, not just ones touching its own species/move/
+  // item. Consumers listing these getters in their own effect dependency
+  // arrays (e.g. EditOverlays.tsx) then had those effects re-fire on every
+  // unrelated cache write, which cascaded into an infinite update loop with
+  // several concurrently-mounted cards hitting real cache misses at once -
+  // see docs/investigations/web-teamcard-expand-infinite-loop.md. Synced via
+  // effect rather than written during render (react-hooks/refs forbids
+  // mutating a ref mid-render) - every getter is only ever invoked from an
+  // event handler, another effect, or a promise continuation, all of which
+  // run after this effect has already applied the latest value, so there's
+  // no window where a getter would read a stale ref.
+  const cacheRef = useRef(cache);
+  useEffect(() => {
+    cacheRef.current = cache;
+  }, [cache]);
+
   // Read the persisted cache from disk on mount (SWR-style, matching
   // useDatabase.ts) - previously this always reset to empty on every launch,
   // meaning move/item/ability/learnset data could never survive a restart.
@@ -139,10 +159,10 @@ export function useGameData(): UseGameDataReturn {
   // as the overrides above, just for fields PokeAPI itself supplies instead
   // of a hand-authored correction table.
   const getCachedMove = useCallback((moveName: string): MoveData | null => {
-    const move = readCacheEntry(cache?.moves, normalizeNameForAPI(moveName));
+    const move = readCacheEntry(cacheRef.current?.moves, normalizeNameForAPI(moveName));
     if (!move || !move.target || !move.meta) return null;
     return applyMoveFlags(applyChampionsMoveOverride(move));
-  }, [cache]);
+  }, []);
 
   // A synthesized placeholder (spriteUrl === '', see the background-load
   // effect below) is deliberately treated as a cache miss regardless of its
@@ -151,14 +171,14 @@ export function useGameData(): UseGameDataReturn {
   // job instead, same self-healing pattern as getCachedMove's target/meta
   // check and getCachedSpeciesLearnset's hasChampionsMoveData check below.
   const getCachedItem = useCallback((itemName: string): ItemData | null => {
-    const item = readCacheEntry(cache?.items, normalizeNameForAPI(itemName));
+    const item = readCacheEntry(cacheRef.current?.items, normalizeNameForAPI(itemName));
     return item && item.spriteUrl ? item : null;
-  }, [cache]);
+  }, []);
 
   const getCachedAbility = useCallback((abilityName: string): AbilityData | null => {
-    const ability = readCacheEntry(cache?.abilities, normalizeNameForAPI(abilityName));
+    const ability = readCacheEntry(cacheRef.current?.abilities, normalizeNameForAPI(abilityName));
     return ability ? applyChampionsAbilityOverride(ability) : null;
-  }, [cache]);
+  }, []);
 
   // Only layer the hand-curated championsMovepoolChanges.ts corrections on
   // top when PokeAPI itself has no "champions"-tagged move data for this
@@ -181,7 +201,7 @@ export function useGameData(): UseGameDataReturn {
   };
 
   const getCachedSpeciesLearnset = useCallback((species: string, gender?: Gender): SpeciesLearnsetEntry | null => {
-    const learnset = readCacheEntry(cache?.learnsets, normalizeSpeciesForAPI(species, gender));
+    const learnset = readCacheEntry(cacheRef.current?.learnsets, normalizeSpeciesForAPI(species, gender));
     // hasChampionsMoveData was added 2026-07-19 - an entry cached before that
     // (still valid for 30 days) predates the field despite the type now
     // claiming it's required. Same self-healing treatment as getCachedMove's
@@ -198,7 +218,7 @@ export function useGameData(): UseGameDataReturn {
     // so the one live re-fetch this forces self-heals the entry to true.
     if (!learnset || learnset.hasChampionsMoveData !== true) return null;
     return applyMovepoolChangesIfNeeded(learnset);
-  }, [cache]);
+  }, []);
 
   const getMoveData = useCallback(async (moveName: string): Promise<MoveData | null> => {
     const cached = getCachedMove(moveName);
@@ -232,7 +252,7 @@ export function useGameData(): UseGameDataReturn {
   // on-demand fetch-and-cache version callers use when they need to
   // guarantee fresh data for one specific species.
   const getCachedChampionsUsage = useCallback((species: string): ChampionsUsageEntry | null =>
-    readCacheEntry(cache?.usage, normalizeUsageCacheKey(species)), [cache]);
+    readCacheEntry(cacheRef.current?.usage, normalizeUsageCacheKey(species)), []);
 
   const getSpeciesLearnset = useCallback(async (species: string, gender?: Gender): Promise<SpeciesLearnsetEntry | null> => {
     const cached = getCachedSpeciesLearnset(species, gender);
