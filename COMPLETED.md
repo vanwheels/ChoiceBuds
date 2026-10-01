@@ -18,6 +18,22 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Responsive Layout Audit: Remaining Pages] — Leg 1** (2026-09-30) - see
+  commit `ada485c`. Covered Battle Log, Statistics, Settings, Type Matchup,
+  Speed Tiers in one leg per the item's own grouping call. Settings and Speed
+  Tiers were already fully fluid (flex-wrap-based controls) - no changes
+  needed. Real bugs found in the other three: `PastBattlesList.tsx`'s
+  past-battles grid used a fixed `minmax(420px, 1fr)`/`minmax(380px, 1fr)`
+  column sizing wider than any phone viewport (forced page overflow) - fixed
+  via `minmax(min(Npx, 100%), 1fr)`. Several `flex-1 truncate` species-name
+  spans (Statistics' usage panels, Type Matchup's Team Gap Analysis) were
+  missing `min-w-0`, so a flex item's default `auto` min-width stopped them
+  from actually shrinking - confirmed live this wasn't just cosmetic: without
+  it, two rows (`TeamRosterUsagePanel`'s fixed bar+text columns,
+  `UsageThreatsList`'s reuse of the fixed-`w-20` `TypeBadge`) left the name
+  squeezed to as little as 0px once `min-w-0` let the other fixed-width
+  siblings win the space entirely; narrowed those columns and swapped in a
+  local content-sized type pill respectively.
 - **[Responsive Layout Audit: Calc & Modals] — Leg 1** (2026-09-30) - see
   commit `eace312`. Survey (subagent-driven) confirmed `Modal.tsx` and most
   of its modals (Import/Export/PDF, item/move/ability/nature pickers) were

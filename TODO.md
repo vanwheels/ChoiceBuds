@@ -226,12 +226,12 @@ pickers) was already fluid. Verified live via DOM geometry at a zoomed
 ~383px effective width (screenshots at that zoom level only capture a
 cropped corner, not the full page, so geometry checks were used instead).
 
-- **[Responsive Layout Audit: Remaining Pages] — Leg 1** *(Last touched:
-  2026-09-30 · Re-checks: 0)*
-  Battle Log, Statistics, Settings, Type Matchup, Speed Tiers - lower
-  traffic and less data-dense than Teams/Box/Calc, grouped into one leg on
-  that basis. Split further mid-leg if any one of them turns out to need
-  disproportionate work.
+[Responsive Layout Audit: Remaining Pages] — Leg 1 shipped 2026-09-30 (see
+`COMPLETED.md`) - Settings and Speed Tiers were already fluid; real fixes
+landed in Battle Log (a fixed-minmax grid overflowing phone widths) and
+Statistics/Type Matchup (missing `min-w-0` on truncating name spans, plus
+two rows whose other fixed-width elements needed narrowing/replacing once
+`min-w-0` exposed how little room they left).
 
 Mobile Teams & Box Card View raised by Vanny 2026-09-30, right after
 Responsive Layout Audit: Teams & Box shipped - a different ask than that
