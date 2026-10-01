@@ -18,6 +18,11 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Sidebar Sync Status Indicator Removal] — Leg 1** (2026-09-30) - see
+  commit `2263f44`. Dropped the sync status dot/text from `AppWeb.tsx`'s
+  sidebar footer per Vanny's decision - `SyncSection.tsx` on the Settings
+  page stays the sole place sync status is shown.
+
 - **[Floating Calc Button Repositioning] — Leg 1** (2026-09-30) - see commits
   `4d2267c`, `0ed96f1`, `37a1942`. Extracted the previously-duplicated Calc
   launcher button (`App.tsx`/`AppWeb.tsx`) into a shared

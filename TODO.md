@@ -26,16 +26,6 @@ Data Check sections are removed outright (not automated), and Player Profile
 sync uses a whole-section reveal toggle. Sequenced decision-free fixes first
 per Vanny's call.
 
-- **[Sidebar Sync Status Indicator Removal] — Leg 1** *(Last touched:
-  2026-09-30 · Re-checks: 0)*
-  Decision (2026-09-30, Vanny): drop the sync status indicator from the
-  sidebar entirely rather than just debounce it further. Scoped to
-  `AppWeb.tsx:95-167`: remove `SYNC_STATUS_LABEL`, the colored dot, and the
-  "Synced"/"Syncing..."/error status text from the `renderFooter` slot.
-  Keep `syncUsername` + the log-out button in that footer - that's identity,
-  not sync status. `SyncSection.tsx` on the Settings page stays the sole
-  place sync status is shown.
-
 - **[Season/Champions Data Check Removal] — Leg 1** *(Last touched:
   2026-09-30 · Re-checks: 0)*
   Decision (2026-09-30, Vanny): remove the manual "mark as checked" sections
