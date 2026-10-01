@@ -25,6 +25,15 @@ interface ImportTeamModalProps {
   resolveSprite: (remoteUrl: string) => string;
   existingTeamNames: string[];
   defaultRegulation: RegulationLabel;
+  // Signed-in sync account username (useSync.ts's syncUsername, sourced from
+  // AppSettings directly - see settingsState.settings.syncUsername), used to
+  // default the Author field below for a self-authored team. Deliberately
+  // not applied when catalogRow is set - a VGCPastes import is someone
+  // else's real tournament team, and applyPokepasteData's own
+  // owner/author precedence (see its comment) already handles attribution
+  // for that case; defaulting to the signed-in user there would silently
+  // overwrite a blank field before that logic gets a chance to run.
+  syncUsername: string | null;
   // Set by VgcPasteCatalogModal.tsx when a catalog row's "Import" button is
   // clicked - the paste itself is fetched and applied on mount exactly like
   // a user pasting the same link into the paste area and blurring it (see
@@ -61,10 +70,11 @@ export default function ImportTeamModal({
   existingTeamNames,
   defaultRegulation,
   catalogRow,
+  syncUsername,
 }: ImportTeamModalProps) {
   const [pastedText, setPastedText] = useState('');
   const [teamName, setTeamName] = useState('');
-  const [author, setAuthor] = useState('');
+  const [author, setAuthor] = useState(() => (!catalogRow && syncUsername) ? syncUsername : '');
   const [teamFormat, setTeamFormat] = useState<RegulationLabel>(defaultRegulation);
   const [isImporting, setIsImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);

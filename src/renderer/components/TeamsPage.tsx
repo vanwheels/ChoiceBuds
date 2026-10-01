@@ -370,6 +370,7 @@ export default function TeamsPage({
             existingTeamNames={teamsState.teams.map(team => team.name)}
             defaultRegulation={settingsState.settings.defaultRegulation}
             catalogRow={importPrefillRow ?? undefined}
+            syncUsername={settingsState.settings.syncUsername}
           />
         )}
       </AnimatePresence>
