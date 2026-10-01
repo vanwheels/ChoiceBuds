@@ -200,7 +200,10 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
           </div>
 
           {viewMode === 'team' ? (
-            <div className="grid grid-cols-6 gap-3">
+            // Fewer columns at narrow widths - at a fixed grid-cols-6 the tile's own
+            // fixed 80px sprite (TeamPosterTile.tsx) no longer fits its column at phone
+            // widths and overlaps the neighboring tile instead of wrapping.
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
               {team.pokemon.map((pokemon, idx) => (
                 <TeamPosterTile
                   key={idx}
