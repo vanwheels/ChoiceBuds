@@ -90,7 +90,7 @@ export function CalcLauncherButton({ onOpen }: CalcLauncherButtonProps) {
       onClick={handleClick}
       aria-label="Open Calc"
       style={style}
-      className={`hidden md:flex fixed ${CORNER_CLASSES[corner]} z-40 items-center gap-2 rounded-full bg-accent-gold px-4 py-3 font-bold text-zinc-900 shadow-lg transition-transform cursor-pointer hover:scale-105`}
+      className={`hidden md:flex fixed ${CORNER_CLASSES[corner]} z-40 items-center gap-2 rounded-full bg-accent-gold px-4 py-3 font-bold text-zinc-900 shadow-lg transition-[top,bottom,left,right,transform] duration-200 ease-out cursor-pointer hover:scale-105`}
     >
       <CalcIcon />
       Calc
