@@ -16,13 +16,38 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: none scoped
+## Current Milestone: Data Audit & Bug Fix Sweep
 
+Scoped 2026-09-30, pulling two already-ready items out of Unscheduled below.
 Post-Parity Polish shipped 2026-09-30 (all 8 legs - see `MILESTONES.md` and
-its [post-mortem](docs/postmortems/post-parity-polish.md)). No milestone is
-currently in progress; the next one needs a scoping pass over the candidates
-below (Unscheduled and Future Milestones) before it gets its own `## Current
-Milestone:` section.
+its [post-mortem](docs/postmortems/post-parity-polish.md)).
+
+- **[Web TeamCard Expand Infinite-Loop Bug] — Leg 1** *(Last touched:
+  2026-09-30 · Re-checks: 0)*
+  Discovered live while verifying Responsive Layout Audit: Teams & Box Leg 1
+  (see `COMPLETED.md`). Expanding a `TeamCard` with **4+ Pokémon** at a
+  viewport **narrower than 768px** throws a React "Maximum update depth
+  exceeded" loop - doesn't crash outright but spams re-renders indefinitely
+  (burns CPU/battery, degrades the UI). Only reachable on the web build or a
+  resized browser - the desktop Electron app enforces a 1280px minimum
+  window width (`main.ts`), so this has never been visible there.
+  Confirmed via `git stash` + a clean rerun that it's pre-existing, not
+  caused by that leg's CSS changes - reproduces identically on unmodified
+  `main`. Bisected live via a Playwright-driven repro script (not yet
+  written down anywhere beyond this entry): 3 Pokémon never loops at any
+  width tested (375-1512px); 4 Pokémon loops reliably, but only below 768px
+  - the identical 4-6 mon roster expanded fine at 1512px with the same
+  timing. Root cause not yet identified - ruled out `ResizeObserver` (none
+  exist anywhere in `src/renderer`) and simple squish-driven remeasurement
+  (reproduces whether `PokemonCard` is squished to ~47px or rendering
+  healthy at ~276px, so it's not about card width itself). Leading
+  suspicion, not confirmed: something in `EditOverlays.tsx`'s per-card data-
+  fetch effects (`getEnrichedSpeciesOptions`/`getChampionsUsage`) or
+  `useGameData.ts`'s cache-update propagation misbehaving when 4+ instances
+  mount concurrently at a narrow width - needs real debugging (add a
+  `console.trace()`/React DevTools profiler pass at repro conditions), not a
+  CSS fix. This leg is that scoping/investigation pass - root-causing the
+  loop; the actual fix is a follow-up leg once the cause is confirmed.
 
 ## Blocked
 
@@ -30,31 +55,6 @@ Items where the whole item (not just a sub-part) is stalled on something
 outside this project — a person, a dependency, or an external decision.
 Exempt from the re-check counter; they move back to "In progress" once
 unblocked.
-
-- **[Reg M-C Z-A-Exclusive Movepool Audit] — Leg 1** *(Last touched:
-  2026-09-16 · Re-checks: exempt, blocked)*
-  Blocked: waiting on PokeAPI to backfill "champions"-tagged move data more
-  broadly, the same way it eventually did for Reg M-B's 22 species (see
-  `config/championsMovepoolChanges.ts`'s header). Deferred out of
-  Regulation M-C Prep's Leg 2 (see COMPLETED.md/postmortem) rather than
-  forced into that pass.
-  Scope correction 2026-09-16 (per Vanny): Rillaboom/Baxcalibur/Salamence
-  are not the actual audit target, they're cheap indicator species used to
-  check whether PokeAPI has caught up yet (currently 0 champions-tagged
-  moves each, vs. 51 for already-backfilled archaludon as control - checked
-  live 2026-09-10 and again 2026-09-16, no change). The real scope is a
-  full Champions movepool sweep across *all* Champions-legal species once
-  PokeAPI's backfill catches up - not just these 3, and not just Reg M-C's
-  roster. Golisopod (originally a 4th indicator) is separately resolved via
-  hand-curation from user-provided source text - see COMPLETED.md's
-  Champions M-C Balance Patch Corrections entry - but that was a one-off,
-  not a template to repeat per-species while waiting; the plan is to wait
-  for PokeAPI rather than hand-curate the rest.
-  Next step: periodically re-run the live champions-tag query against
-  Rillaboom/Baxcalibur/Salamence (indicator species); once any of them
-  shows non-zero champions-tagged moves, PokeAPI has started backfilling
-  Reg M-C and it's time to run the full sweep across all Champions-legal
-  species, not just these 3.
 
 - **[Team Card Grid Layout Re-check] — Leg 1** *(Last touched: 2026-08-31 ·
   Re-checks: 0)*
@@ -98,33 +98,6 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
-
-- **[Web TeamCard Expand Infinite-Loop Bug] — Leg 1** *(Last touched:
-  2026-09-30 · Re-checks: 0)*
-  Discovered live while verifying Responsive Layout Audit: Teams & Box Leg 1
-  (see `COMPLETED.md`). Expanding a `TeamCard` with **4+ Pokémon** at a
-  viewport **narrower than 768px** throws a React "Maximum update depth
-  exceeded" loop - doesn't crash outright but spams re-renders indefinitely
-  (burns CPU/battery, degrades the UI). Only reachable on the web build or a
-  resized browser - the desktop Electron app enforces a 1280px minimum
-  window width (`main.ts`), so this has never been visible there.
-  Confirmed via `git stash` + a clean rerun that it's pre-existing, not
-  caused by that leg's CSS changes - reproduces identically on unmodified
-  `main`. Bisected live via a Playwright-driven repro script (not yet
-  written down anywhere beyond this entry): 3 Pokémon never loops at any
-  width tested (375-1512px); 4 Pokémon loops reliably, but only below 768px
-  - the identical 4-6 mon roster expanded fine at 1512px with the same
-  timing. Root cause not yet identified - ruled out `ResizeObserver` (none
-  exist anywhere in `src/renderer`) and simple squish-driven remeasurement
-  (reproduces whether `PokemonCard` is squished to ~47px or rendering
-  healthy at ~276px, so it's not about card width itself). Leading
-  suspicion, not confirmed: something in `EditOverlays.tsx`'s per-card data-
-  fetch effects (`getEnrichedSpeciesOptions`/`getChampionsUsage`) or
-  `useGameData.ts`'s cache-update propagation misbehaving when 4+ instances
-  mount concurrently at a narrow width - needs real debugging (add a
-  `console.trace()`/React DevTools profiler pass at repro conditions), not a
-  CSS fix. Needs its own scoping/investigation pass before this can become a
-  concrete fix leg.
 
 - **[UI Shift Assessment Sweep — Post Card UI Polish] — Leg 1** *(Last
   touched: 2026-09-08 · Re-checks: 0)*

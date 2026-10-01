@@ -21,4 +21,16 @@ Entries prior to this file's oldest are in:
   (VGCPastes Real-Set Sourcing through Post-Parity Polish and everything
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
+
+- **[Reg M-C Z-A-Exclusive Movepool Audit] — Leg 1** (2026-09-30) - see
+  commit `b990967`. Re-ran Leg 4b's PokeAPI-vs-`learnsets.ts` diff
+  methodology (see `docs/investigations/champions-showdown-mod-audit.md`)
+  against the full current legal roster rather than just the 3 hand-picked
+  indicator species - confirmed the zero-`hasChampionsMoveData` set is
+  exactly all 25 Reg M-C-added species (no regressions elsewhere) and
+  populated `CHAMPIONS_MOVEPOOL_ADDITIONS`/`CHAMPIONS_MOVEPOOL_REMOVALS` for
+  all 25, superseding the 5 single-move entries hand-added during Reg M-C
+  Prep. Closes the item outright - no further legs needed; the existing
+  `hasChampionsMoveData !== true` self-heal already covers pruning this data
+  once PokeAPI eventually back-fills Reg M-C.
 </content>
