@@ -26,17 +26,6 @@ Data Check sections are removed outright (not automated), and Player Profile
 sync uses a whole-section reveal toggle. Sequenced decision-free fixes first
 per Vanny's call.
 
-- **[Season/Champions Data Check Removal] — Leg 1** *(Last touched:
-  2026-09-30 · Re-checks: 0)*
-  Decision (2026-09-30, Vanny): remove the manual "mark as checked" sections
-  entirely rather than automate them. Cleanly isolated - both hooks and both
-  section components are only wired in `SettingsPage.tsx` (imports at
-  lines 15-16/20-21, instantiation at 43-44, render at 95/97). Delete
-  `SeasonDataCheckSection.tsx`, `ChampionsDataCheckSection.tsx`,
-  `useSeasonDataCheck.ts`, `useChampionsDataCheck.ts` (+ their tests), and
-  `config/championsDataChecks.ts`; remove the now-dead check-state fields
-  from `AppSettings` in `types/settings.ts`.
-
 - **[Player Profile Cross-Device Sync] — Leg 1** *(Last touched: 2026-09-30
   · Re-checks: 0)*
   Decision (2026-09-30, Vanny): whole-section reveal toggle, not per-field.

@@ -18,6 +18,18 @@ Entries prior to this file's oldest are in:
   (Card UI Polish through Regular Calc Popup and everything shipped between
   them, split out at the 2026-09-13 Regular Calc Popup boundary)
 
+- **[Season/Champions Data Check Removal] — Leg 1** (2026-09-30) - see
+  commit `4289fd8`. Removed the manual "Mark as Checked" sections for
+  `config/seasons.ts` and the Champions balance-patch tables from Settings
+  per Vanny's decision to drop the manual tracking outright rather than
+  automate it. Deleted both hook/section pairs
+  (`useSeasonDataCheck`/`SeasonDataCheckSection`,
+  `useChampionsDataCheck`/`ChampionsDataCheckSection`) and
+  `config/championsDataChecks.ts`, and dropped the now-dead
+  `lastSeasonDataCheckedAt`/`championsDataChecks` fields (and
+  `ChampionsDataCheckId`) from `AppSettings`. `config/seasons.ts` itself is
+  untouched - only the manual-verification UI around it is gone.
+
 - **[Sidebar Sync Status Indicator Removal] — Leg 1** (2026-09-30) - see
   commit `2263f44`. Dropped the sync status dot/text from `AppWeb.tsx`'s
   sidebar footer per Vanny's decision - `SyncSection.tsx` on the Settings
