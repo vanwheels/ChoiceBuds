@@ -27,7 +27,7 @@ Entries prior to this file's oldest are in:
   `AddPokemonStatTable` (as a modal, card stays in place) instead of
   `SpeciesPickerCard`, with `#tag` search, Mega rows (stone pre-equipped via
   `swapSlot`'s new `itemOverride`) and other-slot Species Clause filtering.
-  Not live-verified in the app yet. See the commit following `d141f33`.
+  Confirmed by the user in the app. See commit `a6fc6e8`.
 
 - **[Team Add-Pokémon Species Search Parity] — Leg 1** (2026-10-03) -
   scoping only. Desktop `TeamCard` and `BoxPage` already use
