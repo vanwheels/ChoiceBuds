@@ -23,7 +23,39 @@ shipped the same day (see `MILESTONES.md` and its
 
 ## Current Milestone: Fixes & Adjustments
 
-Legs are added as issues are reported. None are logged yet.
+Legs are added as issues are reported. First batch reported 2026-10-03
+(desktop and/or web).
+
+### [Mega Stone Sprites] — Leg 1
+Some Mega Stones render with no sprite; user recalls them working before,
+so likely a regression. Start by bisecting (git log on the item-sprite
+util/config) and checking which stones miss. Applies to app and web.
+Last touched: 2026-10-03 · Re-checks: 0
+
+### [Team Add-Pokémon Species Search Parity] — Leg 1
+Adding a Pokémon to a team should show the richer species search (BST,
+typing, abilities) that Box's create flow already has
+(`SpeciesPickerCard.tsx`/`AddPokemonStatTable.tsx`). User reports it exists
+on web but not in the desktop client — confirm where each platform's team
+add path diverges, then unify. Scope-to-plan first.
+Last touched: 2026-10-03 · Re-checks: 0
+
+### [Web Species Search Cold-Cache Stats] — Leg 1
+On web, BST/abilities/types don't show on search results until that
+species has been cached (i.e. picked/loaded once). Likely the search rows
+read only from `useDatabase`'s cache with no prefetch/bulk load on web
+(desktop's `useInitialSync` fills it). Decide: prefetch roster stats vs.
+lazy-fetch per visible row.
+Last touched: 2026-10-03 · Re-checks: 0
+
+### [Web Reorder Jank] — Leg 1
+Drag-reordering moves, Pokémon, and teams on web is unreliable: items land
+in the wrong slot or only move one slot at a time. Touches
+`TeamCard.tsx`, `PokemonCard.tsx`, `EditablePokemonCore.tsx`,
+`AppWeb.tsx`/`App.tsx` (native HTML5 DnD, no library). Audit all three
+reorder paths for a shared root cause before fixing; may split into
+per-surface legs, and a touch/mobile pass is likely part of it.
+Last touched: 2026-10-03 · Re-checks: 0
 
 ## Blocked
 
