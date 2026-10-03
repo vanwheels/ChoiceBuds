@@ -187,6 +187,7 @@ export default function MobileTeamSwipeOverlay({ team, initialIndex, updateTeam,
               speciesRosterState={speciesRosterState}
               spriteCacheState={spriteCacheState}
               rosterActions={rosterActions}
+              getCachedEntry={databaseState.getCachedEntry}
               savedPokemonState={savedPokemonState}
               vgcPastesState={vgcPastesState}
               vgcRealSetsState={vgcRealSetsState}

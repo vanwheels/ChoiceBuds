@@ -22,6 +22,13 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[Team Add-Pokémon Species Search Parity] — Leg 2** (2026-10-03) -
+  Roster Swap on `PokemonCard`/`MobilePokemonCard` now opens
+  `AddPokemonStatTable` (as a modal, card stays in place) instead of
+  `SpeciesPickerCard`, with `#tag` search, Mega rows (stone pre-equipped via
+  `swapSlot`'s new `itemOverride`) and other-slot Species Clause filtering.
+  Not live-verified in the app yet. See the commit following `d141f33`.
+
 - **[Team Add-Pokémon Species Search Parity] — Leg 1** (2026-10-03) -
   scoping only. Desktop `TeamCard` and `BoxPage` already use
   `AddPokemonStatTable`; the real gap is Roster Swap still using plain

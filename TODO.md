@@ -26,16 +26,6 @@ shipped the same day (see `MILESTONES.md` and its
 Legs are added as issues are reported. First batch reported 2026-10-03
 (desktop and/or web).
 
-### [Team Add-Pokémon Species Search Parity] — Leg 2
-Build the Roster Swap fix scoped in Leg 1 (see COMPLETED.md): render
-`AddPokemonStatTable` instead of `SpeciesPickerCard` in `PokemonCard.tsx`
-(~L199) and `MobilePokemonCard.tsx` (~L127). `handleSwapSelect` must accept
-and apply the new optional `itemOverride` (Mega Stone rows). Don't pass
-`savedPokemon`/`onSelectSaved` (swap has its own `SavedSetPicker` step).
-Check the table fits the card slot on mobile first. Mobile add-Pokémon entry
-is a separate, unscheduled feature.
-Last touched: 2026-10-03 · Re-checks: 0
-
 ### [Web Species Search Cold-Cache Stats] — Leg 1
 On web, BST/abilities/types don't show on search results until that
 species has been cached (i.e. picked/loaded once). Likely the search rows

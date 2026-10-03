@@ -25,7 +25,7 @@
 
 import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import type { ImportedPokemonInfo, SavedPokemonEntry, Team, SpeciesRosterEntry, VgcRealSetBundle } from '../types/pokemon';
+import type { ImportedPokemonInfo, SavedPokemonEntry, Team, SpeciesRosterEntry, PokeAPICacheEntry, VgcRealSetBundle } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
@@ -34,7 +34,7 @@ import type { UseSavedPokemonReturn } from '../hooks/useSavedPokemon';
 import type { UseVgcPastesCacheReturn } from '../hooks/useVgcPastesCache';
 import type { UseVgcRealSetsCacheReturn } from '../hooks/useVgcRealSetsCache';
 import EditablePokemonCore from './EditablePokemonCore';
-import SpeciesPickerCard from './SpeciesPickerCard';
+import AddPokemonStatTable from './AddPokemonStatTable';
 import SavedSetPicker from './SavedSetPicker';
 import RealSetsButton from './RealSetsButton';
 import ExportTeamModal from './ExportTeamModal';
@@ -53,22 +53,28 @@ interface MobilePokemonCardProps {
   speciesRosterState: UseSpeciesRosterReturn;
   spriteCacheState: UseSpriteCacheReturn;
   rosterActions: UseRosterActionsReturn;
+  getCachedEntry: (species: string) => PokeAPICacheEntry | null;
   savedPokemonState: UseSavedPokemonReturn;
   vgcPastesState: UseVgcPastesCacheReturn;
   vgcRealSetsState: UseVgcRealSetsCacheReturn;
   showAnimatedSprites: boolean;
 }
 
-export default function MobilePokemonCard({ pokemon, team, pokemonIndex, updateTeam, gameDataState, speciesRosterState, spriteCacheState, rosterActions, savedPokemonState, vgcPastesState, vgcRealSetsState, showAnimatedSprites }: MobilePokemonCardProps) {
+export default function MobilePokemonCard({ pokemon, team, pokemonIndex, updateTeam, gameDataState, speciesRosterState, spriteCacheState, rosterActions, getCachedEntry, savedPokemonState, vgcPastesState, vgcRealSetsState, showAnimatedSprites }: MobilePokemonCardProps) {
   const { showdownData } = pokemon;
   const [isSwapPickerOpen, setIsSwapPickerOpen] = useState(false);
   // Same "saved builds for this species" offer PokemonCard.tsx's own Roster
   // Swap uses - see its header comment.
   const [savedSetPickerSpecies, setSavedSetPickerSpecies] = useState<SpeciesRosterEntry | null>(null);
+  // Mega Stone chosen on a Mega row, held while SavedSetPicker's "Blank" choice is pending.
+  const [pendingItemOverride, setPendingItemOverride] = useState<string | undefined>(undefined);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isSaveToLibraryOpen, setIsSaveToLibraryOpen] = useState(false);
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
   const rulesetId = toRegulationId(team.format);
+  // Species Clause, same as TeamCard.tsx's add picker - but this slot's own species stays pickable.
+  const otherTeamSpecies = new Set(team.pokemon.filter((_, i) => i !== pokemonIndex).map(p => p.showdownData.species.toLowerCase()));
+  const swapRoster = speciesRosterState.roster.filter(s => !otherTeamSpecies.has(s.name.toLowerCase()));
 
   const updatePokemon = async (updates: Partial<ImportedPokemonInfo>): Promise<boolean> => {
     const updatedPokemon = [...team.pokemon];
@@ -76,21 +82,22 @@ export default function MobilePokemonCard({ pokemon, team, pokemonIndex, updateT
     return updateTeam(team.id, { pokemon: updatedPokemon });
   };
 
-  const handleSwapSelect = async (species: SpeciesRosterEntry) => {
+  const handleSwapSelect = async (species: SpeciesRosterEntry, itemOverride?: string) => {
     setIsSwapPickerOpen(false);
     const savedSets = savedPokemonState.getSavedSetsForSpecies(species.name);
     if (savedSets.length > 0) {
+      setPendingItemOverride(itemOverride);
       setSavedSetPickerSpecies(species);
       return;
     }
-    await rosterActions.swapSlot(team, pokemonIndex, species.name);
+    await rosterActions.swapSlot(team, pokemonIndex, species.name, itemOverride);
   };
 
   const handleSwapBlank = async () => {
     if (!savedSetPickerSpecies) return;
     const species = savedSetPickerSpecies.name;
     setSavedSetPickerSpecies(null);
-    await rosterActions.swapSlot(team, pokemonIndex, species);
+    await rosterActions.swapSlot(team, pokemonIndex, species, pendingItemOverride);
   };
 
   const handleSwapPickSaved = async (entry: SavedPokemonEntry) => {
@@ -122,17 +129,6 @@ export default function MobilePokemonCard({ pokemon, team, pokemonIndex, updateT
     await updateTeam(team.id, { pokemon: updatedPokemon });
   };
 
-  if (isSwapPickerOpen) {
-    return (
-      <SpeciesPickerCard
-        roster={speciesRosterState.roster}
-        rulesetId={rulesetId}
-        resolveSprite={spriteCacheState.resolveSprite}
-        onSelect={handleSwapSelect}
-        onClose={() => setIsSwapPickerOpen(false)}
-      />
-    );
-  }
 
   return (
     <div className="w-full max-w-md mx-auto flex flex-col gap-3">
@@ -200,6 +196,19 @@ export default function MobilePokemonCard({ pokemon, team, pokemonIndex, updateT
           onPickBundle={handlePickRealSet}
         />
       </div>
+
+      <AnimatePresence>
+        {isSwapPickerOpen && (
+          <AddPokemonStatTable
+            roster={swapRoster}
+            rulesetId={rulesetId}
+            resolveSprite={spriteCacheState.resolveSprite}
+            getCachedEntry={getCachedEntry}
+            onSelect={handleSwapSelect}
+            onClose={() => setIsSwapPickerOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {isExportOpen && (

@@ -24,7 +24,7 @@ const ZERO_EVS: EVSpread = {
 };
 
 export interface UseRosterActionsReturn {
-  swapSlot: (team: Team, index: number, species: string) => Promise<boolean>;
+  swapSlot: (team: Team, index: number, species: string, itemOverride?: string) => Promise<boolean>;
   addSlot: (team: Team, species: string, itemOverride?: string) => Promise<boolean>;
   removeSlot: (team: Team, index: number) => Promise<boolean>;
   loadSavedSet: (team: Team, index: number, entry: SavedPokemonEntry) => Promise<boolean>;
@@ -106,8 +106,8 @@ export function useRosterActions(
     return enrichPokemonWithAPI(showdownData, getCachedEntry, setCacheEntry);
   }, [getEnrichedSpeciesOptions, getChampionsUsage, getCachedEntry, setCacheEntry]);
 
-  const swapSlot = useCallback(async (team: Team, index: number, species: string): Promise<boolean> => {
-    const newSlot = await buildSlot(species);
+  const swapSlot = useCallback(async (team: Team, index: number, species: string, itemOverride?: string): Promise<boolean> => {
+    const newSlot = await buildSlot(species, itemOverride);
     const updatedPokemon = [...team.pokemon];
     updatedPokemon[index] = newSlot;
     return updateTeam(team.id, { pokemon: updatedPokemon });

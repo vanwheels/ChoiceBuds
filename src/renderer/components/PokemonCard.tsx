@@ -18,7 +18,7 @@
 import { useState } from 'react';
 import { AnimatePresence, Reorder, useDragControls } from 'framer-motion';
 import type { CSSProperties, PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent } from 'react';
-import type { ImportedPokemonInfo, SavedPokemonEntry, Team, SpeciesRosterEntry, VgcRealSetBundle } from '../types/pokemon';
+import type { ImportedPokemonInfo, SavedPokemonEntry, Team, SpeciesRosterEntry, PokeAPICacheEntry, VgcRealSetBundle } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
@@ -28,7 +28,7 @@ import type { UseVgcPastesCacheReturn } from '../hooks/useVgcPastesCache';
 import type { UseVgcRealSetsCacheReturn } from '../hooks/useVgcRealSetsCache';
 import { getTypeGlowColors } from '../config/pokemonTheme';
 import EditablePokemonCore from './EditablePokemonCore';
-import SpeciesPickerCard from './SpeciesPickerCard';
+import AddPokemonStatTable from './AddPokemonStatTable';
 import SavedSetPicker from './SavedSetPicker';
 import RealSetsButton from './RealSetsButton';
 import ExportTeamModal from './ExportTeamModal';
@@ -48,6 +48,7 @@ interface PokemonCardProps {
   speciesRosterState: UseSpeciesRosterReturn;
   spriteCacheState: UseSpriteCacheReturn;
   rosterActions: UseRosterActionsReturn;
+  getCachedEntry: (species: string) => PokeAPICacheEntry | null;
   savedPokemonState: UseSavedPokemonReturn;
   /** Shared single instances (mounted once in TeamsPage.tsx, not per-card) -
       see RealSetsButton.tsx's header for why a per-card instance would race
@@ -63,7 +64,7 @@ interface PokemonCardProps {
   onReorderDragEnd: () => void;
 }
 
-export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, gameDataState, speciesRosterState, spriteCacheState, rosterActions, savedPokemonState, vgcPastesState, vgcRealSetsState, showAnimatedSprites, onReorderDragEnd }: PokemonCardProps) {
+export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, gameDataState, speciesRosterState, spriteCacheState, rosterActions, getCachedEntry, savedPokemonState, vgcPastesState, vgcRealSetsState, showAnimatedSprites, onReorderDragEnd }: PokemonCardProps) {
   const { showdownData, types } = pokemon;
   const [isSwapPickerOpen, setIsSwapPickerOpen] = useState(false);
   // Set the instant a Roster Swap lands on a species with 1+ saved builds
@@ -72,6 +73,8 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
   // Database for Team-Building Leg 1, see TODO.md). null the rest of the
   // time, including right after the swap picker closes with no matches.
   const [savedSetPickerSpecies, setSavedSetPickerSpecies] = useState<SpeciesRosterEntry | null>(null);
+  // Mega Stone chosen on a Mega row, held while SavedSetPicker's "Blank" choice is pending.
+  const [pendingItemOverride, setPendingItemOverride] = useState<string | undefined>(undefined);
   const [isExportOpen, setIsExportOpen] = useState(false);
   // "Save to Library" context-menu item (Save-to-Library Name Prompt Leg 1,
   // see TODO.md) - opens the shared name-prompt dialog directly, since this
@@ -92,6 +95,9 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
   // ContextMenu positions itself at literal click coordinates.
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
   const rulesetId = toRegulationId(team.format);
+  // Species Clause, same as TeamCard.tsx's add picker - but this slot's own species stays pickable.
+  const otherTeamSpecies = new Set(team.pokemon.filter((_, i) => i !== pokemonIndex).map(p => p.showdownData.species.toLowerCase()));
+  const swapRoster = speciesRosterState.roster.filter(s => !otherTeamSpecies.has(s.name.toLowerCase()));
   const [glowC1, glowC2] = getTypeGlowColors(types);
   const glowRingStyle = { '--glow-c1': glowC1, '--glow-c2': glowC2 } as CSSProperties;
 
@@ -109,14 +115,15 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
   // for a choice between those and a fresh default, instead of committing
   // the swap immediately - same "offer a saved-set choice on real selection"
   // pattern CalcPokemonPanel.tsx's own species Autocomplete already uses.
-  const handleSwapSelect = async (species: SpeciesRosterEntry) => {
+  const handleSwapSelect = async (species: SpeciesRosterEntry, itemOverride?: string) => {
     setIsSwapPickerOpen(false);
     const savedSets = savedPokemonState.getSavedSetsForSpecies(species.name);
     if (savedSets.length > 0) {
+      setPendingItemOverride(itemOverride);
       setSavedSetPickerSpecies(species);
       return;
     }
-    await rosterActions.swapSlot(team, pokemonIndex, species.name);
+    await rosterActions.swapSlot(team, pokemonIndex, species.name, itemOverride);
   };
 
   // "Blank" on the saved-set popover: same fresh usage-based default a
@@ -125,7 +132,7 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
     if (!savedSetPickerSpecies) return;
     const species = savedSetPickerSpecies.name;
     setSavedSetPickerSpecies(null);
-    await rosterActions.swapSlot(team, pokemonIndex, species);
+    await rosterActions.swapSlot(team, pokemonIndex, species, pendingItemOverride);
   };
 
   const handleSwapPickSaved = async (entry: SavedPokemonEntry) => {
@@ -192,19 +199,6 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
     dragControls.start(e);
   };
 
-  // Roster Swap fills this slot with an in-card species picker rather than
-  // floating a dropdown under the sprite - see SpeciesPickerCard.tsx
-  if (isSwapPickerOpen) {
-    return (
-      <SpeciesPickerCard
-        roster={speciesRosterState.roster}
-        rulesetId={rulesetId}
-        resolveSprite={spriteCacheState.resolveSprite}
-        onSelect={handleSwapSelect}
-        onClose={() => setIsSwapPickerOpen(false)}
-      />
-    );
-  }
 
   return (
     // Outer ring wraps the actual card in a soft per-type colored glow (see
@@ -294,6 +288,19 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
         />
 
         <AnimatePresence>
+        {isSwapPickerOpen && (
+          <AddPokemonStatTable
+            roster={swapRoster}
+            rulesetId={rulesetId}
+            resolveSprite={spriteCacheState.resolveSprite}
+            getCachedEntry={getCachedEntry}
+            onSelect={handleSwapSelect}
+            onClose={() => setIsSwapPickerOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
           {isExportOpen && (
             <ExportTeamModal
               pokemonList={[showdownData]}

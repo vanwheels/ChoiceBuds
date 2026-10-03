@@ -581,6 +581,7 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
                       speciesRosterState={speciesRosterState}
                       spriteCacheState={spriteCacheState}
                       rosterActions={rosterActions}
+                      getCachedEntry={databaseState.getCachedEntry}
                       savedPokemonState={savedPokemonState}
                       vgcPastesState={vgcPastesState}
                       vgcRealSetsState={vgcRealSetsState}
