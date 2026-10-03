@@ -26,18 +26,13 @@ shipped the same day (see `MILESTONES.md` and its
 Legs are added as issues are reported. First batch reported 2026-10-03
 (desktop and/or web).
 
-### [Web Reorder Jank] — Leg 1
-Audit done (code-read only, not reproduced): all three paths (teams list,
-roster, Box) are framer-motion `Reorder.Group/Item`, not native DnD, and
-share one structure. Applied a cheap fix: TeamCard's `transition-all` was
-CSS-transitioning the transform framer drives; narrowed it. Awaiting user
-verification on web. Likely root cause of "wrong slot / one slot at a time"
-is structural: `Reorder` is 1D-only but all three groups are wrapping 2D
-grids (axis="x"/"y" can't swap across rows/columns), plus a 0.32s layout
-transition delays the next swap while neighbors are mid-animation. If still
-janky, next leg = custom 2D pointer-hit-test reorder (bigger than a tweak).
-Update: move grid (MoveBubbleGrid) now uses a custom 2D hit-test reorder,
-pushed for live verification. Teams list, roster and Box still use Reorder.
+### [Web Reorder Jank] — Leg 2
+Port the move grid's 2D pointer hit-test reorder (see
+`MoveBubbleGrid.tsx`, commit `c0dd045`) to the roster grid in `TeamCard.tsx`/
+`PokemonCard.tsx`, the Box (`BoxPage.tsx`/`BoxCard.tsx`) and the teams list
+(`TeamsPage.tsx`). All three still use 1D framer `Reorder`, so cross-row
+drags and the snap-back-on-release glitch likely persist there. Consider
+extracting a shared hook; may split per surface.
 Last touched: 2026-10-03 · Re-checks: 0
 
 ## Blocked

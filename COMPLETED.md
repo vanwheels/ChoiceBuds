@@ -112,5 +112,8 @@ Entries prior to this file's oldest are in:
   once PokeAPI eventually back-fills Reg M-C.
 </content>
 
+## [Web Reorder Jank] — Leg 1 (2026-10-03)
+Move-slot reorder was broken because framer's 1D `Reorder` can't swap across rows of the 2x2 grid, and the identity reset animated bubbles back before shifting. Replaced with a 2D pointer hit-test reorder, user-verified live. See commit `c0dd045`.
+
 ## [Mega Stone Sprites] — Leg 1 (2026-10-03)
 Not a regression: the 36 Champions-new Mega Stones never had PokeAPI sprites (null/404), only Fairy Feather had a Serebii fallback. Generalized it via `utils/itemSprite.ts` across the item box, picker, and poster tiles. See commit `7fd8f2d`.
