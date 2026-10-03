@@ -102,9 +102,10 @@
  */
 
 import { useState } from 'react';
-import { AnimatePresence, Reorder } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import type { BoxSortMode, ImportedPokemonInfo, SavedPokemonEntry, SpeciesRosterEntry } from '../types/pokemon';
+import { useGridReorder } from '../hooks/useGridReorder';
 import type { UseSavedPokemonReturn } from '../hooks/useSavedPokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
@@ -285,6 +286,11 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
     setOrderedEntryIds(displayedEntries.map(e => e.id));
   }
   const canReorderBox = sortMode === 'custom' && !isSearching;
+  const { containerRef: boxGridRef, getHandlers: getBoxHandlers } = useGridReorder({
+    orderedIds: orderedEntryIds,
+    setOrderedIds: setOrderedEntryIds,
+    onCommit: ids => savedPokemonState.setSavedPokemonOrder(ids),
+  });
 
   const handleSetSortMode = async (mode: BoxSortMode) => {
     if (mode === 'custom' && !settingsState.settings.boxCustomOrderSeeded) {
@@ -464,19 +470,9 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
             />
           </div>
 
-          {/* axis="x" (confirmed live via run-desktop against TeamCard.tsx's
-             own roster grid - "y" silently never triggered a swap at all,
-             same root cause here) since Reorder only measures drag offset
-             along one axis to detect a swap, and this flex-wrap grid is
-             predominantly horizontal. A wrapped second row can still only
-             swap within its own row via horizontal drag - a known
-             1D-vs-2D-grid limitation of the Reorder primitive itself, not
-             something either axis choice fixes. */}
-          <Reorder.Group
-            as="div"
-            axis="x"
-            values={orderedEntryIds}
-            onReorder={setOrderedEntryIds}
+          {/* 2D hit-test reorder (useGridReorder.ts, Web Reorder Jank Leg 2). */}
+          <div
+            ref={boxGridRef}
             className="hidden md:flex flex-wrap gap-4 items-start"
             onContextMenu={handleGridContextMenu}
           >
@@ -510,7 +506,7 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
                   onToggleFavorite={() => savedPokemonState.toggleSavedPokemonFavorite(entry.id)}
                   onDelete={() => savedPokemonState.deleteSavedPokemon(entry.id)}
                   canReorder={canReorderBox}
-                  onReorderDragEnd={() => savedPokemonState.setSavedPokemonOrder(orderedEntryIds)}
+                  reorderHandlers={getBoxHandlers(id)}
                   gameDataState={gameDataState}
                   rulesetId={rulesetId}
                   resolveSprite={spriteCacheState.resolveSprite}
@@ -518,7 +514,7 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
                 />
               );
             })}
-          </Reorder.Group>
+          </div>
           </>
         )}
         </div>

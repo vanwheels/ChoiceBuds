@@ -16,9 +16,10 @@
  */
 
 import { useState } from 'react';
-import { AnimatePresence, Reorder, useDragControls } from 'framer-motion';
+import { AnimatePresence, motion, useDragControls } from 'framer-motion';
 import type { CSSProperties, PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent } from 'react';
 import type { ImportedPokemonInfo, SavedPokemonEntry, Team, SpeciesRosterEntry, PokeAPICacheEntry, VgcRealSetBundle } from '../types/pokemon';
+import { toMotionDragProps, type GridReorderHandlers } from '../hooks/useGridReorder';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
@@ -61,10 +62,10 @@ interface PokemonCardProps {
   // Drag-and-Drop: Framer Motion Reorder Leg 1, see TODO.md) - TeamCard.tsx
   // owns the Reorder.Group's local order state and persists it here, since
   // committing needs the whole roster's final order, not just this card's.
-  onReorderDragEnd: () => void;
+  reorderHandlers: GridReorderHandlers;
 }
 
-export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, gameDataState, speciesRosterState, spriteCacheState, rosterActions, getCachedEntry, savedPokemonState, vgcPastesState, vgcRealSetsState, showAnimatedSprites, onReorderDragEnd }: PokemonCardProps) {
+export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, gameDataState, speciesRosterState, spriteCacheState, rosterActions, getCachedEntry, savedPokemonState, vgcPastesState, vgcRealSetsState, showAnimatedSprites, reorderHandlers }: PokemonCardProps) {
   const { showdownData, types } = pokemon;
   const [isSwapPickerOpen, setIsSwapPickerOpen] = useState(false);
   // Set the instant a Roster Swap lands on a species with 1+ saved builds
@@ -214,14 +215,18 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
     // (pokemon.id). dragListener is off - handlePointerDown below is the
     // only thing that starts a drag, so it can exclude inputs/buttons/
     // [data-no-drag] first.
-    <Reorder.Item
-      as="div"
-      value={pokemon.id}
+    <motion.div
+      layout="position"
+      drag
+      dragSnapToOrigin
+      dragMomentum={false}
+      dragElastic={0}
+      data-reorder-id={pokemon.id}
       dragListener={false}
       dragControls={dragControls}
       transition={DRAG_REORDER_TRANSITION}
       whileDrag={{ scale: 1.03, zIndex: 1, boxShadow: '0 8px 24px rgba(0,0,0,0.45)' }}
-      onDragEnd={onReorderDragEnd}
+      {...toMotionDragProps(reorderHandlers)}
       className="type-glow-ring max-w-[280px] min-w-0"
       style={glowRingStyle}
     >
@@ -372,6 +377,6 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
           )}
         </AnimatePresence>
       </div>
-    </Reorder.Item>
+    </motion.div>
   );
 }

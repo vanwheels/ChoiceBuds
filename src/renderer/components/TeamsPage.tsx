@@ -5,10 +5,11 @@
  */
 
 import { useState } from 'react';
-import { AnimatePresence, Reorder } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import type { RegulationLabel, VgcPasteTeamRow } from '../types/pokemon';
 import { sortTeamsByFavorite } from '../utils/teamSort';
+import { useGridReorder } from '../hooks/useGridReorder';
 import type { UseTeamsReturn } from '../hooks/useTeams';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
 import type { UseActiveEditorReturn } from '../hooks/useActiveEditor';
@@ -124,6 +125,11 @@ export default function TeamsPage({
     setOrderedTeamIds(sortedTeams.map(t => t.id));
   }
   const canReorderTeams = activeFilter === 'All';
+  const { containerRef: teamsGridRef, getHandlers: getTeamHandlers } = useGridReorder({
+    orderedIds: orderedTeamIds,
+    setOrderedIds: setOrderedTeamIds,
+    onCommit: ids => teamsState.setTeamOrder(ids),
+  });
 
   // Format filter buttons configuration
   const filterButtons: FormatFilter[] = ['All', 'Reg M-A', 'Reg M-B', 'Reg M-C'];
@@ -295,11 +301,8 @@ export default function TeamsPage({
             />
           </div>
 
-          <Reorder.Group
-            as="div"
-            axis="y"
-            values={orderedTeamIds}
-            onReorder={setOrderedTeamIds}
+          <div
+            ref={teamsGridRef}
             className="hidden md:grid grid-cols-1 @[1700px]:grid-cols-2 gap-4 w-full"
           >
             {/* Responsive teams grid (carousel/grid rework leg 4, see TODO.md):
@@ -345,11 +348,11 @@ export default function TeamsPage({
                   vgcPastesState={vgcPastesState}
                   vgcRealSetsState={vgcRealSetsState}
                   canReorder={canReorderTeams}
-                  onReorderDragEnd={() => teamsState.setTeamOrder(orderedTeamIds)}
+                  reorderHandlers={getTeamHandlers(id)}
                 />
               );
             })}
-          </Reorder.Group>
+          </div>
           </>
         )}
         </div>

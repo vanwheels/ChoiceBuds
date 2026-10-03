@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { AnimatePresence, motion, Reorder, useDragControls } from 'framer-motion';
+import { AnimatePresence, motion, useDragControls } from 'framer-motion';
 import type { PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent } from 'react';
 import { Team, SpeciesRosterEntry, SavedPokemonEntry, type ImportedPokemonInfo } from '../types/pokemon';
+import { toMotionDragProps, useGridReorder, type GridReorderHandlers } from '../hooks/useGridReorder';
 import type { UseTeamsReturn } from '../hooks/useTeams';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
 import type { UseGameDataReturn } from '../hooks/useGameData';
@@ -52,7 +53,7 @@ interface TeamCardProps {
   // against a partial view has no well-defined "moved to the very end"
   // target) - same gate shape as BoxCard.tsx's own isCustomOrder check.
   canReorder: boolean;
-  onReorderDragEnd: () => void;
+  reorderHandlers: GridReorderHandlers;
 }
 
 // Card expand/collapse (animation/motion leg 2, see TODO.md): animates height
@@ -91,7 +92,7 @@ const cardExpandVariants = {
   },
 };
 
-export default function TeamCard({ team, onDelete, teamsState, databaseState, gameDataState, speciesRosterState, spriteCacheState, settingsState, savedPokemonState, vgcPastesState, vgcRealSetsState, canReorder, onReorderDragEnd }: TeamCardProps) {
+export default function TeamCard({ team, onDelete, teamsState, databaseState, gameDataState, speciesRosterState, spriteCacheState, settingsState, savedPokemonState, vgcPastesState, vgcRealSetsState, canReorder, reorderHandlers }: TeamCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   // Collapse-flicker fix (Team Card Collapse Animation Flicker Leg 1, see
   // TODO.md): col-span-full used to be driven directly off isExpanded, so
@@ -136,6 +137,16 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
     setPrevRosterIdsKey(rosterIdsKey);
     setOrderedPokemonIds(team.pokemon.map(p => p.id));
   }
+  const { containerRef: rosterGridRef, getHandlers: getRosterHandlers } = useGridReorder({
+    orderedIds: orderedPokemonIds,
+    setOrderedIds: setOrderedPokemonIds,
+    onCommit: ids => {
+      const reordered = ids
+        .map(oid => team.pokemon.find(pk => pk.id === oid))
+        .filter((pk): pk is ImportedPokemonInfo => pk !== undefined);
+      teamsState.updateTeam(team.id, { pokemon: reordered });
+    },
+  });
   // Quick Copy/Paste Pokémon & Teams via Right-Click (Leg 1, see TODO.md) -
   // same click-coordinates ContextMenu pattern PokemonCard.tsx already
   // established for its own right-click menu.
@@ -261,13 +272,17 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
     // layout="position" pairing - value must match whatever identity
     // TeamsPage.tsx's Reorder.Group tracks its items by (team.id).
     // dragListener is off - only the grip handle below starts a drag.
-    <Reorder.Item
-      as="div"
-      value={team.id}
+    <motion.div
+      layout="position"
+      drag
+      dragSnapToOrigin
+      dragMomentum={false}
+      dragElastic={0}
+      data-reorder-id={team.id}
       dragListener={false}
       dragControls={dragControls}
       transition={DRAG_REORDER_TRANSITION}
-      onDragEnd={onReorderDragEnd}
+      {...toMotionDragProps(reorderHandlers)}
       className={`bg-zinc-900/40 border border-zinc-800/80 border-l-4 ${regulationTheme.accentBorder} rounded-xl transition-[background-color,border-color,box-shadow,opacity] ${
       isFullWidth ? 'col-span-full' : ''
     }`}>
@@ -542,28 +557,15 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
                   (keyed off the @container ancestor above), not a viewport
                   media query - unlike the old xl:grid-cols-6 this can't
                   misfire from raw viewport width alone. */}
-              {/* Reorder.Group (Touch Drag-and-Drop: Framer Motion Reorder Leg 1,
-                  see TODO.md) replaces the old plain grid div - values are
-                  pokemon ids (orderedPokemonIds above), not the pokemon objects
-                  themselves, so identity stays stable across the re-renders a
-                  drag triggers. pokemonIndex passed to each PokemonCard is its
-                  authoritative position in team.pokemon (not its visual
-                  position here), since that's what PokemonCard's own field
-                  edits index into - only onReorderDragEnd needs the visual
-                  order, to commit it as team.pokemon's new real order.
-                  axis="x" (confirmed live via run-desktop - "y" silently
-                  never triggered a swap at all) since Reorder only measures
-                  drag offset along one axis to detect a swap, and this grid
-                  is predominantly a single wide row (3 or 6 across); a
-                  2-row layout (narrow container, grid-cols-3 with 4-6 mons)
-                  can still only swap within a row via horizontal drag - a
-                  known 1D-vs-2D-grid limitation of the Reorder primitive
-                  itself, not something either axis choice fixes. */}
-              <Reorder.Group
-                as="div"
-                axis="x"
-                values={orderedPokemonIds}
-                onReorder={setOrderedPokemonIds}
+              {/* 2D hit-test reorder (useGridReorder.ts, Web Reorder Jank Leg 2) -
+                  items are keyed by pokemon id (orderedPokemonIds above), so
+                  identity stays stable across drag re-renders. pokemonIndex
+                  passed to each PokemonCard is its authoritative position in
+                  team.pokemon (not its visual position here), since that's
+                  what PokemonCard's own field edits index into; only the
+                  drag-end commit uses the visual order. */}
+              <div
+                ref={rosterGridRef}
                 className="grid grid-cols-1 @[380px]:grid-cols-2 @[600px]:grid-cols-3 @[1220px]:grid-cols-6 gap-4 w-full"
                 onContextMenu={handlePokemonAreaContextMenu}
               >
@@ -586,12 +588,7 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
                       vgcPastesState={vgcPastesState}
                       vgcRealSetsState={vgcRealSetsState}
                       showAnimatedSprites={settingsState.settings.showAnimatedSprites}
-                      onReorderDragEnd={() => {
-                        const reordered = orderedPokemonIds
-                          .map(oid => team.pokemon.find(pk => pk.id === oid))
-                          .filter((pk): pk is ImportedPokemonInfo => pk !== undefined);
-                        updateTeam(team.id, { pokemon: reordered });
-                      }}
+                      reorderHandlers={getRosterHandlers(id)}
                     />
                   );
                 })}
@@ -612,7 +609,7 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
                     <span className="text-sm font-semibold">+ Add Pokémon</span>
                   </button>
                 )}
-              </Reorder.Group>
+              </div>
 
               {/* Strategy Notes - team-level free text (Team.notes), same "local state + save
                   on blur" pattern as the name/author fields above. Permanently editable
@@ -740,6 +737,6 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
           />
         )}
       </AnimatePresence>
-    </Reorder.Item>
+    </motion.div>
   );
 }

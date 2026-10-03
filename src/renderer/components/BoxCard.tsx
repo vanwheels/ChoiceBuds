@@ -59,8 +59,9 @@
  */
 
 import { useState } from 'react';
+import { toMotionDragProps, type GridReorderHandlers } from '../hooks/useGridReorder';
 import type { CSSProperties, PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent } from 'react';
-import { AnimatePresence, Reorder, useDragControls } from 'framer-motion';
+import { AnimatePresence, motion, useDragControls } from 'framer-motion';
 import type { ImportedPokemonInfo, SavedPokemonEntry } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { RegulationId } from '../utils/pokemonRules';
@@ -86,14 +87,14 @@ interface BoxCardProps {
   // BoxCard), so this card only starts/commits its own drag - see its
   // header comment above.
   canReorder: boolean;
-  onReorderDragEnd: () => void;
+  reorderHandlers: GridReorderHandlers;
   gameDataState: UseGameDataReturn;
   rulesetId: RegulationId;
   resolveSprite: (remoteUrl: string) => string;
   showAnimatedSprites: boolean;
 }
 
-export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePokemon, onAddToTeam, onRename, onDuplicate, onToggleFavorite, onDelete, canReorder, onReorderDragEnd, gameDataState, rulesetId, resolveSprite, showAnimatedSprites }: BoxCardProps) {
+export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePokemon, onAddToTeam, onRename, onDuplicate, onToggleFavorite, onDelete, canReorder, reorderHandlers, gameDataState, rulesetId, resolveSprite, showAnimatedSprites }: BoxCardProps) {
   const { pokemon, label, favorite } = entry;
 
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
@@ -277,7 +278,7 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
       // on pointerdown (this card's own earlier attempt) has no movement
       // threshold at all and swallowed the plain click-to-expand outright.
       // canReorder/isRenaming still gate whether dragging can start at all.
-      <Reorder.Item as="div" value={entry.id} dragListener={canReorder && !isRenaming} transition={DRAG_REORDER_TRANSITION} onDragEnd={onReorderDragEnd}>
+      <motion.div layout="position" drag dragSnapToOrigin dragMomentum={false} dragElastic={0} data-reorder-id={entry.id} dragListener={canReorder && !isRenaming} transition={DRAG_REORDER_TRANSITION} {...toMotionDragProps(reorderHandlers)}>
         <div
           onContextMenu={handleContextMenu}
           title={isRenaming ? undefined : label}
@@ -314,7 +315,7 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
           {contextMenu}
           {exportModal}
         </div>
-      </Reorder.Item>
+      </motion.div>
     );
   }
 
@@ -325,13 +326,17 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
     // TODO.md) provides its own FLIP animation on reorder, replacing the old
     // plain motion.div + layout="position" pairing. dragListener is off -
     // only the grip handle below starts a drag.
-    <Reorder.Item
-      as="div"
-      value={entry.id}
+    <motion.div
+      layout="position"
+      drag
+      dragSnapToOrigin
+      dragMomentum={false}
+      dragElastic={0}
+      data-reorder-id={entry.id}
       dragListener={false}
       dragControls={dragControls}
       transition={DRAG_REORDER_TRANSITION}
-      onDragEnd={onReorderDragEnd}
+      {...toMotionDragProps(reorderHandlers)}
       className="type-glow-ring w-[280px] shrink-0"
       style={{ '--glow-c1': glowC1, '--glow-c2': glowC2 } as CSSProperties}
     >
@@ -405,6 +410,6 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
         {contextMenu}
         {exportModal}
       </div>
-    </Reorder.Item>
+    </motion.div>
   );
 }
