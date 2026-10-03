@@ -12,6 +12,7 @@ import type { ImportedPokemonInfo } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
 import { getPixelSpriteUrl } from '../utils/spriteUrl';
+import { getItemSpriteUrl } from '../utils/itemSprite';
 
 interface TeamPosterMiniSpriteProps {
   pokemon: ImportedPokemonInfo;
@@ -31,9 +32,9 @@ export default function TeamPosterMiniSprite({ pokemon, gameDataState, spriteCac
         alt={showdownData.species}
         className="w-full h-full object-contain [image-rendering:pixelated]"
       />
-      {itemData?.spriteUrl && (
+      {getItemSpriteUrl(showdownData.item ?? '', itemData?.spriteUrl) && (
         <img
-          src={spriteCacheState.resolveSprite(itemData.spriteUrl)}
+          src={spriteCacheState.resolveSprite(getItemSpriteUrl(showdownData.item ?? '', itemData?.spriteUrl))}
           alt={showdownData.item}
           className="absolute -bottom-0.5 -right-0.5 w-5 h-5 object-contain [image-rendering:pixelated] bg-zinc-900 rounded-full border border-zinc-700 p-0.5"
         />

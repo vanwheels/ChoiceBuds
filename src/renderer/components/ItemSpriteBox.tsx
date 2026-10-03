@@ -1,7 +1,7 @@
 /**
  * ItemSpriteBox.tsx - Held Item Sprite Tile
  * Presentational only: renders the equipped item's sprite (with a
- * Fairy-Feather-specific Serebii fallback, then an emoji fallback). Clicking
+ * Serebii fallback for Fairy Feather/Mega Stones, then an emoji fallback). Clicking
  * it (edit mode) just calls onToggleMenu - EditOverlays floats
  * ItemPickerPanel over this component via FloatingCardPanel while picking,
  * rather than this component managing its own popover. Extracted from
@@ -16,8 +16,7 @@ import { useRef } from 'react';
 import type { MouseEvent } from 'react';
 import type { ItemData } from '../types/pokemon';
 import { useLongPress } from '../hooks/useLongPress';
-
-const FAIRY_FEATHER_FALLBACK_SPRITE = 'https://www.serebii.net/itemdex/sprites/fairyfeather.png';
+import { getItemFallbackSpriteUrl } from '../utils/itemSprite';
 
 interface ItemSpriteBoxProps {
   selectedItem: string;
@@ -46,7 +45,7 @@ export default function ItemSpriteBox({
   onHoverLeave,
   onToggleMenu,
 }: ItemSpriteBoxProps) {
-  const isFairyFeather = selectedItem.trim().toLowerCase() === 'fairy feather';
+  const fallbackUrl = getItemFallbackSpriteUrl(selectedItem.trim());
   const ref = useRef<HTMLDivElement>(null);
   const longPress = useLongPress(
     () => { if (ref.current) onHoverEnter(ref.current); },
@@ -71,11 +70,11 @@ export default function ItemSpriteBox({
           className="w-9 h-9 object-contain [image-rendering:pixelated]"
           onError={onSpriteError}
         />
-      ) : isFairyFeather && !fallbackSpriteFailed ? (
-        // Fairy Feather is a Gen 9 item PokeAPI's default sprite set predates - fall
-        // back to Serebii's itemdex sprite (verified live; see CLAUDE.md exception).
+      ) : fallbackUrl && !fallbackSpriteFailed ? (
+        // Fairy Feather and the Champions-new Mega Stones have no PokeAPI sprite -
+        // fall back to Serebii's itemdex sprite (see CLAUDE.md exception).
         <img
-          src={FAIRY_FEATHER_FALLBACK_SPRITE}
+          src={resolveSprite(fallbackUrl)}
           alt={selectedItem}
           loading="lazy"
           className="w-9 h-9 object-contain"

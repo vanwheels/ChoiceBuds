@@ -12,6 +12,7 @@ import { useDismissable } from '../hooks/useDismissable';
 import { toReadableName } from '../utils/displayName';
 import { itemMatchesTag } from '../config/vgcData';
 import { parseTagFilter } from '../utils/tagSearch';
+import { getItemSpriteUrl } from '../utils/itemSprite';
 
 interface ItemPickerPanelProps {
   items: ItemData[];
@@ -50,8 +51,8 @@ export default function ItemPickerPanel({ items, maxHeight, resolveSprite, onSel
               onClick={() => onSelect(item)}
               className="flex items-center gap-2 px-2 py-1 rounded hover:bg-zinc-700 cursor-pointer transition-colors"
             >
-              {item.spriteUrl ? (
-                <img src={resolveSprite(item.spriteUrl)} alt={item.name} loading="lazy" className="w-8 h-8 object-contain shrink-0" />
+              {getItemSpriteUrl(item.name, item.spriteUrl) ? (
+                <img src={resolveSprite(getItemSpriteUrl(item.name, item.spriteUrl))} alt={item.name} loading="lazy" className="w-8 h-8 object-contain shrink-0" />
               ) : (
                 <span className="w-8 h-8 flex items-center justify-center text-base shrink-0" role="img" aria-label="Unknown item">🎒</span>
               )}

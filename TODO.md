@@ -26,12 +26,6 @@ shipped the same day (see `MILESTONES.md` and its
 Legs are added as issues are reported. First batch reported 2026-10-03
 (desktop and/or web).
 
-### [Mega Stone Sprites] — Leg 1
-Some Mega Stones render with no sprite; user recalls them working before,
-so likely a regression. Start by bisecting (git log on the item-sprite
-util/config) and checking which stones miss. Applies to app and web.
-Last touched: 2026-10-03 · Re-checks: 0
-
 ### [Team Add-Pokémon Species Search Parity] — Leg 1
 Adding a Pokémon to a team should show the richer species search (BST,
 typing, abilities) that Box's create flow already has

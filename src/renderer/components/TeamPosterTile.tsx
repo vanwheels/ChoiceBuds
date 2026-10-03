@@ -12,6 +12,7 @@ import type { ImportedPokemonInfo } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
 import { getPixelSpriteUrl } from '../utils/spriteUrl';
+import { getItemSpriteUrl } from '../utils/itemSprite';
 import { getTypeTheme } from '../config/pokemonTheme';
 import { formatStatAlignment } from '../utils/statAlignment';
 
@@ -44,8 +45,8 @@ export default function TeamPosterTile({ pokemon, gameDataState, spriteCacheStat
 
       {showdownData.item && (
         <div className="flex items-center gap-1.5 w-full min-w-0 justify-center">
-          {itemData?.spriteUrl && (
-            <img src={spriteCacheState.resolveSprite(itemData.spriteUrl)} alt={showdownData.item} className="w-5 h-5 object-contain [image-rendering:pixelated] shrink-0" />
+          {getItemSpriteUrl(showdownData.item, itemData?.spriteUrl) && (
+            <img src={spriteCacheState.resolveSprite(getItemSpriteUrl(showdownData.item, itemData?.spriteUrl))} alt={showdownData.item} className="w-5 h-5 object-contain [image-rendering:pixelated] shrink-0" />
           )}
           <span className="text-[11px] text-zinc-400 truncate min-w-0">{showdownData.item}</span>
         </div>

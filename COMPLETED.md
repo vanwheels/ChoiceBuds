@@ -90,3 +90,6 @@ Entries prior to this file's oldest are in:
   `hasChampionsMoveData !== true` self-heal already covers pruning this data
   once PokeAPI eventually back-fills Reg M-C.
 </content>
+
+## [Mega Stone Sprites] — Leg 1 (2026-10-03)
+Not a regression: the 36 Champions-new Mega Stones never had PokeAPI sprites (null/404), only Fairy Feather had a Serebii fallback. Generalized it via `utils/itemSprite.ts` across the item box, picker, and poster tiles. See commit `PENDING`.
