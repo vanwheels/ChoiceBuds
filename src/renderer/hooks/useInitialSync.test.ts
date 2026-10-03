@@ -292,4 +292,27 @@ describe('useInitialSync', () => {
     expect(markSpeciesSynced).toHaveBeenCalledWith(['Gengar', 'Rillaboom']);
     consoleErrorSpy.mockRestore();
   }, 15_000);
+  it('does not re-run the self-heal pass in the same session for a species whose stats fetch keeps failing', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mockedFetchPokemonData.mockRejectedValue(new Error('offline'));
+    const gameDataState = makeGameDataState(); // nothing flagged - Gengar only qualifies via the missing-cache-entry self-heal
+    const speciesRosterState = makeSpeciesRosterState();
+    const spriteCacheState = makeSpriteCacheState();
+    const enriched = gameDataState.getEnrichedSpeciesOptions as ReturnType<typeof vi.fn>;
+
+    const { result, rerender } = renderHook(
+      ({ databaseState }) => useInitialSync(gameDataState, speciesRosterState, spriteCacheState, databaseState),
+      { initialProps: { databaseState: makeDatabaseState() } }
+    );
+    await waitFor(() => expect(result.current.isDone).toBe(true));
+    expect(enriched).toHaveBeenCalledTimes(1);
+
+    // A cache write elsewhere changes getCachedEntry's identity - previously re-triggered the whole pass, forever
+    rerender({ databaseState: makeDatabaseState() });
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    expect(result.current.isDone).toBe(true);
+    expect(enriched).toHaveBeenCalledTimes(1);
+    consoleErrorSpy.mockRestore();
+  }, 15_000);
 });

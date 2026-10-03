@@ -135,17 +135,26 @@ export function useInitialSync(
   // unconditionally over whatever this resolves to - harmless now that
   // presence, not the flag, is the real source of truth for whether a
   // species needs re-fetching.
+  //
+  // The self-heal is attempted at most once per species per session
+  // (healAttempted): a species whose stats fetch keeps failing (offline,
+  // rate-limited, a bad slug) would otherwise stay "stale" after every pass,
+  // and since each pass's own cache writes change getCachedEntry's identity
+  // and re-run this memo, the sync effect would re-fire forever - the
+  // LoadingScreen looping through its download phases endlessly. The next
+  // launch retries it; the flagged (never-synced) path is not gated by this.
+  const [healAttempted, setHealAttempted] = useState<ReadonlySet<string>>(() => new Set());
   const unsyncedSpecies = useMemo(() => {
     const flagged = getUnsyncedSpecies(legalRoster);
     const flaggedNames = new Set(flagged.map(entry => entry.name));
-    const staleCached = legalRoster.filter(entry => !flaggedNames.has(entry.name) && !getCachedEntry(normalizeSpeciesForAPI(entry.name)));
+    const staleCached = legalRoster.filter(entry => !flaggedNames.has(entry.name) && !healAttempted.has(entry.name) && !getCachedEntry(normalizeSpeciesForAPI(entry.name)));
     // Returns `flagged` itself, unmodified, in the common case (nothing to
     // self-heal) - keeps the same reference stability getUnsyncedSpecies'
     // own mocked/real result already had, rather than a fresh array literal
     // on every recompute that would otherwise re-trigger the sync effect
     // below (whose own dependency array includes this value).
     return staleCached.length === 0 ? flagged : [...flagged, ...staleCached];
-  }, [legalRoster, getUnsyncedSpecies, getCachedEntry]);
+  }, [legalRoster, getUnsyncedSpecies, getCachedEntry, healAttempted]);
 
   const ready = isInitialized && isDatabaseInitialized && !isRosterLoading && roster.length > 0;
 
@@ -224,7 +233,9 @@ export function useInitialSync(
         }
       );
 
-      markSpeciesSynced(unsyncedSpecies.map(entry => entry.name));
+      const syncedNames = unsyncedSpecies.map(entry => entry.name);
+      markSpeciesSynced(syncedNames);
+      setHealAttempted(prev => new Set([...prev, ...syncedNames]));
       isSyncing.current = false;
       setHeavySyncDone(true);
     })();

@@ -130,6 +130,19 @@ describe('useDatabase', () => {
     ));
   });
 
+  it('setCacheEntry keeps every entry when called concurrently through one captured (stale) reference', async () => {
+    const { result } = renderHook(() => useDatabase());
+    await waitFor(() => expect(result.current.isInitialized).toBe(true));
+
+    // Mirrors useInitialSync: one databaseState captured at effect start, many writes in flight at once
+    const { setCacheEntry } = result.current;
+    await act(async () => {
+      await Promise.all(['gengar', 'rillaboom', 'incineroar'].map(name => setCacheEntry(name, makeEntry({ species: name }))));
+    });
+
+    expect(Object.keys(result.current.cache!.entries).sort()).toEqual(['gengar', 'incineroar', 'rillaboom']);
+  });
+
   it('setCacheEntry updates state optimistically even when the underlying debounced write later fails', async () => {
     // The write-through effect no longer gates state on disk success - a
     // failed/rejected write is log-only (see useDebouncedWrite.ts), same

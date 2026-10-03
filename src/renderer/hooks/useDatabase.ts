@@ -293,27 +293,31 @@ export function useDatabase(): UseDatabaseReturn {
    * the write itself has been confirmed - matching useGameData.ts's
    * cache-mutation callbacks, which never confirmed disk success either.
    * No caller branches on a `false` result today.
+   *
+   * Functional update, not a spread of the closure's `cache` - useInitialSync
+   * fires this 8-way concurrent off one captured databaseState, so every
+   * call in a sync pass used to spread the same stale snapshot and each
+   * setCache overwrote the last, keeping only one new entry per pass. That
+   * silently dropped most of a fresh install's species stats, which the
+   * self-heal then re-detected every pass - the LoadingScreen's
+   * "downloading forever" loop. Also keeps this callback's identity stable.
    */
   const setCacheEntry = useCallback(async (
     species: string,
     entry: PokeAPICacheEntry
   ): Promise<boolean> => {
-    if (!cache) return false;
-
     const normalizedSpecies = species.toLowerCase().trim();
 
-    const updatedCache: PokeAPICache = {
-      ...cache,
+    setCache(prev => prev ? {
+      ...prev,
       entries: {
-        ...cache.entries,
+        ...prev.entries,
         [normalizedSpecies]: entry,
       },
-    };
-
-    setCache(updatedCache);
+    } : prev);
     setError(null);
     return true;
-  }, [cache]);
+  }, []);
 
   /**
    * Check if a cache entry is valid (exists and not expired)
