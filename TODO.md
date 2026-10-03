@@ -36,7 +36,15 @@ Findings (2026-10-03): desktop `TeamCard`'s "+ Add Pokémon" and `BoxPage`
 both already open `AddPokemonStatTable`. Gaps: (a) `MobileTeamsList`/
 `MobileTeamSwipeOverlay` have no add-Pokémon entry at all; (b) Roster Swap
 (`PokemonCard`/`MobilePokemonCard`) still uses plain `SpeciesPickerCard`.
-Needs Vanny to say which flow they saw lacking before building.
+Resolved (2026-10-03): Vanny confirmed the gap is Roster Swap. Plan: render
+`AddPokemonStatTable` instead of `SpeciesPickerCard` in `PokemonCard.tsx` (~L199)
+and `MobilePokemonCard.tsx` (~L127); both already share the same prop shape
+(`roster`/`rulesetId`/`resolveSprite`/`onSelect`/`onClose`). `onSelect` gains an
+optional `itemOverride` (Mega Stone rows), so `handleSwapSelect` must accept and
+apply it. Don't pass `savedPokemon`/`onSelectSaved` (swap has its own
+`SavedSetPicker` step). Check the table fits the card slot on mobile before
+building. Mobile add-Pokémon entry is a separate, unscheduled feature.
+Next: Start [Team Add-Pokémon Species Search Parity] — Leg 2 (build).
 Last touched: 2026-10-03 · Re-checks: 0
 
 ### [Web Species Search Cold-Cache Stats] — Leg 1
