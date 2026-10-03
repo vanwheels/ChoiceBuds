@@ -21,17 +21,6 @@ running the now-up-to-date macOS client on real MacBook hardware.
 
 ## Current Milestone: MacBook Pass
 
-- **[Team Card Grid Layout Re-check] — Leg 1** *(Last touched: 2026-10-03 ·
-  Re-checks: 1)*
-  The real 14" MacBook pass (2026-10-03) showed the earlier 1040px fix was
-  wrong: ~170px cards wrapped the second type badge (uneven mono/dual card
-  heights) and overflowed move names and the SP badge. It had only checked
-  the sprite-box floor. Re-fixed: sidebar 208→176px, dropped TeamsPage's
-  duplicated md:px-8 padding, compacted the badges/pills/SP row, and moved
-  the 6-column breakpoint to 1220px. Measured live: no overflow at 182px
-  (narrowest 6-column card) or at 187px (1512px window). Open only for the
-  user's on-device confirmation.
-
 - **[Calc Button Card Overlap] — Leg 1** *(Last touched: 2026-10-03 ·
   Re-checks: 0)*
   The floating Calc button (bottom-right) sits over the last Pokémon card in

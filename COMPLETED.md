@@ -22,6 +22,18 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[SP Editor Overflow] — Leg 1** (2026-10-03) - the active stat's
+  -/input/+ editor widened its `1fr` grid column and pushed the other stats
+  out of the box on narrow cards. Columns are now fixed equal widths and
+  the editor floats over its row, anchored by column. See commit `8c7aef7`.
+
+- **[Team Card Grid Layout Re-check] — Leg 1** (2026-10-03) - the earlier
+  1040px six-column breakpoint left ~170px cards on a real 14" MacBook,
+  which wrapped the type badges and overflowed the move names/SP badge.
+  Re-fixed by narrowing the sidebar, removing duplicated padding,
+  compacting the card content and using a 1220px breakpoint. Confirmed by
+  the user on device. See commit `997fb98`.
+
 - **[Desktop Startup Sync Loop Fix] — Leg 1** (2026-10-03) - the
   LoadingScreen looping through its download phases on launch was
   concurrent `setCacheEntry` writes clobbering each other (stale closure),
