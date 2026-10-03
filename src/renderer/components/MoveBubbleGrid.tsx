@@ -91,7 +91,7 @@ function MoveBubble({ originalIndex, theme, label, gridRef, onToggleMenu, onHove
       onMouseLeave={() => onHoverLeave(key)}
       onClick={(e: MouseEvent<HTMLDivElement>) => onToggleMenu(key, e)}
       {...longPress}
-      className={`w-full min-h-[2.75rem] flex items-center justify-center text-center whitespace-normal break-words p-1 rounded-xl text-xs font-bold transition-colors select-none ${theme.bg} ${theme.text} hover:opacity-80 cursor-grab`}
+      className={`w-full min-h-[2.75rem] flex items-center justify-center text-center whitespace-normal break-words px-0.5 py-1 rounded-xl text-xs @max-[160px]:text-[10.5px] @max-[160px]:tracking-tight @max-[160px]:px-0 font-bold transition-colors select-none ${theme.bg} ${theme.text} hover:opacity-80 cursor-grab`}
     >
       {label}
     </Reorder.Item>
@@ -147,7 +147,7 @@ export default function MoveBubbleGrid({
       values={order}
       onReorder={setOrder}
       ref={gridRef}
-      className="grid grid-cols-2 gap-2 w-full"
+      className="@container grid grid-cols-2 gap-1.5 w-full"
     >
       {order.map(originalIndex => (
         <MoveBubble

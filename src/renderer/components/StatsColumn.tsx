@@ -167,21 +167,21 @@ export default function StatsColumn({ species, level, gender, baseStats, evs, na
     <div ref={ref} className="bg-zinc-800 rounded px-2 py-1.5 border border-zinc-600 min-w-0">
       <div className="mb-1 min-w-0">
         <div className="flex justify-between items-center min-w-0 gap-1">
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-0.5 shrink-0">
             {DISPLAY_MODES.map(({ mode, label, title }) => (
               <button
                 key={mode}
                 type="button"
                 onClick={() => setDisplayMode(mode)}
                 title={title}
-                className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded transition-colors cursor-pointer ${
+                className={`text-[9px] font-bold uppercase px-1 py-0.5 rounded transition-colors cursor-pointer ${
                   displayMode === mode ? 'bg-accent-gold text-zinc-900' : 'bg-zinc-900 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-300'
                 }`}
               >{label}</button>
             ))}
           </div>
           {displayMode === 'sp' ? (
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+            <span className={`text-[10px] font-bold px-1 py-0.5 rounded ${
               totalEVs > 66
                 ? 'bg-red-600 text-white border border-red-400'
                 : totalEVs === 66
@@ -189,7 +189,7 @@ export default function StatsColumn({ species, level, gender, baseStats, evs, na
                   : 'bg-zinc-700 text-zinc-400'
             }`}>{totalEVs > 66 ? '⚠ ' : ''}{totalEVs}/66</span>
           ) : (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-zinc-700 text-zinc-400">
+            <span className="text-[10px] font-bold px-1 py-0.5 rounded bg-zinc-700 text-zinc-400">
               {displayMode === 'base' ? baseTotal : (realTotal !== null ? realTotal : '…')}
             </span>
           )}

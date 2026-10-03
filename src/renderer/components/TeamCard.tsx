@@ -522,16 +522,18 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
                   a hard requirement rather than PokemonCard's actual
                   max-w-[280px] cap) was never reachable on a real laptop.
                   Measured live via run-desktop (see TODO.md) on the
-                  reporter's actual setup - 14" MacBook, sidebar expanded
-                  (default), 2 real teams, single-column Teams-page layout -
-                  this grid only gets 1043px of real container width, well
-                  short of even a first attempted 1100px breakpoint. 1040px
-                  (a small margin under that measured number) is what's
-                  actually reachable there; cards land around ~160px wide at
-                  6 columns, confirmed live to still clear PokemonCard's
-                  ~158px fixed-content floor (134px sprite box + padding)
-                  without squishing. Doesn't help a 13" MacBook (measured
-                  818px there, sidebar expanded) - not a target device for
+                  reporter's actual setup - 14" MacBook at 1512px, sidebar
+                  expanded - this grid's container gets 1251px (after the
+                  Team Card Grid Layout Re-check narrowed the sidebar to
+                  176px and dropped TeamsPage's duplicated md:px-8 padding).
+                  1220px keeps cards >= ~182px at 6 columns, the width
+                  EditablePokemonCore's content (two side-by-side type
+                  badges, move pills, the SP row) is sized to fit without
+                  wrapping or overflowing. An earlier 1040px tier only
+                  checked the sprite box's ~158px floor, so at ~170px the
+                  second type badge wrapped (uneven card heights) and move
+                  names/the SP badge overflowed. Doesn't help a 13" MacBook -
+                  not a target device for
                   this fix. The 380px/600px tiers below (Responsive Layout
                   Audit: Teams & Box Leg 1, see TODO.md) were measured the
                   same way, live via run-desktop at a 375px phone viewport
@@ -562,7 +564,7 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
                 axis="x"
                 values={orderedPokemonIds}
                 onReorder={setOrderedPokemonIds}
-                className="grid grid-cols-1 @[380px]:grid-cols-2 @[600px]:grid-cols-3 @[1040px]:grid-cols-6 gap-4 w-full"
+                className="grid grid-cols-1 @[380px]:grid-cols-2 @[600px]:grid-cols-3 @[1220px]:grid-cols-6 gap-4 w-full"
                 onContextMenu={handlePokemonAreaContextMenu}
               >
                 {orderedPokemonIds.map(id => {

@@ -16,11 +16,28 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-No milestone is currently in progress - Data Audit & Bug Fix Sweep shipped
-2026-09-30 (both items - see `MILESTONES.md` and its
-[post-mortem](docs/postmortems/data-audit-bug-fix-sweep.md)). Next session
-should scope one of the Unscheduled/Future Milestones candidates below into
-a leg list before opening a new `## Current Milestone:` section.
+Current milestone: **MacBook Pass** (opened 2026-10-03) — fixes surfaced by
+running the now-up-to-date macOS client on real MacBook hardware.
+
+## Current Milestone: MacBook Pass
+
+- **[Team Card Grid Layout Re-check] — Leg 1** *(Last touched: 2026-10-03 ·
+  Re-checks: 1)*
+  The real 14" MacBook pass (2026-10-03) showed the earlier 1040px fix was
+  wrong: ~170px cards wrapped the second type badge (uneven mono/dual card
+  heights) and overflowed move names and the SP badge. It had only checked
+  the sprite-box floor. Re-fixed: sidebar 208→176px, dropped TeamsPage's
+  duplicated md:px-8 padding, compacted the badges/pills/SP row, and moved
+  the 6-column breakpoint to 1220px. Measured live: no overflow at 182px
+  (narrowest 6-column card) or at 187px (1512px window). Open only for the
+  user's on-device confirmation.
+
+- **[Calc Button Card Overlap] — Leg 1** *(Last touched: 2026-10-03 ·
+  Re-checks: 0)*
+  The floating Calc button (bottom-right) sits over the last Pokémon card in
+  an expanded team on a 14" MacBook, covering its SP row and moves. It needs
+  either bottom/right clearance in the Teams scroll area or a smaller/
+  repositioned button. Not yet scoped.
 
 ## Blocked
 
@@ -28,28 +45,6 @@ Items where the whole item (not just a sub-part) is stalled on something
 outside this project — a person, a dependency, or an external decision.
 Exempt from the re-check counter; they move back to "In progress" once
 unblocked.
-
-- **[Team Card Grid Layout Re-check] — Leg 1** *(Last touched: 2026-08-31 ·
-  Re-checks: 0)*
-  Blocked: waiting on the user to verify live on their physical MacBook —
-  everything below was confirmed on a resized Electron window on the dev
-  machine, not the actual hardware.
-  Fixed and live-verified via `run-desktop` (added a `resize` command to
-  `driver.mjs` — sets Electron's content size directly, matching what the
-  renderer's CSS/`@container` actually measures). Root cause: not already
-  fixed by the carousel rework — that rework is what introduced it.
-  `TeamCard.tsx`'s 3-vs-6-column snap required a 1760px container (6*280px +
-  5*1rem gaps), unreachable on any MacBook. First attempt (1100px, based on
-  a theoretical estimate) still wasn't low enough — measured live at the
-  reporter's actual conditions (14" MacBook, sidebar expanded, 2 real teams,
-  single-column layout) the container only gets 1043px. Retuned to 1040px
-  against that measured number; confirmed live it renders a clean 1x6 with
-  no truncation at 1512x982/sidebar-expanded (screenshot:
-  `.claude/skills/run-desktop/shots/06-fixed-1512-expanded-sidebar.png`).
-  Doesn't cover a 13" MacBook (measured 818px there) — not this fix's
-  target device. Also corrected a stale `TeamsPage.tsx` comment describing
-  an auto-fill/minmax grid that no longer matches the real implementation.
-  Ready to move to COMPLETED.md once the MacBook pass confirms it.
 
 - **[In-App Auto-Update: macOS] — Leg 1** *(Last touched: not recorded ·
   Re-checks: 0)*

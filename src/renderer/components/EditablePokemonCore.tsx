@@ -236,14 +236,17 @@ export default function EditablePokemonCore({ pokemon, onUpdatePokemon, gameData
 
       {/* Type Badges - min-w-0 on the outer row lets it shrink with the card
           (Card Content Overflow at Mid Widths Leg 1, see TODO.md); flex-wrap
-          on the inner row is the actual overflow guard, since TypeBadge's
-          fixed w-20/shrink-0 badges (deliberately not truncated - "GRASS"
-          clipped to "GRA" reads worse than wrapping) don't shrink to fit a
-          track narrower than their combined width. */}
-      <div className="w-full flex justify-center items-center my-1.5 px-2 min-w-0">
+          on the inner row is the last-resort overflow guard, since the
+          fixed-width/shrink-0 badges (deliberately not truncated - "GRASS"
+          clipped to "GRA" reads worse than wrapping) don't shrink. Wrapping
+          is what makes dual-type cards taller than mono-type ones, so the
+          70px badge width + no row padding are sized (Team Card Grid Layout
+          Re-check, see TODO.md) to keep two badges on one row down to
+          TeamCard's narrowest 6-column card (~182px). */}
+      <div className="w-full flex justify-center items-center my-1.5 min-w-0">
         <div className="flex flex-row flex-wrap items-center justify-center gap-1.5 w-full">
           {types.map((type, index) => (
-            <TypeBadge key={index} type={type} />
+            <TypeBadge key={index} type={type} widthClass="w-[70px]" />
           ))}
         </div>
       </div>

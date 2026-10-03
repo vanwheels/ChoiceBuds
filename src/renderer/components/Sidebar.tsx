@@ -178,7 +178,7 @@ export default function Sidebar({ activeTab, onTabChange, renderFooter, mobileTo
     <>
       {/* Desktop/tablet rail - md (768px) and up. Below that, the drawer below takes over entirely. */}
       <motion.aside
-        animate={{ width: collapsed ? 68 : 208 }}
+        animate={{ width: collapsed ? 68 : 176 }}
         transition={SIDEBAR_WIDTH_TRANSITION}
         className={`hidden md:flex md:flex-col border-r border-zinc-700 bg-zinc-800 py-4 ${
           collapsed ? 'px-2.5 items-center' : 'px-3'

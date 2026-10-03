@@ -241,7 +241,7 @@ export default function TeamsPage({
           the DOM ancestor chain and diffing scrollHeight/clientHeight per
           ancestor before/after opening the dropdown - this was the only one
           whose clientHeight was exceeded. */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-6 @container" style={{ scrollbarGutter: 'stable' }} onContextMenu={handleContentContextMenu}>
+      <div className="flex-1 overflow-y-auto px-4 md:px-0 py-6 @container" style={{ scrollbarGutter: 'stable' }} onContextMenu={handleContentContextMenu}>
         {/* min-h-[calc(100%+1px)] - guarantees this scroll container always
             has at least 1px of real overflow (Responsive Layout Audit
             follow-up, see TODO.md). Confirmed live on iPhone Safari: when a
