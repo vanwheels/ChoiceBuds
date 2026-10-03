@@ -2,9 +2,12 @@
  * EVStatCell.tsx - Single EV Stat Editor Cell
  * Only the currently-active cell (isActive) shows the hold-to-repeat +/-
  * buttons and typable input; every other cell stays a compact label+value
- * button. This keeps the 3-column grid from ever needing more than one
- * cell's worth of extra width, so it can't overflow the stats box/card on
- * resize - see StatsColumn.tsx for how `isActive` is chosen.
+ * button. The active editor (~80px) is wider than a grid column at narrow
+ * card widths (~42px in a 6-column TeamCard grid), so it floats over its row
+ * (absolutely positioned, anchored by `column` so it never leaves the stats
+ * box) instead of widening its column and pushing neighbours out of the box.
+ * An invisible copy of the value keeps the cell's in-flow height unchanged.
+ * See StatsColumn.tsx for how `isActive` is chosen.
  */
 
 import { useHoldRepeat } from '../hooks/useHoldRepeat';
@@ -14,6 +17,8 @@ interface EVStatCellProps {
   label: string;
   value: number;
   isActive: boolean;
+  /** Grid column (0-2) - picks which edge the floating editor anchors to. */
+  column: number;
   exceedsMax: boolean;
   canIncrement: boolean;
   onActivate: () => void;
@@ -21,6 +26,8 @@ interface EVStatCellProps {
   onDecrement: () => void;
   onDirectInput: (value: number) => void;
 }
+
+const EDITOR_ANCHOR = ['left-0', 'left-1/2 -translate-x-1/2', 'right-0'];
 
 const valueClassName = (exceedsMax: boolean, editableBorder: boolean) =>
   `text-sm font-mono font-bold rounded border ${
@@ -34,6 +41,7 @@ export default function EVStatCell({
   label,
   value,
   isActive,
+  column,
   exceedsMax,
   canIncrement,
   onActivate,
@@ -58,9 +66,10 @@ export default function EVStatCell({
   }
 
   return (
-    <div className="flex flex-col items-center gap-0.5">
+    <div className="relative flex flex-col items-center gap-0.5">
       <span className="text-[10px] font-bold text-zinc-400 uppercase">{label}</span>
-      <div className="flex items-center gap-0.5 min-w-0">
+      <span aria-hidden className={`${valueClassName(false, false)} px-1.5 py-0.5 invisible`}>{value}</span>
+      <div className={`absolute bottom-0 z-10 flex items-center gap-0.5 rounded bg-zinc-800 ${EDITOR_ANCHOR[column] ?? EDITOR_ANCHOR[1]}`}>
         <button
           {...decRepeat}
           disabled={value <= 0}

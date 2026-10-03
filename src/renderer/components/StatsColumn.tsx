@@ -219,8 +219,8 @@ export default function StatsColumn({ species, level, gender, baseStats, evs, na
           )}
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginTop: '0.5rem' }}>
-        {STATS.map(stat => {
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.5rem', marginTop: '0.5rem' }}>
+        {STATS.map((stat, statIndex) => {
           if (displayMode === 'sp') {
             const val = localEVs[stat.key];
             return (
@@ -229,6 +229,7 @@ export default function StatsColumn({ species, level, gender, baseStats, evs, na
                 label={stat.label}
                 value={val}
                 isActive={activeStat === stat.key}
+                column={statIndex % 3}
                 exceedsMax={val > 32}
                 canIncrement={val < 32 && totalEVs < 66}
                 onActivate={() => setActiveStat(stat.key)}
