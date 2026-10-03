@@ -92,7 +92,7 @@ export interface UseInitialSyncReturn {
 }
 
 /** Populates pokeapi-cache.json's species stats/types entry, skipping species already cached from a prior partial sync */
-async function syncSpeciesStats(speciesName: string, databaseState: UseDatabaseReturn): Promise<void> {
+export async function syncSpeciesStats(speciesName: string, databaseState: UseDatabaseReturn): Promise<void> {
   const cacheKey = normalizeSpeciesForAPI(speciesName);
   if (databaseState.getCachedEntry(cacheKey)) return;
   const entry = await fetchPokemonData(speciesName);

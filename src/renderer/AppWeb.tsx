@@ -20,7 +20,10 @@
  * Storage Adapter Port leg, see TODO.md) and wired into useSync directly.
  * Still NOT wired: useInitialSync/useUsageSync (bulk first-launch dex sync -
  * a perf pre-warm, not a functional requirement, since useGameData already
- * fetches lazily on cache miss).
+ * fetches lazily on cache miss). The one exception is species stats:
+ * useSpeciesStatsPrefetch quietly fills in missing legal-roster stats/types
+ * in the background (no LoadingScreen) so the Add-Pokémon table isn't blank
+ * on a cold IndexedDB.
  *
  * Battle Log + Statistics (Web Battle Log & Statistics Parity leg, see
  * TODO.md) now render the same BattleLogPage/StatisticsPage.tsx the desktop
@@ -76,6 +79,7 @@ import { useSpriteCache } from './hooks/useSpriteCache';
 import { useSettings } from './hooks/useSettings';
 import { useSync } from './hooks/useSync';
 import { useBattles } from './hooks/useBattles';
+import { useSpeciesStatsPrefetch } from './hooks/useSpeciesStatsPrefetch';
 import { useReleaseNotes } from './hooks/useReleaseNotes';
 import type { ActiveTab } from './App';
 import TeamsPage from './components/TeamsPage';
@@ -118,6 +122,7 @@ export default function AppWeb() {
   const editorState = useActiveEditor();
   const gameDataState = useGameData();
   const speciesRosterState = useSpeciesRoster();
+  useSpeciesStatsPrefetch(speciesRosterState, databaseState);
   const spriteCacheState = useSpriteCache();
   const settingsState = useSettings();
   const battlesState = useBattles();

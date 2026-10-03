@@ -38,6 +38,10 @@ LoadingScreen. Use low concurrency (~3-4) and one pass per session: a prior
 comment, add a unit test, then live-check the web Add-Pokémon table on a cold
 IndexedDB. Check `setCacheEntry` write cost per species (IndexedDB, 250
 writes) — batch/debounce if it re-renders the table too often.
+Built (`useSpeciesStatsPrefetch.ts`, wired in `AppWeb.tsx`, 3 unit tests,
+no batching yet — per-species `setCacheEntry`, concurrency 3). Open: user's
+live cold-IndexedDB check of the Add-Pokémon table; add batching only if
+re-renders look janky.
 Last touched: 2026-10-03 · Re-checks: 0
 
 ### [Web Reorder Jank] — Leg 1
