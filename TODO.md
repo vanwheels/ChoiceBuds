@@ -16,17 +16,14 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-Current milestone: **MacBook Pass** (opened 2026-10-03) — fixes surfaced by
-running the now-up-to-date macOS client on real MacBook hardware.
+Current milestone: **Fixes & Adjustments** (opened 2026-10-03) — general
+fixes and adjustments across the app, not limited to macOS. MacBook Pass
+shipped the same day (see `MILESTONES.md` and its
+[post-mortem](docs/postmortems/macbook-pass.md)).
 
-## Current Milestone: MacBook Pass
+## Current Milestone: Fixes & Adjustments
 
-- **[Calc Button Card Overlap] — Leg 1** *(Last touched: 2026-10-03 ·
-  Re-checks: 0)*
-  The floating Calc button (bottom-right) sits over the last Pokémon card in
-  an expanded team on a 14" MacBook, covering its SP row and moves. It needs
-  either bottom/right clearance in the Teams scroll area or a smaller/
-  repositioned button. Not yet scoped.
+Legs are added as issues are reported. None are logged yet.
 
 ## Blocked
 

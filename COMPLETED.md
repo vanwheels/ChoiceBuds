@@ -22,6 +22,11 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[Calc Button Card Overlap] — Leg 1** (2026-10-03) - closed with no
+  change: the user doesn't consider the floating Calc button covering the
+  last card a problem, since the button isn't fixed in the layout. This
+  closes the MacBook Pass milestone (see `MILESTONES.md`).
+
 - **[SP Editor Overflow] — Leg 1** (2026-10-03) - the active stat's
   -/input/+ editor widened its `1fr` grid column and pushed the other stats
   out of the box on narrow cards. Columns are now fixed equal widths and

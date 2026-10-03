@@ -48,3 +48,6 @@ milestone.
   [post-mortem](docs/postmortems/post-parity-polish.md)
 - **Data Audit & Bug Fix Sweep** — 2026-09-30 — Shipped —
   [post-mortem](docs/postmortems/data-audit-bug-fix-sweep.md)
+- **MacBook Pass** — 2026-10-03 — Shipped —
+  [post-mortem](docs/postmortems/macbook-pass.md)
+- **Fixes & Adjustments** — 2026-10-03 — In progress
