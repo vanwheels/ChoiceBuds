@@ -22,6 +22,12 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[Desktop Startup Sync Loop Fix] — Leg 1** (2026-10-03) - the
+  LoadingScreen looping through its download phases on launch was
+  concurrent `setCacheEntry` writes clobbering each other (stale closure),
+  re-triggered by the missing-entry self-heal. Fixed with a functional
+  update plus a once-per-session self-heal guard. See commit `8b2aada`.
+
 - **[Web TeamCard Expand Infinite-Loop Bug] — Leg 2** (2026-09-30) - see
   commit `31b425e`. The fix Leg 1 scoped: `useGameData.ts`'s getters now
   read the cache through a ref (synced via a plain effect) instead of
