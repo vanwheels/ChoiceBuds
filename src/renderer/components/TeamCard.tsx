@@ -268,7 +268,7 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
       dragControls={dragControls}
       transition={DRAG_REORDER_TRANSITION}
       onDragEnd={onReorderDragEnd}
-      className={`bg-zinc-900/40 border border-zinc-800/80 border-l-4 ${regulationTheme.accentBorder} rounded-xl transition-all ${
+      className={`bg-zinc-900/40 border border-zinc-800/80 border-l-4 ${regulationTheme.accentBorder} rounded-xl transition-[background-color,border-color,box-shadow,opacity] ${
       isFullWidth ? 'col-span-full' : ''
     }`}>
 

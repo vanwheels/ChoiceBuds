@@ -27,12 +27,17 @@ Legs are added as issues are reported. First batch reported 2026-10-03
 (desktop and/or web).
 
 ### [Web Reorder Jank] — Leg 1
-Drag-reordering moves, Pokémon, and teams on web is unreliable: items land
-in the wrong slot or only move one slot at a time. Touches
-`TeamCard.tsx`, `PokemonCard.tsx`, `EditablePokemonCore.tsx`,
-`AppWeb.tsx`/`App.tsx` (native HTML5 DnD, no library). Audit all three
-reorder paths for a shared root cause before fixing; may split into
-per-surface legs, and a touch/mobile pass is likely part of it.
+Audit done (code-read only, not reproduced): all three paths (teams list,
+roster, Box) are framer-motion `Reorder.Group/Item`, not native DnD, and
+share one structure. Applied a cheap fix: TeamCard's `transition-all` was
+CSS-transitioning the transform framer drives; narrowed it. Awaiting user
+verification on web. Likely root cause of "wrong slot / one slot at a time"
+is structural: `Reorder` is 1D-only but all three groups are wrapping 2D
+grids (axis="x"/"y" can't swap across rows/columns), plus a 0.32s layout
+transition delays the next swap while neighbors are mid-animation. If still
+janky, next leg = custom 2D pointer-hit-test reorder (bigger than a tweak).
+Update: move grid (MoveBubbleGrid) now uses a custom 2D hit-test reorder,
+pushed for live verification. Teams list, roster and Box still use Reorder.
 Last touched: 2026-10-03 · Re-checks: 0
 
 ## Blocked
