@@ -32,6 +32,11 @@ typing, abilities) that Box's create flow already has
 (`SpeciesPickerCard.tsx`/`AddPokemonStatTable.tsx`). User reports it exists
 on web but not in the desktop client — confirm where each platform's team
 add path diverges, then unify. Scope-to-plan first.
+Findings (2026-10-03): desktop `TeamCard`'s "+ Add Pokémon" and `BoxPage`
+both already open `AddPokemonStatTable`. Gaps: (a) `MobileTeamsList`/
+`MobileTeamSwipeOverlay` have no add-Pokémon entry at all; (b) Roster Swap
+(`PokemonCard`/`MobilePokemonCard`) still uses plain `SpeciesPickerCard`.
+Needs Vanny to say which flow they saw lacking before building.
 Last touched: 2026-10-03 · Re-checks: 0
 
 ### [Web Species Search Cold-Cache Stats] — Leg 1
