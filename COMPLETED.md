@@ -22,6 +22,11 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[Team Add-Pokémon Species Search Parity] — Leg 1** (2026-10-03) -
+  scoping only. Desktop `TeamCard` and `BoxPage` already use
+  `AddPokemonStatTable`; the real gap is Roster Swap still using plain
+  `SpeciesPickerCard`. Plan recorded in `TODO.md`'s Leg 2. See commit `b386ce0`.
+
 - **[Calc Button Card Overlap] — Leg 1** (2026-10-03) - closed with no
   change: the user doesn't consider the floating Calc button covering the
   last card a problem, since the button isn't fixed in the layout. This

@@ -26,25 +26,14 @@ shipped the same day (see `MILESTONES.md` and its
 Legs are added as issues are reported. First batch reported 2026-10-03
 (desktop and/or web).
 
-### [Team Add-Pokémon Species Search Parity] — Leg 1
-Adding a Pokémon to a team should show the richer species search (BST,
-typing, abilities) that Box's create flow already has
-(`SpeciesPickerCard.tsx`/`AddPokemonStatTable.tsx`). User reports it exists
-on web but not in the desktop client — confirm where each platform's team
-add path diverges, then unify. Scope-to-plan first.
-Findings (2026-10-03): desktop `TeamCard`'s "+ Add Pokémon" and `BoxPage`
-both already open `AddPokemonStatTable`. Gaps: (a) `MobileTeamsList`/
-`MobileTeamSwipeOverlay` have no add-Pokémon entry at all; (b) Roster Swap
-(`PokemonCard`/`MobilePokemonCard`) still uses plain `SpeciesPickerCard`.
-Resolved (2026-10-03): Vanny confirmed the gap is Roster Swap. Plan: render
-`AddPokemonStatTable` instead of `SpeciesPickerCard` in `PokemonCard.tsx` (~L199)
-and `MobilePokemonCard.tsx` (~L127); both already share the same prop shape
-(`roster`/`rulesetId`/`resolveSprite`/`onSelect`/`onClose`). `onSelect` gains an
-optional `itemOverride` (Mega Stone rows), so `handleSwapSelect` must accept and
-apply it. Don't pass `savedPokemon`/`onSelectSaved` (swap has its own
-`SavedSetPicker` step). Check the table fits the card slot on mobile before
-building. Mobile add-Pokémon entry is a separate, unscheduled feature.
-Next: Start [Team Add-Pokémon Species Search Parity] — Leg 2 (build).
+### [Team Add-Pokémon Species Search Parity] — Leg 2
+Build the Roster Swap fix scoped in Leg 1 (see COMPLETED.md): render
+`AddPokemonStatTable` instead of `SpeciesPickerCard` in `PokemonCard.tsx`
+(~L199) and `MobilePokemonCard.tsx` (~L127). `handleSwapSelect` must accept
+and apply the new optional `itemOverride` (Mega Stone rows). Don't pass
+`savedPokemon`/`onSelectSaved` (swap has its own `SavedSetPicker` step).
+Check the table fits the card slot on mobile first. Mobile add-Pokémon entry
+is a separate, unscheduled feature.
 Last touched: 2026-10-03 · Re-checks: 0
 
 ### [Web Species Search Cold-Cache Stats] — Leg 1
