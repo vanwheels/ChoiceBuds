@@ -112,6 +112,9 @@ Entries prior to this file's oldest are in:
   once PokeAPI eventually back-fills Reg M-C.
 </content>
 
+## [Web Reorder Jank] — Leg 2 (2026-10-03)
+Ported the 2D pointer hit-test reorder to the roster grid, Box and teams list via a shared `useGridReorder` hook (slot rects snapshotted at drag start). Awaiting live user verification; slot geometry is a drag-start snapshot, so heavily mixed-height rows (expanded cards) may mis-target. See commit `e8bcfaf`.
+
 ## [Web Reorder Jank] — Leg 1 (2026-10-03)
 Move-slot reorder was broken because framer's 1D `Reorder` can't swap across rows of the 2x2 grid, and the identity reset animated bubbles back before shifting. Replaced with a 2D pointer hit-test reorder, user-verified live. See commit `c0dd045`.
 
