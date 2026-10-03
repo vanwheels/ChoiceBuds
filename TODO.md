@@ -26,24 +26,6 @@ shipped the same day (see `MILESTONES.md` and its
 Legs are added as issues are reported. First batch reported 2026-10-03
 (desktop and/or web).
 
-### [Web Species Search Cold-Cache Stats] — Leg 2
-Add a non-gating web hook (e.g. `useSpeciesStatsPrefetch`, reusing
-`useInitialSync.ts`'s `syncSpeciesStats` — export it — and
-`runWithConcurrency`) that, once roster + database are ready, fetches
-`fetchPokemonData` for every legal-roster species missing a cache entry and
-writes via `setCacheEntry`. No sprites/moves/learnsets (those stay lazy), no
-LoadingScreen. Use low concurrency (~3-4) and one pass per session: a prior
-250-species burst at concurrency 8 got PokeAPI-rate-limited (see
-`useInitialSync.ts` self-heal comment). Wire in `AppWeb.tsx`, update its header
-comment, add a unit test, then live-check the web Add-Pokémon table on a cold
-IndexedDB. Check `setCacheEntry` write cost per species (IndexedDB, 250
-writes) — batch/debounce if it re-renders the table too often.
-Built (`useSpeciesStatsPrefetch.ts`, wired in `AppWeb.tsx`, 3 unit tests,
-no batching yet — per-species `setCacheEntry`, concurrency 3). Open: user's
-live cold-IndexedDB check of the Add-Pokémon table; add batching only if
-re-renders look janky.
-Last touched: 2026-10-03 · Re-checks: 0
-
 ### [Web Reorder Jank] — Leg 1
 Drag-reordering moves, Pokémon, and teams on web is unreliable: items land
 in the wrong slot or only move one slot at a time. Touches

@@ -22,6 +22,10 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[Web Species Search Cold-Cache Stats] — Leg 2** (2026-10-03) -
+  Added `useSpeciesStatsPrefetch`, a non-gating web pass (concurrency 3, one
+  per session) that backfills missing legal-roster species stats. User-verified
+  live; no batching needed. See commit `52096a9`.
 - **[Web Species Search Cold-Cache Stats] — Leg 1** (2026-10-03) -
   scoping only. Cause: `AppWeb` never runs `useInitialSync`, so the stat
   table's cache join is empty until a species is picked. Decision: background
