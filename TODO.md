@@ -27,11 +27,26 @@ Legs are added as issues are reported. First batch reported 2026-10-03
 (desktop and/or web).
 
 ### [Web Species Search Cold-Cache Stats] — Leg 1
-On web, BST/abilities/types don't show on search results until that
-species has been cached (i.e. picked/loaded once). Likely the search rows
-read only from `useDatabase`'s cache with no prefetch/bulk load on web
-(desktop's `useInitialSync` fills it). Decide: prefetch roster stats vs.
-lazy-fetch per visible row.
+Scoped 2026-10-03 (plan only, no code). Cause confirmed: `AddPokemonStatTable.tsx`
+joins stats/types/abilities from `getCachedEntry` only, and `AppWeb.tsx` never
+wires `useInitialSync`, so the cache is empty until a species is picked.
+Decision: **background prefetch of species stats only** (not lazy per-row —
+the table sorts by every stat/BST, so sorting needs all rows' stats, not just
+visible ones). Leg 2 builds it; this leg is done once Leg 2 is opened.
+Last touched: 2026-10-03 · Re-checks: 0
+
+### [Web Species Search Cold-Cache Stats] — Leg 2
+Add a non-gating web hook (e.g. `useSpeciesStatsPrefetch`, reusing
+`useInitialSync.ts`'s `syncSpeciesStats` — export it — and
+`runWithConcurrency`) that, once roster + database are ready, fetches
+`fetchPokemonData` for every legal-roster species missing a cache entry and
+writes via `setCacheEntry`. No sprites/moves/learnsets (those stay lazy), no
+LoadingScreen. Use low concurrency (~3-4) and one pass per session: a prior
+250-species burst at concurrency 8 got PokeAPI-rate-limited (see
+`useInitialSync.ts` self-heal comment). Wire in `AppWeb.tsx`, update its header
+comment, add a unit test, then live-check the web Add-Pokémon table on a cold
+IndexedDB. Check `setCacheEntry` write cost per species (IndexedDB, 250
+writes) — batch/debounce if it re-renders the table too often.
 Last touched: 2026-10-03 · Re-checks: 0
 
 ### [Web Reorder Jank] — Leg 1
