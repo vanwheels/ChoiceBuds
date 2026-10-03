@@ -22,10 +22,17 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[Web Reorder Jank] — Leg 2** (2026-10-03) -
+  Ported the 2D pointer hit-test reorder to the roster grid, Box and teams list via a shared `useGridReorder` hook (slot rects snapshotted at drag start). User-verified live: snap-back, cross-row swaps and mixed-height targeting all behave. See commit `e8bcfaf`.
+
+- **[Web Reorder Jank] — Leg 1** (2026-10-03) -
+  Move-slot reorder was broken because framer's 1D `Reorder` can't swap across rows of the 2x2 grid, and the identity reset animated bubbles back before shifting. Replaced with a 2D pointer hit-test reorder, user-verified live. See commit `c0dd045`.
+
 - **[Web Species Search Cold-Cache Stats] — Leg 2** (2026-10-03) -
   Added `useSpeciesStatsPrefetch`, a non-gating web pass (concurrency 3, one
   per session) that backfills missing legal-roster species stats. User-verified
   live; no batching needed. See commit `52096a9`.
+
 - **[Web Species Search Cold-Cache Stats] — Leg 1** (2026-10-03) -
   scoping only. Cause: `AppWeb` never runs `useInitialSync`, so the stat
   table's cache join is empty until a species is picked. Decision: background
@@ -42,6 +49,9 @@ Entries prior to this file's oldest are in:
   scoping only. Desktop `TeamCard` and `BoxPage` already use
   `AddPokemonStatTable`; the real gap is Roster Swap still using plain
   `SpeciesPickerCard`. Plan recorded in `TODO.md`'s Leg 2. See commit `b386ce0`.
+
+- **[Mega Stone Sprites] — Leg 1** (2026-10-03) -
+  Not a regression: the 36 Champions-new Mega Stones never had PokeAPI sprites (null/404), only Fairy Feather had a Serebii fallback. Generalized it via `utils/itemSprite.ts` across the item box, picker, and poster tiles. See commit `7fd8f2d`.
 
 - **[Calc Button Card Overlap] — Leg 1** (2026-10-03) - closed with no
   change: the user doesn't consider the floating Calc button covering the
@@ -110,13 +120,3 @@ Entries prior to this file's oldest are in:
   Prep. Closes the item outright - no further legs needed; the existing
   `hasChampionsMoveData !== true` self-heal already covers pruning this data
   once PokeAPI eventually back-fills Reg M-C.
-</content>
-
-## [Web Reorder Jank] — Leg 2 (2026-10-03)
-Ported the 2D pointer hit-test reorder to the roster grid, Box and teams list via a shared `useGridReorder` hook (slot rects snapshotted at drag start). User-verified live: snap-back, cross-row swaps and mixed-height targeting all behave. See commit `e8bcfaf`.
-
-## [Web Reorder Jank] — Leg 1 (2026-10-03)
-Move-slot reorder was broken because framer's 1D `Reorder` can't swap across rows of the 2x2 grid, and the identity reset animated bubbles back before shifting. Replaced with a 2D pointer hit-test reorder, user-verified live. See commit `c0dd045`.
-
-## [Mega Stone Sprites] — Leg 1 (2026-10-03)
-Not a regression: the 36 Champions-new Mega Stones never had PokeAPI sprites (null/404), only Fairy Feather had a Serebii fallback. Generalized it via `utils/itemSprite.ts` across the item box, picker, and poster tiles. See commit `7fd8f2d`.

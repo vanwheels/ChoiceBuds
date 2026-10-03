@@ -50,4 +50,5 @@ milestone.
   [post-mortem](docs/postmortems/data-audit-bug-fix-sweep.md)
 - **MacBook Pass** — 2026-10-03 — Shipped —
   [post-mortem](docs/postmortems/macbook-pass.md)
-- **Fixes & Adjustments** — 2026-10-03 — In progress
+- **Fixes & Adjustments** — 2026-10-03 — Shipped —
+  [post-mortem](docs/postmortems/fixes-and-adjustments.md)

@@ -16,15 +16,10 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-Current milestone: **Fixes & Adjustments** (opened 2026-10-03) — general
-fixes and adjustments across the app, not limited to macOS. MacBook Pass
-shipped the same day (see `MILESTONES.md` and its
-[post-mortem](docs/postmortems/macbook-pass.md)).
-
-## Current Milestone: Fixes & Adjustments
-
-Legs are added as issues are reported. First batch reported 2026-10-03
-(desktop and/or web).
+Current milestone: none open. **Fixes & Adjustments** shipped 2026-10-03
+(see `MILESTONES.md` and its
+[post-mortem](docs/postmortems/fixes-and-adjustments.md)); the next
+milestone gets its own `## Current Milestone:` section once scoped.
 
 ## Blocked
 
