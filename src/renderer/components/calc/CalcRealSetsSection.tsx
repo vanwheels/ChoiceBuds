@@ -27,6 +27,15 @@
  * same full-card rows in a fixed-height scroll container instead of letting
  * the panel grow unbounded.
  *
+ * Non-Destructive Bundle Preview (see TODO.md's Web Bug Sweep Leg 5): a
+ * bundle row's item/ability/nature/moves line is CSS-truncated to fit the
+ * panel, so the full set wasn't visible without clicking - and clicking used
+ * to call `onPickBundle` immediately, overwriting whatever the user already
+ * had entered just to preview it. Clicking a row now only expands it in
+ * place (full, untruncated item/ability/nature/moves/EVs); a separate "Apply
+ * This Set" button only appears once expanded, and that's the only thing
+ * that calls `onPickBundle`.
+ *
  * `collapsible` (default true) is what Team Builder Real Sets Integration
  * (see TODO.md/docs/investigations/team-builder-real-sets-scope.md) turns
  * off - RealSetsButton.tsx already hosts this inside an on-demand
@@ -61,6 +70,7 @@ export default function CalcRealSetsSection({
   species, regulation, hasCatalogRows, isCatalogRefreshing, onRefreshCatalog, entry, isLoading, error, onPickBundle, collapsible = true,
 }: CalcRealSetsSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [expandedBundleIndex, setExpandedBundleIndex] = useState<number | null>(null);
   const bundles = entry?.bundles ?? [];
   const showBundles = !collapsible || isExpanded;
 
@@ -73,7 +83,10 @@ export default function CalcRealSetsSection({
         {collapsible && !error && hasCatalogRows && !isLoading && bundles.length > 0 && (
           <button
             type="button"
-            onClick={() => setIsExpanded((prev) => !prev)}
+            onClick={() => {
+              setIsExpanded((prev) => !prev);
+              setExpandedBundleIndex(null);
+            }}
             className="shrink-0 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded transition-colors cursor-pointer bg-zinc-700 text-zinc-200 hover:bg-zinc-600"
           >
             {isExpanded ? 'Hide' : `Show ${bundles.length}`}
@@ -109,26 +122,42 @@ export default function CalcRealSetsSection({
 
       {!error && hasCatalogRows && !isLoading && entry && bundles.length > 0 && showBundles && (
         <div className="flex flex-col gap-1 max-h-72 overflow-y-auto">
-          {bundles.map((bundle, index) => (
-            <button
-              key={index}
-              type="button"
-              onClick={() => onPickBundle(bundle)}
-              title="Click to fill this panel with this real set"
-              className="text-left px-2 py-1 rounded border border-zinc-700 bg-zinc-800/60 hover:border-accent-gold hover:bg-zinc-800 transition-colors cursor-pointer"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[10px] text-zinc-300 truncate">
-                  {bundle.item || 'No Item'} · {bundle.ability || 'No Ability'} · {bundle.nature || 'Hardy'}
-                </span>
-                <span className="shrink-0 text-[10px] font-mono text-accent-gold">
-                  {bundle.occurrences}/{entry.sampledTeamCount}
-                </span>
+          {bundles.map((bundle, index) => {
+            const isRowExpanded = expandedBundleIndex === index;
+            return (
+              <div
+                key={index}
+                onClick={() => setExpandedBundleIndex((prev) => (prev === index ? null : index))}
+                title="Click to expand this real set"
+                className="text-left px-2 py-1 rounded border border-zinc-700 bg-zinc-800/60 hover:border-accent-gold hover:bg-zinc-800 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className={`text-[10px] text-zinc-300 ${isRowExpanded ? '' : 'truncate'}`}>
+                    {bundle.item || 'No Item'} · {bundle.ability || 'No Ability'} · {bundle.nature || 'Hardy'}
+                  </span>
+                  <span className="shrink-0 text-[10px] font-mono text-accent-gold">
+                    {bundle.occurrences}/{entry.sampledTeamCount}
+                  </span>
+                </div>
+                <div className={`text-[10px] text-zinc-500 ${isRowExpanded ? '' : 'truncate'}`}>
+                  {bundle.moves.join(' / ')}
+                </div>
+                <div className="text-[10px] font-mono text-zinc-600">{formatEvs(bundle)}</div>
+                {isRowExpanded && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onPickBundle(bundle);
+                    }}
+                    className="mt-1.5 w-full px-2 py-1 text-[10px] font-bold uppercase tracking-wide rounded transition-colors cursor-pointer bg-accent-gold text-zinc-900 hover:bg-accent-gold-deep"
+                  >
+                    Apply This Set
+                  </button>
+                )}
               </div>
-              <div className="text-[10px] text-zinc-500 truncate">{bundle.moves.join(' / ')}</div>
-              <div className="text-[10px] font-mono text-zinc-600">{formatEvs(bundle)}</div>
-            </button>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
