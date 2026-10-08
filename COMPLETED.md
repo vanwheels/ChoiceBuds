@@ -22,6 +22,12 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[Web Bug Sweep: Second Pass Before Closing] — Leg 6** (2026-10-08) -
+  Decision, no diff: no further findings surfaced from continued use, so
+  the catch-all second-pass item was closed without filing additional
+  legs. Milestone shipped as **Web Client Bug Fix Sweep**, see
+  `MILESTONES.md`.
+
 - **[Web Bug Sweep: StatsColumn EVs Share Leg 4's Stale-Local-State Bug]
   — Leg 1** (2026-10-08) - See commit `c14df4c`. `StatsColumn.tsx`'s
   `localEVs` had the same unguarded-initializer shape Leg 4 fixed elsewhere
@@ -57,7 +63,7 @@ Entries prior to this file's oldest are in:
   into `settings.json` (a new `teamsFilter` field on `AppSettings`, read/
   written through `useSettings`'s existing `updateSettings`) alongside the
   other per-device UI preferences (`boxSortMode`, `showAnimatedSprites`) it
-  already sits next to. See commit `954b706`. Not yet live-verified by
+  already sits next to. See commit `954b706`. Since live-verified by
   Vanny.
 
 - **[Web Bug Sweep: Team Drag-Reorder Reverts After a Few Seconds] — Leg 7**
@@ -104,8 +110,8 @@ Entries prior to this file's oldest are in:
   Live-verified on desktop via `run-desktop`: picking a Real Set bundle
   updated the ability pill and all 4 move bubbles immediately with no
   remount needed. Surfaced a related bug in `StatsColumn.tsx` during that
-  same verification pass, tracked separately in `TODO.md`. Not yet
-  confirmed by Vanny on the live web deploy.
+  same verification pass, tracked separately in `TODO.md`. Since confirmed
+  by Vanny on the live web deploy.
 
 - **[Web Bug Sweep: Item Selector Spawns Off-Screen] — Leg 3** (2026-10-08) -
   Separate root cause from Legs 1/2: the picker panel's max-height was

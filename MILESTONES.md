@@ -52,3 +52,5 @@ milestone.
   [post-mortem](docs/postmortems/macbook-pass.md)
 - **Fixes & Adjustments** — 2026-10-03 — Shipped —
   [post-mortem](docs/postmortems/fixes-and-adjustments.md)
+- **Web Client Bug Fix Sweep** — 2026-10-08 — Shipped —
+  [post-mortem](docs/postmortems/web-client-bug-fix-sweep.md)

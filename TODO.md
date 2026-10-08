@@ -16,31 +16,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Web Client Bug Fix Sweep
-
-Reported by Vanny 2026-10-08 from personal use of the web client. Legs 1
-and 2 turned out to share one root cause (a lost-update race in
-`useTeams.ts`'s mutators) — fixed and user-verified, see `COMPLETED.md`.
-Leg 4 was confirmed to be a *separate* root cause (stale local component
-state, not a persistence race) and has since been fixed and live-verified
-on desktop — see `COMPLETED.md`. Leg 6 intentionally holds the milestone
-open for a second bug-finding pass; don't close the milestone until that's
-done. Legs 7 and 8 have since shipped and been live-verified by Vanny on
-web (see `COMPLETED.md`) — Leg 7's root cause turned out to be a third,
-distinct kind of bug from Legs 1/2/4: a sync-protocol gap (reorder wasn't
-mergeable state at all), not a local race or stale render. The separate
-"StatsColumn EVs Share Leg 4's Stale-Local-State Bug" item has also shipped
-and been live-verified by Vanny on web — see `COMPLETED.md`.
-
-- **[Web Bug Sweep: Second Pass Before Closing] — Leg 6** *(Last touched:
-  2026-10-08 · Re-checks: 0)*
-  Vanny flagged there may be more web-client bugs from personal use not yet
-  written down. First batch of findings came in 2026-10-08, now filed as
-  Legs 9-12 below (7 and 8 have since shipped and been live-verified, see
-  `COMPLETED.md`). Still don't close the milestone until those are fixed
-  *and* Legs 1-5 are re-verified — this item stays open as the catch-all
-  for any further findings from continued use.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
