@@ -38,9 +38,74 @@ done.
 - **[Web Bug Sweep: Second Pass Before Closing] — Leg 6** *(Last touched:
   2026-10-08 · Re-checks: 0)*
   Vanny flagged there may be more web-client bugs from personal use not yet
-  written down. Do a deliberate second look (and re-verify Legs 1-5) before
-  closing this milestone — don't ship it on the strength of the initial
-  five reports alone.
+  written down. First batch of findings came in 2026-10-08, now filed as
+  Legs 7-12 below. Still don't close the milestone until those are fixed
+  *and* Legs 1-5 are re-verified — this item stays open as the catch-all for
+  any further findings from continued use.
+
+- **[Web Bug Sweep: Team Drag-Reorder Reverts After a Few Seconds] — Leg 7**
+  *(Last touched: 2026-10-08 · Re-checks: 0)*
+  Dragging a team to a new position in the list snaps back to its old spot
+  a couple seconds later. `useTeams.ts`'s `setTeamOrder` already goes
+  through the same ref+queue serialized-mutation fix Leg 1 (of the prior
+  sweep) added, so this likely isn't that same lost-update race recurring —
+  more likely something re-derives `TeamsPage.tsx`'s `orderedTeamIds` from
+  a stale `sortedTeams` after the write round-trips (its "adjust state
+  during render" sync at lines ~120-126 resets `orderedTeamIds` any time
+  `sortedTeamIdsKey` changes). Needs investigation to confirm before
+  fixing. Likely entangled with Leg 8 below (making regulation the primary
+  sort key changes what "the list's order" even means) - resolve Leg 8's
+  design first and re-check whether this reproduces under it.
+
+- **[Web Bug Sweep: Teams List Should Always Sort by Regulation (Newest
+  First)] — Leg 8** *(Last touched: 2026-10-08 · Re-checks: 0)*
+  Teams currently sort only by favorite (`utils/teamSort.ts::sortTeamsByFavorite`
+  has no regulation awareness at all) with drag-order as the tiebreaker.
+  Vanny wants regulation as the primary sort (newest - currently Reg M-C -
+  first), drag-order preserved within each regulation group. This also
+  resolves Leg 5 of this list below (filtering to one regulation currently
+  disables the grip handle entirely per `TeamsPage.tsx`'s `canReorderTeams`
+  gate, by design, since a partial filtered view has no well-defined "moved
+  to the end" target) - once regulation is the primary sort, a filtered
+  view is just one contiguous group, so reordering within it is
+  well-defined and the gate can come off.
+
+- **[Web Bug Sweep: Regulation Filter Doesn't Persist Across Sessions] —
+  Leg 9** *(Last touched: 2026-10-08 · Re-checks: 0)*
+  `TeamsPage.tsx`'s `activeFilter` is plain `useState<FormatFilter>('All')`,
+  reset every reload. Needs to persist (likely through `useSettings`,
+  alongside `defaultRegulation` - see Leg 10 below for why these two are
+  related but distinct settings).
+
+- **[Web Bug Sweep: Default Regulation Falls Back to the Oldest, Not the
+  Current, Regulation] — Leg 10** *(Last touched: 2026-10-08 · Re-checks:
+  0)*
+  Vanny recalls this being fixed before - it was, partially: `useSettings.ts`
+  exposes a persisted, user-settable `defaultRegulation` that `ImportTeamModal`,
+  `CalcPage`, `BoxPage`, and `VgcPasteCatalogModal` (sample-team browsing)
+  all already read. The bug is narrower than it looks: `useSettings.ts`'s
+  own `DEFAULT_SETTINGS` hardcodes `defaultRegulation: 'Reg M-A'` (line 23)
+  - the oldest regulation, not the current one - as the fallback for any
+  settings file that predates this field, or a fresh install. Reg M-C is
+  current per `config/seasons.ts::getLatestSeason()`. Fix: derive that
+  fallback from `getLatestSeason().regulation` instead of a hardcoded
+  literal, so it tracks whatever's actually current without a second place
+  to update when a new regulation drops.
+
+- **[Web Bug Sweep: Remove Existing-vs-Imported Set Picker on Team Creation]
+  — Leg 11** *(Last touched: 2026-10-08 · Re-checks: 0)*
+  The popup asking whether to use an existing saved set or the freshly
+  imported one when creating a new team is redundant - that same choice is
+  already made per-Pokémon during editing. Vanny wants it removed from the
+  team-creation flow entirely (just use the imported set, let editing
+  handle the swap-to-existing-set case same as it already does elsewhere).
+
+- **[Web Bug Sweep: Real Set Sampling Is Slow to Populate] — Leg 12** *(Last
+  touched: 2026-10-08 · Re-checks: 0)*
+  Not blocking - Vanny's fine with it being slow if it has to be - but
+  wants either a faster load or a loading indicator / progressive
+  populate-as-it-loads instead of an unexplained wait. Lowest priority of
+  this batch; revisit after Legs 7-10 land.
 
 - **[Web Bug Sweep: StatsColumn EVs Share Leg 4's Stale-Local-State Bug]
   — Leg 1** *(Last touched: 2026-10-08 · Re-checks: 0)*
@@ -111,6 +176,18 @@ unblocked.
   `MILESTONES.md`). Open-ended — needs a pass identifying which
   screens/components haven't had a UI-focused pass yet before it turns
   into concrete legs.
+
+- **[Write Up Web-Transition Playbook for GW2 Squaded Handoff] — Leg 1**
+  *(Last touched: 2026-10-08 · Re-checks: 0)*
+  Done - see `docs/web-transition-playbook.md`. Covers the storage-adapter
+  pattern, the separate `AppWeb.tsx`/`web/` entry point, the GitHub Pages
+  deploy, the lost-update-race and stale-local-state-prop-resync bug
+  classes this sweep found and fixed, and the decisions ChoiceBuds deferred
+  (mobile support, account model, sync shape) that GW2 Squaded should make
+  earlier than ChoiceBuds did. Kept as its own TODO item rather than moved
+  to COMPLETED.md since it's a standalone reference doc, not tied to a
+  commit - revisit/update it if ChoiceBuds' web effort surfaces more
+  transferable lessons before GW2 Squaded's web work actually starts.
 
 ## Future Milestones (unscheduled)
 
