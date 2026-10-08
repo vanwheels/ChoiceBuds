@@ -32,9 +32,8 @@ Entries prior to this file's oldest are in:
   bumped alongside `updatedAt` on every reorder so it rides along with
   that record's own merge resolution; `teamSort.ts` uses it as the
   regulation-group tiebreaker, falling back to stable array order for
-  teams that don't have it yet. See commit `34bbc17`. Not yet
-  live-verified against real signed-in sync - do a manual pass dragging a
-  team, waiting 10+ seconds, and confirming it holds.
+  teams that don't have it yet. See commit `34bbc17`. Live-verified by
+  Vanny on web.
 
 - **[Web Bug Sweep: Teams List Should Always Sort by Regulation (Newest
   First)] — Leg 8** (2026-10-08) - `utils/teamSort.ts`'s
@@ -45,9 +44,7 @@ Entries prior to this file's oldest are in:
   filter is active" gate in `TeamCard.tsx`/`TeamsPage.tsx` - removed
   outright, since a filtered view is now always one contiguous regulation
   group and reordering within it is well-defined. See commit `b2f5177`.
-  Not yet live-verified in the browser (type-check/lint/tests pass) - do a
-  manual pass on the live site for both the new sort order and reordering
-  within a filtered view.
+  Live-verified by Vanny on web.
 
 - **[Web Bug Sweep: Real Sets Panel Hides Info Behind a Destructive Click]
   — Leg 5** (2026-10-08) - Clicking a bundle row in
