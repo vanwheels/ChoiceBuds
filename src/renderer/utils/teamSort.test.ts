@@ -81,4 +81,24 @@ describe('sortTeams', () => {
 
     expect(sortTeams(teams).map(t => t.id)).toEqual(['b', 'a', 'c']);
   });
+
+  it('breaks ties within a regulation group by sortOrder, ascending, even against raw array order', () => {
+    const teams = [
+      makeTeam({ id: 'a', format: 'Reg M-C', sortOrder: 2 }),
+      makeTeam({ id: 'b', format: 'Reg M-C', sortOrder: 0 }),
+      makeTeam({ id: 'c', format: 'Reg M-C', sortOrder: 1 }),
+    ];
+
+    expect(sortTeams(teams).map(t => t.id)).toEqual(['b', 'c', 'a']);
+  });
+
+  it('falls back to raw array order when sortOrder is missing on either side of a tie', () => {
+    const teams = [
+      makeTeam({ id: 'a', format: 'Reg M-C' }),
+      makeTeam({ id: 'b', format: 'Reg M-C', sortOrder: 0 }),
+      makeTeam({ id: 'c', format: 'Reg M-C' }),
+    ];
+
+    expect(sortTeams(teams).map(t => t.id)).toEqual(['a', 'b', 'c']);
+  });
 });

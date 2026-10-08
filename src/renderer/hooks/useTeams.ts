@@ -295,7 +295,14 @@ export function useTeams(): UseTeamsReturn {
     const ordered = orderedIds.map(id => byId.get(id)).filter((t): t is Team => t !== undefined);
     const orderedIdSet = new Set(ordered.map(t => t.id));
     const leftover = base.filter(t => !orderedIdSet.has(t.id));
-    const updatedTeams = [...ordered, ...leftover];
+    // sortOrder/updatedAt are stamped on every team here, not just the ones
+    // that visually moved - see Team.sortOrder's doc comment for why this
+    // needs to be its own last-write-wins record field at all: the Worker's
+    // per-record merge has no concept of list position, so a reorder that
+    // only lived in this array's element order would be silently discarded
+    // by the next auto-sync round-trip.
+    const now = Date.now();
+    const updatedTeams = [...ordered, ...leftover].map((team, index) => ({ ...team, sortOrder: index, updatedAt: now }));
 
     const success = await persistTeamsToDisk(updatedTeams, tombstonesRef.current);
     if (success) {

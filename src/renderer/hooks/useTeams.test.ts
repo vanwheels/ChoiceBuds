@@ -235,6 +235,32 @@ describe('useTeams', () => {
     expect(result.current.teams.map(t => t.id)).toEqual(['c', 'a', 'b']);
   });
 
+  it('setTeamOrder stamps an ascending sortOrder and a fresh updatedAt on every team', async () => {
+    // sortOrder/updatedAt need to be stamped on every reorder (not derived
+    // from array position alone) so the reorder survives the sync Worker's
+    // per-record last-write-wins merge, which has no concept of list
+    // position - see Team.sortOrder's doc comment and Web Bug Sweep Leg 7
+    // in COMPLETED.md.
+    vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({
+      version: 1,
+      teams: [makeTeam({ id: 'a', updatedAt: 1 }), makeTeam({ id: 'b', updatedAt: 1 }), makeTeam({ id: 'c', updatedAt: 1 })],
+      lastModified: 0,
+    });
+    const { result } = renderHook(() => useTeams());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    const before = Date.now();
+    await act(async () => {
+      await result.current.setTeamOrder(['c', 'a']);
+    });
+
+    const [c, a, b] = result.current.teams;
+    expect([c.sortOrder, a.sortOrder, b.sortOrder]).toEqual([0, 1, 2]);
+    expect(c.updatedAt).toBeGreaterThanOrEqual(before);
+    expect(a.updatedAt).toBeGreaterThanOrEqual(before);
+    expect(b.updatedAt).toBeGreaterThanOrEqual(before);
+  });
+
   it('toggleCardExpansion, collapseCard and collapseAllCards manage the expansion set', async () => {
     const { result } = renderHook(() => useTeams());
     await waitFor(() => expect(result.current.isLoading).toBe(false));

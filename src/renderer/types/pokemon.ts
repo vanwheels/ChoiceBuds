@@ -127,6 +127,19 @@ export interface Team {
   // useTeams.ts's normalizeTeam does for other fields, since "missing" and
   // "not favorited" mean the same thing here.
   favorite?: boolean;
+  // Drag-reorder position within this team's regulation group (utils/
+  // teamSort.ts's tiebreaker, ascending - lower sorts first), set by
+  // useTeams.ts's setTeamOrder. Exists as its own record field, bumped
+  // alongside updatedAt on every reorder, specifically so a reorder
+  // survives cross-device sync: the Worker's merge (worker/src/merge.ts)
+  // is last-write-wins per record by updatedAt and has no concept of list
+  // position at all, so an order that only lived in this array's raw
+  // element order would be silently discarded by the very next auto-sync
+  // round-trip (confirmed live - see Web Bug Sweep Leg 7 in COMPLETED.md).
+  // Undefined (a team that's never been through a reorder, or data from
+  // before this field existed) falls back to the array's existing stable
+  // relative order, same as before this field existed.
+  sortOrder?: number;
 }
 
 /**
