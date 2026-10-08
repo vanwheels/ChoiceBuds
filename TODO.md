@@ -39,13 +39,6 @@ mergeable state at all), not a local race or stale render.
   *and* Legs 1-5 are re-verified — this item stays open as the catch-all
   for any further findings from continued use.
 
-- **[Web Bug Sweep: Real Set Sampling Is Slow to Populate] — Leg 12** *(Last
-  touched: 2026-10-08 · Re-checks: 0)*
-  Not blocking - Vanny's fine with it being slow if it has to be - but
-  wants either a faster load or a loading indicator / progressive
-  populate-as-it-loads instead of an unexplained wait. Lowest priority of
-  this batch; revisit after Legs 7-10 land.
-
 - **[Web Bug Sweep: StatsColumn EVs Share Leg 4's Stale-Local-State Bug]
   — Leg 1** *(Last touched: 2026-10-08 · Re-checks: 0)*
   Found live-verifying Leg 4's fix: `StatsColumn.tsx`'s

@@ -22,6 +22,14 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[Web Bug Sweep: Real Set Sampling Is Slow to Populate] — Leg 12**
+  (2026-10-08) - See commit `5006f13`. The sequential sample-paste fetch loop
+  (kept sequential per CLAUDE.md's eighth exception's politeness requirement,
+  not parallelizable) only showed an unexplained "Sampling..." message with
+  no sense of progress until it finished entirely - now reports "(N/M pastes
+  checked)" and populates the Real Sets list as bundles are found instead of
+  only once the whole loop completes.
+
 - **[Web Bug Sweep: Remove Existing-vs-Imported Set Picker on Team Creation]
   — Leg 11** (2026-10-08) - See commit `7cbd7ba`. Removed the "use saved
   build or keep pasted" review step from team creation entirely, since the
