@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { useSettings } from './useSettings';
 import type { AppSettings } from '../types/pokemon';
+import { getLatestSeason } from '../config/seasons';
 
 describe('useSettings', () => {
   it('starts loading and settles on the built-in defaults when no settings.json exists', async () => {
@@ -9,7 +10,7 @@ describe('useSettings', () => {
     expect(result.current.isLoading).toBe(true);
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.settings.defaultRegulation).toBe('Reg M-A');
+    expect(result.current.settings.defaultRegulation).toBe(getLatestSeason().regulation);
     expect(result.current.settings.syncUsername).toBeNull();
     expect(result.current.error).toBeNull();
   });
@@ -67,7 +68,7 @@ describe('useSettings', () => {
     });
 
     expect(success).toBe(false);
-    expect(result.current.settings.defaultRegulation).toBe('Reg M-A'); // unchanged
+    expect(result.current.settings.defaultRegulation).toBe(getLatestSeason().regulation); // unchanged
     expect(result.current.error).toBe('Failed to write settings');
   });
 

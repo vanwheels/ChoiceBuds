@@ -6,6 +6,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { AppSettings, PlayerProfile, RegulationLabel } from '../types/pokemon';
 import { getStorageAdapter } from '../services/storage';
+import { getLatestSeason } from '../config/seasons';
 
 const DEFAULT_PLAYER_PROFILE: PlayerProfile = {
   playerName: '',
@@ -20,7 +21,7 @@ const DEFAULT_PLAYER_PROFILE: PlayerProfile = {
 
 const DEFAULT_SETTINGS: AppSettings = {
   version: 1,
-  defaultRegulation: 'Reg M-A',
+  defaultRegulation: getLatestSeason().regulation,
   teamsFilter: 'All',
   syncUsername: null,
   syncToken: null,

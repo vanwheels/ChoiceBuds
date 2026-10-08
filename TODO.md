@@ -39,21 +39,6 @@ mergeable state at all), not a local race or stale render.
   *and* Legs 1-5 are re-verified — this item stays open as the catch-all
   for any further findings from continued use.
 
-- **[Web Bug Sweep: Default Regulation Falls Back to the Oldest, Not the
-  Current, Regulation] — Leg 10** *(Last touched: 2026-10-08 · Re-checks:
-  0)*
-  Vanny recalls this being fixed before - it was, partially: `useSettings.ts`
-  exposes a persisted, user-settable `defaultRegulation` that `ImportTeamModal`,
-  `CalcPage`, `BoxPage`, and `VgcPasteCatalogModal` (sample-team browsing)
-  all already read. The bug is narrower than it looks: `useSettings.ts`'s
-  own `DEFAULT_SETTINGS` hardcodes `defaultRegulation: 'Reg M-A'` (line 23)
-  - the oldest regulation, not the current one - as the fallback for any
-  settings file that predates this field, or a fresh install. Reg M-C is
-  current per `config/seasons.ts::getLatestSeason()`. Fix: derive that
-  fallback from `getLatestSeason().regulation` instead of a hardcoded
-  literal, so it tracks whatever's actually current without a second place
-  to update when a new regulation drops.
-
 - **[Web Bug Sweep: Remove Existing-vs-Imported Set Picker on Team Creation]
   — Leg 11** *(Last touched: 2026-10-08 · Re-checks: 0)*
   The popup asking whether to use an existing saved set or the freshly
