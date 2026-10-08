@@ -41,14 +41,12 @@ mergeable state at all), not a local race or stale render.
 
 - **[Web Bug Sweep: StatsColumn EVs Share Leg 4's Stale-Local-State Bug]
   — Leg 1** *(Last touched: 2026-10-08 · Re-checks: 0)*
-  Found live-verifying Leg 4's fix: `StatsColumn.tsx`'s
-  `const [localEVs, setLocalEVs] = useState(evs)` has the exact same
-  unguarded-initializer shape Leg 4 fixed in `EditOverlays.tsx`/
-  `EditablePokemonCore.tsx` — never resyncs when the `evs` prop changes from
-  an externally-applied update. Confirmed live: picking a Real Set bundle
-  correctly updated `showdownData.evs` underneath, but the displayed EV
-  grid kept showing the pre-pick values. Same fix shape as Leg 4 (the
-  `prevProp*` render-time resync pattern) should apply directly.
+  Fixed - see commit `c14df4c`. Applied the same `prevProp*` render-time
+  resync pattern Leg 4 used in `EditOverlays.tsx`/`EditablePokemonCore.tsx`
+  to `StatsColumn.tsx`'s `localEVs`. Type-check/lint/full test suite clean.
+  Not yet live-verified by Vanny (picking a Real Set bundle should now
+  update the displayed EV grid immediately) - leave open until confirmed,
+  then move to `COMPLETED.md`.
 
 ## Blocked
 
