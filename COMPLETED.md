@@ -22,6 +22,30 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[Web Bug Sweep: Real Set Import Not Visually Reflected] — Leg 4**
+  (2026-10-08) - Separate root cause from Legs 1/2: `EditOverlays.tsx`'s
+  `selectedItem`/`selectedAbility`/`selectedMoves` and
+  `EditablePokemonCore.tsx`'s `localNickname`/`isLocalShiny`/`localGender`
+  each initialized once via `useState(pokemon.showdownData.X)` and never
+  resynced when the `pokemon` prop changed from an externally-applied
+  update (e.g. Real Set import) that bypasses the components' own
+  optimistic on-click handlers. Fixed with the same "adjust state during
+  render" prop-resync pattern `TeamCard.tsx`'s `rosterIdsKey` already uses.
+  Live-verified on desktop via `run-desktop`: picking a Real Set bundle
+  updated the ability pill and all 4 move bubbles immediately with no
+  remount needed. Surfaced a related bug in `StatsColumn.tsx` during that
+  same verification pass, tracked separately in `TODO.md`. Not yet
+  confirmed by Vanny on the live web deploy.
+
+- **[Web Bug Sweep: Item Selector Spawns Off-Screen] — Leg 3** (2026-10-08) -
+  Separate root cause from Legs 1/2: the picker panel's max-height was
+  measured against the wrong side (always "space below the trigger") while
+  `FloatingCardPanel` independently flips the panel above the trigger
+  whenever there's room, letting it grow past the top of the card/viewport;
+  chrome (search input/padding) also wasn't counted in the height budget.
+  User-verified live on web after the `deploy-web.yml` GitHub Pages deploy
+  picked up the fix. See commit `a4598cc`.
+
 - **[Web Bug Sweep: Export Shows Stale Data, Reverts on Refresh] — Leg 2**
   (2026-10-08) - Same root cause as Leg 1's lost-update race; resolved by
   the same fix, user-verified live. See commit `1f51dac`.

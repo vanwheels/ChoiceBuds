@@ -22,35 +22,10 @@ Reported by Vanny 2026-10-08 from personal use of the web client. Legs 1
 and 2 turned out to share one root cause (a lost-update race in
 `useTeams.ts`'s mutators) — fixed and user-verified, see `COMPLETED.md`.
 Leg 4 was confirmed to be a *separate* root cause (stale local component
-state, not a persistence race) and is still open below. Leg 6 intentionally
-holds the milestone open for a second bug-finding pass; don't close the
-milestone until that's done.
-
-- **[Web Bug Sweep: Item Selector Spawns Off-Screen] — Leg 3** *(Last
-  touched: 2026-10-08 · Re-checks: 0)*
-  The item-select dropdown can position slightly outside the visible
-  viewport vertically instead of anchoring to its trigger. Looks like a
-  plain positioning/CSS calculation bug, independent of the state-
-  persistence issues above.
-
-- **[Web Bug Sweep: Real Set Import Not Visually Reflected] — Leg 4** *(Last
-  touched: 2026-10-08 · Re-checks: 0)*
-  Confirmed during Leg 1's investigation this is a **separate** root cause
-  from Legs 1/2, not the same one: `EditOverlays.tsx`'s `selectedItem`/
-  `selectedAbility`/`selectedMoves` and `EditablePokemonCore.tsx`'s
-  `localNickname`/`isLocalShiny`/`localGender` all initialize once via
-  `useState(pokemon.showdownData.X)` and never resync when the `pokemon`
-  prop changes from an *externally-applied* update (Real Set import, Roster
-  Swap, Saved Set load, Paste Pokémon, Speed Tiers override save) - those
-  bypass the components' own on-click handlers (which optimistically
-  `setSelectedX(...)` themselves) entirely, so the underlying data persists
-  correctly but these components keep displaying their stale initial
-  values until something else forces a remount. Needs its own fix (resync
-  local state off a prop-change, e.g. the "adjust state during render"
-  pattern already used elsewhere in this codebase - see `TeamCard.tsx`'s
-  `rosterIdsKey` handling for a reference - or key the component so an
-  externally-applied update remounts it) - not fixed by Leg 1's write-race
-  fix.
+state, not a persistence race) and has since been fixed and live-verified
+on desktop — see `COMPLETED.md`. Leg 6 intentionally holds the milestone
+open for a second bug-finding pass; don't close the milestone until that's
+done.
 
 - **[Web Bug Sweep: Real Sets Panel Hides Info Behind a Destructive Click]
   — Leg 5** *(Last touched: 2026-10-08 · Re-checks: 0)*
@@ -66,6 +41,17 @@ milestone until that's done.
   written down. Do a deliberate second look (and re-verify Legs 1-5) before
   closing this milestone — don't ship it on the strength of the initial
   five reports alone.
+
+- **[Web Bug Sweep: StatsColumn EVs Share Leg 4's Stale-Local-State Bug]
+  — Leg 1** *(Last touched: 2026-10-08 · Re-checks: 0)*
+  Found live-verifying Leg 4's fix: `StatsColumn.tsx`'s
+  `const [localEVs, setLocalEVs] = useState(evs)` has the exact same
+  unguarded-initializer shape Leg 4 fixed in `EditOverlays.tsx`/
+  `EditablePokemonCore.tsx` — never resyncs when the `evs` prop changes from
+  an externally-applied update. Confirmed live: picking a Real Set bundle
+  correctly updated `showdownData.evs` underneath, but the displayed EV
+  grid kept showing the pre-pick values. Same fix shape as Leg 4 (the
+  `prevProp*` render-time resync pattern) should apply directly.
 
 ## Blocked
 

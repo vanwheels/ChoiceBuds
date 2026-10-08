@@ -60,6 +60,31 @@ export default function EditablePokemonCore({ pokemon, onUpdatePokemon, gameData
   const [isLocalShiny, setIsLocalShiny] = useState(showdownData.shiny);
   const [localGender, setLocalGender] = useState<'M' | 'F' | 'N' | '' | undefined>(showdownData.gender);
   const [localNickname, setLocalNickname] = useState(showdownData.nickname || '');
+  // Resyncs shiny/gender/nickname off the pokemon prop itself (not just on
+  // mount) - "adjust state during render" pattern, same shape as
+  // TeamCard.tsx's rosterIdsKey/EditOverlays.tsx's selectedItem handling.
+  // handleShinyToggle/handleGenderToggle already set these optimistically
+  // before their onUpdatePokemon call resolves, so these checks are no-ops
+  // by the time the prop catches up; what they're actually for is an
+  // *externally*-applied update (Real Set import, Roster Swap, Saved Set
+  // load, Paste Pokémon, Speed Tiers override save) that bypasses these
+  // handlers entirely and swaps `pokemon` straight from outside - see Web
+  // Bug Sweep Leg 4, TODO.md.
+  const [prevPropShiny, setPrevPropShiny] = useState(showdownData.shiny);
+  const [prevPropGender, setPrevPropGender] = useState(showdownData.gender);
+  const [prevPropNickname, setPrevPropNickname] = useState(showdownData.nickname || '');
+  if (showdownData.shiny !== prevPropShiny) {
+    setPrevPropShiny(showdownData.shiny);
+    setIsLocalShiny(showdownData.shiny);
+  }
+  if (showdownData.gender !== prevPropGender) {
+    setPrevPropGender(showdownData.gender);
+    setLocalGender(showdownData.gender);
+  }
+  if ((showdownData.nickname || '') !== prevPropNickname) {
+    setPrevPropNickname(showdownData.nickname || '');
+    setLocalNickname(showdownData.nickname || '');
+  }
   // Tracks the specific animated URL that last failed to load, not just a
   // bare "give up" flag - so a subsequent gender/shiny/Mega-state change
   // (which produces a different candidate URL) gets a fresh chance rather

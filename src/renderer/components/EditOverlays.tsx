@@ -65,6 +65,34 @@ export default function EditOverlays({ pokemon, gameDataState, rulesetId, resolv
     pokemon.showdownData.moves[2] || '',
     pokemon.showdownData.moves[3] || '',
   ]);
+
+  // Resyncs item/ability/moves off the pokemon prop itself (not just on mount)
+  // - "adjust state during render" pattern, same shape as TeamCard.tsx's
+  // rosterIdsKey. This component's own click handlers already setSelectedX
+  // optimistically before onUpdatePokemon resolves, so by the time the prop
+  // actually changes to match, these checks are no-ops; what they're really
+  // for is an *externally*-applied update (Real Set import, Roster Swap,
+  // Saved Set load, Paste Pokémon, Speed Tiers override save) that bypasses
+  // these handlers entirely and swaps `pokemon` straight from outside - see
+  // Web Bug Sweep Leg 4, TODO.md.
+  const propItem = pokemon.showdownData.item || '';
+  const propAbility = pokemon.showdownData.ability || '';
+  const propMovesKey = [0, 1, 2, 3].map(i => pokemon.showdownData.moves[i] || '').join('|');
+  const [prevPropItem, setPrevPropItem] = useState(propItem);
+  const [prevPropAbility, setPrevPropAbility] = useState(propAbility);
+  const [prevPropMovesKey, setPrevPropMovesKey] = useState(propMovesKey);
+  if (propItem !== prevPropItem) {
+    setPrevPropItem(propItem);
+    setSelectedItem(propItem);
+  }
+  if (propAbility !== prevPropAbility) {
+    setPrevPropAbility(propAbility);
+    setSelectedAbility(propAbility);
+  }
+  if (propMovesKey !== prevPropMovesKey) {
+    setPrevPropMovesKey(propMovesKey);
+    setSelectedMoves([0, 1, 2, 3].map(i => pokemon.showdownData.moves[i] || ''));
+  }
   const [legalMoves, setLegalMoves] = useState<MoveData[]>([]);
   const [legalAbilities, setLegalAbilities] = useState<AbilityData[]>([]);
   const [moveUsage, setMoveUsage] = useState<ChampionsUsageRankedEntry[]>([]);
