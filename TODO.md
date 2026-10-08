@@ -39,13 +39,6 @@ mergeable state at all), not a local race or stale render.
   *and* Legs 1-5 are re-verified — this item stays open as the catch-all
   for any further findings from continued use.
 
-- **[Web Bug Sweep: Regulation Filter Doesn't Persist Across Sessions] —
-  Leg 9** *(Last touched: 2026-10-08 · Re-checks: 0)*
-  `TeamsPage.tsx`'s `activeFilter` is plain `useState<FormatFilter>('All')`,
-  reset every reload. Needs to persist (likely through `useSettings`,
-  alongside `defaultRegulation` - see Leg 10 below for why these two are
-  related but distinct settings).
-
 - **[Web Bug Sweep: Default Regulation Falls Back to the Oldest, Not the
   Current, Regulation] — Leg 10** *(Last touched: 2026-10-08 · Re-checks:
   0)*

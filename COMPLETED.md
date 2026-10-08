@@ -22,6 +22,15 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[Web Bug Sweep: Regulation Filter Doesn't Persist Across Sessions] —
+  Leg 9** (2026-10-08) - `TeamsPage.tsx`'s `activeFilter` was plain
+  component-local `useState`, reset to `'All'` on every reload. Moved it
+  into `settings.json` (a new `teamsFilter` field on `AppSettings`, read/
+  written through `useSettings`'s existing `updateSettings`) alongside the
+  other per-device UI preferences (`boxSortMode`, `showAnimatedSprites`) it
+  already sits next to. See commit `954b706`. Not yet live-verified by
+  Vanny.
+
 - **[Web Bug Sweep: Team Drag-Reorder Reverts After a Few Seconds] — Leg 7**
   (2026-10-08) - Root cause turned out to be a sync-protocol gap, not the
   stale-render pattern the item originally suspected: `setTeamOrder` never
