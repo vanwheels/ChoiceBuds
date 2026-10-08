@@ -16,10 +16,92 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-Current milestone: none open. **Fixes & Adjustments** shipped 2026-10-03
-(see `MILESTONES.md` and its
-[post-mortem](docs/postmortems/fixes-and-adjustments.md)); the next
-milestone gets its own `## Current Milestone:` section once scoped.
+## Current Milestone: Web Client Bug Fix Sweep
+
+Reported by Vanny 2026-10-08 from personal use of the web client. Legs 1, 2,
+and 4 share a suspicious shape (a mutation doesn't visibly/durably take
+effect until some other trigger fires) and may turn out to be one root
+cause in the web storage-adapter/state-update path rather than three
+separate bugs — confirm or rule that out during Leg 1 rather than assuming
+it going in. Leg 6 intentionally holds the milestone open for a second
+bug-finding pass; don't close the milestone until that's done.
+
+- **[Web Bug Sweep: Team Edit Needs Double Action] — Leg 1** *(Last
+  touched: 2026-10-08 · Re-checks: 0)*
+  Root cause confirmed and fixed in `useTeams.ts`: `useActiveEditor` turned
+  out to be a dead end — it's mounted in `AppWeb.tsx`/`App.tsx` and passed
+  into `TeamsPage` as a prop, but `TeamsPage` never destructures or forwards
+  it anywhere; all real editing now goes through Always-On Editing's direct
+  `onUpdatePokemon`/`updateTeam` calls instead, so its draft-commit path
+  isn't involved in this bug at all (worth a separate cleanup TODO to delete
+  it, since it's fully unused). The real cause: every `useTeams` mutator
+  (`updateTeam`/`addTeam`/`deleteTeam`/`setTeamOrder`) rebuilt its "next
+  teams array" from the `teams` state closured into that render, then
+  persisted it independently - two mutations fired before React re-rendered
+  (e.g. `StatsColumn.tsx`'s EV hold-to-repeat fires one `onUpdatePokemon`
+  per interval tick, unawaited) both read the *same* stale base, and
+  whichever write happened to resolve last won, silently dropping whichever
+  edit lost the race regardless of which was issued last - repeating the
+  same edit later (once a render had caught up) no longer raced, so it
+  stuck. Fixed by giving `useTeams` a `teamsRef`/`tombstonesRef` (updated
+  synchronously the instant a mutation computes its result, not only once
+  React re-renders) and a serializing write queue (`enqueueMutation`) that
+  every mutator, plus `refreshTeams`, now runs through - see that file's new
+  header comment on the refs. Covered by a new race-reproducing test in
+  `useTeams.test.ts`; full suite + type-check + lint all pass. Needs Vanny's
+  own live verification (hold an EV +/- button, or fire two quick edits,
+  then refresh) before this and Leg 2 close out.
+
+- **[Web Bug Sweep: Export Shows Stale Data, Reverts on Refresh] — Leg 2**
+  *(Last touched: 2026-10-08 · Re-checks: 0)*
+  Same root cause as Leg 1 (confirmed during Leg 1's investigation) - the
+  lost-update race in `useTeams.ts`'s mutators meant an edit could fail to
+  actually persist while still looking applied in the moment, so a later
+  export/refresh read back the pre-edit (or partially-overwritten) value.
+  Leg 1's fix (serializing writes through `enqueueMutation` + ref-based
+  bases) should resolve this too - not closing this leg out yet pending
+  Vanny's own live verification of the specific export/refresh repro.
+
+- **[Web Bug Sweep: Item Selector Spawns Off-Screen] — Leg 3** *(Last
+  touched: 2026-10-08 · Re-checks: 0)*
+  The item-select dropdown can position slightly outside the visible
+  viewport vertically instead of anchoring to its trigger. Looks like a
+  plain positioning/CSS calculation bug, independent of the state-
+  persistence issues above.
+
+- **[Web Bug Sweep: Real Set Import Not Visually Reflected] — Leg 4** *(Last
+  touched: 2026-10-08 · Re-checks: 0)*
+  Confirmed during Leg 1's investigation this is a **separate** root cause
+  from Legs 1/2, not the same one: `EditOverlays.tsx`'s `selectedItem`/
+  `selectedAbility`/`selectedMoves` and `EditablePokemonCore.tsx`'s
+  `localNickname`/`isLocalShiny`/`localGender` all initialize once via
+  `useState(pokemon.showdownData.X)` and never resync when the `pokemon`
+  prop changes from an *externally-applied* update (Real Set import, Roster
+  Swap, Saved Set load, Paste Pokémon, Speed Tiers override save) - those
+  bypass the components' own on-click handlers (which optimistically
+  `setSelectedX(...)` themselves) entirely, so the underlying data persists
+  correctly but these components keep displaying their stale initial
+  values until something else forces a remount. Needs its own fix (resync
+  local state off a prop-change, e.g. the "adjust state during render"
+  pattern already used elsewhere in this codebase - see `TeamCard.tsx`'s
+  `rosterIdsKey` handling for a reference - or key the component so an
+  externally-applied update remounts it) - not fixed by Leg 1's write-race
+  fix.
+
+- **[Web Bug Sweep: Real Sets Panel Hides Info Behind a Destructive Click]
+  — Leg 5** *(Last touched: 2026-10-08 · Re-checks: 0)*
+  The Real Sets panel doesn't show all of a set's information up front —
+  seeing the rest requires clicking the set, but clicking also immediately
+  applies it, overwriting the user's current set just to preview it. Needs
+  a UX decision (e.g. a details-only expand/preview that doesn't apply)
+  before a fix, not just a rendering tweak.
+
+- **[Web Bug Sweep: Second Pass Before Closing] — Leg 6** *(Last touched:
+  2026-10-08 · Re-checks: 0)*
+  Vanny flagged there may be more web-client bugs from personal use not yet
+  written down. Do a deliberate second look (and re-verify Legs 1-5) before
+  closing this milestone — don't ship it on the strength of the initial
+  five reports alone.
 
 ## Blocked
 
@@ -48,6 +130,29 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+- **[Delete Dead useActiveEditor Hook] — Leg 1** *(Last touched: 2026-10-08 ·
+  Re-checks: 0)*
+  Found during Web Bug Sweep Leg 1's investigation: `useActiveEditor.ts`
+  (draft/commit scratchpad for the old modal-based edit flow) is mounted in
+  both `App.tsx` and `AppWeb.tsx` and passed into `TeamsPage` as
+  `editorState`, but `TeamsPage` never destructures or forwards it to
+  anything - Always-On Editing replaced that whole flow with direct
+  `onUpdatePokemon`/`updateTeam` calls and nothing was ever wired back up.
+  Fully dead code (hook + its test file + the unused prop plumbing) -
+  safe to delete outright.
+
+- **[Audit Sibling Hooks for useTeams' Lost-Update Race] — Leg 1** *(Last
+  touched: 2026-10-08 · Re-checks: 0)*
+  `useTeams.ts` had a lost-update race (fixed, see COMPLETED.md/TODO.md's
+  Web Bug Sweep Leg 1) from its mutators rebuilding "next state" off a
+  `teams` value closured at render time instead of a synchronously-updated
+  ref, with no serialization between concurrent mutations. `useSavedPokemon`,
+  `useBattles`, `useSettings`, and `useDatabase` all follow the same
+  "closure over state array + persist via storage adapter" shape and
+  plausibly share the same race - not fixed proactively here (out of Leg 1's
+  scope), but worth auditing each for the same pattern and applying the same
+  ref+queue fix where it applies.
 
 - **[UI Shift Assessment Sweep — Post Card UI Polish] — Leg 1** *(Last
   touched: 2026-09-08 · Re-checks: 0)*

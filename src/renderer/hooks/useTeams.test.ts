@@ -124,6 +124,35 @@ describe('useTeams', () => {
     expect(result.current.teams[0].updatedAt).toBeGreaterThan(1);
   });
 
+  it('updateTeam serializes concurrent calls so a slower write landing later never drops an earlier one (TODO.md Team Edit Needs Double Action)', async () => {
+    vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({
+      version: 1,
+      teams: [makeTeam({ pokemon: [] })],
+      lastModified: 0,
+    });
+    const { result } = renderHook(() => useTeams());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    // First call's own write resolves *after* the second call's, same as a
+    // real IndexedDB/Electron write landing out of issue-order - without
+    // serializing+rebasing on the latest ref, the second call's stale base
+    // (read before the first call's update applied) would overwrite it.
+    vi.mocked(window.electron.writeTeamsDatabase)
+      .mockImplementationOnce(() => new Promise(resolve => setTimeout(() => resolve(true), 20)))
+      .mockImplementationOnce(() => new Promise(resolve => setTimeout(() => resolve(true), 5)));
+
+    let firstCall: Promise<boolean>;
+    let secondCall: Promise<boolean>;
+    await act(async () => {
+      firstCall = result.current.updateTeam('team-1', { name: 'First Edit' });
+      secondCall = result.current.updateTeam('team-1', { author: 'Second Edit' });
+      await Promise.all([firstCall, secondCall]);
+    });
+
+    expect(result.current.teams[0].name).toBe('First Edit');
+    expect(result.current.teams[0].author).toBe('Second Edit');
+  });
+
   it('updateTeam fails with an error for an unknown team id', async () => {
     const { result } = renderHook(() => useTeams());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
