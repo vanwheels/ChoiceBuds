@@ -18,7 +18,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { RegulationLabel, VgcPasteTeamRow, VgcRealSetsCache, VgcRealSetsEntry } from '../types/pokemon';
 import { normalizeUsageCacheKey } from '../services/championsBattleData';
-import { filterRowsBySpecies, extractRealSetsForSpecies } from '../services/vgcRealSets';
+import { filterRowsBySpecies, extractRealSetsForSpecies, type VgcRealSetsExtractionProgress } from '../services/vgcRealSets';
 import { useDebouncedWrite } from './useDebouncedWrite';
 import { getStorageAdapter } from '../services/storage';
 
@@ -28,10 +28,12 @@ export interface UseVgcRealSetsCacheReturn {
   isLoading: boolean;
   error: string | null;
   getCachedRealSets: (regulation: RegulationLabel, species: string) => VgcRealSetsEntry | null;
+  /** `onProgress` (Web Bug Sweep Leg 12, see TODO.md) fires after every sampled row so a caller can render merged-so-far results instead of waiting for the whole sequential fetch loop. Never fires on a cache hit. */
   getRealSets: (
     regulation: RegulationLabel,
     species: string,
-    availableRows: VgcPasteTeamRow[]
+    availableRows: VgcPasteTeamRow[],
+    onProgress?: (progress: VgcRealSetsExtractionProgress) => void
   ) => Promise<VgcRealSetsEntry | null>;
 }
 
@@ -78,7 +80,8 @@ export function useVgcRealSetsCache(): UseVgcRealSetsCacheReturn {
   const getRealSets = useCallback(async (
     regulation: RegulationLabel,
     species: string,
-    availableRows: VgcPasteTeamRow[]
+    availableRows: VgcPasteTeamRow[],
+    onProgress?: (progress: VgcRealSetsExtractionProgress) => void
   ): Promise<VgcRealSetsEntry | null> => {
     const cached = getCachedRealSets(regulation, species);
     if (cached) return cached;
@@ -93,7 +96,7 @@ export function useVgcRealSetsCache(): UseVgcRealSetsCacheReturn {
     setError(null);
     try {
       const matchingRows = filterRowsBySpecies(availableRows, species);
-      const entry = await extractRealSetsForSpecies(species, matchingRows);
+      const entry = await extractRealSetsForSpecies(species, matchingRows, onProgress);
       const key = normalizeUsageCacheKey(species);
       setCache(prev => {
         const base = prev ?? createEmptyCache();

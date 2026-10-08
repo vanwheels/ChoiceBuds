@@ -23,13 +23,21 @@
 
 import { useCallback, useRef, useState } from 'react';
 import type { RegulationLabel, VgcRealSetsEntry } from '../types/pokemon';
+import { normalizeUsageCacheKey } from '../services/championsBattleData';
 import type { UseVgcPastesCacheReturn } from './useVgcPastesCache';
 import type { UseVgcRealSetsCacheReturn } from './useVgcRealSetsCache';
+
+/** How far a lookup's sequential sample-paste fetch loop has gotten - see CalcRealSetsSection.tsx's loading caption and this file's progressive-entry behavior below (Web Bug Sweep Leg 12, TODO.md). */
+export interface RealSetsLookupProgress {
+  processedRows: number;
+  totalRows: number;
+}
 
 export interface UseCalcRealSetsLookupReturn {
   entry: VgcRealSetsEntry | null;
   isLoading: boolean;
   error: string | null;
+  progress: RealSetsLookupProgress | null;
   /** Looks up (cached, or extracts+caches on miss) real sets for `species` in `regulation`. A no-op (leaves entry/isLoading alone) when the regulation's Sample Team Catalog hasn't been refreshed yet - see hasCatalogRows in the caller, which renders a "refresh the catalog" prompt instead of a false "no real sets found" in that case. */
   lookup: (species: string) => Promise<void>;
   /** Refreshes the Sample Team Catalog for `regulation`, then retries `lookup(species)` if that succeeded - the action behind CalcRealSetsSection's empty-catalog "Refresh Catalog" button. */
@@ -47,17 +55,33 @@ export function useCalcRealSetsLookup(
   const [entry, setEntry] = useState<VgcRealSetsEntry | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<RealSetsLookupProgress | null>(null);
 
   const lookup = useCallback(async (species: string) => {
     const requestId = ++requestRef.current;
     setEntry(null);
     setError(null);
+    setProgress(null);
     const rows = vgcPastesState.getRows(regulation);
     if (rows.length === 0) return;
     setIsLoading(true);
-    const result = await vgcRealSetsState.getRealSets(regulation, species, rows);
+    const result = await vgcRealSetsState.getRealSets(regulation, species, rows, (sampleProgress) => {
+      if (requestRef.current !== requestId) return;
+      setProgress({ processedRows: sampleProgress.processedRows, totalRows: sampleProgress.totalRows });
+      // Populate-as-it-loads (Web Bug Sweep Leg 12, see TODO.md): render the
+      // merged-so-far bundles immediately rather than only once the whole
+      // sequential sample-paste fetch loop finishes. Overwritten by the
+      // final, cached `result` below once the lookup completes.
+      setEntry({
+        species: normalizeUsageCacheKey(species),
+        sampledTeamCount: sampleProgress.sampledTeamCount,
+        bundles: sampleProgress.bundles,
+        fetchedAt: Date.now(),
+      });
+    });
     if (requestRef.current !== requestId) return;
     setIsLoading(false);
+    setProgress(null);
     if (result) {
       setEntry(result);
     } else {
@@ -67,6 +91,7 @@ export function useCalcRealSetsLookup(
       // own `error` is the best signal available, best-effort since that
       // hook instance is shared with the other panel (see this file's
       // header comment).
+      setEntry(null);
       setError(vgcRealSetsState.error ?? `Failed to load real sets for "${species}"`);
     }
   }, [regulation, vgcPastesState, vgcRealSetsState]);
@@ -76,5 +101,5 @@ export function useCalcRealSetsLookup(
     if (success && species) await lookup(species);
   }, [regulation, vgcPastesState, lookup]);
 
-  return { entry, isLoading, error, lookup, refreshCatalogAndRetry };
+  return { entry, isLoading, error, progress, lookup, refreshCatalogAndRetry };
 }

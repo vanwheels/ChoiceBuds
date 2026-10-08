@@ -17,6 +17,14 @@
  * `await`, never `Promise.all`) - CLAUDE.md's eighth exception requires
  * politeness for any bulk sheet-driven pokepaste fetching, and a regulation
  * tab can hold 200+ rows.
+ *
+ * Real Set Sampling Progressive Loading (Web Bug Sweep Leg 12, see TODO.md):
+ * a species with many matching rows can take a real wall-clock while to
+ * sample politely one paste at a time. `extractRealSetsForSpecies`'s
+ * optional `onProgress` is called after every row (matched, skipped, or
+ * failed) with the merged-so-far bundles, so a caller
+ * (useVgcRealSetsCache.ts) can render results as they accumulate instead of
+ * only after the whole loop finishes.
  */
 
 import { parseShowdownText } from './parser';
@@ -77,6 +85,14 @@ export function mergeRealSetBundles(bundles: VgcRealSetBundle[]): VgcRealSetBund
   return [...merged.values()].sort((a, b) => b.occurrences - a.occurrences);
 }
 
+/** Merged-so-far snapshot passed to `onProgress` after each row is processed - see this file's header comment. */
+export interface VgcRealSetsExtractionProgress {
+  processedRows: number;
+  totalRows: number;
+  sampledTeamCount: number;
+  bundles: VgcRealSetBundle[];
+}
+
 /**
  * Fetches+parses only `matchingRows` (already filtered by filterRowsBySpecies)
  * and returns the deduped result. A row whose pokepasteUrl doesn't parse as a
@@ -87,15 +103,21 @@ export function mergeRealSetBundles(bundles: VgcRealSetBundle[]): VgcRealSetBund
  */
 export async function extractRealSetsForSpecies(
   species: string,
-  matchingRows: VgcPasteTeamRow[]
+  matchingRows: VgcPasteTeamRow[],
+  onProgress?: (progress: VgcRealSetsExtractionProgress) => void
 ): Promise<VgcRealSetsEntry> {
   const targetKey = normalizeUsageCacheKey(species);
   const rawBundles: VgcRealSetBundle[] = [];
   let sampledTeamCount = 0;
+  let processedRows = 0;
 
   for (const row of matchingRows) {
     const pasteId = extractPokepasteId(row.pokepasteUrl);
-    if (!pasteId) continue;
+    if (!pasteId) {
+      processedRows++;
+      onProgress?.({ processedRows, totalRows: matchingRows.length, sampledTeamCount, bundles: mergeRealSetBundles(rawBundles) });
+      continue;
+    }
 
     try {
       const paste = await fetchPokepaste(pasteId);
@@ -108,13 +130,16 @@ export async function extractRealSetsForSpecies(
       // of the fetched paste text itself.
       const { pokemon } = parseShowdownText(paste.paste);
       const match = pokemon.find(p => normalizeUsageCacheKey(getMegaApiSlug(p.item, p.species) ?? p.species) === targetKey);
-      if (!match) continue;
-
-      sampledTeamCount++;
-      rawBundles.push(toRealSetBundle(match));
+      if (match) {
+        sampledTeamCount++;
+        rawBundles.push(toRealSetBundle(match));
+      }
     } catch (err) {
       console.error(`Real-set extraction: failed to fetch/parse pokepaste for row "${row.id}":`, err);
     }
+
+    processedRows++;
+    onProgress?.({ processedRows, totalRows: matchingRows.length, sampledTeamCount, bundles: mergeRealSetBundles(rawBundles) });
   }
 
   return {

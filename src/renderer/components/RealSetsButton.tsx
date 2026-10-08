@@ -96,6 +96,7 @@ export default function RealSetsButton({ species, item, regulation, vgcPastesSta
               onRefreshCatalog={() => realSets.refreshCatalogAndRetry(effectiveSpecies)}
               entry={realSets.entry}
               isLoading={realSets.isLoading}
+              progress={realSets.progress}
               error={realSets.error}
               onPickBundle={handlePickBundle}
               collapsible={false}

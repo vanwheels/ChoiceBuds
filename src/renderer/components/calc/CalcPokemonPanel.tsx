@@ -490,6 +490,7 @@ export default function CalcPokemonPanel({
           onRefreshCatalog={() => realSets.refreshCatalogAndRetry(state.species)}
           entry={realSets.entry}
           isLoading={realSets.isLoading}
+          progress={realSets.progress}
           error={realSets.error}
           onPickBundle={(bundle) => onChange(realSetBundleToCalcUpdates(bundle))}
         />

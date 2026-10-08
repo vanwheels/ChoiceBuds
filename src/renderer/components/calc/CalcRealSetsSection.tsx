@@ -47,6 +47,7 @@
 
 import { useState } from 'react';
 import type { RegulationLabel, VgcRealSetBundle, VgcRealSetsEntry } from '../../types/pokemon';
+import type { RealSetsLookupProgress } from '../../hooks/useCalcRealSetsLookup';
 
 interface CalcRealSetsSectionProps {
   species: string;
@@ -56,6 +57,8 @@ interface CalcRealSetsSectionProps {
   onRefreshCatalog: () => void;
   entry: VgcRealSetsEntry | null;
   isLoading: boolean;
+  /** How far the sequential sample-paste fetch loop has gotten (Web Bug Sweep Leg 12, see TODO.md) - null before the first row resolves or once loading finishes. */
+  progress?: RealSetsLookupProgress | null;
   error: string | null;
   onPickBundle: (bundle: VgcRealSetBundle) => void;
   collapsible?: boolean;
@@ -67,7 +70,7 @@ function formatEvs(bundle: VgcRealSetBundle): string {
 }
 
 export default function CalcRealSetsSection({
-  species, regulation, hasCatalogRows, isCatalogRefreshing, onRefreshCatalog, entry, isLoading, error, onPickBundle, collapsible = true,
+  species, regulation, hasCatalogRows, isCatalogRefreshing, onRefreshCatalog, entry, isLoading, progress, error, onPickBundle, collapsible = true,
 }: CalcRealSetsSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [expandedBundleIndex, setExpandedBundleIndex] = useState<number | null>(null);
@@ -80,7 +83,7 @@ export default function CalcRealSetsSection({
         <label className="text-[10px] text-zinc-400 uppercase tracking-wide">
           Real Sets Seen ({regulation})
         </label>
-        {collapsible && !error && hasCatalogRows && !isLoading && bundles.length > 0 && (
+        {collapsible && !error && hasCatalogRows && bundles.length > 0 && (
           <button
             type="button"
             onClick={() => {
@@ -113,14 +116,17 @@ export default function CalcRealSetsSection({
       )}
 
       {!error && hasCatalogRows && isLoading && (
-        <p className="text-[10px] text-zinc-500 italic">Sampling real {species} sets from VGCPastes...</p>
+        <p className="text-[10px] text-zinc-500 italic">
+          Sampling real {species} sets from VGCPastes...
+          {progress && progress.totalRows > 0 && ` (${progress.processedRows}/${progress.totalRows} pastes checked)`}
+        </p>
       )}
 
       {!error && hasCatalogRows && !isLoading && entry && bundles.length === 0 && (
         <p className="text-[10px] text-zinc-500 italic">No confirmed real sets found for {species} in {regulation} yet.</p>
       )}
 
-      {!error && hasCatalogRows && !isLoading && entry && bundles.length > 0 && showBundles && (
+      {!error && hasCatalogRows && entry && bundles.length > 0 && showBundles && (
         <div className="flex flex-col gap-1 max-h-72 overflow-y-auto">
           {bundles.map((bundle, index) => {
             const isRowExpanded = expandedBundleIndex === index;
