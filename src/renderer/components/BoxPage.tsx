@@ -97,7 +97,7 @@
  * favorited entries to the top of `sortedEntries` - applied after either
  * Alphabetical or Custom ordering (`utils/savedPokemonSort.ts`'s
  * `sortSavedPokemonByFavorite`), same composition point/precedent as
- * `TeamsPage.tsx` layering `teamSort.ts`'s `sortTeamsByFavorite` over its
+ * `TeamsPage.tsx` layering `teamSort.ts`'s `sortTeams` over its
  * own base sort.
  */
 
@@ -206,7 +206,7 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
   // order across both surfaces.
   // Favorites-first applies after either Alphabetical or Custom ordering
   // (Box Tab: Favoriting, see TODO.md) - same composition point/precedent as
-  // TeamsPage.tsx layering sortTeamsByFavorite over its own base sort.
+  // TeamsPage.tsx layering sortTeams over its own base sort.
   const sortedEntries = sortSavedPokemonByFavorite(
     sortMode === 'custom'
       ? savedPokemonState.savedPokemon

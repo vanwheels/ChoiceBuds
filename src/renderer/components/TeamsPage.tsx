@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import type { RegulationLabel, VgcPasteTeamRow } from '../types/pokemon';
-import { sortTeamsByFavorite } from '../utils/teamSort';
+import { sortTeams } from '../utils/teamSort';
 import { useGridReorder } from '../hooks/useGridReorder';
 import type { UseTeamsReturn } from '../hooks/useTeams';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
@@ -102,9 +102,10 @@ export default function TeamsPage({
     ? teamsState.teams
     : teamsState.teams.filter(team => team.format === activeFilter);
 
-  // Favorited teams always sort to the top, otherwise preserving each
-  // group's existing relative (drag-reorderable) order - see teamSort.ts.
-  const sortedTeams = sortTeamsByFavorite(filteredTeams);
+  // Favorited teams always sort to the top (across every regulation), then
+  // by regulation newest-first, otherwise preserving each group's existing
+  // relative (drag-reorderable) order - see teamSort.ts.
+  const sortedTeams = sortTeams(filteredTeams);
 
   // Teams-list reorder (Touch Drag-and-Drop: Framer Motion Reorder Leg 1,
   // see TODO.md) - local visual order of team ids for the Reorder.Group
@@ -113,10 +114,12 @@ export default function TeamsPage({
   // than an effect, since sortedTeams is a fresh array every render and an
   // effect keyed on it directly would re-fire (and stomp a live drag's own
   // in-progress reorder) on every incidental re-render, not just a real
-  // change. Only meaningful with no format filter active - dragging a
-  // partial view has no well-defined "moved to the very end" target, so
-  // TeamCard.tsx's grip handle is disabled via canReorder below whenever
-  // activeFilter isn't 'All'.
+  // change. Reordering is well-defined even with a format filter active now
+  // that regulation is a sort key in its own right (not just raw array
+  // order) - a filtered view is always one contiguous group, so a drag
+  // within it only ever reorders siblings sharing that same regulation
+  // (and favorite status), never the cross-group order the "All" view
+  // shows (see Leg 8/Leg 5 in TODO.md's Web Bug Sweep).
   const sortedTeamIdsKey = sortedTeams.map(t => t.id).join('|');
   const [orderedTeamIds, setOrderedTeamIds] = useState(() => sortedTeams.map(t => t.id));
   const [prevSortedTeamIdsKey, setPrevSortedTeamIdsKey] = useState(sortedTeamIdsKey);
@@ -124,7 +127,6 @@ export default function TeamsPage({
     setPrevSortedTeamIdsKey(sortedTeamIdsKey);
     setOrderedTeamIds(sortedTeams.map(t => t.id));
   }
-  const canReorderTeams = activeFilter === 'All';
   const { containerRef: teamsGridRef, getHandlers: getTeamHandlers } = useGridReorder({
     orderedIds: orderedTeamIds,
     setOrderedIds: setOrderedTeamIds,
@@ -347,7 +349,6 @@ export default function TeamsPage({
                   savedPokemonState={savedPokemonState}
                   vgcPastesState={vgcPastesState}
                   vgcRealSetsState={vgcRealSetsState}
-                  canReorder={canReorderTeams}
                   reorderHandlers={getTeamHandlers(id)}
                 />
               );

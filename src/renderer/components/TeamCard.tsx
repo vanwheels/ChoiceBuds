@@ -49,10 +49,9 @@ interface TeamCardProps {
   // Teams-list reorder (Touch Drag-and-Drop: Framer Motion Reorder Leg 1,
   // see TODO.md) - TeamsPage.tsx owns the Reorder.Group's local order state
   // (it wraps every TeamCard), so this card only starts/commits its own drag.
-  // canReorder is false while a format filter is hiding any teams (dragging
-  // against a partial view has no well-defined "moved to the very end"
-  // target) - same gate shape as BoxCard.tsx's own isCustomOrder check.
-  canReorder: boolean;
+  // Always enabled now that regulation is its own sort key rather than raw
+  // array order - a filtered view is one contiguous group, so a drag within
+  // it is well-defined (see Leg 8/Leg 5 in TODO.md's Web Bug Sweep).
   reorderHandlers: GridReorderHandlers;
 }
 
@@ -92,7 +91,7 @@ const cardExpandVariants = {
   },
 };
 
-export default function TeamCard({ team, onDelete, teamsState, databaseState, gameDataState, speciesRosterState, spriteCacheState, settingsState, savedPokemonState, vgcPastesState, vgcRealSetsState, canReorder, reorderHandlers }: TeamCardProps) {
+export default function TeamCard({ team, onDelete, teamsState, databaseState, gameDataState, speciesRosterState, spriteCacheState, settingsState, savedPokemonState, vgcPastesState, vgcRealSetsState, reorderHandlers }: TeamCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   // Collapse-flicker fix (Team Card Collapse Animation Flicker Leg 1, see
   // TODO.md): col-span-full used to be driven directly off isExpanded, so
@@ -253,9 +252,8 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
   // (an always-draggable collapsed header was tried once and reverted for
   // making every header click/drag ambiguous - see Leg 1's COMPLETED.md
   // entry). dragListener is off on the Reorder.Item this card returns, so
-  // only this handler starts a drag, and only when canReorder allows it.
+  // only this handler starts a drag.
   const handleGripPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (!canReorder) return;
     dragControls.start(e);
   };
 
@@ -455,16 +453,11 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
               with clicking the name/author inputs or the Expand/overflow
               buttons (an always-draggable header was tried and reverted for
               exactly that ambiguity - see Leg 1's COMPLETED.md entry). Same
-              grip-icon glyph as PokemonCard.tsx's per-slot handle. Dimmed and
-              inert while canReorder is false (a format filter is hiding some
-              teams) - same disabled-affordance shape as BoxCard.tsx's own
-              Alphabetical-mode gate. */}
+              grip-icon glyph as PokemonCard.tsx's per-slot handle. */}
           <div
             onPointerDown={handleGripPointerDown}
-            title={canReorder ? 'Drag to reorder' : 'Clear the format filter to reorder teams'}
-            className={`w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-full text-zinc-400 transition-colors select-none ${
-              canReorder ? 'hover:text-zinc-200 hover:bg-zinc-700 cursor-grab' : 'opacity-40 cursor-not-allowed'
-            }`}
+            title="Drag to reorder"
+            className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-full text-zinc-400 transition-colors select-none hover:text-zinc-200 hover:bg-zinc-700 cursor-grab"
           >
             <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
               <circle cx="9" cy="6" r="1.4" />
