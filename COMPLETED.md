@@ -22,6 +22,10 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[Web Bug Sweep: Default Regulation Falls Back to the Oldest, Not the
+  Current, Regulation] — Leg 10** (2026-10-08) - See commit `6494344`. Not
+  yet live-verified by Vanny.
+
 - **[Web Bug Sweep: Regulation Filter Doesn't Persist Across Sessions] —
   Leg 9** (2026-10-08) - `TeamsPage.tsx`'s `activeFilter` was plain
   component-local `useState`, reset to `'All'` on every reload. Moved it
