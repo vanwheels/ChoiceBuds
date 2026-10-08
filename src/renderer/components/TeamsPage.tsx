@@ -374,8 +374,6 @@ export default function TeamsPage({
             }}
             onImport={teamsState.addTeam}
             databaseState={databaseState}
-            savedPokemonState={savedPokemonState}
-            resolveSprite={spriteCacheState.resolveSprite}
             existingTeamNames={teamsState.teams.map(team => team.name)}
             defaultRegulation={settingsState.settings.defaultRegulation}
             catalogRow={importPrefillRow ?? undefined}
