@@ -24,6 +24,14 @@ const FALLBACK_WIDTH = 256; // px - only used when cardRect is null
 const VIEWPORT_MARGIN = 8;
 const MIN_SPACE_ABOVE = 160; // rough panel height - flip below if less room than this
 
+// Shared with measureDropdownHeight.ts so the panel's max-height is always
+// measured against whichever side it actually ends up placed on - measuring
+// the wrong side is what let the panel grow taller than the room it had and
+// spill off-screen.
+export function shouldPlaceBelow(anchorRect: DOMRect): boolean {
+  return anchorRect.top < MIN_SPACE_ABOVE;
+}
+
 export function computeFloatingCardPanelStyle(anchorRect: DOMRect, cardRect: DOMRect | null): FloatingCardPanelStyle {
   const width = cardRect ? cardRect.width : FALLBACK_WIDTH;
   const left = cardRect
@@ -33,7 +41,7 @@ export function computeFloatingCardPanelStyle(anchorRect: DOMRect, cardRect: DOM
         window.innerWidth - FALLBACK_WIDTH - VIEWPORT_MARGIN
       );
 
-  const placeBelow = anchorRect.top < MIN_SPACE_ABOVE;
+  const placeBelow = shouldPlaceBelow(anchorRect);
   return {
     left,
     width,

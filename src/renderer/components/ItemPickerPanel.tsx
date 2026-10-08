@@ -32,7 +32,11 @@ export default function ItemPickerPanel({ items, maxHeight, resolveSprite, onSel
   );
 
   return (
-    <div ref={ref} className="w-full flex flex-col gap-2 bg-zinc-800 border-2 border-accent-gold rounded-lg p-2">
+    <div
+      ref={ref}
+      className="w-full flex flex-col gap-2 bg-zinc-800 border-2 border-accent-gold rounded-lg p-2 overflow-hidden"
+      style={{ maxHeight }}
+    >
       <input
         type="text"
         value={search}
@@ -41,7 +45,7 @@ export default function ItemPickerPanel({ items, maxHeight, resolveSprite, onSel
         autoFocus
         className="w-full px-2 py-1 text-sm font-bold text-white bg-zinc-900 border border-zinc-600 rounded text-center outline-none focus:border-accent-gold"
       />
-      <div className="overflow-y-auto flex flex-col gap-1" style={{ maxHeight }}>
+      <div className="overflow-y-auto flex flex-col gap-1 flex-1 min-h-0">
         {filtered.length === 0 ? (
           <p className="text-xs text-zinc-400 text-center mt-2">No items found</p>
         ) : (
