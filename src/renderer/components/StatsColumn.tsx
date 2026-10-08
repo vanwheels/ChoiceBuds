@@ -73,6 +73,18 @@ const STATS: Array<{ label: string; key: keyof EVSpread }> = [
 // are all unconditionally interactive now.
 export default function StatsColumn({ species, level, gender, baseStats, evs, nature, onUpdatePokemon }: StatsColumnProps) {
   const [localEVs, setLocalEVs] = useState(evs);
+  // Resyncs off the evs prop itself during render, same "prevProp" shape as
+  // EditablePokemonCore.tsx's shiny/gender/nickname handling - handleIncrement/
+  // handleDecrement/handleDirectInput already set localEVs optimistically
+  // before their onUpdatePokemon call resolves, so this is a no-op for those;
+  // it's what catches an *externally*-applied evs change (Real Set import,
+  // Speed Tiers override save, etc.) that bypasses those handlers and swaps
+  // the evs prop straight from outside - see Web Bug Sweep Leg 1, TODO.md.
+  const [prevPropEVs, setPrevPropEVs] = useState(evs);
+  if (evs !== prevPropEVs) {
+    setPrevPropEVs(evs);
+    setLocalEVs(evs);
+  }
   const [activeStat, setActiveStat] = useState<keyof EVSpread | null>(null);
   const [natureMenuOpen, setNatureMenuOpen] = useState(false);
   const [natureMenuMaxHeight, setNatureMenuMaxHeight] = useState(400);
