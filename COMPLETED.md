@@ -27,8 +27,8 @@ Entries prior to this file's oldest are in:
   `CalcRealSetsSection.tsx` used to call `onPickBundle` immediately just to
   preview a truncated set, overwriting the user's current entry. Now
   expands the row in place instead; a separate "Apply This Set" button is
-  the only thing that still calls `onPickBundle`. See commit `10fdec3`. Not
-  yet live-verified by Vanny.
+  the only thing that still calls `onPickBundle`. See commit `10fdec3`.
+  Live-verified by Vanny on web.
 
 - **[Web Bug Sweep: Real Set Import Not Visually Reflected] — Leg 4**
   (2026-10-08) - Separate root cause from Legs 1/2: `EditOverlays.tsx`'s
