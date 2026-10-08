@@ -25,42 +25,20 @@ Leg 4 was confirmed to be a *separate* root cause (stale local component
 state, not a persistence race) and has since been fixed and live-verified
 on desktop — see `COMPLETED.md`. Leg 6 intentionally holds the milestone
 open for a second bug-finding pass; don't close the milestone until that's
-done.
+done. Legs 7 and 8 have since shipped (see `COMPLETED.md`) — Leg 7's root
+cause turned out to be a third, distinct kind of bug from Legs 1/2/4: a
+sync-protocol gap (reorder wasn't mergeable state at all), not a local
+race or stale render. Neither is live-verified against the real web app
+yet.
 
 - **[Web Bug Sweep: Second Pass Before Closing] — Leg 6** *(Last touched:
   2026-10-08 · Re-checks: 0)*
   Vanny flagged there may be more web-client bugs from personal use not yet
   written down. First batch of findings came in 2026-10-08, now filed as
-  Legs 7-12 below. Still don't close the milestone until those are fixed
-  *and* Legs 1-5 are re-verified — this item stays open as the catch-all for
-  any further findings from continued use.
-
-- **[Web Bug Sweep: Team Drag-Reorder Reverts After a Few Seconds] — Leg 7**
-  *(Last touched: 2026-10-08 · Re-checks: 0)*
-  Dragging a team to a new position in the list snaps back to its old spot
-  a couple seconds later. `useTeams.ts`'s `setTeamOrder` already goes
-  through the same ref+queue serialized-mutation fix Leg 1 (of the prior
-  sweep) added, so this likely isn't that same lost-update race recurring —
-  more likely something re-derives `TeamsPage.tsx`'s `orderedTeamIds` from
-  a stale `sortedTeams` after the write round-trips (its "adjust state
-  during render" sync at lines ~120-126 resets `orderedTeamIds` any time
-  `sortedTeamIdsKey` changes). Needs investigation to confirm before
-  fixing. Likely entangled with Leg 8 below (making regulation the primary
-  sort key changes what "the list's order" even means) - resolve Leg 8's
-  design first and re-check whether this reproduces under it.
-
-- **[Web Bug Sweep: Teams List Should Always Sort by Regulation (Newest
-  First)] — Leg 8** *(Last touched: 2026-10-08 · Re-checks: 0)*
-  Teams currently sort only by favorite (`utils/teamSort.ts::sortTeamsByFavorite`
-  has no regulation awareness at all) with drag-order as the tiebreaker.
-  Vanny wants regulation as the primary sort (newest - currently Reg M-C -
-  first), drag-order preserved within each regulation group. This also
-  resolves Leg 5 of this list below (filtering to one regulation currently
-  disables the grip handle entirely per `TeamsPage.tsx`'s `canReorderTeams`
-  gate, by design, since a partial filtered view has no well-defined "moved
-  to the end" target) - once regulation is the primary sort, a filtered
-  view is just one contiguous group, so reordering within it is
-  well-defined and the gate can come off.
+  Legs 9-12 below (7 and 8 have since shipped, see `COMPLETED.md`). Still
+  don't close the milestone until those are fixed *and* Legs 1-5/7/8 are
+  re-verified — this item stays open as the catch-all for any further
+  findings from continued use.
 
 - **[Web Bug Sweep: Regulation Filter Doesn't Persist Across Sessions] —
   Leg 9** *(Last touched: 2026-10-08 · Re-checks: 0)*

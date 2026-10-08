@@ -22,6 +22,33 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[Web Bug Sweep: Team Drag-Reorder Reverts After a Few Seconds] — Leg 7**
+  (2026-10-08) - Root cause turned out to be a sync-protocol gap, not the
+  stale-render pattern the item originally suspected: `setTeamOrder` never
+  bumped `updatedAt`, so the Worker's per-record last-write-wins merge
+  (which has no concept of list position) discarded the reorder on the
+  very next auto-sync (`useSync.ts`'s 5-second debounce - matching "a few
+  seconds" exactly). Fixed by giving `Team` its own `sortOrder` field,
+  bumped alongside `updatedAt` on every reorder so it rides along with
+  that record's own merge resolution; `teamSort.ts` uses it as the
+  regulation-group tiebreaker, falling back to stable array order for
+  teams that don't have it yet. See commit `34bbc17`. Not yet
+  live-verified against real signed-in sync - do a manual pass dragging a
+  team, waiting 10+ seconds, and confirming it holds.
+
+- **[Web Bug Sweep: Teams List Should Always Sort by Regulation (Newest
+  First)] — Leg 8** (2026-10-08) - `utils/teamSort.ts`'s
+  `sortTeamsByFavorite` had no regulation awareness; renamed to `sortTeams`
+  and added regulation (newest first) as a secondary sort key under
+  favorite, with drag-order as the tiebreaker within each regulation group.
+  Also let this resolve the standing "grip handle disabled while a format
+  filter is active" gate in `TeamCard.tsx`/`TeamsPage.tsx` - removed
+  outright, since a filtered view is now always one contiguous regulation
+  group and reordering within it is well-defined. See commit `b2f5177`.
+  Not yet live-verified in the browser (type-check/lint/tests pass) - do a
+  manual pass on the live site for both the new sort order and reordering
+  within a filtered view.
+
 - **[Web Bug Sweep: Real Sets Panel Hides Info Behind a Destructive Click]
   — Leg 5** (2026-10-08) - Clicking a bundle row in
   `CalcRealSetsSection.tsx` used to call `onPickBundle` immediately just to
