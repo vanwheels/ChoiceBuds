@@ -93,10 +93,42 @@ crash or a missed click.
 
 ## Gotchas
 
-- The driver's Electron instance shares the same `userData` dir
-  (teams.json/battles.json/etc.) as any other running instance - fine for
-  read-only verification, but avoid running two instances that both write
-  at the same time.
+- **The driver's Electron instance shares the same `userData` dir
+  (teams.json/battles.json/etc.) as Vanny's real app data - any write
+  flows is a write against real teams, not a sandbox.** Confirmed live
+  2026-10-08: a verification run used `document.querySelector('[title=
+  "More"]')` (first-match, unscoped) to open a team's overflow menu and
+  click "Delete Team" as part of test cleanup, while an earlier step's
+  "Import Team" submit click had silently missed (hit the modal's `<h2>`
+  instead of the real button) and left the modal open on top of the page.
+  `element.click()` doesn't respect visual occlusion the way a real click
+  does, so the query reached straight through the still-open modal and
+  deleted whichever real team happened to be first in the list - no
+  confirmation dialog exists for team deletion. Rules going forward for
+  *any* driver interaction that writes (creates/edits/deletes a
+  team/Pokémon/saved build):
+  1. Give test data an unmistakable, unique name (e.g.
+     `ZZZ-LEG4-TEST-DELETE-ME`) up front, specifically so cleanup can be
+     scoped by exact match instead of position.
+  2. Never click a delete/overflow/"More" control via a bare `[title=...]`
+     or `.some-class` selector that isn't first scoped to a container
+     matched by that unique name/id - `querySelector` returns the *first*
+     DOM match, which on a real data page is somebody else's real row.
+  3. Before any such step, verify no modal/overlay is still open (e.g.
+     `document.querySelector('textarea') === null`, or whatever the modal's
+     own marker is) - a click-through can't happen if there's nothing
+     silently sitting on top to click through.
+  4. After any delete, confirm by reading the actual persisted file (e.g.
+     `teams.json` in the Electron userData folder) rather than trusting an
+     immediate in-page DOM check, which can read stale pre-re-render state
+     and report `false` for a delete that actually succeeded.
+- Plain `element.click()` on an `<input>`/`<textarea>` does **not**
+  reliably move focus the way a real user click does (confirmed live:
+  `click textarea` returned `OK` but `document.activeElement` stayed on a
+  different element, and a following `type` command typed into nothing).
+  Always `eval` an explicit `.focus()` on the target field immediately
+  before `type`-ing into it, and verify with
+  `document.activeElement === <el>` if the following `type` matters.
 - `click`/`click-text` use `element.click()` in the DOM, which won't fire
   real pointer events some libraries expect (drag handles, custom
   hover-only menus). For those, fall back to `eval` with a more targeted
