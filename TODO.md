@@ -39,14 +39,6 @@ mergeable state at all), not a local race or stale render.
   *and* Legs 1-5 are re-verified — this item stays open as the catch-all
   for any further findings from continued use.
 
-- **[Web Bug Sweep: Remove Existing-vs-Imported Set Picker on Team Creation]
-  — Leg 11** *(Last touched: 2026-10-08 · Re-checks: 0)*
-  The popup asking whether to use an existing saved set or the freshly
-  imported one when creating a new team is redundant - that same choice is
-  already made per-Pokémon during editing. Vanny wants it removed from the
-  team-creation flow entirely (just use the imported set, let editing
-  handle the swap-to-existing-set case same as it already does elsewhere).
-
 - **[Web Bug Sweep: Real Set Sampling Is Slow to Populate] — Leg 12** *(Last
   touched: 2026-10-08 · Re-checks: 0)*
   Not blocking - Vanny's fine with it being slow if it has to be - but

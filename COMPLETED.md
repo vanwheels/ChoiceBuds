@@ -22,6 +22,11 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[Web Bug Sweep: Remove Existing-vs-Imported Set Picker on Team Creation]
+  — Leg 11** (2026-10-08) - See commit `7cbd7ba`. Removed the "use saved
+  build or keep pasted" review step from team creation entirely, since the
+  same choice is already available per-Pokémon during editing.
+
 - **[Web Bug Sweep: Default Regulation Falls Back to the Oldest, Not the
   Current, Regulation] — Leg 10** (2026-10-08) - See commits `6494344`
   (fallback derived from `getLatestSeason()` instead of a hardcoded
