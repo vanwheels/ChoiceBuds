@@ -22,6 +22,14 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[Web Bug Sweep: Real Sets Panel Hides Info Behind a Destructive Click]
+  — Leg 5** (2026-10-08) - Clicking a bundle row in
+  `CalcRealSetsSection.tsx` used to call `onPickBundle` immediately just to
+  preview a truncated set, overwriting the user's current entry. Now
+  expands the row in place instead; a separate "Apply This Set" button is
+  the only thing that still calls `onPickBundle`. See commit `10fdec3`. Not
+  yet live-verified by Vanny.
+
 - **[Web Bug Sweep: Real Set Import Not Visually Reflected] — Leg 4**
   (2026-10-08) - Separate root cause from Legs 1/2: `EditOverlays.tsx`'s
   `selectedItem`/`selectedAbility`/`selectedMoves` and

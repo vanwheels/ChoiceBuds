@@ -27,14 +27,6 @@ on desktop — see `COMPLETED.md`. Leg 6 intentionally holds the milestone
 open for a second bug-finding pass; don't close the milestone until that's
 done.
 
-- **[Web Bug Sweep: Real Sets Panel Hides Info Behind a Destructive Click]
-  — Leg 5** *(Last touched: 2026-10-08 · Re-checks: 0)*
-  The Real Sets panel doesn't show all of a set's information up front —
-  seeing the rest requires clicking the set, but clicking also immediately
-  applies it, overwriting the user's current set just to preview it. Needs
-  a UX decision (e.g. a details-only expand/preview that doesn't apply)
-  before a fix, not just a rendering tweak.
-
 - **[Web Bug Sweep: Second Pass Before Closing] — Leg 6** *(Last touched:
   2026-10-08 · Re-checks: 0)*
   Vanny flagged there may be more web-client bugs from personal use not yet
