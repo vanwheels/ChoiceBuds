@@ -30,6 +30,22 @@ describe('useSettings', () => {
     expect(result.current.settings.lastModified).toBe(12345); // real field preserved, not overwritten
   });
 
+  it('migrates a persisted "Reg M-A" default (the old hardcoded fallback) to the current regulation, and persists the correction', async () => {
+    vi.mocked(window.electron.readSettings).mockResolvedValueOnce({
+      version: 1,
+      defaultRegulation: 'Reg M-A',
+      lastModified: 12345,
+    } as unknown as AppSettings);
+
+    const { result } = renderHook(() => useSettings());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.settings.defaultRegulation).toBe(getLatestSeason().regulation);
+    await waitFor(() => expect(window.electron.writeSettings).toHaveBeenCalledWith(
+      expect.objectContaining({ defaultRegulation: getLatestSeason().regulation })
+    ));
+  });
+
   it('reports an error and stops loading when reading settings throws', async () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.mocked(window.electron.readSettings).mockRejectedValueOnce(new Error('disk error'));

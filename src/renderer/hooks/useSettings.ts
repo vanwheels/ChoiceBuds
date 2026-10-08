@@ -76,7 +76,20 @@ export function useSettings(): UseSettingsReturn {
         // Spread over DEFAULT_SETTINGS so a settings.json written before a
         // field existed (e.g. sync fields, added after defaultRegulation)
         // still loads with a valid value instead of undefined.
-        setSettings(database ? { ...DEFAULT_SETTINGS, ...database } : DEFAULT_SETTINGS);
+        let merged = database ? { ...DEFAULT_SETTINGS, ...database } : DEFAULT_SETTINGS;
+
+        // One-time migration: every settings record written before this fix
+        // has 'Reg M-A' persisted literally (it was the hardcoded fallback,
+        // not just a transient default), so the fallback fix above never
+        // reaches existing installs - only fresh ones with no record at all.
+        // Correct it the same way here and write it back so it's fixed at
+        // rest, not just for this session.
+        if (database && database.defaultRegulation === 'Reg M-A') {
+          merged = { ...merged, defaultRegulation: getLatestSeason().regulation };
+          void persistSettingsToDisk(merged);
+        }
+
+        setSettings(merged);
       } catch (err) {
         if (ignore) return;
         const errorMessage = err instanceof Error ? err.message : 'Failed to load settings';
