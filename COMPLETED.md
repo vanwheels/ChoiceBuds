@@ -22,6 +22,15 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[Web Bug Sweep: StatsColumn EVs Share Leg 4's Stale-Local-State Bug]
+  — Leg 1** (2026-10-08) - See commit `c14df4c`. `StatsColumn.tsx`'s
+  `localEVs` had the same unguarded-initializer shape Leg 4 fixed elsewhere
+  - never resynced when `evs` changed from an externally-applied update
+  (e.g. picking a Real Set bundle), so the EV grid kept showing stale
+  values. Fixed with the same `prevProp*` render-time resync pattern Leg 4
+  used in `EditOverlays.tsx`/`EditablePokemonCore.tsx`. Live-verified by
+  Vanny on web.
+
 - **[Web Bug Sweep: Real Set Sampling Is Slow to Populate] — Leg 12**
   (2026-10-08) - See commit `5006f13`. The sequential sample-paste fetch loop
   (kept sequential per CLAUDE.md's eighth exception's politeness requirement,

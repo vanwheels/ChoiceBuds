@@ -28,7 +28,9 @@ open for a second bug-finding pass; don't close the milestone until that's
 done. Legs 7 and 8 have since shipped and been live-verified by Vanny on
 web (see `COMPLETED.md`) — Leg 7's root cause turned out to be a third,
 distinct kind of bug from Legs 1/2/4: a sync-protocol gap (reorder wasn't
-mergeable state at all), not a local race or stale render.
+mergeable state at all), not a local race or stale render. The separate
+"StatsColumn EVs Share Leg 4's Stale-Local-State Bug" item has also shipped
+and been live-verified by Vanny on web — see `COMPLETED.md`.
 
 - **[Web Bug Sweep: Second Pass Before Closing] — Leg 6** *(Last touched:
   2026-10-08 · Re-checks: 0)*
@@ -38,15 +40,6 @@ mergeable state at all), not a local race or stale render.
   `COMPLETED.md`). Still don't close the milestone until those are fixed
   *and* Legs 1-5 are re-verified — this item stays open as the catch-all
   for any further findings from continued use.
-
-- **[Web Bug Sweep: StatsColumn EVs Share Leg 4's Stale-Local-State Bug]
-  — Leg 1** *(Last touched: 2026-10-08 · Re-checks: 0)*
-  Fixed - see commit `c14df4c`. Applied the same `prevProp*` render-time
-  resync pattern Leg 4 used in `EditOverlays.tsx`/`EditablePokemonCore.tsx`
-  to `StatsColumn.tsx`'s `localEVs`. Type-check/lint/full test suite clean.
-  Not yet live-verified by Vanny (picking a Real Set bundle should now
-  update the displayed EV grid immediately) - leave open until confirmed,
-  then move to `COMPLETED.md`.
 
 ## Blocked
 
