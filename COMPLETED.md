@@ -23,8 +23,11 @@ Entries prior to this file's oldest are in:
   boundary)
 
 - **[Web Bug Sweep: Default Regulation Falls Back to the Oldest, Not the
-  Current, Regulation] — Leg 10** (2026-10-08) - See commit `6494344`. Not
-  yet live-verified by Vanny.
+  Current, Regulation] — Leg 10** (2026-10-08) - See commits `6494344`
+  (fallback derived from `getLatestSeason()` instead of a hardcoded
+  literal) and `4a49bff` (one-time migration for settings records that
+  already had the old literal persisted to disk - the first fix alone
+  didn't reach existing installs). Live-verified by Vanny.
 
 - **[Web Bug Sweep: Regulation Filter Doesn't Persist Across Sessions] —
   Leg 9** (2026-10-08) - `TeamsPage.tsx`'s `activeFilter` was plain
