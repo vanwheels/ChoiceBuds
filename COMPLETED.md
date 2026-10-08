@@ -22,6 +22,19 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[Web Bug Sweep: Export Shows Stale Data, Reverts on Refresh] — Leg 2**
+  (2026-10-08) - Same root cause as Leg 1's lost-update race; resolved by
+  the same fix, user-verified live. See commit `1f51dac`.
+
+- **[Web Bug Sweep: Team Edit Needs Double Action] — Leg 1** (2026-10-08) -
+  `useTeams.ts`'s mutators rebuilt "next state" from a closured `teams`
+  value with no serialization between concurrent calls, so two edits fired
+  before a re-render (e.g. EV hold-to-repeat) could race and silently drop
+  one. Fixed with a synchronously-updated ref + serializing write queue;
+  `useActiveEditor`, the original suspect, confirmed to be unrelated dead
+  code (now its own cleanup TODO). User-verified live. See commit
+  `1f51dac`.
+
 - **[Web Reorder Jank] — Leg 2** (2026-10-03) -
   Ported the 2D pointer hit-test reorder to the roster grid, Box and teams list via a shared `useGridReorder` hook (slot rects snapshotted at drag start). User-verified live: snap-back, cross-row swaps and mixed-height targeting all behave. See commit `e8bcfaf`.
 

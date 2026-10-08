@@ -18,49 +18,13 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 
 ## Current Milestone: Web Client Bug Fix Sweep
 
-Reported by Vanny 2026-10-08 from personal use of the web client. Legs 1, 2,
-and 4 share a suspicious shape (a mutation doesn't visibly/durably take
-effect until some other trigger fires) and may turn out to be one root
-cause in the web storage-adapter/state-update path rather than three
-separate bugs — confirm or rule that out during Leg 1 rather than assuming
-it going in. Leg 6 intentionally holds the milestone open for a second
-bug-finding pass; don't close the milestone until that's done.
-
-- **[Web Bug Sweep: Team Edit Needs Double Action] — Leg 1** *(Last
-  touched: 2026-10-08 · Re-checks: 0)*
-  Root cause confirmed and fixed in `useTeams.ts`: `useActiveEditor` turned
-  out to be a dead end — it's mounted in `AppWeb.tsx`/`App.tsx` and passed
-  into `TeamsPage` as a prop, but `TeamsPage` never destructures or forwards
-  it anywhere; all real editing now goes through Always-On Editing's direct
-  `onUpdatePokemon`/`updateTeam` calls instead, so its draft-commit path
-  isn't involved in this bug at all (worth a separate cleanup TODO to delete
-  it, since it's fully unused). The real cause: every `useTeams` mutator
-  (`updateTeam`/`addTeam`/`deleteTeam`/`setTeamOrder`) rebuilt its "next
-  teams array" from the `teams` state closured into that render, then
-  persisted it independently - two mutations fired before React re-rendered
-  (e.g. `StatsColumn.tsx`'s EV hold-to-repeat fires one `onUpdatePokemon`
-  per interval tick, unawaited) both read the *same* stale base, and
-  whichever write happened to resolve last won, silently dropping whichever
-  edit lost the race regardless of which was issued last - repeating the
-  same edit later (once a render had caught up) no longer raced, so it
-  stuck. Fixed by giving `useTeams` a `teamsRef`/`tombstonesRef` (updated
-  synchronously the instant a mutation computes its result, not only once
-  React re-renders) and a serializing write queue (`enqueueMutation`) that
-  every mutator, plus `refreshTeams`, now runs through - see that file's new
-  header comment on the refs. Covered by a new race-reproducing test in
-  `useTeams.test.ts`; full suite + type-check + lint all pass. Needs Vanny's
-  own live verification (hold an EV +/- button, or fire two quick edits,
-  then refresh) before this and Leg 2 close out.
-
-- **[Web Bug Sweep: Export Shows Stale Data, Reverts on Refresh] — Leg 2**
-  *(Last touched: 2026-10-08 · Re-checks: 0)*
-  Same root cause as Leg 1 (confirmed during Leg 1's investigation) - the
-  lost-update race in `useTeams.ts`'s mutators meant an edit could fail to
-  actually persist while still looking applied in the moment, so a later
-  export/refresh read back the pre-edit (or partially-overwritten) value.
-  Leg 1's fix (serializing writes through `enqueueMutation` + ref-based
-  bases) should resolve this too - not closing this leg out yet pending
-  Vanny's own live verification of the specific export/refresh repro.
+Reported by Vanny 2026-10-08 from personal use of the web client. Legs 1
+and 2 turned out to share one root cause (a lost-update race in
+`useTeams.ts`'s mutators) — fixed and user-verified, see `COMPLETED.md`.
+Leg 4 was confirmed to be a *separate* root cause (stale local component
+state, not a persistence race) and is still open below. Leg 6 intentionally
+holds the milestone open for a second bug-finding pass; don't close the
+milestone until that's done.
 
 - **[Web Bug Sweep: Item Selector Spawns Off-Screen] — Leg 3** *(Last
   touched: 2026-10-08 · Re-checks: 0)*
