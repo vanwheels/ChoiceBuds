@@ -21,6 +21,7 @@ const DEFAULT_PLAYER_PROFILE: PlayerProfile = {
 const DEFAULT_SETTINGS: AppSettings = {
   version: 1,
   defaultRegulation: 'Reg M-A',
+  teamsFilter: 'All',
   syncUsername: null,
   syncToken: null,
   lastSyncedAt: null,

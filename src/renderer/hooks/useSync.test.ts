@@ -28,6 +28,7 @@ function makeSettings(overrides: Partial<AppSettings> = {}): AppSettings {
   return {
     version: 1,
     defaultRegulation: 'Reg M-A',
+    teamsFilter: 'All',
     syncUsername: null,
     syncToken: null,
     lastSyncedAt: null,

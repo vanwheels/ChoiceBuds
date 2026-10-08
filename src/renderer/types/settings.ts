@@ -44,11 +44,20 @@ export interface PlayerProfile {
 export type BoxSortMode = 'alphabetical' | 'custom';
 
 /**
+ * TeamsPage.tsx's regulation filter - 'All' plus whichever RegulationLabel
+ * is picked. Persisted per-device (not synced, same as boxSortMode/
+ * showAnimatedSprites below) so it survives a reload instead of resetting
+ * to 'All' every session.
+ */
+export type TeamsFilter = 'All' | RegulationLabel;
+
+/**
  * Persisted user preferences, stored as settings.json in userData directory
  */
 export interface AppSettings {
   version: number;
   defaultRegulation: RegulationLabel;
+  teamsFilter: TeamsFilter;
   syncUsername: string | null; // account username, once signed up/logged in
   syncToken: string | null; // this device's opaque bearer token for the sync Worker - never the password itself
   lastSyncedAt: number | null; // Unix timestamp of this device's last successful sync (server-stamped, from the Worker's merge response)

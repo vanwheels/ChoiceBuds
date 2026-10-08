@@ -7,7 +7,8 @@
 import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import type { MouseEvent as ReactMouseEvent } from 'react';
-import type { RegulationLabel, VgcPasteTeamRow } from '../types/pokemon';
+import type { VgcPasteTeamRow } from '../types/pokemon';
+import type { TeamsFilter } from '../types/settings';
 import { sortTeams } from '../utils/teamSort';
 import { useGridReorder } from '../hooks/useGridReorder';
 import type { UseTeamsReturn } from '../hooks/useTeams';
@@ -43,8 +44,6 @@ interface TeamsPageProps {
   savedPokemonState: UseSavedPokemonReturn;
 }
 
-type FormatFilter = 'All' | RegulationLabel;
-
 /**
  * Main teams page component
  * Displays all teams with filtering and import capabilities
@@ -58,7 +57,13 @@ export default function TeamsPage({
   settingsState,
   savedPokemonState,
 }: TeamsPageProps) {
-  const [activeFilter, setActiveFilter] = useState<FormatFilter>('All');
+  // Persisted via settingsState (settings.json's teamsFilter) rather than
+  // local useState so the filter survives a reload instead of resetting to
+  // 'All' every session - see TODO.md's Web Bug Sweep Leg 9.
+  const activeFilter = settingsState.settings.teamsFilter;
+  const setActiveFilter = (filter: TeamsFilter) => {
+    void settingsState.updateSettings({ teamsFilter: filter });
+  };
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isCatalogModalOpen, setIsCatalogModalOpen] = useState(false);
   // Set when a VgcPasteCatalogModal row's "Import" button is picked - passed
@@ -134,7 +139,7 @@ export default function TeamsPage({
   });
 
   // Format filter buttons configuration
-  const filterButtons: FormatFilter[] = ['All', 'Reg M-A', 'Reg M-B', 'Reg M-C'];
+  const filterButtons: TeamsFilter[] = ['All', 'Reg M-A', 'Reg M-B', 'Reg M-C'];
 
   // Mobile Compact Top Bar: Teams & Box leg (see TODO.md) - publishes this
   // page's title/action buttons into Sidebar.tsx's mobile top bar in place
