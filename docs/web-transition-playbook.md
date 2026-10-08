@@ -173,6 +173,35 @@ this pattern in a few places by now (`TeamCard.tsx`'s `rosterIdsKey`,
 Squaded needs this more than once or twice (ChoiceBuds hasn't extracted one
 yet either, for what it's worth).
 
+### c) Ordering/position isn't mergeable under last-write-wins sync
+
+**Symptom:** a reorder (drag-and-drop list position) visibly applies, then
+silently reverts a few seconds later — timed suspiciously close to a sync
+interval, not a render or a remount.
+
+**Root cause:** this one isn't the lost-update race or the stale-prop bug
+above — it's a genuine sync-protocol gap, only possible once you add
+cross-device sync (see ChoiceBuds' separate Worker-based sync, section 6
+below) on top of the web port. A per-record last-write-wins merge resolves
+conflicts on a record's own *fields* (whichever write has the newer
+timestamp wins), but list *position* isn't a field on any single record —
+it's an emergent property of the whole collection's array order. Nothing
+about reordering touched any record's `updatedAt`, so the merge had no
+signal that anything had changed, and the next sync round-trip silently
+re-applied the old order.
+
+**Fix:** (see ChoiceBuds' `Team.sortOrder` field) give the thing being
+reordered its own explicit position field, and bump it (alongside the
+record's normal `updatedAt`) every time it moves. That turns "list order"
+back into a per-record field the existing last-write-wins merge already
+knows how to resolve, instead of a cross-record concern the protocol has
+no way to see.
+
+If GW2 Squaded ever syncs anything the user can manually reorder (a list,
+a priority ranking, a kanban-style board), decide the position-field shape
+up front rather than discovering it the same way ChoiceBuds did — via a
+live bug report a few seconds after a drag-and-drop.
+
 ## 5. Incremental porting, not a big-bang rewrite
 
 Port one hook/page at a time, not everything at once. ChoiceBuds ported
@@ -182,6 +211,20 @@ web build — other hooks still call `window.electron` directly and the web
 build simply doesn't support those features yet. This kept each porting
 step small, testable, and shippable on its own, rather than holding the
 whole web build back on every single hook being ready.
+
+**Caveat found later (Web Species Search Cold-Cache Stats):** a hook you
+*do* port can still come up silently empty on web if it implicitly
+depended on another hook's eager-sync behavior that hasn't been ported
+yet. ChoiceBuds' desktop build runs `useInitialSync` on every launch to
+eagerly backfill the full legal-species stat cache; the web build never
+runs it, so the stat table's cache join was empty until a species
+happened to get looked up some other way. Nothing errored — the ported
+hook worked exactly as written, it just had cold data to work with. The
+fix was a separate, non-gating background prefetch for web specifically,
+not a port of `useInitialSync` itself. When porting a hook, check whether
+it reads a cache that something *else* (not yet ported) was responsible
+for keeping warm, and don't assume "the hook works" means "the hook has
+data" on first web load.
 
 ## 6. What to decide early that ChoiceBuds didn't
 
