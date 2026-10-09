@@ -123,10 +123,26 @@ export async function fetchMoveData(normalizedName: string): Promise<MoveData | 
 }
 
 /**
+ * PokeAPI kept its original Gen 1-7 resource slug for a handful of items
+ * whose English display name later changed - Farfetch'd's held item was
+ * renamed "Stick" -> "Leek" starting Gen 8, but the resource is still at
+ * GET /item/stick, so /item/leek 404s. Same "display name diverges from
+ * PokeAPI's own slug" shape services/pokeapi.ts's normalizeSpeciesForAPI
+ * already handles for gender-divergent species. Keyed by the already-
+ * normalizeNameForAPI'd name, so the cache key/stored `name` field below
+ * (and the fairy-feather special-case right after it) stay on the display
+ * slug - only the actual request URL changes.
+ */
+const ITEM_SLUG_API_OVERRIDES: Record<string, string> = {
+  leek: 'stick',
+};
+
+/**
  * Fetches and shapes a single item's metadata from PokeAPI
  */
 export async function fetchItemData(normalizedName: string): Promise<ItemData | null> {
-  const data = await fetchJSON<PokeAPIItemResponse>(`/item/${normalizedName}`);
+  const apiSlug = ITEM_SLUG_API_OVERRIDES[normalizedName] ?? normalizedName;
+  const data = await fetchJSON<PokeAPIItemResponse>(`/item/${apiSlug}`);
   if (!data) return null;
 
   const now = Date.now();

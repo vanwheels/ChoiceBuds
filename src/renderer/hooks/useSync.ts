@@ -63,14 +63,28 @@ export function useSync(
   const [internalStatus, setStatus] = useState<SyncStatus>(() => (settings.syncUsername ? 'idle' : 'signed-out'));
   const [error, setError] = useState<string | null>(null);
   const inFlightRef = useRef<Promise<SyncResult> | null>(null);
-  // Set right before applySyncedState below writes the Worker's merged
-  // result back into teams/battles/savedPokemon state. That write changes
-  // those arrays' references the same way a real local edit would, which
-  // would otherwise re-trigger the debounced-mutation effect below and push
-  // right back to the Worker - an infinite ~5s sync loop with no actual
-  // local changes involved. Consumed (and cleared) by that effect so only
-  // the one render caused by this sync is skipped, not genuine edits after.
-  const skipNextMutationSyncRef = useRef(false);
+  // Remembers the exact teams/battles/savedPokemon array references a sync
+  // just wrote back via applySyncedState below (those hooks store `records`
+  // - the parsed server-response arrays - as-is, so this is a precise
+  // reference, not a guess). The debounced-mutation effect compares its own
+  // dependency array against this on every run and skips scheduling a sync
+  // when they match, which is what tells "the Worker's own merged result
+  // just landed" apart from "a real local edit happened."
+  //
+  // This replaces a prior one-shot boolean skip flag that assumed all three
+  // applySyncedState calls below always land in a single React commit. They
+  // don't: each hook's applySyncedState goes through its own enqueueMutation
+  // queue and its own storage-adapter write (separate IndexedDB/Electron-IPC
+  // calls with independent latency), so their state updates routinely commit
+  // across two or three separate renders. The boolean only ever suppressed
+  // the first of those renders - the second/third re-triggered the debounced
+  // effect for real, scheduling a phantom sync 5s later with no actual local
+  // change behind it. That phantom sync's own response then did the same
+  // thing again, and closely-spaced automatic pushes like this were enough
+  // to occasionally trip the Worker's 3-second per-account write throttle
+  // (429 "Writing too frequently") even for a single signed-in device/tab -
+  // reported live 2026-10-09 alongside the original team-notes sync report.
+  const lastSyncedRef = useRef<{ teams: SyncPayload['teams']; battles: SyncPayload['battles']; savedPokemon: SyncPayload['savedPokemon'] } | null>(null);
 
   // Derived rather than effect-driven: being signed out always overrides
   // whatever syncNow last set (e.g. a stale 'error' from before logOut), and
@@ -158,7 +172,7 @@ export function useSync(
 
         const merged = await pushSyncData(syncUsername, syncToken, payload);
 
-        skipNextMutationSyncRef.current = true;
+        lastSyncedRef.current = { teams: merged.teams, battles: merged.battles, savedPokemon: merged.savedPokemon };
         await Promise.all([
           teamsState.applySyncedState(merged.teams),
           battlesState.applySyncedState(merged.battles),
@@ -226,8 +240,8 @@ export function useSync(
   // resets on an actual change, not on every render of this hook.
   useEffect(() => {
     if (!syncUsername || !syncToken) return;
-    if (skipNextMutationSyncRef.current) {
-      skipNextMutationSyncRef.current = false;
+    const last = lastSyncedRef.current;
+    if (last && last.teams === teamsState.teams && last.battles === battlesState.battles && last.savedPokemon === savedPokemonState.savedPokemon) {
       return;
     }
     const timeoutId = setTimeout(() => { syncNowRef.current(); }, AUTO_SYNC_DEBOUNCE_MS);

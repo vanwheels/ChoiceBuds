@@ -56,6 +56,62 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
   export - applies to both Copy and Download, and to any flaky/blocked
   hotlink, not just this one Opera GX case.
 
+- **[Auto-Sync Self-Retriggers After Every Sync] — Leg 3** *(Last touched:
+  2026-10-09 · Re-checks: 0)*
+  Done, pending live verification. Surfaced from the same console capture as
+  Leg 2: a `PUT /sync/:id 429 (Too Many Requests)` on page load, confirmed
+  live with only one device/tab signed in (ruling out two sessions racing
+  each other). Root cause in `useSync.ts`: the debounced-on-mutation effect
+  used a one-shot boolean (`skipNextMutationSyncRef`) to suppress itself for
+  the render where `syncNow`'s own `applySyncedState` calls wrote the synced
+  result back into `teams`/`battles`/`savedPokemon` state - set once right
+  before three concurrent `applySyncedState` calls, on the assumption all
+  three land in a single React commit. They don't: each goes through its own
+  hook's `enqueueMutation` queue and its own storage-adapter write (separate
+  IndexedDB/Electron-IPC calls, independent latency), so they routinely
+  commit across 2-3 separate renders. The boolean only swallowed the first of
+  those - the next one re-triggered the debounce effect for real, with no
+  actual local edit behind it, scheduling a phantom sync 5s later; that
+  phantom sync's own response did the same thing again. Closely-spaced
+  automatic pushes like this were enough to occasionally trip the Worker's
+  own 3-second per-account write throttle even for a single device. Fixed by
+  replacing the boolean with a ref holding the exact `teams`/`battles`/
+  `savedPokemon` array references the last sync wrote (useTeams.ts's
+  `applySyncedState` stores the given `records` array as-is, so this is an
+  exact reference, not a guess) - the debounce effect now skips scheduling
+  whenever current state still matches that snapshot, regardless of how many
+  renders it took to get there.
+
+- **[Mega Sprite Lookup Fetch-Storms on Page Load] — Leg 4** *(Last touched:
+  2026-10-09 · Re-checks: 0)*
+  Done, pending live verification. Same console capture again: ~15 duplicate
+  `GET /pokemon/meowstic-mega 404`s in one page load. The 404 itself is
+  expected/harmless (Meowstic's Champions-only Mega Stone has no PokeAPI
+  resource yet, exactly what `useMegaSprite.ts`'s own header comment already
+  documents) - the bug was purely the duplicate volume. Root cause:
+  `fetchMegaSprite`'s dedup only checked `cache.has(apiSlug)`, which blocks a
+  *second* fetch once the *first* has already resolved, but does nothing for
+  concurrent callers that all check before any of them resolves - the common
+  case here, since every `TeamCard` (one per team) independently mounts its
+  own `useMegaSpritePrefetch()` call, so on a Teams page with several teams
+  they all see an empty cache for the same slug at once and each fire their
+  own redundant request. Fixed by adding a module-level `inFlight` map so a
+  slug already being fetched hands back the same pending promise instead of
+  starting a new request.
+
+- **[PokeAPI 404 for "Leek" Item] — Leg 5** *(Last touched: 2026-10-09 ·
+  Re-checks: 0)*
+  Done, pending live verification. `GET /item/leek 404` in the same capture.
+  PokeAPI kept its original Gen 1-7 resource slug after Gen 8 renamed
+  Farfetch'd's held item from "Stick" to "Leek" in English - the data is
+  still at `/item/stick`. Same "display name diverges from PokeAPI's own
+  slug" shape `services/pokeapi.ts`'s `normalizeSpeciesForAPI` already
+  handles for gender-divergent species. Fixed with a small
+  `ITEM_SLUG_API_OVERRIDES` map in `pokeapiService.ts`'s `fetchItemData`,
+  applied only to the request URL - the cache key and stored `name` field
+  stay on "leek" so nothing else downstream (display name, the existing
+  fairy-feather special-case) needs to change.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something

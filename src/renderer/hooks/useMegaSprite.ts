@@ -30,6 +30,21 @@ interface PokeAPIPokemonResponse {
 }
 
 const cache = new Map<string, MegaSpriteResult | null>();
+// In-flight de-dup: `cache` alone only blocks a *second* fetch for a slug
+// once the *first* one has already resolved and written an entry - it does
+// nothing for concurrent callers that all check `cache.has()` before any of
+// them has resolved. That's the common case here, since every TeamCard (one
+// per team on the Teams page) independently mounts its own
+// useMegaSpritePrefetch() call (see TeamCard.tsx), plus individual
+// useMegaSprite() calls from EditablePokemonCore.tsx etc. - on first page
+// load with several teams, all of them see an empty cache for the same slug
+// at the same instant and each kick off their own redundant network request
+// for it. Reported live 2026-10-09 as ~15 duplicate `meowstic-mega` 404s in
+// one page load (the 404 itself is expected/harmless per this file's header
+// comment - the bug was purely the duplicate volume). Sharing the same
+// in-flight promise across callers fixes that regardless of which
+// combination of prefetch/individual callers happens to race.
+const inFlight = new Map<string, Promise<MegaSpriteResult | null>>();
 
 function buildResult(id: number): MegaSpriteResult {
   return {
@@ -48,10 +63,18 @@ function buildResult(id: number): MegaSpriteResult {
  */
 export async function fetchMegaSprite(apiSlug: string): Promise<MegaSpriteResult | null> {
   if (cache.has(apiSlug)) return cache.get(apiSlug)!;
-  const data = await fetchJSON<PokeAPIPokemonResponse>(`/pokemon/${apiSlug}`);
-  const result = data ? buildResult(data.id) : null;
-  cache.set(apiSlug, result);
-  return result;
+  const existing = inFlight.get(apiSlug);
+  if (existing) return existing;
+
+  const request = (async () => {
+    const data = await fetchJSON<PokeAPIPokemonResponse>(`/pokemon/${apiSlug}`);
+    const result = data ? buildResult(data.id) : null;
+    cache.set(apiSlug, result);
+    inFlight.delete(apiSlug);
+    return result;
+  })();
+  inFlight.set(apiSlug, request);
+  return request;
 }
 
 /**
