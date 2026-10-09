@@ -34,6 +34,19 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
   render-time resync pattern already used for this file's `orderedPokemonIds`
   and `StatsColumn.tsx`'s `localEVs`.
 
+- **[Web Clipboard Image Copy Unreliable] — Leg 2** *(Last touched:
+  2026-10-09 · Re-checks: 0)*
+  Done, pending live verification (esp. Safari/mobile browsers where this is
+  likely most visible). `TeamExportImageModal.tsx`'s `handleCopy` awaited
+  `html-to-image`'s async rasterization *before* calling
+  `navigator.clipboard.write()` - Chrome tolerates calling that after an
+  awaited step, but Safari/Firefox require it within the click's transient
+  user-activation window and reject/silently drop it once that's expired,
+  matching "doesn't work consistently." Fixed by passing the pending
+  `Promise<Blob>` straight into `ClipboardItem` so `write()` itself is called
+  synchronously in the click handler while the rasterization still resolves
+  async - the standard cross-browser-safe pattern for async clipboard images.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something

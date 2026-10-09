@@ -57,12 +57,23 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
   const regulationTheme = getRegulationTheme(toRegulationId(team.format));
 
   const handleCopy = async () => {
-    if (!posterRef.current) return;
+    const node = posterRef.current;
+    if (!node) return;
     setIsWorking(true);
     setError(null);
     try {
-      const blob = await renderPosterBlob(posterRef.current);
-      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      // navigator.clipboard.write must be called synchronously within the
+      // click's transient user activation window - Chrome tolerates calling
+      // it after an awaited async step, but Safari/Firefox don't, and
+      // silently/inconsistently reject the write once that window has
+      // expired. html-to-image's rasterization (renderPosterBlob) is async
+      // and was previously awaited *before* this call, which is why this
+      // was reported as working sometimes and not others on web. Passing
+      // the pending Blob promise straight into ClipboardItem instead keeps
+      // the write() call itself synchronous in the gesture handler while
+      // still letting the actual rasterization happen async - this is the
+      // documented cross-browser-safe pattern for async clipboard images.
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': renderPosterBlob(node) })]);
       setCopied(true);
       window.setTimeout(() => setCopied(false), COPY_CONFIRMATION_MS);
     } catch (err) {
