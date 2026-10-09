@@ -16,6 +16,24 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
+## Current Milestone: Sync & Clipboard Reliability Fixes
+
+- **[Team Notes/Name/Author Don't Resync After Sync Pull] — Leg 1** *(Last
+  touched: 2026-10-09 · Re-checks: 0)*
+  Done, pending live multi-device verification. Root cause: `TeamCard.tsx`'s
+  `localTeamName`/`localAuthor`/`localNotes` only initialized off the `team`
+  prop via `useState(...)` on mount, with no resync when `team` changed
+  externally - same unguarded-initializer shape `StatsColumn.tsx`'s EVs fix
+  addressed (see COMPLETED.md). A sync pull updated `team.notes` on disk and
+  in state, but an already-open card's textarea kept showing the pre-sync
+  text; the next time that textarea lost focus, its `onBlur` compared the
+  stale local value against the now-different `team.notes` and read it as a
+  user edit, writing the stale value straight back over the synced one -
+  this is why notes looked like they "didn't sync": the pull worked, but got
+  silently reverted again moments later. Fixed with the same `prevProp`
+  render-time resync pattern already used for this file's `orderedPokemonIds`
+  and `StatsColumn.tsx`'s `localEVs`.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something

@@ -112,6 +112,32 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
   const [localTeamName, setLocalTeamName] = useState(team.name);
   const [localAuthor, setLocalAuthor] = useState(team.author || '');
   const [localNotes, setLocalNotes] = useState(team.notes || '');
+  // Resync off the team.name/author/notes props themselves during render,
+  // same "prevProp" shape as StatsColumn.tsx's localEVs fix (see TODO.md's
+  // Web Bug Sweep Leg 1) - the onBlur handlers below already set these
+  // local values on a user edit, so this only catches an *externally*
+  // applied change (a sync pull overwriting team with another device's
+  // data). Without this, a stale local value compared against the freshly-
+  // synced team.notes/author/name on the next blur reads as "changed" and
+  // writes the stale pre-sync text straight back over the synced value -
+  // this was the actual cause of "notes don't sync across platforms": the
+  // sync pull itself worked, but the open card's textarea silently
+  // clobbered it again the next time it lost focus.
+  const [prevPropTeamName, setPrevPropTeamName] = useState(team.name);
+  if (team.name !== prevPropTeamName) {
+    setPrevPropTeamName(team.name);
+    setLocalTeamName(team.name);
+  }
+  const [prevPropAuthor, setPrevPropAuthor] = useState(team.author || '');
+  if ((team.author || '') !== prevPropAuthor) {
+    setPrevPropAuthor(team.author || '');
+    setLocalAuthor(team.author || '');
+  }
+  const [prevPropNotes, setPrevPropNotes] = useState(team.notes || '');
+  if ((team.notes || '') !== prevPropNotes) {
+    setPrevPropNotes(team.notes || '');
+    setLocalNotes(team.notes || '');
+  }
   const [isAddPickerOpen, setIsAddPickerOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isImageExportOpen, setIsImageExportOpen] = useState(false);
