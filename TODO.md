@@ -36,16 +36,25 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 
 - **[Web Clipboard Image Copy Unreliable] — Leg 2** *(Last touched:
   2026-10-09 · Re-checks: 0)*
-  Done, pending live verification (esp. Safari/mobile browsers where this is
-  likely most visible). `TeamExportImageModal.tsx`'s `handleCopy` awaited
-  `html-to-image`'s async rasterization *before* calling
-  `navigator.clipboard.write()` - Chrome tolerates calling that after an
-  awaited step, but Safari/Firefox require it within the click's transient
-  user-activation window and reject/silently drop it once that's expired,
-  matching "doesn't work consistently." Fixed by passing the pending
-  `Promise<Blob>` straight into `ClipboardItem` so `write()` itself is called
-  synchronously in the click handler while the rasterization still resolves
-  async - the standard cross-browser-safe pattern for async clipboard images.
+  Done, pending live verification. Two independent bugs found under the one
+  symptom. (1) `handleCopy` awaited `html-to-image`'s async rasterization
+  *before* calling `navigator.clipboard.write()` - Chrome tolerates that,
+  but Safari/Firefox require the call within the click's transient user-
+  activation window. Fixed by passing the pending `Promise<Blob>` straight
+  into `ClipboardItem` so `write()` itself is called synchronously. (2) Live
+  on Opera GX (Chromium - not the activation-window bug): console showed a
+  raw `error` Event off a small `<img>`, traced to `html-to-image`'s
+  `embed-images.js` - when a hotlinked image's fetch fails (here, a
+  serebii.net item-sprite fallback blocked by Opera GX's built-in ad/tracker
+  blocking, see `utils/itemSprite.ts`), `resourceToDataURL` swallows the
+  fetch error but falls back to its default empty-string placeholder;
+  setting the cloned `<img>`'s `src` to `''` then fires that element's own
+  native `error` event, which html-to-image treats as a hard rejection of
+  the *entire* render, not just a blank icon. Fixed by passing a real
+  `imagePlaceholder` (1x1 transparent PNG data URI) into `toBlob`, so one
+  blocked/broken image degrades to a blank icon instead of failing the whole
+  export - applies to both Copy and Download, and to any flaky/blocked
+  hotlink, not just this one Opera GX case.
 
 ## Blocked
 

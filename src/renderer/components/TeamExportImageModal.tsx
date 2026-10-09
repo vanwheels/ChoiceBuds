@@ -35,9 +35,27 @@ interface TeamExportImageModalProps {
 
 const COPY_CONFIRMATION_MS = 2000;
 
+// 1x1 transparent PNG, handed to html-to-image's imagePlaceholder option
+// below. Without it, html-to-image's default placeholder for a failed image
+// fetch is '' (empty string) - setting a cloned <img>'s src to '' fires that
+// element's own native 'error' event, and html-to-image's embed step treats
+// *that* as a hard rejection of the whole render (see embed-images.js's
+// embedImageNode), not just a blank icon. Hit live via Opera GX's built-in
+// ad/tracker blocking silently failing the fetch for a serebii.net item-
+// sprite fallback (utils/itemSprite.ts, CLAUDE.md's hotlink exception #1) -
+// one blocked icon shouldn't take down the whole poster export. A real
+// (non-empty) placeholder data URI loads cleanly instead, so the export
+// still succeeds with that one icon blank.
+const TRANSPARENT_PIXEL_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+
 async function renderPosterBlob(node: HTMLElement): Promise<Blob> {
   // pixelRatio 2 for a crisp export - the on-screen preview stays 1x.
-  const blob = await toBlob(node, { pixelRatio: 2, backgroundColor: '#18181b', cacheBust: true });
+  const blob = await toBlob(node, {
+    pixelRatio: 2,
+    backgroundColor: '#18181b',
+    cacheBust: true,
+    imagePlaceholder: TRANSPARENT_PIXEL_PNG,
+  });
   if (!blob) throw new Error('Failed to render team image');
   return blob;
 }
