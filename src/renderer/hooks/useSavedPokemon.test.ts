@@ -52,6 +52,24 @@ describe('useSavedPokemon', () => {
     expect(result.current.savedPokemon).toHaveLength(1);
   });
 
+  it('self-heals a species stored as PokeAPI\'s raw "-Male"/"-Female" resource text on load', async () => {
+    const database: SavedPokemonDatabase = {
+      version: 1,
+      savedPokemon: [
+        { id: 'a', label: 'Indeedee', pokemon: makePokemon({ species: 'Indeedee-Female' }), savedAt: 1, updatedAt: 1 },
+        { id: 'b', label: 'Indeedee 2', pokemon: makePokemon({ species: 'Indeedee-Male' }), savedAt: 1, updatedAt: 1 },
+      ],
+      tombstones: [],
+      lastModified: 1,
+    };
+    vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce(database);
+
+    const { result } = renderHook(() => useSavedPokemon());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.savedPokemon.map(e => e.pokemon.showdownData.species)).toEqual(['Indeedee-F', 'Indeedee']);
+  });
+
   it('backfills an empty tombstones list for a database persisted before tombstones existed', async () => {
     vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
       version: 1,

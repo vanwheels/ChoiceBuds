@@ -148,6 +148,34 @@ export function normalizeSpeciesName(species: string): string {
 }
 
 /**
+ * One-time correction for species text stored before the
+ * useSpeciesRoster.ts fix (Roster Picker Stores Invalid "-Female"/"-Male"
+ * Species Text, see TODO.md/COMPLETED.md) - picking one of the four
+ * gender-divergent species below from the "+ Add Pokémon" roster picker
+ * used to store PokeAPI's own raw "-Male"/"-Female" resource-name text
+ * (e.g. "Indeedee-Female") instead of this app's own convention (bare
+ * species = male/default, "-F" suffix = female, no "-M" form at all - see
+ * GENDERED_FORM_VARIANTS above). Applied at the read boundary by
+ * useTeams.ts/useSavedPokemon.ts so any already-saved team/Box entry
+ * self-heals the next time it loads, rather than needing a separate manual
+ * migration step - a no-op for every already-correct species string.
+ */
+const GENDER_SPLIT_RESOURCE_TEXT_FIXES: Record<string, string> = {
+  'basculegion-male': 'Basculegion',
+  'basculegion-female': 'Basculegion-F',
+  'indeedee-male': 'Indeedee',
+  'indeedee-female': 'Indeedee-F',
+  'meowstic-male': 'Meowstic',
+  'meowstic-female': 'Meowstic-F',
+  'oinkologne-male': 'Oinkologne',
+  'oinkologne-female': 'Oinkologne-F',
+};
+
+export function fixGenderSplitResourceSpeciesText(species: string): string {
+  return GENDER_SPLIT_RESOURCE_TEXT_FIXES[normalizeSpeciesName(species)] ?? species;
+}
+
+/**
  * Checks if a species is female-locked
  */
 export function isFemaleLocked(species: string): boolean {

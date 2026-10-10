@@ -7,6 +7,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type { ImportedPokemonInfo, SyncTombstone, Team, TeamsDatabase } from '../types/pokemon';
 import { getStorageAdapter } from '../services/storage';
+import { fixGenderSplitResourceSpeciesText } from '../config/pokemonRules';
 
 /**
  * Leading "Reg M-A "/"Reg M-B "/"Reg M-C " prefix this app used to stamp
@@ -25,12 +26,21 @@ const REG_PREFIX_PATTERN = /^Reg M-[ABC] /;
  * proactively; a team just picks up real ids the next time it's saved
  * through any normal mutation (addTeam/updateTeam/setTeamOrder all persist
  * the full `teams` array state, which holds these backfilled ids).
+ *
+ * Also self-heals any Pokémon whose species was stored as PokeAPI's raw
+ * "-Male"/"-Female" resource text (fixGenderSplitResourceSpeciesText, see
+ * its own doc comment and TODO.md's Roster Picker leg) - same
+ * read-boundary/never-eagerly-persisted treatment as the id backfill above.
  */
 function normalizeTeam(team: Team & { pokemon: (ImportedPokemonInfo & { id?: string })[] }): Team {
   return {
     ...team,
     name: team.name.replace(REG_PREFIX_PATTERN, ''),
-    pokemon: team.pokemon.map(p => ({ ...p, id: p.id ?? crypto.randomUUID() })),
+    pokemon: team.pokemon.map(p => ({
+      ...p,
+      id: p.id ?? crypto.randomUUID(),
+      showdownData: { ...p.showdownData, species: fixGenderSplitResourceSpeciesText(p.showdownData.species) },
+    })),
   };
 }
 

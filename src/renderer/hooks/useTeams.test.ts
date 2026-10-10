@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { useTeams } from './useTeams';
-import type { Team, TeamsDatabase } from '../types/pokemon';
+import type { ImportedPokemonInfo, Team, TeamsDatabase } from '../types/pokemon';
 
 function makeTeam(overrides: Partial<Team> = {}): Team {
   return {
@@ -11,6 +11,19 @@ function makeTeam(overrides: Partial<Team> = {}): Team {
     pokemon: [],
     createdAt: 0,
     updatedAt: 0,
+    ...overrides,
+  };
+}
+
+function makePokemon(overrides: Partial<ImportedPokemonInfo> = {}): ImportedPokemonInfo {
+  return {
+    showdownData: { species: 'Pikachu', level: 50, shiny: false, gigantamax: false, happiness: 255, evs: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 }, moves: [] },
+    pokedexNumber: 25,
+    types: ['electric'],
+    baseStats: { hp: 35, attack: 55, defense: 40, specialAttack: 50, specialDefense: 50, speed: 90 },
+    spriteUrl: '',
+    importedAt: 0,
+    id: 'mon-1',
     ...overrides,
   };
 }
@@ -65,6 +78,32 @@ describe('useTeams', () => {
       'Sand Team',
       'Reg M-D Trick Room',
       'My Reg M-A Team',
+    ]);
+  });
+
+  it('self-heals a species stored as PokeAPI\'s raw "-Male"/"-Female" resource text on load', async () => {
+    const database: TeamsDatabase = {
+      version: 1,
+      teams: [
+        makeTeam({
+          id: 'a',
+          pokemon: [
+            makePokemon({ id: 'p1', showdownData: { ...makePokemon().showdownData, species: 'Indeedee-Female' } }),
+            makePokemon({ id: 'p2', showdownData: { ...makePokemon().showdownData, species: 'Indeedee-Male' } }),
+            makePokemon({ id: 'p3', showdownData: { ...makePokemon().showdownData, species: 'Pikachu' } }),
+          ],
+        }),
+      ],
+      tombstones: [],
+      lastModified: 0,
+    };
+    vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce(database);
+
+    const { result } = renderHook(() => useTeams());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.teams[0].pokemon.map(p => p.showdownData.species)).toEqual([
+      'Indeedee-F', 'Indeedee', 'Pikachu',
     ]);
   });
 

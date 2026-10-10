@@ -10,6 +10,24 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { ImportedPokemonInfo, SavedPokemonEntry, SavedPokemonDatabase, SyncTombstone } from '../types/pokemon';
 import { getStorageAdapter } from '../services/storage';
+import { fixGenderSplitResourceSpeciesText } from '../config/pokemonRules';
+
+/**
+ * Self-heals any Box entry whose species was stored as PokeAPI's raw
+ * "-Male"/"-Female" resource text (fixGenderSplitResourceSpeciesText, see
+ * its own doc comment and TODO.md's Roster Picker leg), at the read
+ * boundary - same never-eagerly-persisted treatment as useTeams.ts's own
+ * normalizeTeam.
+ */
+function normalizeSavedPokemon(entries: SavedPokemonEntry[]): SavedPokemonEntry[] {
+  return entries.map(entry => ({
+    ...entry,
+    pokemon: {
+      ...entry.pokemon,
+      showdownData: { ...entry.pokemon.showdownData, species: fixGenderSplitResourceSpeciesText(entry.pokemon.showdownData.species) },
+    },
+  }));
+}
 
 export interface UseSavedPokemonReturn {
   savedPokemon: SavedPokemonEntry[];
@@ -132,7 +150,7 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
       const database = await getStorageAdapter().read<SavedPokemonDatabase>('saved-pokemon-database');
 
       if (database) {
-        setSavedPokemon(database.savedPokemon);
+        setSavedPokemon(normalizeSavedPokemon(database.savedPokemon));
         setTombstones(database.tombstones ?? []);
       } else {
         setSavedPokemon([]);
@@ -166,7 +184,7 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
         if (ignore) return;
 
         if (database) {
-          setSavedPokemon(database.savedPokemon);
+          setSavedPokemon(normalizeSavedPokemon(database.savedPokemon));
           setTombstones(database.tombstones ?? []);
         } else {
           setSavedPokemon([]);

@@ -137,10 +137,24 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
   version bump (`v3` -> `v4`) so existing installs' already-cached stale
   roster entries get rebuilt rather than continuing to serve the old invalid
   names indefinitely (that cache never otherwise expires). Added a test case
-  covering the mapping. Worth double-checking live whether any already-saved
-  team/Box entry has "Indeedee-Female"-shaped species text baked in from
-  before this fix - those would need a manual one-time correction, since this
-  fix only prevents *new* bad entries, it doesn't repair existing ones.
+  covering the mapping.
+
+  Follow-up (2026-10-10): Vanny confirmed a few already-saved teams do have
+  "Indeedee-Female"-shaped species text baked in from before this fix.
+  Added a `fixGenderSplitResourceSpeciesText` correction in
+  `config/pokemonRules.ts`, wired into `useTeams.ts`'s `normalizeTeam` and a
+  new `normalizeSavedPokemon` in `useSavedPokemon.ts` - both at the read
+  boundary, same never-eagerly-persisted-until-the-next-real-mutation
+  treatment `normalizeTeam`'s existing id-backfill already uses, so any
+  already-saved team *or* Box entry self-heals the moment it's loaded,
+  without a manual data edit. Covered by a new test in each hook's test
+  file. Known gap, matching the id-backfill's own existing precedent: a sync
+  *pull* writes `applySyncedState`'s records straight into state without
+  running this normalization, so if a second device/session hasn't picked up
+  this fix yet and pushes stale "-Female" text, this device could briefly
+  show it again until its *next* full reload re-normalizes on read - not
+  fixed proactively here since the existing id-backfill already accepts the
+  same eventual-consistency gap.
 
 ## Blocked
 
