@@ -8,7 +8,7 @@ vi.mock('../services/pokeapiService', () => ({
 }));
 
 const mockedFetchJSON = vi.mocked(fetchJSON);
-const CACHE_KEY = 'choicebuds:speciesRoster:v3';
+const CACHE_KEY = 'choicebuds:speciesRoster:v4';
 
 describe('useSpeciesRoster', () => {
   beforeEach(() => {
@@ -52,6 +52,28 @@ describe('useSpeciesRoster', () => {
         spriteUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10103.png',
         shinySpriteUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10103.png',
       },
+    ]);
+  });
+
+  it('maps PokeAPI\'s split -male/-female resources to this app\'s own bare/-F convention', async () => {
+    mockedFetchJSON.mockResolvedValueOnce({
+      results: [
+        { name: 'indeedee-male', url: 'https://pokeapi.co/api/v2/pokemon/876/' },
+        { name: 'indeedee-female', url: 'https://pokeapi.co/api/v2/pokemon/10186/' },
+        { name: 'basculegion-male', url: 'https://pokeapi.co/api/v2/pokemon/902/' },
+        { name: 'basculegion-female', url: 'https://pokeapi.co/api/v2/pokemon/10238/' },
+        { name: 'meowstic-male', url: 'https://pokeapi.co/api/v2/pokemon/678/' },
+        { name: 'meowstic-female', url: 'https://pokeapi.co/api/v2/pokemon/10159/' },
+        { name: 'oinkologne-male', url: 'https://pokeapi.co/api/v2/pokemon/916/' },
+        { name: 'oinkologne-female', url: 'https://pokeapi.co/api/v2/pokemon/10260/' },
+      ],
+    });
+
+    const { result } = renderHook(() => useSpeciesRoster());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.roster.map(entry => entry.name)).toEqual([
+      'Indeedee', 'Indeedee-F', 'Basculegion', 'Basculegion-F', 'Meowstic', 'Meowstic-F', 'Oinkologne', 'Oinkologne-F',
     ]);
   });
 

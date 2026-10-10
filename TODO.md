@@ -112,6 +112,36 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
   stay on "leek" so nothing else downstream (display name, the existing
   fairy-feather special-case) needs to change.
 
+- **[Roster Picker Stores Invalid "-Female"/"-Male" Species Text] — Leg 6**
+  *(Last touched: 2026-10-10 · Re-checks: 0)*
+  Done, pending live verification. Reported live: exported Showdown text for
+  an Indeedee-F read "Indeedee-Female" - invalid for real Showdown, which
+  only recognizes this app's own "Indeedee-F" convention - and flagged as a
+  likely cause of some Pokémon missing VGC Real Sets data too. Root cause:
+  `useSpeciesRoster.ts`'s `toDisplayName` capitalizes PokeAPI's raw resource
+  name as-is. For the four species PokeAPI only models as fully separate
+  `-male`/`-female` resources (Basculegion/Indeedee/Meowstic/Oinkologne -
+  CLAUDE.md's Gender/form handling section), that produced roster rows
+  literally named "Indeedee-Male"/"Indeedee-Female", not this app's own
+  convention (bare species = male/default, "-F" suffix = female, no "-M"
+  form at all - `config/pokemonRules.ts`'s `GENDERED_FORM_VARIANTS`).
+  Picking one of these from the "+ Add Pokémon" roster picker (species typed
+  in directly, not parsed from pasted text, so `parser.ts`'s
+  `getFallbackGender` normalization never runs on it) stored that exact
+  invalid string as the Pokémon's species - breaking Showdown re-export, and
+  silently breaking `getFallbackGender`/VGC Real Sets matching too, since
+  both key off "Indeedee-F", not "Indeedee-Female". This was a species-string
+  problem, not a sync/clipboard one, but bundled into this milestone since it
+  surfaced in the same session. Fixed with a small override table in
+  `toDisplayName` for exactly those 8 known slugs, plus a roster cache-key
+  version bump (`v3` -> `v4`) so existing installs' already-cached stale
+  roster entries get rebuilt rather than continuing to serve the old invalid
+  names indefinitely (that cache never otherwise expires). Added a test case
+  covering the mapping. Worth double-checking live whether any already-saved
+  team/Box entry has "Indeedee-Female"-shaped species text baked in from
+  before this fix - those would need a manual one-time correction, since this
+  fix only prevents *new* bad entries, it doesn't repair existing ones.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something

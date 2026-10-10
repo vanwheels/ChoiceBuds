@@ -34,7 +34,7 @@ interface CachedRoster {
   cachedAt: number;
 }
 
-const CACHE_KEY = 'choicebuds:speciesRoster:v3';
+const CACHE_KEY = 'choicebuds:speciesRoster:v4';
 
 /**
  * Mega Evolution is item-driven (holding the right Mega Stone), not a roster
@@ -51,6 +51,34 @@ function extractIdFromUrl(url: string): number {
 }
 
 /**
+ * PokeAPI has no bare "indeedee" resource at all - Basculegion/Indeedee/
+ * Meowstic/Oinkologne (CLAUDE.md's Gender/form handling section) only exist
+ * there as fully separate "-male"/"-female" resources. This app's own
+ * storage convention (config/pokemonRules.ts's GENDERED_FORM_VARIANTS,
+ * mirroring real Showdown) is different: the bare species name alone means
+ * male/default, and only the female form gets an explicit "-F" suffix -
+ * there's no "-M" form at all. Left to the generic split-and-capitalize
+ * rule below, these four would round-trip as "Indeedee-Male"/
+ * "Indeedee-Female" instead - a string this app's own parser/exporter never
+ * produces or expects. Picking either of those from the roster (species not
+ * typed/pasted in, so parser.ts's getFallbackGender normalization never
+ * runs) stored that exact invalid species text: real Showdown rejects
+ * "Indeedee-Female" on import, and VGC Real Sets matching - which keys off
+ * this app's own "-F" convention - silently found no data for it either.
+ * Reported live 2026-10-09/10.
+ */
+const GENDER_SPLIT_RESOURCE_DISPLAY_NAMES: Record<string, string> = {
+  'basculegion-male': 'Basculegion',
+  'basculegion-female': 'Basculegion-F',
+  'indeedee-male': 'Indeedee',
+  'indeedee-female': 'Indeedee-F',
+  'meowstic-male': 'Meowstic',
+  'meowstic-female': 'Meowstic-F',
+  'oinkologne-male': 'Oinkologne',
+  'oinkologne-female': 'Oinkologne-F',
+};
+
+/**
  * "ninetales-alola" -> "Ninetales-Alola", matching this app's existing
  * species-naming convention for forms (e.g. "Rotom-Wash", "Basculegion-F").
  * Kept as a single round-trippable string - the same value is displayed,
@@ -58,6 +86,9 @@ function extractIdFromUrl(url: string): number {
  * ruleset's legality slugs, with no separate "raw slug" field needed.
  */
 function toDisplayName(apiName: string): string {
+  const genderSplitOverride = GENDER_SPLIT_RESOURCE_DISPLAY_NAMES[apiName];
+  if (genderSplitOverride) return genderSplitOverride;
+
   return apiName
     .split('-')
     .map(part => part.charAt(0).toUpperCase() + part.slice(1))
