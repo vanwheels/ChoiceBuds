@@ -156,6 +156,25 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
   fixed proactively here since the existing id-backfill already accepts the
   same eventual-consistency gap.
 
+  Second follow-up (2026-10-10): that gap was worse than "briefly" - Vanny
+  reported a fresh browser page still showed "Indeedee-Female" even after
+  the above shipped. Root cause: the read-boundary correction never bumps
+  `updatedAt` (deliberate, matching the id-backfill precedent it was modeled
+  on), but `worker/src/merge.ts`'s `mergeCollection` requires a push's
+  `updatedAt` to be *strictly greater* than the Worker's own stored copy to
+  win a merge. A same-timestamp corrected push reads as "not newer" than
+  the Worker's still-bad record, loses every time, and the Worker hands the
+  old text straight back via that same sync's own merge response - auto-
+  sync's mount-triggered push (Leg 3 above) fires within moments of every
+  page load, so the revert wasn't a rare race, it was the *normal* outcome
+  for any signed-in device. Fixed in `useSync.ts`: `fixTeamsForSync`/
+  `fixSavedPokemonForSync` re-apply the same correction to the push payload
+  itself, right as it's built, bumping `updatedAt` on any record actually
+  changed - so the corrected version can actually win the Worker's merge
+  and propagate to every other device instead of being silently clobbered
+  on every sync. Covered by a new `useSync.test.ts` case asserting the
+  pushed payload's species and bumped timestamp directly.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something

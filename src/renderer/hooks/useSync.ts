@@ -24,9 +24,54 @@ import type { UseBattlesReturn } from './useBattles';
 import type { UseSavedPokemonReturn } from './useSavedPokemon';
 import { signup, login, pushSyncData } from '../services/syncApi';
 import type { SyncPayload } from '../types/pokemon';
+import { fixGenderSplitResourceSpeciesText } from '../config/pokemonRules';
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_]{2,32}$/;
 const MIN_PASSWORD_LENGTH = 8;
+
+/**
+ * Re-applies fixGenderSplitResourceSpeciesText to every team's Pokémon right
+ * before a push, bumping `updatedAt` on any team it actually changes - NOT
+ * redundant with useTeams.ts's own read-boundary normalizeTeam correction,
+ * which fixes what's *displayed* locally but never bumps `updatedAt` (it's
+ * not a real mutation, deliberately, same as the pre-existing id-backfill it
+ * sits alongside). worker/src/merge.ts's mergeCollection requires a
+ * push's `updatedAt` to be *strictly greater* than the Worker's own stored
+ * copy to win a merge - a same-timestamp corrected push reads as "not
+ * newer" than the Worker's still-bad record, loses the merge, and the
+ * Worker hands the old "-Female"/"-Male" text straight back via this same
+ * sync's own merge response, silently reverting the local fix within
+ * seconds. Reported live 2026-10-10: "a fresh browser page still shows the
+ * existing teams with indeedee-female" even after the display-level fix
+ * shipped. Fixing it here too - synchronously, right as the payload is
+ * built - lets the correction actually win the next merge and propagate to
+ * the Worker and every other device, instead of being silently clobbered on
+ * every auto-sync. A no-op (same object references) once a team's already
+ * correct, so safe to run on every push indefinitely.
+ */
+function fixTeamsForSync(teams: SyncPayload['teams']): SyncPayload['teams'] {
+  return teams.map(team => {
+    const fixedPokemon = team.pokemon.map(p => {
+      const fixedSpecies = fixGenderSplitResourceSpeciesText(p.showdownData.species);
+      return fixedSpecies === p.showdownData.species ? p : { ...p, showdownData: { ...p.showdownData, species: fixedSpecies } };
+    });
+    const changed = fixedPokemon.some((p, i) => p !== team.pokemon[i]);
+    return changed ? { ...team, pokemon: fixedPokemon, updatedAt: Date.now() } : team;
+  });
+}
+
+/** Same fix/bump treatment as fixTeamsForSync above, for Box entries. */
+function fixSavedPokemonForSync(entries: SyncPayload['savedPokemon']): SyncPayload['savedPokemon'] {
+  return entries.map(entry => {
+    const fixedSpecies = fixGenderSplitResourceSpeciesText(entry.pokemon.showdownData.species);
+    if (fixedSpecies === entry.pokemon.showdownData.species) return entry;
+    return {
+      ...entry,
+      pokemon: { ...entry.pokemon, showdownData: { ...entry.pokemon.showdownData, species: fixedSpecies } },
+      updatedAt: Date.now(),
+    };
+  });
+}
 
 // How long to wait after the last local mutation before syncing, so a burst
 // of edits (e.g. importing a full team) collapses into one sync instead of
@@ -160,11 +205,11 @@ export function useSync(
 
       try {
         const payload: SyncPayload = {
-          teams: teamsState.teams,
+          teams: fixTeamsForSync(teamsState.teams),
           teamTombstones: teamsState.tombstones,
           battles: battlesState.battles,
           battleTombstones: battlesState.tombstones,
-          savedPokemon: savedPokemonState.savedPokemon,
+          savedPokemon: fixSavedPokemonForSync(savedPokemonState.savedPokemon),
           savedPokemonTombstones: savedPokemonState.tombstones,
           playerProfile,
           savedAt: Date.now(),

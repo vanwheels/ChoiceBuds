@@ -46,6 +46,13 @@ function makeTeam(overrides: Partial<Team> = {}): Team {
   return { id: 'team-1', name: 'Test Team', format: 'Reg M-B', pokemon: [], createdAt: Date.now(), updatedAt: Date.now(), ...overrides };
 }
 
+function makePokemon(species: string): Team['pokemon'][number] {
+  return {
+    showdownData: { species, level: 50, shiny: false, gigantamax: false, happiness: 255, evs: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 }, moves: [] },
+    pokedexNumber: 0, types: [], baseStats: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 }, spriteUrl: '', importedAt: 0, id: 'mon-1',
+  };
+}
+
 function emptyMergedPayload(overrides: Partial<SyncPayload> = {}): SyncPayload {
   return {
     teams: [], teamTombstones: [],
@@ -421,6 +428,30 @@ describe('useSync', () => {
       });
 
       expect(mockedPush).toHaveBeenCalledTimes(1);
+    });
+
+    it('fixes lingering "-Female"/"-Male" species text in the push and bumps updatedAt so it can win the Worker\'s merge', async () => {
+      const { rerender, teamsState } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
+      await vi.waitFor(() => expect(mockedPush).toHaveBeenCalledTimes(1)); // mount-triggered
+      rerender();
+
+      mockedPush.mockClear();
+      const staleTeam = makeTeam({ id: 'stale', updatedAt: 1_000, pokemon: [makePokemon('Indeedee-Female')] });
+      teamsState.teams = [staleTeam];
+      rerender();
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5_000);
+      });
+
+      expect(mockedPush).toHaveBeenCalledTimes(1);
+      const pushedTeams = mockedPush.mock.calls[0][2].teams;
+      expect(pushedTeams).toHaveLength(1);
+      expect(pushedTeams[0].pokemon[0].showdownData.species).toBe('Indeedee-F');
+      expect(pushedTeams[0].updatedAt).toBeGreaterThan(1_000);
+      // The original (still-stale) team object passed in is untouched - the
+      // fix only ever applies to the push payload's own copy.
+      expect(staleTeam.pokemon[0].showdownData.species).toBe('Indeedee-Female');
     });
 
     it('does not re-sync off its own applySyncedState write (regression: this used to ping-pong forever)', async () => {
