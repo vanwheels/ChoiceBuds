@@ -29,6 +29,29 @@ function normalizeSavedPokemon(entries: SavedPokemonEntry[]): SavedPokemonEntry[
   }));
 }
 
+/**
+ * Bumps `updatedAt` on any entry normalizeSavedPokemon above actually
+ * changed, by comparing against the RAW pre-normalize data - normalizeSavedPokemon's
+ * read-boundary fix alone isn't enough: worker/src/merge.ts's mergeCollection
+ * requires a push's `updatedAt` to be strictly greater than the Worker's own
+ * stored copy to win a merge, so a same-timestamp corrected-but-never-
+ * persisted entry can never actually overwrite the Worker's still-bad copy -
+ * the very next auto-sync pull just hands the bad text straight back (see
+ * TODO.md's Roster Picker leg for the full trail, including the same issue
+ * on the Teams side). Entries that didn't need fixing keep their exact
+ * object reference, so a caller can cheaply detect "did anything change" via
+ * reference comparison against `normalizedEntries` rather than re-diffing.
+ */
+function bumpUpdatedAtForFixedEntries(rawEntries: SavedPokemonEntry[], normalizedEntries: SavedPokemonEntry[]): SavedPokemonEntry[] {
+  const now = Date.now();
+  return normalizedEntries.map((entry, i) => {
+    const rawSpecies = rawEntries[i]?.pokemon.showdownData.species;
+    return rawSpecies !== undefined && rawSpecies !== entry.pokemon.showdownData.species
+      ? { ...entry, updatedAt: now }
+      : entry;
+  });
+}
+
 export interface UseSavedPokemonReturn {
   savedPokemon: SavedPokemonEntry[];
   isLoading: boolean;
@@ -137,6 +160,34 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
   const [error, setError] = useState<string | null>(null);
   const [expandedCardIds, setExpandedCardIds] = useState<Set<string>>(new Set());
 
+  // Moved above loadSavedPokemonFromDisk/the mount effect below (both of
+  // which now call it directly to persist the gender-split species fix for
+  // real) - this project's lint config forbids referencing a same-scope
+  // const before its declaration even from a deferred async closure.
+  const persistSavedPokemonToDisk = async (updated: SavedPokemonEntry[], updatedTombstones: SyncTombstone[]): Promise<boolean> => {
+    try {
+      const database: SavedPokemonDatabase = {
+        version: 1,
+        savedPokemon: updated,
+        tombstones: updatedTombstones,
+        lastModified: Date.now(),
+      };
+
+      const success = await getStorageAdapter().write('saved-pokemon-database', database);
+
+      if (!success) {
+        throw new Error('Failed to write saved-Pokemon database');
+      }
+
+      return true;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to save Pokemon set';
+      setError(errorMessage);
+      console.error('Error persisting saved Pokemon sets:', err);
+      return false;
+    }
+  };
+
   /**
    * Internal: Load saved Pokemon from disk via preload bridge. Only called
    * from refreshSavedPokemon() now - the mount path below inlines its own
@@ -150,8 +201,13 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
       const database = await getStorageAdapter().read<SavedPokemonDatabase>('saved-pokemon-database');
 
       if (database) {
-        setSavedPokemon(normalizeSavedPokemon(database.savedPokemon));
+        const normalized = normalizeSavedPokemon(database.savedPokemon);
+        const fixed = bumpUpdatedAtForFixedEntries(database.savedPokemon, normalized);
+        setSavedPokemon(fixed);
         setTombstones(database.tombstones ?? []);
+        if (fixed.some((e, i) => e !== normalized[i])) {
+          void persistSavedPokemonToDisk(fixed, database.tombstones ?? []);
+        }
       } else {
         setSavedPokemon([]);
         setTombstones([]);
@@ -184,8 +240,13 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
         if (ignore) return;
 
         if (database) {
-          setSavedPokemon(normalizeSavedPokemon(database.savedPokemon));
+          const normalized = normalizeSavedPokemon(database.savedPokemon);
+          const fixed = bumpUpdatedAtForFixedEntries(database.savedPokemon, normalized);
+          setSavedPokemon(fixed);
           setTombstones(database.tombstones ?? []);
+          if (fixed.some((e, i) => e !== normalized[i])) {
+            void persistSavedPokemonToDisk(fixed, database.tombstones ?? []);
+          }
         } else {
           setSavedPokemon([]);
           setTombstones([]);
@@ -204,30 +265,6 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
       ignore = true;
     };
   }, []);
-
-  const persistSavedPokemonToDisk = async (updated: SavedPokemonEntry[], updatedTombstones: SyncTombstone[]): Promise<boolean> => {
-    try {
-      const database: SavedPokemonDatabase = {
-        version: 1,
-        savedPokemon: updated,
-        tombstones: updatedTombstones,
-        lastModified: Date.now(),
-      };
-
-      const success = await getStorageAdapter().write('saved-pokemon-database', database);
-
-      if (!success) {
-        throw new Error('Failed to write saved-Pokemon database');
-      }
-
-      return true;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to save Pokemon set';
-      setError(errorMessage);
-      console.error('Error persisting saved Pokemon sets:', err);
-      return false;
-    }
-  };
 
   const addSavedPokemonBatch = useCallback(async (pokemonList: ImportedPokemonInfo[], labels?: string[], ids?: string[]): Promise<boolean> => {
     const labelsSoFar = savedPokemon.map(e => e.label);
@@ -386,6 +423,7 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
 
   const refreshSavedPokemon = useCallback(async (): Promise<void> => {
     await loadSavedPokemonFromDisk();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const getSavedSetsForSpecies = useCallback((species: string): SavedPokemonEntry[] => {

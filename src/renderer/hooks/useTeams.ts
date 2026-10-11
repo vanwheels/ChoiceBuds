@@ -44,6 +44,23 @@ function normalizeTeam(team: Team & { pokemon: (ImportedPokemonInfo & { id?: str
   };
 }
 
+/**
+ * Diffs raw-vs-normalizeTeam'd teams to find which ones actually need their
+ * gender-split species fix persisted for real (see the ref/effect using
+ * this below for why a real, timestamp-bumping persist is required and
+ * normalizeTeam's own read-boundary fix isn't enough on its own).
+ */
+function computeGenderSplitFixes(rawTeams: Team[], correctedTeams: Team[]): { id: string; pokemon: Team['pokemon'] }[] {
+  const fixes: { id: string; pokemon: Team['pokemon'] }[] = [];
+  for (let i = 0; i < rawTeams.length; i++) {
+    const raw = rawTeams[i];
+    const fixed = correctedTeams[i];
+    const speciesChanged = raw.pokemon.some((p, j) => p.showdownData.species !== fixed.pokemon[j]?.showdownData.species);
+    if (speciesChanged) fixes.push({ id: fixed.id, pokemon: fixed.pokemon });
+  }
+  return fixes;
+}
+
 export interface UseTeamsReturn {
   teams: Team[];
   isLoading: boolean;
@@ -101,6 +118,15 @@ export function useTeams(): UseTeamsReturn {
   const [error, setError] = useState<string | null>(null);
   const [expandedCardIds, setExpandedCardIds] = useState<Set<string>>(new Set());
 
+  // Holds whatever computeGenderSplitFixes found on the most recent load,
+  // for the effect below (declared after updateTeam, which it calls) to
+  // flush once loading settles - see that effect's own comment for why this
+  // two-step ref handoff exists instead of calling updateTeam directly from
+  // the load functions above (updateTeam isn't declared yet at that point
+  // in the file, and this project's lint config forbids referencing a
+  // same-scope const before its declaration even from a deferred closure).
+  const pendingSpeciesFixRef = useRef<{ id: string; pokemon: Team['pokemon'] }[]>([]);
+
   // Mirrors of `teams`/`tombstones` that every mutator below reads as its
   // base instead of the `teams`/`tombstones` closure variables, and a queue
   // serializing every mutation - together these fix the "double action"
@@ -145,6 +171,7 @@ export function useTeams(): UseTeamsReturn {
       tombstonesRef.current = loadedTombstones;
       setTeams(loadedTeams);
       setTombstones(loadedTombstones);
+      if (database) pendingSpeciesFixRef.current = computeGenderSplitFixes(database.teams, loadedTeams);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load teams';
       setError(errorMessage);
@@ -179,6 +206,7 @@ export function useTeams(): UseTeamsReturn {
         tombstonesRef.current = loadedTombstones;
         setTeams(loadedTeams);
         setTombstones(loadedTombstones);
+        if (database) pendingSpeciesFixRef.current = computeGenderSplitFixes(database.teams, loadedTeams);
       } catch (err) {
         if (ignore) return;
         const errorMessage = err instanceof Error ? err.message : 'Failed to load teams';
@@ -269,6 +297,22 @@ export function useTeams(): UseTeamsReturn {
 
     return success;
   }), [enqueueMutation]);
+
+  // Flushes computeGenderSplitFixes' findings (stashed in pendingSpeciesFixRef
+  // by whichever load path just ran) once loading settles, routing each fix
+  // through the real updateTeam mutator so it bumps updatedAt and persists
+  // to disk for real - see pendingSpeciesFixRef's own comment and
+  // normalizeTeam's doc comment for why a read-boundary-only fix isn't
+  // enough on its own (TODO.md's Roster Picker leg has the full trail).
+  // Each affected team is independently queued through updateTeam's own
+  // enqueueMutation, so multiple fixes in one load don't race each other.
+  useEffect(() => {
+    if (isLoading) return;
+    const pending = pendingSpeciesFixRef.current;
+    if (pending.length === 0) return;
+    pendingSpeciesFixRef.current = [];
+    for (const fix of pending) void updateTeam(fix.id, { pokemon: fix.pokemon });
+  }, [isLoading, updateTeam]);
 
   /**
    * Delete a targeted team configuration from disk storage. Also records a

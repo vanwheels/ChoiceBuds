@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { useSavedPokemon } from './useSavedPokemon';
-import type { ImportedPokemonInfo, SavedPokemonDatabase, ShowdownPokemon } from '../types/pokemon';
+import type { ImportedPokemonInfo, SavedPokemonDatabase, SavedPokemonEntry, ShowdownPokemon } from '../types/pokemon';
 
 const ZERO_EVS = { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 };
 
@@ -68,6 +68,17 @@ describe('useSavedPokemon', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.savedPokemon.map(e => e.pokemon.showdownData.species)).toEqual(['Indeedee-F', 'Indeedee']);
+
+    // Also needs to persist for real, with a freshly bumped updatedAt (raw
+    // entries were both 1), so a future sync push can actually win the
+    // Worker's merge instead of losing to its own still-bad stored copy -
+    // see TODO.md's Roster Picker leg.
+    await waitFor(() => expect(window.electron.writeSavedPokemonDatabase).toHaveBeenCalled());
+    const calls = vi.mocked(window.electron.writeSavedPokemonDatabase).mock.calls;
+    const [persisted] = calls[calls.length - 1];
+    expect(persisted.savedPokemon[0].updatedAt).toBeGreaterThan(1);
+    expect(persisted.savedPokemon[1].updatedAt).toBeGreaterThan(1);
+    expect(persisted.savedPokemon.map((e: SavedPokemonEntry) => e.pokemon.showdownData.species)).toEqual(['Indeedee-F', 'Indeedee']);
   });
 
   it('backfills an empty tombstones list for a database persisted before tombstones existed', async () => {

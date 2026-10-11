@@ -175,6 +175,36 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
   on every sync. Covered by a new `useSync.test.ts` case asserting the
   pushed payload's species and bumped timestamp directly.
 
+  Third follow-up (2026-10-11): the sync-payload fix (previous paragraph)
+  turned out to be structurally unable to fire in the normal case -
+  `normalizeTeam`/`normalizeSavedPokemon` already pre-correct the species
+  text before `useSync.ts` ever sees it, so `fixTeamsForSync`/
+  `fixSavedPokemonForSync` almost never finds anything left to fix or bump
+  (it only helps the narrower case of bad text arriving via a sync *pull*
+  that bypasses those read-boundary normalizers). "Not seeing the update on
+  a refreshed web page" was the result. The real fix needed the timestamp
+  bump to happen *at the point the raw broken data is still visible* -
+  local disk/IndexedDB load - not reconstructed later. Added
+  `computeGenderSplitFixes`/`pendingSpeciesFixRef` in `useTeams.ts` (a
+  two-step ref handoff, since `updateTeam` isn't declared yet at the load
+  functions' point in the file and this project's lint config forbids
+  referencing a same-scope const before its declaration even from a
+  deferred closure) and `bumpUpdatedAtForFixedEntries` in
+  `useSavedPokemon.ts` (a simpler single-pass fix, routed through a
+  relocated `persistSavedPokemonToDisk` instead of the public
+  `updateSavedPokemon` mutator, since that hook has no `useTeams.ts`-style
+  ref+queue serialization yet - see TODO.md's own "Audit Sibling Hooks for
+  useTeams' Lost-Update Race" item - and looping multiple single-entry
+  `updateSavedPokemon` calls would race each other's stale closures for a
+  user with 2+ affected Box entries). Both now persist the fix for real,
+  with a freshly bumped `updatedAt`, the moment a load actually finds
+  something to correct. Covered by new assertions in both hooks' test files
+  checking the actual persisted write (not just in-memory display) carries
+  the fix and a bumped timestamp. The useSync.ts-level fix from the previous
+  paragraph is kept too (not reverted) - it's still the right fix for its
+  own narrower "bad data just arrived via a sync pull" case, genuinely
+  complementary rather than redundant with this one.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something

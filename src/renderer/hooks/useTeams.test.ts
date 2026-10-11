@@ -105,6 +105,19 @@ describe('useTeams', () => {
     expect(result.current.teams[0].pokemon.map(p => p.showdownData.species)).toEqual([
       'Indeedee-F', 'Indeedee', 'Pikachu',
     ]);
+
+    // The display-only fix above isn't enough on its own to survive a sync
+    // round-trip (see TODO.md's Roster Picker leg) - it also needs to
+    // persist for real, through updateTeam, with a freshly bumped updatedAt
+    // (the raw team's was 0) so a future push can actually win the Worker's
+    // merge instead of losing to its own still-bad stored copy.
+    await waitFor(() => expect(window.electron.writeTeamsDatabase).toHaveBeenCalled());
+    const calls = vi.mocked(window.electron.writeTeamsDatabase).mock.calls;
+    const [persisted] = calls[calls.length - 1];
+    expect(persisted.teams[0].updatedAt).toBeGreaterThan(0);
+    expect(persisted.teams[0].pokemon.map((p: ImportedPokemonInfo) => p.showdownData.species)).toEqual([
+      'Indeedee-F', 'Indeedee', 'Pikachu',
+    ]);
   });
 
   it('reports an error when loading throws', async () => {
