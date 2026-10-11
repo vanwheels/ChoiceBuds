@@ -144,4 +144,18 @@ describe('usePokedexNumberSelfHeal', () => {
     rerender({ teams: teamsState([makeTeam([bad], 'team-2')]) });
     expect(mockedFetch).toHaveBeenCalledTimes(1);
   });
+
+  it('logs a warning and does not update anything when a fetched response has no species url to derive a dex number from', async () => {
+    const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const bad = makePokemon({ species: 'Indeedee-F', gender: 'F' });
+    const teams = teamsState([makeTeam([bad])]);
+    mockedFetch.mockResolvedValue(apiEntry(undefined));
+
+    renderHook(() => usePokedexNumberSelfHeal(teams, savedPokemonState([]), databaseState()));
+
+    await waitFor(() => expect(mockedFetch).toHaveBeenCalledTimes(1));
+    expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining('no species.url'));
+    expect(teams.updateTeam).not.toHaveBeenCalled();
+    consoleWarnSpy.mockRestore();
+  });
 });

@@ -108,9 +108,24 @@ export function usePokedexNumberSelfHeal(
         CONCURRENCY,
         () => {},
         async ([key, affected]) => {
-          const apiData = await fetchPokemonData(affected.species, affected.gender);
-          if (apiData.nationalDexNumber !== undefined) correctedByKey.set(key, apiData.nationalDexNumber);
-          void setCacheEntry(key, apiData);
+          try {
+            const apiData = await fetchPokemonData(affected.species, affected.gender);
+            if (apiData.nationalDexNumber !== undefined) {
+              correctedByKey.set(key, apiData.nationalDexNumber);
+            } else {
+              console.warn(`[usePokedexNumberSelfHeal] Fetched "${key}" but its response had no species.url to derive a real dex number from`);
+            }
+            void setCacheEntry(key, apiData);
+          } catch (err) {
+            // runWithConcurrency's own try/catch would otherwise swallow this
+            // with zero visibility - logged here so a failed backfill (e.g.
+            // offline, PokeAPI rate-limited) is at least diagnosable instead
+            // of just silently never completing. Not re-thrown: this worker
+            // already handles its own failure terminally (nothing added to
+            // correctedByKey for this key), so there's nothing left for
+            // runWithConcurrency's own catch to do with it.
+            console.warn(`[usePokedexNumberSelfHeal] Failed to fetch "${key}" for dex-number backfill:`, err);
+          }
         }
       );
 
@@ -137,6 +152,6 @@ export function usePokedexNumberSelfHeal(
         if (nationalDexNumber !== undefined) savedPokemonFixes.push({ id: entry.id, nationalDexNumber });
       }
       if (savedPokemonFixes.length > 0) void applyPokedexNumberFixes(savedPokemonFixes);
-    })();
+    })().catch(err => console.warn('[usePokedexNumberSelfHeal] Backfill pass failed unexpectedly:', err));
   }, [teams, teamsLoading, savedPokemon, savedPokemonLoading, isDatabaseInitialized, updateTeam, applyPokedexNumberFixes, setCacheEntry]);
 }
