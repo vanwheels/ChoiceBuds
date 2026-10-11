@@ -22,6 +22,24 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[Pokedex Number Wrong For Forms] — Leg 7** (2026-10-11) - See commits
+  `f2ecf71`/`78f4218`. Form/gender-variant species (Indeedee-Female,
+  Rotom-Heat, etc.) displayed PokeAPI's own per-form resource id
+  (`#10186`/`#10008`) instead of the real National Dex number (`#876`/
+  `#479`) - `transformAPIResponse` read the fetched resource's top-level
+  `id` directly, which only equals the real dex number for a species'
+  default form. Fixed by adding a separate `nationalDexNumber` field rather
+  than overwriting `pokedexNumber` - an earlier in-session attempt did
+  overwrite it and was caught/reverted before shipping, since
+  `utils/spriteUrl.ts`'s `getPixelSpriteUrl` needs `pokedexNumber` verbatim
+  to build a non-default form's correct sprite URL. Live-verified by Vanny:
+  newly-added Pokémon now show the correct number. The accompanying
+  `usePokedexNumberSelfHeal.ts` backfill for *already-saved* entries did not
+  visibly take effect live, even after added diagnostic logging turned up
+  nothing conclusive - accepted as a known gap per Vanny's call rather than
+  investigated further; an already-saved form/gender-variant Pokémon keeps
+  showing its old (sprite-id) number until re-added or otherwise re-enriched.
+
 - **[Web Bug Sweep: Second Pass Before Closing] — Leg 6** (2026-10-08) -
   Decision, no diff: no further findings surfaced from continued use, so
   the catch-all second-pass item was closed without filing additional
