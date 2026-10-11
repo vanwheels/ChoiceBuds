@@ -22,6 +22,67 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[Team Notes/Name/Author Don't Resync After Sync Pull] — Leg 1**
+  (2026-10-09) - See commit `0453286`. `TeamCard.tsx`'s local
+  name/author/notes `useState` fields never resynced when the `team` prop
+  changed externally (a sync pull), so an open card's stale local text won
+  the next `onBlur` comparison and wrote itself straight back over the
+  freshly-synced value - why notes looked like they "didn't sync." Fixed
+  with the same `prevProp` render-time resync pattern already used
+  elsewhere in the file. Live-verified by Vanny.
+
+- **[Web Clipboard Image Copy Unreliable] — Leg 2** (2026-10-09) - See
+  commits `23dabf9`/`1a1e6c7`. Two distinct bugs: `handleCopy` called
+  `navigator.clipboard.write()` after an awaited step, losing Safari/
+  Firefox's transient-activation window (fixed by passing a pending
+  `Promise<Blob>` into `ClipboardItem` so the call stays synchronous); and,
+  found live on Opera GX, a single blocked/broken hotlinked image (ad-
+  blocker) made `html-to-image` fail the *entire* render instead of just
+  that icon (fixed with a real `imagePlaceholder` for `toBlob`). Live-
+  verified by Vanny, including the Opera GX case specifically.
+
+- **[Auto-Sync Self-Retriggers After Every Sync] — Leg 3** (2026-10-09) -
+  See commit `71ac148`. `useSync.ts`'s debounced-mutation effect used a
+  one-shot boolean to suppress itself for its own `applySyncedState`
+  writes, assuming all three (teams/battles/savedPokemon) land in one React
+  commit - they routinely don't, so unsuppressed phantom re-syncs
+  occasionally tripped the Worker's 3-second write throttle even for a
+  single device. Fixed by replacing the boolean with a ref holding the
+  exact array references the last sync wrote. Live-verified by Vanny.
+
+- **[Mega Sprite Lookup Fetch-Storms on Page Load] — Leg 4** (2026-10-09) -
+  See commit `71ac148`. `fetchMegaSprite`'s cache check only blocked a
+  *second* fetch once the *first* resolved, so every `TeamCard` mounting
+  its own prefetch at once (~15 duplicate `meowstic-mega` 404s observed)
+  each fired a redundant request. Fixed with a module-level in-flight
+  promise map. Live-verified by Vanny.
+
+- **[PokeAPI 404 for "Leek" Item] — Leg 5** (2026-10-09) - See commit
+  `71ac148`. PokeAPI kept its Gen 1-7 slug ("stick") after Gen 8 renamed
+  Farfetch'd's item to "Leek" in English. Fixed with a small slug-override
+  table in `fetchItemData`. Live-verified by Vanny.
+
+- **[Roster Picker Stores Invalid "-Female"/"-Male" Species Text] — Leg 6**
+  (2026-10-10 to 2026-10-11) - See commits `ef2852c`/`a149621`/`1c5dd46`/
+  `fe7bb32`. `useSpeciesRoster.ts` capitalized PokeAPI's raw `-male`/
+  `-female` resource names for the four gender-split species
+  (Basculegion/Indeedee/Meowstic/Oinkologne) instead of this app's own
+  bare/"-F" convention, so picking one from the roster stored invalid
+  Showdown text and silently broke VGC Real Sets matching. Took three
+  follow-up rounds to land for real: a display-only read-boundary fix
+  wasn't enough on its own (never bumped `updatedAt`, so a same-timestamp
+  corrected push lost every time to the Worker's strictly-greater-than
+  merge rule and got silently reverted by the very next auto-sync - "not
+  seeing the update on a refreshed web page"); a sync-payload-level fix
+  turned out structurally unable to fire in the normal case, since the
+  read-boundary fix had already pre-corrected everything by the time
+  `useSync.ts` saw it; the fix that actually stuck moved the timestamp bump
+  to the one place the raw broken data was still visible - the local disk/
+  IndexedDB load itself - routed through the real `updateTeam` mutator
+  (teams) and a relocated `persistSavedPokemonToDisk` single-pass fix (Box)
+  so it persists for real. All live-verified by Vanny, including
+  confirming the fix survives a sync round-trip this time.
+
 - **[Pokedex Number Wrong For Forms] — Leg 7** (2026-10-11) - See commits
   `f2ecf71`/`78f4218`. Form/gender-variant species (Indeedee-Female,
   Rotom-Heat, etc.) displayed PokeAPI's own per-form resource id

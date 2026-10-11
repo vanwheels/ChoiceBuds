@@ -54,3 +54,6 @@ milestone.
   [post-mortem](docs/postmortems/fixes-and-adjustments.md)
 - **Web Client Bug Fix Sweep** — 2026-10-08 — Shipped —
   [post-mortem](docs/postmortems/web-client-bug-fix-sweep.md)
+- **Sync & Clipboard Reliability Fixes** — 2026-10-09 to 2026-10-11 —
+  Shipped —
+  [post-mortem](docs/postmortems/sync-clipboard-reliability-fixes.md)
