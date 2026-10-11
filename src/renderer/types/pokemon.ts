@@ -66,7 +66,15 @@ export interface ImportedPokemonInfo {
   showdownData: ShowdownPokemon;
 
   // API-enriched data
+  // Sprite-id, not display number, for a non-default form/gender variant -
+  // see PokeAPICacheEntry's own doc comment (types/gameData.ts) for why.
   pokedexNumber: number;
+  // The true National Dex number for display - see PokeAPICacheEntry's
+  // nationalDexNumber doc comment. Optional: entries saved before this
+  // field existed don't have it yet; EditablePokemonCore.tsx falls back to
+  // pokedexNumber (sprite-id, not quite right for a form-divergent species,
+  // but still a real number) until usePokedexNumberSelfHeal.ts fills it in.
+  nationalDexNumber?: number;
   types: string[];
   baseStats: PokemonStats;
   spriteUrl: string;

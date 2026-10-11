@@ -133,6 +133,13 @@ export interface UseSavedPokemonReturn {
    * `updatePokemon` for a roster slot.
    */
   updateSavedPokemon: (id: string, updates: Partial<ImportedPokemonInfo>) => Promise<boolean>;
+  /**
+   * Bulk `nationalDexNumber` backfill for usePokedexNumberSelfHeal.ts (see
+   * TODO.md's Pokedex Number Wrong For Forms leg) - one batched write for
+   * every affected entry at once, not N individual updateSavedPokemon
+   * calls (see its own doc comment for why that would race).
+   */
+  applyPokedexNumberFixes: (fixes: { id: string; nationalDexNumber: number }[]) => Promise<boolean>;
   deleteSavedPokemon: (id: string) => Promise<boolean>;
   refreshSavedPokemon: () => Promise<void>;
   getSavedSetsForSpecies: (species: string) => SavedPokemonEntry[];
@@ -348,6 +355,36 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     return success;
   }, [savedPokemon, tombstones]);
 
+  /**
+   * Bulk variant of updateSavedPokemon, for usePokedexNumberSelfHeal.ts's
+   * dex-number self-heal (see its own doc comment and TODO.md's Pokedex
+   * Number Wrong For Forms leg) - same "one batched call instead of N
+   * sequential single calls" reasoning addSavedPokemonBatch's own doc
+   * comment already covers: this hook has no useTeams.ts-style ref+queue
+   * mutation serialization, so N individual updateSavedPokemon calls fired
+   * in a loop would each read the same stale `savedPokemon` closure and
+   * silently drop all but the last one's fix for a user with 2+ affected
+   * Box entries.
+   */
+  const applyPokedexNumberFixes = useCallback(async (fixes: { id: string; nationalDexNumber: number }[]): Promise<boolean> => {
+    const fixById = new Map(fixes.map(f => [f.id, f.nationalDexNumber]));
+    const updated = savedPokemon.map(entry => {
+      const nationalDexNumber = fixById.get(entry.id);
+      return nationalDexNumber === undefined
+        ? entry
+        : { ...entry, pokemon: { ...entry.pokemon, nationalDexNumber }, updatedAt: Date.now() };
+    });
+
+    const success = await persistSavedPokemonToDisk(updated, tombstones);
+
+    if (success) {
+      setSavedPokemon(updated);
+      setError(null);
+    }
+
+    return success;
+  }, [savedPokemon, tombstones]);
+
   const duplicateSavedPokemon = useCallback(async (id: string): Promise<boolean> => {
     const source = savedPokemon.find(e => e.id === id);
     if (!source) {
@@ -453,6 +490,7 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     duplicateSavedPokemon,
     setSavedPokemonOrder,
     updateSavedPokemon,
+    applyPokedexNumberFixes,
     deleteSavedPokemon,
     refreshSavedPokemon,
     getSavedSetsForSpecies,

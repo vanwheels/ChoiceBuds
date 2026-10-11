@@ -20,6 +20,10 @@ const POKEAPI_BASE_URL = 'https://pokeapi.co/api/v2';
 interface PokeAPISpeciesResponse {
   id: number;
   name: string;
+  // The true National Dex number, regardless of which form/gender-variant
+  // resource was fetched - see transformAPIResponse's pokedexNumber comment
+  // for why this app needs it instead of the top-level `id` above.
+  species: { name: string; url: string };
   types: Array<{
     slot: number;
     type: {
@@ -196,6 +200,19 @@ export function normalizeSpeciesForAPI(name: string, gender?: 'M' | 'F' | 'N' | 
 }
 
 /**
+ * Parses the trailing numeric id out of a PokeAPI resource URL (e.g.
+ * "https://pokeapi.co/api/v2/pokemon-species/876/" -> 876) - same pattern
+ * useSpeciesRoster.ts's extractIdFromUrl already uses for the roster list.
+ * Null (not NaN) when the URL is missing or doesn't end in a number, so
+ * callers can `?? fallback` cleanly.
+ */
+function extractPokedexNumberFromSpeciesUrl(url: string | undefined): number | null {
+  if (!url) return null;
+  const match = url.match(/\/(\d+)\/?$/);
+  return match ? Number(match[1]) : null;
+}
+
+/**
  * Transforms raw PokeAPI response into our cache entry format
  * Forces all string values to lowercase
  * @param data - Raw API response
@@ -251,10 +268,24 @@ function transformAPIResponse(data: PokeAPISpeciesResponse): PokeAPICacheEntry {
   
   // Extract abilities (forced to lowercase)
   const abilities = data.abilities.map(a => a.ability.name.toLowerCase());
-  
+
   return {
     species: data.name.toLowerCase(),
+    // This specific form/gender-variant RESOURCE's own id (PokeAPI assigns
+    // ids from its 10001+ "extra forms" space to anything that isn't a
+    // species' single default form) - utils/spriteUrl.ts's getPixelSpriteUrl
+    // needs this exact value to build that form's own correct sprite URL
+    // (e.g. Indeedee-Female's real sprite file is .../10186.png). Must NOT
+    // be replaced with the species' National Dex number - see
+    // nationalDexNumber below for that.
     pokedexNumber: data.id,
+    // The true National Dex number regardless of which form was fetched
+    // (Indeedee #876, Rotom #479, not their form-resource ids above) -
+    // parsed from this same response's species.url, not a second fetch.
+    // Undefined (not a bad fallback value) if that url is ever missing/
+    // malformed - see PokeAPICacheEntry's own doc comment for why this is a
+    // separate optional field rather than overwriting pokedexNumber.
+    nationalDexNumber: extractPokedexNumberFromSpeciesUrl(data.species?.url) ?? undefined,
     types,
     baseStats,
     spriteUrl,
@@ -353,6 +384,7 @@ export async function enrichPokemonWithAPI(
   const enrichedPokemon: ImportedPokemonInfo = {
     showdownData: showdownPokemon,
     pokedexNumber: apiData.pokedexNumber,
+    nationalDexNumber: apiData.nationalDexNumber,
     types: apiData.types,
     baseStats: apiData.baseStats,
     spriteUrl: apiData.spriteUrl,

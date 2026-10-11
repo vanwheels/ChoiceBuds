@@ -56,7 +56,16 @@ interface EditablePokemonCoreProps {
 const FORM_DIVERGENT: Record<string, boolean> = { 'basculegion': true, 'indeedee': true, 'meowstic': true, 'oinkologne': true };
 
 export default function EditablePokemonCore({ pokemon, onUpdatePokemon, gameDataState, rulesetId, resolveSprite, showAnimatedSprites, onSpriteClick, spriteOverlay }: EditablePokemonCoreProps) {
-  const { showdownData, types, pokedexNumber } = pokemon;
+  const { showdownData, types, pokedexNumber, nationalDexNumber } = pokemon;
+  // pokedexNumber is a sprite-id (see types/pokemon.ts's own doc comment) -
+  // for a non-default form/gender variant it's PokeAPI's own 10001+ "extra
+  // forms" id, not the real National Dex number. nationalDexNumber holds
+  // the real one once usePokedexNumberSelfHeal.ts backfills it; falling
+  // back to pokedexNumber here only matters for the brief window before
+  // that backfill lands (still some real number, just not quite right for
+  // a form-divergent species in that window) - see TODO.md's Pokedex
+  // Number Wrong For Forms leg.
+  const displayedDexNumber = nationalDexNumber ?? pokedexNumber;
   const [isLocalShiny, setIsLocalShiny] = useState(showdownData.shiny);
   const [localGender, setLocalGender] = useState<'M' | 'F' | 'N' | '' | undefined>(showdownData.gender);
   const [localNickname, setLocalNickname] = useState(showdownData.nickname || '');
@@ -185,7 +194,7 @@ export default function EditablePokemonCore({ pokemon, onUpdatePokemon, gameData
           placeholder={showdownData.species}
           className="w-full px-2 py-1 text-sm font-bold text-white bg-zinc-800 border border-zinc-600 rounded text-center outline-none"
         />
-        <p className="text-xs text-zinc-300 truncate">{showdownData.species} #{pokedexNumber}</p>
+        <p className="text-xs text-zinc-300 truncate">{showdownData.species} #{displayedDexNumber}</p>
         {isOverSPCap && (
           <span
             title={`Total SP (${totalSP}) exceeds the ${MAX_TOTAL_SP} cap`}

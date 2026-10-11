@@ -22,6 +22,7 @@ import { useSpeciesRoster } from './hooks/useSpeciesRoster';
 import { useSpriteCache } from './hooks/useSpriteCache';
 import { useInitialSync } from './hooks/useInitialSync';
 import { useUsageSync } from './hooks/useUsageSync';
+import { usePokedexNumberSelfHeal } from './hooks/usePokedexNumberSelfHeal';
 import { useBattles } from './hooks/useBattles';
 import { useSettings } from './hooks/useSettings';
 import { useSync } from './hooks/useSync';
@@ -128,6 +129,11 @@ export default function App() {
   // Analysis Leg 1, see TODO.md) - never gates the LoadingScreen, see
   // useUsageSync.ts's own header comment.
   useUsageSync(gameDataState, speciesRosterState);
+  // One-time pokedexNumber correction for teams/Box entries affected by the
+  // dex-number-thrown-off-for-forms bug (see TODO.md's Pokedex Number Wrong
+  // For Forms leg) - also never gates the LoadingScreen, same background-fix
+  // shape as useUsageSync above.
+  usePokedexNumberSelfHeal(teamsState, savedPokemonState, databaseState);
 
   if (!isInitialSyncDone) {
     return <LoadingScreen progress={initialSyncProgress} />;

@@ -1,5 +1,53 @@
-import { describe, expect, it } from 'vitest';
-import { normalizeSpeciesForAPI } from './pokeapi';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { normalizeSpeciesForAPI, fetchPokemonData } from './pokeapi';
+
+function mockFetchOnce(json: unknown) {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 200, json: () => Promise.resolve(json) }));
+}
+
+const INDEEDEE_FEMALE_RESPONSE = {
+  id: 10186, // PokeAPI's own per-form resource id - NOT Indeedee's real dex number
+  name: 'indeedee-female',
+  species: { name: 'indeedee', url: 'https://pokeapi.co/api/v2/pokemon-species/876/' },
+  types: [{ slot: 1, type: { name: 'psychic' } }],
+  stats: [],
+  sprites: { front_default: null },
+  abilities: [],
+};
+
+// Regression test for the "dex number completely thrown off" report
+// (TODO.md's Pokedex Number Wrong For Forms leg): transformAPIResponse's
+// pokedexNumber must stay the form resource's own id (utils/spriteUrl.ts's
+// getPixelSpriteUrl needs it verbatim to build a non-default form's correct
+// sprite URL) - the real National Dex number goes in the separate
+// nationalDexNumber field instead, parsed from the species url. An earlier
+// version of this fix overwrote pokedexNumber directly and would have
+// broken every non-default form's sprite; these two fields are checked
+// separately specifically to guard against that regression recurring.
+describe('fetchPokemonData', () => {
+  beforeEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("keeps pokedexNumber as the form resource's own sprite-id", async () => {
+    mockFetchOnce(INDEEDEE_FEMALE_RESPONSE);
+    const entry = await fetchPokemonData('Indeedee', 'F');
+    expect(entry.pokedexNumber).toBe(10186);
+  });
+
+  it('derives nationalDexNumber from the species url', async () => {
+    mockFetchOnce(INDEEDEE_FEMALE_RESPONSE);
+    const entry = await fetchPokemonData('Indeedee', 'F');
+    expect(entry.nationalDexNumber).toBe(876);
+  });
+
+  it('leaves nationalDexNumber undefined if the species url is ever missing', async () => {
+    mockFetchOnce({ ...INDEEDEE_FEMALE_RESPONSE, species: undefined });
+    const entry = await fetchPokemonData('Indeedee', 'F');
+    expect(entry.nationalDexNumber).toBeUndefined();
+    expect(entry.pokedexNumber).toBe(10186);
+  });
+});
 
 // Previously untested despite backing every enrichment fetch - written while
 // fixing the Toxtricity gap this table was missing (found via VGCPastes

@@ -122,6 +122,7 @@ function setup(settingsOverrides: Partial<AppSettings> = {}) {
     duplicateSavedPokemon: vi.fn(),
     setSavedPokemonOrder: vi.fn(),
     updateSavedPokemon: vi.fn(),
+    applyPokedexNumberFixes: vi.fn(),
     deleteSavedPokemon: vi.fn(),
     refreshSavedPokemon: vi.fn().mockResolvedValue(undefined),
     getSavedSetsForSpecies: vi.fn().mockReturnValue([]),

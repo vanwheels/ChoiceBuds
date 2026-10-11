@@ -205,6 +205,68 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
   own narrower "bad data just arrived via a sync pull" case, genuinely
   complementary rather than redundant with this one.
 
+- **[Pokedex Number Wrong For Forms] — Leg 7** *(Last touched: 2026-10-11 ·
+  Re-checks: 0)*
+  Done, pending live verification. Reported live: cards showed
+  "Indeedee-Female #10186"/"Rotom-Heat #10008" instead of the real National
+  Dex numbers (#876/#479). Root cause: `services/pokeapi.ts`'s
+  `transformAPIResponse` read the fetched resource's own top-level `id`
+  directly - for a species' single default form that equals the real dex
+  number, but for any other form/gender variant PokeAPI assigns an id from
+  its 10001+ "extra forms" space instead (confirmed live against
+  `/pokemon/indeedee-female`: `id: 10186`, with the real number only
+  reachable via that same response's `species.url`).
+
+  First attempt (reverted mid-session, not shipped): overwrote
+  `pokedexNumber` itself with the real dex number. Caught before shipping -
+  `utils/spriteUrl.ts`'s `getPixelSpriteUrl` uses `pokedexNumber` verbatim
+  as the sprite image filename, and PokeAPI's sprite repo genuinely stores a
+  non-default form's sprite under its *own* resource id (Indeedee-Female's
+  real sprite file is `.../10186.png`, not `.../876.png`, which is plain
+  male Indeedee). Overwriting it would have fixed the displayed number while
+  silently breaking sprites for every form-divergent species in the app
+  (Rotom forms, regional forms, Therian/Origin/Crowned formes, all four
+  gender-divergent species, etc.) - a much bigger regression than the
+  cosmetic bug being fixed. Caught by inspecting every `getPixelSpriteUrl`
+  call site before shipping, not by a test catching it after the fact -
+  worth a to-do nod to adding a visual/snapshot check for this file's sprite
+  URLs later, see Known Exceptions-adjacent note below.
+
+  Real fix: added a separate optional `nationalDexNumber` field to
+  `PokeAPICacheEntry`/`ImportedPokemonInfo` (`types/gameData.ts`/
+  `types/pokemon.ts`), populated by `transformAPIResponse` alongside the
+  untouched `pokedexNumber`, threaded through `enrichPokemonWithAPI` and
+  `clonePokemon.ts`. `EditablePokemonCore.tsx`'s display text now reads
+  `nationalDexNumber ?? pokedexNumber` (falls back to the sprite-id only in
+  the brief window before backfill, which is still some real number, just
+  not perfectly right for a form-divergent species in that window).
+
+  New `usePokedexNumberSelfHeal.ts` hook (independent of `useInitialSync` -
+  that hook doesn't run on web at all, and only ever covers the *current*
+  legal roster, not an older-regulation/off-roster species a team/Box entry
+  might reference) scans every team/Box Pokémon once per launch for
+  `nationalDexNumber === undefined && pokedexNumber >= 10000` (the narrow
+  genuinely-affected set - a default-form species is skipped entirely, no
+  fetch needed, since its `pokedexNumber` already equals the real number).
+  Fetches each distinct affected species/gender once (not once per
+  Pokémon), repairs the PokeAPI cache as a side effect, and persists through
+  `updateTeam` (teams) and a new bulk `applyPokedexNumberFixes` mutator
+  (Box - `useSavedPokemon.ts` has no `useTeams.ts`-style ref+queue
+  serialization yet, so N individual `updateSavedPokemon` calls in a loop
+  would race each other's stale closures for 2+ affected entries). Wired
+  into both `App.tsx` and `AppWeb.tsx` directly (not just `App.tsx`), since
+  `useInitialSync` isn't available on web.
+
+  Deliberately did NOT add a `useDatabase.ts` cache-eviction step the way
+  the species-text fix needed - an earlier draft of this leg tried treating
+  any cache entry missing `nationalDexNumber` as a cache miss, but since
+  that field is brand new, *every* cached species (including the vast
+  majority already on their correct default form) would miss it at once,
+  triggering a mass refetch of the entire cache on next launch for a field
+  that's a no-op for most of them. The self-heal hook's own direct
+  `fetchPokemonData` call already repairs the cache for exactly the species
+  that actually need it, with no eviction trick required.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something

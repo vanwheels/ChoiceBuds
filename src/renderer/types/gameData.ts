@@ -12,7 +12,25 @@ import type { PokemonStats, RegulationLabel, EVSpread } from './pokemon';
  */
 export interface PokeAPICacheEntry {
   species: string; // Lowercase normalized
+  // NOT the National Dex number for a non-default form/gender variant -
+  // this is the exact PokeAPI resource id for *this* fetched form (e.g.
+  // "indeedee-female" is resource id 10186), which utils/spriteUrl.ts's
+  // getPixelSpriteUrl relies on verbatim to build that form's own distinct
+  // sprite URL (Indeedee-Female's real sprite file genuinely is
+  // .../10186.png, not .../876.png - PokeAPI's sprite repo keys non-default
+  // forms by their own resource id, not the shared species number). See
+  // nationalDexNumber below for the real dex number shown in UI text.
   pokedexNumber: number;
+  // The true National Dex number (Indeedee #876, Rotom #479), regardless of
+  // which form/gender variant pokedexNumber above actually came from -
+  // parsed from the fetch response's own species.url (services/pokeapi.ts's
+  // transformAPIResponse), not a second request. Optional: entries cached
+  // before this field existed don't have it yet - useDatabase.ts's
+  // getCachedEntry treats that as a cache miss so it self-heals on the next
+  // lookup (see TODO.md's Pokedex Number Wrong For Forms leg - this was
+  // split into its own field specifically because reusing pokedexNumber for
+  // display broke sprite rendering for every form-divergent species).
+  nationalDexNumber?: number;
   types: string[];
   baseStats: PokemonStats;
   spriteUrl: string;

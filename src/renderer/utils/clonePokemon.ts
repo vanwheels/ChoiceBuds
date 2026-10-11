@@ -25,6 +25,7 @@ export function cloneSavedPokemon(pokemon: ImportedPokemonInfo): ImportedPokemon
       moves: [...pokemon.showdownData.moves],
     },
     pokedexNumber: pokemon.pokedexNumber,
+    nationalDexNumber: pokemon.nationalDexNumber,
     types: [...pokemon.types],
     baseStats: { ...pokemon.baseStats },
     spriteUrl: pokemon.spriteUrl,

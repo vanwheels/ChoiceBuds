@@ -80,6 +80,7 @@ import { useSettings } from './hooks/useSettings';
 import { useSync } from './hooks/useSync';
 import { useBattles } from './hooks/useBattles';
 import { useSpeciesStatsPrefetch } from './hooks/useSpeciesStatsPrefetch';
+import { usePokedexNumberSelfHeal } from './hooks/usePokedexNumberSelfHeal';
 import { useReleaseNotes } from './hooks/useReleaseNotes';
 import type { ActiveTab } from './App';
 import TeamsPage from './components/TeamsPage';
@@ -127,6 +128,12 @@ export default function AppWeb() {
   const settingsState = useSettings();
   const battlesState = useBattles();
   const syncState = useSync(settingsState, teamsState, battlesState, savedPokemonState);
+  // One-time pokedexNumber correction for teams/Box entries affected by the
+  // dex-number-thrown-off-for-forms bug (see TODO.md's Pokedex Number Wrong
+  // For Forms leg) - independent of useInitialSync (not wired on web at
+  // all, see this file's header comment), so this is the only place that
+  // fix runs for the web build.
+  usePokedexNumberSelfHeal(teamsState, savedPokemonState, databaseState);
   // No useUpdateCheck() here (unlike App.tsx) - it talks to
   // window.electron.onUpdateStatus directly, which doesn't exist on web, and
   // there's no in-app auto-update concept for a web app anyway. SettingsPage
