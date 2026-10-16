@@ -26,5 +26,8 @@ Entries prior to this file's oldest are in:
   everything shipped between them, split out at the 2026-10-16 Project
   Revision v2 boundary)
 
-No work logged yet since this boundary.
+**Prettier Adoption — Leg 1** (2026-10-16)
+Installed `prettier` + `eslint-config-prettier`, added `.prettierrc`/
+`.prettierignore`, and wired `eslintConfigPrettier` into `eslint.config.js`
+plus `format`/`format:check` npm scripts. See commit d1aeb98.
 

@@ -27,15 +27,6 @@ Done when:
   hash is recorded in `.git-blame-ignore-revs`.
 - CI fails if someone pushes unformatted code.
 
-- **[Prettier Adoption] — Leg 1** *(Last touched: 2026-10-16 · Re-checks: 0)*
-  Install `prettier` + `eslint-config-prettier`, add `.prettierrc` and
-  `.prettierignore` (excluding markdown/docs and
-  `src/renderer/_archived/**`), append the prettier config to
-  `eslint.config.js` so conflicting style rules are turned off, and add
-  `format`/`format:check` npm scripts.
-  Done check: `npm run lint` passes clean.
-  Manual verification: no. Review: no.
-
 - **[Prettier Adoption] — Leg 2** *(Last touched: 2026-10-16 · Re-checks: 0)*
   Run `prettier --write` across the codebase (code only, per Leg 1's
   `.prettierignore` scope) and commit the result as a single
