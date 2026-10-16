@@ -40,7 +40,7 @@ Entries prior to this file's oldest are in:
   badly out of date — the web build now has full `Sidebar`-tab parity with
   desktop (Teams/Box/Battle Log/Statistics/Settings/sync/nav shell all
   ported), not the "minimal Teams/Box nav" it described. CLAUDE.md is now
-  140 lines with no line over ~200 chars. See commit (pending).
+  140 lines with no line over ~200 chars. See commit ac600c7.
 
 - **[Project Revision v2] — Leg 1 (CI Gate)** — 2026-10-16
   Added `npm run lint` + `npm run test` ahead of the build step in
