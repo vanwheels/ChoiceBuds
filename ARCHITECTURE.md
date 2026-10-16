@@ -65,12 +65,9 @@ the matching hook.
   `useInitialSync` (on launch, diffs the legal species roster against
   `GameDataCache.lastSyncedSpeciesNames` and bulk-syncs whatever's missing;
   gates the app behind a `LoadingScreen` — this plus Champions usage's 5-day
-  refresh are the only things that need network after first launch).
-  `useActiveEditor` (draft/commit scratchpad for a now-removed modal edit
-  flow) is dead code — still mounted in `App.tsx`/`AppWeb.tsx` and typed on
-  `TeamsPage`'s props but never read inside it; editing a Pokémon today goes
-  straight through `useTeams().updateTeam()` calls from `TeamCard.tsx`. See
-  `TODO.md`'s "Delete Dead useActiveEditor Hook".
+  refresh are the only things that need network after first launch). Editing
+  a Pokémon goes straight through `useTeams().updateTeam()` calls from
+  `TeamCard.tsx` — there is no separate draft/commit scratchpad hook.
 - `src/renderer/services/parser.ts` — pure, offline, regex-based
   Showdown/Pokepaste text parser: `parseShowdownText()` → `ParseResult`
   (`ShowdownPokemon[]` plus parse errors). No API calls, no side effects.

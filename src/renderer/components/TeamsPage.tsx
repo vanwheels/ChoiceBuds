@@ -13,7 +13,6 @@ import { sortTeams } from '../utils/teamSort';
 import { useGridReorder } from '../hooks/useGridReorder';
 import type { UseTeamsReturn } from '../hooks/useTeams';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
-import type { UseActiveEditorReturn } from '../hooks/useActiveEditor';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
@@ -35,7 +34,6 @@ import { PlusIcon, CompassIcon, FilterIcon } from './icons/SidebarIcons';
 interface TeamsPageProps {
   teamsState: UseTeamsReturn;
   databaseState: UseDatabaseReturn;
-  editorState: UseActiveEditorReturn;
   gameDataState: UseGameDataReturn;
   speciesRosterState: UseSpeciesRosterReturn;
   spriteCacheState: UseSpriteCacheReturn;

@@ -4,9 +4,9 @@
  * wires up every hook TeamsPage actually needs (Web Teams Parity leg, see
  * TODO.md) - useGameData/useSettings/useSavedPokemon/useVgcPastesCache/
  * useVgcRealSetsCache were ported to the storage-adapter interface as part
- * of this same leg; useSpeciesRoster/useActiveEditor already had no
- * Electron dependency, and useSpriteCache now no-ops on web (see its own
- * header comment) rather than needing a port.
+ * of this same leg; useSpeciesRoster already had no Electron dependency,
+ * and useSpriteCache now no-ops on web (see its own header comment) rather
+ * than needing a port.
  *
  * Wired here (Web Login/Signup UX leg, see TODO.md): useSync. Signing in is
  * opt-in, not a gate - same as desktop, Teams/Box/the calc all work fully
@@ -72,7 +72,6 @@ import type { OpponentPokemonEntry } from './types/pokemon';
 import { useTeams } from './hooks/useTeams';
 import { useDatabase } from './hooks/useDatabase';
 import { useSavedPokemon } from './hooks/useSavedPokemon';
-import { useActiveEditor } from './hooks/useActiveEditor';
 import { useGameData } from './hooks/useGameData';
 import { useSpeciesRoster } from './hooks/useSpeciesRoster';
 import { useSpriteCache } from './hooks/useSpriteCache';
@@ -120,7 +119,6 @@ export default function AppWeb() {
   const teamsState = useTeams();
   const databaseState = useDatabase();
   const savedPokemonState = useSavedPokemon();
-  const editorState = useActiveEditor();
   const gameDataState = useGameData();
   const speciesRosterState = useSpeciesRoster();
   useSpeciesStatsPrefetch(speciesRosterState, databaseState);
@@ -210,7 +208,6 @@ export default function AppWeb() {
             <TeamsPage
               teamsState={teamsState}
               databaseState={databaseState}
-              editorState={editorState}
               gameDataState={gameDataState}
               speciesRosterState={speciesRosterState}
               spriteCacheState={spriteCacheState}

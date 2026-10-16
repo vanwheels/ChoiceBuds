@@ -16,7 +16,6 @@ import type { OpponentPokemonEntry } from './types/pokemon';
 import { useTeams } from './hooks/useTeams';
 import { useDatabase } from './hooks/useDatabase';
 import { useSavedPokemon } from './hooks/useSavedPokemon';
-import { useActiveEditor } from './hooks/useActiveEditor';
 import { useGameData } from './hooks/useGameData';
 import { useSpeciesRoster } from './hooks/useSpeciesRoster';
 import { useSpriteCache } from './hooks/useSpriteCache';
@@ -112,7 +111,6 @@ export default function App() {
   const teamsState = useTeams();
   const databaseState = useDatabase();
   const savedPokemonState = useSavedPokemon();
-  const editorState = useActiveEditor();
   const gameDataState = useGameData();
   const speciesRosterState = useSpeciesRoster();
   const spriteCacheState = useSpriteCache();
@@ -209,7 +207,6 @@ export default function App() {
               <TeamsPage
                 teamsState={teamsState}
                 databaseState={databaseState}
-                editorState={editorState}
                 gameDataState={gameDataState}
                 speciesRosterState={speciesRosterState}
                 spriteCacheState={spriteCacheState}

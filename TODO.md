@@ -29,16 +29,6 @@ Done when:
   `CalcPokemonPanel.tsx` are each split below the 500-line hard cap with no
   behavior change.
 
-- **[Delete Dead useActiveEditor Hook] — Leg 1** *(Last touched: 2026-10-16
-  · Re-checks: 0)*
-  Remove `useActiveEditor.ts`, its test file, and the dead prop plumbing
-  threading `editorState` through `App.tsx`/`AppWeb.tsx` into `TeamsPage`
-  (never consumed there since Always-On Editing replaced the flow). Confirm
-  no remaining references via grep before deleting.
-  Done check: grep for `useActiveEditor`/`editorState` prop returns nothing
-  outside git history; `npm run build` and `npm run test` pass.
-  Manual verification: no. Review: no.
-
 - **[Audit Sibling Hooks for useTeams' Lost-Update Race] — Leg 1** *(Last
   touched: 2026-10-16 · Re-checks: 0)*
   Audit `useSavedPokemon`, `useBattles`, `useSettings`, and `useDatabase`

@@ -63,8 +63,8 @@
  * saveAllOverrides below are the one path that does write back - a direct
  * `teamsState.updateTeam` patch of just `showdownData.evs.speed`/`nature` on
  * the affected team member(s) (species/form excluded, per that leg's scope
- * resolution), not the full `useActiveEditor` edit-overlay flow. A successful
- * save clears that mon's (or, for Save All, every saved mon's) entry out of
+ * resolution), not a full edit-overlay flow. A successful save clears that
+ * mon's (or, for Save All, every saved mon's) entry out of
  * `speedOverrides`, since it now matches the team's real saved data.
  */
 import { useMemo, useState } from 'react';
