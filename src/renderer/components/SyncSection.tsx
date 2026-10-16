@@ -65,8 +65,8 @@ export default function SyncSection({ syncState }: SyncSectionProps) {
     <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-4">
       <h2 className="text-sm font-semibold text-zinc-200">Cross-Device Sync</h2>
       <p className="mt-1 text-xs text-zinc-400">
-        Your teams, battle logs, and Box syncs automatically to your own sync
-        server in the background. "Sync Now" below is a manual fallback.
+        Your teams, battle logs, and Box syncs automatically to your own sync server in the
+        background. "Sync Now" below is a manual fallback.
       </p>
 
       {!syncUsername ? (
@@ -76,27 +76,27 @@ export default function SyncSection({ syncState }: SyncSectionProps) {
             <div className="flex flex-col gap-2">
               <input
                 value={signupUsername}
-                onChange={e => setSignupUsername(e.target.value)}
+                onChange={(e) => setSignupUsername(e.target.value)}
                 placeholder="username"
                 className="px-3 py-1.5 text-sm bg-zinc-900 border border-zinc-600 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
               />
               <input
                 type="password"
                 value={signupPassword}
-                onChange={e => setSignupPassword(e.target.value)}
+                onChange={(e) => setSignupPassword(e.target.value)}
                 placeholder="password (min 8 characters)"
                 className="px-3 py-1.5 text-sm bg-zinc-900 border border-zinc-600 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
               />
               <input
                 type="password"
                 value={signupPasswordConfirm}
-                onChange={e => setSignupPasswordConfirm(e.target.value)}
+                onChange={(e) => setSignupPasswordConfirm(e.target.value)}
                 placeholder="confirm password"
                 className="px-3 py-1.5 text-sm bg-zinc-900 border border-zinc-600 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
               />
               <input
                 value={signupEmail}
-                onChange={e => setSignupEmail(e.target.value)}
+                onChange={(e) => setSignupEmail(e.target.value)}
                 placeholder="email (optional, for a future password reset)"
                 className="px-3 py-1.5 text-sm bg-zinc-900 border border-zinc-600 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
               />
@@ -110,18 +110,20 @@ export default function SyncSection({ syncState }: SyncSectionProps) {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-zinc-300 mb-1">Or log in on this device</label>
+            <label className="block text-xs font-medium text-zinc-300 mb-1">
+              Or log in on this device
+            </label>
             <div className="flex flex-col gap-2">
               <input
                 value={loginUsername}
-                onChange={e => setLoginUsername(e.target.value)}
+                onChange={(e) => setLoginUsername(e.target.value)}
                 placeholder="username"
                 className="px-3 py-1.5 text-sm bg-zinc-900 border border-zinc-600 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
               />
               <input
                 type="password"
                 value={loginPassword}
-                onChange={e => setLoginPassword(e.target.value)}
+                onChange={(e) => setLoginPassword(e.target.value)}
                 placeholder="password"
                 className="px-3 py-1.5 text-sm bg-zinc-900 border border-zinc-600 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
               />
@@ -153,7 +155,15 @@ export default function SyncSection({ syncState }: SyncSectionProps) {
 
           <div className="flex items-center gap-2 text-xs">
             <span className="text-zinc-400">Status:</span>
-            <span className={status === 'idle' ? 'text-green-400' : status === 'error' ? 'text-red-400' : 'text-zinc-500'}>
+            <span
+              className={
+                status === 'idle'
+                  ? 'text-green-400'
+                  : status === 'error'
+                    ? 'text-red-400'
+                    : 'text-zinc-500'
+              }
+            >
               {STATUS_LABEL[status]}
             </span>
           </div>
@@ -166,7 +176,11 @@ export default function SyncSection({ syncState }: SyncSectionProps) {
             {status === 'syncing' ? 'Syncing...' : 'Sync Now'}
           </button>
 
-          {lastSyncedAt && <p className="text-[11px] text-zinc-500">Last synced: {new Date(lastSyncedAt).toLocaleString()}</p>}
+          {lastSyncedAt && (
+            <p className="text-[11px] text-zinc-500">
+              Last synced: {new Date(lastSyncedAt).toLocaleString()}
+            </p>
+          )}
 
           {error && <p className="text-xs text-red-400">{error}</p>}
         </div>

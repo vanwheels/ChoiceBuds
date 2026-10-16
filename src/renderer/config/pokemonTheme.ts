@@ -217,9 +217,20 @@ export function getStatLabelColor(label: string): string {
 export const REGULATION_THEMES: Record<string, { accentBorder: string; badgeBg: string }> = {
   'REG-MA': { accentBorder: 'border-l-blue-500', badgeBg: 'bg-blue-600 hover:bg-blue-500' },
   'REG-MB': { accentBorder: 'border-l-purple-500', badgeBg: 'bg-purple-600 hover:bg-purple-500' },
-  'REG-MC': { accentBorder: 'border-l-emerald-500', badgeBg: 'bg-emerald-600 hover:bg-emerald-500' },
+  'REG-MC': {
+    accentBorder: 'border-l-emerald-500',
+    badgeBg: 'bg-emerald-600 hover:bg-emerald-500',
+  },
 };
 
-export function getRegulationTheme(regulationId: string): { accentBorder: string; badgeBg: string } {
-  return REGULATION_THEMES[regulationId] || { accentBorder: 'border-l-zinc-600', badgeBg: 'bg-zinc-600 hover:bg-zinc-500' };
+export function getRegulationTheme(regulationId: string): {
+  accentBorder: string;
+  badgeBg: string;
+} {
+  return (
+    REGULATION_THEMES[regulationId] || {
+      accentBorder: 'border-l-zinc-600',
+      badgeBg: 'bg-zinc-600 hover:bg-zinc-500',
+    }
+  );
 }

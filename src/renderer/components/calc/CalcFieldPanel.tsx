@@ -6,13 +6,18 @@
  * on which of the two directions is being viewed.
  */
 
-import type { CalcFieldState, CalcSideConditions as CalcSideConditionsState } from '../../hooks/useDamageCalc';
+import type {
+  CalcFieldState,
+  CalcSideConditions as CalcSideConditionsState,
+} from '../../hooks/useDamageCalc';
 import { WEATHER_OPTIONS, TERRAIN_OPTIONS } from '../../hooks/useDamageCalc';
 import CalcSideConditions from './CalcSideConditions';
 
 interface CalcFieldPanelProps {
   field: CalcFieldState;
-  onChangeField: (updates: Partial<Pick<CalcFieldState, 'gameType' | 'weather' | 'terrain'>>) => void;
+  onChangeField: (
+    updates: Partial<Pick<CalcFieldState, 'gameType' | 'weather' | 'terrain'>>,
+  ) => void;
   onChangePokemon1Side: (updates: Partial<CalcSideConditionsState>) => void;
   onChangePokemon2Side: (updates: Partial<CalcSideConditionsState>) => void;
   pokemon1Ability: string;
@@ -22,14 +27,21 @@ interface CalcFieldPanelProps {
 }
 
 /** "who moves first" at a glance - null when either side's species/stats aren't set up yet. */
-function SpeedTierBanner({ pokemon1Speed, pokemon2Speed }: { pokemon1Speed: number | null; pokemon2Speed: number | null }) {
+function SpeedTierBanner({
+  pokemon1Speed,
+  pokemon2Speed,
+}: {
+  pokemon1Speed: number | null;
+  pokemon2Speed: number | null;
+}) {
   if (pokemon1Speed == null || pokemon2Speed == null) return null;
 
-  const label = pokemon1Speed === pokemon2Speed
-    ? `Speed tie (${pokemon1Speed})`
-    : pokemon1Speed > pokemon2Speed
-      ? `⚡ Pokémon 1 is faster (${pokemon1Speed} vs ${pokemon2Speed})`
-      : `⚡ Pokémon 2 is faster (${pokemon2Speed} vs ${pokemon1Speed})`;
+  const label =
+    pokemon1Speed === pokemon2Speed
+      ? `Speed tie (${pokemon1Speed})`
+      : pokemon1Speed > pokemon2Speed
+        ? `⚡ Pokémon 1 is faster (${pokemon1Speed} vs ${pokemon2Speed})`
+        : `⚡ Pokémon 2 is faster (${pokemon2Speed} vs ${pokemon1Speed})`;
 
   return (
     <p className="text-center text-[11px] font-bold text-amber-300 bg-amber-500/10 border border-amber-600/40 rounded px-2 py-1">
@@ -39,8 +51,14 @@ function SpeedTierBanner({ pokemon1Speed, pokemon2Speed }: { pokemon1Speed: numb
 }
 
 export default function CalcFieldPanel({
-  field, onChangeField, onChangePokemon1Side, onChangePokemon2Side,
-  pokemon1Ability, pokemon2Ability, pokemon1Speed, pokemon2Speed,
+  field,
+  onChangeField,
+  onChangePokemon1Side,
+  onChangePokemon2Side,
+  pokemon1Ability,
+  pokemon2Ability,
+  pokemon1Speed,
+  pokemon2Speed,
 }: CalcFieldPanelProps) {
   return (
     <div className="flex-1 min-w-[280px] bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-2">
@@ -49,13 +67,15 @@ export default function CalcFieldPanel({
       <SpeedTierBanner pokemon1Speed={pokemon1Speed} pokemon2Speed={pokemon2Speed} />
 
       <div className="flex gap-2">
-        {(['Singles', 'Doubles'] as const).map(type => (
+        {(['Singles', 'Doubles'] as const).map((type) => (
           <button
             key={type}
             type="button"
             onClick={() => onChangeField({ gameType: type })}
             className={`flex-1 px-2 py-0.5 text-xs font-bold rounded transition-colors cursor-pointer ${
-              field.gameType === type ? 'bg-accent-gold text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+              field.gameType === type
+                ? 'bg-accent-gold text-zinc-900'
+                : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
             }`}
           >
             {type}
@@ -68,22 +88,34 @@ export default function CalcFieldPanel({
           <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Weather</label>
           <select
             value={field.weather}
-            onChange={(e) => onChangeField({ weather: e.target.value as CalcFieldState['weather'] })}
+            onChange={(e) =>
+              onChangeField({ weather: e.target.value as CalcFieldState['weather'] })
+            }
             className="px-2 py-0.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
           >
             <option value="">None</option>
-            {WEATHER_OPTIONS.map(w => <option key={w} value={w}>{w}</option>)}
+            {WEATHER_OPTIONS.map((w) => (
+              <option key={w} value={w}>
+                {w}
+              </option>
+            ))}
           </select>
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Terrain</label>
           <select
             value={field.terrain}
-            onChange={(e) => onChangeField({ terrain: e.target.value as CalcFieldState['terrain'] })}
+            onChange={(e) =>
+              onChangeField({ terrain: e.target.value as CalcFieldState['terrain'] })
+            }
             className="px-2 py-0.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
           >
             <option value="">None</option>
-            {TERRAIN_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+            {TERRAIN_OPTIONS.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
           </select>
         </div>
       </div>

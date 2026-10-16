@@ -41,8 +41,8 @@
 import type { WeatherType } from '../types/pokemon';
 
 const MOVE_WEATHER_EFFECTS: Record<string, Partial<Record<WeatherType, string>>> = {
-  'thunder': { rain: 'Never misses in Rain', sun: '50% accuracy in Sun (down from 70%)' },
-  'hurricane': { rain: 'Never misses in Rain', sun: '50% accuracy in Sun (down from 70%)' },
+  thunder: { rain: 'Never misses in Rain', sun: '50% accuracy in Sun (down from 70%)' },
+  hurricane: { rain: 'Never misses in Rain', sun: '50% accuracy in Sun (down from 70%)' },
   'solar-beam': {
     sun: 'No charge turn needed in Sun',
     rain: 'Half power in Rain',
@@ -61,13 +61,13 @@ const MOVE_WEATHER_EFFECTS: Record<string, Partial<Record<WeatherType, string>>>
     sand: 'Becomes Rock-type, 100 power in Sandstorm',
     snow: 'Becomes Ice-type, 100 power in Snow',
   },
-  'synthesis': {
+  synthesis: {
     sun: 'Heals ~67% HP in Sun (up from 50%)',
     rain: 'Heals 25% HP in Rain (down from 50%)',
     sand: 'Heals 25% HP in Sandstorm (down from 50%)',
     snow: 'Heals 25% HP in Snow (down from 50%)',
   },
-  'moonlight': {
+  moonlight: {
     sun: 'Heals ~67% HP in Sun (up from 50%)',
     rain: 'Heals 25% HP in Rain (down from 50%)',
     sand: 'Heals 25% HP in Sandstorm (down from 50%)',
@@ -79,10 +79,13 @@ const MOVE_WEATHER_EFFECTS: Record<string, Partial<Record<WeatherType, string>>>
     sand: 'Heals 25% HP in Sandstorm (down from 50%)',
     snow: 'Heals 25% HP in Snow (down from 50%)',
   },
-  'blizzard': { snow: 'Never misses in Snow' },
+  blizzard: { snow: 'Never misses in Snow' },
 };
 
-export function getMoveWeatherNote(move: string | undefined, weather: WeatherType | null | undefined): string | null {
+export function getMoveWeatherNote(
+  move: string | undefined,
+  weather: WeatherType | null | undefined,
+): string | null {
   if (!move || !weather) return null;
   const entry = MOVE_WEATHER_EFFECTS[move.toLowerCase().trim().replace(/\s+/g, '-')];
   return entry?.[weather] ?? null;

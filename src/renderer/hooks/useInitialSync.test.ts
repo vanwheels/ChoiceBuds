@@ -31,13 +31,22 @@ import { MEGA_STONE_TO_SPECIES } from '../config/megaEvolution';
 const mockedValidateLegality = vi.mocked(validateSpeciesLegality);
 const mockedFetchPokemonData = vi.mocked(fetchPokemonData);
 const mockedFetchMegaSprite = vi.mocked(fetchMegaSprite);
-const MEGA_SLUG_COUNT = new Set(Object.values(MEGA_STONE_TO_SPECIES).map(e => `${e.species}-${e.suffix}`)).size;
+const MEGA_SLUG_COUNT = new Set(
+  Object.values(MEGA_STONE_TO_SPECIES).map((e) => `${e.species}-${e.suffix}`),
+).size;
 
 const CACHE_ENTRY: PokeAPICacheEntry = {
   species: 'gengar',
   pokedexNumber: 94,
   types: ['ghost', 'poison'],
-  baseStats: { hp: 60, attack: 65, defense: 60, specialAttack: 130, specialDefense: 75, speed: 110 },
+  baseStats: {
+    hp: 60,
+    attack: 65,
+    defense: 60,
+    specialAttack: 130,
+    specialDefense: 75,
+    speed: 110,
+  },
   spriteUrl: 'https://example.com/gengar.png',
   abilities: ['cursed-body'],
   cachedAt: Date.now(),
@@ -79,12 +88,18 @@ function makeGameDataState(overrides: Partial<UseGameDataReturn> = {}): UseGameD
   } as UseGameDataReturn;
 }
 
-function makeSpeciesRosterState(overrides: Partial<UseSpeciesRosterReturn> = {}): UseSpeciesRosterReturn {
+function makeSpeciesRosterState(
+  overrides: Partial<UseSpeciesRosterReturn> = {},
+): UseSpeciesRosterReturn {
   return { roster: [makeRosterEntry()], isLoading: false, ...overrides };
 }
 
 function makeSpriteCacheState(overrides: Partial<UseSpriteCacheReturn> = {}): UseSpriteCacheReturn {
-  return { resolveSprite: vi.fn(), downloadSprite: vi.fn().mockResolvedValue('/local/sprite.png'), ...overrides };
+  return {
+    resolveSprite: vi.fn(),
+    downloadSprite: vi.fn().mockResolvedValue('/local/sprite.png'),
+    ...overrides,
+  };
 }
 
 function makeDatabaseState(overrides: Partial<UseDatabaseReturn> = {}): UseDatabaseReturn {
@@ -103,18 +118,22 @@ function makeDatabaseState(overrides: Partial<UseDatabaseReturn> = {}): UseDatab
   };
 }
 
-function setup(overrides: {
-  gameData?: Partial<UseGameDataReturn>;
-  speciesRoster?: Partial<UseSpeciesRosterReturn>;
-  spriteCache?: Partial<UseSpriteCacheReturn>;
-  database?: Partial<UseDatabaseReturn>;
-} = {}) {
+function setup(
+  overrides: {
+    gameData?: Partial<UseGameDataReturn>;
+    speciesRoster?: Partial<UseSpeciesRosterReturn>;
+    spriteCache?: Partial<UseSpriteCacheReturn>;
+    database?: Partial<UseDatabaseReturn>;
+  } = {},
+) {
   const gameDataState = makeGameDataState(overrides.gameData);
   const speciesRosterState = makeSpeciesRosterState(overrides.speciesRoster);
   const spriteCacheState = makeSpriteCacheState(overrides.spriteCache);
   const databaseState = makeDatabaseState(overrides.database);
 
-  const { result } = renderHook(() => useInitialSync(gameDataState, speciesRosterState, spriteCacheState, databaseState));
+  const { result } = renderHook(() =>
+    useInitialSync(gameDataState, speciesRosterState, spriteCacheState, databaseState),
+  );
   return { result, gameDataState, speciesRosterState, spriteCacheState, databaseState };
 }
 
@@ -163,10 +182,10 @@ describe('useInitialSync', () => {
     expect(mockedFetchPokemonData).not.toHaveBeenCalled();
   });
 
-  it('filters the roster to the latest regulation\'s legal set before asking what is unsynced', () => {
+  it("filters the roster to the latest regulation's legal set before asking what is unsynced", () => {
     const illegal = makeRosterEntry({ name: 'Not-A-Real-Mon', id: 9999 });
     const legal = makeRosterEntry();
-    mockedValidateLegality.mockImplementation(name => name === 'Gengar');
+    mockedValidateLegality.mockImplementation((name) => name === 'Gengar');
     const getUnsyncedSpecies = vi.fn().mockReturnValue([]);
 
     setup({
@@ -183,7 +202,15 @@ describe('useInitialSync', () => {
   });
 
   it('downloads sprites/species data/item sprites for unsynced species and marks them synced', async () => {
-    const unsynced = [makeRosterEntry(), makeRosterEntry({ name: 'Rillaboom', id: 812, spriteUrl: 'https://example.com/812.png', shinySpriteUrl: 'https://example.com/812-shiny.png' })];
+    const unsynced = [
+      makeRosterEntry(),
+      makeRosterEntry({
+        name: 'Rillaboom',
+        id: 812,
+        spriteUrl: 'https://example.com/812.png',
+        shinySpriteUrl: 'https://example.com/812-shiny.png',
+      }),
+    ];
     const getUnsyncedSpecies = vi.fn().mockReturnValue(unsynced);
     const markSpeciesSynced = vi.fn();
     const getEnrichedSpeciesOptions = vi.fn().mockResolvedValue({ moves: [], abilities: [] });
@@ -217,16 +244,24 @@ describe('useInitialSync', () => {
     expect(mockedFetchMegaSprite).toHaveBeenCalledTimes(MEGA_SLUG_COUNT);
 
     expect(markSpeciesSynced).toHaveBeenCalledWith(['Gengar', 'Rillaboom']);
-    expect(result.current.progress).toEqual({ label: 'Downloading Mega Sprites', current: MEGA_SLUG_COUNT, total: MEGA_SLUG_COUNT });
+    expect(result.current.progress).toEqual({
+      label: 'Downloading Mega Sprites',
+      current: MEGA_SLUG_COUNT,
+      total: MEGA_SLUG_COUNT,
+    });
   }, 15_000);
 
   it('downloads both sprite variants for a Mega form whose id lookup succeeds', async () => {
     const unsynced = [makeRosterEntry()];
     const downloadSprite = vi.fn().mockResolvedValue('/local/sprite.png');
-    mockedFetchMegaSprite.mockImplementation(async slug =>
+    mockedFetchMegaSprite.mockImplementation(async (slug) =>
       slug === 'gengar-mega'
-        ? { id: 10024, spriteUrl: 'https://example.com/10024.png', shinySpriteUrl: 'https://example.com/10024-shiny.png' }
-        : null
+        ? {
+            id: 10024,
+            spriteUrl: 'https://example.com/10024.png',
+            shinySpriteUrl: 'https://example.com/10024-shiny.png',
+          }
+        : null,
     );
 
     const { result } = setup({
@@ -276,14 +311,27 @@ describe('useInitialSync', () => {
 
   it('a single failing species does not abort the rest of the sync', async () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const unsynced = [makeRosterEntry({ name: 'Gengar' }), makeRosterEntry({ name: 'Rillaboom', id: 812, spriteUrl: 'https://example.com/812.png', shinySpriteUrl: 'https://example.com/812-shiny.png' })];
-    const getEnrichedSpeciesOptions = vi.fn()
+    const unsynced = [
+      makeRosterEntry({ name: 'Gengar' }),
+      makeRosterEntry({
+        name: 'Rillaboom',
+        id: 812,
+        spriteUrl: 'https://example.com/812.png',
+        shinySpriteUrl: 'https://example.com/812-shiny.png',
+      }),
+    ];
+    const getEnrichedSpeciesOptions = vi
+      .fn()
       .mockRejectedValueOnce(new Error('network blip'))
       .mockResolvedValue({ moves: [], abilities: [] });
     const markSpeciesSynced = vi.fn();
 
     const { result } = setup({
-      gameData: { getUnsyncedSpecies: vi.fn().mockReturnValue(unsynced), getEnrichedSpeciesOptions, markSpeciesSynced },
+      gameData: {
+        getUnsyncedSpecies: vi.fn().mockReturnValue(unsynced),
+        getEnrichedSpeciesOptions,
+        markSpeciesSynced,
+      },
     });
 
     await waitFor(() => expect(result.current.isDone).toBe(true));
@@ -301,15 +349,16 @@ describe('useInitialSync', () => {
     const enriched = gameDataState.getEnrichedSpeciesOptions as ReturnType<typeof vi.fn>;
 
     const { result, rerender } = renderHook(
-      ({ databaseState }) => useInitialSync(gameDataState, speciesRosterState, spriteCacheState, databaseState),
-      { initialProps: { databaseState: makeDatabaseState() } }
+      ({ databaseState }) =>
+        useInitialSync(gameDataState, speciesRosterState, spriteCacheState, databaseState),
+      { initialProps: { databaseState: makeDatabaseState() } },
     );
     await waitFor(() => expect(result.current.isDone).toBe(true));
     expect(enriched).toHaveBeenCalledTimes(1);
 
     // A cache write elsewhere changes getCachedEntry's identity - previously re-triggered the whole pass, forever
     rerender({ databaseState: makeDatabaseState() });
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
     expect(result.current.isDone).toBe(true);
     expect(enriched).toHaveBeenCalledTimes(1);

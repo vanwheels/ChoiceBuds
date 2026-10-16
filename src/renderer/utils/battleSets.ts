@@ -33,7 +33,7 @@ export function groupBattlesBySet(battles: Battle[]): BattleSetGroup[] {
     bySetId.get(battle.setId)!.push(battle);
   }
 
-  return order.map(setId => {
+  return order.map((setId) => {
     const sorted = [...bySetId.get(setId)!].sort((a, b) => a.date - b.date);
     return {
       setId,
@@ -44,8 +44,12 @@ export function groupBattlesBySet(battles: Battle[]): BattleSetGroup[] {
 }
 
 /** A set is decided once either side reaches 2 wins (best-of-3) - undecided while 0-0/1-0/0-1/1-1. */
-export function getSetOutcome(battles: Battle[]): { wins: number; losses: number; decided: boolean } {
-  const wins = battles.filter(b => b.result === 'win').length;
-  const losses = battles.filter(b => b.result === 'loss').length;
+export function getSetOutcome(battles: Battle[]): {
+  wins: number;
+  losses: number;
+  decided: boolean;
+} {
+  const wins = battles.filter((b) => b.result === 'win').length;
+  const losses = battles.filter((b) => b.result === 'loss').length;
   return { wins, losses, decided: wins >= 2 || losses >= 2 };
 }

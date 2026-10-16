@@ -22,7 +22,7 @@ const PREFETCH_CONCURRENCY = 3;
 
 export function useSpeciesStatsPrefetch(
   speciesRosterState: UseSpeciesRosterReturn,
-  databaseState: UseDatabaseReturn
+  databaseState: UseDatabaseReturn,
 ): void {
   const hasRun = useRef(false);
   // Latest-state ref so the effect needn't depend on databaseState's identity,
@@ -39,11 +39,14 @@ export function useSpeciesStatsPrefetch(
     if (hasRun.current || isLoading || !isInitialized || roster.length === 0) return;
     hasRun.current = true;
     const missing = roster
-      .filter(entry => validateSpeciesLegality(entry.name, LATEST_REGULATION_ID))
-      .filter(entry => !databaseRef.current.getCachedEntry(normalizeSpeciesForAPI(entry.name)));
+      .filter((entry) => validateSpeciesLegality(entry.name, LATEST_REGULATION_ID))
+      .filter((entry) => !databaseRef.current.getCachedEntry(normalizeSpeciesForAPI(entry.name)));
     if (missing.length === 0) return;
-    void runWithConcurrency(missing, PREFETCH_CONCURRENCY, () => {}, entry =>
-      syncSpeciesStats(entry.name, databaseRef.current)
+    void runWithConcurrency(
+      missing,
+      PREFETCH_CONCURRENCY,
+      () => {},
+      (entry) => syncSpeciesStats(entry.name, databaseRef.current),
     );
   }, [roster, isLoading, isInitialized]);
 }

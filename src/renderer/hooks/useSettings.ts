@@ -39,7 +39,9 @@ export interface UseSettingsReturn {
   isLoading: boolean;
   error: string | null;
   setDefaultRegulation: (format: RegulationLabel) => Promise<boolean>;
-  updateSettings: (partial: Partial<Omit<AppSettings, 'schemaVersion' | 'lastModified'>>) => Promise<boolean>;
+  updateSettings: (
+    partial: Partial<Omit<AppSettings, 'schemaVersion' | 'lastModified'>>,
+  ) => Promise<boolean>;
 }
 
 /**
@@ -131,45 +133,49 @@ export function useSettings(): UseSettingsReturn {
   /**
    * Set the default regulation used when importing new teams
    */
-  const setDefaultRegulation = useCallback(async (format: RegulationLabel): Promise<boolean> => {
-    const updated: AppSettings = {
-      ...settings,
-      defaultRegulation: format,
-      lastModified: Date.now(),
-    };
+  const setDefaultRegulation = useCallback(
+    async (format: RegulationLabel): Promise<boolean> => {
+      const updated: AppSettings = {
+        ...settings,
+        defaultRegulation: format,
+        lastModified: Date.now(),
+      };
 
-    const success = await persistSettingsToDisk(updated);
+      const success = await persistSettingsToDisk(updated);
 
-    if (success) {
-      setSettings(updated);
-      setError(null);
-    }
+      if (success) {
+        setSettings(updated);
+        setError(null);
+      }
 
-    return success;
-  }, [settings]);
+      return success;
+    },
+    [settings],
+  );
 
   /**
    * Generic multi-field update, used by the sync feature to persist
    * syncUsername/syncToken/lastSyncedAt together in one write
    */
-  const updateSettings = useCallback(async (
-    partial: Partial<Omit<AppSettings, 'version' | 'lastModified'>>
-  ): Promise<boolean> => {
-    const updated: AppSettings = {
-      ...settings,
-      ...partial,
-      lastModified: Date.now(),
-    };
+  const updateSettings = useCallback(
+    async (partial: Partial<Omit<AppSettings, 'version' | 'lastModified'>>): Promise<boolean> => {
+      const updated: AppSettings = {
+        ...settings,
+        ...partial,
+        lastModified: Date.now(),
+      };
 
-    const success = await persistSettingsToDisk(updated);
+      const success = await persistSettingsToDisk(updated);
 
-    if (success) {
-      setSettings(updated);
-      setError(null);
-    }
+      if (success) {
+        setSettings(updated);
+        setError(null);
+      }
 
-    return success;
-  }, [settings]);
+      return success;
+    },
+    [settings],
+  );
 
   return {
     settings,

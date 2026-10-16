@@ -7,10 +7,21 @@
 import { useState, useEffect } from 'react';
 import { parseShowdownText } from '../services/parser';
 import { enrichPokemonWithAPI } from '../services/pokeapi';
-import { extractPokepasteId, fetchPokepaste, detectRegulationFromNotes, type PokepasteData } from '../services/pokepaste';
+import {
+  extractPokepasteId,
+  fetchPokepaste,
+  detectRegulationFromNotes,
+  type PokepasteData,
+} from '../services/pokepaste';
 import { buildCatalogNotes } from '../services/vgcPastes';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
-import type { Team, ImportedPokemonInfo, RegulationLabel, ShowdownPokemon, VgcPasteTeamRow } from '../types/pokemon';
+import type {
+  Team,
+  ImportedPokemonInfo,
+  RegulationLabel,
+  ShowdownPokemon,
+  VgcPasteTeamRow,
+} from '../types/pokemon';
 import Modal from './Modal';
 
 interface ImportTeamModalProps {
@@ -63,7 +74,7 @@ export default function ImportTeamModal({
 }: ImportTeamModalProps) {
   const [pastedText, setPastedText] = useState('');
   const [teamName, setTeamName] = useState('');
-  const [author, setAuthor] = useState(() => (!catalogRow && syncUsername) ? syncUsername : '');
+  const [author, setAuthor] = useState(() => (!catalogRow && syncUsername ? syncUsername : ''));
   const [teamFormat, setTeamFormat] = useState<RegulationLabel>(defaultRegulation);
   const [isImporting, setIsImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -146,7 +157,9 @@ export default function ImportTeamModal({
         if (!cancelled) setIsFetchingPokepaste(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -168,7 +181,7 @@ export default function ImportTeamModal({
         throw new Error(
           parseResult.errors.length > 0
             ? parseResult.errors.join(', ')
-            : 'Failed to parse team data'
+            : 'Failed to parse team data',
         );
       }
 
@@ -195,7 +208,7 @@ export default function ImportTeamModal({
         const enriched = await enrichPokemonWithAPI(
           pokemon,
           databaseState.getCachedEntry,
-          databaseState.setCacheEntry
+          databaseState.setCacheEntry,
         );
         enrichedPokemon.push(enriched);
       }
@@ -260,7 +273,12 @@ export default function ImportTeamModal({
           className="text-zinc-400 hover:text-zinc-200 transition-colors disabled:opacity-50"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -278,7 +296,7 @@ export default function ImportTeamModal({
             value={teamName}
             onChange={(e) => setTeamName(e.target.value)}
             disabled={isImporting}
-            placeholder="Enter team name... (defaults to &quot;Team N&quot; if left blank)"
+            placeholder='Enter team name... (defaults to "Team N" if left blank)'
             className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold disabled:opacity-50"
           />
         </div>
@@ -321,7 +339,10 @@ export default function ImportTeamModal({
         <div>
           <label htmlFor="pasteArea" className="block text-sm font-medium text-zinc-300 mb-2">
             Paste Team (Showdown Format or a pokepast.es link)
-            <span className="text-zinc-500 font-normal"> (optional - leave blank to create an empty team)</span>
+            <span className="text-zinc-500 font-normal">
+              {' '}
+              (optional - leave blank to create an empty team)
+            </span>
           </label>
           <textarea
             id="pasteArea"
@@ -339,8 +360,19 @@ export default function ImportTeamModal({
         {isFetchingPokepaste && (
           <div className="flex items-center gap-2 text-accent-gold text-sm">
             <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
             </svg>
             <span>Fetching from Pokepaste...</span>
           </div>
@@ -350,8 +382,19 @@ export default function ImportTeamModal({
         {importProgress && (
           <div className="flex items-center gap-2 text-accent-gold text-sm">
             <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
             </svg>
             <span>{importProgress}</span>
           </div>

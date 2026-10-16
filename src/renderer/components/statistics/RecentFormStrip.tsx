@@ -25,7 +25,7 @@ export default function RecentFormStrip({ form }: RecentFormStripProps) {
         <p className="text-sm text-zinc-500">No completed battles yet.</p>
       ) : (
         <div className="flex flex-wrap gap-1.5">
-          {form.map(entry => (
+          {form.map((entry) => (
             <span
               key={entry.id}
               title={entry.result}

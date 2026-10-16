@@ -42,13 +42,19 @@ export default function StatisticsPage({ battlesState, spriteCacheState }: Stati
 
   const availableSeasons = useMemo(() => getSeasonsWithBattles(battles), [battles]);
   const filterOptions = useMemo(
-    () => [{ id: ALL_SEASONS, label: ALL_SEASONS }, ...availableSeasons.map(s => ({ id: s.id, label: s.label }))],
-    [availableSeasons]
+    () => [
+      { id: ALL_SEASONS, label: ALL_SEASONS },
+      ...availableSeasons.map((s) => ({ id: s.id, label: s.label })),
+    ],
+    [availableSeasons],
   );
 
   const filteredBattles = useMemo(
-    () => seasonFilter === ALL_SEASONS ? battles : battles.filter(b => getSeasonForDate(b.date)?.id === seasonFilter),
-    [battles, seasonFilter]
+    () =>
+      seasonFilter === ALL_SEASONS
+        ? battles
+        : battles.filter((b) => getSeasonForDate(b.date)?.id === seasonFilter),
+    [battles, seasonFilter],
   );
 
   const overallRecord = useMemo(() => getOverallRecord(filteredBattles), [filteredBattles]);
@@ -58,7 +64,10 @@ export default function StatisticsPage({ battlesState, spriteCacheState }: Stati
   const recordBySeason = useMemo(() => getRecordBySeason(battles), [battles]);
   const recentForm = useMemo(() => getRecentForm(filteredBattles), [filteredBattles]);
   const mostUsedPokemon = useMemo(() => getMostUsedPokemon(filteredBattles), [filteredBattles]);
-  const mostFacedOpponents = useMemo(() => getMostFacedOpponents(filteredBattles), [filteredBattles]);
+  const mostFacedOpponents = useMemo(
+    () => getMostFacedOpponents(filteredBattles),
+    [filteredBattles],
+  );
   const teamRosterUsage = useMemo(() => getTeamRosterUsage(filteredBattles), [filteredBattles]);
 
   if (battles.length === 0) {
@@ -76,7 +85,7 @@ export default function StatisticsPage({ battlesState, spriteCacheState }: Stati
 
       {availableSeasons.length > 1 && (
         <div className="flex gap-2 flex-wrap">
-          {filterOptions.map(option => (
+          {filterOptions.map((option) => (
             <button
               key={option.id}
               onClick={() => setSeasonFilter(option.id)}
@@ -97,14 +106,32 @@ export default function StatisticsPage({ battlesState, spriteCacheState }: Stati
       <RecentFormStrip form={recentForm} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <BreakdownPanel title="By Format" records={recordByFormat} emptyMessage="No completed battles yet." />
-        <BreakdownPanel title="By Team" records={recordByTeam} emptyMessage="No completed battles yet." />
+        <BreakdownPanel
+          title="By Format"
+          records={recordByFormat}
+          emptyMessage="No completed battles yet."
+        />
+        <BreakdownPanel
+          title="By Team"
+          records={recordByTeam}
+          emptyMessage="No completed battles yet."
+        />
         {seasonFilter === ALL_SEASONS && (
-          <BreakdownPanel title="By Season" records={recordBySeason} emptyMessage="No battles logged during a known season yet." />
+          <BreakdownPanel
+            title="By Season"
+            records={recordBySeason}
+            emptyMessage="No battles logged during a known season yet."
+          />
         )}
         <PokemonUsagePanel stats={mostUsedPokemon} resolveSprite={spriteCacheState.resolveSprite} />
-        <OpponentFacedPanel stats={mostFacedOpponents} resolveSprite={spriteCacheState.resolveSprite} />
-        <TeamRosterUsagePanel usage={teamRosterUsage} resolveSprite={spriteCacheState.resolveSprite} />
+        <OpponentFacedPanel
+          stats={mostFacedOpponents}
+          resolveSprite={spriteCacheState.resolveSprite}
+        />
+        <TeamRosterUsagePanel
+          usage={teamRosterUsage}
+          resolveSprite={spriteCacheState.resolveSprite}
+        />
       </div>
     </div>
   );

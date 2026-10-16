@@ -18,7 +18,17 @@ interface IconProps {
 
 export function TeamsIcon({ className }: IconProps) {
   return (
-    <svg className={className} viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <rect x="3" y="3" width="7" height="7" rx="1.5" />
       <rect x="14" y="3" width="7" height="7" rx="1.5" />
       <rect x="3" y="14" width="7" height="7" rx="1.5" />
@@ -29,7 +39,17 @@ export function TeamsIcon({ className }: IconProps) {
 
 export function BoxIcon({ className }: IconProps) {
   return (
-    <svg className={className} viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M3 8.5 12 4l9 4.5-9 4.5-9-4.5Z" />
       <path d="M3 8.5V16l9 4.5V13" />
       <path d="M21 8.5V16l-9 4.5" />
@@ -39,7 +59,17 @@ export function BoxIcon({ className }: IconProps) {
 
 export function CalcIcon({ className }: IconProps) {
   return (
-    <svg className={className} viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <rect x="5" y="2" width="14" height="20" rx="2" />
       <rect x="7" y="4.5" width="10" height="4" rx="0.5" />
       <circle cx="8.5" cy="12" r="1" fill="currentColor" stroke="none" />
@@ -54,7 +84,17 @@ export function CalcIcon({ className }: IconProps) {
 
 export function BattleLogIcon({ className }: IconProps) {
   return (
-    <svg className={className} viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M6 6l12 12" />
       <path d="M18 6 6 18" />
       <path d="M4 4l3 1M4 4l1 3" />
@@ -67,7 +107,17 @@ export function BattleLogIcon({ className }: IconProps) {
 
 export function StatisticsIcon({ className }: IconProps) {
   return (
-    <svg className={className} viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M4 20V10" />
       <path d="M12 20V4" />
       <path d="M20 20v-7" />
@@ -77,7 +127,17 @@ export function StatisticsIcon({ className }: IconProps) {
 
 export function TypeMatchupIcon({ className }: IconProps) {
   return (
-    <svg className={className} viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3Z" />
       <path d="M12 3v15" />
     </svg>
@@ -86,7 +146,17 @@ export function TypeMatchupIcon({ className }: IconProps) {
 
 export function SpeedTiersIcon({ className }: IconProps) {
   return (
-    <svg className={className} viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M4 15a8 8 0 0 1 16 0" />
       <path d="M12 15 16 9" />
       <circle cx="12" cy="15" r="1.2" fill="currentColor" stroke="none" />
@@ -96,7 +166,17 @@ export function SpeedTiersIcon({ className }: IconProps) {
 
 export function SettingsIcon({ className }: IconProps) {
   return (
-    <svg className={className} viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <circle cx="12" cy="12" r="3.2" />
       <path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" />
     </svg>
@@ -106,7 +186,17 @@ export function SettingsIcon({ className }: IconProps) {
 /** Hamburger trigger for the mobile nav drawer (Mobile Nav Shell: Drawer leg). */
 export function MenuIcon({ className }: IconProps) {
   return (
-    <svg className={className} viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M4 6h16" />
       <path d="M4 12h16" />
       <path d="M4 18h16" />
@@ -117,7 +207,17 @@ export function MenuIcon({ className }: IconProps) {
 /** Close glyph for the mobile nav drawer's header (Mobile Nav Shell: Drawer leg). */
 export function CloseIcon({ className }: IconProps) {
   return (
-    <svg className={className} viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M6 6l12 12" />
       <path d="M18 6 6 18" />
     </svg>
@@ -127,7 +227,17 @@ export function CloseIcon({ className }: IconProps) {
 /** Add/create trigger (Mobile Compact Top Bar: Teams & Box leg - Teams' "Add Team" icon). */
 export function PlusIcon({ className }: IconProps) {
   return (
-    <svg className={className} viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M12 5v14M5 12h14" />
     </svg>
   );
@@ -136,7 +246,17 @@ export function PlusIcon({ className }: IconProps) {
 /** Browse/discover trigger (Mobile Compact Top Bar leg - Teams' "Browse Sample Teams" icon). */
 export function CompassIcon({ className }: IconProps) {
   return (
-    <svg className={className} viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <circle cx="12" cy="12" r="9" />
       <path d="m15 9-4 2-2 4 4-2 2-4Z" />
     </svg>
@@ -146,7 +266,17 @@ export function CompassIcon({ className }: IconProps) {
 /** Filter trigger (Mobile Compact Top Bar leg - Teams' format filter, Box's sort-mode toggle). */
 export function FilterIcon({ className }: IconProps) {
   return (
-    <svg className={className} viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M4 5h16l-6 7.5V19l-4 2v-8.5L4 5Z" />
     </svg>
   );
@@ -155,7 +285,17 @@ export function FilterIcon({ className }: IconProps) {
 /** Search trigger (Mobile Compact Top Bar leg - Box's search icon). */
 export function SearchIcon({ className }: IconProps) {
   return (
-    <svg className={className} viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <circle cx="11" cy="11" r="7" />
       <path d="m20 20-3.5-3.5" />
     </svg>
@@ -170,7 +310,17 @@ export function SearchIcon({ className }: IconProps) {
  */
 export function SidebarToggleIcon({ className, collapsed }: IconProps & { collapsed: boolean }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <rect x="3" y="4" width="18" height="16" rx="2" />
       <path d="M9 4v16" />
       {collapsed ? <path d="m6 10 1.5 2-1.5 2" /> : <path d="m7 10-1.5 2 1.5 2" />}

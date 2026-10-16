@@ -45,7 +45,11 @@ describe('parseTagFilters', () => {
   });
 
   it('splits multiple space-separated single-word tags on the # delimiter', () => {
-    expect(parseTagFilters('#fire #shadowclaw #shadowsneak')).toEqual(['fire', 'shadowclaw', 'shadowsneak']);
+    expect(parseTagFilters('#fire #shadowclaw #shadowsneak')).toEqual([
+      'fire',
+      'shadowclaw',
+      'shadowsneak',
+    ]);
   });
 
   it('keeps a multi-word tag intact when it is the only tag', () => {

@@ -58,7 +58,17 @@ const CONDITIONAL_TOGGLES: Array<[keyof CalcSideConditionsState, string, string]
 
 const SPIKES_OPTIONS = [0, 1, 2, 3];
 
-function ToggleButton({ active, label, align, onClick }: { active: boolean; label: string; align: 'left' | 'right'; onClick: () => void }) {
+function ToggleButton({
+  active,
+  label,
+  align,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  align: 'left' | 'right';
+  onClick: () => void;
+}) {
   return (
     <button
       type="button"
@@ -72,11 +82,17 @@ function ToggleButton({ active, label, align, onClick }: { active: boolean; labe
   );
 }
 
-export default function CalcSideConditions({ title, side, align, ownAbility, onChange }: CalcSideConditionsProps) {
+export default function CalcSideConditions({
+  title,
+  side,
+  align,
+  ownAbility,
+  onChange,
+}: CalcSideConditionsProps) {
   const spikesOptions = align === 'right' ? [...SPIKES_OPTIONS].reverse() : SPIKES_OPTIONS;
   const alignClass = align === 'right' ? 'text-right' : 'text-left';
   const visibleConditionalToggles = CONDITIONAL_TOGGLES.filter(
-    ([, , requiredAbility]) => ownAbility.toLowerCase() === requiredAbility.toLowerCase()
+    ([, , requiredAbility]) => ownAbility.toLowerCase() === requiredAbility.toLowerCase(),
   );
 
   return (
@@ -84,15 +100,19 @@ export default function CalcSideConditions({ title, side, align, ownAbility, onC
       <p className={`text-[10px] text-zinc-400 uppercase tracking-wide ${alignClass}`}>{title}</p>
 
       <div className="flex flex-col gap-1">
-        <label className={`text-[10px] text-zinc-400 uppercase tracking-wide ${alignClass}`}>Spikes</label>
+        <label className={`text-[10px] text-zinc-400 uppercase tracking-wide ${alignClass}`}>
+          Spikes
+        </label>
         <div className="flex gap-1">
-          {spikesOptions.map(count => (
+          {spikesOptions.map((count) => (
             <button
               key={count}
               type="button"
               onClick={() => onChange({ spikes: count })}
               className={`flex-1 px-1 py-0.5 text-xs font-bold rounded transition-colors cursor-pointer ${
-                side.spikes === count ? 'bg-accent-gold text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                side.spikes === count
+                  ? 'bg-accent-gold text-zinc-900'
+                  : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
               }`}
             >
               {count}

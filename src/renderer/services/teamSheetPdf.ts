@@ -11,7 +11,13 @@ import { PDFDocument, StandardFonts } from 'pdf-lib';
 import { Generations, Pokemon } from '@smogon/calc';
 import type { NatureName, StatsTable } from '@smogon/calc/dist/data/interface';
 import type { Team, PlayerProfile, ImportedPokemonInfo } from '../types/pokemon';
-import { TEAM_SHEET_LAYOUT, type TeamSheetFieldPos, type TeamSheetPageLayout, type TeamSheetPokemonSlot, type TeamSheetStaffPokemonSlot } from '../config/teamSheetLayout';
+import {
+  TEAM_SHEET_LAYOUT,
+  type TeamSheetFieldPos,
+  type TeamSheetPageLayout,
+  type TeamSheetPokemonSlot,
+  type TeamSheetStaffPokemonSlot,
+} from '../config/teamSheetLayout';
 import { formatSpeciesWithGenderSuffix } from '../config/pokemonRules';
 import { MAX_IVS, spsToEvs, resolveCalcSpecies } from '../utils/championsStats';
 
@@ -43,12 +49,19 @@ function computeRealStats(pokemon: ImportedPokemonInfo): StatsTable | null {
   try {
     const gen = Generations.get(GEN_NUM);
     const sps: StatsTable = {
-      hp: showdownData.evs.hp, atk: showdownData.evs.attack, def: showdownData.evs.defense,
-      spa: showdownData.evs.specialAttack, spd: showdownData.evs.specialDefense, spe: showdownData.evs.speed,
+      hp: showdownData.evs.hp,
+      atk: showdownData.evs.attack,
+      def: showdownData.evs.defense,
+      spa: showdownData.evs.specialAttack,
+      spd: showdownData.evs.specialDefense,
+      spe: showdownData.evs.speed,
     };
     const calcPokemon = new Pokemon(gen, resolveCalcSpecies(showdownData.species), {
       level: showdownData.level || 50,
-      gender: showdownData.gender === 'M' || showdownData.gender === 'F' || showdownData.gender === 'N' ? showdownData.gender : undefined,
+      gender:
+        showdownData.gender === 'M' || showdownData.gender === 'F' || showdownData.gender === 'N'
+          ? showdownData.gender
+          : undefined,
       nature: (showdownData.nature || 'Hardy') as NatureName,
       evs: spsToEvs(sps),
       ivs: MAX_IVS,
@@ -59,9 +72,12 @@ function computeRealStats(pokemon: ImportedPokemonInfo): StatsTable | null {
   }
 }
 
-export async function generateTeamSheetPdf(team: Team, playerProfile: PlayerProfile): Promise<Uint8Array> {
+export async function generateTeamSheetPdf(
+  team: Team,
+  playerProfile: PlayerProfile,
+): Promise<Uint8Array> {
   const templateUrl = `${import.meta.env.BASE_URL}vg-team-list-template.pdf`;
-  const templateBytes = await fetch(templateUrl).then(res => res.arrayBuffer());
+  const templateBytes = await fetch(templateUrl).then((res) => res.arrayBuffer());
 
   const doc = await PDFDocument.load(templateBytes);
   const font = await doc.embedFont(StandardFonts.Helvetica);
@@ -82,17 +98,23 @@ export async function generateTeamSheetPdf(team: Team, playerProfile: PlayerProf
     page.drawText(text, { x: pos.x - width / 2, y: pos.y, size: pos.size, font });
   };
 
-  const battleTeamNumberName = [team.battleTeamNumber, team.battleTeamName].filter(Boolean).join(' - ');
+  const battleTeamNumberName = [team.battleTeamNumber, team.battleTeamName]
+    .filter(Boolean)
+    .join(' - ');
 
   const drawSharedHeader = (page: typeof page0, layout: TeamSheetPageLayout) => {
     draw(page, playerProfile.playerName, layout.playerName);
     draw(page, playerProfile.trainerNameInGame, layout.trainerNameInGame);
     draw(page, battleTeamNumberName, layout.battleTeamNumberName);
     draw(page, playerProfile.switchProfileName, layout.switchProfileName);
-    const ageDivisionPos = playerProfile.ageDivision === 'Juniors' ? layout.ageDivision.juniors
-      : playerProfile.ageDivision === 'Seniors' ? layout.ageDivision.seniors
-      : playerProfile.ageDivision === 'Masters' ? layout.ageDivision.masters
-      : null;
+    const ageDivisionPos =
+      playerProfile.ageDivision === 'Juniors'
+        ? layout.ageDivision.juniors
+        : playerProfile.ageDivision === 'Seniors'
+          ? layout.ageDivision.seniors
+          : playerProfile.ageDivision === 'Masters'
+            ? layout.ageDivision.masters
+            : null;
     if (ageDivisionPos) draw(page, 'X', ageDivisionPos);
   };
 
@@ -105,8 +127,9 @@ export async function generateTeamSheetPdf(team: Team, playerProfile: PlayerProf
       // roster form - "(Shield)" makes that explicit next to the species
       // itself rather than leaving readers to guess which of its two very
       // different stat spreads the numbers came from.
-      const speciesText = formatSpeciesWithGenderSuffix(showdownData.species, showdownData.gender)
-        + (showdownData.species.toLowerCase() === 'aegislash' ? ' (Shield)' : '');
+      const speciesText =
+        formatSpeciesWithGenderSuffix(showdownData.species, showdownData.gender) +
+        (showdownData.species.toLowerCase() === 'aegislash' ? ' (Shield)' : '');
       draw(page, speciesText, slot.species);
       draw(page, showdownData.nature ?? '', slot.statAlignment);
       draw(page, showdownData.ability ?? '', slot.ability);

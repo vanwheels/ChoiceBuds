@@ -79,12 +79,40 @@ export type BlockRule =
 
 /** Bulbapedia's Category:Sound-based_moves, cross-checked against Serebii - see file header. */
 export const SOUND_BASED_MOVES = [
-  'Alluring Voice', 'Boomburst', 'Bug Buzz', 'Chatter', 'Clanging Scales', 'Clangorous Soul',
-  'Clangorous Soulblaze', 'Confide', 'Disarming Voice', 'Dragon Cheer', 'Echoed Voice',
-  'Eerie Spell', 'Grass Whistle', 'Growl', 'Heal Bell', 'Howl', 'Hyper Voice', 'Metal Sound',
-  'Noble Roar', 'Overdrive', 'Parting Shot', 'Perish Song', 'Psychic Noise', 'Relic Song',
-  'Roar', 'Round', 'Screech', 'Sing', 'Snarl', 'Snore', 'Sparkling Aria', 'Supersonic',
-  'Torch Song', 'Uproar',
+  'Alluring Voice',
+  'Boomburst',
+  'Bug Buzz',
+  'Chatter',
+  'Clanging Scales',
+  'Clangorous Soul',
+  'Clangorous Soulblaze',
+  'Confide',
+  'Disarming Voice',
+  'Dragon Cheer',
+  'Echoed Voice',
+  'Eerie Spell',
+  'Grass Whistle',
+  'Growl',
+  'Heal Bell',
+  'Howl',
+  'Hyper Voice',
+  'Metal Sound',
+  'Noble Roar',
+  'Overdrive',
+  'Parting Shot',
+  'Perish Song',
+  'Psychic Noise',
+  'Relic Song',
+  'Roar',
+  'Round',
+  'Screech',
+  'Sing',
+  'Snarl',
+  'Snore',
+  'Sparkling Aria',
+  'Supersonic',
+  'Torch Song',
+  'Uproar',
 ];
 
 // Type-immunity 'type' rules, built from config/typeImmunityAbilities.ts's shared
@@ -119,33 +147,65 @@ const MOVE_BLOCKING_ABILITIES: Record<string, BlockRule> = {
 
   // "Ball and bomb" moves - Bulbapedia's Category:Ball_and_bomb_moves, cross-checked against
   // Serebii's own Bulletproof page (identical list).
-  'bulletproof': {
-    kind: 'move-list', moves: [
-      'Acid Spray', 'Aura Sphere', 'Barrage', 'Beak Blast', 'Bullet Seed', 'Egg Bomb',
-      'Electro Ball', 'Energy Ball', 'Focus Blast', 'Gyro Ball', 'Ice Ball', 'Magnet Bomb',
-      'Mist Ball', 'Mud Bomb', 'Octazooka', 'Pollen Puff', 'Pyro Ball', 'Rock Blast',
-      'Rock Wrecker', 'Searing Shot', 'Seed Bomb', 'Shadow Ball', 'Sludge Bomb', 'Syrup Bomb',
-      'Weather Ball', 'Zap Cannon',
+  bulletproof: {
+    kind: 'move-list',
+    moves: [
+      'Acid Spray',
+      'Aura Sphere',
+      'Barrage',
+      'Beak Blast',
+      'Bullet Seed',
+      'Egg Bomb',
+      'Electro Ball',
+      'Energy Ball',
+      'Focus Blast',
+      'Gyro Ball',
+      'Ice Ball',
+      'Magnet Bomb',
+      'Mist Ball',
+      'Mud Bomb',
+      'Octazooka',
+      'Pollen Puff',
+      'Pyro Ball',
+      'Rock Blast',
+      'Rock Wrecker',
+      'Searing Shot',
+      'Seed Bomb',
+      'Shadow Ball',
+      'Sludge Bomb',
+      'Syrup Bomb',
+      'Weather Ball',
+      'Zap Cannon',
     ],
   },
   // Sound-based moves - Bulbapedia's Category:Sound-based_moves, cross-checked against Serebii's
   // own Soundproof page (identical apart from Shadow Panic - see file header). Shared with
   // config/typeChangingAbilities.ts's Liquid Voice rule (same move category, no reason to
   // duplicate the list) - see SOUND_BASED_MOVES below.
-  'soundproof': { kind: 'move-list', moves: SOUND_BASED_MOVES },
+  soundproof: { kind: 'move-list', moves: SOUND_BASED_MOVES },
   // Powder/spore moves - Bulbapedia's Category:Powder_and_spore_moves (8 real moves; the category
   // page's own self-listing entry isn't a move). Overcoat also blocks sandstorm/hail chip damage
   // and Effect Spore's ability-trigger, neither of which is a "move" this table's shape covers.
-  'overcoat': {
-    kind: 'move-list', moves: [
-      'Cotton Spore', 'Magic Powder', 'Poison Powder', 'Powder', 'Rage Powder', 'Sleep Powder',
-      'Spore', 'Stun Spore',
+  overcoat: {
+    kind: 'move-list',
+    moves: [
+      'Cotton Spore',
+      'Magic Powder',
+      'Poison Powder',
+      'Powder',
+      'Rage Powder',
+      'Sleep Powder',
+      'Spore',
+      'Stun Spore',
     ],
   },
   // The explosive-move family Damp prevents from even being used. Confirmed on Bulbapedia's own
   // Damp page that Blast Burn/Powder/Pollen Puff/Shell Trap are NOT blocked despite the "explosive"
   // association - only these 4 are the real list.
-  'damp': { kind: 'move-list', moves: ['Self-Destruct', 'Explosion', 'Mind Blown', 'Misty Explosion'] },
+  damp: {
+    kind: 'move-list',
+    moves: ['Self-Destruct', 'Explosion', 'Mind Blown', 'Misty Explosion'],
+  },
 };
 
 function toSlug(ability: string): string {
@@ -168,7 +228,7 @@ export function abilityBlocksMove(
   if (!rule) return false;
   if (rule.kind === 'type') return moveType === rule.type;
   if (rule.kind === 'category') return moveCategory === rule.category;
-  return rule.moves.some(m => m.toLowerCase() === move.trim().toLowerCase());
+  return rule.moves.some((m) => m.toLowerCase() === move.trim().toLowerCase());
 }
 
 /**
@@ -182,5 +242,5 @@ export function abilitiesThatCouldBlock(
   moveType: string | undefined,
   moveCategory: string | undefined,
 ): string[] {
-  return legalAbilities.filter(a => abilityBlocksMove(a, move, moveType, moveCategory));
+  return legalAbilities.filter((a) => abilityBlocksMove(a, move, moveType, moveCategory));
 }

@@ -43,7 +43,8 @@ export function useVgcPastesCache(): UseVgcPastesCacheReturn {
   // ever reads what a prior manual refresh() already wrote.
   useEffect(() => {
     let cancelled = false;
-    getStorageAdapter().read<VgcPastesCache>('vgc-pastes-cache')
+    getStorageAdapter()
+      .read<VgcPastesCache>('vgc-pastes-cache')
       .then((persisted: VgcPastesCache | null) => {
         if (cancelled) return;
         setDiskSnapshot(persisted ? JSON.stringify(persisted) : undefined);
@@ -57,30 +58,48 @@ export function useVgcPastesCache(): UseVgcPastesCacheReturn {
         setCache(createEmptyCache());
         setIsInitialized(true);
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  useDebouncedWrite(cache, isInitialized, (value) => getStorageAdapter().write('vgc-pastes-cache', value), 'Error persisting VGCPastes cache:', undefined, diskSnapshot);
+  useDebouncedWrite(
+    cache,
+    isInitialized,
+    (value) => getStorageAdapter().write('vgc-pastes-cache', value),
+    'Error persisting VGCPastes cache:',
+    undefined,
+    diskSnapshot,
+  );
 
-  const getRows = useCallback((regulation: RegulationLabel): VgcPasteTeamRow[] => {
-    return cache?.rowsByRegulation[regulation] ?? [];
-  }, [cache]);
+  const getRows = useCallback(
+    (regulation: RegulationLabel): VgcPasteTeamRow[] => {
+      return cache?.rowsByRegulation[regulation] ?? [];
+    },
+    [cache],
+  );
 
-  const getLastFetchedAt = useCallback((regulation: RegulationLabel): number | null => {
-    return cache?.lastFetchedAtByRegulation[regulation] ?? null;
-  }, [cache]);
+  const getLastFetchedAt = useCallback(
+    (regulation: RegulationLabel): number | null => {
+      return cache?.lastFetchedAtByRegulation[regulation] ?? null;
+    },
+    [cache],
+  );
 
   const refresh = useCallback(async (regulation: RegulationLabel): Promise<boolean> => {
     setIsRefreshing(true);
     setError(null);
     try {
       const rows = await fetchVgcPasteRows(regulation);
-      setCache(prev => {
+      setCache((prev) => {
         const base = prev ?? createEmptyCache();
         return {
           ...base,
           rowsByRegulation: { ...base.rowsByRegulation, [regulation]: rows },
-          lastFetchedAtByRegulation: { ...base.lastFetchedAtByRegulation, [regulation]: Date.now() },
+          lastFetchedAtByRegulation: {
+            ...base.lastFetchedAtByRegulation,
+            [regulation]: Date.now(),
+          },
         };
       });
       return true;

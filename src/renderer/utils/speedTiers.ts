@@ -55,7 +55,13 @@
  * speed effect is already correctly gated by the caller's own field context.
  */
 import { Field } from '@smogon/calc';
-import type { Generation, NatureName, StatsTable, Terrain, Weather } from '@smogon/calc/dist/data/interface';
+import type {
+  Generation,
+  NatureName,
+  StatsTable,
+  Terrain,
+  Weather,
+} from '@smogon/calc/dist/data/interface';
 import { getFinalSpeed } from '@smogon/calc/dist/mechanics/util';
 import type { ChampionsUsageEntry, ImportedPokemonInfo } from '../types/pokemon';
 import { teamPokemonToCalcUpdates } from './calcTeamImport';
@@ -80,7 +86,13 @@ export interface SpeedFieldContext {
 }
 
 export function defaultSpeedFieldContext(): SpeedFieldContext {
-  return { weather: '', terrain: '', teamHasTailwind: false, threatHasTailwind: false, threatItem: '' };
+  return {
+    weather: '',
+    terrain: '',
+    teamHasTailwind: false,
+    threatHasTailwind: false,
+    threatItem: '',
+  };
 }
 
 export interface TeamSpeedEntry {
@@ -136,7 +148,12 @@ function buildField(field: SpeedFieldContext): InstanceType<typeof Field> {
   });
 }
 
-function finalSpeed(gen: Generation, state: CalcPokemonState, calcField: InstanceType<typeof Field>, side: InstanceType<typeof Field>['attackerSide']): number {
+function finalSpeed(
+  gen: Generation,
+  state: CalcPokemonState,
+  calcField: InstanceType<typeof Field>,
+  side: InstanceType<typeof Field>['attackerSide'],
+): number {
   const pokemon = buildPokemon(gen, state);
   return getFinalSpeed(gen, pokemon, calcField, side);
 }
@@ -147,9 +164,16 @@ function finalSpeed(gen: Generation, state: CalcPokemonState, calcField: Instanc
  * unresolvable species/nature/item, same graceful-failure shape as
  * damageCalcEngine.ts::computeBoostedStats.
  */
-export function computeTeamSpeed(gen: Generation, pokemon: ImportedPokemonInfo, field: SpeedFieldContext): TeamSpeedEntry | null {
+export function computeTeamSpeed(
+  gen: Generation,
+  pokemon: ImportedPokemonInfo,
+  field: SpeedFieldContext,
+): TeamSpeedEntry | null {
   try {
-    const state: CalcPokemonState = { ...defaultPokemonState(), ...teamPokemonToCalcUpdates(pokemon) };
+    const state: CalcPokemonState = {
+      ...defaultPokemonState(),
+      ...teamPokemonToCalcUpdates(pokemon),
+    };
     const calcField = buildField(field);
     return {
       pokemonId: pokemon.id,
@@ -159,7 +183,11 @@ export function computeTeamSpeed(gen: Generation, pokemon: ImportedPokemonInfo, 
       // showdownData.species may already be a Mega form - pokemon.spriteUrl
       // itself is never updated by that override (see its header), so it
       // has to be resolved here instead.
-      spriteUrl: resolveDisplaySpriteUrl(pokemon.showdownData.species, pokemon.showdownData.shiny, pokemon.spriteUrl),
+      spriteUrl: resolveDisplaySpriteUrl(
+        pokemon.showdownData.species,
+        pokemon.showdownData.shiny,
+        pokemon.spriteUrl,
+      ),
       speed: finalSpeed(gen, state, calcField, calcField.attackerSide),
     };
   } catch {
@@ -173,7 +201,11 @@ export function computeTeamSpeed(gen: Generation, pokemon: ImportedPokemonInfo, 
  * ThreatSpeedInput's doc comment for why usage is optional. Null on an
  * unresolvable species.
  */
-export function computeThreatSpeedProfile(gen: Generation, input: ThreatSpeedInput, field: SpeedFieldContext): ThreatSpeedProfile | null {
+export function computeThreatSpeedProfile(
+  gen: Generation,
+  input: ThreatSpeedInput,
+  field: SpeedFieldContext,
+): ThreatSpeedProfile | null {
   try {
     const calcField = buildField(field);
     const { species, ability, usage } = input;
@@ -186,17 +218,37 @@ export function computeThreatSpeedProfile(gen: Generation, input: ThreatSpeedInp
     });
 
     const spreads: ThreatSpeedSpreadEntry[] = (usage?.statSpreads ?? [])
-      .map(spread => ({
-        speed: finalSpeed(gen, { ...baseState(), sps: spread.points }, calcField, calcField.defenderSide),
+      .map((spread) => ({
+        speed: finalSpeed(
+          gen,
+          { ...baseState(), sps: spread.points },
+          calcField,
+          calcField.defenderSide,
+        ),
         percentage: spread.percentage,
       }))
       .sort((a, b) => b.percentage - a.percentage);
 
     const maxSps: StatsTable = { ...baseState().sps, spe: 32 };
     const bounds: ThreatSpeedBounds = {
-      min: finalSpeed(gen, { ...baseState(), nature: MIN_SPEED_NATURE }, calcField, calcField.defenderSide),
-      neutral: finalSpeed(gen, { ...baseState(), nature: NEUTRAL_SPEED_NATURE }, calcField, calcField.defenderSide),
-      max: finalSpeed(gen, { ...baseState(), nature: MAX_SPEED_NATURE, sps: maxSps }, calcField, calcField.defenderSide),
+      min: finalSpeed(
+        gen,
+        { ...baseState(), nature: MIN_SPEED_NATURE },
+        calcField,
+        calcField.defenderSide,
+      ),
+      neutral: finalSpeed(
+        gen,
+        { ...baseState(), nature: NEUTRAL_SPEED_NATURE },
+        calcField,
+        calcField.defenderSide,
+      ),
+      max: finalSpeed(
+        gen,
+        { ...baseState(), nature: MAX_SPEED_NATURE, sps: maxSps },
+        calcField,
+        calcField.defenderSide,
+      ),
     };
 
     return { species, spreads, bounds };

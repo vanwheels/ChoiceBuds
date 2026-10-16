@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { hashPassword, verifyPassword, generateToken, hashToken, constantTimeEqual, isValidUsername, isValidPassword } from './crypto';
+import {
+  hashPassword,
+  verifyPassword,
+  generateToken,
+  hashToken,
+  constantTimeEqual,
+  isValidUsername,
+  isValidPassword,
+} from './crypto';
 
 describe('hashPassword / verifyPassword', () => {
   it('verifies the correct password against its own hash', async () => {

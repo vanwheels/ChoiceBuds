@@ -2,7 +2,7 @@
  * index.css - Global Styles and Tailwind CSS Base
  * Provides base styling and Tailwind utility classes
  */
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /*
  * Explicit @source rather than relying on Tailwind v4's automatic content
@@ -50,9 +50,9 @@
   }
 
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-      sans-serif;
+    font-family:
+      -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+      'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }

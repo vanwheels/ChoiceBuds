@@ -40,18 +40,31 @@ export default function CoverageTable({
           <tr className="bg-zinc-900/60">
             <th className="w-20 border border-zinc-700/60" />
             {pokemon.map((p, i) => (
-              <th key={i} className="py-1.5 px-1 border border-zinc-700/60" title={p.showdownData.nickname || p.showdownData.species}>
+              <th
+                key={i}
+                className="py-1.5 px-1 border border-zinc-700/60"
+                title={p.showdownData.nickname || p.showdownData.species}
+              >
                 <img
                   src={spriteCacheState.resolveSprite(
-                    getPixelSpriteUrl(p.pokedexNumber, p.showdownData.species, p.showdownData.gender || 'M', p.showdownData.shiny)
+                    getPixelSpriteUrl(
+                      p.pokedexNumber,
+                      p.showdownData.species,
+                      p.showdownData.gender || 'M',
+                      p.showdownData.shiny,
+                    ),
                   )}
                   alt={p.showdownData.species}
                   className="w-9 h-9 mx-auto object-contain [image-rendering:pixelated]"
                 />
               </th>
             ))}
-            <th className="py-1.5 px-2 text-zinc-300 font-medium whitespace-nowrap border border-zinc-700/60">{unfavorableLabel}</th>
-            <th className="py-1.5 px-2 text-zinc-300 font-medium whitespace-nowrap border border-zinc-700/60">{favorableLabel}</th>
+            <th className="py-1.5 px-2 text-zinc-300 font-medium whitespace-nowrap border border-zinc-700/60">
+              {unfavorableLabel}
+            </th>
+            <th className="py-1.5 px-2 text-zinc-300 font-medium whitespace-nowrap border border-zinc-700/60">
+              {favorableLabel}
+            </th>
           </tr>
         </thead>
         <tbody>

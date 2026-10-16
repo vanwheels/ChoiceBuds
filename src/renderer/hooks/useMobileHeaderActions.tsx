@@ -51,13 +51,11 @@ const RegistryContext = createContext<MobileHeaderRegistry>({});
 export function MobileHeaderActionsProvider({ children }: { children: ReactNode }) {
   const [registry, setRegistry] = useState<MobileHeaderRegistry>({});
   const register = useCallback<RegisterFn>((tab, entry) => {
-    setRegistry(prev => ({ ...prev, [tab]: entry }));
+    setRegistry((prev) => ({ ...prev, [tab]: entry }));
   }, []);
   return (
     <RegisterContext.Provider value={register}>
-      <RegistryContext.Provider value={registry}>
-        {children}
-      </RegistryContext.Provider>
+      <RegistryContext.Provider value={registry}>{children}</RegistryContext.Provider>
     </RegisterContext.Provider>
   );
 }

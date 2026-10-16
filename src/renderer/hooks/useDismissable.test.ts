@@ -21,7 +21,9 @@ describe('useDismissable', () => {
   it('ignores keys other than Escape', () => {
     const onDismiss = vi.fn();
     renderHook(() => useDismissable(onDismiss));
-    act(() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })));
+    act(() =>
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })),
+    );
     expect(onDismiss).not.toHaveBeenCalled();
   });
 
@@ -71,7 +73,9 @@ describe('useDismissable', () => {
   it('re-subscribes to the latest onDismiss when its identity changes', () => {
     const first = vi.fn();
     const second = vi.fn();
-    const { rerender } = renderHook(({ cb }) => useDismissable(cb), { initialProps: { cb: first } });
+    const { rerender } = renderHook(({ cb }) => useDismissable(cb), {
+      initialProps: { cb: first },
+    });
     rerender({ cb: second });
     act(() => fireEscape());
     expect(first).not.toHaveBeenCalled();

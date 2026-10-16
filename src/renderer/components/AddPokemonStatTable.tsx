@@ -85,7 +85,12 @@
 
 import { useState } from 'react';
 import { Generations, toID } from '@smogon/calc';
-import type { PokeAPICacheEntry, PokemonStats, SavedPokemonEntry, SpeciesRosterEntry } from '../types/pokemon';
+import type {
+  PokeAPICacheEntry,
+  PokemonStats,
+  SavedPokemonEntry,
+  SpeciesRosterEntry,
+} from '../types/pokemon';
 import type { RegulationId } from '../utils/pokemonRules';
 import { validateSpeciesLegality } from '../utils/pokemonRules';
 import { normalizeSpeciesForAPI } from '../services/pokeapi';
@@ -180,21 +185,23 @@ export default function AddPokemonStatTable({
   // Same '#tag' type -> move -> ability resolution chain as
   // SpeciesPickerCard.tsx - see that file's header comment for the full
   // writeup. Multiple '#tag's are ANDed together.
-  const tags = parseTagFilters(search).filter(t => t.length > 0);
+  const tags = parseTagFilters(search).filter((t) => t.length > 0);
   const isTagMode = tags.length > 0;
   const hasMegaTag = tags.includes('mega');
   // '#mega' itself isn't a type/move/ability - strip it out before the rest
   // of the chain below resolves, so it doesn't get mistaken for (and fail
   // to resolve as) a move/ability tag. See the Mega rows section below for
   // what it actually does.
-  const filterTags = tags.filter(t => t !== 'mega');
+  const filterTags = tags.filter((t) => t !== 'mega');
   const isTypeTag = (t: string): boolean => (ALL_TYPES as readonly string[]).includes(t);
   const typeTags = filterTags.filter(isTypeTag);
-  const normalizedNonTypeTags = filterTags.filter(t => !isTypeTag(t)).map(normalizeNameForAPI);
+  const normalizedNonTypeTags = filterTags.filter((t) => !isTypeTag(t)).map(normalizeNameForAPI);
 
   const typeMembers = usePokemonTypeFilter(typeTags);
   const moveMembers = usePokemonMoveFilter(normalizedNonTypeTags);
-  const moveFailedTags = normalizedNonTypeTags.filter(t => isMoveResolved(t) && moveMembers.get(t) === null);
+  const moveFailedTags = normalizedNonTypeTags.filter(
+    (t) => isMoveResolved(t) && moveMembers.get(t) === null,
+  );
   const abilityMembers = usePokemonAbilityFilter(moveFailedTags);
 
   function resolvedSetForTag(tag: string): Set<string> | null {
@@ -207,24 +214,24 @@ export default function AddPokemonStatTable({
   }
 
   const tagSets = filterTags.map(resolvedSetForTag);
-  const anyTagPending = tagSets.some(set => set === null);
+  const anyTagPending = tagSets.some((set) => set === null);
 
   // Shared by both the plain-roster and "From Box" halves below - a species
   // (by its own name) or a saved build (by its underlying species) matches
   // the #tag chain the same way.
   const matchesTags = (speciesName: string): boolean =>
-    anyTagPending ? false : tagSets.every(set => set!.has(speciesName.toLowerCase()));
+    anyTagPending ? false : tagSets.every((set) => set!.has(speciesName.toLowerCase()));
 
-  const legalRoster = roster.filter(pkmn => validateSpeciesLegality(pkmn.name, rulesetId));
+  const legalRoster = roster.filter((pkmn) => validateSpeciesLegality(pkmn.name, rulesetId));
   // '#mega' is a standalone filter to Mega-only rows (see below) - no plain
   // species rows alongside it.
   const filteredRoster = hasMegaTag
     ? []
     : !isTagMode
-      ? legalRoster.filter(pkmn => pkmn.name.toLowerCase().includes(search.toLowerCase()))
-      : legalRoster.filter(pkmn => matchesTags(pkmn.name));
+      ? legalRoster.filter((pkmn) => pkmn.name.toLowerCase().includes(search.toLowerCase()))
+      : legalRoster.filter((pkmn) => matchesTags(pkmn.name));
 
-  const speciesRows: StatTableRow[] = filteredRoster.map(species => {
+  const speciesRows: StatTableRow[] = filteredRoster.map((species) => {
     const cacheEntry = getCachedEntry(normalizeSpeciesForAPI(species.name));
     const stats = cacheEntry?.baseStats ?? null;
     return {
@@ -258,84 +265,95 @@ export default function AddPokemonStatTable({
   const showMegaRows = !isTagMode || hasMegaTag;
   const megaRows: StatTableRow[] = showMegaRows
     ? Object.entries(MEGA_STONE_TO_SPECIES).flatMap(([item, entry]) => {
-      const baseSpecies = legalRoster.find(pkmn => pkmn.name.toLowerCase() === entry.species.toLowerCase());
-      if (!baseSpecies) return [];
+        const baseSpecies = legalRoster.find(
+          (pkmn) => pkmn.name.toLowerCase() === entry.species.toLowerCase(),
+        );
+        if (!baseSpecies) return [];
 
-      const slug = `${entry.species}-${entry.suffix}`;
-      const calcSpecies = gen.species.get(toID(slug));
-      const stats: PokemonStats | null = calcSpecies ? {
-        hp: calcSpecies.baseStats.hp,
-        attack: calcSpecies.baseStats.atk,
-        defense: calcSpecies.baseStats.def,
-        specialAttack: calcSpecies.baseStats.spa,
-        specialDefense: calcSpecies.baseStats.spd,
-        speed: calcSpecies.baseStats.spe,
-      } : null;
-      const displayName = formatMegaLabel(baseSpecies.name, entry.suffix);
-      const megaAbility = getMegaAbility(slug);
+        const slug = `${entry.species}-${entry.suffix}`;
+        const calcSpecies = gen.species.get(toID(slug));
+        const stats: PokemonStats | null = calcSpecies
+          ? {
+              hp: calcSpecies.baseStats.hp,
+              attack: calcSpecies.baseStats.atk,
+              defense: calcSpecies.baseStats.def,
+              specialAttack: calcSpecies.baseStats.spa,
+              specialDefense: calcSpecies.baseStats.spd,
+              speed: calcSpecies.baseStats.spe,
+            }
+          : null;
+        const displayName = formatMegaLabel(baseSpecies.name, entry.suffix);
+        const megaAbility = getMegaAbility(slug);
 
-      if (isTagMode) {
-        // '#mega' alone (no other tags) matches every Mega row unfiltered -
-        // filterTags is empty, so .every() below is vacuously true.
-        if (anyTagPending) return [];
-        const baseLower = baseSpecies.name.toLowerCase();
-        const matchesRemainingTags = filterTags.every((tag, i) => {
-          if (isTypeTag(tag)) {
-            // Own types, not the base species' - some Megas retype (e.g.
-            // Mega Gyarados is Water/Dark, not Water/Flying).
-            const types = calcSpecies ? calcSpecies.types.map(t => t.toLowerCase()) : [];
-            return types.includes(tag);
-          }
-          const normalized = normalizeNameForAPI(tag);
-          const isAbilityTag = isMoveResolved(normalized) && (moveMembers.get(normalized) ?? null) === null;
-          // A confirmed Mega ability replaces the base species' normal/
-          // hidden pair outright, so it wins over the base-species
-          // membership check below rather than falling back onto it. Move
-          // tags, and ability tags with no confirmed override yet (see
-          // megaAbilities.ts's header), still fall through to that same
-          // base-species check `tagSets[i]` already resolved above.
-          if (isAbilityTag && megaAbility) return normalizeNameForAPI(megaAbility) === normalized;
-          const set = tagSets[i];
-          return set ? set.has(baseLower) : false;
-        });
-        if (!matchesRemainingTags) return [];
-      } else if (!displayName.toLowerCase().includes(search.toLowerCase())) {
-        return [];
-      }
+        if (isTagMode) {
+          // '#mega' alone (no other tags) matches every Mega row unfiltered -
+          // filterTags is empty, so .every() below is vacuously true.
+          if (anyTagPending) return [];
+          const baseLower = baseSpecies.name.toLowerCase();
+          const matchesRemainingTags = filterTags.every((tag, i) => {
+            if (isTypeTag(tag)) {
+              // Own types, not the base species' - some Megas retype (e.g.
+              // Mega Gyarados is Water/Dark, not Water/Flying).
+              const types = calcSpecies ? calcSpecies.types.map((t) => t.toLowerCase()) : [];
+              return types.includes(tag);
+            }
+            const normalized = normalizeNameForAPI(tag);
+            const isAbilityTag =
+              isMoveResolved(normalized) && (moveMembers.get(normalized) ?? null) === null;
+            // A confirmed Mega ability replaces the base species' normal/
+            // hidden pair outright, so it wins over the base-species
+            // membership check below rather than falling back onto it. Move
+            // tags, and ability tags with no confirmed override yet (see
+            // megaAbilities.ts's header), still fall through to that same
+            // base-species check `tagSets[i]` already resolved above.
+            if (isAbilityTag && megaAbility) return normalizeNameForAPI(megaAbility) === normalized;
+            const set = tagSets[i];
+            return set ? set.has(baseLower) : false;
+          });
+          if (!matchesRemainingTags) return [];
+        } else if (!displayName.toLowerCase().includes(search.toLowerCase())) {
+          return [];
+        }
 
-      return [{
-        key: `mega:${item}`,
-        displayName,
-        spriteUrl: getCachedMegaSprite(slug)?.spriteUrl ?? baseSpecies.spriteUrl,
-        types: calcSpecies ? [...calcSpecies.types] : [],
-        abilities: megaAbility ? [megaAbility] : [],
-        hp: stats?.hp ?? null,
-        attack: stats?.attack ?? null,
-        defense: stats?.defense ?? null,
-        specialAttack: stats?.specialAttack ?? null,
-        specialDefense: stats?.specialDefense ?? null,
-        speed: stats?.speed ?? null,
-        bst: stats ? computeBST(stats) : null,
-        onClick: () => onSelect(baseSpecies, toTitleCase(item)),
-      }];
-    })
+        return [
+          {
+            key: `mega:${item}`,
+            displayName,
+            spriteUrl: getCachedMegaSprite(slug)?.spriteUrl ?? baseSpecies.spriteUrl,
+            types: calcSpecies ? [...calcSpecies.types] : [],
+            abilities: megaAbility ? [megaAbility] : [],
+            hp: stats?.hp ?? null,
+            attack: stats?.attack ?? null,
+            defense: stats?.defense ?? null,
+            specialAttack: stats?.specialAttack ?? null,
+            specialDefense: stats?.specialDefense ?? null,
+            speed: stats?.speed ?? null,
+            bst: stats ? computeBST(stats) : null,
+            onClick: () => onSelect(baseSpecies, toTitleCase(item)),
+          },
+        ];
+      })
     : [];
 
   const rows = [...speciesRows, ...megaRows];
-  const sortedRows = sort ? sortStatTableRows(rows, sort, row => row[sort.key]) : rows;
+  const sortedRows = sort ? sortStatTableRows(rows, sort, (row) => row[sort.key]) : rows;
 
-  const handleSortClick = (key: StatTableSortKey) => setSort(prev => nextStatTableSort(prev, key));
+  const handleSortClick = (key: StatTableSortKey) =>
+    setSort((prev) => nextStatTableSort(prev, key));
 
   // '#mega' filters the whole modal to Mega-only rows - a saved Box build is
   // never one of those, so it drops out entirely rather than staying visible
   // alongside them.
   const showBoxResults = savedPokemon !== undefined && onSelectSaved !== undefined && !hasMegaTag;
   const filteredSaved = showBoxResults
-    ? savedPokemon.filter(entry => validateSpeciesLegality(entry.pokemon.showdownData.species, rulesetId))
-      .filter(entry => !isTagMode
-        ? entry.label.toLowerCase().includes(search.toLowerCase()) ||
-          entry.pokemon.showdownData.species.toLowerCase().includes(search.toLowerCase())
-        : matchesTags(entry.pokemon.showdownData.species))
+    ? savedPokemon
+        .filter((entry) => validateSpeciesLegality(entry.pokemon.showdownData.species, rulesetId))
+        .filter((entry) =>
+          !isTagMode
+            ? entry.label.toLowerCase().includes(search.toLowerCase()) ||
+              entry.pokemon.showdownData.species.toLowerCase().includes(search.toLowerCase())
+            : matchesTags(entry.pokemon.showdownData.species),
+        )
     : [];
 
   return (
@@ -344,7 +362,12 @@ export default function AddPokemonStatTable({
         <h2 className="text-xl font-bold text-zinc-100">Add Pokémon</h2>
         <button onClick={onClose} className="text-zinc-400 hover:text-zinc-200 transition-colors">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -361,21 +384,25 @@ export default function AddPokemonStatTable({
 
         {filteredSaved.length > 0 && (
           <div className="shrink-0">
-            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wide">From Box</span>
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wide">
+              From Box
+            </span>
             <div className="flex flex-wrap gap-2 mt-1 max-h-28 overflow-y-auto">
-              {filteredSaved.map(entry => (
+              {filteredSaved.map((entry) => (
                 <button
                   key={entry.id}
                   onClick={() => onSelectSaved!(entry)}
                   className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full bg-zinc-900 border border-zinc-700 hover:border-accent-gold transition-colors cursor-pointer"
                 >
                   <img
-                    src={resolveSprite(getPixelSpriteUrl(
-                      entry.pokemon.pokedexNumber,
-                      entry.pokemon.showdownData.species,
-                      entry.pokemon.showdownData.gender || 'M',
-                      entry.pokemon.showdownData.shiny
-                    ))}
+                    src={resolveSprite(
+                      getPixelSpriteUrl(
+                        entry.pokemon.pokedexNumber,
+                        entry.pokemon.showdownData.species,
+                        entry.pokemon.showdownData.gender || 'M',
+                        entry.pokemon.showdownData.shiny,
+                      ),
+                    )}
                     alt={entry.pokemon.showdownData.species}
                     loading="lazy"
                     className="w-7 h-7 object-contain [image-rendering:pixelated] shrink-0"
@@ -391,10 +418,16 @@ export default function AddPokemonStatTable({
           <table className="w-full text-xs border-collapse">
             <thead>
               <tr className="bg-zinc-900 sticky top-0 z-10">
-                <th className="py-2 px-2 text-left text-zinc-400 font-semibold border-b border-zinc-700/60">Species</th>
-                <th className="py-2 px-2 text-left text-zinc-400 font-semibold border-b border-zinc-700/60">Types</th>
-                <th className="py-2 px-2 text-left text-zinc-400 font-semibold border-b border-zinc-700/60">Abilities</th>
-                {STAT_COLUMNS.map(col => (
+                <th className="py-2 px-2 text-left text-zinc-400 font-semibold border-b border-zinc-700/60">
+                  Species
+                </th>
+                <th className="py-2 px-2 text-left text-zinc-400 font-semibold border-b border-zinc-700/60">
+                  Types
+                </th>
+                <th className="py-2 px-2 text-left text-zinc-400 font-semibold border-b border-zinc-700/60">
+                  Abilities
+                </th>
+                {STAT_COLUMNS.map((col) => (
                   <th
                     key={col.key}
                     onClick={() => handleSortClick(col.key)}
@@ -403,7 +436,8 @@ export default function AddPokemonStatTable({
                       sort?.key === col.key ? 'text-accent-gold' : getStatLabelColor(col.label)
                     }`}
                   >
-                    {col.label}{sort?.key === col.key ? (sort.direction === 'desc' ? ' ▼' : ' ▲') : ''}
+                    {col.label}
+                    {sort?.key === col.key ? (sort.direction === 'desc' ? ' ▼' : ' ▲') : ''}
                   </th>
                 ))}
               </tr>
@@ -423,21 +457,31 @@ export default function AddPokemonStatTable({
                     className={`cursor-pointer hover:bg-zinc-700/60 transition-colors ${i % 2 === 1 ? 'bg-zinc-900/30' : ''}`}
                   >
                     <td className="py-1.5 px-2 flex items-center gap-2">
-                      <img src={resolveSprite(row.spriteUrl)} alt={row.displayName} loading="lazy" className="w-7 h-7 object-contain [image-rendering:pixelated] shrink-0" />
+                      <img
+                        src={resolveSprite(row.spriteUrl)}
+                        alt={row.displayName}
+                        loading="lazy"
+                        className="w-7 h-7 object-contain [image-rendering:pixelated] shrink-0"
+                      />
                       <span className="text-white truncate">{row.displayName}</span>
                     </td>
                     <td className="py-1.5 px-2">
                       <div className="flex items-center gap-1">
-                        {row.types.length > 0
-                          ? row.types.map(type => <TypeBadge key={type} type={type} />)
-                          : <span className="text-zinc-500">—</span>}
+                        {row.types.length > 0 ? (
+                          row.types.map((type) => <TypeBadge key={type} type={type} />)
+                        ) : (
+                          <span className="text-zinc-500">—</span>
+                        )}
                       </div>
                     </td>
                     <td className="py-1.5 px-2 text-zinc-200 whitespace-nowrap">
                       {row.abilities.length > 0 ? row.abilities.join(' / ') : '—'}
                     </td>
-                    {STAT_COLUMNS.map(col => (
-                      <td key={col.key} className="py-1.5 px-2 text-right text-zinc-200 tabular-nums">
+                    {STAT_COLUMNS.map((col) => (
+                      <td
+                        key={col.key}
+                        className="py-1.5 px-2 text-right text-zinc-200 tabular-nums"
+                      >
                         {row[col.key] ?? '—'}
                       </td>
                     ))}

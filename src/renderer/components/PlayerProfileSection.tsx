@@ -22,7 +22,8 @@ interface PlayerProfileSectionProps {
 
 const AGE_DIVISIONS: PlayerProfile['ageDivision'][] = ['Juniors', 'Seniors', 'Masters'];
 
-const inputClass = 'w-full px-3 py-1.5 text-sm bg-zinc-900 border border-zinc-600 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold';
+const inputClass =
+  'w-full px-3 py-1.5 text-sm bg-zinc-900 border border-zinc-600 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold';
 const labelClass = 'block text-xs font-medium text-zinc-300 mb-1';
 
 export default function PlayerProfileSection({ settingsState }: PlayerProfileSectionProps) {
@@ -30,17 +31,23 @@ export default function PlayerProfileSection({ settingsState }: PlayerProfileSec
   const { playerProfile } = settings;
 
   const [localPlayerName, setLocalPlayerName] = useState(playerProfile.playerName);
-  const [localTrainerNameInGame, setLocalTrainerNameInGame] = useState(playerProfile.trainerNameInGame);
+  const [localTrainerNameInGame, setLocalTrainerNameInGame] = useState(
+    playerProfile.trainerNameInGame,
+  );
   const [localPlayerId, setLocalPlayerId] = useState(playerProfile.playerId);
   const [localSupportId, setLocalSupportId] = useState(playerProfile.supportId);
-  const [localSwitchProfileName, setLocalSwitchProfileName] = useState(playerProfile.switchProfileName);
+  const [localSwitchProfileName, setLocalSwitchProfileName] = useState(
+    playerProfile.switchProfileName,
+  );
   const [localDateOfBirth, setLocalDateOfBirth] = useState(playerProfile.dateOfBirth);
 
   const [revealed, setRevealed] = useState(false);
 
   const commitField = async (field: keyof PlayerProfile, value: string) => {
     if (value !== playerProfile[field]) {
-      await updateSettings({ playerProfile: { ...playerProfile, [field]: value, updatedAt: Date.now() } });
+      await updateSettings({
+        playerProfile: { ...playerProfile, [field]: value, updatedAt: Date.now() },
+      });
     }
   };
 
@@ -52,8 +59,10 @@ export default function PlayerProfileSection({ settingsState }: PlayerProfileSec
     // closure per button, same as commitField's onBlur closures elsewhere in
     // this file (which aren't flagged, since they're not built inside a
     // .map()). Confirmed via an isolated repro outside this file.
-    // eslint-disable-next-line react-hooks/purity
-    updateSettings({ playerProfile: { ...playerProfile, ageDivision: nextDivision, updatedAt: Date.now() } });
+    updateSettings({
+      // eslint-disable-next-line react-hooks/purity
+      playerProfile: { ...playerProfile, ageDivision: nextDivision, updatedAt: Date.now() },
+    });
   };
 
   const maskedClass = `${inputClass} opacity-50 cursor-not-allowed select-none`;
@@ -64,17 +73,17 @@ export default function PlayerProfileSection({ settingsState }: PlayerProfileSec
         <h2 className="text-sm font-semibold text-zinc-200">Player Profile</h2>
         <button
           type="button"
-          onClick={() => setRevealed(r => !r)}
+          onClick={() => setRevealed((r) => !r)}
           className="text-xs font-medium text-accent-gold hover:underline cursor-pointer"
         >
           {revealed ? 'Hide personal info' : 'Reveal personal info'}
         </button>
       </div>
       <p className="mt-1 text-xs text-zinc-400">
-        Entered once and reused on every VGC Team Sheet PDF export (Teams page, per-team export button) -
-        a team's own Battle Team Number/Name is entered separately at export time. Legal name, Player ID,
-        Support ID, and date of birth stay hidden on screen until revealed, since this Settings page is
-        easy to end up on camera during a stream or screen share.
+        Entered once and reused on every VGC Team Sheet PDF export (Teams page, per-team export
+        button) - a team's own Battle Team Number/Name is entered separately at export time. Legal
+        name, Player ID, Support ID, and date of birth stay hidden on screen until revealed, since
+        this Settings page is easy to end up on camera during a stream or screen share.
       </p>
 
       <div className="mt-3 grid grid-cols-2 gap-3">
@@ -84,7 +93,7 @@ export default function PlayerProfileSection({ settingsState }: PlayerProfileSec
             <input
               type="text"
               value={localPlayerName}
-              onChange={e => setLocalPlayerName(e.target.value)}
+              onChange={(e) => setLocalPlayerName(e.target.value)}
               onBlur={() => commitField('playerName', localPlayerName)}
               className={inputClass}
             />
@@ -97,7 +106,7 @@ export default function PlayerProfileSection({ settingsState }: PlayerProfileSec
           <input
             type="text"
             value={localTrainerNameInGame}
-            onChange={e => setLocalTrainerNameInGame(e.target.value)}
+            onChange={(e) => setLocalTrainerNameInGame(e.target.value)}
             onBlur={() => commitField('trainerNameInGame', localTrainerNameInGame)}
             className={inputClass}
           />
@@ -108,7 +117,7 @@ export default function PlayerProfileSection({ settingsState }: PlayerProfileSec
             <input
               type="text"
               value={localPlayerId}
-              onChange={e => setLocalPlayerId(e.target.value)}
+              onChange={(e) => setLocalPlayerId(e.target.value)}
               onBlur={() => commitField('playerId', localPlayerId)}
               className={inputClass}
             />
@@ -122,7 +131,7 @@ export default function PlayerProfileSection({ settingsState }: PlayerProfileSec
             <input
               type="text"
               value={localSupportId}
-              onChange={e => setLocalSupportId(e.target.value)}
+              onChange={(e) => setLocalSupportId(e.target.value)}
               onBlur={() => commitField('supportId', localSupportId)}
               className={inputClass}
             />
@@ -135,7 +144,7 @@ export default function PlayerProfileSection({ settingsState }: PlayerProfileSec
           <input
             type="text"
             value={localSwitchProfileName}
-            onChange={e => setLocalSwitchProfileName(e.target.value)}
+            onChange={(e) => setLocalSwitchProfileName(e.target.value)}
             onBlur={() => commitField('switchProfileName', localSwitchProfileName)}
             className={inputClass}
           />
@@ -146,7 +155,7 @@ export default function PlayerProfileSection({ settingsState }: PlayerProfileSec
             <input
               type="date"
               value={localDateOfBirth}
-              onChange={e => setLocalDateOfBirth(e.target.value)}
+              onChange={(e) => setLocalDateOfBirth(e.target.value)}
               onBlur={() => commitField('dateOfBirth', localDateOfBirth)}
               className={inputClass}
             />
@@ -157,7 +166,7 @@ export default function PlayerProfileSection({ settingsState }: PlayerProfileSec
         <div className="col-span-2">
           <label className={labelClass}>Age Division</label>
           <div className="flex gap-2">
-            {AGE_DIVISIONS.map(division => (
+            {AGE_DIVISIONS.map((division) => (
               <button
                 key={division}
                 type="button"

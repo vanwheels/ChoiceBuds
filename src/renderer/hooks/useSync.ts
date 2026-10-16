@@ -50,10 +50,12 @@ const MIN_PASSWORD_LENGTH = 8;
  * correct, so safe to run on every push indefinitely.
  */
 function fixTeamsForSync(teams: SyncPayload['teams']): SyncPayload['teams'] {
-  return teams.map(team => {
-    const fixedPokemon = team.pokemon.map(p => {
+  return teams.map((team) => {
+    const fixedPokemon = team.pokemon.map((p) => {
       const fixedSpecies = fixGenderSplitResourceSpeciesText(p.showdownData.species);
-      return fixedSpecies === p.showdownData.species ? p : { ...p, showdownData: { ...p.showdownData, species: fixedSpecies } };
+      return fixedSpecies === p.showdownData.species
+        ? p
+        : { ...p, showdownData: { ...p.showdownData, species: fixedSpecies } };
     });
     const changed = fixedPokemon.some((p, i) => p !== team.pokemon[i]);
     return changed ? { ...team, pokemon: fixedPokemon, updatedAt: Date.now() } : team;
@@ -62,12 +64,15 @@ function fixTeamsForSync(teams: SyncPayload['teams']): SyncPayload['teams'] {
 
 /** Same fix/bump treatment as fixTeamsForSync above, for Box entries. */
 function fixSavedPokemonForSync(entries: SyncPayload['savedPokemon']): SyncPayload['savedPokemon'] {
-  return entries.map(entry => {
+  return entries.map((entry) => {
     const fixedSpecies = fixGenderSplitResourceSpeciesText(entry.pokemon.showdownData.species);
     if (fixedSpecies === entry.pokemon.showdownData.species) return entry;
     return {
       ...entry,
-      pokemon: { ...entry.pokemon, showdownData: { ...entry.pokemon.showdownData, species: fixedSpecies } },
+      pokemon: {
+        ...entry.pokemon,
+        showdownData: { ...entry.pokemon.showdownData, species: fixedSpecies },
+      },
       updatedAt: Date.now(),
     };
   });
@@ -89,8 +94,15 @@ export interface UseSyncReturn {
   lastSyncedAt: number | null;
   status: SyncStatus;
   error: string | null;
-  signUp: (username: string, password: string, email?: string) => Promise<{ ok: true } | { ok: false; message: string }>;
-  logIn: (username: string, password: string) => Promise<{ ok: true } | { ok: false; message: string }>;
+  signUp: (
+    username: string,
+    password: string,
+    email?: string,
+  ) => Promise<{ ok: true } | { ok: false; message: string }>;
+  logIn: (
+    username: string,
+    password: string,
+  ) => Promise<{ ok: true } | { ok: false; message: string }>;
   logOut: () => Promise<void>;
   /** Pushes local state and applies back the Worker's merged result - safe to call anytime, and safe to call concurrently (shares one in-flight run). */
   syncNow: () => Promise<SyncResult>;
@@ -100,12 +112,14 @@ export function useSync(
   settingsState: UseSettingsReturn,
   teamsState: UseTeamsReturn,
   battlesState: UseBattlesReturn,
-  savedPokemonState: UseSavedPokemonReturn
+  savedPokemonState: UseSavedPokemonReturn,
 ): UseSyncReturn {
   const { settings, updateSettings } = settingsState;
   const { syncUsername, syncToken, lastSyncedAt, playerProfile } = settings;
 
-  const [internalStatus, setStatus] = useState<SyncStatus>(() => (settings.syncUsername ? 'idle' : 'signed-out'));
+  const [internalStatus, setStatus] = useState<SyncStatus>(() =>
+    settings.syncUsername ? 'idle' : 'signed-out',
+  );
   const [error, setError] = useState<string | null>(null);
   const inFlightRef = useRef<Promise<SyncResult> | null>(null);
   // Remembers the exact teams/battles/savedPokemon array references a sync
@@ -129,58 +143,82 @@ export function useSync(
   // to occasionally trip the Worker's 3-second per-account write throttle
   // (429 "Writing too frequently") even for a single signed-in device/tab -
   // reported live 2026-10-09 alongside the original team-notes sync report.
-  const lastSyncedRef = useRef<{ teams: SyncPayload['teams']; battles: SyncPayload['battles']; savedPokemon: SyncPayload['savedPokemon'] } | null>(null);
+  const lastSyncedRef = useRef<{
+    teams: SyncPayload['teams'];
+    battles: SyncPayload['battles'];
+    savedPokemon: SyncPayload['savedPokemon'];
+  } | null>(null);
 
   // Derived rather than effect-driven: being signed out always overrides
   // whatever syncNow last set (e.g. a stale 'error' from before logOut), and
   // there's no external system to synchronize here that an effect would be
   // needed for.
-  const status: SyncStatus = (!syncUsername || !syncToken) ? 'signed-out' : internalStatus;
+  const status: SyncStatus = !syncUsername || !syncToken ? 'signed-out' : internalStatus;
 
-  const signUp = useCallback(async (username: string, password: string, email?: string) => {
-    const trimmedUsername = username.trim();
-    if (!USERNAME_PATTERN.test(trimmedUsername)) {
-      return { ok: false as const, message: 'Username must be 2-32 letters, numbers, or underscores' };
-    }
-    if (password.length < MIN_PASSWORD_LENGTH) {
-      return { ok: false as const, message: `Password must be at least ${MIN_PASSWORD_LENGTH} characters` };
-    }
+  const signUp = useCallback(
+    async (username: string, password: string, email?: string) => {
+      const trimmedUsername = username.trim();
+      if (!USERNAME_PATTERN.test(trimmedUsername)) {
+        return {
+          ok: false as const,
+          message: 'Username must be 2-32 letters, numbers, or underscores',
+        };
+      }
+      if (password.length < MIN_PASSWORD_LENGTH) {
+        return {
+          ok: false as const,
+          message: `Password must be at least ${MIN_PASSWORD_LENGTH} characters`,
+        };
+      }
 
-    let token: string;
-    try {
-      ({ token } = await signup(trimmedUsername, password, email));
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Sign up failed';
-      return { ok: false as const, message };
-    }
+      let token: string;
+      try {
+        ({ token } = await signup(trimmedUsername, password, email));
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Sign up failed';
+        return { ok: false as const, message };
+      }
 
-    const success = await updateSettings({ syncUsername: trimmedUsername, syncToken: token, lastSyncedAt: null });
-    if (!success) {
-      return { ok: false as const, message: 'Failed to save sync credentials' };
-    }
-    return { ok: true as const };
-  }, [updateSettings]);
+      const success = await updateSettings({
+        syncUsername: trimmedUsername,
+        syncToken: token,
+        lastSyncedAt: null,
+      });
+      if (!success) {
+        return { ok: false as const, message: 'Failed to save sync credentials' };
+      }
+      return { ok: true as const };
+    },
+    [updateSettings],
+  );
 
-  const logIn = useCallback(async (username: string, password: string) => {
-    const trimmedUsername = username.trim();
-    if (!trimmedUsername || !password) {
-      return { ok: false as const, message: 'Username and password are required' };
-    }
+  const logIn = useCallback(
+    async (username: string, password: string) => {
+      const trimmedUsername = username.trim();
+      if (!trimmedUsername || !password) {
+        return { ok: false as const, message: 'Username and password are required' };
+      }
 
-    let token: string;
-    try {
-      ({ token } = await login(trimmedUsername, password));
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Log in failed';
-      return { ok: false as const, message };
-    }
+      let token: string;
+      try {
+        ({ token } = await login(trimmedUsername, password));
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Log in failed';
+        return { ok: false as const, message };
+      }
 
-    const success = await updateSettings({ syncUsername: trimmedUsername, syncToken: token, lastSyncedAt: null });
-    if (!success) {
-      return { ok: false as const, message: 'Failed to save sync credentials' };
-    }
-    return { ok: true as const };
-  }, [updateSettings]);
+      const success = await updateSettings({
+        syncUsername: trimmedUsername,
+        syncToken: token,
+        lastSyncedAt: null,
+      });
+      if (!success) {
+        return { ok: false as const, message: 'Failed to save sync credentials' };
+      }
+      return { ok: true as const };
+    },
+    [updateSettings],
+  );
 
   const logOut = useCallback(async (): Promise<void> => {
     // Client-side only, same as before: this device's token simply stops
@@ -217,7 +255,11 @@ export function useSync(
 
         const merged = await pushSyncData(syncUsername, syncToken, payload);
 
-        lastSyncedRef.current = { teams: merged.teams, battles: merged.battles, savedPokemon: merged.savedPokemon };
+        lastSyncedRef.current = {
+          teams: merged.teams,
+          battles: merged.battles,
+          savedPokemon: merged.savedPokemon,
+        };
         await Promise.all([
           teamsState.applySyncedState(merged.teams),
           battlesState.applySyncedState(merged.battles),
@@ -251,7 +293,15 @@ export function useSync(
     // fields, so this recreates on every render - fine, since every trigger
     // effect below reads it through syncNowRef instead of depending on it
     // directly.
-  }, [syncUsername, syncToken, updateSettings, teamsState, battlesState, savedPokemonState, playerProfile]);
+  }, [
+    syncUsername,
+    syncToken,
+    updateSettings,
+    teamsState,
+    battlesState,
+    savedPokemonState,
+    playerProfile,
+  ]);
 
   // Always-current ref so the trigger effects below (keyed only on
   // syncUsername/syncToken, not on syncNow's own frequently-churning
@@ -266,7 +316,9 @@ export function useSync(
     if (!syncUsername || !syncToken) return;
     syncNowRef.current();
 
-    const handleOnline = () => { syncNowRef.current(); };
+    const handleOnline = () => {
+      syncNowRef.current();
+    };
     window.addEventListener('online', handleOnline);
     return () => window.removeEventListener('online', handleOnline);
   }, [syncUsername, syncToken]);
@@ -275,7 +327,9 @@ export function useSync(
   // isn't actively editing.
   useEffect(() => {
     if (!syncUsername || !syncToken) return;
-    const intervalId = setInterval(() => { syncNowRef.current(); }, AUTO_SYNC_INTERVAL_MS);
+    const intervalId = setInterval(() => {
+      syncNowRef.current();
+    }, AUTO_SYNC_INTERVAL_MS);
     return () => clearInterval(intervalId);
   }, [syncUsername, syncToken]);
 
@@ -286,17 +340,30 @@ export function useSync(
   useEffect(() => {
     if (!syncUsername || !syncToken) return;
     const last = lastSyncedRef.current;
-    if (last && last.teams === teamsState.teams && last.battles === battlesState.battles && last.savedPokemon === savedPokemonState.savedPokemon) {
+    if (
+      last &&
+      last.teams === teamsState.teams &&
+      last.battles === battlesState.battles &&
+      last.savedPokemon === savedPokemonState.savedPokemon
+    ) {
       return;
     }
-    const timeoutId = setTimeout(() => { syncNowRef.current(); }, AUTO_SYNC_DEBOUNCE_MS);
+    const timeoutId = setTimeout(() => {
+      syncNowRef.current();
+    }, AUTO_SYNC_DEBOUNCE_MS);
     return () => clearTimeout(timeoutId);
     // Deliberately excludes playerProfile: unlike teams/battles/savedPokemon,
     // an edit there isn't debounce-triggered - it still reaches the Worker
     // via the next mount sync, the 5-minute fallback poll, or whichever of
     // these three collections' own debounced sync fires next. Not worth a
     // second debounce effect/skip-ref pair for a field that changes rarely.
-  }, [syncUsername, syncToken, teamsState.teams, battlesState.battles, savedPokemonState.savedPokemon]);
+  }, [
+    syncUsername,
+    syncToken,
+    teamsState.teams,
+    battlesState.battles,
+    savedPokemonState.savedPokemon,
+  ]);
 
   return {
     syncUsername,

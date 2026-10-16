@@ -30,8 +30,10 @@ describe('useMegaSprite', () => {
     await waitFor(() => expect(result.current).not.toBeNull());
     expect(result.current).toEqual({
       id: 10033,
-      spriteUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10033.png',
-      shinySpriteUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10033.png',
+      spriteUrl:
+        'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10033.png',
+      shinySpriteUrl:
+        'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10033.png',
     });
     expect(mockedFetchJSON).toHaveBeenCalledWith('/pokemon/venusaur-mega-test-1');
   });

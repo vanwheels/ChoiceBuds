@@ -14,15 +14,23 @@ import { syncSpeciesStats } from './useInitialSync';
 const mockedSync = vi.mocked(syncSpeciesStats);
 
 const roster = (names: string[]) =>
-  ({ roster: names.map(name => ({ name })), isLoading: false }) as unknown as UseSpeciesRosterReturn;
+  ({
+    roster: names.map((name) => ({ name })),
+    isLoading: false,
+  }) as unknown as UseSpeciesRosterReturn;
 const db = (cached: string[], isInitialized = true) =>
-  ({ isInitialized, getCachedEntry: (k: string) => (cached.includes(k) ? {} : null) }) as unknown as UseDatabaseReturn;
+  ({
+    isInitialized,
+    getCachedEntry: (k: string) => (cached.includes(k) ? {} : null),
+  }) as unknown as UseDatabaseReturn;
 
 describe('useSpeciesStatsPrefetch', () => {
   beforeEach(() => mockedSync.mockClear());
 
   it('fetches only legal species missing a cache entry', async () => {
-    renderHook(() => useSpeciesStatsPrefetch(roster(['gengar', 'pikachu', 'illegal']), db(['pikachu'])));
+    renderHook(() =>
+      useSpeciesStatsPrefetch(roster(['gengar', 'pikachu', 'illegal']), db(['pikachu'])),
+    );
     await waitFor(() => expect(mockedSync).toHaveBeenCalledTimes(1));
     expect(mockedSync.mock.calls[0][0]).toBe('gengar');
   });
@@ -33,10 +41,9 @@ describe('useSpeciesStatsPrefetch', () => {
   });
 
   it('runs only one pass per session', async () => {
-    const { rerender } = renderHook(
-      ({ r }) => useSpeciesStatsPrefetch(r, db([])),
-      { initialProps: { r: roster(['gengar']) } }
-    );
+    const { rerender } = renderHook(({ r }) => useSpeciesStatsPrefetch(r, db([])), {
+      initialProps: { r: roster(['gengar']) },
+    });
     await waitFor(() => expect(mockedSync).toHaveBeenCalledTimes(1));
     rerender({ r: roster(['gengar', 'mew']) });
     expect(mockedSync).toHaveBeenCalledTimes(1);

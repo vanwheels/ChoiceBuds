@@ -31,7 +31,12 @@ interface SaveToLibraryDialogProps {
   onClose: () => void;
 }
 
-export default function SaveToLibraryDialog({ pokemon, resolveSprite, onSave, onClose }: SaveToLibraryDialogProps) {
+export default function SaveToLibraryDialog({
+  pokemon,
+  resolveSprite,
+  onSave,
+  onClose,
+}: SaveToLibraryDialogProps) {
   const { showdownData, pokedexNumber } = pokemon;
   const [name, setName] = useState(showdownData.nickname || showdownData.species);
   const [isSaving, setIsSaving] = useState(false);
@@ -62,9 +67,17 @@ export default function SaveToLibraryDialog({ pokemon, resolveSprite, onSave, on
     <Modal panelClassName="max-w-sm">
       <div className="px-5 py-4 border-b border-zinc-700 flex items-center justify-between">
         <h2 className="text-base font-bold text-zinc-100">Save to Library</h2>
-        <button onClick={onClose} className="text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer">
+        <button
+          onClick={onClose}
+          className="text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
+        >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -73,7 +86,14 @@ export default function SaveToLibraryDialog({ pokemon, resolveSprite, onSave, on
         <div className="flex items-center gap-3">
           <div className="w-14 h-14 shrink-0 bg-zinc-900 rounded-lg border border-zinc-600 flex items-center justify-center overflow-hidden">
             <img
-              src={resolveSprite(getPixelSpriteUrl(pokedexNumber, showdownData.species, showdownData.gender || 'M', showdownData.shiny))}
+              src={resolveSprite(
+                getPixelSpriteUrl(
+                  pokedexNumber,
+                  showdownData.species,
+                  showdownData.gender || 'M',
+                  showdownData.shiny,
+                ),
+              )}
               alt={showdownData.species}
               className="w-12 h-12 object-contain [image-rendering:pixelated]"
             />
@@ -82,7 +102,10 @@ export default function SaveToLibraryDialog({ pokemon, resolveSprite, onSave, on
         </div>
 
         <div>
-          <label htmlFor="saveToLibraryName" className="block text-xs font-medium text-zinc-400 uppercase tracking-wide mb-1">
+          <label
+            htmlFor="saveToLibraryName"
+            className="block text-xs font-medium text-zinc-400 uppercase tracking-wide mb-1"
+          >
             Name
           </label>
           <input

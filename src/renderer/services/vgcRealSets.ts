@@ -31,17 +31,25 @@ import { parseShowdownText } from './parser';
 import { fetchPokepaste, extractPokepasteId } from './pokepaste';
 import { normalizeUsageCacheKey } from './championsBattleData';
 import { getMegaApiSlug } from '../config/megaEvolution';
-import type { ShowdownPokemon, VgcPasteTeamRow, VgcRealSetBundle, VgcRealSetsEntry } from '../types/pokemon';
+import type {
+  ShowdownPokemon,
+  VgcPasteTeamRow,
+  VgcRealSetBundle,
+  VgcRealSetsEntry,
+} from '../types/pokemon';
 
 /** True when one of a row's own species tokens matches `targetSpecies` (key-normalized on both sides). */
 export function matchesSpecies(rowSpecies: string[], targetSpecies: string): boolean {
   const targetKey = normalizeUsageCacheKey(targetSpecies);
-  return rowSpecies.some(species => normalizeUsageCacheKey(species) === targetKey);
+  return rowSpecies.some((species) => normalizeUsageCacheKey(species) === targetKey);
 }
 
 /** Narrows a regulation's cached rows to only the ones that mention `targetSpecies`. */
-export function filterRowsBySpecies(rows: VgcPasteTeamRow[], targetSpecies: string): VgcPasteTeamRow[] {
-  return rows.filter(row => matchesSpecies(row.species, targetSpecies));
+export function filterRowsBySpecies(
+  rows: VgcPasteTeamRow[],
+  targetSpecies: string,
+): VgcPasteTeamRow[] {
+  return rows.filter((row) => matchesSpecies(row.species, targetSpecies));
 }
 
 /** Builds a single-occurrence bundle from one parsed Pokemon - see mergeRealSetBundles for how duplicates collapse. */
@@ -62,7 +70,7 @@ function bundleDedupeKey(bundle: VgcRealSetBundle): string {
     item: bundle.item?.toLowerCase() ?? null,
     ability: bundle.ability?.toLowerCase() ?? null,
     nature: bundle.nature?.toLowerCase() ?? null,
-    moves: bundle.moves.map(move => move.toLowerCase()),
+    moves: bundle.moves.map((move) => move.toLowerCase()),
     evs: bundle.evs,
   });
 }
@@ -104,7 +112,7 @@ export interface VgcRealSetsExtractionProgress {
 export async function extractRealSetsForSpecies(
   species: string,
   matchingRows: VgcPasteTeamRow[],
-  onProgress?: (progress: VgcRealSetsExtractionProgress) => void
+  onProgress?: (progress: VgcRealSetsExtractionProgress) => void,
 ): Promise<VgcRealSetsEntry> {
   const targetKey = normalizeUsageCacheKey(species);
   const rawBundles: VgcRealSetBundle[] = [];
@@ -115,7 +123,12 @@ export async function extractRealSetsForSpecies(
     const pasteId = extractPokepasteId(row.pokepasteUrl);
     if (!pasteId) {
       processedRows++;
-      onProgress?.({ processedRows, totalRows: matchingRows.length, sampledTeamCount, bundles: mergeRealSetBundles(rawBundles) });
+      onProgress?.({
+        processedRows,
+        totalRows: matchingRows.length,
+        sampledTeamCount,
+        bundles: mergeRealSetBundles(rawBundles),
+      });
       continue;
     }
 
@@ -129,17 +142,27 @@ export async function extractRealSetsForSpecies(
       // in filterRowsBySpecies above) would never match anything parsed out
       // of the fetched paste text itself.
       const { pokemon } = parseShowdownText(paste.paste);
-      const match = pokemon.find(p => normalizeUsageCacheKey(getMegaApiSlug(p.item, p.species) ?? p.species) === targetKey);
+      const match = pokemon.find(
+        (p) => normalizeUsageCacheKey(getMegaApiSlug(p.item, p.species) ?? p.species) === targetKey,
+      );
       if (match) {
         sampledTeamCount++;
         rawBundles.push(toRealSetBundle(match));
       }
     } catch (err) {
-      console.error(`Real-set extraction: failed to fetch/parse pokepaste for row "${row.id}":`, err);
+      console.error(
+        `Real-set extraction: failed to fetch/parse pokepaste for row "${row.id}":`,
+        err,
+      );
     }
 
     processedRows++;
-    onProgress?.({ processedRows, totalRows: matchingRows.length, sampledTeamCount, bundles: mergeRealSetBundles(rawBundles) });
+    onProgress?.({
+      processedRows,
+      totalRows: matchingRows.length,
+      sampledTeamCount,
+      bundles: mergeRealSetBundles(rawBundles),
+    });
   }
 
   return {

@@ -37,16 +37,52 @@ export interface SeasonDef {
 }
 
 export const SEASONS: SeasonDef[] = [
-  { id: 'M-1', label: 'M-1', regulation: 'Reg M-A', start: Date.parse('2026-04-08'), end: Date.parse('2026-05-13') },
-  { id: 'M-2', label: 'M-2', regulation: 'Reg M-A', start: Date.parse('2026-05-13'), end: Date.parse('2026-06-17') },
-  { id: 'M-3', label: 'M-3', regulation: 'Reg M-B', start: Date.parse('2026-06-17'), end: Date.parse('2026-07-08') },
-  { id: 'M-4', label: 'M-4', regulation: 'Reg M-B', start: Date.parse('2026-07-08'), end: Date.parse('2026-08-05') },
-  { id: 'M-5', label: 'M-5', regulation: 'Reg M-B', start: Date.parse('2026-08-05'), end: Date.parse('2026-09-09') },
-  { id: 'M-6', label: 'M-6', regulation: 'Reg M-C', start: Date.parse('2026-09-09'), end: Date.parse('2026-10-07') },
+  {
+    id: 'M-1',
+    label: 'M-1',
+    regulation: 'Reg M-A',
+    start: Date.parse('2026-04-08'),
+    end: Date.parse('2026-05-13'),
+  },
+  {
+    id: 'M-2',
+    label: 'M-2',
+    regulation: 'Reg M-A',
+    start: Date.parse('2026-05-13'),
+    end: Date.parse('2026-06-17'),
+  },
+  {
+    id: 'M-3',
+    label: 'M-3',
+    regulation: 'Reg M-B',
+    start: Date.parse('2026-06-17'),
+    end: Date.parse('2026-07-08'),
+  },
+  {
+    id: 'M-4',
+    label: 'M-4',
+    regulation: 'Reg M-B',
+    start: Date.parse('2026-07-08'),
+    end: Date.parse('2026-08-05'),
+  },
+  {
+    id: 'M-5',
+    label: 'M-5',
+    regulation: 'Reg M-B',
+    start: Date.parse('2026-08-05'),
+    end: Date.parse('2026-09-09'),
+  },
+  {
+    id: 'M-6',
+    label: 'M-6',
+    regulation: 'Reg M-C',
+    start: Date.parse('2026-09-09'),
+    end: Date.parse('2026-10-07'),
+  },
 ];
 
 export function getSeasonForDate(timestamp: number): SeasonDef | undefined {
-  return SEASONS.find(s => timestamp >= s.start && timestamp < s.end);
+  return SEASONS.find((s) => timestamp >= s.start && timestamp < s.end);
 }
 
 /**

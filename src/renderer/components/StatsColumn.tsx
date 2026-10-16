@@ -71,7 +71,15 @@ const STATS: Array<{ label: string; key: keyof EVSpread }> = [
 // Permanently editable (Always-On Editing Leg 1, see TODO.md) - no more
 // isEditing gate; the total-EV badge, nature picker, and stat cells below
 // are all unconditionally interactive now.
-export default function StatsColumn({ species, level, gender, baseStats, evs, nature, onUpdatePokemon }: StatsColumnProps) {
+export default function StatsColumn({
+  species,
+  level,
+  gender,
+  baseStats,
+  evs,
+  nature,
+  onUpdatePokemon,
+}: StatsColumnProps) {
   const [localEVs, setLocalEVs] = useState(evs);
   // Resyncs off the evs prop itself during render, same "prevProp" shape as
   // EditablePokemonCore.tsx's shiny/gender/nickname handling - handleIncrement/
@@ -93,7 +101,10 @@ export default function StatsColumn({ species, level, gender, baseStats, evs, na
   const ref = useDismissable<HTMLDivElement>(() => setActiveStat(null));
 
   const [displayMode, setDisplayMode] = useState<StatDisplayMode>('sp');
-  const [realTotalCache, setRealTotalCache] = useState<{ key: string; stats: PokemonStats | null } | null>(null);
+  const [realTotalCache, setRealTotalCache] = useState<{
+    key: string;
+    stats: PokemonStats | null;
+  } | null>(null);
 
   const totalEVs = Object.values(localEVs).reduce((sum, val) => sum + val, 0);
   const natureEffect = getNatureEffect(nature);
@@ -109,9 +120,14 @@ export default function StatsColumn({ species, level, gender, baseStats, evs, na
     let cancelled = false;
     import('../utils/realTotalStats').then(({ computeRealTotalStats }) => {
       if (cancelled) return;
-      setRealTotalCache({ key: realTotalKey, stats: computeRealTotalStats(species, { level, gender, nature, evs: localEVs }) });
+      setRealTotalCache({
+        key: realTotalKey,
+        stats: computeRealTotalStats(species, { level, gender, nature, evs: localEVs }),
+      });
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- realTotalKey already encodes every input this needs to react to
   }, [displayMode, realTotalKey]);
 
@@ -121,7 +137,7 @@ export default function StatsColumn({ species, level, gender, baseStats, evs, na
   // also persists immediately, matching the rest of the app's "write on
   // every mutation" convention (see useTeams.ts).
   const handleIncrement = (key: keyof EVSpread) => {
-    setLocalEVs(prev => {
+    setLocalEVs((prev) => {
       const currentTotal = Object.values(prev).reduce((sum, v) => sum + v, 0);
       if (prev[key] >= 32 || currentTotal >= 66) return prev;
       const next = { ...prev, [key]: prev[key] + 1 };
@@ -131,7 +147,7 @@ export default function StatsColumn({ species, level, gender, baseStats, evs, na
   };
 
   const handleDecrement = (key: keyof EVSpread) => {
-    setLocalEVs(prev => {
+    setLocalEVs((prev) => {
       if (prev[key] <= 0) return prev;
       const next = { ...prev, [key]: prev[key] - 1 };
       onUpdatePokemon({ evs: next });
@@ -146,7 +162,9 @@ export default function StatsColumn({ species, level, gender, baseStats, evs, na
     }
     setNatureMenuMaxHeight(measureDropdownMaxHeight(e.currentTarget));
     setNatureMenuAnchorRect(e.currentTarget.getBoundingClientRect());
-    setNatureMenuCardRect(e.currentTarget.closest<HTMLElement>('[data-pokemon-card]')?.getBoundingClientRect() ?? null);
+    setNatureMenuCardRect(
+      e.currentTarget.closest<HTMLElement>('[data-pokemon-card]')?.getBoundingClientRect() ?? null,
+    );
     setNatureMenuOpen(true);
   };
 
@@ -157,10 +175,11 @@ export default function StatsColumn({ species, level, gender, baseStats, evs, na
 
   const handleDirectInput = (key: keyof EVSpread, rawValue: number) => {
     if (Number.isNaN(rawValue)) return;
-    setLocalEVs(prev => {
+    setLocalEVs((prev) => {
       const clampedForStat = Math.max(0, Math.min(32, Math.floor(rawValue)));
       const totalWithoutThisStat = Object.entries(prev).reduce(
-        (sum, [k, v]) => (k === key ? sum : sum + v), 0
+        (sum, [k, v]) => (k === key ? sum : sum + v),
+        0,
       );
       const maxAllowedForStat = Math.min(32, 66 - totalWithoutThisStat);
       const finalValue = Math.max(0, Math.min(clampedForStat, maxAllowedForStat));
@@ -171,9 +190,10 @@ export default function StatsColumn({ species, level, gender, baseStats, evs, na
   };
 
   const baseTotal = Object.values(baseStats).reduce((sum, v) => sum + v, 0);
-  const realTotal = isRealTotalCurrent && realTotalCache?.stats
-    ? Object.values(realTotalCache.stats).reduce((sum, v) => sum + v, 0)
-    : null;
+  const realTotal =
+    isRealTotalCurrent && realTotalCache?.stats
+      ? Object.values(realTotalCache.stats).reduce((sum, v) => sum + v, 0)
+      : null;
 
   return (
     <div ref={ref} className="bg-zinc-800 rounded px-2 py-1.5 border border-zinc-600 min-w-0">
@@ -187,22 +207,31 @@ export default function StatsColumn({ species, level, gender, baseStats, evs, na
                 onClick={() => setDisplayMode(mode)}
                 title={title}
                 className={`text-[9px] font-bold uppercase px-1 py-0.5 rounded transition-colors cursor-pointer ${
-                  displayMode === mode ? 'bg-accent-gold text-zinc-900' : 'bg-zinc-900 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-300'
+                  displayMode === mode
+                    ? 'bg-accent-gold text-zinc-900'
+                    : 'bg-zinc-900 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-300'
                 }`}
-              >{label}</button>
+              >
+                {label}
+              </button>
             ))}
           </div>
           {displayMode === 'sp' ? (
-            <span className={`text-[10px] font-bold px-1 py-0.5 rounded ${
-              totalEVs > 66
-                ? 'bg-red-600 text-white border border-red-400'
-                : totalEVs === 66
-                  ? 'bg-emerald-500 text-white'
-                  : 'bg-zinc-700 text-zinc-400'
-            }`}>{totalEVs > 66 ? '⚠ ' : ''}{totalEVs}/66</span>
+            <span
+              className={`text-[10px] font-bold px-1 py-0.5 rounded ${
+                totalEVs > 66
+                  ? 'bg-red-600 text-white border border-red-400'
+                  : totalEVs === 66
+                    ? 'bg-emerald-500 text-white'
+                    : 'bg-zinc-700 text-zinc-400'
+              }`}
+            >
+              {totalEVs > 66 ? '⚠ ' : ''}
+              {totalEVs}/66
+            </span>
           ) : (
             <span className="text-[10px] font-bold px-1 py-0.5 rounded bg-zinc-700 text-zinc-400">
-              {displayMode === 'base' ? baseTotal : (realTotal !== null ? realTotal : '…')}
+              {displayMode === 'base' ? baseTotal : realTotal !== null ? realTotal : '…'}
             </span>
           )}
         </div>
@@ -231,7 +260,14 @@ export default function StatsColumn({ species, level, gender, baseStats, evs, na
           )}
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.5rem', marginTop: '0.5rem' }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+          gap: '0.5rem',
+          marginTop: '0.5rem',
+        }}
+      >
         {STATS.map((stat, statIndex) => {
           if (displayMode === 'sp') {
             const val = localEVs[stat.key];
@@ -254,22 +290,36 @@ export default function StatsColumn({ species, level, gender, baseStats, evs, na
           // Base / Real Total are read-only display states - rendered as
           // plain values rather than through EVStatCell, whose whole shape
           // (activate-to-edit, hold-to-repeat +/-) only makes sense for SP.
-          const readOnlyValue = displayMode === 'base'
-            ? baseStats[stat.key]
-            : isRealTotalCurrent
-              ? (realTotalCache?.stats ? realTotalCache.stats[stat.key] : '—')
-              : '…';
+          const readOnlyValue =
+            displayMode === 'base'
+              ? baseStats[stat.key]
+              : isRealTotalCurrent
+                ? realTotalCache?.stats
+                  ? realTotalCache.stats[stat.key]
+                  : '—'
+                : '…';
           return (
-            <div key={stat.label} className="flex flex-col items-center gap-0.5 rounded px-1 py-0.5">
-              <span className={`text-[10px] font-bold uppercase ${getStatLabelColor(stat.label)}`}>{stat.label}</span>
-              <span className="text-sm font-mono font-bold text-zinc-100 px-1.5 py-0.5">{readOnlyValue}</span>
+            <div
+              key={stat.label}
+              className="flex flex-col items-center gap-0.5 rounded px-1 py-0.5"
+            >
+              <span className={`text-[10px] font-bold uppercase ${getStatLabelColor(stat.label)}`}>
+                {stat.label}
+              </span>
+              <span className="text-sm font-mono font-bold text-zinc-100 px-1.5 py-0.5">
+                {readOnlyValue}
+              </span>
             </div>
           );
         })}
       </div>
       {natureMenuOpen && natureMenuAnchorRect && (
         <FloatingCardPanel anchorRect={natureMenuAnchorRect} cardRect={natureMenuCardRect}>
-          <NaturePickerPanel maxHeight={natureMenuMaxHeight} onSelect={handleNatureSelect} onClose={() => setNatureMenuOpen(false)} />
+          <NaturePickerPanel
+            maxHeight={natureMenuMaxHeight}
+            onSelect={handleNatureSelect}
+            onClose={() => setNatureMenuOpen(false)}
+          />
         </FloatingCardPanel>
       )}
     </div>

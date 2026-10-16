@@ -54,9 +54,11 @@ describe('useSettings', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.settings.defaultRegulation).toBe(getLatestSeason().regulation);
-    await waitFor(() => expect(window.electron.writeSettings).toHaveBeenCalledWith(
-      expect.objectContaining({ defaultRegulation: getLatestSeason().regulation })
-    ));
+    await waitFor(() =>
+      expect(window.electron.writeSettings).toHaveBeenCalledWith(
+        expect.objectContaining({ defaultRegulation: getLatestSeason().regulation }),
+      ),
+    );
   });
 
   it('reports an error and stops loading when reading settings throws', async () => {
@@ -82,7 +84,7 @@ describe('useSettings', () => {
     expect(success).toBe(true);
     expect(result.current.settings.defaultRegulation).toBe('Reg M-B');
     expect(window.electron.writeSettings).toHaveBeenCalledWith(
-      expect.objectContaining({ defaultRegulation: 'Reg M-B' })
+      expect.objectContaining({ defaultRegulation: 'Reg M-B' }),
     );
   });
 

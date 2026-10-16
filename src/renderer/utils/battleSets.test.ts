@@ -37,16 +37,16 @@ describe('groupBattlesBySet', () => {
     ];
     const groups = groupBattlesBySet(battles);
     expect(groups).toHaveLength(1);
-    expect(groups[0].battles.map(b => b.id)).toEqual(['g1', 'g2']);
+    expect(groups[0].battles.map((b) => b.id)).toEqual(['g1', 'g2']);
   });
 
-  it('sorts each group\'s battles oldest-first regardless of input order', () => {
+  it("sorts each group's battles oldest-first regardless of input order", () => {
     const battles = [
       makeBattle({ id: 'g2', setId: 'set-a', date: 2 }),
       makeBattle({ id: 'g1', setId: 'set-a', date: 1 }),
     ];
     const groups = groupBattlesBySet(battles);
-    expect(groups[0].battles.map(b => b.id)).toEqual(['g1', 'g2']);
+    expect(groups[0].battles.map((b) => b.id)).toEqual(['g1', 'g2']);
   });
 
   it('places each group at the position of its first-encountered member, preserving overall ordering', () => {
@@ -56,10 +56,10 @@ describe('groupBattlesBySet', () => {
       makeBattle({ id: 'x2', setId: 'set-x', date: 3 }),
     ];
     const groups = groupBattlesBySet(battles);
-    expect(groups.map(g => g.setId)).toEqual(['set-x', 'set-y']);
+    expect(groups.map((g) => g.setId)).toEqual(['set-x', 'set-y']);
   });
 
-  it('uses Game 1\'s opponentName casing even if a later game differs only by case', () => {
+  it("uses Game 1's opponentName casing even if a later game differs only by case", () => {
     const battles = [
       makeBattle({ id: 'g1', setId: 'set-a', date: 1, opponentName: 'AshKetchum' }),
       makeBattle({ id: 'g2', setId: 'set-a', date: 2, opponentName: 'ashketchum' }),

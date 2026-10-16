@@ -35,8 +35,11 @@ describe('getMegaAbility', () => {
 describe('MEGA_ABILITIES coverage', () => {
   it('has an entry for every Mega form in MEGA_STONE_TO_SPECIES', () => {
     const missing = Object.values(MEGA_STONE_TO_SPECIES)
-      .map(({ species, suffix }) => (species === 'floette-eternal' ? 'floette' : species) + '-' + suffix)
-      .filter(slug => !(slug in MEGA_ABILITIES));
+      .map(
+        ({ species, suffix }) =>
+          (species === 'floette-eternal' ? 'floette' : species) + '-' + suffix,
+      )
+      .filter((slug) => !(slug in MEGA_ABILITIES));
 
     expect(missing).toEqual([]);
   });

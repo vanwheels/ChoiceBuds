@@ -59,12 +59,24 @@ interface MoveBubbleProps {
   onDragEnd: () => void;
 }
 
-function MoveBubble({ originalIndex, theme, label, gridRef, onToggleMenu, onHoverEnter, onHoverLeave, onDrag, onDragEnd }: MoveBubbleProps) {
+function MoveBubble({
+  originalIndex,
+  theme,
+  label,
+  gridRef,
+  onToggleMenu,
+  onHoverEnter,
+  onHoverLeave,
+  onDrag,
+  onDragEnd,
+}: MoveBubbleProps) {
   const key = `move${originalIndex}` as `move${0 | 1 | 2 | 3}`;
   // Same grid-rect anchoring as onMouseEnter below.
   const longPress = useLongPress(
-    () => { if (gridRef.current) onHoverEnter(key, gridRef.current); },
-    () => onHoverLeave(key)
+    () => {
+      if (gridRef.current) onHoverEnter(key, gridRef.current);
+    },
+    () => onHoverLeave(key),
   );
 
   // Swallows the click a finished drag would otherwise fire on pointerup.
@@ -79,9 +91,22 @@ function MoveBubble({ originalIndex, theme, label, gridRef, onToggleMenu, onHove
       dragElastic={0}
       transition={DRAG_REORDER_TRANSITION}
       whileDrag={{ scale: 1.05, zIndex: 1, boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}
-      onDragStart={() => { didDrag.current = true; }}
-      onDrag={(e, info) => onDrag(originalIndex, (e as globalThis.PointerEvent).clientX ?? info.point.x, (e as globalThis.PointerEvent).clientY ?? info.point.y)}
-      onDragEnd={() => { onDragEnd(); setTimeout(() => { didDrag.current = false; }, 0); }}
+      onDragStart={() => {
+        didDrag.current = true;
+      }}
+      onDrag={(e, info) =>
+        onDrag(
+          originalIndex,
+          (e as globalThis.PointerEvent).clientX ?? info.point.x,
+          (e as globalThis.PointerEvent).clientY ?? info.point.y,
+        )
+      }
+      onDragEnd={() => {
+        onDragEnd();
+        setTimeout(() => {
+          didDrag.current = false;
+        }, 0);
+      }}
       // Each bubble is its own drag source (not just the outer PokemonCard)
       // - stopPropagation on pointerdown is what stops a bubble drag from
       // also bubbling up into PokemonCard's own handlePointerDown and
@@ -98,7 +123,9 @@ function MoveBubble({ originalIndex, theme, label, gridRef, onToggleMenu, onHove
         if (gridRef.current) onHoverEnter(key, gridRef.current);
       }}
       onMouseLeave={() => onHoverLeave(key)}
-      onClick={(e: MouseEvent<HTMLDivElement>) => { if (!didDrag.current) onToggleMenu(key, e); }}
+      onClick={(e: MouseEvent<HTMLDivElement>) => {
+        if (!didDrag.current) onToggleMenu(key, e);
+      }}
       {...longPress}
       className={`w-full min-h-[2.75rem] flex items-center justify-center text-center whitespace-normal break-words px-0.5 py-1 rounded-xl text-xs @max-[160px]:text-[10.5px] @max-[160px]:tracking-tight @max-[160px]:px-0 font-bold transition-colors select-none ${theme.bg} ${theme.text} hover:opacity-80 cursor-grab`}
     >
@@ -118,8 +145,8 @@ export default function MoveBubbleGrid({
   // Move-type background/text classes only need recomputing when the 4
   // equipped moves actually change, not on every render during mount/hover.
   const themes = useMemo(
-    () => moveDataSlots.map(move => (move ? getTypeTheme(move.type) : NEUTRAL_THEME)),
-    [moveDataSlots]
+    () => moveDataSlots.map((move) => (move ? getTypeTheme(move.type) : NEUTRAL_THEME)),
+    [moveDataSlots],
   );
 
   // Local visual order of original slot indices, permuted live during a
@@ -147,9 +174,9 @@ export default function MoveBubbleGrid({
     const col = Math.min(1, Math.max(0, Math.floor(((clientX - rect.left) / rect.width) * 2)));
     const row = Math.min(1, Math.max(0, Math.floor(((clientY - rect.top) / rect.height) * 2)));
     const target = row * 2 + col;
-    setOrder(prev => {
+    setOrder((prev) => {
       if (prev.indexOf(originalIndex) === target) return prev;
-      const next = prev.filter(i => i !== originalIndex);
+      const next = prev.filter((i) => i !== originalIndex);
       next.splice(target, 0, originalIndex);
       return next;
     });
@@ -161,7 +188,7 @@ export default function MoveBubbleGrid({
       // Remount so the already-final layout doesn't animate back to
       // identity positions before the re-indexed content settles.
       setOrder([...IDENTITY_ORDER]);
-      setResetCount(c => c + 1);
+      setResetCount((c) => c + 1);
     }
   };
 
@@ -169,7 +196,7 @@ export default function MoveBubbleGrid({
     // 2D hit-test reorder (Web Reorder Jank, see TODO.md): framer's Reorder
     // is 1D-only, so row-to-row moves never registered in this 2x2 grid.
     <div key={resetCount} ref={gridRef} className="@container grid grid-cols-2 gap-1.5 w-full">
-      {order.map(originalIndex => (
+      {order.map((originalIndex) => (
         <MoveBubble
           key={originalIndex}
           originalIndex={originalIndex}

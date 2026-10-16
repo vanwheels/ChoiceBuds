@@ -15,8 +15,8 @@ export interface ReactiveLowerEffect {
 }
 
 const REACTIVE_ON_STAT_LOWERED: Record<string, ReactiveLowerEffect> = {
-  'defiant': { stat: 'atk', stages: 2 },
-  'competitive': { stat: 'spa', stages: 2 },
+  defiant: { stat: 'atk', stages: 2 },
+  competitive: { stat: 'spa', stages: 2 },
 };
 
 export function getReactiveLowerEffect(ability: string | undefined): ReactiveLowerEffect | null {

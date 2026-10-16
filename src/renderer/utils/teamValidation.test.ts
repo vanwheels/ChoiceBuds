@@ -22,7 +22,14 @@ function makePokemon(overrides: Partial<ShowdownPokemon> = {}): ImportedPokemonI
     showdownData: makeShowdownPokemon(overrides),
     pokedexNumber: 94,
     types: ['ghost', 'poison'],
-    baseStats: { hp: 60, attack: 65, defense: 60, specialAttack: 130, specialDefense: 75, speed: 110 },
+    baseStats: {
+      hp: 60,
+      attack: 65,
+      defense: 60,
+      specialAttack: 130,
+      specialDefense: 75,
+      speed: 110,
+    },
     spriteUrl: 'https://example.com/gengar.png',
     importedAt: Date.now(),
     id: crypto.randomUUID(),
@@ -34,7 +41,14 @@ function makeFullLegalTeam(): Team {
   // validateSpeciesLegality normalizes internally, but display labels use
   // this text as-is), distinct items, no duplicate moves
   const species = ['Gengar', 'Gholdengo', 'Garchomp', 'Incineroar', 'Primarina', 'Sylveon'];
-  const items = ['life-orb', 'choice-scarf', 'rocky-helmet', 'sitrus-berry', 'leftovers', 'safety-goggles'];
+  const items = [
+    'life-orb',
+    'choice-scarf',
+    'rocky-helmet',
+    'sitrus-berry',
+    'leftovers',
+    'safety-goggles',
+  ];
   return {
     id: 'team-1',
     name: 'Test Team',
@@ -61,15 +75,22 @@ describe('validateTeam', () => {
 
   it('flags a nickname longer than 12 characters, labeling by nickname (species)', () => {
     const team = makeFullLegalTeam();
-    team.pokemon[0] = makePokemon({ species: 'Gengar', item: 'life-orb', nickname: 'ReallyLongNickname' });
+    team.pokemon[0] = makePokemon({
+      species: 'Gengar',
+      item: 'life-orb',
+      nickname: 'ReallyLongNickname',
+    });
     const result = validateTeam(team, 'REG-MB');
-    expect(result.issues).toContain('ReallyLongNickname (Gengar): nickname is longer than 12 characters');
+    expect(result.issues).toContain(
+      'ReallyLongNickname (Gengar): nickname is longer than 12 characters',
+    );
   });
 
   it('flags the same move used in more than one slot', () => {
     const team = makeFullLegalTeam();
     team.pokemon[0] = makePokemon({
-      species: 'Gengar', item: 'life-orb',
+      species: 'Gengar',
+      item: 'life-orb',
       moves: ['Shadow Ball', 'Shadow Ball', 'Protect', 'Taunt'],
     });
     const result = validateTeam(team, 'REG-MB');
@@ -79,7 +100,8 @@ describe('validateTeam', () => {
   it('detects duplicate moves case-insensitively', () => {
     const team = makeFullLegalTeam();
     team.pokemon[0] = makePokemon({
-      species: 'Gengar', item: 'life-orb',
+      species: 'Gengar',
+      item: 'life-orb',
       moves: ['shadow ball', 'Shadow Ball', 'Protect', 'Taunt'],
     });
     const result = validateTeam(team, 'REG-MB');
@@ -112,7 +134,7 @@ describe('validateTeam', () => {
     team.pokemon[0] = makePokemon({ species: 'Gengar', item: undefined });
     team.pokemon[1] = makePokemon({ species: 'Gholdengo', item: undefined });
     const result = validateTeam(team, 'REG-MB');
-    expect(result.issues.some(i => i.startsWith('Item Clause'))).toBe(false);
+    expect(result.issues.some((i) => i.startsWith('Item Clause'))).toBe(false);
   });
 
   it('labels a species-clause duplicate by nickname when set', () => {
@@ -120,6 +142,8 @@ describe('validateTeam', () => {
     team.pokemon[0] = makePokemon({ species: 'Gengar', item: 'life-orb', nickname: 'Ghosty' });
     team.pokemon[1] = makePokemon({ species: 'Gengar', item: 'choice-scarf' });
     const result = validateTeam(team, 'REG-MB');
-    expect(result.issues).toContain('Duplicate Pokémon: Ghosty (Gengar), Gengar are the same species');
+    expect(result.issues).toContain(
+      'Duplicate Pokémon: Ghosty (Gengar), Gengar are the same species',
+    );
   });
 });

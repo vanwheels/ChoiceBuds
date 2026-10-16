@@ -26,9 +26,19 @@ interface TeamPosterTileProps {
   showStatAlignment: boolean;
 }
 
-export default function TeamPosterTile({ pokemon, gameDataState, spriteCacheState, showStatAlignment }: TeamPosterTileProps) {
+export default function TeamPosterTile({
+  pokemon,
+  gameDataState,
+  spriteCacheState,
+  showStatAlignment,
+}: TeamPosterTileProps) {
   const { showdownData, pokedexNumber } = pokemon;
-  const spriteUrl = getPixelSpriteUrl(pokedexNumber, showdownData.species, showdownData.gender || 'M', showdownData.shiny);
+  const spriteUrl = getPixelSpriteUrl(
+    pokedexNumber,
+    showdownData.species,
+    showdownData.gender || 'M',
+    showdownData.shiny,
+  );
   const itemData = showdownData.item ? gameDataState.getCachedItem(showdownData.item) : null;
   const statAlignment = formatStatAlignment(showdownData.nature, showdownData.evs);
 
@@ -46,14 +56,22 @@ export default function TeamPosterTile({ pokemon, gameDataState, spriteCacheStat
       {showdownData.item && (
         <div className="flex items-center gap-1.5 w-full min-w-0 justify-center">
           {getItemSpriteUrl(showdownData.item, itemData?.spriteUrl) && (
-            <img src={spriteCacheState.resolveSprite(getItemSpriteUrl(showdownData.item, itemData?.spriteUrl))} alt={showdownData.item} className="w-5 h-5 object-contain [image-rendering:pixelated] shrink-0" />
+            <img
+              src={spriteCacheState.resolveSprite(
+                getItemSpriteUrl(showdownData.item, itemData?.spriteUrl),
+              )}
+              alt={showdownData.item}
+              className="w-5 h-5 object-contain [image-rendering:pixelated] shrink-0"
+            />
           )}
           <span className="text-[11px] text-zinc-400 truncate min-w-0">{showdownData.item}</span>
         </div>
       )}
 
       {showdownData.ability && (
-        <span className="text-[11px] text-zinc-500 italic truncate w-full text-center">{showdownData.ability}</span>
+        <span className="text-[11px] text-zinc-500 italic truncate w-full text-center">
+          {showdownData.ability}
+        </span>
       )}
 
       {/* One move per row (not the old 2x2 grid) - a move chip's full width is now the whole
@@ -62,7 +80,10 @@ export default function TeamPosterTile({ pokemon, gameDataState, spriteCacheStat
         {showdownData.moves.map((move, idx) => {
           const theme = getTypeTheme(gameDataState.getCachedMove(move)?.type ?? '');
           return (
-            <div key={idx} className={`text-[10px] font-bold text-center rounded px-1 py-1 truncate min-w-0 ${theme.bg} ${theme.text}`}>
+            <div
+              key={idx}
+              className={`text-[10px] font-bold text-center rounded px-1 py-1 truncate min-w-0 ${theme.bg} ${theme.text}`}
+            >
               {move}
             </div>
           );
@@ -70,9 +91,7 @@ export default function TeamPosterTile({ pokemon, gameDataState, spriteCacheStat
       </div>
 
       {showStatAlignment && statAlignment && (
-        <p className="text-[10px] text-zinc-500 text-center w-full">
-          {statAlignment}
-        </p>
+        <p className="text-[10px] text-zinc-500 text-center w-full">{statAlignment}</p>
       )}
     </div>
   );

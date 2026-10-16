@@ -46,7 +46,8 @@ const COPY_CONFIRMATION_MS = 2000;
 // one blocked icon shouldn't take down the whole poster export. A real
 // (non-empty) placeholder data URI loads cleanly instead, so the export
 // still succeeds with that one icon blank.
-const TRANSPARENT_PIXEL_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+const TRANSPARENT_PIXEL_PNG =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
 
 async function renderPosterBlob(node: HTMLElement): Promise<Blob> {
   // pixelRatio 2 for a crisp export - the on-screen preview stays 1x.
@@ -60,7 +61,12 @@ async function renderPosterBlob(node: HTMLElement): Promise<Blob> {
   return blob;
 }
 
-export default function TeamExportImageModal({ team, gameDataState, spriteCacheState, onClose }: TeamExportImageModalProps) {
+export default function TeamExportImageModal({
+  team,
+  gameDataState,
+  spriteCacheState,
+  onClose,
+}: TeamExportImageModalProps) {
   const posterRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -139,7 +145,9 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
                 onClick={() => setViewMode('team')}
                 title="Full per-Pokemon detail grid"
                 className={`px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
-                  viewMode === 'team' ? 'bg-accent-gold text-zinc-900' : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
+                  viewMode === 'team'
+                    ? 'bg-accent-gold text-zinc-900'
+                    : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
                 }`}
               >
                 Team
@@ -148,7 +156,9 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
                 onClick={() => setViewMode('notes')}
                 title="Compact sprite strip + the full strategy writeup"
                 className={`px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
-                  viewMode === 'notes' ? 'bg-accent-gold text-zinc-900' : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
+                  viewMode === 'notes'
+                    ? 'bg-accent-gold text-zinc-900'
+                    : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
                 }`}
               >
                 Notes
@@ -165,7 +175,9 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
                 onClick={() => setSheetMode('open')}
                 title="Shows species, item, ability, moves, and Stat Alignment (Nature + EVs)"
                 className={`px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
-                  sheetMode === 'open' ? 'bg-accent-gold text-zinc-900' : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
+                  sheetMode === 'open'
+                    ? 'bg-accent-gold text-zinc-900'
+                    : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
                 }`}
               >
                 Open
@@ -174,7 +186,9 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
                 onClick={() => setSheetMode('closed')}
                 title="Hides Stat Alignment (Nature + EVs) - matches a Closed Team Sheet"
                 className={`px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
-                  sheetMode === 'closed' ? 'bg-accent-gold text-zinc-900' : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
+                  sheetMode === 'closed'
+                    ? 'bg-accent-gold text-zinc-900'
+                    : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
                 }`}
               >
                 Closed
@@ -202,9 +216,17 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
           {copied ? 'Copied!' : 'Copy to Clipboard'}
         </button>
 
-        <button onClick={onClose} className="text-zinc-400 hover:text-zinc-200 transition-colors shrink-0">
+        <button
+          onClick={onClose}
+          className="text-zinc-400 hover:text-zinc-200 transition-colors shrink-0"
+        >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -219,10 +241,16 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
         {/* w-full (not a fixed px width) so every child stretches to the same width, bounded
             strictly by this modal's own max-w-6xl/padding - can't overflow by construction,
             and uses whatever width is actually available (bigger tiles, less truncation). */}
-        <div ref={posterRef} className="flex flex-col gap-4 p-6 bg-zinc-900 rounded-lg w-full" style={{ backgroundColor: '#18181b' }}>
+        <div
+          ref={posterRef}
+          className="flex flex-col gap-4 p-6 bg-zinc-900 rounded-lg w-full"
+          style={{ backgroundColor: '#18181b' }}
+        >
           <div className="flex items-center gap-3">
             <h3 className="text-lg font-bold text-zinc-100">{team.name}</h3>
-            <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded text-white ${regulationTheme.badgeBg}`}>
+            <span
+              className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded text-white ${regulationTheme.badgeBg}`}
+            >
               {team.format}
             </span>
             {team.author && <span className="text-xs text-zinc-500">by {team.author}</span>}
@@ -247,11 +275,18 @@ export default function TeamExportImageModal({ team, gameDataState, spriteCacheS
             <>
               <div className="flex items-center gap-4 flex-wrap">
                 {team.pokemon.map((pokemon, idx) => (
-                  <TeamPosterMiniSprite key={idx} pokemon={pokemon} gameDataState={gameDataState} spriteCacheState={spriteCacheState} />
+                  <TeamPosterMiniSprite
+                    key={idx}
+                    pokemon={pokemon}
+                    gameDataState={gameDataState}
+                    spriteCacheState={spriteCacheState}
+                  />
                 ))}
               </div>
               {team.notes && (
-                <p className="text-sm text-zinc-300 whitespace-pre-wrap border-l-2 border-zinc-700 pl-4 w-full">{team.notes}</p>
+                <p className="text-sm text-zinc-300 whitespace-pre-wrap border-l-2 border-zinc-700 pl-4 w-full">
+                  {team.notes}
+                </p>
               )}
             </>
           )}

@@ -15,7 +15,14 @@ function makePokemon(id: string): ImportedPokemonInfo {
     },
     pokedexNumber: 94,
     types: ['ghost', 'poison'],
-    baseStats: { hp: 60, attack: 65, defense: 60, specialAttack: 130, specialDefense: 75, speed: 110 },
+    baseStats: {
+      hp: 60,
+      attack: 65,
+      defense: 60,
+      specialAttack: 130,
+      specialDefense: 75,
+      speed: 110,
+    },
     spriteUrl: 'https://example.com/gengar.png',
     importedAt: 0,
     id,
@@ -41,7 +48,11 @@ describe('buildPastedTeam', () => {
   });
 
   it('appends " (Copy N)" once "(Copy)" is already taken, finding the smallest unused N', () => {
-    const pasted = buildPastedTeam(makeTeam({ name: 'Rain Team' }), ['Rain Team', 'Rain Team (Copy)', 'Rain Team (Copy 2)']);
+    const pasted = buildPastedTeam(makeTeam({ name: 'Rain Team' }), [
+      'Rain Team',
+      'Rain Team (Copy)',
+      'Rain Team (Copy 2)',
+    ]);
     expect(pasted.name).toBe('Rain Team (Copy 3)');
   });
 
@@ -50,9 +61,9 @@ describe('buildPastedTeam', () => {
     const pasted = buildPastedTeam(source, []);
 
     expect(pasted.id).not.toBe(source.id);
-    expect(pasted.pokemon.map(p => p.id)).not.toEqual(source.pokemon.map(p => p.id));
+    expect(pasted.pokemon.map((p) => p.id)).not.toEqual(source.pokemon.map((p) => p.id));
     expect(pasted.pokemon).toHaveLength(source.pokemon.length);
-    expect(new Set(pasted.pokemon.map(p => p.id)).size).toBe(pasted.pokemon.length); // no id collisions between slots either
+    expect(new Set(pasted.pokemon.map((p) => p.id)).size).toBe(pasted.pokemon.length); // no id collisions between slots either
   });
 
   it('resets favorite to false even when the source team was favorited', () => {

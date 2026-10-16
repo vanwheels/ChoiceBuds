@@ -103,7 +103,7 @@ export default function AppWeb() {
   const [visitedTabs, setVisitedTabs] = useState<Set<ActiveTab>>(() => new Set(['teams']));
   const goToTab = (tab: ActiveTab) => {
     setActiveTab(tab);
-    setVisitedTabs(prev => prev.has(tab) ? prev : new Set(prev).add(tab));
+    setVisitedTabs((prev) => (prev.has(tab) ? prev : new Set(prev).add(tab)));
   };
   const [showAuthModal, setShowAuthModal] = useState(false);
   // Same lazy-once/hidden-after-first-open lifecycle as visitedTabs above,
@@ -139,173 +139,214 @@ export default function AppWeb() {
   // there's no in-app auto-update concept for a web app anyway. SettingsPage
   // treats updateCheckState as optional and skips UpdateCheckSection
   // entirely when it's absent - see SettingsPage.tsx.
-  const releaseNotesState = useReleaseNotes(settingsState.settings, settingsState.isLoading, settingsState.updateSettings);
+  const releaseNotesState = useReleaseNotes(
+    settingsState.settings,
+    settingsState.isLoading,
+    settingsState.updateSettings,
+  );
 
   return (
     // Mobile Compact Top Bar: Teams & Box leg (see TODO.md) - see App.tsx's
     // matching comment for why this needs to wrap both Sidebar and <main>.
     <MobileHeaderActionsProvider>
-    <div className="flex flex-col md:flex-row h-screen bg-zinc-900 text-zinc-100">
-      <Sidebar
-        activeTab={activeTab}
-        onTabChange={goToTab}
-        renderFooter={(collapsed) => collapsed ? null : (
-          <div className="flex flex-col gap-1 px-1.5">
-            {syncState.syncUsername ? (
-              <>
-                <span className="truncate text-xs font-mono text-zinc-300" title={syncState.syncUsername}>
-                  {syncState.syncUsername}
-                </span>
-                <button
-                  onClick={() => { syncState.logOut(); }}
-                  className="mt-1 self-start text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
-                >
-                  Log out
-                </button>
-              </>
-            ) : (
-              <>
-                <span className="text-[11px] text-zinc-500">Not signed in</span>
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="self-start text-[11px] font-semibold text-accent-gold hover:text-accent-gold-deep transition-colors cursor-pointer"
-                >
-                  Sign in to sync
-                </button>
-              </>
-            )}
-          </div>
-        )}
-        mobileTopBarEnd={
-          <button
-            onClick={() => { setIsCalcPopupOpen(true); setHasOpenedCalcPopup(true); }}
-            aria-label="Open Calc"
-            className="flex items-center justify-center rounded-lg p-2 text-accent-gold transition-colors cursor-pointer hover:bg-zinc-700"
-          >
-            <CalcIcon />
-          </button>
-        }
-      />
+      <div className="flex flex-col md:flex-row h-screen bg-zinc-900 text-zinc-100">
+        <Sidebar
+          activeTab={activeTab}
+          onTabChange={goToTab}
+          renderFooter={(collapsed) =>
+            collapsed ? null : (
+              <div className="flex flex-col gap-1 px-1.5">
+                {syncState.syncUsername ? (
+                  <>
+                    <span
+                      className="truncate text-xs font-mono text-zinc-300"
+                      title={syncState.syncUsername}
+                    >
+                      {syncState.syncUsername}
+                    </span>
+                    <button
+                      onClick={() => {
+                        syncState.logOut();
+                      }}
+                      className="mt-1 self-start text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+                    >
+                      Log out
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-[11px] text-zinc-500">Not signed in</span>
+                    <button
+                      onClick={() => setShowAuthModal(true)}
+                      className="self-start text-[11px] font-semibold text-accent-gold hover:text-accent-gold-deep transition-colors cursor-pointer"
+                    >
+                      Sign in to sync
+                    </button>
+                  </>
+                )}
+              </div>
+            )
+          }
+          mobileTopBarEnd={
+            <button
+              onClick={() => {
+                setIsCalcPopupOpen(true);
+                setHasOpenedCalcPopup(true);
+              }}
+              aria-label="Open Calc"
+              className="flex items-center justify-center rounded-lg p-2 text-accent-gold transition-colors cursor-pointer hover:bg-zinc-700"
+            >
+              <CalcIcon />
+            </button>
+          }
+        />
 
-      {showAuthModal && (
-        <WebAuthScreen syncState={syncState} onClose={() => setShowAuthModal(false)} />
-      )}
+        {showAuthModal && (
+          <WebAuthScreen syncState={syncState} onClose={() => setShowAuthModal(false)} />
+        )}
 
-      <main className="flex-1 overflow-y-auto">
-        <div style={{ display: activeTab === 'teams' ? 'block' : 'none' }} className="h-full">
-          <TeamsPage
-            teamsState={teamsState}
-            databaseState={databaseState}
-            editorState={editorState}
-            gameDataState={gameDataState}
-            speciesRosterState={speciesRosterState}
-            spriteCacheState={spriteCacheState}
-            settingsState={settingsState}
-            savedPokemonState={savedPokemonState}
-          />
-        </div>
-        {visitedTabs.has('box') && (
-          <div style={{ display: activeTab === 'box' ? 'block' : 'none' }} className="h-full">
-            <Suspense fallback={<div className="p-8 text-sm text-zinc-400">Loading box...</div>}>
-              <BoxPage
-                savedPokemonState={savedPokemonState}
-                gameDataState={gameDataState}
-                databaseState={databaseState}
-                speciesRosterState={speciesRosterState}
-                spriteCacheState={spriteCacheState}
-                settingsState={settingsState}
-                teamsState={teamsState}
-              />
-            </Suspense>
+        <main className="flex-1 overflow-y-auto">
+          <div style={{ display: activeTab === 'teams' ? 'block' : 'none' }} className="h-full">
+            <TeamsPage
+              teamsState={teamsState}
+              databaseState={databaseState}
+              editorState={editorState}
+              gameDataState={gameDataState}
+              speciesRosterState={speciesRosterState}
+              spriteCacheState={spriteCacheState}
+              settingsState={settingsState}
+              savedPokemonState={savedPokemonState}
+            />
           </div>
-        )}
-        {visitedTabs.has('typeMatchup') && (
-          <div style={{ display: activeTab === 'typeMatchup' ? 'block' : 'none' }} className="h-full">
-            <Suspense fallback={<div className="p-8 text-sm text-zinc-400">Loading type matchup...</div>}>
-              <TypeMatchupPage
-                teamsState={teamsState}
-                gameDataState={gameDataState}
-                databaseState={databaseState}
-                spriteCacheState={spriteCacheState}
-              />
-            </Suspense>
-          </div>
-        )}
-        {visitedTabs.has('speedTiers') && (
-          <div style={{ display: activeTab === 'speedTiers' ? 'block' : 'none' }} className="h-full">
-            <Suspense fallback={<div className="p-8 text-sm text-zinc-400">Loading speed tiers...</div>}>
-              <SpeedTiersPage
-                teamsState={teamsState}
-                gameDataState={gameDataState}
-                databaseState={databaseState}
-                spriteCacheState={spriteCacheState}
-                speciesRosterState={speciesRosterState}
-              />
-            </Suspense>
-          </div>
-        )}
-        {visitedTabs.has('battles') && (
-          <div style={{ display: activeTab === 'battles' ? 'block' : 'none' }} className="h-full">
-            <Suspense fallback={<div className="p-8 text-sm text-zinc-400">Loading battle log...</div>}>
-              <BattleLogPage
-                battlesState={battlesState}
-                teamsState={teamsState}
-                speciesRosterState={speciesRosterState}
-                spriteCacheState={spriteCacheState}
-                registerBattleLogSession={setBattleLogSession}
-              />
-            </Suspense>
-          </div>
-        )}
-        {visitedTabs.has('statistics') && (
-          <div style={{ display: activeTab === 'statistics' ? 'block' : 'none' }} className="h-full">
-            <Suspense fallback={<div className="p-8 text-sm text-zinc-400">Loading statistics...</div>}>
-              <StatisticsPage battlesState={battlesState} spriteCacheState={spriteCacheState} />
-            </Suspense>
-          </div>
-        )}
-        {visitedTabs.has('settings') && (
-          <div style={{ display: activeTab === 'settings' ? 'block' : 'none' }} className="h-full">
-            <Suspense fallback={<div className="p-8 text-sm text-zinc-400">Loading settings...</div>}>
-              <SettingsPage
-                settingsState={settingsState}
-                syncState={syncState}
-                teamsState={teamsState}
-                releaseNotesState={releaseNotesState}
-                databaseState={databaseState}
-                gameDataState={gameDataState}
-              />
-            </Suspense>
-          </div>
-        )}
-      </main>
+          {visitedTabs.has('box') && (
+            <div style={{ display: activeTab === 'box' ? 'block' : 'none' }} className="h-full">
+              <Suspense fallback={<div className="p-8 text-sm text-zinc-400">Loading box...</div>}>
+                <BoxPage
+                  savedPokemonState={savedPokemonState}
+                  gameDataState={gameDataState}
+                  databaseState={databaseState}
+                  speciesRosterState={speciesRosterState}
+                  spriteCacheState={spriteCacheState}
+                  settingsState={settingsState}
+                  teamsState={teamsState}
+                />
+              </Suspense>
+            </div>
+          )}
+          {visitedTabs.has('typeMatchup') && (
+            <div
+              style={{ display: activeTab === 'typeMatchup' ? 'block' : 'none' }}
+              className="h-full"
+            >
+              <Suspense
+                fallback={<div className="p-8 text-sm text-zinc-400">Loading type matchup...</div>}
+              >
+                <TypeMatchupPage
+                  teamsState={teamsState}
+                  gameDataState={gameDataState}
+                  databaseState={databaseState}
+                  spriteCacheState={spriteCacheState}
+                />
+              </Suspense>
+            </div>
+          )}
+          {visitedTabs.has('speedTiers') && (
+            <div
+              style={{ display: activeTab === 'speedTiers' ? 'block' : 'none' }}
+              className="h-full"
+            >
+              <Suspense
+                fallback={<div className="p-8 text-sm text-zinc-400">Loading speed tiers...</div>}
+              >
+                <SpeedTiersPage
+                  teamsState={teamsState}
+                  gameDataState={gameDataState}
+                  databaseState={databaseState}
+                  spriteCacheState={spriteCacheState}
+                  speciesRosterState={speciesRosterState}
+                />
+              </Suspense>
+            </div>
+          )}
+          {visitedTabs.has('battles') && (
+            <div style={{ display: activeTab === 'battles' ? 'block' : 'none' }} className="h-full">
+              <Suspense
+                fallback={<div className="p-8 text-sm text-zinc-400">Loading battle log...</div>}
+              >
+                <BattleLogPage
+                  battlesState={battlesState}
+                  teamsState={teamsState}
+                  speciesRosterState={speciesRosterState}
+                  spriteCacheState={spriteCacheState}
+                  registerBattleLogSession={setBattleLogSession}
+                />
+              </Suspense>
+            </div>
+          )}
+          {visitedTabs.has('statistics') && (
+            <div
+              style={{ display: activeTab === 'statistics' ? 'block' : 'none' }}
+              className="h-full"
+            >
+              <Suspense
+                fallback={<div className="p-8 text-sm text-zinc-400">Loading statistics...</div>}
+              >
+                <StatisticsPage battlesState={battlesState} spriteCacheState={spriteCacheState} />
+              </Suspense>
+            </div>
+          )}
+          {visitedTabs.has('settings') && (
+            <div
+              style={{ display: activeTab === 'settings' ? 'block' : 'none' }}
+              className="h-full"
+            >
+              <Suspense
+                fallback={<div className="p-8 text-sm text-zinc-400">Loading settings...</div>}
+              >
+                <SettingsPage
+                  settingsState={settingsState}
+                  syncState={syncState}
+                  teamsState={teamsState}
+                  releaseNotesState={releaseNotesState}
+                  databaseState={databaseState}
+                  gameDataState={gameDataState}
+                />
+              </Suspense>
+            </div>
+          )}
+        </main>
 
-      {/* Corner-snap draggable (Floating Calc Button Repositioning Leg 1) -
+        {/* Corner-snap draggable (Floating Calc Button Repositioning Leg 1) -
           see CalcLauncherButton.tsx. Desktop/tablet only (`hidden md:flex`,
           handled inside that component) - below `md` this covered whatever
           page content sat at the bottom of a phone viewport (reported live),
           so Sidebar.tsx's mobile top bar gets a compact version instead
           (`mobileTopBarEnd` above). */}
-      <CalcLauncherButton onOpen={() => { setIsCalcPopupOpen(true); setHasOpenedCalcPopup(true); }} />
+        <CalcLauncherButton
+          onOpen={() => {
+            setIsCalcPopupOpen(true);
+            setHasOpenedCalcPopup(true);
+          }}
+        />
 
-      {hasOpenedCalcPopup && (
-        <Suspense fallback={null}>
-          <CalcPopup
-            isOpen={isCalcPopupOpen}
-            onClose={() => setIsCalcPopupOpen(false)}
-            gameDataState={gameDataState}
-            teamsState={teamsState}
-            databaseState={databaseState}
-            savedPokemonState={savedPokemonState}
-            spriteCacheState={spriteCacheState}
-            settingsState={settingsState}
-            battleLogOpponentRoster={battleLogSession?.roster}
-            onUpdateOpponentEntry={battleLogSession?.onUpdateEntry}
-            battleLogPlayerTeamId={battleLogSession?.teamId}
-          />
-        </Suspense>
-      )}
-    </div>
+        {hasOpenedCalcPopup && (
+          <Suspense fallback={null}>
+            <CalcPopup
+              isOpen={isCalcPopupOpen}
+              onClose={() => setIsCalcPopupOpen(false)}
+              gameDataState={gameDataState}
+              teamsState={teamsState}
+              databaseState={databaseState}
+              savedPokemonState={savedPokemonState}
+              spriteCacheState={spriteCacheState}
+              settingsState={settingsState}
+              battleLogOpponentRoster={battleLogSession?.roster}
+              onUpdateOpponentEntry={battleLogSession?.onUpdateEntry}
+              battleLogPlayerTeamId={battleLogSession?.teamId}
+            />
+          </Suspense>
+        )}
+      </div>
     </MobileHeaderActionsProvider>
   );
 }

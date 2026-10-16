@@ -9,7 +9,10 @@ import { parseCsv } from './csv';
 describe('parseCsv', () => {
   it('parses plain comma-separated rows', () => {
     const result = parseCsv('a,b,c\n1,2,3');
-    expect(result).toEqual([['a', 'b', 'c'], ['1', '2', '3']]);
+    expect(result).toEqual([
+      ['a', 'b', 'c'],
+      ['1', '2', '3'],
+    ]);
   });
 
   it('parses quoted fields containing commas', () => {
@@ -27,17 +30,26 @@ describe('parseCsv', () => {
 
   it('does not produce a phantom trailing row for a clean trailing newline', () => {
     const result = parseCsv('a,b\n1,2\n');
-    expect(result).toEqual([['a', 'b'], ['1', '2']]);
+    expect(result).toEqual([
+      ['a', 'b'],
+      ['1', '2'],
+    ]);
   });
 
   it('still parses a final row with no trailing newline', () => {
     const result = parseCsv('a,b\n1,2');
-    expect(result).toEqual([['a', 'b'], ['1', '2']]);
+    expect(result).toEqual([
+      ['a', 'b'],
+      ['1', '2'],
+    ]);
   });
 
   it('handles \\r\\n line endings', () => {
     const result = parseCsv('a,b\r\n1,2\r\n');
-    expect(result).toEqual([['a', 'b'], ['1', '2']]);
+    expect(result).toEqual([
+      ['a', 'b'],
+      ['1', '2'],
+    ]);
   });
 
   it('preserves empty fields', () => {

@@ -54,7 +54,17 @@ const slideVariants = {
   exit: (direction: number) => ({ x: direction > 0 ? -80 : 80, opacity: 0 }),
 };
 
-export default function MobileBoxSwipeOverlay({ entries, initialIndex, savedPokemonState, gameDataState, rulesetId, resolveSprite, showAnimatedSprites, onAddToTeam, onClose }: MobileBoxSwipeOverlayProps) {
+export default function MobileBoxSwipeOverlay({
+  entries,
+  initialIndex,
+  savedPokemonState,
+  gameDataState,
+  rulesetId,
+  resolveSprite,
+  showAnimatedSprites,
+  onAddToTeam,
+  onClose,
+}: MobileBoxSwipeOverlayProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [direction, setDirection] = useState(0);
 
@@ -103,7 +113,10 @@ export default function MobileBoxSwipeOverlay({ entries, initialIndex, savedPoke
   const handleDragEnd = (_e: unknown, info: PanInfo) => {
     if (info.offset.x <= -SWIPE_OFFSET_THRESHOLD || info.velocity.x <= -SWIPE_VELOCITY_THRESHOLD) {
       paginate(1);
-    } else if (info.offset.x >= SWIPE_OFFSET_THRESHOLD || info.velocity.x >= SWIPE_VELOCITY_THRESHOLD) {
+    } else if (
+      info.offset.x >= SWIPE_OFFSET_THRESHOLD ||
+      info.velocity.x >= SWIPE_VELOCITY_THRESHOLD
+    ) {
       paginate(-1);
     }
   };
@@ -121,7 +134,9 @@ export default function MobileBoxSwipeOverlay({ entries, initialIndex, savedPoke
         >
           <CloseIcon />
         </button>
-        <span className="flex-1 min-w-0 truncate font-bold text-zinc-100">{currentEntry.label}</span>
+        <span className="flex-1 min-w-0 truncate font-bold text-zinc-100">
+          {currentEntry.label}
+        </span>
         <span className="shrink-0 text-xs font-semibold text-zinc-400 bg-zinc-800 border border-zinc-700 rounded-full px-2.5 py-1">
           {safeIndex + 1} / {entryCount}
         </span>
@@ -147,7 +162,9 @@ export default function MobileBoxSwipeOverlay({ entries, initialIndex, savedPoke
           >
             <MobileBoxPokemonCard
               entry={currentEntry}
-              onUpdatePokemon={(updates) => savedPokemonState.updateSavedPokemon(currentEntry.id, updates)}
+              onUpdatePokemon={(updates) =>
+                savedPokemonState.updateSavedPokemon(currentEntry.id, updates)
+              }
               onRename={(label) => savedPokemonState.renameSavedPokemon(currentEntry.id, label)}
               onDuplicate={() => savedPokemonState.duplicateSavedPokemon(currentEntry.id)}
               onToggleFavorite={() => savedPokemonState.toggleSavedPokemonFavorite(currentEntry.id)}
@@ -169,7 +186,16 @@ export default function MobileBoxSwipeOverlay({ entries, initialIndex, savedPoke
             aria-label="Previous build"
             className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-zinc-800/80 border border-zinc-700 text-zinc-300 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer"
           >
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="m15 6-6 6 6 6" />
             </svg>
           </button>
@@ -180,13 +206,22 @@ export default function MobileBoxSwipeOverlay({ entries, initialIndex, savedPoke
             aria-label="Next build"
             className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-zinc-800/80 border border-zinc-700 text-zinc-300 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer"
           >
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="m9 6 6 6-6 6" />
             </svg>
           </button>
         )}
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

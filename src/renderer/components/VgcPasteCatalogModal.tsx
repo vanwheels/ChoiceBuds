@@ -74,7 +74,7 @@ export default function VgcPasteCatalogModal({
   const filteredRows = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     if (!query) return rows;
-    return rows.filter(row => {
+    return rows.filter((row) => {
       const haystack = [row.owner, row.description, ...row.species].join(' ').toLowerCase();
       return haystack.includes(query);
     });
@@ -87,7 +87,12 @@ export default function VgcPasteCatalogModal({
         <h2 className="text-xl font-bold text-zinc-100">Browse Sample Teams</h2>
         <button onClick={onClose} className="text-zinc-400 hover:text-zinc-200 transition-colors">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -95,7 +100,7 @@ export default function VgcPasteCatalogModal({
       {/* Regulation Tabs + Refresh */}
       <div className="px-6 pt-4 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex gap-2">
-          {REGULATIONS.map(regulation => (
+          {REGULATIONS.map((regulation) => (
             <button
               key={regulation}
               onClick={() => setActiveTab(regulation)}
@@ -154,7 +159,7 @@ export default function VgcPasteCatalogModal({
           </p>
         )}
 
-        {filteredRows.map(row => (
+        {filteredRows.map((row) => (
           <VgcPasteCatalogRow
             key={row.id}
             row={row}

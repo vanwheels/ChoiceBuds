@@ -41,9 +41,11 @@ describe('usePokemonAbilityFilter', () => {
     mockedFetchJSON.mockImplementation(async (url: string) =>
       url === '/ability/static-test-2'
         ? { pokemon: [{ pokemon: { name: 'pikachu' } }] }
-        : { pokemon: [{ pokemon: { name: 'blissey' } }] }
+        : { pokemon: [{ pokemon: { name: 'blissey' } }] },
     );
-    const { result } = renderHook(() => usePokemonAbilityFilter(['static-test-2', 'natural-cure-test-2']));
+    const { result } = renderHook(() =>
+      usePokemonAbilityFilter(['static-test-2', 'natural-cure-test-2']),
+    );
 
     await waitFor(() => expect(result.current.get('static-test-2')).not.toBeNull());
     expect(result.current.get('static-test-2')).toEqual(new Set(['pikachu']));

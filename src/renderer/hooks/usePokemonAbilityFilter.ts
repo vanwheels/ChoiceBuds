@@ -25,7 +25,9 @@ const abilityUserCache = new Map<string, Set<string> | null>();
 async function fetchAbilityUsers(ability: string): Promise<Set<string> | null> {
   if (abilityUserCache.has(ability)) return abilityUserCache.get(ability)!;
   const data = await fetchJSON<PokeAPIAbilityUsersResponse>(`/ability/${ability}`);
-  const result = data ? new Set((data.pokemon ?? []).map(p => p.pokemon.name.toLowerCase())) : null;
+  const result = data
+    ? new Set((data.pokemon ?? []).map((p) => p.pokemon.name.toLowerCase()))
+    : null;
   abilityUserCache.set(ability, result);
   return result;
 }
@@ -43,7 +45,9 @@ function buildResultMap(abilities: string[]): Map<string, Set<string> | null> {
  * immediately, with no fetch.
  */
 export function usePokemonAbilityFilter(abilities: string[]): Map<string, Set<string> | null> {
-  const [result, setResult] = useState<Map<string, Set<string> | null>>(() => buildResultMap(abilities));
+  const [result, setResult] = useState<Map<string, Set<string> | null>>(() =>
+    buildResultMap(abilities),
+  );
 
   // Re-derives synchronously from cache the moment the requested abilities
   // change - set during render rather than in an effect, see
@@ -58,13 +62,15 @@ export function usePokemonAbilityFilter(abilities: string[]): Map<string, Set<st
   }
 
   useEffect(() => {
-    const missing = abilities.filter(ability => !abilityUserCache.has(ability));
+    const missing = abilities.filter((ability) => !abilityUserCache.has(ability));
     if (missing.length === 0) return;
     let cancelled = false;
     Promise.all(missing.map(fetchAbilityUsers)).then(() => {
       if (!cancelled) setResult(buildResultMap(abilities));
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
     // Depends on `key` (a stable stringified snapshot of `abilities`), not
     // `abilities` itself - a fresh array reference every render would
     // otherwise rerun this effect on every keystroke even when the tags

@@ -15,7 +15,15 @@ interface UpdateCheckSectionProps {
 const GITHUB_URL_PREFIX = 'https://github.com/';
 
 export default function UpdateCheckSection({ updateCheckState }: UpdateCheckSectionProps) {
-  const { status, currentVersion, latestVersion, releaseUrl, downloadPercent, nativeCheckPending, installUpdate } = updateCheckState;
+  const {
+    status,
+    currentVersion,
+    latestVersion,
+    releaseUrl,
+    downloadPercent,
+    nativeCheckPending,
+    installUpdate,
+  } = updateCheckState;
 
   const handleViewRelease = () => {
     if (releaseUrl && releaseUrl.startsWith(GITHUB_URL_PREFIX)) {
@@ -29,17 +37,15 @@ export default function UpdateCheckSection({ updateCheckState }: UpdateCheckSect
       <p className="mt-1 text-xs text-zinc-400">Current version: {currentVersion}</p>
 
       <div className="mt-3">
-        {status === 'checking' && (
-          <p className="text-xs text-zinc-500">Checking for updates...</p>
-        )}
-        {status === 'up-to-date' && (
-          <p className="text-xs text-green-400">You're up to date.</p>
-        )}
+        {status === 'checking' && <p className="text-xs text-zinc-500">Checking for updates...</p>}
+        {status === 'up-to-date' && <p className="text-xs text-green-400">You're up to date.</p>}
         {status === 'no-releases' && (
           <p className="text-xs text-zinc-500">No releases published yet.</p>
         )}
         {status === 'error' && (
-          <p className="text-xs text-red-400">Couldn't check for updates - check your connection.</p>
+          <p className="text-xs text-red-400">
+            Couldn't check for updates - check your connection.
+          </p>
         )}
         {status === 'update-available' && nativeCheckPending && (
           <p className="text-xs text-yellow-400">

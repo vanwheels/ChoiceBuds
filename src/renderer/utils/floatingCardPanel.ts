@@ -32,13 +32,16 @@ export function shouldPlaceBelow(anchorRect: DOMRect): boolean {
   return anchorRect.top < MIN_SPACE_ABOVE;
 }
 
-export function computeFloatingCardPanelStyle(anchorRect: DOMRect, cardRect: DOMRect | null): FloatingCardPanelStyle {
+export function computeFloatingCardPanelStyle(
+  anchorRect: DOMRect,
+  cardRect: DOMRect | null,
+): FloatingCardPanelStyle {
   const width = cardRect ? cardRect.width : FALLBACK_WIDTH;
   const left = cardRect
     ? cardRect.left
     : Math.min(
         Math.max(anchorRect.left + anchorRect.width / 2 - FALLBACK_WIDTH / 2, VIEWPORT_MARGIN),
-        window.innerWidth - FALLBACK_WIDTH - VIEWPORT_MARGIN
+        window.innerWidth - FALLBACK_WIDTH - VIEWPORT_MARGIN,
       );
 
   const placeBelow = shouldPlaceBelow(anchorRect);

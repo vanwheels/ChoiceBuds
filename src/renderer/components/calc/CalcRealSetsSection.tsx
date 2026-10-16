@@ -70,7 +70,17 @@ function formatEvs(bundle: VgcRealSetBundle): string {
 }
 
 export default function CalcRealSetsSection({
-  species, regulation, hasCatalogRows, isCatalogRefreshing, onRefreshCatalog, entry, isLoading, progress, error, onPickBundle, collapsible = true,
+  species,
+  regulation,
+  hasCatalogRows,
+  isCatalogRefreshing,
+  onRefreshCatalog,
+  entry,
+  isLoading,
+  progress,
+  error,
+  onPickBundle,
+  collapsible = true,
 }: CalcRealSetsSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [expandedBundleIndex, setExpandedBundleIndex] = useState<number | null>(null);
@@ -98,12 +108,16 @@ export default function CalcRealSetsSection({
       </div>
 
       {error && (
-        <p className="text-[10px] text-red-300 bg-red-900/40 border border-red-800/60 rounded px-2 py-1">{error}</p>
+        <p className="text-[10px] text-red-300 bg-red-900/40 border border-red-800/60 rounded px-2 py-1">
+          {error}
+        </p>
       )}
 
       {!error && !hasCatalogRows && (
         <div className="flex items-center justify-between gap-2 px-2 py-1 rounded border border-zinc-700 bg-zinc-800/60">
-          <span className="text-[10px] text-zinc-400">Sample Team Catalog not pulled for {regulation} yet.</span>
+          <span className="text-[10px] text-zinc-400">
+            Sample Team Catalog not pulled for {regulation} yet.
+          </span>
           <button
             type="button"
             onClick={onRefreshCatalog}
@@ -118,12 +132,16 @@ export default function CalcRealSetsSection({
       {!error && hasCatalogRows && isLoading && (
         <p className="text-[10px] text-zinc-500 italic">
           Sampling real {species} sets from VGCPastes...
-          {progress && progress.totalRows > 0 && ` (${progress.processedRows}/${progress.totalRows} pastes checked)`}
+          {progress &&
+            progress.totalRows > 0 &&
+            ` (${progress.processedRows}/${progress.totalRows} pastes checked)`}
         </p>
       )}
 
       {!error && hasCatalogRows && !isLoading && entry && bundles.length === 0 && (
-        <p className="text-[10px] text-zinc-500 italic">No confirmed real sets found for {species} in {regulation} yet.</p>
+        <p className="text-[10px] text-zinc-500 italic">
+          No confirmed real sets found for {species} in {regulation} yet.
+        </p>
       )}
 
       {!error && hasCatalogRows && entry && bundles.length > 0 && showBundles && (
@@ -139,7 +157,8 @@ export default function CalcRealSetsSection({
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className={`text-[10px] text-zinc-300 ${isRowExpanded ? '' : 'truncate'}`}>
-                    {bundle.item || 'No Item'} · {bundle.ability || 'No Ability'} · {bundle.nature || 'Hardy'}
+                    {bundle.item || 'No Item'} · {bundle.ability || 'No Ability'} ·{' '}
+                    {bundle.nature || 'Hardy'}
                   </span>
                   <span className="shrink-0 text-[10px] font-mono text-accent-gold">
                     {bundle.occurrences}/{entry.sampledTeamCount}

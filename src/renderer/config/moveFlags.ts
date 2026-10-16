@@ -19,7 +19,8 @@
 import type { MoveData } from '../types/pokemon';
 import { MOVE_FLAGS_DATA } from './moveFlagsData.generated';
 
-export type MoveFlagKey = 'contact' | 'bite' | 'sound' | 'punch' | 'bullet' | 'pulse' | 'slicing' | 'wind';
+export type MoveFlagKey =
+  'contact' | 'bite' | 'sound' | 'punch' | 'bullet' | 'pulse' | 'slicing' | 'wind';
 
 export const MOVE_FLAG_LABELS: Record<MoveFlagKey, string> = {
   contact: 'Contact',
@@ -32,7 +33,15 @@ export const MOVE_FLAG_LABELS: Record<MoveFlagKey, string> = {
   wind: 'Wind',
 };
 
-export const VISIBLE_MOVE_FLAGS: MoveFlagKey[] = ['sound', 'bullet', 'punch', 'bite', 'pulse', 'slicing', 'wind'];
+export const VISIBLE_MOVE_FLAGS: MoveFlagKey[] = [
+  'sound',
+  'bullet',
+  'punch',
+  'bite',
+  'pulse',
+  'slicing',
+  'wind',
+];
 
 /**
  * Champions reclassified these 4 moves as slicing (Sharpness-boostable) -

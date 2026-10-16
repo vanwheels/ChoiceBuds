@@ -16,13 +16,27 @@ const mockedFetch = vi.mocked(fetchPokemonData);
 
 const ZERO_EVS = { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 };
 
-function makePokemon(overrides: Partial<ImportedPokemonInfo> & { species: string; gender?: 'M' | 'F' | 'N' | '' }): ImportedPokemonInfo {
+function makePokemon(
+  overrides: Partial<ImportedPokemonInfo> & { species: string; gender?: 'M' | 'F' | 'N' | '' },
+): ImportedPokemonInfo {
   const { species, gender, ...rest } = overrides;
   return {
-    showdownData: { species, gender, level: 50, shiny: false, gigantamax: false, happiness: 255, evs: ZERO_EVS, moves: [] },
+    showdownData: {
+      species,
+      gender,
+      level: 50,
+      shiny: false,
+      gigantamax: false,
+      happiness: 255,
+      evs: ZERO_EVS,
+      moves: [],
+    },
     pokedexNumber: 10186, // a non-default-form resource id (Indeedee-Female) - the "needs backfill" case
-    types: [], baseStats: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
-    spriteUrl: '', importedAt: 0, id: crypto.randomUUID(),
+    types: [],
+    baseStats: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
+    spriteUrl: '',
+    importedAt: 0,
+    id: crypto.randomUUID(),
     ...rest,
   };
 }
@@ -33,36 +47,80 @@ function makeTeam(pokemon: ImportedPokemonInfo[], id = 'team-1'): Team {
 
 function teamsState(teams: Team[], overrides: Partial<UseTeamsReturn> = {}): UseTeamsReturn {
   return {
-    teams, isLoading: false, error: null, expandedCardIds: new Set(), tombstones: [],
-    addTeam: vi.fn(), updateTeam: vi.fn().mockResolvedValue(true), deleteTeam: vi.fn(), setTeamOrder: vi.fn(),
-    toggleCardExpansion: vi.fn(), expandCard: vi.fn(), collapseCard: vi.fn(), collapseAllCards: vi.fn(),
-    refreshTeams: vi.fn(), getTeamById: vi.fn(), applySyncedState: vi.fn(),
+    teams,
+    isLoading: false,
+    error: null,
+    expandedCardIds: new Set(),
+    tombstones: [],
+    addTeam: vi.fn(),
+    updateTeam: vi.fn().mockResolvedValue(true),
+    deleteTeam: vi.fn(),
+    setTeamOrder: vi.fn(),
+    toggleCardExpansion: vi.fn(),
+    expandCard: vi.fn(),
+    collapseCard: vi.fn(),
+    collapseAllCards: vi.fn(),
+    refreshTeams: vi.fn(),
+    getTeamById: vi.fn(),
+    applySyncedState: vi.fn(),
     ...overrides,
   };
 }
 
-function savedPokemonState(entries: UseSavedPokemonReturn['savedPokemon'], overrides: Partial<UseSavedPokemonReturn> = {}): UseSavedPokemonReturn {
+function savedPokemonState(
+  entries: UseSavedPokemonReturn['savedPokemon'],
+  overrides: Partial<UseSavedPokemonReturn> = {},
+): UseSavedPokemonReturn {
   return {
-    savedPokemon: entries, isLoading: false, error: null, expandedCardIds: new Set(), toggleCardExpansion: vi.fn(),
-    addSavedPokemonBatch: vi.fn(), renameSavedPokemon: vi.fn(), toggleSavedPokemonFavorite: vi.fn(),
-    duplicateSavedPokemon: vi.fn(), setSavedPokemonOrder: vi.fn(), updateSavedPokemon: vi.fn(),
-    applyPokedexNumberFixes: vi.fn().mockResolvedValue(true), deleteSavedPokemon: vi.fn(),
-    refreshSavedPokemon: vi.fn(), getSavedSetsForSpecies: vi.fn(), tombstones: [], applySyncedState: vi.fn(),
+    savedPokemon: entries,
+    isLoading: false,
+    error: null,
+    expandedCardIds: new Set(),
+    toggleCardExpansion: vi.fn(),
+    addSavedPokemonBatch: vi.fn(),
+    renameSavedPokemon: vi.fn(),
+    toggleSavedPokemonFavorite: vi.fn(),
+    duplicateSavedPokemon: vi.fn(),
+    setSavedPokemonOrder: vi.fn(),
+    updateSavedPokemon: vi.fn(),
+    applyPokedexNumberFixes: vi.fn().mockResolvedValue(true),
+    deleteSavedPokemon: vi.fn(),
+    refreshSavedPokemon: vi.fn(),
+    getSavedSetsForSpecies: vi.fn(),
+    tombstones: [],
+    applySyncedState: vi.fn(),
     ...overrides,
   };
 }
 
 function databaseState(overrides: Partial<UseDatabaseReturn> = {}): UseDatabaseReturn {
   return {
-    cache: null, isInitialized: true, isRevalidating: false, error: null,
-    getCachedEntry: vi.fn(), setCacheEntry: vi.fn().mockResolvedValue(true),
-    isCacheEntryValid: vi.fn(), cleanExpiredEntries: vi.fn(), clearCache: vi.fn(), refreshCache: vi.fn(),
+    cache: null,
+    isInitialized: true,
+    isRevalidating: false,
+    error: null,
+    getCachedEntry: vi.fn(),
+    setCacheEntry: vi.fn().mockResolvedValue(true),
+    isCacheEntryValid: vi.fn(),
+    cleanExpiredEntries: vi.fn(),
+    clearCache: vi.fn(),
+    refreshCache: vi.fn(),
     ...overrides,
   };
 }
 
 function apiEntry(nationalDexNumber: number | undefined): PokeAPICacheEntry {
-  return { species: 'indeedee', pokedexNumber: 10186, nationalDexNumber, types: ['psychic'], baseStats: ZERO_EVS, spriteUrl: '', abilities: [], cachedAt: 0, expiresAt: 0 };
+  return {
+    species: 'indeedee',
+    pokedexNumber: 10186,
+    nationalDexNumber,
+    types: ['psychic'],
+    baseStats: ZERO_EVS,
+    spriteUrl: '',
+    abilities: [],
+    cachedAt: 0,
+    expiresAt: 0,
+  };
 }
 
 describe('usePokedexNumberSelfHeal', () => {
@@ -77,7 +135,9 @@ describe('usePokedexNumberSelfHeal', () => {
     renderHook(() => usePokedexNumberSelfHeal(teams, savedPokemonState([]), databaseState()));
 
     await waitFor(() => expect(teams.updateTeam).toHaveBeenCalledTimes(1));
-    expect(teams.updateTeam).toHaveBeenCalledWith('team-1', { pokemon: [{ ...bad, nationalDexNumber: 876 }] });
+    expect(teams.updateTeam).toHaveBeenCalledWith('team-1', {
+      pokemon: [{ ...bad, nationalDexNumber: 876 }],
+    });
   });
 
   it('backfills a Box entry via the bulk applyPokedexNumberFixes mutator, not individual calls', async () => {
@@ -89,7 +149,9 @@ describe('usePokedexNumberSelfHeal', () => {
     renderHook(() => usePokedexNumberSelfHeal(teamsState([]), savedState, databaseState()));
 
     await waitFor(() => expect(savedState.applyPokedexNumberFixes).toHaveBeenCalledTimes(1));
-    expect(savedState.applyPokedexNumberFixes).toHaveBeenCalledWith([{ id: 'box-1', nationalDexNumber: 876 }]);
+    expect(savedState.applyPokedexNumberFixes).toHaveBeenCalledWith([
+      { id: 'box-1', nationalDexNumber: 876 },
+    ]);
     expect(savedState.updateSavedPokemon).not.toHaveBeenCalled();
   });
 
@@ -98,7 +160,9 @@ describe('usePokedexNumberSelfHeal', () => {
     const teamB = makeTeam([makePokemon({ species: 'Indeedee-F', gender: 'F' })], 'b');
     mockedFetch.mockResolvedValue(apiEntry(876));
 
-    renderHook(() => usePokedexNumberSelfHeal(teamsState([teamA, teamB]), savedPokemonState([]), databaseState()));
+    renderHook(() =>
+      usePokedexNumberSelfHeal(teamsState([teamA, teamB]), savedPokemonState([]), databaseState()),
+    );
 
     await waitFor(() => expect(mockedFetch).toHaveBeenCalledTimes(1));
   });
@@ -137,7 +201,7 @@ describe('usePokedexNumberSelfHeal', () => {
 
     const { rerender } = renderHook(
       ({ teams }) => usePokedexNumberSelfHeal(teams, savedPokemonState([]), databaseState()),
-      { initialProps: { teams: teamsState([makeTeam([bad])]) } }
+      { initialProps: { teams: teamsState([makeTeam([bad])]) } },
     );
     await waitFor(() => expect(mockedFetch).toHaveBeenCalledTimes(1));
 

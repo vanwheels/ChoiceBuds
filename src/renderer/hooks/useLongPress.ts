@@ -28,7 +28,10 @@ export interface LongPressHandlers {
   onTouchCancel: (e: TouchEvent<HTMLElement>) => void;
 }
 
-export function useLongPress(onLongPressStart: () => void, onLongPressEnd: () => void): LongPressHandlers {
+export function useLongPress(
+  onLongPressStart: () => void,
+  onLongPressEnd: () => void,
+): LongPressHandlers {
   const timerRef = useRef<number | null>(null);
   const startPosRef = useRef<{ x: number; y: number } | null>(null);
   const activeRef = useRef(false);
@@ -48,28 +51,37 @@ export function useLongPress(onLongPressStart: () => void, onLongPressEnd: () =>
     }
   }, [clearTimer, onLongPressEnd]);
 
-  const onTouchStart = useCallback((e: TouchEvent<HTMLElement>) => {
-    const touch = e.touches[0];
-    startPosRef.current = { x: touch.clientX, y: touch.clientY };
-    clearTimer();
-    timerRef.current = window.setTimeout(() => {
-      activeRef.current = true;
-      onLongPressStart();
-    }, LONG_PRESS_MS);
-  }, [clearTimer, onLongPressStart]);
+  const onTouchStart = useCallback(
+    (e: TouchEvent<HTMLElement>) => {
+      const touch = e.touches[0];
+      startPosRef.current = { x: touch.clientX, y: touch.clientY };
+      clearTimer();
+      timerRef.current = window.setTimeout(() => {
+        activeRef.current = true;
+        onLongPressStart();
+      }, LONG_PRESS_MS);
+    },
+    [clearTimer, onLongPressStart],
+  );
 
-  const onTouchMove = useCallback((e: TouchEvent<HTMLElement>) => {
-    if (!startPosRef.current) return;
-    const touch = e.touches[0];
-    const dx = touch.clientX - startPosRef.current.x;
-    const dy = touch.clientY - startPosRef.current.y;
-    if (Math.hypot(dx, dy) > MOVE_CANCEL_THRESHOLD_PX) end();
-  }, [end]);
+  const onTouchMove = useCallback(
+    (e: TouchEvent<HTMLElement>) => {
+      if (!startPosRef.current) return;
+      const touch = e.touches[0];
+      const dx = touch.clientX - startPosRef.current.x;
+      const dy = touch.clientY - startPosRef.current.y;
+      if (Math.hypot(dx, dy) > MOVE_CANCEL_THRESHOLD_PX) end();
+    },
+    [end],
+  );
 
-  const onTouchEnd = useCallback((e: TouchEvent<HTMLElement>) => {
-    if (activeRef.current) e.preventDefault();
-    end();
-  }, [end]);
+  const onTouchEnd = useCallback(
+    (e: TouchEvent<HTMLElement>) => {
+      if (activeRef.current) e.preventDefault();
+      end();
+    },
+    [end],
+  );
 
   const onTouchCancel = useCallback(() => end(), [end]);
 

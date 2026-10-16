@@ -53,9 +53,23 @@ interface EditablePokemonCoreProps {
   spriteOverlay?: ReactNode;
 }
 
-const FORM_DIVERGENT: Record<string, boolean> = { 'basculegion': true, 'indeedee': true, 'meowstic': true, 'oinkologne': true };
+const FORM_DIVERGENT: Record<string, boolean> = {
+  basculegion: true,
+  indeedee: true,
+  meowstic: true,
+  oinkologne: true,
+};
 
-export default function EditablePokemonCore({ pokemon, onUpdatePokemon, gameDataState, rulesetId, resolveSprite, showAnimatedSprites, onSpriteClick, spriteOverlay }: EditablePokemonCoreProps) {
+export default function EditablePokemonCore({
+  pokemon,
+  onUpdatePokemon,
+  gameDataState,
+  rulesetId,
+  resolveSprite,
+  showAnimatedSprites,
+  onSpriteClick,
+  spriteOverlay,
+}: EditablePokemonCoreProps) {
   const { showdownData, types, pokedexNumber, nationalDexNumber } = pokemon;
   // pokedexNumber is a sprite-id (see types/pokemon.ts's own doc comment) -
   // for a non-default form/gender variant it's PokeAPI's own 10001+ "extra
@@ -67,7 +81,9 @@ export default function EditablePokemonCore({ pokemon, onUpdatePokemon, gameData
   // Number Wrong For Forms leg.
   const displayedDexNumber = nationalDexNumber ?? pokedexNumber;
   const [isLocalShiny, setIsLocalShiny] = useState(showdownData.shiny);
-  const [localGender, setLocalGender] = useState<'M' | 'F' | 'N' | '' | undefined>(showdownData.gender);
+  const [localGender, setLocalGender] = useState<'M' | 'F' | 'N' | '' | undefined>(
+    showdownData.gender,
+  );
   const [localNickname, setLocalNickname] = useState(showdownData.nickname || '');
   // Resyncs shiny/gender/nickname off the pokemon prop itself (not just on
   // mount) - "adjust state during render" pattern, same shape as
@@ -100,7 +116,12 @@ export default function EditablePokemonCore({ pokemon, onUpdatePokemon, gameData
   // than being stuck on the static fallback for the rest of this card's
   // lifetime.
   const [failedAnimatedUrl, setFailedAnimatedUrl] = useState<string | null>(null);
-  const spriteUrl = getPixelSpriteUrl(pokedexNumber, showdownData.species, localGender || 'M', isLocalShiny);
+  const spriteUrl = getPixelSpriteUrl(
+    pokedexNumber,
+    showdownData.species,
+    localGender || 'M',
+    isLocalShiny,
+  );
   // Over-cap SP warning (Speed Tiers Save Override: Over-Cap SP Warning, see
   // TODO.md) - a Speed Tiers Preview Strip save only sees Speed's SP in
   // isolation, so it can legitimately push this total over the 66 cap that
@@ -116,7 +137,11 @@ export default function EditablePokemonCore({ pokemon, onUpdatePokemon, gameData
   // Stone - see config/megaEvolution.ts for the verified stone->species map.
   const megaApiSlug = getMegaApiSlug(showdownData.item, showdownData.species);
   const megaSprite = useMegaSprite(megaApiSlug);
-  const staticSpriteUrl = megaSprite ? (isLocalShiny ? megaSprite.shinySpriteUrl : megaSprite.spriteUrl) : spriteUrl;
+  const staticSpriteUrl = megaSprite
+    ? isLocalShiny
+      ? megaSprite.shinySpriteUrl
+      : megaSprite.spriteUrl
+    : spriteUrl;
 
   // Showdown's sprite roster can lag official reveals (a newly-added Mega,
   // in particular) - onError below records this exact URL as failed so the
@@ -157,7 +182,8 @@ export default function EditablePokemonCore({ pokemon, onUpdatePokemon, gameData
       const currentSpriteUrl = pokemon.spriteUrl;
       let newSpriteUrl = currentSpriteUrl;
       if (newGender === 'F') {
-        if (!currentSpriteUrl.includes('-female')) newSpriteUrl = currentSpriteUrl.replace(/\/(\d+)\.png$/, '/$1-female.png');
+        if (!currentSpriteUrl.includes('-female'))
+          newSpriteUrl = currentSpriteUrl.replace(/\/(\d+)\.png$/, '/$1-female.png');
       } else {
         newSpriteUrl = currentSpriteUrl.replace(/-female\.png$/, '.png');
       }
@@ -175,7 +201,13 @@ export default function EditablePokemonCore({ pokemon, onUpdatePokemon, gameData
   const isGenderClickable = (): boolean => {
     const species = showdownData.species;
     const speciesLower = species.toLowerCase();
-    if (speciesLower.includes('basculegion') || speciesLower.includes('indeedee') || speciesLower.includes('meowstic') || speciesLower.includes('oinkologne')) return false;
+    if (
+      speciesLower.includes('basculegion') ||
+      speciesLower.includes('indeedee') ||
+      speciesLower.includes('meowstic') ||
+      speciesLower.includes('oinkologne')
+    )
+      return false;
     return !isGenderless(species) && !isFemaleLocked(species);
   };
 
@@ -194,7 +226,9 @@ export default function EditablePokemonCore({ pokemon, onUpdatePokemon, gameData
           placeholder={showdownData.species}
           className="w-full px-2 py-1 text-sm font-bold text-white bg-zinc-800 border border-zinc-600 rounded text-center outline-none"
         />
-        <p className="text-xs text-zinc-300 truncate">{showdownData.species} #{displayedDexNumber}</p>
+        <p className="text-xs text-zinc-300 truncate">
+          {showdownData.species} #{displayedDexNumber}
+        </p>
         {isOverSPCap && (
           <span
             title={`Total SP (${totalSP}) exceeds the ${MAX_TOTAL_SP} cap`}
@@ -242,12 +276,22 @@ export default function EditablePokemonCore({ pokemon, onUpdatePokemon, gameData
               e.stopPropagation();
               if (isGenderClickable()) handleGenderToggle();
             }}
-            title={isGenderless(showdownData.species) ? 'Genderless species' : isFemaleLocked(showdownData.species) ? 'Female-only species' : 'Click to toggle gender'}
+            title={
+              isGenderless(showdownData.species)
+                ? 'Genderless species'
+                : isFemaleLocked(showdownData.species)
+                  ? 'Female-only species'
+                  : 'Click to toggle gender'
+            }
           >
-            <div className={`w-[22px] h-[22px] flex items-center justify-center rounded-md border border-transparent transition-colors ${isGenderClickable() ? 'group-hover:bg-zinc-900/55 group-hover:border-zinc-600/60' : 'opacity-60'}`}>
+            <div
+              className={`w-[22px] h-[22px] flex items-center justify-center rounded-md border border-transparent transition-colors ${isGenderClickable() ? 'group-hover:bg-zinc-900/55 group-hover:border-zinc-600/60' : 'opacity-60'}`}
+            >
               {localGender === 'M' && <span className="text-sm font-bold text-blue-400">♂</span>}
               {localGender === 'F' && <span className="text-sm font-bold text-pink-400">♀</span>}
-              {localGender !== 'M' && localGender !== 'F' && <span className="text-sm font-bold text-zinc-400">⌀</span>}
+              {localGender !== 'M' && localGender !== 'F' && (
+                <span className="text-sm font-bold text-zinc-400">⌀</span>
+              )}
             </div>
           </div>
           <div
@@ -260,7 +304,15 @@ export default function EditablePokemonCore({ pokemon, onUpdatePokemon, gameData
             title="Click to toggle shiny status"
           >
             <div className="w-[22px] h-[22px] flex items-center justify-center rounded-md border border-transparent transition-colors group-hover:bg-zinc-900/55 group-hover:border-zinc-600/60">
-              <span className={isLocalShiny ? 'text-sm select-none filter-none opacity-100' : 'text-sm select-none grayscale opacity-30'}>✨</span>
+              <span
+                className={
+                  isLocalShiny
+                    ? 'text-sm select-none filter-none opacity-100'
+                    : 'text-sm select-none grayscale opacity-30'
+                }
+              >
+                ✨
+              </span>
             </div>
           </div>
         </div>
@@ -292,7 +344,13 @@ export default function EditablePokemonCore({ pokemon, onUpdatePokemon, gameData
           target that opens its picker and the drag source, disambiguated
           natively since HTML5 only fires dragstart after real pointer
           movement and suppresses click when a drag actually occurred. */}
-      <EditOverlays pokemon={pokemon} gameDataState={gameDataState} rulesetId={rulesetId} resolveSprite={resolveSprite} onUpdatePokemon={updateShowdownData} />
+      <EditOverlays
+        pokemon={pokemon}
+        gameDataState={gameDataState}
+        rulesetId={rulesetId}
+        resolveSprite={resolveSprite}
+        onUpdatePokemon={updateShowdownData}
+      />
 
       {/* EVs Grid Block - permanently editable (Always-On Editing Leg 1, see
           TODO.md). Also cycles a read-only Base/Real Total display mode

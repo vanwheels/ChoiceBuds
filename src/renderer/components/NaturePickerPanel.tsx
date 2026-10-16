@@ -18,14 +18,21 @@ interface NaturePickerPanelProps {
   onClose: () => void;
 }
 
-export default function NaturePickerPanel({ maxHeight, onSelect, onClose }: NaturePickerPanelProps) {
+export default function NaturePickerPanel({
+  maxHeight,
+  onSelect,
+  onClose,
+}: NaturePickerPanelProps) {
   const [search, setSearch] = useState('');
   const ref = useDismissable<HTMLDivElement>(onClose);
 
-  const filtered = NATURES.filter(nature => nature.toLowerCase().includes(search.toLowerCase()));
+  const filtered = NATURES.filter((nature) => nature.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div ref={ref} className="w-full flex flex-col gap-2 bg-zinc-800 border-2 border-accent-gold rounded-lg p-2">
+    <div
+      ref={ref}
+      className="w-full flex flex-col gap-2 bg-zinc-800 border-2 border-accent-gold rounded-lg p-2"
+    >
       <input
         type="text"
         value={search}
@@ -38,7 +45,7 @@ export default function NaturePickerPanel({ maxHeight, onSelect, onClose }: Natu
         {filtered.length === 0 ? (
           <p className="text-xs text-zinc-400 text-center mt-2">No natures found</p>
         ) : (
-          filtered.map(nature => {
+          filtered.map((nature) => {
             const effect = getNatureEffect(nature);
             return (
               <div

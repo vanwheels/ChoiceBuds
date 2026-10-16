@@ -73,8 +73,18 @@ describe('fetchReleaseHistory', () => {
     const history = await fetchReleaseHistory();
 
     expect(history).toEqual([
-      { version: '1.2.3', releaseUrl: RAW_RELEASE.html_url, body: RAW_RELEASE.body, publishedAt: RAW_RELEASE.published_at },
-      { version: '1.2.2', releaseUrl: second.html_url, body: second.body, publishedAt: second.published_at },
+      {
+        version: '1.2.3',
+        releaseUrl: RAW_RELEASE.html_url,
+        body: RAW_RELEASE.body,
+        publishedAt: RAW_RELEASE.published_at,
+      },
+      {
+        version: '1.2.2',
+        releaseUrl: second.html_url,
+        body: second.body,
+        publishedAt: second.published_at,
+      },
     ]);
   });
 
@@ -87,7 +97,9 @@ describe('fetchReleaseHistory', () => {
   it('throws on a non-ok response', async () => {
     mockFetchOnce({ ok: false, status: 500 });
 
-    await expect(fetchReleaseHistory()).rejects.toThrow('GitHub release history fetch failed (500)');
+    await expect(fetchReleaseHistory()).rejects.toThrow(
+      'GitHub release history fetch failed (500)',
+    );
   });
 });
 

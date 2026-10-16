@@ -7,7 +7,10 @@
  */
 import type { ImportedPokemonInfo } from '../types/pokemon';
 
-const EV_STAT_LABELS: Array<{ key: keyof ImportedPokemonInfo['showdownData']['evs']; label: string }> = [
+const EV_STAT_LABELS: Array<{
+  key: keyof ImportedPokemonInfo['showdownData']['evs'];
+  label: string;
+}> = [
   { key: 'hp', label: 'HP' },
   { key: 'attack', label: 'Atk' },
   { key: 'defense', label: 'Def' },
@@ -16,9 +19,11 @@ const EV_STAT_LABELS: Array<{ key: keyof ImportedPokemonInfo['showdownData']['ev
   { key: 'speed', label: 'Spe' },
 ];
 
-export function formatStatAlignment(nature: string | undefined, evs: ImportedPokemonInfo['showdownData']['evs']): string {
-  const evLine = EV_STAT_LABELS
-    .filter(({ key }) => evs[key] > 0)
+export function formatStatAlignment(
+  nature: string | undefined,
+  evs: ImportedPokemonInfo['showdownData']['evs'],
+): string {
+  const evLine = EV_STAT_LABELS.filter(({ key }) => evs[key] > 0)
     .map(({ key, label }) => `${evs[key]} ${label}`)
     .join(' / ');
   return `${nature ? `${nature} - ` : ''}${evLine}`;

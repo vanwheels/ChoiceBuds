@@ -1,8 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import {
-  getOverallRecord, getRecordByFormat, getRecordBySeason, getSeasonsWithBattles,
-  getRecordByTeam, getSetRecord, getRecentForm,
-  getMostUsedPokemon, getMostFacedOpponents, getTeamRosterUsage,
+  getOverallRecord,
+  getRecordByFormat,
+  getRecordBySeason,
+  getSeasonsWithBattles,
+  getRecordByTeam,
+  getSetRecord,
+  getRecentForm,
+  getMostUsedPokemon,
+  getMostFacedOpponents,
+  getTeamRosterUsage,
 } from './battleStats';
 import type { Battle, BroughtPokemonSnapshot, OpponentPokemonEntry } from '../types/pokemon';
 import { SEASONS } from '../config/seasons';
@@ -36,15 +43,27 @@ function makeBattle(overrides: Partial<Battle> = {}): Battle {
 
 function makeBrought(overrides: Partial<BroughtPokemonSnapshot> = {}): BroughtPokemonSnapshot {
   return {
-    id: 'p1', species: 'Gengar', moves: [], pokedexNumber: 94, types: ['ghost', 'poison'],
-    spriteUrl: 'https://example.com/gengar.png', ...overrides,
+    id: 'p1',
+    species: 'Gengar',
+    moves: [],
+    pokedexNumber: 94,
+    types: ['ghost', 'poison'],
+    spriteUrl: 'https://example.com/gengar.png',
+    ...overrides,
   };
 }
 
 function makeOpponent(overrides: Partial<OpponentPokemonEntry> = {}): OpponentPokemonEntry {
   return {
-    id: 'o1', species: 'Incineroar', pokedexNumber: 727, spriteUrl: 'https://example.com/incineroar.png',
-    types: ['fire', 'dark'], moves: [], fainted: false, addedAt: 0, ...overrides,
+    id: 'o1',
+    species: 'Incineroar',
+    pokedexNumber: 727,
+    spriteUrl: 'https://example.com/incineroar.png',
+    types: ['fire', 'dark'],
+    moves: [],
+    fainted: false,
+    addedAt: 0,
+    ...overrides,
   };
 }
 
@@ -95,7 +114,7 @@ describe('getRecordBySeason', () => {
       makeBattle({ date: SEASONS[0].start + 1, result: 'win' }),
     ];
     const result = getRecordBySeason(battles);
-    expect(result.map(r => r.label)).toEqual([SEASONS[0].label, SEASONS[1].label]);
+    expect(result.map((r) => r.label)).toEqual([SEASONS[0].label, SEASONS[1].label]);
   });
 });
 
@@ -103,7 +122,7 @@ describe('getSeasonsWithBattles', () => {
   it('includes only seasons that have at least one battle, including in-progress ones', () => {
     const battles = [makeBattle({ date: SEASONS[0].start + 1, result: 'in-progress' })];
     const result = getSeasonsWithBattles(battles);
-    expect(result.map(s => s.id)).toEqual([SEASONS[0].id]);
+    expect(result.map((s) => s.id)).toEqual([SEASONS[0].id]);
   });
 
   it('returns no seasons for an empty battle list', () => {
@@ -169,7 +188,9 @@ describe('getMostUsedPokemon', () => {
       makeBattle({ playerRoster: [gengar], broughtIds: ['p1'], result: 'loss' }),
     ];
     const result = getMostUsedPokemon(battles);
-    expect(result).toEqual([{ species: 'Gengar', spriteUrl: gengar.spriteUrl, count: 2, winRate: 0.5 }]);
+    expect(result).toEqual([
+      { species: 'Gengar', spriteUrl: gengar.spriteUrl, count: 2, winRate: 0.5 },
+    ]);
   });
 
   it('does not count a roster member that was not actually brought', () => {
@@ -195,42 +216,88 @@ describe('getTeamRosterUsage', () => {
     const gengar = makeBrought({ id: 'p1', species: 'Gengar' });
     const incin = makeBrought({ id: 'p2', species: 'Incineroar' });
     const battles = [
-      makeBattle({ teamId: 't1', teamName: 'Alpha', playerRoster: [gengar, incin], broughtIds: ['p1'], result: 'win' }),
+      makeBattle({
+        teamId: 't1',
+        teamName: 'Alpha',
+        playerRoster: [gengar, incin],
+        broughtIds: ['p1'],
+        result: 'win',
+      }),
     ];
     const result = getTeamRosterUsage(battles);
-    expect(result).toEqual([{
-      teamId: 't1',
-      teamName: 'Alpha',
-      totalTeamBattles: 1,
-      pokemon: [
-        { species: 'Gengar', spriteUrl: gengar.spriteUrl, broughtCount: 1, battleCount: 1, rate: 1 },
-        { species: 'Incineroar', spriteUrl: incin.spriteUrl, broughtCount: 0, battleCount: 1, rate: 0 },
-      ],
-    }]);
+    expect(result).toEqual([
+      {
+        teamId: 't1',
+        teamName: 'Alpha',
+        totalTeamBattles: 1,
+        pokemon: [
+          {
+            species: 'Gengar',
+            spriteUrl: gengar.spriteUrl,
+            broughtCount: 1,
+            battleCount: 1,
+            rate: 1,
+          },
+          {
+            species: 'Incineroar',
+            spriteUrl: incin.spriteUrl,
+            broughtCount: 0,
+            battleCount: 1,
+            rate: 0,
+          },
+        ],
+      },
+    ]);
   });
 
-  it('pins a swapped-out species\' rate to its own battleCount instead of the team-wide total drifting it downward', () => {
+  it("pins a swapped-out species' rate to its own battleCount instead of the team-wide total drifting it downward", () => {
     const salamence = makeBrought({ id: 'p1', species: 'Salamence' });
     const hydreigon = makeBrought({ id: 'p2', species: 'Hydreigon' });
     const rillaboom = makeBrought({ id: 'p3', species: 'Rillaboom' });
     const battles = [
       // Battles 1-12: Salamence on the roster and always brought, Rillaboom always brought too.
-      ...Array.from({ length: 12 }, () => makeBattle({
-        teamId: 't1', teamName: 'Alpha',
-        playerRoster: [salamence, rillaboom], broughtIds: ['p1', 'p3'], result: 'win',
-      })),
+      ...Array.from({ length: 12 }, () =>
+        makeBattle({
+          teamId: 't1',
+          teamName: 'Alpha',
+          playerRoster: [salamence, rillaboom],
+          broughtIds: ['p1', 'p3'],
+          result: 'win',
+        }),
+      ),
       // Battle 13+: Salamence swapped out for Hydreigon, which is brought once, Rillaboom still always brought.
       makeBattle({
-        teamId: 't1', teamName: 'Alpha',
-        playerRoster: [hydreigon, rillaboom], broughtIds: ['p2', 'p3'], result: 'win',
+        teamId: 't1',
+        teamName: 'Alpha',
+        playerRoster: [hydreigon, rillaboom],
+        broughtIds: ['p2', 'p3'],
+        result: 'win',
       }),
     ];
     const result = getTeamRosterUsage(battles);
     expect(result[0].totalTeamBattles).toBe(13);
-    const bySpecies = Object.fromEntries(result[0].pokemon.map(p => [p.species, p]));
-    expect(bySpecies['Salamence']).toEqual({ species: 'Salamence', spriteUrl: salamence.spriteUrl, broughtCount: 12, battleCount: 12, rate: 1 });
-    expect(bySpecies['Hydreigon']).toEqual({ species: 'Hydreigon', spriteUrl: hydreigon.spriteUrl, broughtCount: 1, battleCount: 1, rate: 1 });
-    expect(bySpecies['Rillaboom']).toEqual({ species: 'Rillaboom', spriteUrl: rillaboom.spriteUrl, broughtCount: 13, battleCount: 13, rate: 1 });
+    const bySpecies = Object.fromEntries(result[0].pokemon.map((p) => [p.species, p]));
+    expect(bySpecies['Salamence']).toEqual({
+      species: 'Salamence',
+      spriteUrl: salamence.spriteUrl,
+      broughtCount: 12,
+      battleCount: 12,
+      rate: 1,
+    });
+    expect(bySpecies['Hydreigon']).toEqual({
+      species: 'Hydreigon',
+      spriteUrl: hydreigon.spriteUrl,
+      broughtCount: 1,
+      battleCount: 1,
+      rate: 1,
+    });
+    expect(bySpecies['Rillaboom']).toEqual({
+      species: 'Rillaboom',
+      spriteUrl: rillaboom.spriteUrl,
+      broughtCount: 13,
+      battleCount: 13,
+      rate: 1,
+    });
   });
 
   it('keeps teams and their species sorted independently: teams by battle count desc, species within a team by rate desc', () => {
@@ -238,19 +305,44 @@ describe('getTeamRosterUsage', () => {
     const incin = makeBrought({ id: 'p2', species: 'Incineroar' });
     const battles = [
       // t1: 1 battle total
-      makeBattle({ teamId: 't1', teamName: 'Alpha', playerRoster: [gengar], broughtIds: ['p1'], result: 'win' }),
+      makeBattle({
+        teamId: 't1',
+        teamName: 'Alpha',
+        playerRoster: [gengar],
+        broughtIds: ['p1'],
+        result: 'win',
+      }),
       // t2: 2 battles total - Incineroar brought once (50%), Gengar never brought (0%)
-      makeBattle({ teamId: 't2', teamName: 'Beta', playerRoster: [gengar, incin], broughtIds: ['p2'], result: 'win' }),
-      makeBattle({ teamId: 't2', teamName: 'Beta', playerRoster: [gengar, incin], broughtIds: [], result: 'loss' }),
+      makeBattle({
+        teamId: 't2',
+        teamName: 'Beta',
+        playerRoster: [gengar, incin],
+        broughtIds: ['p2'],
+        result: 'win',
+      }),
+      makeBattle({
+        teamId: 't2',
+        teamName: 'Beta',
+        playerRoster: [gengar, incin],
+        broughtIds: [],
+        result: 'loss',
+      }),
     ];
     const result = getTeamRosterUsage(battles);
-    expect(result.map(t => t.teamId)).toEqual(['t2', 't1']);
-    expect(result[0].pokemon.map(p => p.species)).toEqual(['Incineroar', 'Gengar']);
+    expect(result.map((t) => t.teamId)).toEqual(['t2', 't1']);
+    expect(result[0].pokemon.map((p) => p.species)).toEqual(['Incineroar', 'Gengar']);
   });
 
   it('excludes in-progress battles from both the roster snapshot and the denominator', () => {
     const gengar = makeBrought({ id: 'p1', species: 'Gengar' });
-    const battles = [makeBattle({ teamId: 't1', playerRoster: [gengar], broughtIds: ['p1'], result: 'in-progress' })];
+    const battles = [
+      makeBattle({
+        teamId: 't1',
+        playerRoster: [gengar],
+        broughtIds: ['p1'],
+        result: 'in-progress',
+      }),
+    ];
     expect(getTeamRosterUsage(battles)).toEqual([]);
   });
 });
@@ -270,12 +362,11 @@ describe('getMostFacedOpponents', () => {
   it('sorts by count descending and respects topN', () => {
     const a = makeOpponent({ species: 'A' });
     const b = makeOpponent({ species: 'B' });
-    const battles = [
-      makeBattle({ opponentRoster: [a, b] }),
-      makeBattle({ opponentRoster: [a] }),
-    ];
+    const battles = [makeBattle({ opponentRoster: [a, b] }), makeBattle({ opponentRoster: [a] })];
     const result = getMostFacedOpponents(battles, 1);
-    expect(result).toEqual([{ species: 'A', spriteUrl: a.spriteUrl, count: 2, wins: 2, losses: 0 }]);
+    expect(result).toEqual([
+      { species: 'A', spriteUrl: a.spriteUrl, count: 2, wins: 2, losses: 0 },
+    ]);
   });
 
   it('tallies wins and losses only from completed battles, separately from the all-battle count', () => {

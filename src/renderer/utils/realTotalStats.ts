@@ -30,8 +30,12 @@ interface RealTotalInputs {
 
 function evSpreadToStatsTable(evs: EVSpread): StatsTable {
   return {
-    hp: evs.hp, atk: evs.attack, def: evs.defense,
-    spa: evs.specialAttack, spd: evs.specialDefense, spe: evs.speed,
+    hp: evs.hp,
+    atk: evs.attack,
+    def: evs.defense,
+    spa: evs.specialAttack,
+    spd: evs.specialDefense,
+    spe: evs.speed,
   };
 }
 
@@ -41,20 +45,30 @@ function evSpreadToStatsTable(evs: EVSpread): StatsTable {
  * null if @smogon/calc doesn't recognize the species/nature - the caller
  * renders that as unavailable rather than a stale/wrong number.
  */
-export function computeRealTotalStats(species: string, inputs: RealTotalInputs): PokemonStats | null {
+export function computeRealTotalStats(
+  species: string,
+  inputs: RealTotalInputs,
+): PokemonStats | null {
   try {
     const gen = Generations.get(GEN_NUM);
     const calcPokemon = new Pokemon(gen, resolveCalcSpecies(species), {
       level: inputs.level || 50,
-      gender: inputs.gender === 'M' || inputs.gender === 'F' || inputs.gender === 'N' ? inputs.gender : undefined,
+      gender:
+        inputs.gender === 'M' || inputs.gender === 'F' || inputs.gender === 'N'
+          ? inputs.gender
+          : undefined,
       nature: (inputs.nature || 'Hardy') as NatureName,
       evs: spsToEvs(evSpreadToStatsTable(inputs.evs)),
       ivs: MAX_IVS,
     });
     const raw = calcPokemon.rawStats;
     return {
-      hp: raw.hp, attack: raw.atk, defense: raw.def,
-      specialAttack: raw.spa, specialDefense: raw.spd, speed: raw.spe,
+      hp: raw.hp,
+      attack: raw.atk,
+      defense: raw.def,
+      specialAttack: raw.spa,
+      specialDefense: raw.spd,
+      speed: raw.spe,
     };
   } catch {
     return null;

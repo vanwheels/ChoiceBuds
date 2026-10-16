@@ -31,7 +31,7 @@
  */
 
 export const TYPE_IMMUNITY_ABILITIES: Record<string, string[]> = {
-  'levitate': ['ground'],
+  levitate: ['ground'],
   'earth-eater': ['ground'],
   'flash-fire': ['fire'],
   'well-baked-body': ['fire'],

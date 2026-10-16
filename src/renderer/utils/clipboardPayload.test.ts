@@ -23,7 +23,14 @@ function makePokemon(overrides: Partial<ShowdownPokemon> = {}): ImportedPokemonI
     },
     pokedexNumber: 94,
     types: ['ghost', 'poison'],
-    baseStats: { hp: 60, attack: 65, defense: 60, specialAttack: 130, specialDefense: 75, speed: 110 },
+    baseStats: {
+      hp: 60,
+      attack: 65,
+      defense: 60,
+      specialAttack: 130,
+      specialDefense: 75,
+      speed: 110,
+    },
     spriteUrl: 'https://example.com/gengar.png',
     importedAt: Date.now(),
     id: 'mon-1',
@@ -52,7 +59,9 @@ beforeEach(() => {
   clipboardText = '';
   Object.defineProperty(navigator, 'clipboard', {
     value: {
-      writeText: vi.fn(async (text: string) => { clipboardText = text; }),
+      writeText: vi.fn(async (text: string) => {
+        clipboardText = text;
+      }),
       readText: vi.fn(async () => clipboardText),
     },
     configurable: true,

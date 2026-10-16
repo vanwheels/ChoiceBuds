@@ -178,7 +178,7 @@ describe('parseShowdownText - gender fallback', () => {
 
   it('applies the right fallback per-Pokémon across a mixed team', () => {
     const result = parseShowdownText(TEST_CASES.mixedTeam);
-    expect(result.pokemon.map(p => p.gender)).toEqual(['F', 'N', 'F', 'M']);
+    expect(result.pokemon.map((p) => p.gender)).toEqual(['F', 'N', 'F', 'M']);
   });
 });
 

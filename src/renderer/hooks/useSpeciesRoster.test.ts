@@ -44,18 +44,21 @@ describe('useSpeciesRoster', () => {
         name: 'Charizard',
         id: 6,
         spriteUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/6.png',
-        shinySpriteUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/6.png',
+        shinySpriteUrl:
+          'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/6.png',
       },
       {
         name: 'Ninetales-Alola',
         id: 10103,
-        spriteUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10103.png',
-        shinySpriteUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10103.png',
+        spriteUrl:
+          'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10103.png',
+        shinySpriteUrl:
+          'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10103.png',
       },
     ]);
   });
 
-  it('maps PokeAPI\'s split -male/-female resources to this app\'s own bare/-F convention', async () => {
+  it("maps PokeAPI's split -male/-female resources to this app's own bare/-F convention", async () => {
     mockedFetchJSON.mockResolvedValueOnce({
       results: [
         { name: 'indeedee-male', url: 'https://pokeapi.co/api/v2/pokemon/876/' },
@@ -72,8 +75,15 @@ describe('useSpeciesRoster', () => {
     const { result } = renderHook(() => useSpeciesRoster());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-    expect(result.current.roster.map(entry => entry.name)).toEqual([
-      'Indeedee', 'Indeedee-F', 'Basculegion', 'Basculegion-F', 'Meowstic', 'Meowstic-F', 'Oinkologne', 'Oinkologne-F',
+    expect(result.current.roster.map((entry) => entry.name)).toEqual([
+      'Indeedee',
+      'Indeedee-F',
+      'Basculegion',
+      'Basculegion-F',
+      'Meowstic',
+      'Meowstic-F',
+      'Oinkologne',
+      'Oinkologne-F',
     ]);
   });
 
@@ -86,7 +96,17 @@ describe('useSpeciesRoster', () => {
     expect(localStorage.getItem(CACHE_KEY)).not.toBeNull();
 
     const { result: second } = renderHook(() => useSpeciesRoster());
-    expect(second.current).toEqual({ roster: [{ name: 'Pikachu', id: 25, spriteUrl: expect.any(String), shinySpriteUrl: expect.any(String) }], isLoading: false });
+    expect(second.current).toEqual({
+      roster: [
+        {
+          name: 'Pikachu',
+          id: 25,
+          spriteUrl: expect.any(String),
+          shinySpriteUrl: expect.any(String),
+        },
+      ],
+      isLoading: false,
+    });
     expect(mockedFetchJSON).toHaveBeenCalledTimes(1); // second mount served from cache, no refetch
   });
 

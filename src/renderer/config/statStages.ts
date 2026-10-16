@@ -9,5 +9,9 @@ import type { StatKey } from '../types/pokemon';
 export const STAT_ORDER: StatKey[] = ['atk', 'def', 'spa', 'spd', 'spe'];
 
 export const STAT_LABELS: Record<StatKey, string> = {
-  atk: 'Atk', def: 'Def', spa: 'SpA', spd: 'SpD', spe: 'Spe',
+  atk: 'Atk',
+  def: 'Def',
+  spa: 'SpA',
+  spd: 'SpD',
+  spe: 'Spe',
 };

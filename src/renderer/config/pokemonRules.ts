@@ -130,13 +130,13 @@ export const GENDERLESS_SPECIES: readonly string[] = [
  */
 export const GENDERED_FORM_VARIANTS: Record<string, 'M' | 'F'> = {
   'Basculegion-F': 'F',
-  'Basculegion': 'M', // Default male form
+  Basculegion: 'M', // Default male form
   'Indeedee-F': 'F',
-  'Indeedee': 'M', // Default male form
+  Indeedee: 'M', // Default male form
   'Meowstic-F': 'F',
-  'Meowstic': 'M', // Default male form
+  Meowstic: 'M', // Default male form
   'Oinkologne-F': 'F',
-  'Oinkologne': 'M', // Default male form
+  Oinkologne: 'M', // Default male form
 } as const;
 
 /**
@@ -180,7 +180,7 @@ export function fixGenderSplitResourceSpeciesText(species: string): string {
  */
 export function isFemaleLocked(species: string): boolean {
   const normalized = normalizeSpeciesName(species);
-  return FEMALE_LOCKED_SPECIES.some(s => normalizeSpeciesName(s) === normalized);
+  return FEMALE_LOCKED_SPECIES.some((s) => normalizeSpeciesName(s) === normalized);
 }
 
 /**
@@ -188,7 +188,7 @@ export function isFemaleLocked(species: string): boolean {
  */
 export function isGenderless(species: string): boolean {
   const normalized = normalizeSpeciesName(species);
-  return GENDERLESS_SPECIES.some(s => normalizeSpeciesName(s) === normalized);
+  return GENDERLESS_SPECIES.some((s) => normalizeSpeciesName(s) === normalized);
 }
 
 /**
@@ -200,7 +200,7 @@ export function getGenderedFormGender(species: string): 'M' | 'F' | undefined {
   if (species in GENDERED_FORM_VARIANTS) {
     return GENDERED_FORM_VARIANTS[species as keyof typeof GENDERED_FORM_VARIANTS];
   }
-  
+
   // Check case-insensitive match
   const normalized = normalizeSpeciesName(species);
   for (const [formName, gender] of Object.entries(GENDERED_FORM_VARIANTS)) {
@@ -208,7 +208,7 @@ export function getGenderedFormGender(species: string): 'M' | 'F' | undefined {
       return gender;
     }
   }
-  
+
   return undefined;
 }
 
@@ -223,8 +223,9 @@ export function getGenderedFormGender(species: string): 'M' | 'F' | undefined {
  * species - so formatSpeciesWithGenderSuffix below makes the male suffix
  * explicit too, only for this export.
  */
-const GENDER_DIVERGENT_BASE_SPECIES = Object.keys(GENDERED_FORM_VARIANTS)
-  .map(name => name.split('-')[0].toLowerCase());
+const GENDER_DIVERGENT_BASE_SPECIES = Object.keys(GENDERED_FORM_VARIANTS).map((name) =>
+  name.split('-')[0].toLowerCase(),
+);
 
 /**
  * Appends an explicit "-M"/"-F" for the four gender-divergent species
@@ -233,7 +234,10 @@ const GENDER_DIVERGENT_BASE_SPECIES = Object.keys(GENDERED_FORM_VARIANTS)
  * matters for these four. A no-op for every other species, and a no-op if
  * `species` already ends in "-M"/"-F" (e.g. "Indeedee-F" from parsing).
  */
-export function formatSpeciesWithGenderSuffix(species: string, gender: 'M' | 'F' | 'N' | '' | undefined): string {
+export function formatSpeciesWithGenderSuffix(
+  species: string,
+  gender: 'M' | 'F' | 'N' | '' | undefined,
+): string {
   const base = species.split('-')[0];
   if (!GENDER_DIVERGENT_BASE_SPECIES.includes(base.toLowerCase())) return species;
   if (/-[mf]$/i.test(species)) return species;
@@ -242,13 +246,13 @@ export function formatSpeciesWithGenderSuffix(species: string, gender: 'M' | 'F'
 
 /**
  * Determines the fallback gender for a species when no explicit gender is provided
- * 
+ *
  * Priority order:
  * 1. Check if it's a gendered form variant (e.g., Basculegion-F)
  * 2. Check if it's female-locked
  * 3. Check if it's genderless
  * 4. Default to 'M' (male) as baseline
- * 
+ *
  * @param species - The species name (may include form variants)
  * @returns The appropriate gender: 'M', 'F', 'N', or undefined
  */
@@ -256,27 +260,27 @@ export function getFallbackGender(species: string): 'M' | 'F' | 'N' | undefined 
   if (!species) {
     return undefined;
   }
-  
+
   // First check if it's a gendered form variant
   const genderedFormGender = getGenderedFormGender(species);
   if (genderedFormGender) {
     return genderedFormGender;
   }
-  
+
   // Extract base species name (remove form suffix for checking)
   // e.g., "Rotom-Wash" -> "Rotom", but keep full name for gendered forms
   const baseSpecies = species.split('-')[0];
-  
+
   // Check female-locked (check both full name and base)
   if (isFemaleLocked(species) || isFemaleLocked(baseSpecies)) {
     return 'F';
   }
-  
+
   // Check genderless (check both full name and base)
   if (isGenderless(species) || isGenderless(baseSpecies)) {
     return 'N';
   }
-  
+
   // Default to male as baseline
   return 'M';
 }

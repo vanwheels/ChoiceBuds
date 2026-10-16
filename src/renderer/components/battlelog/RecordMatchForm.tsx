@@ -21,7 +21,13 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import type { Battle, BroughtPokemonSnapshot, OpponentPokemonEntry, SpeciesRosterEntry, Team } from '../../types/pokemon';
+import type {
+  Battle,
+  BroughtPokemonSnapshot,
+  OpponentPokemonEntry,
+  SpeciesRosterEntry,
+  Team,
+} from '../../types/pokemon';
 import type { UseTeamsReturn } from '../../hooks/useTeams';
 import type { UseBattlesReturn } from '../../hooks/useBattles';
 import type { UseSpeciesRosterReturn } from '../../hooks/useSpeciesRoster';
@@ -36,7 +42,7 @@ const MAX_OPPONENT_ROSTER_SIZE = 6;
 
 /** Shared toggle logic for both brought-4 pickers below (player roster, opponent roster) - add up to `max` ids, remove on re-click. */
 function toggleId(prev: string[], id: string, max: number): string[] {
-  if (prev.includes(id)) return prev.filter(existing => existing !== id);
+  if (prev.includes(id)) return prev.filter((existing) => existing !== id);
   if (prev.length >= max) return prev;
   return [...prev, id];
 }
@@ -49,13 +55,19 @@ interface RecordMatchFormProps {
   onRecorded: () => void;
   onCancel: () => void;
   /** Registers this session's live opponent roster + write-back updater + own team id with the global Calc popup (Regular Calc Battle Log Integration Leg 3/4) - the effect below calls this on mount and on every roster/team change, and with `null` on unmount, so the floating Calc launcher always has the current battle's roster ready without needing a per-tile trigger. See App.tsx's battleLogSession doc. */
-  registerBattleLogSession: (session: { roster: OpponentPokemonEntry[]; onUpdateEntry: (entryId: string, updates: Partial<OpponentPokemonEntry>) => void; teamId?: string } | null) => void;
+  registerBattleLogSession: (
+    session: {
+      roster: OpponentPokemonEntry[];
+      onUpdateEntry: (entryId: string, updates: Partial<OpponentPokemonEntry>) => void;
+      teamId?: string;
+    } | null,
+  ) => void;
   /** When set, the form edits this already-saved battle instead of creating a new one - see the header doc above. */
   editingBattle?: Battle;
 }
 
 function snapshotRoster(team: Team): BroughtPokemonSnapshot[] {
-  return team.pokemon.map(p => ({
+  return team.pokemon.map((p) => ({
     id: crypto.randomUUID(),
     species: p.showdownData.species,
     nickname: p.showdownData.nickname,
@@ -79,14 +91,18 @@ function resolveSetId(battles: Battle[], opponentName: string): string {
   if (!trimmed) return crypto.randomUUID();
 
   const matchingSets = groupBattlesBySet(
-    battles.filter(b => b.opponentName?.trim().toLowerCase() === trimmed.toLowerCase())
+    battles.filter((b) => b.opponentName?.trim().toLowerCase() === trimmed.toLowerCase()),
   );
   const openSet = matchingSets
-    .filter(group => {
+    .filter((group) => {
       const outcome = getSetOutcome(group.battles);
       return !outcome.decided && group.battles.length < 3;
     })
-    .sort((a, b) => Math.max(...b.battles.map(x => x.updatedAt)) - Math.max(...a.battles.map(x => x.updatedAt)))[0];
+    .sort(
+      (a, b) =>
+        Math.max(...b.battles.map((x) => x.updatedAt)) -
+        Math.max(...a.battles.map((x) => x.updatedAt)),
+    )[0];
 
   return openSet?.setId ?? crypto.randomUUID();
 }
@@ -103,7 +119,17 @@ function buildMatchRecord(args: {
   notes: string;
   existingBattles: Battle[];
 }): Battle {
-  const { team, playerRoster, broughtIds, opponentRoster, opponentBroughtIds, opponentName, result, notes, existingBattles } = args;
+  const {
+    team,
+    playerRoster,
+    broughtIds,
+    opponentRoster,
+    opponentBroughtIds,
+    opponentName,
+    result,
+    notes,
+    existingBattles,
+  } = args;
   const trimmedName = opponentName.trim();
   const now = Date.now();
   return {
@@ -134,27 +160,42 @@ function buildMatchRecord(args: {
   };
 }
 
-export default function RecordMatchForm({ teamsState, battlesState, speciesRosterState, spriteCacheState, onRecorded, onCancel, registerBattleLogSession, editingBattle }: RecordMatchFormProps) {
-  const eligibleTeams = teamsState.teams.filter(t => t.pokemon.length >= 4);
+export default function RecordMatchForm({
+  teamsState,
+  battlesState,
+  speciesRosterState,
+  spriteCacheState,
+  onRecorded,
+  onCancel,
+  registerBattleLogSession,
+  editingBattle,
+}: RecordMatchFormProps) {
+  const eligibleTeams = teamsState.teams.filter((t) => t.pokemon.length >= 4);
   const priorOpponentNames = Array.from(
-    new Set(battlesState.battles.map(b => b.opponentName).filter((n): n is string => !!n))
+    new Set(battlesState.battles.map((b) => b.opponentName).filter((n): n is string => !!n)),
   );
 
   const [teamId, setTeamId] = useState<string>('');
   const [opponentName, setOpponentName] = useState(editingBattle?.opponentName ?? '');
   const [broughtIds, setBroughtIds] = useState<string[]>(editingBattle?.broughtIds ?? []);
-  const [opponentRoster, setOpponentRoster] = useState<OpponentPokemonEntry[]>(editingBattle?.opponentRoster ?? []);
-  const [opponentBroughtIds, setOpponentBroughtIds] = useState<string[]>(editingBattle?.opponentBroughtIds ?? []);
+  const [opponentRoster, setOpponentRoster] = useState<OpponentPokemonEntry[]>(
+    editingBattle?.opponentRoster ?? [],
+  );
+  const [opponentBroughtIds, setOpponentBroughtIds] = useState<string[]>(
+    editingBattle?.opponentBroughtIds ?? [],
+  );
   // Snapshotted once per team selection (see handleSelectTeam) rather than
   // derived in render - snapshotRoster mints fresh crypto.randomUUID() ids,
   // so deriving it every render (as this used to) handed out new ids on
   // every re-render, including the one right after a brought-tile click:
   // the id just selected no longer matched anything, so no tile ever
   // visually showed as selected even though broughtIds.length was correct.
-  const [playerRoster, setPlayerRoster] = useState<BroughtPokemonSnapshot[]>(editingBattle?.playerRoster ?? []);
+  const [playerRoster, setPlayerRoster] = useState<BroughtPokemonSnapshot[]>(
+    editingBattle?.playerRoster ?? [],
+  );
   const [isAddingOpponent, setIsAddingOpponent] = useState(false);
   const [result, setResult] = useState<'win' | 'loss' | null>(
-    editingBattle && editingBattle.result !== 'in-progress' ? editingBattle.result : null
+    editingBattle && editingBattle.result !== 'in-progress' ? editingBattle.result : null,
   );
   const [notes, setNotes] = useState(editingBattle?.notes ?? '');
   const [isSaving, setIsSaving] = useState(false);
@@ -163,8 +204,8 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
   // a live reference, so the stored snapshot is used as-is rather than
   // re-derived from the (possibly since-changed) live team.
   const team = editingBattle
-    ? teamsState.teams.find(t => t.id === editingBattle.teamId)
-    : eligibleTeams.find(t => t.id === teamId);
+    ? teamsState.teams.find((t) => t.id === editingBattle.teamId)
+    : eligibleTeams.find((t) => t.id === teamId);
   const rulesetFormat = editingBattle ? (team?.format ?? editingBattle.format) : team?.format;
   const canSave = editingBattle
     ? broughtIds.length > 0 && result !== null && !isSaving
@@ -176,52 +217,67 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
   // and disabled) - otherwise the same opponent Pokemon could be added a
   // second time and both entries independently marked brought, double-
   // counting one Pokemon in the opponent's brought-4.
-  const opponentSpeciesSeen = new Set(opponentRoster.map(o => o.species.toLowerCase()));
-  const opponentPickerRoster = speciesRosterState.roster.filter(s => !opponentSpeciesSeen.has(s.name.toLowerCase()));
+  const opponentSpeciesSeen = new Set(opponentRoster.map((o) => o.species.toLowerCase()));
+  const opponentPickerRoster = speciesRosterState.roster.filter(
+    (s) => !opponentSpeciesSeen.has(s.name.toLowerCase()),
+  );
 
   const handleSelectTeam = (nextTeamId: string) => {
     setTeamId(nextTeamId);
     setBroughtIds([]); // roster identity (crypto.randomUUID() ids) is re-rolled per snapshot, so a prior selection can't carry over
-    const nextTeam = eligibleTeams.find(t => t.id === nextTeamId);
+    const nextTeam = eligibleTeams.find((t) => t.id === nextTeamId);
     setPlayerRoster(nextTeam ? snapshotRoster(nextTeam) : []);
   };
 
-  const toggleBrought = (pokemonId: string) => setBroughtIds(prev => toggleId(prev, pokemonId, MAX_BROUGHT));
-  const toggleOpponentBrought = (pokemonId: string) => setOpponentBroughtIds(prev => toggleId(prev, pokemonId, MAX_BROUGHT));
+  const toggleBrought = (pokemonId: string) =>
+    setBroughtIds((prev) => toggleId(prev, pokemonId, MAX_BROUGHT));
+  const toggleOpponentBrought = (pokemonId: string) =>
+    setOpponentBroughtIds((prev) => toggleId(prev, pokemonId, MAX_BROUGHT));
 
   const handleAddOpponent = (species: SpeciesRosterEntry) => {
     setIsAddingOpponent(false);
-    setOpponentRoster(prev => [...prev, {
-      id: crypto.randomUUID(),
-      species: species.name,
-      pokedexNumber: species.id,
-      spriteUrl: species.spriteUrl,
-      types: [],
-      moves: [],
-      fainted: false,
-      addedAt: Date.now(),
-    }]);
+    setOpponentRoster((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        species: species.name,
+        pokedexNumber: species.id,
+        spriteUrl: species.spriteUrl,
+        types: [],
+        moves: [],
+        fainted: false,
+        addedAt: Date.now(),
+      },
+    ]);
   };
 
   const removeOpponent = (id: string) => {
-    setOpponentRoster(prev => prev.filter(o => o.id !== id));
-    setOpponentBroughtIds(prev => prev.filter(broughtId => broughtId !== id)); // drop a stale brought-selection if its entry is removed entirely
+    setOpponentRoster((prev) => prev.filter((o) => o.id !== id));
+    setOpponentBroughtIds((prev) => prev.filter((broughtId) => broughtId !== id)); // drop a stale brought-selection if its entry is removed entirely
   };
 
   /** Merges Calc-reported moves/ability/item back into a specific opponent-roster entry by id, whenever the global Calc popup's write-back link points at it (Regular Calc Battle Log Integration Leg 2, now dispatched by entryId via registerBattleLogSession's onUpdateEntry rather than a per-tile-bound closure - Leg 3). Moves union rather than overwrite (case-insensitive, since `OpponentPokemonEntry.moves` is a growable tag list, not the Calc grid's fixed 4 slots) - ability/item overwrite directly since they're single values. Wrapped in useCallback so the registration effect below doesn't re-register on every unrelated render. */
-  const handleCalcUpdate = useCallback((entryId: string, updates: Partial<OpponentPokemonEntry>) => {
-    setOpponentRoster(prev => prev.map(o => {
-      if (o.id !== entryId) return o;
-      const next = { ...o };
-      if (updates.ability !== undefined) next.ability = updates.ability;
-      if (updates.item !== undefined) next.item = updates.item;
-      if (updates.moves !== undefined) {
-        const existingLower = new Set(o.moves.map(m => m.toLowerCase()));
-        next.moves = [...o.moves, ...updates.moves.filter(m => !existingLower.has(m.toLowerCase()))];
-      }
-      return next;
-    }));
-  }, []);
+  const handleCalcUpdate = useCallback(
+    (entryId: string, updates: Partial<OpponentPokemonEntry>) => {
+      setOpponentRoster((prev) =>
+        prev.map((o) => {
+          if (o.id !== entryId) return o;
+          const next = { ...o };
+          if (updates.ability !== undefined) next.ability = updates.ability;
+          if (updates.item !== undefined) next.item = updates.item;
+          if (updates.moves !== undefined) {
+            const existingLower = new Set(o.moves.map((m) => m.toLowerCase()));
+            next.moves = [
+              ...o.moves,
+              ...updates.moves.filter((m) => !existingLower.has(m.toLowerCase())),
+            ];
+          }
+          return next;
+        }),
+      );
+    },
+    [],
+  );
 
   // Keeps the global Calc popup's opponent-roster snapshot (and this
   // session's own team id, so Calc's Pokemon 1 side can default its "Load
@@ -234,7 +290,11 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
   // identity must stay stable (App.tsx passes its raw useState setter) -
   // an unstable one here would re-register every render.
   useEffect(() => {
-    registerBattleLogSession({ roster: opponentRoster, onUpdateEntry: handleCalcUpdate, teamId: team?.id });
+    registerBattleLogSession({
+      roster: opponentRoster,
+      onUpdateEntry: handleCalcUpdate,
+      teamId: team?.id,
+    });
     return () => registerBattleLogSession(null);
   }, [opponentRoster, handleCalcUpdate, registerBattleLogSession, team?.id]);
 
@@ -255,10 +315,19 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
           notes: trimmedNotes || undefined,
         })
       : team
-        ? await battlesState.addBattle(buildMatchRecord({
-            team, playerRoster, broughtIds, opponentRoster, opponentBroughtIds, opponentName, result, notes,
-            existingBattles: battlesState.battles,
-          }))
+        ? await battlesState.addBattle(
+            buildMatchRecord({
+              team,
+              playerRoster,
+              broughtIds,
+              opponentRoster,
+              opponentBroughtIds,
+              opponentName,
+              result,
+              notes,
+              existingBattles: battlesState.battles,
+            }),
+          )
         : false;
 
     setIsSaving(false);
@@ -268,26 +337,36 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
   return (
     <div className="flex flex-col gap-4 max-w-2xl">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-zinc-100">{editingBattle ? 'Edit Match' : 'Record a Match'}</h2>
-        <button onClick={onCancel} className="text-sm text-zinc-400 hover:text-zinc-200">Cancel</button>
+        <h2 className="text-lg font-bold text-zinc-100">
+          {editingBattle ? 'Edit Match' : 'Record a Match'}
+        </h2>
+        <button onClick={onCancel} className="text-sm text-zinc-400 hover:text-zinc-200">
+          Cancel
+        </button>
       </div>
 
       <div>
         <label className="block text-sm font-medium text-zinc-300 mb-2">Team</label>
         {editingBattle ? (
           // Locked in edit mode - playerRoster is a snapshot tied to this team, so it can't be reselected (see header doc).
-          <p className="text-sm text-zinc-100">{editingBattle.teamName} ({editingBattle.format})</p>
+          <p className="text-sm text-zinc-100">
+            {editingBattle.teamName} ({editingBattle.format})
+          </p>
         ) : eligibleTeams.length === 0 ? (
-          <p className="text-sm text-zinc-400">No saved teams with at least 4 Pokemon yet - build one in the Teams tab first.</p>
+          <p className="text-sm text-zinc-400">
+            No saved teams with at least 4 Pokemon yet - build one in the Teams tab first.
+          </p>
         ) : (
           <select
             value={teamId}
-            onChange={e => handleSelectTeam(e.target.value)}
+            onChange={(e) => handleSelectTeam(e.target.value)}
             className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-accent-gold"
           >
             <option value="">Select a team...</option>
-            {eligibleTeams.map(t => (
-              <option key={t.id} value={t.id}>{t.name} ({t.format})</option>
+            {eligibleTeams.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name} ({t.format})
+              </option>
             ))}
           </select>
         )}
@@ -299,7 +378,7 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
             Brought ({broughtIds.length}/{MAX_BROUGHT})
           </label>
           <div className="flex flex-wrap gap-2">
-            {playerRoster.map(p => (
+            {playerRoster.map((p) => (
               <BroughtToggleTile
                 key={p.id}
                 spriteUrl={p.spriteUrl}
@@ -315,10 +394,11 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
 
       <div>
         <label className="block text-sm font-medium text-zinc-300 mb-2">
-          Opponent's Team ({opponentRoster.length}/{MAX_OPPONENT_ROSTER_SIZE}) · Brought ({opponentBroughtIds.length}/{MAX_BROUGHT})
+          Opponent's Team ({opponentRoster.length}/{MAX_OPPONENT_ROSTER_SIZE}) · Brought (
+          {opponentBroughtIds.length}/{MAX_BROUGHT})
         </label>
         <div className="flex flex-wrap gap-2">
-          {opponentRoster.map(o => (
+          {opponentRoster.map((o) => (
             <BroughtToggleTile
               key={o.id}
               spriteUrl={o.spriteUrl}
@@ -327,12 +407,18 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
               selected={opponentBroughtIds.includes(o.id)}
               onToggle={() => toggleOpponentBrought(o.id)}
               trailing={
-                <button onClick={() => removeOpponent(o.id)} title="Remove" className="text-zinc-500 hover:text-red-400 cursor-pointer">×</button>
+                <button
+                  onClick={() => removeOpponent(o.id)}
+                  title="Remove"
+                  className="text-zinc-500 hover:text-red-400 cursor-pointer"
+                >
+                  ×
+                </button>
               }
             />
           ))}
-          {opponentRoster.length < MAX_OPPONENT_ROSTER_SIZE && (
-            isAddingOpponent ? (
+          {opponentRoster.length < MAX_OPPONENT_ROSTER_SIZE &&
+            (isAddingOpponent ? (
               <SpeciesPickerCard
                 roster={opponentPickerRoster}
                 rulesetId={toRegulationId(rulesetFormat ?? 'Reg M-B')}
@@ -348,8 +434,7 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
               >
                 + Add Opponent Pokemon
               </button>
-            )
-          )}
+            ))}
         </div>
       </div>
 
@@ -357,7 +442,9 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
         <label htmlFor="opponentName" className="block text-sm font-medium text-zinc-300 mb-2">
           Opponent Name{' '}
           {!editingBattle && (
-            <span className="text-zinc-500 font-normal">(optional - type the same name again to continue a Bo3 set)</span>
+            <span className="text-zinc-500 font-normal">
+              (optional - type the same name again to continue a Bo3 set)
+            </span>
           )}
         </label>
         <input
@@ -365,12 +452,14 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
           type="text"
           list="prior-opponent-names"
           value={opponentName}
-          onChange={e => setOpponentName(e.target.value)}
+          onChange={(e) => setOpponentName(e.target.value)}
           placeholder="Who did you play?"
           className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
         />
         <datalist id="prior-opponent-names">
-          {priorOpponentNames.map(name => <option key={name} value={name} />)}
+          {priorOpponentNames.map((name) => (
+            <option key={name} value={name} />
+          ))}
         </datalist>
       </div>
 
@@ -395,11 +484,13 @@ export default function RecordMatchForm({ teamsState, battlesState, speciesRoste
       </div>
 
       <div>
-        <label htmlFor="notes" className="block text-sm font-medium text-zinc-300 mb-2">Notes <span className="text-zinc-500 font-normal">(optional)</span></label>
+        <label htmlFor="notes" className="block text-sm font-medium text-zinc-300 mb-2">
+          Notes <span className="text-zinc-500 font-normal">(optional)</span>
+        </label>
         <textarea
           id="notes"
           value={notes}
-          onChange={e => setNotes(e.target.value)}
+          onChange={(e) => setNotes(e.target.value)}
           rows={3}
           placeholder="Anything worth remembering about this match..."
           className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold resize-none"

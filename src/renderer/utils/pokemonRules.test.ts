@@ -184,13 +184,13 @@ describe('getRuleset', () => {
   it('REG-MB ruleset is a superset of REG-MA (every M-A species included)', () => {
     const ma = getRuleset('REG-MA');
     const mb = getRuleset('REG-MB');
-    expect(ma.allowedSpecies.every(s => mb.allowedSpecies.includes(s))).toBe(true);
+    expect(ma.allowedSpecies.every((s) => mb.allowedSpecies.includes(s))).toBe(true);
   });
 
   it('REG-MC ruleset is a superset of REG-MB (every M-B species included)', () => {
     const mb = getRuleset('REG-MB');
     const mc = getRuleset('REG-MC');
-    expect(mb.allowedSpecies.every(s => mc.allowedSpecies.includes(s))).toBe(true);
+    expect(mb.allowedSpecies.every((s) => mc.allowedSpecies.includes(s))).toBe(true);
   });
 
   it('ALL_REGULATION_IDS lists every regulation in display order', () => {

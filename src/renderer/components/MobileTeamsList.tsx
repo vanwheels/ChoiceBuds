@@ -43,18 +43,29 @@ interface MobileTeamsListProps {
   vgcRealSetsState: UseVgcRealSetsCacheReturn;
 }
 
-export default function MobileTeamsList({ teams, teamsState, databaseState, gameDataState, speciesRosterState, spriteCacheState, settingsState, savedPokemonState, vgcPastesState, vgcRealSetsState }: MobileTeamsListProps) {
+export default function MobileTeamsList({
+  teams,
+  teamsState,
+  databaseState,
+  gameDataState,
+  speciesRosterState,
+  spriteCacheState,
+  settingsState,
+  savedPokemonState,
+  vgcPastesState,
+  vgcRealSetsState,
+}: MobileTeamsListProps) {
   const [openTeamId, setOpenTeamId] = useState<string | null>(null);
   // Warms the shared Mega-sprite cache once for the whole list's sprite
   // strips - see TeamCard.tsx's own per-card call of the same hook for why
   // this is safe to call from more than one place at once.
   useMegaSpritePrefetch();
 
-  const openTeam = openTeamId ? teams.find(t => t.id === openTeamId) ?? null : null;
+  const openTeam = openTeamId ? (teams.find((t) => t.id === openTeamId) ?? null) : null;
 
   return (
     <div className="flex flex-col gap-2">
-      {teams.map(team => (
+      {teams.map((team) => (
         <MobileTeamRow
           key={team.id}
           team={team}

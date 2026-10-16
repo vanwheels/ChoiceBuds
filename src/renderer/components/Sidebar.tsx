@@ -123,7 +123,12 @@ const drawerVariants = {
   visible: { x: 0, transition: DRAWER_PANEL_ENTER_TRANSITION },
 };
 
-export default function Sidebar({ activeTab, onTabChange, renderFooter, mobileTopBarEnd }: SidebarProps) {
+export default function Sidebar({
+  activeTab,
+  onTabChange,
+  renderFooter,
+  mobileTopBarEnd,
+}: SidebarProps) {
   const { collapsed, toggleCollapsed } = useSidebarCollapsed();
   const [drawerOpen, setDrawerOpen] = useState(false);
   // Mobile Compact Top Bar: Teams & Box leg (see TODO.md) - whichever tab is
@@ -146,7 +151,9 @@ export default function Sidebar({ activeTab, onTabChange, renderFooter, mobileTo
         className={`group relative flex items-center rounded-lg font-semibold transition-colors cursor-pointer ${
           isCollapsed ? 'justify-center p-2.5' : 'gap-2.5 px-2.5 py-[9px] text-[13.5px]'
         } ${
-          isActive ? 'text-accent-gold bg-accent-gold/15' : 'text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200'
+          isActive
+            ? 'text-accent-gold bg-accent-gold/15'
+            : 'text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200'
         }`}
       >
         {isActive && (
@@ -185,9 +192,15 @@ export default function Sidebar({ activeTab, onTabChange, renderFooter, mobileTo
         }`}
       >
         {/* Brand Header */}
-        <div className={`flex items-center border-b border-zinc-700 pb-4 ${collapsed ? 'justify-center w-full' : 'gap-2.5 px-1.5'}`}>
+        <div
+          className={`flex items-center border-b border-zinc-700 pb-4 ${collapsed ? 'justify-center w-full' : 'gap-2.5 px-1.5'}`}
+        >
           <div className="h-[30px] w-[30px] shrink-0 overflow-hidden rounded-lg">
-            <img src={`${import.meta.env.BASE_URL}mascot.png`} alt="ChoiceBuds" className="h-full w-full object-cover" />
+            <img
+              src={`${import.meta.env.BASE_URL}mascot.png`}
+              alt="ChoiceBuds"
+              className="h-full w-full object-cover"
+            />
           </div>
           {!collapsed && <h1 className="text-[15px] font-bold text-zinc-100">ChoiceBuds</h1>}
         </div>
@@ -208,17 +221,19 @@ export default function Sidebar({ activeTab, onTabChange, renderFooter, mobileTo
 
         {/* Navigation Menu */}
         <nav className="mt-2 flex w-full flex-col gap-[3px]">
-          {MAIN_NAV_ITEMS.map(item => renderNavItem(item, collapsed, () => onTabChange(item.tab)))}
+          {MAIN_NAV_ITEMS.map((item) =>
+            renderNavItem(item, collapsed, () => onTabChange(item.tab)),
+          )}
         </nav>
 
         <div className="mt-auto w-full border-t border-zinc-700 pt-2">
-          {BOTTOM_NAV_ITEMS.map(item => renderNavItem(item, collapsed, () => onTabChange(item.tab)))}
+          {BOTTOM_NAV_ITEMS.map((item) =>
+            renderNavItem(item, collapsed, () => onTabChange(item.tab)),
+          )}
         </div>
 
         {renderFooter && (
-          <div className="mt-2 w-full border-t border-zinc-700 pt-2">
-            {renderFooter(collapsed)}
-          </div>
+          <div className="mt-2 w-full border-t border-zinc-700 pt-2">{renderFooter(collapsed)}</div>
         )}
       </motion.aside>
 
@@ -290,7 +305,11 @@ export default function Sidebar({ activeTab, onTabChange, renderFooter, mobileTo
                 <div className="flex items-center justify-between gap-2.5 border-b border-zinc-700 px-1.5 pb-4">
                   <div className="flex items-center gap-2.5">
                     <div className="h-[30px] w-[30px] shrink-0 overflow-hidden rounded-lg">
-                      <img src={`${import.meta.env.BASE_URL}mascot.png`} alt="ChoiceBuds" className="h-full w-full object-cover" />
+                      <img
+                        src={`${import.meta.env.BASE_URL}mascot.png`}
+                        alt="ChoiceBuds"
+                        className="h-full w-full object-cover"
+                      />
                     </div>
                     <h1 className="text-[15px] font-bold text-zinc-100">ChoiceBuds</h1>
                   </div>
@@ -304,11 +323,15 @@ export default function Sidebar({ activeTab, onTabChange, renderFooter, mobileTo
                 </div>
 
                 <nav className="mt-2 flex w-full flex-col gap-[3px]">
-                  {MAIN_NAV_ITEMS.map(item => renderNavItem(item, false, () => goToTabFromDrawer(item.tab)))}
+                  {MAIN_NAV_ITEMS.map((item) =>
+                    renderNavItem(item, false, () => goToTabFromDrawer(item.tab)),
+                  )}
                 </nav>
 
                 <div className="mt-auto w-full border-t border-zinc-700 pt-2">
-                  {BOTTOM_NAV_ITEMS.map(item => renderNavItem(item, false, () => goToTabFromDrawer(item.tab)))}
+                  {BOTTOM_NAV_ITEMS.map((item) =>
+                    renderNavItem(item, false, () => goToTabFromDrawer(item.tab)),
+                  )}
                 </div>
 
                 {renderFooter && (
@@ -320,7 +343,7 @@ export default function Sidebar({ activeTab, onTabChange, renderFooter, mobileTo
             </div>
           )}
         </AnimatePresence>,
-        document.body
+        document.body,
       )}
     </>
   );

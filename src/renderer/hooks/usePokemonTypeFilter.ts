@@ -24,7 +24,7 @@ const typeCache = new Map<string, Set<string> | null>();
 async function fetchTypeMembers(type: string): Promise<Set<string> | null> {
   if (typeCache.has(type)) return typeCache.get(type)!;
   const data = await fetchJSON<PokeAPITypeResponse>(`/type/${type}`);
-  const result = data ? new Set(data.pokemon.map(p => p.pokemon.name.toLowerCase())) : null;
+  const result = data ? new Set(data.pokemon.map((p) => p.pokemon.name.toLowerCase())) : null;
   typeCache.set(type, result);
   return result;
 }
@@ -41,7 +41,9 @@ function buildResultMap(types: string[]): Map<string, Set<string> | null> {
  * empty `types` array resolves to an empty Map immediately, with no fetch.
  */
 export function usePokemonTypeFilter(types: string[]): Map<string, Set<string> | null> {
-  const [result, setResult] = useState<Map<string, Set<string> | null>>(() => buildResultMap(types));
+  const [result, setResult] = useState<Map<string, Set<string> | null>>(() =>
+    buildResultMap(types),
+  );
 
   // Re-derives synchronously from cache the moment the requested types
   // change - set during render rather than in an effect, see
@@ -56,13 +58,15 @@ export function usePokemonTypeFilter(types: string[]): Map<string, Set<string> |
   }
 
   useEffect(() => {
-    const missing = types.filter(type => !typeCache.has(type));
+    const missing = types.filter((type) => !typeCache.has(type));
     if (missing.length === 0) return;
     let cancelled = false;
     Promise.all(missing.map(fetchTypeMembers)).then(() => {
       if (!cancelled) setResult(buildResultMap(types));
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
     // Depends on `key` (a stable stringified snapshot of `types`), not
     // `types` itself - a fresh array reference every render would otherwise
     // rerun this effect on every keystroke even when the tags didn't change.

@@ -36,28 +36,39 @@ export function useSpriteCache(): UseSpriteCacheReturn {
   const downloadSprite = useCallback(async (remoteUrl: string): Promise<string | null> => {
     if (!window.electron) return null;
     const localUrl = await window.electron.downloadSprite(remoteUrl);
-    if (localUrl) setResolved(prev => (prev[remoteUrl] === localUrl ? prev : { ...prev, [remoteUrl]: localUrl }));
+    if (localUrl)
+      setResolved((prev) =>
+        prev[remoteUrl] === localUrl ? prev : { ...prev, [remoteUrl]: localUrl },
+      );
     return localUrl;
   }, []);
 
-  const resolveSprite = useCallback((remoteUrl: string): string => {
-    if (!remoteUrl || !window.electron) return remoteUrl;
-    const cached = resolved[remoteUrl];
-    if (cached) return cached;
+  const resolveSprite = useCallback(
+    (remoteUrl: string): string => {
+      if (!remoteUrl || !window.electron) return remoteUrl;
+      const cached = resolved[remoteUrl];
+      if (cached) return cached;
 
-    if (!inFlight.current.has(remoteUrl)) {
-      inFlight.current.add(remoteUrl);
-      window.electron.getSpritePath(remoteUrl)
-        .then(localUrl => localUrl ?? downloadSprite(remoteUrl))
-        .then(localUrl => {
-          if (localUrl) setResolved(prev => ({ ...prev, [remoteUrl]: localUrl }));
-        })
-        .catch(() => { /* keep serving the remote URL - not fatal */ })
-        .finally(() => { inFlight.current.delete(remoteUrl); });
-    }
+      if (!inFlight.current.has(remoteUrl)) {
+        inFlight.current.add(remoteUrl);
+        window.electron
+          .getSpritePath(remoteUrl)
+          .then((localUrl) => localUrl ?? downloadSprite(remoteUrl))
+          .then((localUrl) => {
+            if (localUrl) setResolved((prev) => ({ ...prev, [remoteUrl]: localUrl }));
+          })
+          .catch(() => {
+            /* keep serving the remote URL - not fatal */
+          })
+          .finally(() => {
+            inFlight.current.delete(remoteUrl);
+          });
+      }
 
-    return remoteUrl;
-  }, [resolved, downloadSprite]);
+      return remoteUrl;
+    },
+    [resolved, downloadSprite],
+  );
 
   return { resolveSprite, downloadSprite };
 }

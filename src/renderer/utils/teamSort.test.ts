@@ -22,7 +22,7 @@ describe('sortTeams', () => {
       makeTeam({ id: 'c' }),
     ];
 
-    expect(sortTeams(teams).map(t => t.id)).toEqual(['b', 'a', 'c']);
+    expect(sortTeams(teams).map((t) => t.id)).toEqual(['b', 'a', 'c']);
   });
 
   it('preserves relative order within the favorited and unfavorited groups', () => {
@@ -33,7 +33,7 @@ describe('sortTeams', () => {
       makeTeam({ id: 'd', favorite: true }),
     ];
 
-    expect(sortTeams(teams).map(t => t.id)).toEqual(['b', 'd', 'a', 'c']);
+    expect(sortTeams(teams).map((t) => t.id)).toEqual(['b', 'd', 'a', 'c']);
   });
 
   it('does not mutate the input array', () => {
@@ -48,7 +48,7 @@ describe('sortTeams', () => {
   it('is a no-op when no teams are favorited and all share a regulation', () => {
     const teams = [makeTeam({ id: 'a' }), makeTeam({ id: 'b' })];
 
-    expect(sortTeams(teams).map(t => t.id)).toEqual(['a', 'b']);
+    expect(sortTeams(teams).map((t) => t.id)).toEqual(['a', 'b']);
   });
 
   it('sorts unfavorited teams by regulation, newest first', () => {
@@ -58,7 +58,7 @@ describe('sortTeams', () => {
       makeTeam({ id: 'c', format: 'Reg M-B' }),
     ];
 
-    expect(sortTeams(teams).map(t => t.id)).toEqual(['b', 'c', 'a']);
+    expect(sortTeams(teams).map((t) => t.id)).toEqual(['b', 'c', 'a']);
   });
 
   it('preserves drag-order within a regulation group', () => {
@@ -69,7 +69,7 @@ describe('sortTeams', () => {
       makeTeam({ id: 'd', format: 'Reg M-A' }),
     ];
 
-    expect(sortTeams(teams).map(t => t.id)).toEqual(['a', 'c', 'b', 'd']);
+    expect(sortTeams(teams).map((t) => t.id)).toEqual(['a', 'c', 'b', 'd']);
   });
 
   it('puts favorited teams first regardless of regulation, ahead of all unfavorited teams', () => {
@@ -79,7 +79,7 @@ describe('sortTeams', () => {
       makeTeam({ id: 'c', format: 'Reg M-B' }),
     ];
 
-    expect(sortTeams(teams).map(t => t.id)).toEqual(['b', 'a', 'c']);
+    expect(sortTeams(teams).map((t) => t.id)).toEqual(['b', 'a', 'c']);
   });
 
   it('breaks ties within a regulation group by sortOrder, ascending, even against raw array order', () => {
@@ -89,7 +89,7 @@ describe('sortTeams', () => {
       makeTeam({ id: 'c', format: 'Reg M-C', sortOrder: 1 }),
     ];
 
-    expect(sortTeams(teams).map(t => t.id)).toEqual(['b', 'c', 'a']);
+    expect(sortTeams(teams).map((t) => t.id)).toEqual(['b', 'c', 'a']);
   });
 
   it('falls back to raw array order when sortOrder is missing on either side of a tie', () => {
@@ -99,6 +99,6 @@ describe('sortTeams', () => {
       makeTeam({ id: 'c', format: 'Reg M-C' }),
     ];
 
-    expect(sortTeams(teams).map(t => t.id)).toEqual(['a', 'b', 'c']);
+    expect(sortTeams(teams).map((t) => t.id)).toEqual(['a', 'b', 'c']);
   });
 });

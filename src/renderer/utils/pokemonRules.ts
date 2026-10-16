@@ -88,46 +88,198 @@ export interface ChampionsRuleset {
  * verified regional-form slugs called out in the file header above.
  */
 const REG_MA_SPECIES: string[] = [
-  'venusaur', 'charizard', 'blastoise', 'beedrill', 'pidgeot', 'arbok', 'pikachu', 'raichu', 'raichu-alola',
-  'clefable', 'ninetales', 'ninetales-alola', 'arcanine', 'arcanine-hisui', 'alakazam', 'machamp',
-  'victreebel', 'slowbro', 'slowbro-galar', 'gengar', 'kangaskhan', 'starmie', 'pinsir',
-  'tauros', 'tauros-paldea-combat-breed', 'tauros-paldea-blaze-breed', 'tauros-paldea-aqua-breed',
+  'venusaur',
+  'charizard',
+  'blastoise',
+  'beedrill',
+  'pidgeot',
+  'arbok',
+  'pikachu',
+  'raichu',
+  'raichu-alola',
+  'clefable',
+  'ninetales',
+  'ninetales-alola',
+  'arcanine',
+  'arcanine-hisui',
+  'alakazam',
+  'machamp',
+  'victreebel',
+  'slowbro',
+  'slowbro-galar',
+  'gengar',
+  'kangaskhan',
+  'starmie',
+  'pinsir',
+  'tauros',
+  'tauros-paldea-combat-breed',
+  'tauros-paldea-blaze-breed',
+  'tauros-paldea-aqua-breed',
   // @smogon/calc's own species data spells these without "-breed" - both spellings kept
   // since Showdown-text parsing (Teams tab) may still produce the "-breed" form.
-  'tauros-paldea-combat', 'tauros-paldea-blaze', 'tauros-paldea-aqua',
-  'gyarados', 'ditto', 'vaporeon', 'jolteon', 'flareon', 'aerodactyl', 'snorlax', 'dragonite',
-  'meganium', 'typhlosion', 'typhlosion-hisui', 'feraligatr', 'ariados', 'ampharos', 'azumarill',
-  'politoed', 'espeon', 'umbreon', 'slowking', 'slowking-galar', 'forretress', 'steelix', 'scizor',
-  'heracross', 'skarmory', 'houndoom', 'tyranitar', 'pelipper', 'gardevoir', 'sableye', 'aggron',
-  'medicham', 'manectric', 'sharpedo', 'camerupt', 'torkoal', 'altaria', 'milotic', 'castform',
-  'banette', 'chimecho', 'absol', 'glalie', 'torterra', 'infernape', 'empoleon', 'luxray', 'roserade',
-  'rampardos', 'bastiodon', 'lopunny', 'spiritomb', 'garchomp', 'lucario', 'hippowdon', 'toxicroak',
-  'abomasnow', 'weavile', 'rhyperior', 'leafeon', 'glaceon', 'gliscor', 'mamoswine', 'gallade',
-  'froslass', 'rotom', 'rotom-heat', 'rotom-wash', 'rotom-frost', 'rotom-fan', 'rotom-mow',
-  'serperior', 'emboar', 'samurott', 'samurott-hisui', 'watchog', 'liepard',
-  'simisage', 'simisear', 'simipour', 'excadrill', 'audino', 'conkeldurr', 'whimsicott', 'krookodile',
-  'cofagrigus', 'garbodor', 'zoroark', 'zoroark-hisui', 'reuniclus', 'vanilluxe', 'emolga', 'chandelure',
-  'beartic', 'stunfisk', 'stunfisk-galar', 'golurk', 'hydreigon', 'volcarona', 'chesnaught', 'delphox',
+  'tauros-paldea-combat',
+  'tauros-paldea-blaze',
+  'tauros-paldea-aqua',
+  'gyarados',
+  'ditto',
+  'vaporeon',
+  'jolteon',
+  'flareon',
+  'aerodactyl',
+  'snorlax',
+  'dragonite',
+  'meganium',
+  'typhlosion',
+  'typhlosion-hisui',
+  'feraligatr',
+  'ariados',
+  'ampharos',
+  'azumarill',
+  'politoed',
+  'espeon',
+  'umbreon',
+  'slowking',
+  'slowking-galar',
+  'forretress',
+  'steelix',
+  'scizor',
+  'heracross',
+  'skarmory',
+  'houndoom',
+  'tyranitar',
+  'pelipper',
+  'gardevoir',
+  'sableye',
+  'aggron',
+  'medicham',
+  'manectric',
+  'sharpedo',
+  'camerupt',
+  'torkoal',
+  'altaria',
+  'milotic',
+  'castform',
+  'banette',
+  'chimecho',
+  'absol',
+  'glalie',
+  'torterra',
+  'infernape',
+  'empoleon',
+  'luxray',
+  'roserade',
+  'rampardos',
+  'bastiodon',
+  'lopunny',
+  'spiritomb',
+  'garchomp',
+  'lucario',
+  'hippowdon',
+  'toxicroak',
+  'abomasnow',
+  'weavile',
+  'rhyperior',
+  'leafeon',
+  'glaceon',
+  'gliscor',
+  'mamoswine',
+  'gallade',
+  'froslass',
+  'rotom',
+  'rotom-heat',
+  'rotom-wash',
+  'rotom-frost',
+  'rotom-fan',
+  'rotom-mow',
+  'serperior',
+  'emboar',
+  'samurott',
+  'samurott-hisui',
+  'watchog',
+  'liepard',
+  'simisage',
+  'simisear',
+  'simipour',
+  'excadrill',
+  'audino',
+  'conkeldurr',
+  'whimsicott',
+  'krookodile',
+  'cofagrigus',
+  'garbodor',
+  'zoroark',
+  'zoroark-hisui',
+  'reuniclus',
+  'vanilluxe',
+  'emolga',
+  'chandelure',
+  'beartic',
+  'stunfisk',
+  'stunfisk-galar',
+  'golurk',
+  'hydreigon',
+  'volcarona',
+  'chesnaught',
+  'delphox',
   // Champions' real legal Floette is the Eternal Flower form, not the ordinary
   // color-variant form - confirmed via Showdown's champions mod, see Leg 5/6
   // of docs/investigations/champions-showdown-mod-audit.md.
-  'greninja', 'diggersby', 'talonflame', 'vivillon', 'floette-eternal', 'florges', 'pangoro', 'furfrou',
-  'meowstic-male', 'meowstic-female', 'aegislash', 'aromatisse', 'slurpuff', 'clawitzer', 'heliolisk', 'tyrantrum', 'aurorus',
+  'greninja',
+  'diggersby',
+  'talonflame',
+  'vivillon',
+  'floette-eternal',
+  'florges',
+  'pangoro',
+  'furfrou',
+  'meowstic-male',
+  'meowstic-female',
+  'aegislash',
+  'aromatisse',
+  'slurpuff',
+  'clawitzer',
+  'heliolisk',
+  'tyrantrum',
+  'aurorus',
   // @smogon/calc has no bare "Aegislash" entry - only its Blade/Shield stat-formes
-  'aegislash-blade', 'aegislash-shield',
-  'sylveon', 'hawlucha', 'dedenne', 'goodra', 'goodra-hisui', 'klefki', 'trevenant',
+  'aegislash-blade',
+  'aegislash-shield',
+  'sylveon',
+  'hawlucha',
+  'dedenne',
+  'goodra',
+  'goodra-hisui',
+  'klefki',
+  'trevenant',
   // PokeAPI has no bare "gourgeist" pokemon resource - only its 4 size varieties, which
   // (unlike Squawkabilly's cosmetic plumage below) have genuinely different stats, so all
   // 4 get their own slug rather than collapsing to one - same reasoning as Maushold above.
-  'gourgeist-average', 'gourgeist-small', 'gourgeist-large', 'gourgeist-super',
-  'avalugg', 'avalugg-hisui', 'noivern', 'decidueye', 'decidueye-hisui', 'incineroar', 'primarina',
-  'toucannon', 'crabominable',
+  'gourgeist-average',
+  'gourgeist-small',
+  'gourgeist-large',
+  'gourgeist-super',
+  'avalugg',
+  'avalugg-hisui',
+  'noivern',
+  'decidueye',
+  'decidueye-hisui',
+  'incineroar',
+  'primarina',
+  'toucannon',
+  'crabominable',
   // PokeAPI has no bare "lycanroc" pokemon resource either - only its 3 ability/version-locked
   // varieties, each with a distinct stat spread, so all 3 get their own slug (same reasoning
   // as Gourgeist just above).
-  'lycanroc-midday', 'lycanroc-midnight', 'lycanroc-dusk',
-  'toxapex', 'mudsdale', 'araquanid', 'salazzle', 'tsareena',
-  'oranguru', 'passimian',
+  'lycanroc-midday',
+  'lycanroc-midnight',
+  'lycanroc-dusk',
+  'toxapex',
+  'mudsdale',
+  'araquanid',
+  'salazzle',
+  'tsareena',
+  'oranguru',
+  'passimian',
   // PokeAPI has no bare "mimikyu" pokemon resource - only mimikyu-disguised/mimikyu-busted
   // (plus USUM-only totem variants never relevant here). Busted is a battle-only Disguise-
   // break transformation, not a team-building pick - same exclusion as Palafin-Hero below -
@@ -135,37 +287,86 @@ const REG_MA_SPECIES: string[] = [
   // same class of gap after Mimikyu turned up missing from the Battle Logger's opponent
   // picker - see services/pokeapi.ts's normalizeSpeciesForAPI, which already had this mapping
   // for the *import* path; this file's legality list never got the matching fix.
-  'mimikyu-disguised', 'drampa', 'kommo-o', 'corviknight', 'flapple', 'appletun',
-  'sandaconda', 'polteageist', 'hatterene', 'mr-rime', 'runerigus', 'alcremie',
+  'mimikyu-disguised',
+  'drampa',
+  'kommo-o',
+  'corviknight',
+  'flapple',
+  'appletun',
+  'sandaconda',
+  'polteageist',
+  'hatterene',
+  'mr-rime',
+  'runerigus',
+  'alcremie',
   // PokeAPI has no bare "morpeko" pokemon resource - only morpeko-full-belly/morpeko-hangry.
   // Hangry is a battle-only Hunger Switch transformation, not a team-building pick - same
   // exclusion as Mimikyu-Busted/Palafin-Hero - so only the default Full Belly variety is listed.
-  'morpeko-full-belly', 'dragapult',
-  'wyrdeer', 'kleavor', 'basculegion-male', 'basculegion-female', 'sneasler', 'meowscarada', 'skeledirge', 'quaquaval',
+  'morpeko-full-belly',
+  'dragapult',
+  'wyrdeer',
+  'kleavor',
+  'basculegion-male',
+  'basculegion-female',
+  'sneasler',
+  'meowscarada',
+  'skeledirge',
+  'quaquaval',
   // PokeAPI has no bare "maushold" pokemon resource - only its maushold-family-of-four/
   // maushold-family-of-three varieties (useSpeciesRoster's picker surfaces exactly these
   // two slugs). Unlike Squawkabilly's purely cosmetic plumage colors, Family of Three has
   // a different stat spread than Family of Four (more Attack, less Defense/Sp. Def), so
   // both are listed as separate legal roster entries rather than collapsed to one slug -
   // same reasoning as indeedee-male/indeedee-female below.
-  'maushold-family-of-four', 'maushold-family-of-three',
-  'garganacl', 'armarouge', 'ceruledge', 'bellibolt', 'scovillain', 'espathra', 'tinkaton',
+  'maushold-family-of-four',
+  'maushold-family-of-three',
+  'garganacl',
+  'armarouge',
+  'ceruledge',
+  'bellibolt',
+  'scovillain',
+  'espathra',
+  'tinkaton',
   // PokeAPI has no bare "palafin" pokemon resource - only its palafin-zero/palafin-hero
   // varieties (Zero is the team-building form; Hero is a battle-only transformation,
   // deliberately excluded here the same way Mega forms are excluded from the roster).
   'palafin-zero',
-  'orthworm', 'glimmora', 'farigiraf', 'kingambit', 'sinistcha', 'archaludon', 'hydrapple',
+  'orthworm',
+  'glimmora',
+  'farigiraf',
+  'kingambit',
+  'sinistcha',
+  'archaludon',
+  'hydrapple',
 ];
 
 /** The 22 species Regulation M-B adds on top of everything in REG_MA_SPECIES */
 const REG_MB_ADDED_SPECIES: string[] = [
-  'vileplume', 'qwilfish', 'sceptile', 'blaziken', 'swampert', 'mawile', 'metagross', 'staraptor',
-  'musharna', 'scolipede', 'scrafty', 'eelektross',
+  'vileplume',
+  'qwilfish',
+  'sceptile',
+  'blaziken',
+  'swampert',
+  'mawile',
+  'metagross',
+  'staraptor',
+  'musharna',
+  'scolipede',
+  'scrafty',
+  'eelektross',
   // PokeAPI has no bare "pyroar" pokemon resource - only "pyroar-male" (gender is a cosmetic
   // sprite difference here, not a separate resource the way Meowstic/Basculegion/Indeedee/
   // Oinkologne's genuine gender-divergent stats are - see the file header's Gender/Form doc).
-  'pyroar-male', 'malamar', 'barbaracle', 'dragalge',
-  'grimmsnarl', 'falinks', 'overqwil', 'houndstone', 'annihilape', 'gholdengo',
+  'pyroar-male',
+  'malamar',
+  'barbaracle',
+  'dragalge',
+  'grimmsnarl',
+  'falinks',
+  'overqwil',
+  'houndstone',
+  'annihilape',
+  'gholdengo',
 ];
 
 /**
@@ -189,29 +390,44 @@ const REG_MB_ADDED_SPECIES: string[] = [
  * Morpeko's own cosmetic formes are handled above.
  */
 const REG_MC_ADDED_SPECIES: string[] = [
-  'wigglytuff', 'persian', 'persian-alola', 'farfetchd', 'mr-mime', 'swalot', 'salamence', 'gogoat',
-  'golisopod', 'rillaboom', 'cinderace', 'inteleon', 'thievul',
+  'wigglytuff',
+  'persian',
+  'persian-alola',
+  'farfetchd',
+  'mr-mime',
+  'swalot',
+  'salamence',
+  'gogoat',
+  'golisopod',
+  'rillaboom',
+  'cinderace',
+  'inteleon',
+  'thievul',
   // PokeAPI has no bare "toxtricity" pokemon resource - only "toxtricity-amped" (the default
   // variety Serebii's plain "Toxtricity" row means) and "toxtricity-low-key" below, matching
   // the Alolan/regional-form convention this file already uses elsewhere.
-  'toxtricity-amped', 'toxtricity-low-key',
-  'grapploct', 'perrserker', 'sirfetchd', 'pincurchin', 'indeedee-male', 'indeedee-female', 'pawmot',
+  'toxtricity-amped',
+  'toxtricity-low-key',
+  'grapploct',
+  'perrserker',
+  'sirfetchd',
+  'pincurchin',
+  'indeedee-male',
+  'indeedee-female',
+  'pawmot',
   // PokeAPI also has no bare "squawkabilly" pokemon resource - only its 4 plumage-color
   // varieties (squawkabilly-{green,blue,yellow,white}-plumage). Unlike Gourgeist/Lycanroc
   // above, these really are purely cosmetic (matching this file's original intent, quoted in
   // the REG_MC_ADDED_SPECIES doc comment below), so rather than listing all 4 slugs here,
   // canonicalizeCosmeticVariantSlug (below) collapses any of them back to 'squawkabilly'
   // before the legality check runs.
-  'squawkabilly', 'mabosstiff', 'baxcalibur',
+  'squawkabilly',
+  'mabosstiff',
+  'baxcalibur',
 ];
 
 export function normalizeSlug(value: string): string {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/['']/g, '')
-    .replace(/[.]/g, '')
-    .replace(/\s+/g, '-');
+  return value.toLowerCase().trim().replace(/['']/g, '').replace(/[.]/g, '').replace(/\s+/g, '-');
 }
 
 /**
@@ -256,7 +472,9 @@ function canonicalizeCosmeticVariantSlug(slug: string): string {
 
 const REG_MA_SPECIES_SET = new Set(REG_MA_SPECIES.map(normalizeSlug));
 const REG_MB_SPECIES_SET = new Set([...REG_MA_SPECIES, ...REG_MB_ADDED_SPECIES].map(normalizeSlug));
-const REG_MC_SPECIES_SET = new Set([...REG_MA_SPECIES, ...REG_MB_ADDED_SPECIES, ...REG_MC_ADDED_SPECIES].map(normalizeSlug));
+const REG_MC_SPECIES_SET = new Set(
+  [...REG_MA_SPECIES, ...REG_MB_ADDED_SPECIES, ...REG_MC_ADDED_SPECIES].map(normalizeSlug),
+);
 
 export const CHAMPIONS_RULESETS: Record<RegulationId, ChampionsRuleset> = {
   'REG-MA': {
@@ -317,7 +535,9 @@ const SPECIES_SET_BY_REGULATION: Record<RegulationId, Set<string>> = {
  * the previous one - REG-MB adds to REG-MA, REG-MC adds to REG-MB).
  */
 export function validateSpeciesLegality(speciesId: string, rulesetId: RegulationId): boolean {
-  const normalized = canonicalizeCosmeticVariantSlug(canonicalizeGenderDivergentSlug(normalizeSlug(speciesId)));
+  const normalized = canonicalizeCosmeticVariantSlug(
+    canonicalizeGenderDivergentSlug(normalizeSlug(speciesId)),
+  );
   return SPECIES_SET_BY_REGULATION[rulesetId].has(normalized);
 }
 
@@ -330,7 +550,9 @@ export function validateSpeciesLegality(speciesId: string, rulesetId: Regulation
 export function validateMoveLegality(moveName: string, rulesetId: RegulationId): boolean {
   const normalized = normalizeSlug(moveName);
   if (!normalized || !/^[a-z0-9-]+$/.test(normalized)) {
-    console.warn(`[pokemonRules] Non-standard move "${moveName}" could not be validated against ${rulesetId}`);
+    console.warn(
+      `[pokemonRules] Non-standard move "${moveName}" could not be validated against ${rulesetId}`,
+    );
     return false;
   }
   return true;
@@ -344,7 +566,9 @@ export function validateMoveLegality(moveName: string, rulesetId: RegulationId):
 export function validateItemLegality(itemName: string, rulesetId: RegulationId): boolean {
   const normalized = normalizeSlug(itemName);
   if (!normalized || !/^[a-z0-9-]+$/.test(normalized)) {
-    console.warn(`[pokemonRules] Non-standard item "${itemName}" could not be validated against ${rulesetId}`);
+    console.warn(
+      `[pokemonRules] Non-standard item "${itemName}" could not be validated against ${rulesetId}`,
+    );
     return false;
   }
   return true;

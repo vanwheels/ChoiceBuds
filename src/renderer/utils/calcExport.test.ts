@@ -13,7 +13,12 @@ function makeCalcState(overrides: Partial<CalcPokemonState> = {}): CalcPokemonSt
     status: '',
     sps: { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 },
     boosts: { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 },
-    moves: [{ name: '', isCrit: false }, { name: '', isCrit: false }, { name: '', isCrit: false }, { name: '', isCrit: false }],
+    moves: [
+      { name: '', isCrit: false },
+      { name: '', isCrit: false },
+      { name: '', isCrit: false },
+      { name: '', isCrit: false },
+    ],
     ...overrides,
   };
 }
@@ -22,12 +27,24 @@ describe('calcStateToShowdownPokemon', () => {
   it('copies sps directly into evs with no scale conversion', () => {
     const state = makeCalcState({ sps: { hp: 4, atk: 0, def: 4, spa: 20, spd: 6, spe: 32 } });
     const result = calcStateToShowdownPokemon(state);
-    expect(result.evs).toEqual({ hp: 4, attack: 0, defense: 4, specialAttack: 20, specialDefense: 6, speed: 32 });
+    expect(result.evs).toEqual({
+      hp: 4,
+      attack: 0,
+      defense: 4,
+      specialAttack: 20,
+      specialDefense: 6,
+      speed: 32,
+    });
   });
 
   it('filters out empty move slots', () => {
     const state = makeCalcState({
-      moves: [{ name: 'Shadow Ball', isCrit: false }, { name: '', isCrit: false }, { name: 'Protect', isCrit: false }, { name: '', isCrit: false }],
+      moves: [
+        { name: 'Shadow Ball', isCrit: false },
+        { name: '', isCrit: false },
+        { name: 'Protect', isCrit: false },
+        { name: '', isCrit: false },
+      ],
     });
     expect(calcStateToShowdownPokemon(state).moves).toEqual(['Shadow Ball', 'Protect']);
   });

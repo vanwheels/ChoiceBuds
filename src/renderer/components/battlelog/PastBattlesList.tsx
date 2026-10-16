@@ -47,7 +47,12 @@ const RESULT_LABELS: Record<Battle['result'], string> = {
 };
 
 /** Shows the team name unless `gameLabel` is set - a Bo3 set always uses one team for all 3 games, so grouped rows show the team name once in the set header instead (see the group render below). */
-function BattleRow({ battle, gameLabel, onEdit, onDelete }: {
+function BattleRow({
+  battle,
+  gameLabel,
+  onEdit,
+  onDelete,
+}: {
   battle: Battle;
   gameLabel?: string;
   onEdit: (battle: Battle) => void;
@@ -69,7 +74,16 @@ function BattleRow({ battle, gameLabel, onEdit, onDelete }: {
       <div className="flex items-center gap-3 shrink-0">
         {battle.notes && (
           <span title={battle.notes} className="text-zinc-500 hover:text-zinc-300 cursor-help">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.75"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M6 3h8l4 4v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" />
               <path d="M14 3v4h4" />
               <path d="M8 17.5 9 15l5.5-5.5 2 2L11 17l-2.5 1Z" />
@@ -108,10 +122,20 @@ export default function PastBattlesList({ battles, onEdit, onDelete }: PastBattl
   return (
     <div className="flex flex-col gap-2">
       <h2 className="text-sm font-bold text-zinc-300 uppercase tracking-wide">Past Battles</h2>
-      <div className="grid items-start gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(360px, 100%), 1fr))' }}>
-        {groups.map(group => {
+      <div
+        className="grid items-start gap-2"
+        style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(360px, 100%), 1fr))' }}
+      >
+        {groups.map((group) => {
           if (group.battles.length === 1) {
-            return <BattleRow key={group.setId} battle={group.battles[0]} onEdit={onEdit} onDelete={onDelete} />;
+            return (
+              <BattleRow
+                key={group.setId}
+                battle={group.battles[0]}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            );
           }
 
           const outcome = getSetOutcome(group.battles);
@@ -125,11 +149,21 @@ export default function PastBattlesList({ battles, onEdit, onDelete }: PastBattl
               style={{ gridColumn: '1 / -1' }}
             >
               <span className="px-2 text-xs font-bold text-zinc-300">
-                {teamName} vs {group.opponentName} - Set {outcome.wins}-{outcome.losses}{!outcome.decided ? ' (in progress)' : ''}
+                {teamName} vs {group.opponentName} - Set {outcome.wins}-{outcome.losses}
+                {!outcome.decided ? ' (in progress)' : ''}
               </span>
-              <div className="grid gap-1.5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))' }}>
+              <div
+                className="grid gap-1.5"
+                style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))' }}
+              >
                 {group.battles.map((battle, i) => (
-                  <BattleRow key={battle.id} battle={battle} gameLabel={`Game ${i + 1}`} onEdit={onEdit} onDelete={onDelete} />
+                  <BattleRow
+                    key={battle.id}
+                    battle={battle}
+                    gameLabel={`Game ${i + 1}`}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                  />
                 ))}
               </div>
             </div>

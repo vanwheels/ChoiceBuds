@@ -24,19 +24,34 @@ export const STANDARD_EXIT_DURATION = 0.15;
 export const DELIBERATE_DURATION = 0.32;
 
 /** Modal overlay (backdrop) fade - same in both directions, the panel itself carries the asymmetry. */
-export const MODAL_OVERLAY_TRANSITION = { duration: STANDARD_EXIT_DURATION, ease: 'easeInOut' } as const;
+export const MODAL_OVERLAY_TRANSITION = {
+  duration: STANDARD_EXIT_DURATION,
+  ease: 'easeInOut',
+} as const;
 
 /** Modal panel enter: standard bucket, ease-out (decelerate in). */
-export const MODAL_PANEL_ENTER_TRANSITION = { duration: STANDARD_ENTER_DURATION, ease: 'easeOut' } as const;
+export const MODAL_PANEL_ENTER_TRANSITION = {
+  duration: STANDARD_ENTER_DURATION,
+  ease: 'easeOut',
+} as const;
 
 /** Modal panel exit: standard bucket, faster than its matching entrance, ease-in (accelerate out). */
-export const MODAL_PANEL_EXIT_TRANSITION = { duration: STANDARD_EXIT_DURATION, ease: 'easeIn' } as const;
+export const MODAL_PANEL_EXIT_TRANSITION = {
+  duration: STANDARD_EXIT_DURATION,
+  ease: 'easeIn',
+} as const;
 
 /** Card expand (height + content fade) enter: standard bucket, ease-out (decelerate in). */
-export const CARD_EXPAND_ENTER_TRANSITION = { duration: STANDARD_ENTER_DURATION, ease: 'easeOut' } as const;
+export const CARD_EXPAND_ENTER_TRANSITION = {
+  duration: STANDARD_ENTER_DURATION,
+  ease: 'easeOut',
+} as const;
 
 /** Card expand exit: standard bucket, faster than its matching entrance, ease-in (accelerate out). */
-export const CARD_EXPAND_EXIT_TRANSITION = { duration: STANDARD_EXIT_DURATION, ease: 'easeIn' } as const;
+export const CARD_EXPAND_EXIT_TRANSITION = {
+  duration: STANDARD_EXIT_DURATION,
+  ease: 'easeIn',
+} as const;
 
 /**
  * Sidebar rail width toggle: deliberate bucket. Symmetric ease-out in both
@@ -69,5 +84,11 @@ export const DRAG_REORDER_TRANSITION = { duration: DELIBERATE_DURATION, ease: 'e
  * the sidebar-width toggle's symmetric easing - this is an overlay
  * appearing/disappearing, not a steady-state resize.
  */
-export const DRAWER_PANEL_ENTER_TRANSITION = { duration: STANDARD_ENTER_DURATION, ease: 'easeOut' } as const;
-export const DRAWER_PANEL_EXIT_TRANSITION = { duration: STANDARD_EXIT_DURATION, ease: 'easeIn' } as const;
+export const DRAWER_PANEL_ENTER_TRANSITION = {
+  duration: STANDARD_ENTER_DURATION,
+  ease: 'easeOut',
+} as const;
+export const DRAWER_PANEL_EXIT_TRANSITION = {
+  duration: STANDARD_EXIT_DURATION,
+  ease: 'easeIn',
+} as const;

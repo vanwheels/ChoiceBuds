@@ -20,13 +20,25 @@ interface TeamPosterMiniSpriteProps {
   spriteCacheState: UseSpriteCacheReturn;
 }
 
-export default function TeamPosterMiniSprite({ pokemon, gameDataState, spriteCacheState }: TeamPosterMiniSpriteProps) {
+export default function TeamPosterMiniSprite({
+  pokemon,
+  gameDataState,
+  spriteCacheState,
+}: TeamPosterMiniSpriteProps) {
   const { showdownData, pokedexNumber } = pokemon;
-  const spriteUrl = getPixelSpriteUrl(pokedexNumber, showdownData.species, showdownData.gender || 'M', showdownData.shiny);
+  const spriteUrl = getPixelSpriteUrl(
+    pokedexNumber,
+    showdownData.species,
+    showdownData.gender || 'M',
+    showdownData.shiny,
+  );
   const itemData = showdownData.item ? gameDataState.getCachedItem(showdownData.item) : null;
 
   return (
-    <div className="relative w-16 h-16 shrink-0" title={showdownData.nickname || showdownData.species}>
+    <div
+      className="relative w-16 h-16 shrink-0"
+      title={showdownData.nickname || showdownData.species}
+    >
       <img
         src={spriteCacheState.resolveSprite(spriteUrl)}
         alt={showdownData.species}
@@ -34,7 +46,9 @@ export default function TeamPosterMiniSprite({ pokemon, gameDataState, spriteCac
       />
       {getItemSpriteUrl(showdownData.item ?? '', itemData?.spriteUrl) && (
         <img
-          src={spriteCacheState.resolveSprite(getItemSpriteUrl(showdownData.item ?? '', itemData?.spriteUrl))}
+          src={spriteCacheState.resolveSprite(
+            getItemSpriteUrl(showdownData.item ?? '', itemData?.spriteUrl),
+          )}
           alt={showdownData.item}
           className="absolute -bottom-0.5 -right-0.5 w-5 h-5 object-contain [image-rendering:pixelated] bg-zinc-900 rounded-full border border-zinc-700 p-0.5"
         />

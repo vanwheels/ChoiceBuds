@@ -51,10 +51,13 @@ function normalizeTeam(team: Team & { pokemon: (ImportedPokemonInfo & { id?: str
   return {
     ...team,
     name: team.name.replace(REG_PREFIX_PATTERN, ''),
-    pokemon: team.pokemon.map(p => ({
+    pokemon: team.pokemon.map((p) => ({
       ...p,
       id: p.id ?? crypto.randomUUID(),
-      showdownData: { ...p.showdownData, species: fixGenderSplitResourceSpeciesText(p.showdownData.species) },
+      showdownData: {
+        ...p.showdownData,
+        species: fixGenderSplitResourceSpeciesText(p.showdownData.species),
+      },
     })),
   };
 }
@@ -65,12 +68,17 @@ function normalizeTeam(team: Team & { pokemon: (ImportedPokemonInfo & { id?: str
  * this below for why a real, timestamp-bumping persist is required and
  * normalizeTeam's own read-boundary fix isn't enough on its own).
  */
-function computeGenderSplitFixes(rawTeams: Team[], correctedTeams: Team[]): { id: string; pokemon: Team['pokemon'] }[] {
+function computeGenderSplitFixes(
+  rawTeams: Team[],
+  correctedTeams: Team[],
+): { id: string; pokemon: Team['pokemon'] }[] {
   const fixes: { id: string; pokemon: Team['pokemon'] }[] = [];
   for (let i = 0; i < rawTeams.length; i++) {
     const raw = rawTeams[i];
     const fixed = correctedTeams[i];
-    const speciesChanged = raw.pokemon.some((p, j) => p.showdownData.species !== fixed.pokemon[j]?.showdownData.species);
+    const speciesChanged = raw.pokemon.some(
+      (p, j) => p.showdownData.species !== fixed.pokemon[j]?.showdownData.species,
+    );
     if (speciesChanged) fixes.push({ id: fixed.id, pokemon: fixed.pokemon });
   }
   return fixes;
@@ -162,9 +170,12 @@ export function useTeams(): UseTeamsReturn {
   const tombstonesRef = useRef<SyncTombstone[]>(tombstones);
   const writeQueueRef = useRef<Promise<unknown>>(Promise.resolve());
 
-  const enqueueMutation = useCallback(<T,>(job: () => Promise<T>): Promise<T> => {
+  const enqueueMutation = useCallback(<T>(job: () => Promise<T>): Promise<T> => {
     const run = writeQueueRef.current.then(job, job);
-    writeQueueRef.current = run.then(() => undefined, () => undefined);
+    writeQueueRef.current = run.then(
+      () => undefined,
+      () => undefined,
+    );
     return run;
   }, []);
 
@@ -187,7 +198,8 @@ export function useTeams(): UseTeamsReturn {
       tombstonesRef.current = loadedTombstones;
       setTeams(loadedTeams);
       setTombstones(loadedTombstones);
-      if (database) pendingSpeciesFixRef.current = computeGenderSplitFixes(database.teams, loadedTeams);
+      if (database)
+        pendingSpeciesFixRef.current = computeGenderSplitFixes(database.teams, loadedTeams);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load teams';
       setError(errorMessage);
@@ -223,7 +235,8 @@ export function useTeams(): UseTeamsReturn {
         tombstonesRef.current = loadedTombstones;
         setTeams(loadedTeams);
         setTombstones(loadedTombstones);
-        if (database) pendingSpeciesFixRef.current = computeGenderSplitFixes(database.teams, loadedTeams);
+        if (database)
+          pendingSpeciesFixRef.current = computeGenderSplitFixes(database.teams, loadedTeams);
       } catch (err) {
         if (ignore) return;
         const errorMessage = err instanceof Error ? err.message : 'Failed to load teams';
@@ -242,7 +255,10 @@ export function useTeams(): UseTeamsReturn {
   /**
    * Internal: Persist current teams + pending tombstones state to disk
    */
-  const persistTeamsToDisk = async (updatedTeams: Team[], updatedTombstones: SyncTombstone[]): Promise<boolean> => {
+  const persistTeamsToDisk = async (
+    updatedTeams: Team[],
+    updatedTombstones: SyncTombstone[],
+  ): Promise<boolean> => {
     try {
       const database: TeamsDatabase = {
         schemaVersion: TEAMS_SCHEMA_VERSION,
@@ -252,11 +268,11 @@ export function useTeams(): UseTeamsReturn {
       };
 
       const success = await getStorageAdapter().write('teams-database', database);
-      
+
       if (!success) {
         throw new Error('Failed to write teams database');
       }
-      
+
       return true;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to save teams';
@@ -269,51 +285,56 @@ export function useTeams(): UseTeamsReturn {
   /**
    * Add a newly parsed team block to the database
    */
-  const addTeam = useCallback((team: Team): Promise<boolean> => enqueueMutation(async () => {
-    const updatedTeams = [team, ...teamsRef.current];
-    const success = await persistTeamsToDisk(updatedTeams, tombstonesRef.current);
+  const addTeam = useCallback(
+    (team: Team): Promise<boolean> =>
+      enqueueMutation(async () => {
+        const updatedTeams = [team, ...teamsRef.current];
+        const success = await persistTeamsToDisk(updatedTeams, tombstonesRef.current);
 
-    if (success) {
-      teamsRef.current = updatedTeams;
-      setTeams(updatedTeams);
-      setError(null);
-    }
+        if (success) {
+          teamsRef.current = updatedTeams;
+          setTeams(updatedTeams);
+          setError(null);
+        }
 
-    return success;
-  }), [enqueueMutation]);
+        return success;
+      }),
+    [enqueueMutation],
+  );
 
   /**
    * Update an existing team configuration
    */
-  const updateTeam = useCallback((
-    teamId: string,
-    updates: Partial<Team>
-  ): Promise<boolean> => enqueueMutation(async () => {
-    const base = teamsRef.current;
-    const teamIndex = base.findIndex(t => t.id === teamId);
+  const updateTeam = useCallback(
+    (teamId: string, updates: Partial<Team>): Promise<boolean> =>
+      enqueueMutation(async () => {
+        const base = teamsRef.current;
+        const teamIndex = base.findIndex((t) => t.id === teamId);
 
-    if (teamIndex === -1) {
-      setError(`Team with ID ${teamId} not found`);
-      return false;
-    }
+        if (teamIndex === -1) {
+          setError(`Team with ID ${teamId} not found`);
+          return false;
+        }
 
-    const updatedTeams = [...base];
-    updatedTeams[teamIndex] = {
-      ...updatedTeams[teamIndex],
-      ...updates,
-      updatedAt: Date.now(),
-    };
+        const updatedTeams = [...base];
+        updatedTeams[teamIndex] = {
+          ...updatedTeams[teamIndex],
+          ...updates,
+          updatedAt: Date.now(),
+        };
 
-    const success = await persistTeamsToDisk(updatedTeams, tombstonesRef.current);
+        const success = await persistTeamsToDisk(updatedTeams, tombstonesRef.current);
 
-    if (success) {
-      teamsRef.current = updatedTeams;
-      setTeams(updatedTeams);
-      setError(null);
-    }
+        if (success) {
+          teamsRef.current = updatedTeams;
+          setTeams(updatedTeams);
+          setError(null);
+        }
 
-    return success;
-  }), [enqueueMutation]);
+        return success;
+      }),
+    [enqueueMutation],
+  );
 
   // Flushes computeGenderSplitFixes' findings (stashed in pendingSpeciesFixRef
   // by whichever load path just ran) once loading settles, routing each fix
@@ -337,58 +358,72 @@ export function useTeams(): UseTeamsReturn {
    * knows this id was intentionally removed here, rather than just never
    * seen - cleared once that's confirmed synced (applySyncedState below).
    */
-  const deleteTeam = useCallback((teamId: string): Promise<boolean> => enqueueMutation(async () => {
-    const updatedTeams = teamsRef.current.filter(t => t.id !== teamId);
-    const updatedTombstones = [...tombstonesRef.current, { id: teamId, deletedAt: Date.now() }];
-    const success = await persistTeamsToDisk(updatedTeams, updatedTombstones);
+  const deleteTeam = useCallback(
+    (teamId: string): Promise<boolean> =>
+      enqueueMutation(async () => {
+        const updatedTeams = teamsRef.current.filter((t) => t.id !== teamId);
+        const updatedTombstones = [...tombstonesRef.current, { id: teamId, deletedAt: Date.now() }];
+        const success = await persistTeamsToDisk(updatedTeams, updatedTombstones);
 
-    if (success) {
-      teamsRef.current = updatedTeams;
-      tombstonesRef.current = updatedTombstones;
-      setTeams(updatedTeams);
-      setTombstones(updatedTombstones);
-      setError(null);
+        if (success) {
+          teamsRef.current = updatedTeams;
+          tombstonesRef.current = updatedTombstones;
+          setTeams(updatedTeams);
+          setTombstones(updatedTombstones);
+          setError(null);
 
-      // Clean up expansion state for deleted team
-      setExpandedCardIds(prev => {
-        const next = new Set(prev);
-        next.delete(teamId);
-        return next;
-      });
-    }
+          // Clean up expansion state for deleted team
+          setExpandedCardIds((prev) => {
+            const next = new Set(prev);
+            next.delete(teamId);
+            return next;
+          });
+        }
 
-    return success;
-  }), [enqueueMutation]);
+        return success;
+      }),
+    [enqueueMutation],
+  );
 
-  const setTeamOrder = useCallback((orderedIds: string[]): Promise<boolean> => enqueueMutation(async () => {
-    const base = teamsRef.current;
-    const byId = new Map(base.map(t => [t.id, t]));
-    const ordered = orderedIds.map(id => byId.get(id)).filter((t): t is Team => t !== undefined);
-    const orderedIdSet = new Set(ordered.map(t => t.id));
-    const leftover = base.filter(t => !orderedIdSet.has(t.id));
-    // sortOrder/updatedAt are stamped on every team here, not just the ones
-    // that visually moved - see Team.sortOrder's doc comment for why this
-    // needs to be its own last-write-wins record field at all: the Worker's
-    // per-record merge has no concept of list position, so a reorder that
-    // only lived in this array's element order would be silently discarded
-    // by the next auto-sync round-trip.
-    const now = Date.now();
-    const updatedTeams = [...ordered, ...leftover].map((team, index) => ({ ...team, sortOrder: index, updatedAt: now }));
+  const setTeamOrder = useCallback(
+    (orderedIds: string[]): Promise<boolean> =>
+      enqueueMutation(async () => {
+        const base = teamsRef.current;
+        const byId = new Map(base.map((t) => [t.id, t]));
+        const ordered = orderedIds
+          .map((id) => byId.get(id))
+          .filter((t): t is Team => t !== undefined);
+        const orderedIdSet = new Set(ordered.map((t) => t.id));
+        const leftover = base.filter((t) => !orderedIdSet.has(t.id));
+        // sortOrder/updatedAt are stamped on every team here, not just the ones
+        // that visually moved - see Team.sortOrder's doc comment for why this
+        // needs to be its own last-write-wins record field at all: the Worker's
+        // per-record merge has no concept of list position, so a reorder that
+        // only lived in this array's element order would be silently discarded
+        // by the next auto-sync round-trip.
+        const now = Date.now();
+        const updatedTeams = [...ordered, ...leftover].map((team, index) => ({
+          ...team,
+          sortOrder: index,
+          updatedAt: now,
+        }));
 
-    const success = await persistTeamsToDisk(updatedTeams, tombstonesRef.current);
-    if (success) {
-      teamsRef.current = updatedTeams;
-      setTeams(updatedTeams);
-      setError(null);
-    }
-    return success;
-  }), [enqueueMutation]);
+        const success = await persistTeamsToDisk(updatedTeams, tombstonesRef.current);
+        if (success) {
+          teamsRef.current = updatedTeams;
+          setTeams(updatedTeams);
+          setError(null);
+        }
+        return success;
+      }),
+    [enqueueMutation],
+  );
 
   /**
    * Toggle expansion state for a specific team card
    */
   const toggleCardExpansion = useCallback((teamId: string): void => {
-    setExpandedCardIds(prev => {
+    setExpandedCardIds((prev) => {
       const next = new Set(prev);
       if (next.has(teamId)) {
         next.delete(teamId);
@@ -403,14 +438,14 @@ export function useTeams(): UseTeamsReturn {
    * Expand a specific team card
    */
   const expandCard = useCallback((teamId: string): void => {
-    setExpandedCardIds(prev => new Set(prev).add(teamId));
+    setExpandedCardIds((prev) => new Set(prev).add(teamId));
   }, []);
 
   /**
    * Collapse a specific team card
    */
   const collapseCard = useCallback((teamId: string): void => {
-    setExpandedCardIds(prev => {
+    setExpandedCardIds((prev) => {
       const next = new Set(prev);
       next.delete(teamId);
       return next;
@@ -430,30 +465,40 @@ export function useTeams(): UseTeamsReturn {
    * mid-write and then stomp teamsRef/state with a pre-write snapshot once
    * that write actually lands.
    */
-  const refreshTeams = useCallback((): Promise<void> => enqueueMutation(loadTeamsFromDisk), [enqueueMutation]);
+  const refreshTeams = useCallback(
+    (): Promise<void> => enqueueMutation(loadTeamsFromDisk),
+    [enqueueMutation],
+  );
 
   /**
    * Get a specific team by ID
    */
-  const getTeamById = useCallback((teamId: string): Team | undefined => {
-    return teams.find(t => t.id === teamId);
-  }, [teams]);
+  const getTeamById = useCallback(
+    (teamId: string): Team | undefined => {
+      return teams.find((t) => t.id === teamId);
+    },
+    [teams],
+  );
 
   /**
    * Overwrites teams with a sync merge's authoritative result and clears
    * pendingtombstones (see UseTeamsReturn's doc comment).
    */
-  const applySyncedState = useCallback((records: Team[]): Promise<boolean> => enqueueMutation(async () => {
-    const success = await persistTeamsToDisk(records, []);
-    if (success) {
-      teamsRef.current = records;
-      tombstonesRef.current = [];
-      setTeams(records);
-      setTombstones([]);
-      setError(null);
-    }
-    return success;
-  }), [enqueueMutation]);
+  const applySyncedState = useCallback(
+    (records: Team[]): Promise<boolean> =>
+      enqueueMutation(async () => {
+        const success = await persistTeamsToDisk(records, []);
+        if (success) {
+          teamsRef.current = records;
+          tombstonesRef.current = [];
+          setTeams(records);
+          setTombstones([]);
+          setError(null);
+        }
+        return success;
+      }),
+    [enqueueMutation],
+  );
 
   return {
     teams,

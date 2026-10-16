@@ -28,7 +28,7 @@ describe('toTitleCase', () => {
     expect(toTitleCase('absolite')).toBe('Absolite');
   });
 
-  it('capitalizes each space-separated word, matching vgcData.ts\'s Mega Stone casing', () => {
+  it("capitalizes each space-separated word, matching vgcData.ts's Mega Stone casing", () => {
     expect(toTitleCase('charizardite x')).toBe('Charizardite X');
     expect(toTitleCase('absolite z')).toBe('Absolite Z');
   });

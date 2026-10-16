@@ -25,7 +25,14 @@
 
 import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import type { ImportedPokemonInfo, SavedPokemonEntry, Team, SpeciesRosterEntry, PokeAPICacheEntry, VgcRealSetBundle } from '../types/pokemon';
+import type {
+  ImportedPokemonInfo,
+  SavedPokemonEntry,
+  Team,
+  SpeciesRosterEntry,
+  PokeAPICacheEntry,
+  VgcRealSetBundle,
+} from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
@@ -60,12 +67,28 @@ interface MobilePokemonCardProps {
   showAnimatedSprites: boolean;
 }
 
-export default function MobilePokemonCard({ pokemon, team, pokemonIndex, updateTeam, gameDataState, speciesRosterState, spriteCacheState, rosterActions, getCachedEntry, savedPokemonState, vgcPastesState, vgcRealSetsState, showAnimatedSprites }: MobilePokemonCardProps) {
+export default function MobilePokemonCard({
+  pokemon,
+  team,
+  pokemonIndex,
+  updateTeam,
+  gameDataState,
+  speciesRosterState,
+  spriteCacheState,
+  rosterActions,
+  getCachedEntry,
+  savedPokemonState,
+  vgcPastesState,
+  vgcRealSetsState,
+  showAnimatedSprites,
+}: MobilePokemonCardProps) {
   const { showdownData } = pokemon;
   const [isSwapPickerOpen, setIsSwapPickerOpen] = useState(false);
   // Same "saved builds for this species" offer PokemonCard.tsx's own Roster
   // Swap uses - see its header comment.
-  const [savedSetPickerSpecies, setSavedSetPickerSpecies] = useState<SpeciesRosterEntry | null>(null);
+  const [savedSetPickerSpecies, setSavedSetPickerSpecies] = useState<SpeciesRosterEntry | null>(
+    null,
+  );
   // Mega Stone chosen on a Mega row, held while SavedSetPicker's "Blank" choice is pending.
   const [pendingItemOverride, setPendingItemOverride] = useState<string | undefined>(undefined);
   const [isExportOpen, setIsExportOpen] = useState(false);
@@ -73,8 +96,14 @@ export default function MobilePokemonCard({ pokemon, team, pokemonIndex, updateT
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
   const rulesetId = toRegulationId(team.format);
   // Species Clause, same as TeamCard.tsx's add picker - but this slot's own species stays pickable.
-  const otherTeamSpecies = new Set(team.pokemon.filter((_, i) => i !== pokemonIndex).map(p => p.showdownData.species.toLowerCase()));
-  const swapRoster = speciesRosterState.roster.filter(s => !otherTeamSpecies.has(s.name.toLowerCase()));
+  const otherTeamSpecies = new Set(
+    team.pokemon
+      .filter((_, i) => i !== pokemonIndex)
+      .map((p) => p.showdownData.species.toLowerCase()),
+  );
+  const swapRoster = speciesRosterState.roster.filter(
+    (s) => !otherTeamSpecies.has(s.name.toLowerCase()),
+  );
 
   const updatePokemon = async (updates: Partial<ImportedPokemonInfo>): Promise<boolean> => {
     const updatedPokemon = [...team.pokemon];
@@ -118,7 +147,9 @@ export default function MobilePokemonCard({ pokemon, team, pokemonIndex, updateT
   };
 
   const handlePickRealSet = async (bundle: VgcRealSetBundle) => {
-    await updatePokemon({ showdownData: { ...pokemon.showdownData, ...realSetBundleToShowdownUpdates(bundle) } });
+    await updatePokemon({
+      showdownData: { ...pokemon.showdownData, ...realSetBundleToShowdownUpdates(bundle) },
+    });
   };
 
   const handlePastePokemon = async () => {
@@ -128,7 +159,6 @@ export default function MobilePokemonCard({ pokemon, team, pokemonIndex, updateT
     updatedPokemon[pokemonIndex] = { ...pasted, id: crypto.randomUUID() };
     await updateTeam(team.id, { pokemon: updatedPokemon });
   };
-
 
   return (
     <div className="w-full max-w-md mx-auto flex flex-col gap-3">
@@ -142,7 +172,16 @@ export default function MobilePokemonCard({ pokemon, team, pokemonIndex, updateT
           title="Remove from team"
           className="flex items-center justify-center gap-1.5 px-3 h-10 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-red-400 hover:border-red-500 transition-colors cursor-pointer text-sm"
         >
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            viewBox="0 0 24 24"
+            width="14"
+            height="14"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M4 7h16" />
             <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
             <path d="M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
@@ -242,7 +281,16 @@ export default function MobilePokemonCard({ pokemon, team, pokemonIndex, updateT
               label: 'Copy Pokémon',
               onClick: handleCopyPokemon,
               icon: (
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <rect x="9" y="9" width="11" height="11" rx="1.5" />
                   <path d="M5 15H4.5A1.5 1.5 0 0 1 3 13.5v-9A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5V5" />
                 </svg>
@@ -252,7 +300,16 @@ export default function MobilePokemonCard({ pokemon, team, pokemonIndex, updateT
               label: 'Paste Pokémon',
               onClick: handlePastePokemon,
               icon: (
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M9 4.5h1.5a1.5 1.5 0 0 1 3 0H15a1 1 0 0 1 1 1V7H8V5.5a1 1 0 0 1 1-1Z" />
                   <path d="M8 6H6a1.5 1.5 0 0 0-1.5 1.5v12A1.5 1.5 0 0 0 6 21h12a1.5 1.5 0 0 0 1.5-1.5v-12A1.5 1.5 0 0 0 18 6h-2" />
                 </svg>
@@ -262,7 +319,16 @@ export default function MobilePokemonCard({ pokemon, team, pokemonIndex, updateT
               label: 'Export',
               onClick: () => setIsExportOpen(true),
               icon: (
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M12 3v12" />
                   <path d="m7 10 5 5 5-5" />
                   <path d="M5 21h14" />
@@ -273,7 +339,16 @@ export default function MobilePokemonCard({ pokemon, team, pokemonIndex, updateT
               label: 'Save to Library',
               onClick: () => setIsSaveToLibraryOpen(true),
               icon: (
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M6 3.75A1.75 1.75 0 0 1 7.75 2h8.5A1.75 1.75 0 0 1 18 3.75V21l-6-3.5L6 21V3.75Z" />
                 </svg>
               ),

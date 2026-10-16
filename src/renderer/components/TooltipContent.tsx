@@ -55,7 +55,9 @@ export default function TooltipContent({
     return (
       <>
         <div className="font-bold text-white mb-1">{selectedAbility || 'No Ability'}</div>
-        {selectedAbility && <div className="text-zinc-300">{abilityData?.description || 'Loading…'}</div>}
+        {selectedAbility && (
+          <div className="text-zinc-300">{abilityData?.description || 'Loading…'}</div>
+        )}
       </>
     );
   }
@@ -79,14 +81,17 @@ export default function TooltipContent({
               alt={move.category}
               loading="lazy"
               className="h-4 w-auto"
-              onError={() => setFailedBadges(prev => ({ ...prev, [move.category]: true }))}
+              onError={() => setFailedBadges((prev) => ({ ...prev, [move.category]: true }))}
             />
           ) : null}
-          <span className="capitalize">{move.category}</span> · PP {move.pp} · Pow {move.power ?? '—'} · Acc {move.accuracy != null ? `${move.accuracy}%` : '--'}
+          <span className="capitalize">{move.category}</span> · PP {move.pp} · Pow{' '}
+          {move.power ?? '—'} · Acc {move.accuracy != null ? `${move.accuracy}%` : '--'}
         </div>
-        {move.flags.some(flag => VISIBLE_MOVE_FLAGS.includes(flag as typeof VISIBLE_MOVE_FLAGS[number])) && (
+        {move.flags.some((flag) =>
+          VISIBLE_MOVE_FLAGS.includes(flag as (typeof VISIBLE_MOVE_FLAGS)[number]),
+        ) && (
           <div className="flex flex-wrap items-center gap-1">
-            {VISIBLE_MOVE_FLAGS.filter(flag => move.flags.includes(flag)).map(flag => {
+            {VISIBLE_MOVE_FLAGS.filter((flag) => move.flags.includes(flag)).map((flag) => {
               const theme = getMoveFlagTheme(flag);
               return (
                 <span

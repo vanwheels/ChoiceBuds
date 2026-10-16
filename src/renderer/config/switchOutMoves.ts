@@ -9,8 +9,14 @@
  */
 
 export const SWITCH_OUT_MOVES: string[] = [
-  'u-turn', 'volt-switch', 'flip-turn', 'parting-shot',
-  'baton-pass', 'chilly-reception', 'shed-tail', 'teleport',
+  'u-turn',
+  'volt-switch',
+  'flip-turn',
+  'parting-shot',
+  'baton-pass',
+  'chilly-reception',
+  'shed-tail',
+  'teleport',
 ];
 
 export function isSwitchOutMove(move: string | undefined): boolean {

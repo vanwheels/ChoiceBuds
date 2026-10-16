@@ -5,7 +5,14 @@ import { NEVER_EXPIRES } from '../utils/cacheExpiry';
 import { CACHE_WRITE_DEBOUNCE_MS } from './useDebouncedWrite';
 import type { PokeAPICache, PokeAPICacheEntry } from '../types/pokemon';
 
-const BASE_STATS = { hp: 60, attack: 65, defense: 60, specialAttack: 130, specialDefense: 75, speed: 110 };
+const BASE_STATS = {
+  hp: 60,
+  attack: 65,
+  defense: 60,
+  specialAttack: 130,
+  specialDefense: 75,
+  speed: 110,
+};
 const NOW = Date.now();
 
 function makeEntry(overrides: Partial<PokeAPICacheEntry> = {}): PokeAPICacheEntry {
@@ -22,7 +29,10 @@ function makeEntry(overrides: Partial<PokeAPICacheEntry> = {}): PokeAPICacheEntr
   };
 }
 
-function makeCache(entries: Record<string, PokeAPICacheEntry> = {}, overrides: Partial<PokeAPICache> = {}): PokeAPICache {
+function makeCache(
+  entries: Record<string, PokeAPICacheEntry> = {},
+  overrides: Partial<PokeAPICache> = {},
+): PokeAPICache {
   return { version: 1, entries, lastCleaned: NOW, ...overrides };
 }
 
@@ -34,9 +44,11 @@ describe('useDatabase', () => {
     expect(result.current.cache).toEqual(expect.objectContaining({ version: 1, entries: {} }));
     // Write-through is debounced (see useDebouncedWrite.ts) rather than
     // immediate, so this needs to wait for the debounce window.
-    await waitFor(() => expect(window.electron.writePokeAPICache).toHaveBeenCalledWith(
-      expect.objectContaining({ version: 1, entries: {} })
-    ));
+    await waitFor(() =>
+      expect(window.electron.writePokeAPICache).toHaveBeenCalledWith(
+        expect.objectContaining({ version: 1, entries: {} }),
+      ),
+    );
   });
 
   it('loads a persisted cache from disk without immediately overwriting it', async () => {
@@ -59,7 +71,7 @@ describe('useDatabase', () => {
 
     // Wait past the debounce window (see useDebouncedWrite.ts) to confirm
     // the write is skipped outright, not merely delayed.
-    await new Promise(resolve => setTimeout(resolve, CACHE_WRITE_DEBOUNCE_MS + 100));
+    await new Promise((resolve) => setTimeout(resolve, CACHE_WRITE_DEBOUNCE_MS + 100));
     expect(window.electron.writePokeAPICache).not.toHaveBeenCalled();
   });
 
@@ -78,8 +90,11 @@ describe('useDatabase', () => {
     const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const eightDaysAgo = Date.now() - 8 * 24 * 60 * 60 * 1000;
     const cache = makeCache(
-      { gengar: makeEntry({ expiresAt: Date.now() - 1000 }), rillaboom: makeEntry({ species: 'rillaboom', expiresAt: Date.now() + 100_000 }) },
-      { lastCleaned: eightDaysAgo }
+      {
+        gengar: makeEntry({ expiresAt: Date.now() - 1000 }),
+        rillaboom: makeEntry({ species: 'rillaboom', expiresAt: Date.now() + 100_000 }),
+      },
+      { lastCleaned: eightDaysAgo },
     );
     vi.mocked(window.electron.readPokeAPICache).mockResolvedValueOnce(cache);
 
@@ -125,9 +140,11 @@ describe('useDatabase', () => {
 
     expect(success).toBe(true);
     expect(result.current.getCachedEntry('gengar')).toEqual(makeEntry());
-    await waitFor(() => expect(window.electron.writePokeAPICache).toHaveBeenCalledWith(
-      expect.objectContaining({ entries: { gengar: makeEntry() } })
-    ));
+    await waitFor(() =>
+      expect(window.electron.writePokeAPICache).toHaveBeenCalledWith(
+        expect.objectContaining({ entries: { gengar: makeEntry() } }),
+      ),
+    );
   });
 
   it('setCacheEntry keeps every entry when called concurrently through one captured (stale) reference', async () => {
@@ -137,10 +154,18 @@ describe('useDatabase', () => {
     // Mirrors useInitialSync: one databaseState captured at effect start, many writes in flight at once
     const { setCacheEntry } = result.current;
     await act(async () => {
-      await Promise.all(['gengar', 'rillaboom', 'incineroar'].map(name => setCacheEntry(name, makeEntry({ species: name }))));
+      await Promise.all(
+        ['gengar', 'rillaboom', 'incineroar'].map((name) =>
+          setCacheEntry(name, makeEntry({ species: name })),
+        ),
+      );
     });
 
-    expect(Object.keys(result.current.cache!.entries).sort()).toEqual(['gengar', 'incineroar', 'rillaboom']);
+    expect(Object.keys(result.current.cache!.entries).sort()).toEqual([
+      'gengar',
+      'incineroar',
+      'rillaboom',
+    ]);
   });
 
   it('setCacheEntry updates state optimistically even when the underlying debounced write later fails', async () => {
@@ -161,7 +186,12 @@ describe('useDatabase', () => {
 
     expect(success).toBe(true);
     expect(result.current.getCachedEntry('gengar')).toEqual(makeEntry());
-    await waitFor(() => expect(consoleErrorSpy).toHaveBeenCalledWith('Error persisting PokeAPI cache:', expect.any(Error)));
+    await waitFor(() =>
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Error persisting PokeAPI cache:',
+        expect.any(Error),
+      ),
+    );
     consoleErrorSpy.mockRestore();
   });
 
@@ -213,7 +243,14 @@ describe('useDatabase', () => {
 
 describe('createCacheEntry', () => {
   it('builds an entry that never expires, normalizing the species key', () => {
-    const entry = createCacheEntry(' Gengar ', 94, ['ghost', 'poison'], BASE_STATS, 'https://example.com/gengar.png', ['cursed-body']);
+    const entry = createCacheEntry(
+      ' Gengar ',
+      94,
+      ['ghost', 'poison'],
+      BASE_STATS,
+      'https://example.com/gengar.png',
+      ['cursed-body'],
+    );
 
     expect(entry.species).toBe('gengar');
     expect(entry.expiresAt).toBe(NEVER_EXPIRES);

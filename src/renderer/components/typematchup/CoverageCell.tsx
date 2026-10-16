@@ -36,7 +36,9 @@ export default function CoverageCell({ multiplier, favorableWhenAbove1 }: Covera
 
   const isFavorable = favorableWhenAbove1 ? multiplier > 1 : multiplier < 1;
   return (
-    <td className={`text-center py-1.5 text-sm font-semibold ${CELL_BORDER} ${isFavorable ? 'text-green-400' : 'text-orange-400'}`}>
+    <td
+      className={`text-center py-1.5 text-sm font-semibold ${CELL_BORDER} ${isFavorable ? 'text-green-400' : 'text-orange-400'}`}
+    >
       {MULTIPLIER_LABELS[multiplier] ?? multiplier}
     </td>
   );

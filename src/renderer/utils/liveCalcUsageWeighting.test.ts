@@ -27,9 +27,16 @@ function baseInference(overrides: Partial<UsageWeightedAxes> = {}): UsageWeighte
 
 function usage(overrides: Partial<ChampionsUsageEntry> = {}): ChampionsUsageEntry {
   return {
-    species: 'test', season: 'Season M-3', moves: [], statSpreads: [],
-    abilities: [], items: [], natures: [],
-    columnPosition: 1, cachedAt: 0, expiresAt: 0,
+    species: 'test',
+    season: 'Season M-3',
+    moves: [],
+    statSpreads: [],
+    abilities: [],
+    items: [],
+    natures: [],
+    columnPosition: 1,
+    cachedAt: 0,
+    expiresAt: 0,
     ...overrides,
   };
 }
@@ -40,16 +47,22 @@ describe('applyUsageWeighting - no usage data', () => {
     const result = applyUsageWeighting(inference, null);
 
     expect(result.natureUsageCandidates).toEqual([
-      { value: 'Jolly', percentage: 0 }, { value: 'Adamant', percentage: 0 }, { value: 'Hardy', percentage: 0 },
+      { value: 'Jolly', percentage: 0 },
+      { value: 'Adamant', percentage: 0 },
+      { value: 'Hardy', percentage: 0 },
     ]);
     expect(result.abilityUsageCandidates).toEqual([
-      { value: 'Sand Veil', percentage: 0 }, { value: 'Rough Skin', percentage: 0 },
+      { value: 'Sand Veil', percentage: 0 },
+      { value: 'Rough Skin', percentage: 0 },
     ]);
     expect(result.itemUsageCandidates).toEqual([
-      { value: NO_ITEM, percentage: 0 }, { value: 'Chople Berry', percentage: 0 }, { value: 'Life Orb', percentage: 0 },
+      { value: NO_ITEM, percentage: 0 },
+      { value: 'Chople Berry', percentage: 0 },
+      { value: 'Life Orb', percentage: 0 },
     ]);
     expect(result.moveUsageCandidates).toEqual([
-      { value: 'Earthquake', percentage: 0 }, { value: 'Stone Edge', percentage: 0 },
+      { value: 'Earthquake', percentage: 0 },
+      { value: 'Stone Edge', percentage: 0 },
     ]);
     // Every other field passes through untouched.
     expect(result.natureCandidates).toEqual(inference.natureCandidates);
@@ -69,21 +82,33 @@ describe('applyUsageWeighting - real usage data', () => {
   it('keeps a low-percentage candidate rather than applying an arbitrary cutoff', () => {
     const result = applyUsageWeighting(
       baseInference(),
-      usage({ items: [{ name: 'Chople Berry', percentage: 0.4 }, { name: NO_ITEM, percentage: 60 }] }),
+      usage({
+        items: [
+          { name: 'Chople Berry', percentage: 0.4 },
+          { name: NO_ITEM, percentage: 60 },
+        ],
+      }),
     );
 
     expect(result.itemUsageCandidates).toEqual([
-      { value: NO_ITEM, percentage: 60 }, { value: 'Chople Berry', percentage: 0.4 },
+      { value: NO_ITEM, percentage: 60 },
+      { value: 'Chople Berry', percentage: 0.4 },
     ]);
   });
 
   it('sorts most-used-first regardless of the ranked-row input order', () => {
     const result = applyUsageWeighting(
       baseInference(),
-      usage({ natures: [{ name: 'Hardy', percentage: 5 }, { name: 'Jolly', percentage: 70 }, { name: 'Adamant', percentage: 25 }] }),
+      usage({
+        natures: [
+          { name: 'Hardy', percentage: 5 },
+          { name: 'Jolly', percentage: 70 },
+          { name: 'Adamant', percentage: 25 },
+        ],
+      }),
     );
 
-    expect(result.natureUsageCandidates.map(c => c.value)).toEqual(['Jolly', 'Adamant', 'Hardy']);
+    expect(result.natureUsageCandidates.map((c) => c.value)).toEqual(['Jolly', 'Adamant', 'Hardy']);
   });
 
   it('matches names case/whitespace-insensitively via normalizeSlug, not exact string equality', () => {
@@ -102,7 +127,8 @@ describe('applyUsageWeighting - real usage data', () => {
     );
 
     expect(result.abilityUsageCandidates).toEqual([
-      { value: 'Sand Veil', percentage: 0 }, { value: 'Rough Skin', percentage: 0 },
+      { value: 'Sand Veil', percentage: 0 },
+      { value: 'Rough Skin', percentage: 0 },
     ]);
   });
 
@@ -118,11 +144,17 @@ describe('applyUsageWeighting - real usage data', () => {
   it('ranks the move axis identically to nature/ability/item (mirrors the same shape)', () => {
     const result = applyUsageWeighting(
       baseInference(),
-      usage({ moves: [{ name: 'Stone Edge', percentage: 40 }, { name: 'Earthquake', percentage: 55 }] }),
+      usage({
+        moves: [
+          { name: 'Stone Edge', percentage: 40 },
+          { name: 'Earthquake', percentage: 55 },
+        ],
+      }),
     );
 
     expect(result.moveUsageCandidates).toEqual([
-      { value: 'Earthquake', percentage: 55 }, { value: 'Stone Edge', percentage: 40 },
+      { value: 'Earthquake', percentage: 55 },
+      { value: 'Stone Edge', percentage: 40 },
     ]);
   });
 

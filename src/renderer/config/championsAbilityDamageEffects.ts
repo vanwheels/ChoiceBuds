@@ -41,6 +41,8 @@ const CHAMPIONS_ABILITY_DAMAGE_EFFECTS: Record<string, ChampionsAbilityDamageEff
   'aura-guard': { contactDamageTakenMultiplier: 0.5 },
 };
 
-export function getChampionsAbilityDamageEffect(abilitySlug: string): ChampionsAbilityDamageEffect | undefined {
+export function getChampionsAbilityDamageEffect(
+  abilitySlug: string,
+): ChampionsAbilityDamageEffect | undefined {
   return CHAMPIONS_ABILITY_DAMAGE_EFFECTS[abilitySlug];
 }

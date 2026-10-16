@@ -19,11 +19,11 @@ export type SwitchInEffect =
   | { kind: 'terrain'; terrain: TerrainType };
 
 const SWITCH_IN_ABILITY_EFFECTS: Record<string, SwitchInEffect> = {
-  'intimidate': { kind: 'stat', stat: 'atk', stages: -1, target: 'opposing-active' },
+  intimidate: { kind: 'stat', stat: 'atk', stages: -1, target: 'opposing-active' },
   'intrepid-sword': { kind: 'stat', stat: 'atk', stages: 1, target: 'self' },
   'dauntless-shield': { kind: 'stat', stat: 'def', stages: 1, target: 'self' },
-  'drought': { kind: 'weather', weather: 'sun' },
-  'drizzle': { kind: 'weather', weather: 'rain' },
+  drought: { kind: 'weather', weather: 'sun' },
+  drizzle: { kind: 'weather', weather: 'rain' },
   'sand-stream': { kind: 'weather', weather: 'sand' },
   'snow-warning': { kind: 'weather', weather: 'snow' },
   'electric-surge': { kind: 'terrain', terrain: 'electric' },

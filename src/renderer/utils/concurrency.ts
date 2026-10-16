@@ -8,7 +8,7 @@ export async function runWithConcurrency<T>(
   items: readonly T[],
   concurrency: number,
   onTick: () => void,
-  worker: (item: T) => Promise<unknown>
+  worker: (item: T) => Promise<unknown>,
 ): Promise<void> {
   let index = 0;
   async function runNext(): Promise<void> {

@@ -35,7 +35,7 @@ export interface UseUsageSyncReturn {
 
 export function useUsageSync(
   gameDataState: UseGameDataReturn,
-  speciesRosterState: UseSpeciesRosterReturn
+  speciesRosterState: UseSpeciesRosterReturn,
 ): UseUsageSyncReturn {
   const [batchDone, setBatchDone] = useState(false);
   // Same "mutex, not a one-shot latch" reasoning as useInitialSync.ts's
@@ -47,12 +47,12 @@ export function useUsageSync(
   const { roster, isLoading: isRosterLoading } = speciesRosterState;
 
   const legalRoster = useMemo(
-    () => roster.filter(entry => validateSpeciesLegality(entry.name, LATEST_REGULATION_ID)),
-    [roster]
+    () => roster.filter((entry) => validateSpeciesLegality(entry.name, LATEST_REGULATION_ID)),
+    [roster],
   );
   const staleSpecies = useMemo(
-    () => legalRoster.filter(entry => !getCachedChampionsUsage(entry.name)),
-    [legalRoster, getCachedChampionsUsage]
+    () => legalRoster.filter((entry) => !getCachedChampionsUsage(entry.name)),
+    [legalRoster, getCachedChampionsUsage],
   );
 
   const ready = isInitialized && !isRosterLoading && roster.length > 0;
@@ -70,9 +70,10 @@ export function useUsageSync(
       // useInitialSync.ts's own heavySyncDone reset.
       setBatchDone(false);
       await runWithConcurrency(
-        staleSpecies, CONCURRENCY,
+        staleSpecies,
+        CONCURRENCY,
         () => {},
-        entry => getChampionsUsage(entry.name)
+        (entry) => getChampionsUsage(entry.name),
       );
       isSyncing.current = false;
       setBatchDone(true);

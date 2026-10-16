@@ -40,7 +40,7 @@ describe('usePokemonMoveFilter', () => {
     mockedFetchJSON.mockImplementation(async (url: string) =>
       url === '/move/tackle-test-2'
         ? { learned_by_pokemon: [{ name: 'rattata' }] }
-        : { learned_by_pokemon: [{ name: 'psyduck' }] }
+        : { learned_by_pokemon: [{ name: 'psyduck' }] },
     );
     const { result } = renderHook(() => usePokemonMoveFilter(['tackle-test-2', 'scratch-test-2']));
 

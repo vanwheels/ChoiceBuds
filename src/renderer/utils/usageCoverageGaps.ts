@@ -66,17 +66,19 @@ export interface MovesetCoverageGapThreat {
  */
 export function computeMovesetCoverageGaps(
   defenders: DefendingSlot[],
-  candidates: MovesetGapCandidate[]
+  candidates: MovesetGapCandidate[],
 ): MovesetCoverageGapThreat[] {
   return candidates
-    .filter(c => c.columnPosition <= USAGE_THREAT_RANK_CUTOFF)
+    .filter((c) => c.columnPosition <= USAGE_THREAT_RANK_CUTOFF)
     .map((c): MovesetCoverageGapThreat => ({
       species: c.species,
       columnPosition: c.columnPosition,
       spriteUrl: c.spriteUrl,
       speed: c.speed,
-      types: [...new Set(c.topMoves.map(m => getEffectiveMoveType(m.name, m.type, c.topAbility)))],
+      types: [
+        ...new Set(c.topMoves.map((m) => getEffectiveMoveType(m.name, m.type, c.topAbility))),
+      ],
     }))
-    .filter(c => c.types.length > 0 && defenders.every(d => !slotResistsThreat(c.types, d)))
+    .filter((c) => c.types.length > 0 && defenders.every((d) => !slotResistsThreat(c.types, d)))
     .sort((a, b) => a.columnPosition - b.columnPosition);
 }

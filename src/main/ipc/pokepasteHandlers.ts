@@ -21,44 +21,47 @@ export function registerPokepasteHandlers(): void {
    * via undici), so fetch() can't read res.headers.location either. Raw
    * https.request() has no such filtering.
    */
-  ipcMain.handle('pokepaste:create', async (_event, payload: { paste: string; title?: string; author?: string; notes?: string }) => {
-    const body = new URLSearchParams({
-      paste: payload.paste,
-      title: payload.title ?? '',
-      author: payload.author ?? '',
-      notes: payload.notes ?? '',
-    }).toString();
+  ipcMain.handle(
+    'pokepaste:create',
+    async (_event, payload: { paste: string; title?: string; author?: string; notes?: string }) => {
+      const body = new URLSearchParams({
+        paste: payload.paste,
+        title: payload.title ?? '',
+        author: payload.author ?? '',
+        notes: payload.notes ?? '',
+      }).toString();
 
-    return new Promise<string | null>((resolve) => {
-      const req = https.request(
-        {
-          hostname: 'pokepast.es',
-          path: '/create',
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Content-Length': Buffer.byteLength(body),
+      return new Promise<string | null>((resolve) => {
+        const req = https.request(
+          {
+            hostname: 'pokepast.es',
+            path: '/create',
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Content-Length': Buffer.byteLength(body),
+            },
           },
-        },
-        (res) => {
-          const location = res.headers.location;
-          res.resume(); // drain the response body, we only need the header
-          if (res.statusCode === 303 && location) {
-            resolve(`https://pokepast.es${location}`);
-          } else {
-            console.error(`Pokepaste create failed: status ${res.statusCode}`);
-            resolve(null);
-          }
-        }
-      );
+          (res) => {
+            const location = res.headers.location;
+            res.resume(); // drain the response body, we only need the header
+            if (res.statusCode === 303 && location) {
+              resolve(`https://pokepast.es${location}`);
+            } else {
+              console.error(`Pokepaste create failed: status ${res.statusCode}`);
+              resolve(null);
+            }
+          },
+        );
 
-      req.on('error', (err) => {
-        console.error('Error creating Pokepaste:', err);
-        resolve(null);
+        req.on('error', (err) => {
+          console.error('Error creating Pokepaste:', err);
+          resolve(null);
+        });
+
+        req.write(body);
+        req.end();
       });
-
-      req.write(body);
-      req.end();
-    });
-  });
+    },
+  );
 }

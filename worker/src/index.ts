@@ -31,7 +31,16 @@
  *                              SyncPayload, 404 if none
  */
 
-import { hashPassword, verifyPassword, generateToken, hashToken, constantTimeEqual, isValidUsername, isValidPassword, type PasswordHash } from './crypto';
+import {
+  hashPassword,
+  verifyPassword,
+  generateToken,
+  hashToken,
+  constantTimeEqual,
+  isValidUsername,
+  isValidPassword,
+  type PasswordHash,
+} from './crypto';
 import { mergeCollection, mergeSingleton, type SyncTombstone } from './merge';
 
 export interface Env {
@@ -76,9 +85,12 @@ interface HasUpdatedAt {
 }
 
 const EMPTY_SYNC_PAYLOAD: SyncPayload = {
-  teams: [], teamTombstones: [],
-  battles: [], battleTombstones: [],
-  savedPokemon: [], savedPokemonTombstones: [],
+  teams: [],
+  teamTombstones: [],
+  battles: [],
+  battleTombstones: [],
+  savedPokemon: [],
+  savedPokemonTombstones: [],
   savedAt: 0,
 };
 
@@ -144,14 +156,18 @@ async function addToken(env: Env, lowerUsername: string, tokenHash: string): Pro
   await env.SYNC_KV.put(tokensKey(lowerUsername), JSON.stringify(tokens));
 }
 
-async function verifyBearerToken(env: Env, lowerUsername: string, request: Request): Promise<boolean> {
+async function verifyBearerToken(
+  env: Env,
+  lowerUsername: string,
+  request: Request,
+): Promise<boolean> {
   const auth = request.headers.get('Authorization') ?? '';
   const match = auth.match(/^Bearer (.+)$/);
   if (!match) return false;
 
   const presentedHash = await hashToken(match[1]);
   const tokens = await getTokens(env, lowerUsername);
-  return tokens.some(t => constantTimeEqual(t.tokenHash, presentedHash));
+  return tokens.some((t) => constantTimeEqual(t.tokenHash, presentedHash));
 }
 
 async function isLoginLocked(env: Env, lowerUsername: string): Promise<boolean> {
@@ -162,7 +178,9 @@ async function isLoginLocked(env: Env, lowerUsername: string): Promise<boolean> 
 async function recordLoginFailure(env: Env, lowerUsername: string): Promise<void> {
   const raw = await env.SYNC_KV.get(loginFailKey(lowerUsername));
   const count = raw ? Number(raw) + 1 : 1;
-  await env.SYNC_KV.put(loginFailKey(lowerUsername), String(count), { expirationTtl: LOGIN_FAIL_WINDOW_SECONDS });
+  await env.SYNC_KV.put(loginFailKey(lowerUsername), String(count), {
+    expirationTtl: LOGIN_FAIL_WINDOW_SECONDS,
+  });
 }
 
 async function clearLoginFailures(env: Env, lowerUsername: string): Promise<void> {
@@ -184,7 +202,9 @@ async function handleSignup(request: Request, env: Env): Promise<Response> {
     return errorResponse('Signing up too frequently - try again shortly', 429);
   }
 
-  const body = await readJsonBody<{ username?: unknown; password?: unknown; email?: unknown }>(request);
+  const body = await readJsonBody<{ username?: unknown; password?: unknown; email?: unknown }>(
+    request,
+  );
   if (!body || typeof body.username !== 'string' || typeof body.password !== 'string') {
     return errorResponse('Body must include "username" and "password"', 400);
   }
@@ -301,12 +321,18 @@ async function handleSyncPut(env: Env, lowerUsername: string, request: Request):
   }
 
   if (
-    !isRecordArray(parsed.teams) || !isTombstoneArray(parsed.teamTombstones) ||
-    !isRecordArray(parsed.battles) || !isTombstoneArray(parsed.battleTombstones) ||
-    !isRecordArray(parsed.savedPokemon) || !isTombstoneArray(parsed.savedPokemonTombstones) ||
+    !isRecordArray(parsed.teams) ||
+    !isTombstoneArray(parsed.teamTombstones) ||
+    !isRecordArray(parsed.battles) ||
+    !isTombstoneArray(parsed.battleTombstones) ||
+    !isRecordArray(parsed.savedPokemon) ||
+    !isTombstoneArray(parsed.savedPokemonTombstones) ||
     !isOptionalSingleton(parsed.playerProfile)
   ) {
-    return errorResponse('Body must include teams/battles/savedPokemon arrays and their tombstone arrays', 400);
+    return errorResponse(
+      'Body must include teams/battles/savedPokemon arrays and their tombstone arrays',
+      400,
+    );
   }
   const incoming = parsed as SyncPayload;
 
@@ -334,9 +360,24 @@ async function handleSyncPut(env: Env, lowerUsername: string, request: Request):
     existing = kvStored ? JSON.parse(kvStored) : EMPTY_SYNC_PAYLOAD;
   }
 
-  const teamsMerge = mergeCollection(existing.teams, existing.teamTombstones, incoming.teams, incoming.teamTombstones);
-  const battlesMerge = mergeCollection(existing.battles, existing.battleTombstones, incoming.battles, incoming.battleTombstones);
-  const savedPokemonMerge = mergeCollection(existing.savedPokemon, existing.savedPokemonTombstones, incoming.savedPokemon, incoming.savedPokemonTombstones);
+  const teamsMerge = mergeCollection(
+    existing.teams,
+    existing.teamTombstones,
+    incoming.teams,
+    incoming.teamTombstones,
+  );
+  const battlesMerge = mergeCollection(
+    existing.battles,
+    existing.battleTombstones,
+    incoming.battles,
+    incoming.battleTombstones,
+  );
+  const savedPokemonMerge = mergeCollection(
+    existing.savedPokemon,
+    existing.savedPokemonTombstones,
+    incoming.savedPokemon,
+    incoming.savedPokemonTombstones,
+  );
   const playerProfile = mergeSingleton(existing.playerProfile, incoming.playerProfile);
 
   const merged: SyncPayload = {
@@ -362,20 +403,38 @@ async function handleSyncPut(env: Env, lowerUsername: string, request: Request):
 }
 
 function isRecordArray(value: unknown): value is HasIdAndUpdatedAt[] {
-  return Array.isArray(value) && value.every((v): v is HasIdAndUpdatedAt =>
-    typeof v === 'object' && v !== null && typeof (v as Record<string, unknown>).id === 'string' && typeof (v as Record<string, unknown>).updatedAt === 'number'
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (v): v is HasIdAndUpdatedAt =>
+        typeof v === 'object' &&
+        v !== null &&
+        typeof (v as Record<string, unknown>).id === 'string' &&
+        typeof (v as Record<string, unknown>).updatedAt === 'number',
+    )
   );
 }
 
 function isTombstoneArray(value: unknown): value is SyncTombstone[] {
-  return Array.isArray(value) && value.every((v): v is SyncTombstone =>
-    typeof v === 'object' && v !== null && typeof (v as Record<string, unknown>).id === 'string' && typeof (v as Record<string, unknown>).deletedAt === 'number'
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (v): v is SyncTombstone =>
+        typeof v === 'object' &&
+        v !== null &&
+        typeof (v as Record<string, unknown>).id === 'string' &&
+        typeof (v as Record<string, unknown>).deletedAt === 'number',
+    )
   );
 }
 
 function isOptionalSingleton(value: unknown): value is HasUpdatedAt | undefined {
   if (value === undefined) return true;
-  return typeof value === 'object' && value !== null && typeof (value as Record<string, unknown>).updatedAt === 'number';
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof (value as Record<string, unknown>).updatedAt === 'number'
+  );
 }
 
 export default {

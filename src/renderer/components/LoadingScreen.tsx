@@ -31,7 +31,8 @@ export default function LoadingScreen({ progress }: LoadingScreenProps) {
         </div>
 
         <p className="text-center text-sm text-zinc-400">
-          {progress.label}{progress.total > 1 ? ` (${progress.current}/${progress.total})` : '...'}
+          {progress.label}
+          {progress.total > 1 ? ` (${progress.current}/${progress.total})` : '...'}
         </p>
       </div>
     </div>

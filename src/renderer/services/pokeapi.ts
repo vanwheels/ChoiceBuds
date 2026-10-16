@@ -5,7 +5,12 @@
  * All returned strings are forced to lowercase before hitting state
  */
 
-import type { PokemonStats, PokeAPICacheEntry, ShowdownPokemon, ImportedPokemonInfo } from '../types/pokemon';
+import type {
+  PokemonStats,
+  PokeAPICacheEntry,
+  ShowdownPokemon,
+  ImportedPokemonInfo,
+} from '../types/pokemon';
 import { NEVER_EXPIRES } from '../utils/cacheExpiry';
 
 /**
@@ -59,25 +64,28 @@ interface PokeAPISpeciesResponse {
  * @returns Promise resolving to PokeAPICacheEntry
  * @throws Error if fetch fails or species not found
  */
-export async function fetchPokemonData(speciesName: string, gender?: 'M' | 'F' | 'N' | ''): Promise<PokeAPICacheEntry> {
+export async function fetchPokemonData(
+  speciesName: string,
+  gender?: 'M' | 'F' | 'N' | '',
+): Promise<PokeAPICacheEntry> {
   // Normalize species name to lowercase and remove special characters
   const normalizedName = normalizeSpeciesForAPI(speciesName, gender);
-  
+
   // Construct API URL
   const url = `${POKEAPI_BASE_URL}/pokemon/${normalizedName}`;
-  
+
   try {
     const response = await fetch(url);
-    
+
     if (!response.ok) {
       if (response.status === 404) {
         throw new Error(`Pokémon species "${speciesName}" not found in PokeAPI`);
       }
       throw new Error(`PokeAPI request failed with status ${response.status}`);
     }
-    
+
     const data: PokeAPISpeciesResponse = await response.json();
-    
+
     // Transform API response to our cache entry format
     return transformAPIResponse(data);
   } catch (error) {
@@ -98,7 +106,7 @@ export async function fetchPokemonData(speciesName: string, gender?: 'M' | 'F' |
  */
 export function normalizeSpeciesForAPI(name: string, gender?: 'M' | 'F' | 'N' | ''): string {
   const nameLower = name.toLowerCase().trim();
-  
+
   // Handle Basculegion Form/Gender Divergence
   if (nameLower === 'basculegion') {
     return gender === 'F' ? 'basculegion-female' : 'basculegion-male';
@@ -109,7 +117,7 @@ export function normalizeSpeciesForAPI(name: string, gender?: 'M' | 'F' | 'N' | 
   if (nameLower === 'basculegion-m') {
     return 'basculegion-male';
   }
-  
+
   // Handle Indeedee Gender Divergence
   if (nameLower === 'indeedee') {
     return gender === 'F' ? 'indeedee-female' : 'indeedee-male';
@@ -142,12 +150,12 @@ export function normalizeSpeciesForAPI(name: string, gender?: 'M' | 'F' | 'N' | 
   if (nameLower === 'meowstic-m') {
     return 'meowstic-male';
   }
-  
+
   // Handle common special cases
   let normalized = nameLower.replace(/['']/g, ''); // Remove apostrophes
   normalized = normalized.replace(/\s+/g, '-'); // Spaces to hyphens
   normalized = normalized.replace(/[.]/g, ''); // Remove periods
-  
+
   // Handle specific form names that PokeAPI expects
   const formMappings: Record<string, string> = {
     'nidoran-f': 'nidoran-f',
@@ -162,11 +170,11 @@ export function normalizeSpeciesForAPI(name: string, gender?: 'M' | 'F' | 'N' | 
     // PokeAPI has no bare "aegislash" slug - only its Blade/Shield stat-formes
     // (see utils/pokemonRules.ts). Showdown/pokepast.es exports always say
     // just "Aegislash" for its default forme, which is Shield.
-    'aegislash': 'aegislash-shield',
+    aegislash: 'aegislash-shield',
     // PokeAPI has no bare "palafin" slug either - only its Zero/Hero formes
     // (see utils/pokemonRules.ts). Showdown/pokepast.es exports always say
     // just "Palafin" for its default (team-building) forme, which is Zero.
-    'palafin': 'palafin-zero',
+    palafin: 'palafin-zero',
     // Same class of gap as aegislash/palafin above, found live 2026-07-19 while
     // auditing PokeAPI's new "champions" version group: these species also have
     // no bare PokeAPI slug, only their default-variety forme, but weren't
@@ -174,12 +182,12 @@ export function normalizeSpeciesForAPI(name: string, gender?: 'M' | 'F' | 'N' | 
     // their default forme same as Aegislash/Palafin. Confirmed live 404 on
     // `/pokemon/mimikyu` etc. before this fix - Mimikyu is an extremely common
     // VGC pick, so this was a real, silent import-enrichment failure.
-    'gourgeist': 'gourgeist-average',
-    'lycanroc': 'lycanroc-midday',
-    'maushold': 'maushold-family-of-four',
-    'mimikyu': 'mimikyu-disguised',
-    'morpeko': 'morpeko-full-belly',
-    'pyroar': 'pyroar-male',
+    gourgeist: 'gourgeist-average',
+    lycanroc: 'lycanroc-midday',
+    maushold: 'maushold-family-of-four',
+    mimikyu: 'mimikyu-disguised',
+    morpeko: 'morpeko-full-belly',
+    pyroar: 'pyroar-male',
     // Same class of gap as the block above, found 2026-09-14 while diagnosing
     // VGCPastes catalog sprite-matching gaps (see docs/investigations/
     // vgcpastes-catalog-sprite-matching.md) rather than the original 2026-07-19
@@ -187,7 +195,7 @@ export function normalizeSpeciesForAPI(name: string, gender?: 'M' | 'F' | 'N' | 
     // `/pokemon/toxtricity-amped`) before this fix. Toxtricity is a common
     // enough VGC pick that this was a real, silent import-enrichment failure
     // the same way Mimikyu's was.
-    'toxtricity': 'toxtricity-amped',
+    toxtricity: 'toxtricity-amped',
     // @smogon/calc spells the Paldean Tauros breeds without "-breed" (see
     // utils/pokemonRules.ts) but PokeAPI's actual slugs all keep it - confirmed
     // live 404 on `/pokemon/tauros-paldea-combat` before this fix.
@@ -195,7 +203,7 @@ export function normalizeSpeciesForAPI(name: string, gender?: 'M' | 'F' | 'N' | 
     'tauros-paldea-blaze': 'tauros-paldea-blaze-breed',
     'tauros-paldea-aqua': 'tauros-paldea-aqua-breed',
   };
-  
+
   return formMappings[normalized] || normalized;
 }
 
@@ -220,12 +228,10 @@ function extractPokedexNumberFromSpeciesUrl(url: string | undefined): number | n
  */
 function transformAPIResponse(data: PokeAPISpeciesResponse): PokeAPICacheEntry {
   const now = Date.now();
-  
+
   // Extract types array (forced to lowercase)
-  const types = data.types
-    .sort((a, b) => a.slot - b.slot)
-    .map(t => t.type.name.toLowerCase());
-  
+  const types = data.types.sort((a, b) => a.slot - b.slot).map((t) => t.type.name.toLowerCase());
+
   // Extract base stats
   const baseStats: PokemonStats = {
     hp: 0,
@@ -235,7 +241,7 @@ function transformAPIResponse(data: PokeAPISpeciesResponse): PokeAPICacheEntry {
     specialDefense: 0,
     speed: 0,
   };
-  
+
   for (const stat of data.stats) {
     const statName = stat.stat.name.toLowerCase();
     switch (statName) {
@@ -259,15 +265,15 @@ function transformAPIResponse(data: PokeAPISpeciesResponse): PokeAPICacheEntry {
         break;
     }
   }
-  
+
   // Extract sprite URL (prefer official artwork, fallback to front_default)
   let spriteUrl = data.sprites.front_default || '';
   if (data.sprites.other?.['official-artwork']?.front_default) {
     spriteUrl = data.sprites.other['official-artwork'].front_default;
   }
-  
+
   // Extract abilities (forced to lowercase)
-  const abilities = data.abilities.map(a => a.ability.name.toLowerCase());
+  const abilities = data.abilities.map((a) => a.ability.name.toLowerCase());
 
   return {
     species: data.name.toLowerCase(),
@@ -303,14 +309,14 @@ function transformAPIResponse(data: PokeAPISpeciesResponse): PokeAPICacheEntry {
 export async function fetchItemSprite(itemName: string): Promise<string | null> {
   const normalizedName = itemName.toLowerCase().trim().replace(/\s+/g, '-');
   const url = `${POKEAPI_BASE_URL}/item/${normalizedName}`;
-  
+
   try {
     const response = await fetch(url);
-    
+
     if (!response.ok) {
       return null; // Item not found, return null instead of throwing
     }
-    
+
     const data = await response.json();
     return data.sprites?.default || null;
   } catch (error) {
@@ -335,7 +341,7 @@ export function isCacheEntryValid(entry: PokeAPICacheEntry): boolean {
  * @returns Promise resolving to array of cache entries (nulls for failures)
  */
 export async function fetchPokemonBatch(
-  speciesNames: string[]
+  speciesNames: string[],
 ): Promise<Array<PokeAPICacheEntry | null>> {
   const promises = speciesNames.map(async (name) => {
     try {
@@ -345,7 +351,7 @@ export async function fetchPokemonBatch(
       return null;
     }
   });
-  
+
   return Promise.all(promises);
 }
 
@@ -361,25 +367,25 @@ export async function fetchPokemonBatch(
 export async function enrichPokemonWithAPI(
   showdownPokemon: ShowdownPokemon,
   getCachedEntry: (species: string) => PokeAPICacheEntry | null,
-  setCacheEntry: (species: string, entry: PokeAPICacheEntry) => Promise<boolean>
+  setCacheEntry: (species: string, entry: PokeAPICacheEntry) => Promise<boolean>,
 ): Promise<ImportedPokemonInfo> {
   const species = showdownPokemon.species;
   const gender = showdownPokemon.gender;
-  
+
   // Generate cache key using normalized API name to ensure consistency
   const cacheKey = normalizeSpeciesForAPI(species, gender);
-  
+
   // Step 1: Check cache first using the normalized cache key
   let apiData = getCachedEntry(cacheKey);
-  
+
   // Step 2: If not cached or expired, fetch from API
   if (!apiData) {
     apiData = await fetchPokemonData(species, gender);
-    
+
     // Step 3: Cache the fetched data using the normalized cache key
     await setCacheEntry(cacheKey, apiData);
   }
-  
+
   // Step 4: Combine Showdown data with API data
   const enrichedPokemon: ImportedPokemonInfo = {
     showdownData: showdownPokemon,
@@ -391,6 +397,6 @@ export async function enrichPokemonWithAPI(
     importedAt: Date.now(),
     id: crypto.randomUUID(),
   };
-  
+
   return enrichedPokemon;
 }

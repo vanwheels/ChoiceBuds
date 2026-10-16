@@ -17,7 +17,7 @@ interface Expirable {
  */
 export function readCacheEntry<T extends Expirable>(
   section: Record<string, T> | undefined,
-  key: string
+  key: string,
 ): T | null {
   const entry = section?.[key];
   if (!entry) return null;
@@ -36,7 +36,7 @@ export function withCacheEntry<K extends CacheSection>(
   cache: GameDataCache,
   section: K,
   key: string,
-  value: GameDataCache[K][string]
+  value: GameDataCache[K][string],
 ): GameDataCache {
   return {
     ...cache,
@@ -96,13 +96,13 @@ export async function runCachedFetch<K extends CacheSection>(
   section: K,
   key: string,
   fetcher: () => Promise<GameDataCache[K][string] | null>,
-  errorMessage: string
+  errorMessage: string,
 ): Promise<GameDataCache[K][string] | null> {
   setIsLoading(true);
   try {
     const result = await fetcher();
     if (result) {
-      setCache(prev => prev ? withCacheEntry(prev, section, key, result) : prev);
+      setCache((prev) => (prev ? withCacheEntry(prev, section, key, result) : prev));
       setError(null);
     }
     return result;

@@ -25,9 +25,14 @@ async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Respon
     return await fetch(url, { ...init, signal: controller.signal });
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') {
-      throw new Error('Sync server took too long to respond - check your connection and try again', { cause: err });
+      throw new Error(
+        'Sync server took too long to respond - check your connection and try again',
+        { cause: err },
+      );
     }
-    throw new Error('Could not reach the sync server - check your connection and try again', { cause: err });
+    throw new Error('Could not reach the sync server - check your connection and try again', {
+      cause: err,
+    });
   } finally {
     clearTimeout(timeoutId);
   }
@@ -38,7 +43,11 @@ async function readErrorMessage(response: Response, fallback: string): Promise<s
   return body?.error || fallback;
 }
 
-export async function signup(username: string, password: string, email?: string): Promise<{ token: string }> {
+export async function signup(
+  username: string,
+  password: string,
+  email?: string,
+): Promise<{ token: string }> {
   const response = await fetchWithTimeout(`${SYNC_WORKER_URL}/signup`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -74,12 +83,19 @@ export async function login(username: string, password: string): Promise<{ token
  * overwriting, so this doubles as a pull: the response is the full
  * authoritative post-merge SyncPayload, not just an acknowledgement.
  */
-export async function pushSyncData(username: string, token: string, payload: SyncPayload): Promise<SyncPayload> {
-  const response = await fetchWithTimeout(`${SYNC_WORKER_URL}/sync/${encodeURIComponent(username)}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify(payload),
-  });
+export async function pushSyncData(
+  username: string,
+  token: string,
+  payload: SyncPayload,
+): Promise<SyncPayload> {
+  const response = await fetchWithTimeout(
+    `${SYNC_WORKER_URL}/sync/${encodeURIComponent(username)}`,
+    {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(payload),
+    },
+  );
 
   if (!response.ok) {
     throw new Error(await readErrorMessage(response, `Sync failed (${response.status})`));
@@ -90,9 +106,12 @@ export async function pushSyncData(username: string, token: string, payload: Syn
 
 /** Returns null if no data has ever been pushed under this account */
 export async function pullSyncData(username: string, token: string): Promise<SyncPayload | null> {
-  const response = await fetchWithTimeout(`${SYNC_WORKER_URL}/sync/${encodeURIComponent(username)}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await fetchWithTimeout(
+    `${SYNC_WORKER_URL}/sync/${encodeURIComponent(username)}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
 
   if (response.status === 404) {
     return null;

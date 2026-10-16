@@ -37,15 +37,17 @@ export interface CoverageRow {
  * meaningfully "hit" anything.
  */
 export function computeOffensiveCoverage(moveTypesByPokemon: string[][]): CoverageRow[] {
-  return ALL_TYPES.map(type => {
-    const cells = moveTypesByPokemon.map(moveTypes =>
-      moveTypes.length === 0 ? null : Math.max(...moveTypes.map(mt => getEffectivenessMultiplier(mt, [type])))
+  return ALL_TYPES.map((type) => {
+    const cells = moveTypesByPokemon.map((moveTypes) =>
+      moveTypes.length === 0
+        ? null
+        : Math.max(...moveTypes.map((mt) => getEffectivenessMultiplier(mt, [type]))),
     );
     return {
       type,
       cells,
-      unfavorableCount: cells.filter(c => c !== null && c < 1).length,
-      favorableCount: cells.filter(c => c !== null && c > 1).length,
+      unfavorableCount: cells.filter((c) => c !== null && c < 1).length,
+      favorableCount: cells.filter((c) => c !== null && c > 1).length,
     };
   });
 }
@@ -58,7 +60,11 @@ export function computeOffensiveCoverage(moveTypesByPokemon: string[][]): Covera
  * multiplier when the ability grants no override for this specific
  * attacking type.
  */
-export function getDefensiveMultiplier(attackingType: string, defendingTypes: string[], ability?: string): number {
+export function getDefensiveMultiplier(
+  attackingType: string,
+  defendingTypes: string[],
+  ability?: string,
+): number {
   if (getImmuneTypes(ability).includes(attackingType)) return 0;
   return getEffectivenessMultiplier(attackingType, defendingTypes);
 }
@@ -69,13 +75,13 @@ export function getDefensiveMultiplier(attackingType: string, defendingTypes: st
  * the team's shared weaknesses/resistances.
  */
 export function computeDefensiveCoverage(defenders: DefendingSlot[]): CoverageRow[] {
-  return ALL_TYPES.map(type => {
-    const cells = defenders.map(d => getDefensiveMultiplier(type, d.types, d.ability));
+  return ALL_TYPES.map((type) => {
+    const cells = defenders.map((d) => getDefensiveMultiplier(type, d.types, d.ability));
     return {
       type,
       cells,
-      unfavorableCount: cells.filter(c => c !== null && c > 1).length,
-      favorableCount: cells.filter(c => c !== null && c < 1).length,
+      unfavorableCount: cells.filter((c) => c !== null && c > 1).length,
+      favorableCount: cells.filter((c) => c !== null && c < 1).length,
     };
   });
 }

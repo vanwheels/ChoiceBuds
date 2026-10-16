@@ -28,7 +28,12 @@ interface CalcSavedSetsModalProps {
   resolveSprite: (remoteUrl: string) => string;
 }
 
-export default function CalcSavedSetsModal({ onClose, databaseState, savedPokemonState, resolveSprite }: CalcSavedSetsModalProps) {
+export default function CalcSavedSetsModal({
+  onClose,
+  databaseState,
+  savedPokemonState,
+  resolveSprite,
+}: CalcSavedSetsModalProps) {
   const [pastedText, setPastedText] = useState('');
   const [isImporting, setIsImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +56,9 @@ export default function CalcSavedSetsModal({ onClose, databaseState, savedPokemo
 
       if (!parseResult.success || parseResult.pokemon.length === 0) {
         throw new Error(
-          parseResult.errors.length > 0 ? parseResult.errors.join(', ') : 'Failed to parse pasted text'
+          parseResult.errors.length > 0
+            ? parseResult.errors.join(', ')
+            : 'Failed to parse pasted text',
         );
       }
 
@@ -62,8 +69,16 @@ export default function CalcSavedSetsModal({ onClose, databaseState, savedPokemo
       const enrichedPokemon: ImportedPokemonInfo[] = [];
       for (let i = 0; i < parseResult.pokemon.length; i++) {
         const pokemon = parseResult.pokemon[i];
-        setImportProgress(`Enriching ${pokemon.species} (${i + 1}/${parseResult.pokemon.length})...`);
-        enrichedPokemon.push(await enrichPokemonWithAPI(pokemon, databaseState.getCachedEntry, databaseState.setCacheEntry));
+        setImportProgress(
+          `Enriching ${pokemon.species} (${i + 1}/${parseResult.pokemon.length})...`,
+        );
+        enrichedPokemon.push(
+          await enrichPokemonWithAPI(
+            pokemon,
+            databaseState.getCachedEntry,
+            databaseState.setCacheEntry,
+          ),
+        );
       }
 
       setImportProgress('Saving...');
@@ -93,7 +108,9 @@ export default function CalcSavedSetsModal({ onClose, databaseState, savedPokemo
   };
 
   const sortedSets = [...savedPokemonState.savedPokemon].sort((a, b) => {
-    const speciesCompare = a.pokemon.showdownData.species.localeCompare(b.pokemon.showdownData.species);
+    const speciesCompare = a.pokemon.showdownData.species.localeCompare(
+      b.pokemon.showdownData.species,
+    );
     return speciesCompare !== 0 ? speciesCompare : a.label.localeCompare(b.label);
   });
 
@@ -103,7 +120,12 @@ export default function CalcSavedSetsModal({ onClose, databaseState, savedPokemo
         <h2 className="text-xl font-bold text-zinc-100">Saved Pokémon Sets</h2>
         <button onClick={onClose} className="text-zinc-400 hover:text-zinc-200 transition-colors">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -111,7 +133,10 @@ export default function CalcSavedSetsModal({ onClose, databaseState, savedPokemo
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
         {/* Import section */}
         <div>
-          <label htmlFor="savedSetsPasteArea" className="block text-sm font-medium text-zinc-300 mb-2">
+          <label
+            htmlFor="savedSetsPasteArea"
+            className="block text-sm font-medium text-zinc-300 mb-2"
+          >
             Paste one or more Pokémon (Showdown format)
           </label>
           <textarea
@@ -146,21 +171,25 @@ export default function CalcSavedSetsModal({ onClose, databaseState, savedPokemo
             Your Saved Sets ({sortedSets.length})
           </h3>
           {sortedSets.length === 0 ? (
-            <p className="text-sm text-zinc-400">No saved sets yet - paste one above to get started.</p>
+            <p className="text-sm text-zinc-400">
+              No saved sets yet - paste one above to get started.
+            </p>
           ) : (
             <div className="flex flex-col gap-1.5">
-              {sortedSets.map(entry => (
+              {sortedSets.map((entry) => (
                 <div
                   key={entry.id}
                   className="flex items-center gap-3 px-3 py-2 rounded-lg bg-zinc-900/60 border border-zinc-700"
                 >
                   <img
-                    src={resolveSprite(getPixelSpriteUrl(
-                      entry.pokemon.pokedexNumber,
-                      entry.pokemon.showdownData.species,
-                      entry.pokemon.showdownData.gender || 'M',
-                      entry.pokemon.showdownData.shiny
-                    ))}
+                    src={resolveSprite(
+                      getPixelSpriteUrl(
+                        entry.pokemon.pokedexNumber,
+                        entry.pokemon.showdownData.species,
+                        entry.pokemon.showdownData.gender || 'M',
+                        entry.pokemon.showdownData.shiny,
+                      ),
+                    )}
                     alt={entry.pokemon.showdownData.species}
                     className="w-9 h-9 object-contain [image-rendering:pixelated] shrink-0"
                   />
@@ -171,7 +200,9 @@ export default function CalcSavedSetsModal({ onClose, databaseState, savedPokemo
                         value={renameDraft}
                         onChange={(e) => setRenameDraft(e.target.value)}
                         onBlur={commitRename}
-                        onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') e.currentTarget.blur();
+                        }}
                         autoFocus
                         className="w-full px-1.5 py-0.5 text-sm bg-zinc-800 border border-accent-gold rounded text-zinc-100 outline-none"
                       />
@@ -185,7 +216,9 @@ export default function CalcSavedSetsModal({ onClose, databaseState, savedPokemo
                         {entry.label}
                       </button>
                     )}
-                    <p className="text-xs text-zinc-400 truncate">{entry.pokemon.showdownData.species} - Lv{entry.pokemon.showdownData.level}</p>
+                    <p className="text-xs text-zinc-400 truncate">
+                      {entry.pokemon.showdownData.species} - Lv{entry.pokemon.showdownData.level}
+                    </p>
                   </div>
                   <button
                     type="button"

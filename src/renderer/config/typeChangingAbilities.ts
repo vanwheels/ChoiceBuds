@@ -35,16 +35,14 @@
 import { SOUND_BASED_MOVES } from './moveBlockingAbilities';
 
 export type TypeChangeRule =
-  | { kind: 'from-normal'; toType: string }
-  | { kind: 'all-to-normal' }
-  | { kind: 'sound-to-water' };
+  { kind: 'from-normal'; toType: string } | { kind: 'all-to-normal' } | { kind: 'sound-to-water' };
 
 const TYPE_CHANGING_ABILITIES: Record<string, TypeChangeRule> = {
-  'pixilate': { kind: 'from-normal', toType: 'fairy' },
-  'aerilate': { kind: 'from-normal', toType: 'flying' },
-  'refrigerate': { kind: 'from-normal', toType: 'ice' },
-  'galvanize': { kind: 'from-normal', toType: 'electric' },
-  'normalize': { kind: 'all-to-normal' },
+  pixilate: { kind: 'from-normal', toType: 'fairy' },
+  aerilate: { kind: 'from-normal', toType: 'flying' },
+  refrigerate: { kind: 'from-normal', toType: 'ice' },
+  galvanize: { kind: 'from-normal', toType: 'electric' },
+  normalize: { kind: 'all-to-normal' },
   'liquid-voice': { kind: 'sound-to-water' },
 };
 
@@ -52,11 +50,20 @@ const TYPE_CHANGING_ABILITIES: Record<string, TypeChangeRule> = {
 // default to Normal (or, for Weather Ball, always be caught by Normalize) in this app's static
 // move data - see file header.
 const VARIABLE_TYPE_MOVES = new Set([
-  'aura wheel', 'ivy cudgel', 'judgment', 'multi-attack', 'natural gift', 'raging bull',
-  'revelation dance', 'techno blast', 'terrain pulse', 'weather ball', 'tera blast',
+  'aura wheel',
+  'ivy cudgel',
+  'judgment',
+  'multi-attack',
+  'natural gift',
+  'raging bull',
+  'revelation dance',
+  'techno blast',
+  'terrain pulse',
+  'weather ball',
+  'tera blast',
 ]);
 
-const SOUND_BASED_MOVES_LOWER = new Set(SOUND_BASED_MOVES.map(m => m.toLowerCase()));
+const SOUND_BASED_MOVES_LOWER = new Set(SOUND_BASED_MOVES.map((m) => m.toLowerCase()));
 
 function toSlug(ability: string): string {
   return ability.toLowerCase().trim().replace(/\s+/g, '-');
@@ -67,7 +74,11 @@ function toSlug(ability: string): string {
  * Falls back to `baseType` unchanged for any species without a type-changing
  * ability, or for a move this table deliberately excludes (see header).
  */
-export function getEffectiveMoveType(moveName: string, baseType: string, ability: string | undefined): string {
+export function getEffectiveMoveType(
+  moveName: string,
+  baseType: string,
+  ability: string | undefined,
+): string {
   if (!ability) return baseType;
   const rule = TYPE_CHANGING_ABILITIES[toSlug(ability)];
   if (!rule) return baseType;

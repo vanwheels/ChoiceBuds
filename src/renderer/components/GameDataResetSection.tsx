@@ -20,7 +20,10 @@ interface GameDataResetSectionProps {
   gameDataState: UseGameDataReturn;
 }
 
-export default function GameDataResetSection({ databaseState, gameDataState }: GameDataResetSectionProps) {
+export default function GameDataResetSection({
+  databaseState,
+  gameDataState,
+}: GameDataResetSectionProps) {
   const [didReset, setDidReset] = useState(false);
 
   const handleReset = async () => {
@@ -32,10 +35,9 @@ export default function GameDataResetSection({ databaseState, gameDataState }: G
     <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-4">
       <h2 className="text-sm font-semibold text-zinc-200">Game Data</h2>
       <p className="mt-1 text-xs text-zinc-400">
-        Species, move, item, and ability data is downloaded once and kept
-        offline permanently rather than periodically re-checked. If
-        something looks wrong or out of date, clear it here to force a
-        fresh download.
+        Species, move, item, and ability data is downloaded once and kept offline permanently rather
+        than periodically re-checked. If something looks wrong or out of date, clear it here to
+        force a fresh download.
       </p>
 
       <div className="mt-3 flex items-center gap-2">
@@ -45,11 +47,7 @@ export default function GameDataResetSection({ databaseState, gameDataState }: G
         >
           Refresh Game Data
         </button>
-        {didReset && (
-          <p className="text-[11px] text-yellow-400">
-            Cleared - re-downloading now.
-          </p>
-        )}
+        {didReset && <p className="text-[11px] text-yellow-400">Cleared - re-downloading now.</p>}
       </div>
     </div>
   );

@@ -31,6 +31,6 @@ export function calcStateToShowdownPokemon(state: CalcPokemonState): ShowdownPok
       specialDefense: state.sps.spd,
       speed: state.sps.spe,
     },
-    moves: state.moves.map(m => m.name).filter(Boolean),
+    moves: state.moves.map((m) => m.name).filter(Boolean),
   };
 }

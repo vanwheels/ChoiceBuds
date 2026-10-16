@@ -36,7 +36,14 @@ interface ExportTeamModalProps {
 
 const COPY_CONFIRMATION_MS = 2000;
 
-export default function ExportTeamModal({ pokemonList, title, pasteTitle, pasteAuthor, pasteNotes, onClose }: ExportTeamModalProps) {
+export default function ExportTeamModal({
+  pokemonList,
+  title,
+  pasteTitle,
+  pasteAuthor,
+  pasteNotes,
+  onClose,
+}: ExportTeamModalProps) {
   const [copied, setCopied] = useState(false);
   const [isCreatingPaste, setIsCreatingPaste] = useState(false);
   const [pokepasteUrl, setPokepasteUrl] = useState<string | null>(null);
@@ -73,12 +80,14 @@ export default function ExportTeamModal({ pokemonList, title, pasteTitle, pasteA
     <Modal>
       <div className="px-6 py-4 border-b border-zinc-700 flex items-center justify-between">
         <h2 className="text-xl font-bold text-zinc-100">{title}</h2>
-        <button
-          onClick={onClose}
-          className="text-zinc-400 hover:text-zinc-200 transition-colors"
-        >
+        <button onClick={onClose} className="text-zinc-400 hover:text-zinc-200 transition-colors">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -89,13 +98,17 @@ export default function ExportTeamModal({ pokemonList, title, pasteTitle, pasteA
             <div key={pIdx} className={pIdx > 0 ? 'mt-4' : ''}>
               {formatPokemonLines(pokemon).map((line, lIdx) => (
                 <div key={lIdx}>
-                  {line.kind === 'text' ? line.text : (
+                  {line.kind === 'text' ? (
+                    line.text
+                  ) : (
                     <>
                       EVs:{' '}
                       {line.parts.map((part, partIdx) => (
                         <span key={part.stat}>
                           {partIdx > 0 && ' / '}
-                          <span className={getStatLabelColor(part.stat)}>{part.value} {part.stat}</span>
+                          <span className={getStatLabelColor(part.stat)}>
+                            {part.value} {part.stat}
+                          </span>
                         </span>
                       ))}
                     </>
@@ -114,7 +127,10 @@ export default function ExportTeamModal({ pokemonList, title, pasteTitle, pasteA
             {window.electron ? (
               <a
                 href={pokepasteUrl}
-                onClick={(e) => { e.preventDefault(); window.electron.openExternal(pokepasteUrl); }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.electron.openExternal(pokepasteUrl);
+                }}
                 className="flex-1 text-sm text-accent-gold hover:underline truncate"
               >
                 {pokepasteUrl}
@@ -137,9 +153,7 @@ export default function ExportTeamModal({ pokemonList, title, pasteTitle, pasteA
             </button>
           </div>
         )}
-        {pasteError && (
-          <p className="mt-4 text-sm text-red-400">{pasteError}</p>
-        )}
+        {pasteError && <p className="mt-4 text-sm text-red-400">{pasteError}</p>}
       </div>
 
       <div className="px-6 py-4 border-t border-zinc-700 flex items-center justify-end gap-3">

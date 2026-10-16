@@ -39,7 +39,7 @@ export function buildPastedTeam(pasted: Team, existingTeamNames: string[]): Team
     ...pasted,
     id: crypto.randomUUID(),
     name: nextPastedTeamName(pasted.name, existingTeamNames),
-    pokemon: pasted.pokemon.map(p => ({ ...p, id: crypto.randomUUID() })),
+    pokemon: pasted.pokemon.map((p) => ({ ...p, id: crypto.randomUUID() })),
     favorite: false,
     createdAt: Date.now(),
     updatedAt: Date.now(),

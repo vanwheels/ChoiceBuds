@@ -39,7 +39,10 @@ interface UsageThreatsListProps {
 }
 
 /** Common shape rendered by ThreatRow - UsageThreat, PartiallyCoveredUsageThreat, and MovesetCoverageGapThreat all satisfy it (the latter's `types` holds move-effective types rather than species types - see usageCoverageGaps.ts). */
-type ThreatRowData = Pick<UsageThreat, 'species' | 'types' | 'columnPosition' | 'spriteUrl' | 'speed'>;
+type ThreatRowData = Pick<
+  UsageThreat,
+  'species' | 'types' | 'columnPosition' | 'spriteUrl' | 'speed'
+>;
 
 /**
  * Content-sized type pill, not CoverageTable's shared `TypeBadge` - that
@@ -55,7 +58,9 @@ type ThreatRowData = Pick<UsageThreat, 'species' | 'types' | 'columnPosition' | 
 function TypePill({ type }: { type: string }) {
   const theme = getTypeTheme(type);
   return (
-    <span className={`inline-block shrink-0 px-1.5 py-0.5 text-[9px] font-bold rounded-sm uppercase tracking-wider whitespace-nowrap ${theme.bg} ${theme.text}`}>
+    <span
+      className={`inline-block shrink-0 px-1.5 py-0.5 text-[9px] font-bold rounded-sm uppercase tracking-wider whitespace-nowrap ${theme.bg} ${theme.text}`}
+    >
       {type}
     </span>
   );
@@ -81,7 +86,7 @@ function ThreatRow({
       />
       <span className="flex-1 min-w-0 text-sm text-zinc-200 truncate">{threat.species}</span>
       <div className="flex gap-1 shrink-0">
-        {threat.types.map(t => (
+        {threat.types.map((t) => (
           <TypePill key={t} type={t} />
         ))}
       </div>
@@ -94,7 +99,9 @@ function ThreatRow({
         </span>
       )}
       {note && <span className="hidden md:inline text-[10px] text-zinc-500 shrink-0">{note}</span>}
-      <span className="text-xs text-zinc-400 w-10 text-right shrink-0">#{threat.columnPosition}</span>
+      <span className="text-xs text-zinc-400 w-10 text-right shrink-0">
+        #{threat.columnPosition}
+      </span>
     </div>
   );
 }
@@ -110,15 +117,22 @@ export default function UsageThreatsList({
     <div className="bg-zinc-800 rounded-lg p-4">
       <h2 className="text-sm font-bold text-zinc-100 mb-1">Team Gap Analysis</h2>
       <p className="text-xs text-zinc-400 mb-3">
-        Real, commonly-used Pokemon (top {USAGE_THREAT_RANK_CUTOFF} ladder usage) this team has no typing answer
-        for - no team slot resists or is immune to their own types.
+        Real, commonly-used Pokemon (top {USAGE_THREAT_RANK_CUTOFF} ladder usage) this team has no
+        typing answer for - no team slot resists or is immune to their own types.
       </p>
       {threats.length === 0 ? (
-        <p className="text-sm text-zinc-400">No unanswered threats in the top {USAGE_THREAT_RANK_CUTOFF} usage.</p>
+        <p className="text-sm text-zinc-400">
+          No unanswered threats in the top {USAGE_THREAT_RANK_CUTOFF} usage.
+        </p>
       ) : (
         <div className="flex flex-col gap-2">
-          {threats.map(threat => (
-            <ThreatRow key={threat.species} threat={threat} spriteCacheState={spriteCacheState} teamSpeedRange={teamSpeedRange} />
+          {threats.map((threat) => (
+            <ThreatRow
+              key={threat.species}
+              threat={threat}
+              spriteCacheState={spriteCacheState}
+              teamSpeedRange={teamSpeedRange}
+            />
           ))}
         </div>
       )}
@@ -128,10 +142,12 @@ export default function UsageThreatsList({
         Threats only one team slot resists or is immune to - a single, fragile answer.
       </p>
       {partiallyCoveredThreats.length === 0 ? (
-        <p className="text-sm text-zinc-400">No partially-covered threats in the top {USAGE_THREAT_RANK_CUTOFF} usage.</p>
+        <p className="text-sm text-zinc-400">
+          No partially-covered threats in the top {USAGE_THREAT_RANK_CUTOFF} usage.
+        </p>
       ) : (
         <div className="flex flex-col gap-2">
-          {partiallyCoveredThreats.map(threat => (
+          {partiallyCoveredThreats.map((threat) => (
             <ThreatRow
               key={threat.species}
               threat={threat}
@@ -145,15 +161,23 @@ export default function UsageThreatsList({
 
       <h3 className="text-xs font-bold text-zinc-100 mt-4 mb-1">Likely Coverage Gaps</h3>
       <p className="text-xs text-zinc-400 mb-3">
-        Threats no team slot resists once their top {COVERAGE_GAP_MOVE_CUTOFF} ranked-usage moves' effective types
-        (through their own top-ranked ability) are checked instead of their raw typing.
+        Threats no team slot resists once their top {COVERAGE_GAP_MOVE_CUTOFF} ranked-usage moves'
+        effective types (through their own top-ranked ability) are checked instead of their raw
+        typing.
       </p>
       {movesetCoverageGaps.length === 0 ? (
-        <p className="text-sm text-zinc-400">No moveset-based coverage gaps in the top {USAGE_THREAT_RANK_CUTOFF} usage.</p>
+        <p className="text-sm text-zinc-400">
+          No moveset-based coverage gaps in the top {USAGE_THREAT_RANK_CUTOFF} usage.
+        </p>
       ) : (
         <div className="flex flex-col gap-2">
-          {movesetCoverageGaps.map(threat => (
-            <ThreatRow key={threat.species} threat={threat} spriteCacheState={spriteCacheState} teamSpeedRange={teamSpeedRange} />
+          {movesetCoverageGaps.map((threat) => (
+            <ThreatRow
+              key={threat.species}
+              threat={threat}
+              spriteCacheState={spriteCacheState}
+              teamSpeedRange={teamSpeedRange}
+            />
           ))}
         </div>
       )}

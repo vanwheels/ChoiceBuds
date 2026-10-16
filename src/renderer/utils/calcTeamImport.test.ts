@@ -18,7 +18,14 @@ function makePokemon(sdOverrides: Partial<ShowdownPokemon> = {}): ImportedPokemo
     },
     pokedexNumber: 94,
     types: ['ghost', 'poison'],
-    baseStats: { hp: 60, attack: 65, defense: 60, specialAttack: 130, specialDefense: 75, speed: 110 },
+    baseStats: {
+      hp: 60,
+      attack: 65,
+      defense: 60,
+      specialAttack: 130,
+      specialDefense: 75,
+      speed: 110,
+    },
     spriteUrl: 'https://example.com/gengar.png',
     importedAt: Date.now(),
     id: crypto.randomUUID(),
@@ -27,7 +34,9 @@ function makePokemon(sdOverrides: Partial<ShowdownPokemon> = {}): ImportedPokemo
 
 describe('teamPokemonToCalcUpdates', () => {
   it('maps evs directly into sps with no scale conversion', () => {
-    const p = makePokemon({ evs: { hp: 4, attack: 0, defense: 4, specialAttack: 20, specialDefense: 6, speed: 32 } });
+    const p = makePokemon({
+      evs: { hp: 4, attack: 0, defense: 4, specialAttack: 20, specialDefense: 6, speed: 32 },
+    });
     const result = teamPokemonToCalcUpdates(p);
     expect(result.sps).toEqual({ hp: 4, atk: 0, def: 4, spa: 20, spd: 6, spe: 32 });
   });

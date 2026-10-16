@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { computeUsageThreats, computePartiallyCoveredUsageThreats, USAGE_THREAT_RANK_CUTOFF, type UsageThreat } from './usageThreats';
+import {
+  computeUsageThreats,
+  computePartiallyCoveredUsageThreats,
+  USAGE_THREAT_RANK_CUTOFF,
+  type UsageThreat,
+} from './usageThreats';
 import type { DefendingSlot } from './typeCoverage';
 
 function makeThreat(overrides: Partial<UsageThreat> = {}): UsageThreat {
@@ -19,7 +24,10 @@ function slot(types: string[], ability?: string): DefendingSlot {
 
 describe('computeUsageThreats', () => {
   it('excludes a candidate past the usage rank cutoff', () => {
-    const overCutoff = makeThreat({ types: ['electric'], columnPosition: USAGE_THREAT_RANK_CUTOFF + 1 });
+    const overCutoff = makeThreat({
+      types: ['electric'],
+      columnPosition: USAGE_THREAT_RANK_CUTOFF + 1,
+    });
     expect(computeUsageThreats([slot(['water'])], [overCutoff])).toEqual([]);
   });
 
@@ -46,7 +54,7 @@ describe('computeUsageThreats', () => {
     expect(computeUsageThreats([slot(['water'])], [neutral])).toEqual([neutral]);
   });
 
-  it('uses the best (max) of a dual-typed candidate\'s two types against a slot', () => {
+  it("uses the best (max) of a dual-typed candidate's two types against a slot", () => {
     // Water/Grass: Water resisted by Water (0.5x) but Grass is super-effective vs Water (2x) -> best is 2, keeps it
     const dualTyped = makeThreat({ types: ['water', 'grass'] });
     expect(computeUsageThreats([slot(['water'])], [dualTyped])).toEqual([dualTyped]);
@@ -62,19 +70,21 @@ describe('computeUsageThreats', () => {
     const third = makeThreat({ species: 'C', types: ['electric'], columnPosition: 30 });
     const first = makeThreat({ species: 'A', types: ['electric'], columnPosition: 5 });
     const second = makeThreat({ species: 'B', types: ['electric'], columnPosition: 15 });
-    expect(computeUsageThreats([slot(['normal'])], [third, first, second]).map(t => t.species)).toEqual(['A', 'B', 'C']);
+    expect(
+      computeUsageThreats([slot(['normal'])], [third, first, second]).map((t) => t.species),
+    ).toEqual(['A', 'B', 'C']);
   });
 
   it('returns an empty list for empty candidates', () => {
     expect(computeUsageThreats([slot(['water'])], [])).toEqual([]);
   });
 
-  it('passes a candidate\'s speed through unchanged', () => {
+  it("passes a candidate's speed through unchanged", () => {
     const fast = makeThreat({ types: ['ground'], speed: 130 });
     expect(computeUsageThreats([slot(['water'])], [fast])[0].speed).toBe(130);
   });
 
-  it('excludes a candidate that would otherwise be super-effective, when a slot\'s ability immunizes it', () => {
+  it("excludes a candidate that would otherwise be super-effective, when a slot's ability immunizes it", () => {
     // Electric is 2x vs a Flying-type slot, but Motor Drive fully no-sells Electric
     const electric = makeThreat({ types: ['electric'] });
     expect(computeUsageThreats([slot(['flying'], 'Motor Drive')], [electric])).toEqual([]);
@@ -86,7 +96,7 @@ describe('computeUsageThreats', () => {
     expect(computeUsageThreats([slot(['flying'], 'Levitate')], [electric])).toEqual([electric]);
   });
 
-  it('still excludes via ability immunity even when the slot\'s raw types are weak to the threat', () => {
+  it("still excludes via ability immunity even when the slot's raw types are weak to the threat", () => {
     // Water is 2x super-effective vs Ground, but Water Absorb fully no-sells it
     const water = makeThreat({ types: ['water'] });
     expect(computeUsageThreats([slot(['ground'], 'Water Absorb')], [water])).toEqual([]);
@@ -95,7 +105,10 @@ describe('computeUsageThreats', () => {
 
 describe('computePartiallyCoveredUsageThreats', () => {
   it('excludes a candidate past the usage rank cutoff', () => {
-    const overCutoff = makeThreat({ types: ['electric'], columnPosition: USAGE_THREAT_RANK_CUTOFF + 1 });
+    const overCutoff = makeThreat({
+      types: ['electric'],
+      columnPosition: USAGE_THREAT_RANK_CUTOFF + 1,
+    });
     expect(computePartiallyCoveredUsageThreats([slot(['ground'])], [overCutoff])).toEqual([]);
   });
 
@@ -108,22 +121,27 @@ describe('computePartiallyCoveredUsageThreats', () => {
   it('excludes a candidate resisted by 2+ slots', () => {
     // Electric is resisted by both Ground slots
     const electric = makeThreat({ types: ['electric'] });
-    expect(computePartiallyCoveredUsageThreats([slot(['ground']), slot(['ground'])], [electric])).toEqual([]);
+    expect(
+      computePartiallyCoveredUsageThreats([slot(['ground']), slot(['ground'])], [electric]),
+    ).toEqual([]);
   });
 
   it('includes a candidate resisted by exactly one slot, with resistCount 1', () => {
     // Electric is resisted by Ground (immune) but neutral vs Normal
     const electric = makeThreat({ types: ['electric'] });
-    expect(computePartiallyCoveredUsageThreats([slot(['ground']), slot(['normal'])], [electric])).toEqual([
-      { ...electric, resistCount: 1 },
-    ]);
+    expect(
+      computePartiallyCoveredUsageThreats([slot(['ground']), slot(['normal'])], [electric]),
+    ).toEqual([{ ...electric, resistCount: 1 }]);
   });
 
   it('treats an ability-based immunity as a resist toward the count', () => {
     // Motor Drive fully no-sells Electric on this one slot; the other is neutral
     const electric = makeThreat({ types: ['electric'] });
     expect(
-      computePartiallyCoveredUsageThreats([slot(['flying'], 'Motor Drive'), slot(['normal'])], [electric])
+      computePartiallyCoveredUsageThreats(
+        [slot(['flying'], 'Motor Drive'), slot(['normal'])],
+        [electric],
+      ),
     ).toEqual([{ ...electric, resistCount: 1 }]);
   });
 
@@ -132,13 +150,16 @@ describe('computePartiallyCoveredUsageThreats', () => {
     const first = makeThreat({ species: 'A', types: ['electric'], columnPosition: 5 });
     const second = makeThreat({ species: 'B', types: ['electric'], columnPosition: 15 });
     expect(
-      computePartiallyCoveredUsageThreats([slot(['ground']), slot(['normal'])], [third, first, second]).map(
-        t => t.species
-      )
+      computePartiallyCoveredUsageThreats(
+        [slot(['ground']), slot(['normal'])],
+        [third, first, second],
+      ).map((t) => t.species),
     ).toEqual(['A', 'B', 'C']);
   });
 
   it('returns an empty list for empty candidates', () => {
-    expect(computePartiallyCoveredUsageThreats([slot(['ground']), slot(['normal'])], [])).toEqual([]);
+    expect(computePartiallyCoveredUsageThreats([slot(['ground']), slot(['normal'])], [])).toEqual(
+      [],
+    );
   });
 });

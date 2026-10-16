@@ -41,8 +41,13 @@ import type { AbilityData } from '../types/pokemon';
 import { normalizeNameForAPI } from '../services/pokeapiService';
 
 const CHAMPIONS_ABILITY_OVERRIDES: Record<string, Partial<AbilityData>> = {
-  'healer': { description: 'Has a 50% chance to heal an adjacent ally of its status condition each turn.' },
-  'unseen-fist': { description: "Contact moves can hit through Protect and similar moves, but deal only 25% damage when they do." },
+  healer: {
+    description: 'Has a 50% chance to heal an adjacent ally of its status condition each turn.',
+  },
+  'unseen-fist': {
+    description:
+      'Contact moves can hit through Protect and similar moves, but deal only 25% damage when they do.',
+  },
 };
 
 export function applyChampionsAbilityOverride(ability: AbilityData): AbilityData {

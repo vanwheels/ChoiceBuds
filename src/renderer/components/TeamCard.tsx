@@ -1,8 +1,17 @@
 import { useState } from 'react';
 import { AnimatePresence, motion, useDragControls } from 'framer-motion';
 import type { PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent } from 'react';
-import { Team, SpeciesRosterEntry, SavedPokemonEntry, type ImportedPokemonInfo } from '../types/pokemon';
-import { toMotionDragProps, useGridReorder, type GridReorderHandlers } from '../hooks/useGridReorder';
+import {
+  Team,
+  SpeciesRosterEntry,
+  SavedPokemonEntry,
+  type ImportedPokemonInfo,
+} from '../types/pokemon';
+import {
+  toMotionDragProps,
+  useGridReorder,
+  type GridReorderHandlers,
+} from '../hooks/useGridReorder';
 import type { UseTeamsReturn } from '../hooks/useTeams';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
 import type { UseGameDataReturn } from '../hooks/useGameData';
@@ -19,7 +28,11 @@ import { getPixelSpriteUrl } from '../utils/spriteUrl';
 import { getTotalSP, MAX_TOTAL_SP } from '../utils/evTotal';
 import { getMegaApiSlug } from '../config/megaEvolution';
 import { getCachedMegaSprite, useMegaSpritePrefetch } from '../hooks/useMegaSprite';
-import { CARD_EXPAND_ENTER_TRANSITION, CARD_EXPAND_EXIT_TRANSITION, DRAG_REORDER_TRANSITION } from '../config/motion';
+import {
+  CARD_EXPAND_ENTER_TRANSITION,
+  CARD_EXPAND_EXIT_TRANSITION,
+  DRAG_REORDER_TRANSITION,
+} from '../config/motion';
 import PokemonCard from './PokemonCard';
 import AddPokemonStatTable from './AddPokemonStatTable';
 import TeamOverflowMenu from './TeamOverflowMenu';
@@ -28,7 +41,11 @@ import ExportTeamModal from './ExportTeamModal';
 import TeamExportImageModal from './TeamExportImageModal';
 import TeamSheetPdfModal from './TeamSheetPdfModal';
 import ContextMenu from './ContextMenu';
-import { copyTeamToClipboard, readTeamFromClipboard, readPokemonFromClipboard } from '../utils/clipboardPayload';
+import {
+  copyTeamToClipboard,
+  readTeamFromClipboard,
+  readPokemonFromClipboard,
+} from '../utils/clipboardPayload';
 import { buildPastedTeam } from '../utils/teamPaste';
 import { cloneSavedPokemon } from '../utils/clonePokemon';
 
@@ -91,7 +108,20 @@ const cardExpandVariants = {
   },
 };
 
-export default function TeamCard({ team, onDelete, teamsState, databaseState, gameDataState, speciesRosterState, spriteCacheState, settingsState, savedPokemonState, vgcPastesState, vgcRealSetsState, reorderHandlers }: TeamCardProps) {
+export default function TeamCard({
+  team,
+  onDelete,
+  teamsState,
+  databaseState,
+  gameDataState,
+  speciesRosterState,
+  spriteCacheState,
+  settingsState,
+  savedPokemonState,
+  vgcPastesState,
+  vgcRealSetsState,
+  reorderHandlers,
+}: TeamCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   // Collapse-flicker fix (Team Card Collapse Animation Flicker Leg 1, see
   // TODO.md): col-span-full used to be driven directly off isExpanded, so
@@ -155,19 +185,19 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
   // continuously by Reorder.Group's onReorder) aren't immediately clobbered
   // by re-syncing against team.pokemon on every incidental re-render - only
   // a real add/remove/reorder-from-elsewhere changes rosterIdsKey below.
-  const rosterIdsKey = team.pokemon.map(p => p.id).join('|');
-  const [orderedPokemonIds, setOrderedPokemonIds] = useState(() => team.pokemon.map(p => p.id));
+  const rosterIdsKey = team.pokemon.map((p) => p.id).join('|');
+  const [orderedPokemonIds, setOrderedPokemonIds] = useState(() => team.pokemon.map((p) => p.id));
   const [prevRosterIdsKey, setPrevRosterIdsKey] = useState(rosterIdsKey);
   if (rosterIdsKey !== prevRosterIdsKey) {
     setPrevRosterIdsKey(rosterIdsKey);
-    setOrderedPokemonIds(team.pokemon.map(p => p.id));
+    setOrderedPokemonIds(team.pokemon.map((p) => p.id));
   }
   const { containerRef: rosterGridRef, getHandlers: getRosterHandlers } = useGridReorder({
     orderedIds: orderedPokemonIds,
     setOrderedIds: setOrderedPokemonIds,
-    onCommit: ids => {
+    onCommit: (ids) => {
       const reordered = ids
-        .map(oid => team.pokemon.find(pk => pk.id === oid))
+        .map((oid) => team.pokemon.find((pk) => pk.id === oid))
         .filter((pk): pk is ImportedPokemonInfo => pk !== undefined);
       teamsState.updateTeam(team.id, { pokemon: reordered });
     },
@@ -181,7 +211,10 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
   // from the header's team-level one above, opened from the grid container
   // itself; PokemonCard's own per-slot context menu stops propagation so a
   // right-click that lands on an actual card never also opens this one.
-  const [pokemonContextMenuPos, setPokemonContextMenuPos] = useState<{ x: number; y: number } | null>(null);
+  const [pokemonContextMenuPos, setPokemonContextMenuPos] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
   // Warms useMegaSprite.ts's shared id/URL cache so the mini sprite strip
   // below (a plain .map(), not a per-item component - Rules of Hooks forbids
   // useMegaSprite itself there) can read a Mega form's real sprite via
@@ -194,7 +227,7 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
     databaseState.getCachedEntry,
     databaseState.setCacheEntry,
     gameDataState.getEnrichedSpeciesOptions,
-    gameDataState.getChampionsUsage
+    gameDataState.getChampionsUsage,
   );
 
   const handleAddSpecies = async (species: SpeciesRosterEntry, itemOverride?: string) => {
@@ -210,9 +243,13 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
   // Species-Clause Dedupe, see TODO.md) - same fix shape as Battle Logger's
   // opponent-roster picker (see COMPLETED.md's Duplicate Pokémon Selectable
   // entry), applied here to both of this picker's add paths.
-  const teamSpeciesSeen = new Set(team.pokemon.map(p => p.showdownData.species.toLowerCase()));
-  const addPickerRoster = speciesRosterState.roster.filter(s => !teamSpeciesSeen.has(s.name.toLowerCase()));
-  const addPickerSavedPokemon = savedPokemonState.savedPokemon.filter(e => !teamSpeciesSeen.has(e.pokemon.showdownData.species.toLowerCase()));
+  const teamSpeciesSeen = new Set(team.pokemon.map((p) => p.showdownData.species.toLowerCase()));
+  const addPickerRoster = speciesRosterState.roster.filter(
+    (s) => !teamSpeciesSeen.has(s.name.toLowerCase()),
+  );
+  const addPickerSavedPokemon = savedPokemonState.savedPokemon.filter(
+    (e) => !teamSpeciesSeen.has(e.pokemon.showdownData.species.toLowerCase()),
+  );
 
   // "+ Add Pokémon" picking a Box result instead of a bare species (Box
   // Tab: Add from Box via Add Pokémon Search, see TODO.md) - same
@@ -249,7 +286,12 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
   const handlePasteTeam = async () => {
     const pasted = await readTeamFromClipboard();
     if (!pasted) return;
-    await addTeam(buildPastedTeam(pasted, teamsState.teams.map(t => t.name)));
+    await addTeam(
+      buildPastedTeam(
+        pasted,
+        teamsState.teams.map((t) => t.name),
+      ),
+    );
   };
 
   // "Paste Pokémon" anywhere within the roster grid (Leg 2, see TODO.md) -
@@ -308,9 +350,9 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
       transition={DRAG_REORDER_TRANSITION}
       {...toMotionDragProps(reorderHandlers)}
       className={`bg-zinc-900/40 border border-zinc-800/80 border-l-4 ${regulationTheme.accentBorder} rounded-xl transition-[background-color,border-color,box-shadow,opacity] ${
-      isFullWidth ? 'col-span-full' : ''
-    }`}>
-
+        isFullWidth ? 'col-span-full' : ''
+      }`}
+    >
       {/* MINIMIZED VIEW CONTAINER ROW - Enhanced Header with Controls */}
       {/* rounded-t-xl replaces the parent's old overflow-hidden clip (removed so
           tooltips/popovers from expanded cards below are never cut off) */}
@@ -375,7 +417,9 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
                 await updateTeam(team.id, { author: localAuthor.trim() || undefined });
               }
             }}
-            onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.currentTarget.blur();
+            }}
             placeholder="Author"
             title="Author"
             className="w-24 px-1.5 py-0.5 text-[10px] bg-zinc-800 border border-zinc-700 rounded text-zinc-100 placeholder-zinc-600 outline-none focus:border-accent-gold"
@@ -411,8 +455,15 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
               const megaApiSlug = getMegaApiSlug(p.showdownData.item, p.showdownData.species);
               const megaSprite = megaApiSlug ? getCachedMegaSprite(megaApiSlug) : null;
               const spriteUrl = megaSprite
-                ? (p.showdownData.shiny ? megaSprite.shinySpriteUrl : megaSprite.spriteUrl)
-                : getPixelSpriteUrl(p.pokedexNumber, p.showdownData.species, p.showdownData.gender || 'M', p.showdownData.shiny);
+                ? p.showdownData.shiny
+                  ? megaSprite.shinySpriteUrl
+                  : megaSprite.spriteUrl
+                : getPixelSpriteUrl(
+                    p.pokedexNumber,
+                    p.showdownData.species,
+                    p.showdownData.gender || 'M',
+                    p.showdownData.shiny,
+                  );
               // Over-cap SP warning (Speed Tiers Save Override: Over-Cap SP
               // Warning, see TODO.md) - surfaced here too, not just on the
               // expanded PokemonCard, so the overage is visible without
@@ -464,10 +515,21 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
             onClick={() => updateTeam(team.id, { favorite: !team.favorite })}
             title={team.favorite ? 'Unfavorite' : 'Favorite'}
             className={`w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-full transition-colors cursor-pointer ${
-              team.favorite ? 'text-accent-gold hover:text-accent-gold-deep' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700'
+              team.favorite
+                ? 'text-accent-gold hover:text-accent-gold-deep'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700'
             }`}
           >
-            <svg viewBox="0 0 24 24" width="16" height="16" fill={team.favorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              fill={team.favorite ? 'currentColor' : 'none'}
+              stroke="currentColor"
+              strokeWidth="1.75"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M12 3.5l2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" />
             </svg>
           </button>
@@ -513,7 +575,16 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
             }`}
             title={isExpanded ? 'Collapse' : 'Expand'}
           >
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.75"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="m6 9 6 6 6-6" />
             </svg>
           </button>
@@ -588,8 +659,8 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
                 className="grid grid-cols-1 @[380px]:grid-cols-2 @[600px]:grid-cols-3 @[1220px]:grid-cols-6 gap-4 w-full"
                 onContextMenu={handlePokemonAreaContextMenu}
               >
-                {orderedPokemonIds.map(id => {
-                  const p = team.pokemon.find(pk => pk.id === id);
+                {orderedPokemonIds.map((id) => {
+                  const p = team.pokemon.find((pk) => pk.id === id);
                   if (!p) return null;
                   return (
                     <PokemonCard
@@ -665,7 +736,16 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
               label: 'Copy Team',
               onClick: handleCopyTeam,
               icon: (
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <rect x="9" y="9" width="11" height="11" rx="1.5" />
                   <path d="M5 15H4.5A1.5 1.5 0 0 1 3 13.5v-9A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5V5" />
                 </svg>
@@ -675,7 +755,16 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
               label: 'Paste as New Team',
               onClick: handlePasteTeam,
               icon: (
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M9 4.5h1.5a1.5 1.5 0 0 1 3 0H15a1 1 0 0 1 1 1V7H8V5.5a1 1 0 0 1 1-1Z" />
                   <path d="M8 6H6a1.5 1.5 0 0 0-1.5 1.5v12A1.5 1.5 0 0 0 6 21h12a1.5 1.5 0 0 0 1.5-1.5v-12A1.5 1.5 0 0 0 18 6h-2" />
                 </svg>
@@ -697,7 +786,16 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
               label: 'Paste Pokémon',
               onClick: handlePasteNewPokemon,
               icon: (
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M9 4.5h1.5a1.5 1.5 0 0 1 3 0H15a1 1 0 0 1 1 1V7H8V5.5a1 1 0 0 1 1-1Z" />
                   <path d="M8 6H6a1.5 1.5 0 0 0-1.5 1.5v12A1.5 1.5 0 0 0 6 21h12a1.5 1.5 0 0 0 1.5-1.5v-12A1.5 1.5 0 0 0 18 6h-2" />
                 </svg>
@@ -725,7 +823,7 @@ export default function TeamCard({ team, onDelete, teamsState, databaseState, ga
       <AnimatePresence>
         {isExportOpen && (
           <ExportTeamModal
-            pokemonList={team.pokemon.map(p => p.showdownData)}
+            pokemonList={team.pokemon.map((p) => p.showdownData)}
             title="Export Team"
             pasteTitle={team.name}
             pasteAuthor={team.author}

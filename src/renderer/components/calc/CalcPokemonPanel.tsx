@@ -66,7 +66,13 @@ import type { CalcPokemonState, NatureStatEffect } from '../../hooks/useDamageCa
 import { STATUS_OPTIONS, STATUS_LABELS } from '../../hooks/useDamageCalc';
 import type { FormeFamily } from '../../utils/calcFormes';
 import type { NatureName, StatsTable } from '@smogon/calc/dist/data/interface';
-import type { Team, SavedPokemonEntry, ImportedPokemonInfo, OpponentPokemonEntry, RegulationLabel } from '../../types/pokemon';
+import type {
+  Team,
+  SavedPokemonEntry,
+  ImportedPokemonInfo,
+  OpponentPokemonEntry,
+  RegulationLabel,
+} from '../../types/pokemon';
 import type { ChampionsUsageEntry } from '../../types/gameData';
 import type { UseSavedPokemonReturn } from '../../hooks/useSavedPokemon';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
@@ -74,9 +80,16 @@ import type { UseDatabaseReturn } from '../../hooks/useDatabase';
 import type { UseVgcPastesCacheReturn } from '../../hooks/useVgcPastesCache';
 import type { UseVgcRealSetsCacheReturn } from '../../hooks/useVgcRealSetsCache';
 import { useCalcRealSetsLookup } from '../../hooks/useCalcRealSetsLookup';
-import { CALC_TEAM_POKEMON_DRAG_TYPE, type CalcTeamPokemonDragPayload } from '../../utils/calcDragTypes';
+import {
+  CALC_TEAM_POKEMON_DRAG_TYPE,
+  type CalcTeamPokemonDragPayload,
+} from '../../utils/calcDragTypes';
 import { getMegaAbility } from '../../config/megaAbilities';
-import { teamPokemonToCalcUpdates, opponentEntryToCalcUpdates, realSetBundleToCalcUpdates } from '../../utils/calcTeamImport';
+import {
+  teamPokemonToCalcUpdates,
+  opponentEntryToCalcUpdates,
+  realSetBundleToCalcUpdates,
+} from '../../utils/calcTeamImport';
 import { calcStateToShowdownPokemon } from '../../utils/calcExport';
 import { enrichPokemonWithAPI } from '../../services/pokeapi';
 import { formatShowdownText } from '../../services/parser';
@@ -131,9 +144,30 @@ const CONFIRMATION_MS = 2000;
 const GENDER_CYCLE: Array<CalcPokemonState['gender']> = ['M', 'F', ''];
 
 export default function CalcPokemonPanel({
-  title, state, speciesOptions, itemOptions, abilityOptions, natureOptions, moveOptions, formes, baseStats, boostedStats, natureEffect,
-  teams, preferredTeamId, opponentRoster, onLoadOpponentEntry, savedPokemonState, gameDataState, databaseState,
-  regulation, vgcPastesState, vgcRealSetsState, resolveSprite, onChange, onMoveUsageChange,
+  title,
+  state,
+  speciesOptions,
+  itemOptions,
+  abilityOptions,
+  natureOptions,
+  moveOptions,
+  formes,
+  baseStats,
+  boostedStats,
+  natureEffect,
+  teams,
+  preferredTeamId,
+  opponentRoster,
+  onLoadOpponentEntry,
+  savedPokemonState,
+  gameDataState,
+  databaseState,
+  regulation,
+  vgcPastesState,
+  vgcRealSetsState,
+  resolveSprite,
+  onChange,
+  onMoveUsageChange,
 }: CalcPokemonPanelProps) {
   const [savedSetPickerSpecies, setSavedSetPickerSpecies] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -175,7 +209,10 @@ export default function CalcPokemonPanel({
     if (usageEntry.natures[0]) updates.nature = usageEntry.natures[0].name as NatureName;
     if (usageEntry.statSpreads[0]) updates.sps = usageEntry.statSpreads[0].points;
     if (usageEntry.moves.length > 0) {
-      updates.moves = Array.from({ length: 4 }, (_, i) => ({ name: usageEntry.moves[i]?.name ?? '', isCrit: false }));
+      updates.moves = Array.from({ length: 4 }, (_, i) => ({
+        name: usageEntry.moves[i]?.name ?? '',
+        isCrit: false,
+      }));
     }
     onChange(updates);
   };
@@ -183,34 +220,65 @@ export default function CalcPokemonPanel({
   // Re-ranks all 4 dropdown-shaped axes against the kept usage state above -
   // a no-op mirror of the base option lists when usage is null (species not
   // yet picked, or no ranked-ladder page for it at all).
-  const weighted = useMemo(() => applyUsageWeighting({
-    natureCandidates: natureOptions,
-    abilityCandidates: abilityOptions,
-    itemCandidates: itemOptions,
-    moveCandidates: moveOptions,
-    natureUsageCandidates: [], abilityUsageCandidates: [], itemUsageCandidates: [], moveUsageCandidates: [],
-  }, usage), [usage, natureOptions, abilityOptions, itemOptions, moveOptions]);
+  const weighted = useMemo(
+    () =>
+      applyUsageWeighting(
+        {
+          natureCandidates: natureOptions,
+          abilityCandidates: abilityOptions,
+          itemCandidates: itemOptions,
+          moveCandidates: moveOptions,
+          natureUsageCandidates: [],
+          abilityUsageCandidates: [],
+          itemUsageCandidates: [],
+          moveUsageCandidates: [],
+        },
+        usage,
+      ),
+    [usage, natureOptions, abilityOptions, itemOptions, moveOptions],
+  );
 
   // percentage: 0 only ever means "no reliable data" here (either usage is
   // null entirely, or rankCandidates()'s never-empty-axis fallback) - a
   // real observed ladder % is never rounded to exactly 0, so this is a safe
   // way to tell "don't badge/reorder this" apart from a genuine low %.
   const percentByName = (candidates: UsageRankedCandidate[]): Record<string, number> =>
-    Object.fromEntries(candidates.filter(c => c.percentage > 0).map(c => [normalizeSlug(c.value), c.percentage]));
+    Object.fromEntries(
+      candidates.filter((c) => c.percentage > 0).map((c) => [normalizeSlug(c.value), c.percentage]),
+    );
 
-  const abilityPercentByName = useMemo(() => percentByName(weighted.abilityUsageCandidates), [weighted.abilityUsageCandidates]);
-  const itemPercentByName = useMemo(() => percentByName(weighted.itemUsageCandidates), [weighted.itemUsageCandidates]);
-  const naturePercentByName = useMemo(() => percentByName(weighted.natureUsageCandidates), [weighted.natureUsageCandidates]);
-  const movePercentByName = useMemo(() => percentByName(weighted.moveUsageCandidates), [weighted.moveUsageCandidates]);
+  const abilityPercentByName = useMemo(
+    () => percentByName(weighted.abilityUsageCandidates),
+    [weighted.abilityUsageCandidates],
+  );
+  const itemPercentByName = useMemo(
+    () => percentByName(weighted.itemUsageCandidates),
+    [weighted.itemUsageCandidates],
+  );
+  const naturePercentByName = useMemo(
+    () => percentByName(weighted.natureUsageCandidates),
+    [weighted.natureUsageCandidates],
+  );
+  const movePercentByName = useMemo(
+    () => percentByName(weighted.moveUsageCandidates),
+    [weighted.moveUsageCandidates],
+  );
 
-  useEffect(() => { onMoveUsageChange?.(movePercentByName); }, [movePercentByName, onMoveUsageChange]);
+  useEffect(() => {
+    onMoveUsageChange?.(movePercentByName);
+  }, [movePercentByName, onMoveUsageChange]);
 
   // Nature's native <select> can't render a styled badge inside an <option>
   // (browsers only show its plain text), so the ranked % is appended to the
   // label itself instead, most-used-first like the other axes.
   const sortedNatureOptions = useMemo(
-    () => [...natureOptions].sort((a, b) => (naturePercentByName[normalizeSlug(b)] ?? -1) - (naturePercentByName[normalizeSlug(a)] ?? -1)),
-    [natureOptions, naturePercentByName]
+    () =>
+      [...natureOptions].sort(
+        (a, b) =>
+          (naturePercentByName[normalizeSlug(b)] ?? -1) -
+          (naturePercentByName[normalizeSlug(a)] ?? -1),
+      ),
+    [natureOptions, naturePercentByName],
   );
 
   // Only fires on a real dropdown-list click (see CalcAutocomplete.tsx's
@@ -269,7 +337,9 @@ export default function CalcPokemonPanel({
     setIsSaving(true);
     try {
       const enriched = await enrichPokemonWithAPI(
-        calcStateToShowdownPokemon(state), databaseState.getCachedEntry, databaseState.setCacheEntry
+        calcStateToShowdownPokemon(state),
+        databaseState.getCachedEntry,
+        databaseState.setCacheEntry,
       );
       setPendingSave(enriched);
     } catch (err) {
@@ -307,7 +377,7 @@ export default function CalcPokemonPanel({
     e.preventDefault();
     try {
       const payload: CalcTeamPokemonDragPayload = JSON.parse(raw);
-      const team = teams.find(t => t.id === payload.teamId);
+      const team = teams.find((t) => t.id === payload.teamId);
       const pokemon = team?.pokemon[payload.pokemonIndex];
       if (pokemon) onChange(teamPokemonToCalcUpdates(pokemon));
     } catch {
@@ -318,7 +388,9 @@ export default function CalcPokemonPanel({
   return (
     <div
       className="flex-1 min-w-[280px] bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-2"
-      onDragOver={(e) => { if (e.dataTransfer.types.includes(CALC_TEAM_POKEMON_DRAG_TYPE)) e.preventDefault(); }}
+      onDragOver={(e) => {
+        if (e.dataTransfer.types.includes(CALC_TEAM_POKEMON_DRAG_TYPE)) e.preventDefault();
+      }}
       onDrop={handleDrop}
     >
       <div className="flex items-center justify-between">
@@ -350,10 +422,19 @@ export default function CalcPokemonPanel({
           reserved this slot for the opponent, so CalcTeamTray steps aside
           entirely rather than offering a second, conflicting source. */}
       {!opponentRoster && (
-        <CalcTeamTray teams={teams} preferredTeamId={preferredTeamId} resolveSprite={resolveSprite} onLoadPokemon={(p) => onChange(teamPokemonToCalcUpdates(p))} />
+        <CalcTeamTray
+          teams={teams}
+          preferredTeamId={preferredTeamId}
+          resolveSprite={resolveSprite}
+          onLoadPokemon={(p) => onChange(teamPokemonToCalcUpdates(p))}
+        />
       )}
       {opponentRoster && (
-        <CalcOpponentTray opponentRoster={opponentRoster} resolveSprite={resolveSprite} onLoadPokemon={handleLoadOpponent} />
+        <CalcOpponentTray
+          opponentRoster={opponentRoster}
+          resolveSprite={resolveSprite}
+          onLoadPokemon={handleLoadOpponent}
+        />
       )}
 
       <div className="flex gap-2 items-end">
@@ -389,7 +470,10 @@ export default function CalcPokemonPanel({
                 }
                 onChange({ species, ability: megaAbility });
               } else {
-                const revert = preMegaAbilityRef.current?.root === formes.root ? preMegaAbilityRef.current.ability : null;
+                const revert =
+                  preMegaAbilityRef.current?.root === formes.root
+                    ? preMegaAbilityRef.current.ability
+                    : null;
                 preMegaAbilityRef.current = null;
                 onChange(revert !== null ? { species, ability: revert } : { species });
               }
@@ -414,7 +498,11 @@ export default function CalcPokemonPanel({
       </div>
 
       {formes.statFormes.length > 1 && (
-        <FormeToggle group={formes.statFormes} current={state.species} onSelect={(species) => onChange({ species })} />
+        <FormeToggle
+          group={formes.statFormes}
+          current={state.species}
+          onSelect={(species) => onChange({ species })}
+        />
       )}
 
       <div className="grid grid-cols-2 gap-2">
@@ -444,9 +532,13 @@ export default function CalcPokemonPanel({
             onChange={(e) => onChange({ nature: e.target.value as NatureName })}
             className="px-2 py-0.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
           >
-            {sortedNatureOptions.map(n => {
+            {sortedNatureOptions.map((n) => {
               const percent = naturePercentByName[normalizeSlug(n)];
-              return <option key={n} value={n}>{percent != null ? `${n} (${percent.toFixed(1)}%)` : n}</option>;
+              return (
+                <option key={n} value={n}>
+                  {percent != null ? `${n} (${percent.toFixed(1)}%)` : n}
+                </option>
+              );
             })}
           </select>
         </div>
@@ -458,7 +550,11 @@ export default function CalcPokemonPanel({
             className="px-2 py-0.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
           >
             <option value="">Healthy</option>
-            {STATUS_OPTIONS.map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
+            {STATUS_OPTIONS.map((s) => (
+              <option key={s} value={s}>
+                {STATUS_LABELS[s]}
+              </option>
+            ))}
           </select>
         </div>
       </div>

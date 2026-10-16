@@ -21,7 +21,14 @@ interface BroughtToggleTileProps {
   trailing?: ReactNode;
 }
 
-export default function BroughtToggleTile({ spriteUrl, resolveSprite, label, selected, onToggle, trailing }: BroughtToggleTileProps) {
+export default function BroughtToggleTile({
+  spriteUrl,
+  resolveSprite,
+  label,
+  selected,
+  onToggle,
+  trailing,
+}: BroughtToggleTileProps) {
   return (
     <div
       className={`flex items-center gap-2 pl-3 pr-2 py-2 rounded-lg border transition-colors ${

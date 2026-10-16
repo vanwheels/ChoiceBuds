@@ -59,7 +59,12 @@
  *    exposes is byte-identical to the live data), so it's never passed.
  */
 
-import type { ChampionsUsageEntry, ChampionsUsageRankedEntry, ChampionsUsageNatureEntry, ChampionsUsageStatSpreadEntry } from '../types/pokemon';
+import type {
+  ChampionsUsageEntry,
+  ChampionsUsageRankedEntry,
+  ChampionsUsageNatureEntry,
+  ChampionsUsageStatSpreadEntry,
+} from '../types/pokemon';
 
 const CHAMPIONS_BASE_URL = 'https://championsbattledata.com';
 
@@ -88,7 +93,8 @@ interface ChampionsIndexResponse {
 }
 
 interface ChampionsBattleDataRow {
-  category: 'move' | 'held_item' | 'ability' | 'stat_alignment' | 'stat_points' | 'teammate' | string;
+  category:
+    'move' | 'held_item' | 'ability' | 'stat_alignment' | 'stat_points' | 'teammate' | string;
   rank: number;
   name?: string;
   percentage_value?: number;
@@ -181,14 +187,16 @@ let indexPromise: Promise<ChampionsIndexPokemonPage[]> | null = null;
 async function getBattleNameIndex(): Promise<ChampionsIndexPokemonPage[]> {
   if (!indexPromise) {
     indexPromise = fetch(`${CHAMPIONS_BASE_URL}/api/index`)
-      .then(response => {
+      .then((response) => {
         if (!response.ok) {
-          throw new Error(`Champions battle-data index request failed with status ${response.status}`);
+          throw new Error(
+            `Champions battle-data index request failed with status ${response.status}`,
+          );
         }
         return response.json();
       })
       .then((data: ChampionsIndexResponse) => data.pokemonPages)
-      .catch(error => {
+      .catch((error) => {
         indexPromise = null; // allow a retry on the next call rather than caching a failure forever
         throw error;
       });
@@ -210,14 +218,17 @@ async function getBattleNameIndex(): Promise<ChampionsIndexPokemonPage[]> {
 export async function resolveChampionsBattleName(species: string): Promise<string | null> {
   const index = await getBattleNameIndex();
   const findBySlugOrName = (value: string) =>
-    index.find(page => page.name.toLowerCase() === value || page.slug.toLowerCase() === value);
+    index.find((page) => page.name.toLowerCase() === value || page.slug.toLowerCase() === value);
 
   const normalized = stripGenderSuffix(species).toLowerCase().trim();
   const direct = findBySlugOrName(normalized);
   if (direct) return direct.battleName;
 
-  const rewritten = CANONICAL_FORM_SLUG_OVERRIDES[normalized] ?? rewriteRegionalFormSlug(normalized);
-  const rewrittenMatch = rewritten ? index.find(page => page.slug.toLowerCase() === rewritten) : undefined;
+  const rewritten =
+    CANONICAL_FORM_SLUG_OVERRIDES[normalized] ?? rewriteRegionalFormSlug(normalized);
+  const rewrittenMatch = rewritten
+    ? index.find((page) => page.slug.toLowerCase() === rewritten)
+    : undefined;
   if (rewrittenMatch) return rewrittenMatch.battleName;
 
   if (normalized.endsWith('-male')) {
@@ -252,12 +263,20 @@ function toRankedEntry(row: ChampionsBattleDataRow): ChampionsUsageRankedEntry {
 }
 
 function toNatureEntry(row: ChampionsBattleDataRow): ChampionsUsageNatureEntry {
-  return { ...toRankedEntry(row), statUp: row.stat_up || undefined, statDown: row.stat_down || undefined };
+  return {
+    ...toRankedEntry(row),
+    statUp: row.stat_up || undefined,
+    statDown: row.stat_down || undefined,
+  };
 }
 
-function groupRowsByCategory(species: string, data: ChampionsBattleDataResponse): ChampionsUsageEntry {
+function groupRowsByCategory(
+  species: string,
+  data: ChampionsBattleDataResponse,
+): ChampionsUsageEntry {
   const byRank = (a: ChampionsBattleDataRow, b: ChampionsBattleDataRow) => a.rank - b.rank;
-  const rowsFor = (category: string) => data.rows.filter(row => row.category === category).sort(byRank);
+  const rowsFor = (category: string) =>
+    data.rows.filter((row) => row.category === category).sort(byRank);
 
   const now = Date.now();
   return {
@@ -285,7 +304,9 @@ export async function fetchChampionsUsage(species: string): Promise<ChampionsUsa
   const battleName = await resolveChampionsBattleName(species);
   if (!battleName) return null;
 
-  const response = await fetch(`${CHAMPIONS_BASE_URL}/api/battle/Doubles/${encodeURIComponent(battleName)}`);
+  const response = await fetch(
+    `${CHAMPIONS_BASE_URL}/api/battle/Doubles/${encodeURIComponent(battleName)}`,
+  );
   if (!response.ok) {
     if (response.status === 404) return null;
     throw new Error(`Champions usage data request failed with status ${response.status}`);

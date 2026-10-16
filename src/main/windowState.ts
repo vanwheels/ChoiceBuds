@@ -85,7 +85,12 @@ export function scheduleWindowStateSave(mainWindow: BrowserWindow | null): void 
     windowStateSaveTimer = null;
     if (!mainWindow || mainWindow.isDestroyed() || mainWindow.isMinimized()) return;
     const bounds = mainWindow.getBounds();
-    const state: WindowState = { width: bounds.width, height: bounds.height, x: bounds.x, y: bounds.y };
+    const state: WindowState = {
+      width: bounds.width,
+      height: bounds.height,
+      x: bounds.x,
+      y: bounds.y,
+    };
     atomicWriteFile(getWindowStatePath(), JSON.stringify(state, null, 2)).catch((err) => {
       console.error('Error persisting window state:', err);
     });
@@ -106,7 +111,12 @@ export function saveWindowStateSync(mainWindow: BrowserWindow | null): void {
     }
     if (!mainWindow || mainWindow.isDestroyed() || mainWindow.isMinimized()) return;
     const bounds = mainWindow.getBounds();
-    const state: WindowState = { width: bounds.width, height: bounds.height, x: bounds.x, y: bounds.y };
+    const state: WindowState = {
+      width: bounds.width,
+      height: bounds.height,
+      x: bounds.x,
+      y: bounds.y,
+    };
     fsSync.writeFileSync(getWindowStatePath(), JSON.stringify(state, null, 2), 'utf-8');
   } catch (err) {
     console.error('Error persisting window state on close:', err);

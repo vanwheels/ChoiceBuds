@@ -1,5 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
-import { readCacheEntry, withCacheEntry, createEmptyGameDataCache, runCachedFetch } from './cacheManager';
+import {
+  readCacheEntry,
+  withCacheEntry,
+  createEmptyGameDataCache,
+  runCachedFetch,
+} from './cacheManager';
 import type { GameDataCache, MoveData } from '../types/pokemon';
 import type { SetStateAction } from 'react';
 
@@ -90,7 +95,10 @@ describe('runCachedFetch', () => {
   function makeSetters() {
     let cache: GameDataCache | null = createEmptyGameDataCache();
     const setCache = vi.fn((updater: SetStateAction<GameDataCache | null>) => {
-      cache = typeof updater === 'function' ? (updater as (prev: GameDataCache | null) => GameDataCache | null)(cache) : updater;
+      cache =
+        typeof updater === 'function'
+          ? (updater as (prev: GameDataCache | null) => GameDataCache | null)(cache)
+          : updater;
     });
     const setIsLoading = vi.fn();
     const setError = vi.fn();
@@ -99,14 +107,30 @@ describe('runCachedFetch', () => {
 
   it('flips loading true then false around a successful fetch', async () => {
     const { setCache, setIsLoading, setError } = makeSetters();
-    await runCachedFetch(setCache, setIsLoading, setError, 'moves', 'thunderbolt', async () => makeMove(), 'fetch failed');
-    expect(setIsLoading.mock.calls.map(c => c[0])).toEqual([true, false]);
+    await runCachedFetch(
+      setCache,
+      setIsLoading,
+      setError,
+      'moves',
+      'thunderbolt',
+      async () => makeMove(),
+      'fetch failed',
+    );
+    expect(setIsLoading.mock.calls.map((c) => c[0])).toEqual([true, false]);
   });
 
   it('merges a successful result into the cache section and clears the error', async () => {
     const { setCache, setIsLoading, setError, getCache } = makeSetters();
     const entry = makeMove();
-    await runCachedFetch(setCache, setIsLoading, setError, 'moves', 'thunderbolt', async () => entry, 'fetch failed');
+    await runCachedFetch(
+      setCache,
+      setIsLoading,
+      setError,
+      'moves',
+      'thunderbolt',
+      async () => entry,
+      'fetch failed',
+    );
     expect(getCache()?.moves.thunderbolt).toBe(entry);
     expect(setError).toHaveBeenCalledWith(null);
   });
@@ -114,39 +138,79 @@ describe('runCachedFetch', () => {
   it('returns the fetched result', async () => {
     const { setCache, setIsLoading, setError } = makeSetters();
     const entry = makeMove();
-    const result = await runCachedFetch(setCache, setIsLoading, setError, 'moves', 'thunderbolt', async () => entry, 'fetch failed');
+    const result = await runCachedFetch(
+      setCache,
+      setIsLoading,
+      setError,
+      'moves',
+      'thunderbolt',
+      async () => entry,
+      'fetch failed',
+    );
     expect(result).toBe(entry);
   });
 
   it('does not touch the cache when the fetcher resolves to null', async () => {
     const { setCache, setIsLoading, setError, getCache } = makeSetters();
-    await runCachedFetch(setCache, setIsLoading, setError, 'moves', 'thunderbolt', async () => null, 'fetch failed');
+    await runCachedFetch(
+      setCache,
+      setIsLoading,
+      setError,
+      'moves',
+      'thunderbolt',
+      async () => null,
+      'fetch failed',
+    );
     expect(getCache()?.moves.thunderbolt).toBeUndefined();
     expect(setError).not.toHaveBeenCalled();
   });
 
-  it('surfaces a thrown Error\'s message via setError and returns null', async () => {
+  it("surfaces a thrown Error's message via setError and returns null", async () => {
     const { setCache, setIsLoading, setError } = makeSetters();
-    const result = await runCachedFetch(setCache, setIsLoading, setError, 'moves', 'thunderbolt', async () => {
-      throw new Error('network down');
-    }, 'fetch failed');
+    const result = await runCachedFetch(
+      setCache,
+      setIsLoading,
+      setError,
+      'moves',
+      'thunderbolt',
+      async () => {
+        throw new Error('network down');
+      },
+      'fetch failed',
+    );
     expect(result).toBeNull();
     expect(setError).toHaveBeenCalledWith('network down');
   });
 
   it('falls back to the generic errorMessage when a non-Error is thrown', async () => {
     const { setCache, setIsLoading, setError } = makeSetters();
-    await runCachedFetch(setCache, setIsLoading, setError, 'moves', 'thunderbolt', async () => {
-      throw 'not an Error instance';
-    }, 'fetch failed');
+    await runCachedFetch(
+      setCache,
+      setIsLoading,
+      setError,
+      'moves',
+      'thunderbolt',
+      async () => {
+        throw 'not an Error instance';
+      },
+      'fetch failed',
+    );
     expect(setError).toHaveBeenCalledWith('fetch failed');
   });
 
   it('still flips loading back to false after a thrown error', async () => {
     const { setCache, setIsLoading, setError } = makeSetters();
-    await runCachedFetch(setCache, setIsLoading, setError, 'moves', 'thunderbolt', async () => {
-      throw new Error('boom');
-    }, 'fetch failed');
+    await runCachedFetch(
+      setCache,
+      setIsLoading,
+      setError,
+      'moves',
+      'thunderbolt',
+      async () => {
+        throw new Error('boom');
+      },
+      'fetch failed',
+    );
     expect(setIsLoading).toHaveBeenLastCalledWith(false);
   });
 });

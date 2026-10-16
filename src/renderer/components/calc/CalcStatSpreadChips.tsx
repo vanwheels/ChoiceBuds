@@ -19,12 +19,21 @@ interface CalcStatSpreadChipsProps {
 }
 
 const isSameSpread = (a: StatsTable, b: StatsTable): boolean =>
-  a.hp === b.hp && a.atk === b.atk && a.def === b.def && a.spa === b.spa && a.spd === b.spd && a.spe === b.spe;
+  a.hp === b.hp &&
+  a.atk === b.atk &&
+  a.def === b.def &&
+  a.spa === b.spa &&
+  a.spd === b.spd &&
+  a.spe === b.spe;
 
 const formatSpread = (points: StatsTable): string =>
   [points.hp, points.atk, points.def, points.spa, points.spd, points.spe].join('/');
 
-export default function CalcStatSpreadChips({ statSpreads, currentSps, onSelect }: CalcStatSpreadChipsProps) {
+export default function CalcStatSpreadChips({
+  statSpreads,
+  currentSps,
+  onSelect,
+}: CalcStatSpreadChipsProps) {
   if (statSpreads.length === 0) return null;
 
   return (
@@ -42,7 +51,9 @@ export default function CalcStatSpreadChips({ statSpreads, currentSps, onSelect 
               onClick={() => onSelect(entry.points)}
               title={`${entry.percentage.toFixed(1)}% of ranked ladder sets`}
               className={`px-1.5 py-0.5 text-[10px] font-mono rounded border transition-colors cursor-pointer ${
-                active ? 'border-accent-gold bg-accent-gold/10 text-accent-gold' : 'border-zinc-600 bg-zinc-800 text-zinc-300 hover:border-zinc-400'
+                active
+                  ? 'border-accent-gold bg-accent-gold/10 text-accent-gold'
+                  : 'border-zinc-600 bg-zinc-800 text-zinc-300 hover:border-zinc-400'
               }`}
             >
               {formatSpread(entry.points)} ({entry.percentage.toFixed(1)}%)

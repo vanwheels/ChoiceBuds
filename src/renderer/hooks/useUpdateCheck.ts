@@ -82,7 +82,9 @@ export function useUpdateCheck(): UseUpdateCheckReturn {
 
         setLatestVersion(release.version);
         setReleaseUrl(release.releaseUrl);
-        setStatus(isNewerVersion(CURRENT_APP_VERSION, release.version) ? 'update-available' : 'up-to-date');
+        setStatus(
+          isNewerVersion(CURRENT_APP_VERSION, release.version) ? 'update-available' : 'up-to-date',
+        );
       } catch (err) {
         if (!cancelled) {
           console.error('Error checking for updates:', err);
@@ -97,7 +99,11 @@ export function useUpdateCheck(): UseUpdateCheckReturn {
   }, []);
 
   useEffect(() => {
-    const applyUpdate = (update: { state: 'checking-native' | 'downloading' | 'ready-to-install' | 'not-available' | 'error'; version?: string; percent?: number }): void => {
+    const applyUpdate = (update: {
+      state: 'checking-native' | 'downloading' | 'ready-to-install' | 'not-available' | 'error';
+      version?: string;
+      percent?: number;
+    }): void => {
       if (update.version) setLatestVersion(update.version);
 
       switch (update.state) {

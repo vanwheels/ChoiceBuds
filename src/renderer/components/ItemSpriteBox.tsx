@@ -47,10 +47,9 @@ export default function ItemSpriteBox({
 }: ItemSpriteBoxProps) {
   const fallbackUrl = getItemFallbackSpriteUrl(selectedItem.trim());
   const ref = useRef<HTMLDivElement>(null);
-  const longPress = useLongPress(
-    () => { if (ref.current) onHoverEnter(ref.current); },
-    onHoverLeave
-  );
+  const longPress = useLongPress(() => {
+    if (ref.current) onHoverEnter(ref.current);
+  }, onHoverLeave);
 
   return (
     <div
@@ -81,7 +80,9 @@ export default function ItemSpriteBox({
           onError={onFallbackSpriteError}
         />
       ) : selectedItem ? (
-        <span className="text-lg leading-none" role="img" aria-label="Unknown item">🎒</span>
+        <span className="text-lg leading-none" role="img" aria-label="Unknown item">
+          🎒
+        </span>
       ) : (
         <span className="text-[9px] text-zinc-500">No Item</span>
       )}

@@ -21,9 +21,15 @@ interface TeamSheetPdfModalProps {
   onClose: () => void;
 }
 
-const inputClass = 'flex-1 px-3 py-1.5 text-sm bg-zinc-900 border border-zinc-600 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold';
+const inputClass =
+  'flex-1 px-3 py-1.5 text-sm bg-zinc-900 border border-zinc-600 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold';
 
-export default function TeamSheetPdfModal({ team, teamsState, settingsState, onClose }: TeamSheetPdfModalProps) {
+export default function TeamSheetPdfModal({
+  team,
+  teamsState,
+  settingsState,
+  onClose,
+}: TeamSheetPdfModalProps) {
   const { updateTeam } = teamsState;
   const { playerProfile } = settingsState.settings;
   const [battleTeamNumber, setBattleTeamNumber] = useState(team.battleTeamNumber ?? '');
@@ -34,13 +40,16 @@ export default function TeamSheetPdfModal({ team, teamsState, settingsState, onC
   const [isWorking, setIsWorking] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const hasProfile = Object.values(playerProfile).some(v => v);
+  const hasProfile = Object.values(playerProfile).some((v) => v);
 
   const handleDownload = async () => {
     setIsWorking(true);
     setError(null);
     try {
-      if (battleTeamNumber !== (team.battleTeamNumber ?? '') || battleTeamName !== (team.battleTeamName ?? '')) {
+      if (
+        battleTeamNumber !== (team.battleTeamNumber ?? '') ||
+        battleTeamName !== (team.battleTeamName ?? '')
+      ) {
         await updateTeam(team.id, {
           battleTeamNumber: battleTeamNumber.trim() || undefined,
           battleTeamName: battleTeamName.trim() || undefined,
@@ -51,8 +60,12 @@ export default function TeamSheetPdfModal({ team, teamsState, settingsState, onC
       // TeamCard.tsx (and every other statically-imported caller) ships in.
       const { generateTeamSheetPdf } = await import('../services/teamSheetPdf');
       const bytes = await generateTeamSheetPdf(
-        { ...team, battleTeamNumber: battleTeamNumber.trim() || undefined, battleTeamName: battleTeamName.trim() || undefined },
-        playerProfile
+        {
+          ...team,
+          battleTeamNumber: battleTeamNumber.trim() || undefined,
+          battleTeamName: battleTeamName.trim() || undefined,
+        },
+        playerProfile,
       );
       const blob = new Blob([new Uint8Array(bytes)], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
@@ -75,29 +88,38 @@ export default function TeamSheetPdfModal({ team, teamsState, settingsState, onC
         <h2 className="text-xl font-bold text-zinc-100">Team Sheet PDF</h2>
         <button onClick={onClose} className="text-zinc-400 hover:text-zinc-200 transition-colors">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
 
       <div className="p-6 flex flex-col gap-4">
         <p className="text-xs text-zinc-400">
-          Fills the official Play! Pokémon Video Game Team List PDF with this team's 6 Pokémon and your Player Profile.
+          Fills the official Play! Pokémon Video Game Team List PDF with this team's 6 Pokémon and
+          your Player Profile.
         </p>
 
         {!hasProfile && (
           <p className="text-xs text-yellow-400">
-            Your Player Profile is empty - fill it in on the Settings page for a fully-completed sheet. Generating now will still work, just with those fields left blank.
+            Your Player Profile is empty - fill it in on the Settings page for a fully-completed
+            sheet. Generating now will still work, just with those fields left blank.
           </p>
         )}
 
         <div className="flex flex-col gap-3">
           <div>
-            <label className="block text-xs font-medium text-zinc-300 mb-1">Battle Team Number</label>
+            <label className="block text-xs font-medium text-zinc-300 mb-1">
+              Battle Team Number
+            </label>
             <input
               type="text"
               value={battleTeamNumber}
-              onChange={e => setBattleTeamNumber(e.target.value)}
+              onChange={(e) => setBattleTeamNumber(e.target.value)}
               placeholder="e.g. 1"
               className={inputClass}
             />
@@ -107,7 +129,7 @@ export default function TeamSheetPdfModal({ team, teamsState, settingsState, onC
             <input
               type="text"
               value={battleTeamName}
-              onChange={e => setBattleTeamName(e.target.value)}
+              onChange={(e) => setBattleTeamName(e.target.value)}
               placeholder="e.g. Rain Balance"
               className={inputClass}
             />

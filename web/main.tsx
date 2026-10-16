@@ -13,7 +13,9 @@ import '../src/renderer/index.css';
 const rootElement = document.getElementById('root');
 
 if (!rootElement) {
-  throw new Error('Failed to find the root element. Ensure index.html contains <div id="root"></div>');
+  throw new Error(
+    'Failed to find the root element. Ensure index.html contains <div id="root"></div>',
+  );
 }
 
 const root = ReactDOM.createRoot(rootElement);
@@ -21,5 +23,5 @@ const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
     <AppWeb />
-  </React.StrictMode>
+  </React.StrictMode>,
 );

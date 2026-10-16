@@ -10,12 +10,20 @@ vi.mock('../hooks/useMegaSprite', () => ({
   getCachedMegaSprite: vi.fn((slug: string) =>
     ['absol-mega-z', 'floette-mega', 'meowstic-mega'].includes(slug)
       ? { id: 1, spriteUrl: `mega:${slug}`, shinySpriteUrl: `mega-shiny:${slug}` }
-      : null
+      : null,
   ),
 }));
 
 function makeEvs(overrides: Partial<EVSpread>): EVSpread {
-  return { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0, ...overrides };
+  return {
+    hp: 0,
+    attack: 0,
+    defense: 0,
+    specialAttack: 0,
+    specialDefense: 0,
+    speed: 0,
+    ...overrides,
+  };
 }
 
 describe('formatEvs', () => {
@@ -56,18 +64,45 @@ describe('findRosterEntry', () => {
 
 describe('resolveCatalogSpriteEntry', () => {
   const roster: SpeciesRosterEntry[] = [
-    { name: 'Landorus-Therian', id: 645, spriteUrl: 'landorus-therian', shinySpriteUrl: 'landorus-therian-shiny' },
-    { name: 'Aegislash-Shield', id: 681, spriteUrl: 'aegislash-shield', shinySpriteUrl: 'aegislash-shield-shiny' },
-    { name: 'Basculegion-Male', id: 902, spriteUrl: 'basculegion-male', shinySpriteUrl: 'basculegion-male-shiny' },
-    { name: 'Basculegion-Female', id: 902, spriteUrl: 'basculegion-female', shinySpriteUrl: 'basculegion-female-shiny' },
-    { name: 'Maushold-Family-Of-Four', id: 998, spriteUrl: 'maushold-four', shinySpriteUrl: 'maushold-four-shiny' },
+    {
+      name: 'Landorus-Therian',
+      id: 645,
+      spriteUrl: 'landorus-therian',
+      shinySpriteUrl: 'landorus-therian-shiny',
+    },
+    {
+      name: 'Aegislash-Shield',
+      id: 681,
+      spriteUrl: 'aegislash-shield',
+      shinySpriteUrl: 'aegislash-shield-shiny',
+    },
+    {
+      name: 'Basculegion-Male',
+      id: 902,
+      spriteUrl: 'basculegion-male',
+      shinySpriteUrl: 'basculegion-male-shiny',
+    },
+    {
+      name: 'Basculegion-Female',
+      id: 902,
+      spriteUrl: 'basculegion-female',
+      shinySpriteUrl: 'basculegion-female-shiny',
+    },
+    {
+      name: 'Maushold-Family-Of-Four',
+      id: 998,
+      spriteUrl: 'maushold-four',
+      shinySpriteUrl: 'maushold-four-shiny',
+    },
   ];
 
   it('uses a direct roster match first', () => {
-    expect(resolveCatalogSpriteEntry('Landorus-Therian', roster)?.spriteUrl).toBe('landorus-therian');
+    expect(resolveCatalogSpriteEntry('Landorus-Therian', roster)?.spriteUrl).toBe(
+      'landorus-therian',
+    );
   });
 
-  it('falls back to normalizeSpeciesForAPI\'s slug for a species with no bare PokeAPI resource', () => {
+  it("falls back to normalizeSpeciesForAPI's slug for a species with no bare PokeAPI resource", () => {
     expect(resolveCatalogSpriteEntry('Aegislash', roster)?.spriteUrl).toBe('aegislash-shield');
   });
 
@@ -76,7 +111,9 @@ describe('resolveCatalogSpriteEntry', () => {
   });
 
   it('resolves an explicit "-F" suffix to the female form', () => {
-    expect(resolveCatalogSpriteEntry('Basculegion-F', roster)?.spriteUrl).toBe('basculegion-female');
+    expect(resolveCatalogSpriteEntry('Basculegion-F', roster)?.spriteUrl).toBe(
+      'basculegion-female',
+    );
   });
 
   it('resolves a curated Mega form from the Mega-sprite cache', () => {
@@ -84,12 +121,16 @@ describe('resolveCatalogSpriteEntry', () => {
   });
 
   it('maps both Floette Mega spellings to the one curated "floette-mega" slug', () => {
-    expect(resolveCatalogSpriteEntry('Floette-Eternal-Mega', roster)?.spriteUrl).toBe('mega:floette-mega');
+    expect(resolveCatalogSpriteEntry('Floette-Eternal-Mega', roster)?.spriteUrl).toBe(
+      'mega:floette-mega',
+    );
     expect(resolveCatalogSpriteEntry('Floette-Mega', roster)?.spriteUrl).toBe('mega:floette-mega');
   });
 
   it('strips an embedded gender token before the Mega-slug check', () => {
-    expect(resolveCatalogSpriteEntry('Meowstic-F-Mega', roster)?.spriteUrl).toBe('mega:meowstic-mega');
+    expect(resolveCatalogSpriteEntry('Meowstic-F-Mega', roster)?.spriteUrl).toBe(
+      'mega:meowstic-mega',
+    );
   });
 
   it('resolves the sheet-only "Maushold-Four" spelling via its own override', () => {

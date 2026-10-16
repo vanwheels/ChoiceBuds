@@ -3,7 +3,13 @@ import { renderHook, waitFor, act } from '@testing-library/react';
 import { useGameData } from './useGameData';
 import { VGC_ITEMS } from '../config/vgcData';
 import { NEVER_EXPIRES } from '../utils/cacheExpiry';
-import type { AbilityData, ChampionsUsageEntry, GameDataCache, MoveData, SpeciesLearnsetEntry } from '../types/pokemon';
+import type {
+  AbilityData,
+  ChampionsUsageEntry,
+  GameDataCache,
+  MoveData,
+  SpeciesLearnsetEntry,
+} from '../types/pokemon';
 
 vi.mock('../services/pokeapiService', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../services/pokeapiService')>();
@@ -21,7 +27,13 @@ vi.mock('../services/championsBattleData', async (importOriginal) => {
   return { ...actual, fetchChampionsUsage: vi.fn() };
 });
 
-import { fetchMoveData, fetchItemData, fetchAbilityData, fetchSpeciesLearnset, normalizeNameForAPI } from '../services/pokeapiService';
+import {
+  fetchMoveData,
+  fetchItemData,
+  fetchAbilityData,
+  fetchSpeciesLearnset,
+  normalizeNameForAPI,
+} from '../services/pokeapiService';
 import { fetchChampionsUsage } from '../services/championsBattleData';
 import { CACHE_WRITE_DEBOUNCE_MS } from './useDebouncedWrite';
 
@@ -46,7 +58,13 @@ function makeMove(overrides: Partial<MoveData> = {}): MoveData {
 }
 
 function makeAbility(overrides: Partial<AbilityData> = {}): AbilityData {
-  return { name: 'cursed-body', description: 'May disable a move that hits.', cachedAt: NOW, expiresAt: NOW + 100_000, ...overrides };
+  return {
+    name: 'cursed-body',
+    description: 'May disable a move that hits.',
+    cachedAt: NOW,
+    expiresAt: NOW + 100_000,
+    ...overrides,
+  };
 }
 
 function makeLearnset(overrides: Partial<SpeciesLearnsetEntry> = {}): SpeciesLearnsetEntry {
@@ -95,7 +113,9 @@ describe('useGameData', () => {
   it('initializes an empty cache when none is persisted', async () => {
     const { result } = renderHook(() => useGameData());
     await waitFor(() => expect(result.current.isInitialized).toBe(true));
-    expect(result.current.cache).toEqual(expect.objectContaining({ schemaVersion: 1, moves: {}, lastSyncedSpeciesNames: [] }));
+    expect(result.current.cache).toEqual(
+      expect.objectContaining({ schemaVersion: 1, moves: {}, lastSyncedSpeciesNames: [] }),
+    );
   });
 
   it('loads a persisted cache, normalizing a legacy cache missing lastSyncedSpeciesNames', async () => {
@@ -136,10 +156,23 @@ describe('useGameData', () => {
     // missing to fetch/fallback-fill - otherwise that unrelated effect's
     // own legitimate mutation would fire a write and mask what this test
     // is actually checking.
-    const items = Object.fromEntries(VGC_ITEMS.map(name => {
-      const normalized = normalizeNameForAPI(name);
-      return [normalized, { name: normalized, category: 'unknown', effect: '', description: '', spriteUrl: 'https://example.com/item.png', cachedAt: NOW, expiresAt: NOW + 100_000 }];
-    }));
+    const items = Object.fromEntries(
+      VGC_ITEMS.map((name) => {
+        const normalized = normalizeNameForAPI(name);
+        return [
+          normalized,
+          {
+            name: normalized,
+            category: 'unknown',
+            effect: '',
+            description: '',
+            spriteUrl: 'https://example.com/item.png',
+            cachedAt: NOW,
+            expiresAt: NOW + 100_000,
+          },
+        ];
+      }),
+    );
     const cache = makeCache({ moves: { 'shadow-ball': makeMove() }, items });
     vi.mocked(window.electron.readGameDataCache).mockResolvedValueOnce(cache);
 
@@ -148,7 +181,7 @@ describe('useGameData', () => {
 
     // Wait past the debounce window (see useDebouncedWrite.ts) to confirm
     // the write is skipped outright, not merely delayed.
-    await new Promise(resolve => setTimeout(resolve, CACHE_WRITE_DEBOUNCE_MS + 100));
+    await new Promise((resolve) => setTimeout(resolve, CACHE_WRITE_DEBOUNCE_MS + 100));
     expect(window.electron.writeGameDataCache).not.toHaveBeenCalled();
   });
 
@@ -163,9 +196,15 @@ describe('useGameData', () => {
 
     // Write-through is debounced (see useDebouncedWrite.ts) so it doesn't
     // land in the same tick as the mutation - waitFor covers that delay.
-    await waitFor(() => expect(window.electron.writeGameDataCache).toHaveBeenCalledWith(
-      expect.objectContaining({ abilities: expect.objectContaining({ 'cursed-body': expect.objectContaining({ name: 'cursed-body' }) }) })
-    ));
+    await waitFor(() =>
+      expect(window.electron.writeGameDataCache).toHaveBeenCalledWith(
+        expect.objectContaining({
+          abilities: expect.objectContaining({
+            'cursed-body': expect.objectContaining({ name: 'cursed-body' }),
+          }),
+        }),
+      ),
+    );
   });
 
   describe('moves', () => {
@@ -220,7 +259,19 @@ describe('useGameData', () => {
 
   describe('items', () => {
     it('getCachedItem treats an entry with an empty spriteUrl (a synthesized placeholder) as a miss', async () => {
-      const cache = makeCache({ items: { 'life-orb': { name: 'life-orb', category: 'held-items', effect: '', description: '', spriteUrl: '', cachedAt: NOW, expiresAt: NEVER_EXPIRES } } });
+      const cache = makeCache({
+        items: {
+          'life-orb': {
+            name: 'life-orb',
+            category: 'held-items',
+            effect: '',
+            description: '',
+            spriteUrl: '',
+            cachedAt: NOW,
+            expiresAt: NEVER_EXPIRES,
+          },
+        },
+      });
       vi.mocked(window.electron.readGameDataCache).mockResolvedValueOnce(cache);
       const { result } = renderHook(() => useGameData());
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
@@ -231,7 +282,15 @@ describe('useGameData', () => {
     it('getItemData caches a real fetched item so a later call hits the cache', async () => {
       const { result } = renderHook(() => useGameData());
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
-      const item = { name: 'life-orb', category: 'held-items', effect: 'Boosts power, costs HP.', description: '', spriteUrl: 'https://example.com/life-orb.png', cachedAt: NOW, expiresAt: NEVER_EXPIRES };
+      const item = {
+        name: 'life-orb',
+        category: 'held-items',
+        effect: 'Boosts power, costs HP.',
+        description: '',
+        spriteUrl: 'https://example.com/life-orb.png',
+        cachedAt: NOW,
+        expiresAt: NEVER_EXPIRES,
+      };
       vi.mocked(fetchItemData).mockResolvedValueOnce(item);
 
       const fetched = await result.current.getItemData('Life Orb');
@@ -246,14 +305,16 @@ describe('useGameData', () => {
       const { result } = renderHook(() => useGameData());
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
       // fetchItemData is unmocked here, so every call resolves undefined - the "PokeAPI doesn't have this item" case
-      await waitFor(() => expect(Object.keys(result.current.cache?.items ?? {}).length).toBe(VGC_ITEMS.length));
+      await waitFor(() =>
+        expect(Object.keys(result.current.cache?.items ?? {}).length).toBe(VGC_ITEMS.length),
+      );
 
       // Every placeholder has an empty spriteUrl (getCachedItem's forced-miss
       // marker, so a later launch keeps retrying it against PokeAPI) but
       // still belongs in the picker's item list - see the background-load
       // effect's "still shows up and is selectable" comment.
       expect(result.current.items.length).toBe(VGC_ITEMS.length);
-      expect(result.current.items.every(item => item.spriteUrl === '')).toBe(true);
+      expect(result.current.items.every((item) => item.spriteUrl === '')).toBe(true);
     });
   });
 
@@ -261,7 +322,9 @@ describe('useGameData', () => {
     it('applies the Champions override text to a known ability', async () => {
       const { result } = renderHook(() => useGameData());
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
-      vi.mocked(fetchAbilityData).mockResolvedValueOnce(makeAbility({ name: 'healer', description: 'mainline SV text' }));
+      vi.mocked(fetchAbilityData).mockResolvedValueOnce(
+        makeAbility({ name: 'healer', description: 'mainline SV text' }),
+      );
 
       const fetched = await result.current.getAbilityData('Healer');
       expect(fetched?.description).toContain('50% chance to heal an adjacent ally');
@@ -279,7 +342,14 @@ describe('useGameData', () => {
 
   describe('species learnsets', () => {
     it('does not apply hand-curated movepool changes once PokeAPI has its own champions move data', async () => {
-      const cache = makeCache({ learnsets: { gengar: makeLearnset({ moves: ['shadow-ball', 'tera-blast'], hasChampionsMoveData: true }) } });
+      const cache = makeCache({
+        learnsets: {
+          gengar: makeLearnset({
+            moves: ['shadow-ball', 'tera-blast'],
+            hasChampionsMoveData: true,
+          }),
+        },
+      });
       vi.mocked(window.electron.readGameDataCache).mockResolvedValueOnce(cache);
       const { result } = renderHook(() => useGameData());
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
@@ -291,7 +361,9 @@ describe('useGameData', () => {
     it('applies the globally-removed-moves correction on a fresh fetch when PokeAPI has no champions move data yet', async () => {
       const { result } = renderHook(() => useGameData());
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
-      vi.mocked(fetchSpeciesLearnset).mockResolvedValueOnce(makeLearnset({ moves: ['shadow-ball', 'tera-blast'], hasChampionsMoveData: false }));
+      vi.mocked(fetchSpeciesLearnset).mockResolvedValueOnce(
+        makeLearnset({ moves: ['shadow-ball', 'tera-blast'], hasChampionsMoveData: false }),
+      );
 
       const learnset = await result.current.getSpeciesLearnset('gengar');
       expect(learnset?.moves).toEqual(['shadow-ball']); // tera-blast stripped
@@ -303,9 +375,18 @@ describe('useGameData', () => {
       // with no TTL to force a re-check - see useGameData.ts's
       // getCachedSpeciesLearnset and the "Prune Dead
       // championsMovepoolChanges.ts Entries" TODO item.
-      const cache = makeCache({ learnsets: { gengar: makeLearnset({ moves: ['shadow-ball', 'tera-blast'], hasChampionsMoveData: false }) } });
+      const cache = makeCache({
+        learnsets: {
+          gengar: makeLearnset({
+            moves: ['shadow-ball', 'tera-blast'],
+            hasChampionsMoveData: false,
+          }),
+        },
+      });
       vi.mocked(window.electron.readGameDataCache).mockResolvedValueOnce(cache);
-      vi.mocked(fetchSpeciesLearnset).mockResolvedValueOnce(makeLearnset({ hasChampionsMoveData: true, moves: ['shadow-ball', 'tera-blast'] }));
+      vi.mocked(fetchSpeciesLearnset).mockResolvedValueOnce(
+        makeLearnset({ hasChampionsMoveData: true, moves: ['shadow-ball', 'tera-blast'] }),
+      );
 
       const { result } = renderHook(() => useGameData());
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
@@ -322,7 +403,9 @@ describe('useGameData', () => {
       delete staleLearnset.hasChampionsMoveData;
       const cache = makeCache({ learnsets: { gengar: staleLearnset } });
       vi.mocked(window.electron.readGameDataCache).mockResolvedValueOnce(cache);
-      vi.mocked(fetchSpeciesLearnset).mockResolvedValueOnce(makeLearnset({ hasChampionsMoveData: false, moves: ['shadow-ball', 'tera-blast'] }));
+      vi.mocked(fetchSpeciesLearnset).mockResolvedValueOnce(
+        makeLearnset({ hasChampionsMoveData: false, moves: ['shadow-ball', 'tera-blast'] }),
+      );
 
       const { result } = renderHook(() => useGameData());
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
@@ -337,15 +420,17 @@ describe('useGameData', () => {
     it('resolves the full move/ability data for a species learnset', async () => {
       const { result } = renderHook(() => useGameData());
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
-      vi.mocked(fetchSpeciesLearnset).mockResolvedValueOnce(makeLearnset({ moves: ['shadow-ball'], abilities: ['cursed-body'] }));
+      vi.mocked(fetchSpeciesLearnset).mockResolvedValueOnce(
+        makeLearnset({ moves: ['shadow-ball'], abilities: ['cursed-body'] }),
+      );
       vi.mocked(fetchMoveData).mockResolvedValueOnce(makeMove());
       vi.mocked(fetchAbilityData).mockResolvedValueOnce(makeAbility());
       // note: getEnrichedSpeciesOptions only ever reads cached usage (getCachedChampionsUsage),
       // never triggers a live fetchChampionsUsage call - nothing to mock here
 
       const options = await result.current.getEnrichedSpeciesOptions('gengar');
-      expect(options.moves.map(m => m.name)).toEqual(['shadow-ball']);
-      expect(options.abilities.map(a => a.name)).toEqual(['cursed-body']);
+      expect(options.moves.map((m) => m.name)).toEqual(['shadow-ball']);
+      expect(options.abilities.map((a) => a.name)).toEqual(['cursed-body']);
     });
 
     it('returns empty moves/abilities when the species has no learnset', async () => {
@@ -361,7 +446,10 @@ describe('useGameData', () => {
       const cache = makeCache({
         usage: {
           gengar: makeUsage({
-            moves: [{ name: 'Shadow Ball', percentage: 10 }, { name: 'Protect', percentage: 90 }],
+            moves: [
+              { name: 'Shadow Ball', percentage: 10 },
+              { name: 'Protect', percentage: 90 },
+            ],
             abilities: [{ name: 'Cursed Body', percentage: 100 }],
           }),
         },
@@ -370,12 +458,16 @@ describe('useGameData', () => {
       const { result } = renderHook(() => useGameData());
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
 
-      vi.mocked(fetchSpeciesLearnset).mockResolvedValueOnce(makeLearnset({ moves: ['shadow-ball', 'protect'], abilities: ['cursed-body'] }));
-      vi.mocked(fetchMoveData).mockImplementation(async (name: string) => makeMove({ name, category: 'status' }));
+      vi.mocked(fetchSpeciesLearnset).mockResolvedValueOnce(
+        makeLearnset({ moves: ['shadow-ball', 'protect'], abilities: ['cursed-body'] }),
+      );
+      vi.mocked(fetchMoveData).mockImplementation(async (name: string) =>
+        makeMove({ name, category: 'status' }),
+      );
       vi.mocked(fetchAbilityData).mockResolvedValueOnce(makeAbility());
 
       const options = await result.current.getEnrichedSpeciesOptions('gengar');
-      expect(options.moves.map(m => m.name)).toEqual(['protect', 'shadow-ball']);
+      expect(options.moves.map((m) => m.name)).toEqual(['protect', 'shadow-ball']);
     });
   });
 
@@ -399,7 +491,9 @@ describe('useGameData', () => {
       const usage = await result.current.getChampionsUsage('Gengar');
       expect(fetchChampionsUsage).toHaveBeenCalledWith('Gengar');
       expect(usage).toEqual(makeUsage());
-      await waitFor(() => expect(result.current.getCachedChampionsUsage('gengar')).toEqual(makeUsage()));
+      await waitFor(() =>
+        expect(result.current.getCachedChampionsUsage('gengar')).toEqual(makeUsage()),
+      );
     });
 
     it('a null usage result (no Champions usage page) is not an error', async () => {
@@ -424,7 +518,7 @@ describe('useGameData', () => {
         { name: 'Gengar', id: 94, spriteUrl: '', shinySpriteUrl: '' },
         { name: 'Rillaboom', id: 812, spriteUrl: '', shinySpriteUrl: '' },
       ];
-      expect(result.current.getUnsyncedSpecies(roster).map(s => s.name)).toEqual(['Rillaboom']);
+      expect(result.current.getUnsyncedSpecies(roster).map((s) => s.name)).toEqual(['Rillaboom']);
     });
 
     it('markSpeciesSynced merges new names into the synced set without duplicates', async () => {
@@ -435,7 +529,9 @@ describe('useGameData', () => {
 
       act(() => result.current.markSpeciesSynced(['Gengar', 'Rillaboom']));
 
-      await waitFor(() => expect(result.current.cache?.lastSyncedSpeciesNames).toEqual(['Gengar', 'Rillaboom']));
+      await waitFor(() =>
+        expect(result.current.cache?.lastSyncedSpeciesNames).toEqual(['Gengar', 'Rillaboom']),
+      );
     });
   });
 

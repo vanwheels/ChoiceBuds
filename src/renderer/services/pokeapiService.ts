@@ -70,17 +70,21 @@ interface PokeAPISpeciesResponse {
   }>;
 }
 
-function extractEffectDescription(effectEntries: PokeAPIEffectEntry[] | undefined, fallback: string): string {
+function extractEffectDescription(
+  effectEntries: PokeAPIEffectEntry[] | undefined,
+  fallback: string,
+): string {
   if (!effectEntries || effectEntries.length === 0) return fallback;
-  const englishEntry = effectEntries.find(entry => entry.language?.name === 'en');
+  const englishEntry = effectEntries.find((entry) => entry.language?.name === 'en');
   const source = englishEntry ?? effectEntries[0];
   return source?.short_effect || source?.effect || fallback;
 }
 
 function extractItemDescription(flavorTextEntries: PokeAPIFlavorTextEntry[] | undefined): string {
   if (!flavorTextEntries || flavorTextEntries.length === 0) return 'No description available';
-  const englishEntries = flavorTextEntries.filter(entry => entry.language?.name === 'en');
-  const latestEntry = englishEntries.length > 0 ? englishEntries[englishEntries.length - 1] : flavorTextEntries[0];
+  const englishEntries = flavorTextEntries.filter((entry) => entry.language?.name === 'en');
+  const latestEntry =
+    englishEntries.length > 0 ? englishEntries[englishEntries.length - 1] : flavorTextEntries[0];
   return latestEntry?.text?.replace(/\n/g, ' ').trim() || 'No description available';
 }
 
@@ -104,7 +108,8 @@ export async function fetchMoveData(normalizedName: string): Promise<MoveData | 
   return {
     name: normalizedName,
     type: data.type?.name?.toLowerCase() || 'normal',
-    category: (data.damage_class?.name?.toLowerCase() || 'status') as 'physical' | 'special' | 'status',
+    category: (data.damage_class?.name?.toLowerCase() || 'status') as
+      'physical' | 'special' | 'status',
     power: data.power,
     pp: data.pp || 0,
     accuracy: data.accuracy,
@@ -197,7 +202,7 @@ interface PokeAPIMoveListResponse {
  */
 export async function fetchAllMoveNames(): Promise<string[]> {
   const data = await fetchJSON<PokeAPIMoveListResponse>('/move?limit=2000');
-  return (data?.results ?? []).map(r => r.name);
+  return (data?.results ?? []).map((r) => r.name);
 }
 
 /**
@@ -209,7 +214,7 @@ export async function fetchAllMoveNames(): Promise<string[]> {
  */
 export async function fetchSpeciesLearnset(
   species: string,
-  gender?: 'M' | 'F' | 'N' | ''
+  gender?: 'M' | 'F' | 'N' | '',
 ): Promise<SpeciesLearnsetEntry | null> {
   const normalizedSpecies = normalizeSpeciesForAPI(species, gender);
   const data = await fetchJSON<PokeAPISpeciesResponse>(`/pokemon/${normalizedSpecies}`);
@@ -239,8 +244,8 @@ export async function fetchSpeciesLearnset(
   // this data as-is or still needs config/championsMovepoolChanges.ts's hand
   // corrections layered on top. Doesn't touch species *legality*
   // (utils/pokemonRules.ts) - see TODO.md.
-  const championsMoves = allMoves.filter(m =>
-    m.version_group_details.some(vgd => vgd.version_group.name === 'champions')
+  const championsMoves = allMoves.filter((m) =>
+    m.version_group_details.some((vgd) => vgd.version_group.name === 'champions'),
   );
   const hasChampionsMoveData = championsMoves.length > 0;
   const relevantMoves = hasChampionsMoveData ? championsMoves : allMoves;
@@ -248,8 +253,8 @@ export async function fetchSpeciesLearnset(
   const now = Date.now();
   return {
     species: normalizedSpecies,
-    abilities: (data.abilities || []).map(a => a.ability.name.toLowerCase()),
-    moves: relevantMoves.map(m => m.move.name.toLowerCase()),
+    abilities: (data.abilities || []).map((a) => a.ability.name.toLowerCase()),
+    moves: relevantMoves.map((m) => m.move.name.toLowerCase()),
     hasChampionsMoveData,
     cachedAt: now,
     expiresAt: NEVER_EXPIRES,

@@ -104,7 +104,12 @@
 import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import type { MouseEvent as ReactMouseEvent } from 'react';
-import type { BoxSortMode, ImportedPokemonInfo, SavedPokemonEntry, SpeciesRosterEntry } from '../types/pokemon';
+import type {
+  BoxSortMode,
+  ImportedPokemonInfo,
+  SavedPokemonEntry,
+  SpeciesRosterEntry,
+} from '../types/pokemon';
 import { useGridReorder } from '../hooks/useGridReorder';
 import type { UseSavedPokemonReturn } from '../hooks/useSavedPokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
@@ -153,19 +158,29 @@ const NOOP_UPDATE_TEAM = async () => false;
 // mode's array order the first time it's switched to (see header comment).
 function sortAlphabetically(entries: SavedPokemonEntry[]): SavedPokemonEntry[] {
   return [...entries].sort((a, b) => {
-    const speciesCompare = a.pokemon.showdownData.species.localeCompare(b.pokemon.showdownData.species);
+    const speciesCompare = a.pokemon.showdownData.species.localeCompare(
+      b.pokemon.showdownData.species,
+    );
     return speciesCompare !== 0 ? speciesCompare : a.label.localeCompare(b.label);
   });
 }
 
-export default function BoxPage({ savedPokemonState, gameDataState, databaseState, speciesRosterState, spriteCacheState, settingsState, teamsState }: BoxPageProps) {
+export default function BoxPage({
+  savedPokemonState,
+  gameDataState,
+  databaseState,
+  speciesRosterState,
+  spriteCacheState,
+  settingsState,
+  teamsState,
+}: BoxPageProps) {
   const rulesetId = toRegulationId(settingsState.settings.defaultRegulation);
   const rosterActions = useRosterActions(
     NOOP_UPDATE_TEAM,
     databaseState.getCachedEntry,
     databaseState.setCacheEntry,
     gameDataState.getEnrichedSpeciesOptions,
-    gameDataState.getChampionsUsage
+    gameDataState.getChampionsUsage,
   );
 
   const [search, setSearch] = useState('');
@@ -173,12 +188,17 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
   const [isBuildingSpecies, setIsBuildingSpecies] = useState(false);
   // Holds the freshly-built Pokémon and its pre-generated id between
   // buildSlot resolving and the save-name dialog closing - see header comment.
-  const [pendingNewBuild, setPendingNewBuild] = useState<{ id: string; pokemon: ImportedPokemonInfo } | null>(null);
+  const [pendingNewBuild, setPendingNewBuild] = useState<{
+    id: string;
+    pokemon: ImportedPokemonInfo;
+  } | null>(null);
   // Which Box entry's "Add to Team…" dialog is open - see header comment.
   const [addToTeamEntryId, setAddToTeamEntryId] = useState<string | null>(null);
   // Grid-level "Paste Pokémon"/"Paste Showdown Text" menu (Leg 5, see
   // header comment above).
-  const [pasteContextMenuPos, setPasteContextMenuPos] = useState<{ x: number; y: number } | null>(null);
+  const [pasteContextMenuPos, setPasteContextMenuPos] = useState<{ x: number; y: number } | null>(
+    null,
+  );
 
   const handleSelectNewSpecies = async (species: SpeciesRosterEntry, itemOverride?: string) => {
     setIsPickerOpen(false);
@@ -193,7 +213,11 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
 
   const handleSaveNewBuild = async (label: string): Promise<boolean> => {
     if (!pendingNewBuild) return false;
-    const success = await savedPokemonState.addSavedPokemonBatch([pendingNewBuild.pokemon], [label], [pendingNewBuild.id]);
+    const success = await savedPokemonState.addSavedPokemonBatch(
+      [pendingNewBuild.pokemon],
+      [label],
+      [pendingNewBuild.id],
+    );
     if (success) savedPokemonState.toggleCardExpansion(pendingNewBuild.id);
     return success;
   };
@@ -210,20 +234,22 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
   const sortedEntries = sortSavedPokemonByFavorite(
     sortMode === 'custom'
       ? savedPokemonState.savedPokemon
-      : sortAlphabetically(savedPokemonState.savedPokemon)
+      : sortAlphabetically(savedPokemonState.savedPokemon),
   );
 
   // Search (see header comment) - a straight port of
   // SpeciesPickerCard.tsx's own '#tag'-chain resolution, applied to each
   // entry's underlying species instead of a roster species name.
-  const tags = parseTagFilters(search).filter(t => t.length > 0);
+  const tags = parseTagFilters(search).filter((t) => t.length > 0);
   const isTypeTag = (t: string): boolean => (ALL_TYPES as readonly string[]).includes(t);
   const typeTags = tags.filter(isTypeTag);
-  const normalizedNonTypeTags = tags.filter(t => !isTypeTag(t)).map(normalizeNameForAPI);
+  const normalizedNonTypeTags = tags.filter((t) => !isTypeTag(t)).map(normalizeNameForAPI);
 
   const typeMembers = usePokemonTypeFilter(typeTags);
   const moveMembers = usePokemonMoveFilter(normalizedNonTypeTags);
-  const moveFailedTags = normalizedNonTypeTags.filter(t => isMoveResolved(t) && moveMembers.get(t) === null);
+  const moveFailedTags = normalizedNonTypeTags.filter(
+    (t) => isMoveResolved(t) && moveMembers.get(t) === null,
+  );
   const abilityMembers = usePokemonAbilityFilter(moveFailedTags);
 
   // Resolves one tag to its matching species set, or null while it's still
@@ -238,35 +264,40 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
   }
 
   const tagSets = tags.map(resolvedSetForTag);
-  const anyTagPending = tagSets.some(set => set === null);
+  const anyTagPending = tagSets.some((set) => set === null);
 
   const matchesTags = (speciesName: string): boolean =>
-    anyTagPending ? false : tagSets.every(set => set!.has(speciesName.toLowerCase()));
+    anyTagPending ? false : tagSets.every((set) => set!.has(speciesName.toLowerCase()));
 
-  const displayedEntries = tags.length === 0
-    ? sortedEntries.filter(entry =>
-        entry.label.toLowerCase().includes(search.toLowerCase()) ||
-        entry.pokemon.showdownData.species.toLowerCase().includes(search.toLowerCase())
-      )
-    : sortedEntries.filter(entry => matchesTags(entry.pokemon.showdownData.species));
+  const displayedEntries =
+    tags.length === 0
+      ? sortedEntries.filter(
+          (entry) =>
+            entry.label.toLowerCase().includes(search.toLowerCase()) ||
+            entry.pokemon.showdownData.species.toLowerCase().includes(search.toLowerCase()),
+        )
+      : sortedEntries.filter((entry) => matchesTags(entry.pokemon.showdownData.species));
 
   const isSearching = search.trim().length > 0;
 
   // Shared between the desktop grid and MobileBoxGrid.tsx (Box Mobile:
   // Compact Grid + Swipe Deck leg, see TODO.md) so both surfaces render the
   // exact same empty-state copy without duplicating the tag-pending check.
-  const emptyStateContent = displayedEntries.length === 0 ? (
-    isSearching ? (
-      <p className="text-lg">
-        {tags.length > 0 && anyTagPending ? 'Loading…' : 'No builds match search'}
-      </p>
-    ) : (
-      <>
-        <p className="text-lg">No saved builds yet</p>
-        <p className="text-sm mt-2">Save a Pokémon to the library from Teams or Calc, or start one with "+ New Build"</p>
-      </>
-    )
-  ) : null;
+  const emptyStateContent =
+    displayedEntries.length === 0 ? (
+      isSearching ? (
+        <p className="text-lg">
+          {tags.length > 0 && anyTagPending ? 'Loading…' : 'No builds match search'}
+        </p>
+      ) : (
+        <>
+          <p className="text-lg">No saved builds yet</p>
+          <p className="text-sm mt-2">
+            Save a Pokémon to the library from Teams or Calc, or start one with "+ New Build"
+          </p>
+        </>
+      )
+    ) : null;
 
   // Box grid reorder (Touch Drag-and-Drop: Framer Motion Reorder Leg 1, see
   // TODO.md) - local visual order of entry ids for the Reorder.Group below,
@@ -278,18 +309,18 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
   // change. Only meaningful in Custom mode with no search filter active -
   // see the header comment's Search section for why dragging is disabled
   // outright while isSearching.
-  const displayedEntryIdsKey = displayedEntries.map(e => e.id).join('|');
-  const [orderedEntryIds, setOrderedEntryIds] = useState(() => displayedEntries.map(e => e.id));
+  const displayedEntryIdsKey = displayedEntries.map((e) => e.id).join('|');
+  const [orderedEntryIds, setOrderedEntryIds] = useState(() => displayedEntries.map((e) => e.id));
   const [prevDisplayedEntryIdsKey, setPrevDisplayedEntryIdsKey] = useState(displayedEntryIdsKey);
   if (displayedEntryIdsKey !== prevDisplayedEntryIdsKey) {
     setPrevDisplayedEntryIdsKey(displayedEntryIdsKey);
-    setOrderedEntryIds(displayedEntries.map(e => e.id));
+    setOrderedEntryIds(displayedEntries.map((e) => e.id));
   }
   const canReorderBox = sortMode === 'custom' && !isSearching;
   const { containerRef: boxGridRef, getHandlers: getBoxHandlers } = useGridReorder({
     orderedIds: orderedEntryIds,
     setOrderedIds: setOrderedEntryIds,
-    onCommit: ids => savedPokemonState.setSavedPokemonOrder(ids),
+    onCommit: (ids) => savedPokemonState.setSavedPokemonOrder(ids),
   });
 
   const handleSetSortMode = async (mode: BoxSortMode) => {
@@ -297,7 +328,7 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
       // First-ever switch to Custom: seed the stored array order from the
       // current Alphabetical view so the grid doesn't visually jump, then
       // never do this again (see header comment).
-      const alphabeticalIds = sortAlphabetically(savedPokemonState.savedPokemon).map(e => e.id);
+      const alphabeticalIds = sortAlphabetically(savedPokemonState.savedPokemon).map((e) => e.id);
       await savedPokemonState.setSavedPokemonOrder(alphabeticalIds);
       await settingsState.updateSettings({ boxSortMode: mode, boxCustomOrderSeeded: true });
     } else {
@@ -306,11 +337,11 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
   };
 
   const addToTeamEntry = addToTeamEntryId
-    ? savedPokemonState.savedPokemon.find(e => e.id === addToTeamEntryId) ?? null
+    ? (savedPokemonState.savedPokemon.find((e) => e.id === addToTeamEntryId) ?? null)
     : null;
 
   const handleAddToTeam = async (teamId: string, cloned: ImportedPokemonInfo): Promise<boolean> => {
-    const team = teamsState.teams.find(t => t.id === teamId);
+    const team = teamsState.teams.find((t) => t.id === teamId);
     if (!team) return false;
     return teamsState.updateTeam(teamId, { pokemon: [...team.pokemon, cloned] });
   };
@@ -348,7 +379,13 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
 
     const enriched: ImportedPokemonInfo[] = [];
     for (const pokemon of parseResult.pokemon) {
-      enriched.push(await enrichPokemonWithAPI(pokemon, databaseState.getCachedEntry, databaseState.setCacheEntry));
+      enriched.push(
+        await enrichPokemonWithAPI(
+          pokemon,
+          databaseState.getCachedEntry,
+          databaseState.setCacheEntry,
+        ),
+      );
     }
     await savedPokemonState.addSavedPokemonBatch(enriched);
   };
@@ -371,9 +408,13 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
           className="w-full px-3 py-2 text-sm text-white bg-zinc-800 border border-zinc-700 rounded-md outline-none focus:border-accent-gold placeholder:text-zinc-500"
         />
       </MobileFilterPopover>
-      <MobileFilterPopover label="Sort builds" icon={<FilterIcon />} isActive={sortMode === 'custom'}>
+      <MobileFilterPopover
+        label="Sort builds"
+        icon={<FilterIcon />}
+        isActive={sortMode === 'custom'}
+      >
         <div className="flex flex-col gap-1">
-          {(['alphabetical', 'custom'] as const).map(mode => (
+          {(['alphabetical', 'custom'] as const).map((mode) => (
             <button
               key={mode}
               onClick={() => handleSetSortMode(mode)}
@@ -388,7 +429,7 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
           ))}
         </div>
       </MobileFilterPopover>
-    </>
+    </>,
   );
 
   return (
@@ -416,7 +457,7 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
             {/* Sort-mode toggle (Box Tab: Reorder Leg 7, see TODO.md) - same
                 pill-button filter style TeamsPage.tsx uses for its format
                 filters. */}
-            {(['alphabetical', 'custom'] as const).map(mode => (
+            {(['alphabetical', 'custom'] as const).map((mode) => (
               <button
                 key={mode}
                 onClick={() => handleSetSortMode(mode)}
@@ -433,90 +474,99 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-6" style={{ scrollbarGutter: 'stable' }}>
+      <div
+        className="flex-1 overflow-y-auto px-4 md:px-8 py-6"
+        style={{ scrollbarGutter: 'stable' }}
+      >
         {/* min-h-[calc(100%+1px)] - same iOS Safari stuck-scroll fix as
             TeamsPage.tsx's content container (see its own comment) - a box
             with very few saved builds could hit the same exact-height
             coincidence. */}
         <div className="min-h-[calc(100%+1px)]">
-        {savedPokemonState.isLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="text-zinc-400">Loading box...</div>
-          </div>
-        ) : savedPokemonState.error ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="text-red-400">Error: {savedPokemonState.error}</div>
-          </div>
-        ) : (
-          <>
-          {/* Compact sprite/favorite/name grid - mobile only (Box Mobile:
+          {savedPokemonState.isLoading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-zinc-400">Loading box...</div>
+            </div>
+          ) : savedPokemonState.error ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-red-400">Error: {savedPokemonState.error}</div>
+            </div>
+          ) : (
+            <>
+              {/* Compact sprite/favorite/name grid - mobile only (Box Mobile:
               Compact Grid + Swipe Deck leg, see TODO.md). Renders instead of
               the desktop Reorder.Group grid below, not a responsive variant
               of it - no drag-reorder here (out of scope, see
               MobileBoxGrid.tsx's header), tapping a tile opens
               MobileBoxSwipeOverlay.tsx at that tile's index. */}
-          <div className="md:hidden">
-            <MobileBoxGrid
-              entries={displayedEntries}
-              savedPokemonState={savedPokemonState}
-              gameDataState={gameDataState}
-              rulesetId={rulesetId}
-              resolveSprite={spriteCacheState.resolveSprite}
-              showAnimatedSprites={settingsState.settings.showAnimatedSprites}
-              onAddToTeam={(entryId) => setAddToTeamEntryId(entryId)}
-              onNewBuild={() => setIsPickerOpen(true)}
-              isBuildingSpecies={isBuildingSpecies}
-              emptyStateContent={emptyStateContent}
-            />
-          </div>
-
-          {/* 2D hit-test reorder (useGridReorder.ts, Web Reorder Jank Leg 2). */}
-          <div
-            ref={boxGridRef}
-            className="hidden md:flex flex-wrap gap-4 items-start"
-            onContextMenu={handleGridContextMenu}
-          >
-            <button
-              onClick={() => setIsPickerOpen(true)}
-              disabled={isBuildingSpecies}
-              className="w-28 min-h-28 shrink-0 flex items-center justify-center text-center rounded-lg border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-wait"
-            >
-              <span className="text-xs font-semibold px-1">{isBuildingSpecies ? 'Building…' : '+ New Build'}</span>
-            </button>
-
-            {emptyStateContent && (
-              <div className="flex flex-col justify-center text-zinc-400 px-2 min-h-28">
-                {emptyStateContent}
-              </div>
-            )}
-
-            {orderedEntryIds.map(id => {
-              const entry = displayedEntries.find(e => e.id === id);
-              if (!entry) return null;
-              return (
-                <BoxCard
-                  key={id}
-                  entry={entry}
-                  isExpanded={savedPokemonState.expandedCardIds.has(entry.id)}
-                  onToggleExpand={() => savedPokemonState.toggleCardExpansion(entry.id)}
-                  onUpdatePokemon={(updates) => savedPokemonState.updateSavedPokemon(entry.id, updates)}
-                  onAddToTeam={() => setAddToTeamEntryId(entry.id)}
-                  onRename={(label) => savedPokemonState.renameSavedPokemon(entry.id, label)}
-                  onDuplicate={() => savedPokemonState.duplicateSavedPokemon(entry.id)}
-                  onToggleFavorite={() => savedPokemonState.toggleSavedPokemonFavorite(entry.id)}
-                  onDelete={() => savedPokemonState.deleteSavedPokemon(entry.id)}
-                  canReorder={canReorderBox}
-                  reorderHandlers={getBoxHandlers(id)}
+              <div className="md:hidden">
+                <MobileBoxGrid
+                  entries={displayedEntries}
+                  savedPokemonState={savedPokemonState}
                   gameDataState={gameDataState}
                   rulesetId={rulesetId}
                   resolveSprite={spriteCacheState.resolveSprite}
                   showAnimatedSprites={settingsState.settings.showAnimatedSprites}
+                  onAddToTeam={(entryId) => setAddToTeamEntryId(entryId)}
+                  onNewBuild={() => setIsPickerOpen(true)}
+                  isBuildingSpecies={isBuildingSpecies}
+                  emptyStateContent={emptyStateContent}
                 />
-              );
-            })}
-          </div>
-          </>
-        )}
+              </div>
+
+              {/* 2D hit-test reorder (useGridReorder.ts, Web Reorder Jank Leg 2). */}
+              <div
+                ref={boxGridRef}
+                className="hidden md:flex flex-wrap gap-4 items-start"
+                onContextMenu={handleGridContextMenu}
+              >
+                <button
+                  onClick={() => setIsPickerOpen(true)}
+                  disabled={isBuildingSpecies}
+                  className="w-28 min-h-28 shrink-0 flex items-center justify-center text-center rounded-lg border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-wait"
+                >
+                  <span className="text-xs font-semibold px-1">
+                    {isBuildingSpecies ? 'Building…' : '+ New Build'}
+                  </span>
+                </button>
+
+                {emptyStateContent && (
+                  <div className="flex flex-col justify-center text-zinc-400 px-2 min-h-28">
+                    {emptyStateContent}
+                  </div>
+                )}
+
+                {orderedEntryIds.map((id) => {
+                  const entry = displayedEntries.find((e) => e.id === id);
+                  if (!entry) return null;
+                  return (
+                    <BoxCard
+                      key={id}
+                      entry={entry}
+                      isExpanded={savedPokemonState.expandedCardIds.has(entry.id)}
+                      onToggleExpand={() => savedPokemonState.toggleCardExpansion(entry.id)}
+                      onUpdatePokemon={(updates) =>
+                        savedPokemonState.updateSavedPokemon(entry.id, updates)
+                      }
+                      onAddToTeam={() => setAddToTeamEntryId(entry.id)}
+                      onRename={(label) => savedPokemonState.renameSavedPokemon(entry.id, label)}
+                      onDuplicate={() => savedPokemonState.duplicateSavedPokemon(entry.id)}
+                      onToggleFavorite={() =>
+                        savedPokemonState.toggleSavedPokemonFavorite(entry.id)
+                      }
+                      onDelete={() => savedPokemonState.deleteSavedPokemon(entry.id)}
+                      canReorder={canReorderBox}
+                      reorderHandlers={getBoxHandlers(id)}
+                      gameDataState={gameDataState}
+                      rulesetId={rulesetId}
+                      resolveSprite={spriteCacheState.resolveSprite}
+                      showAnimatedSprites={settingsState.settings.showAnimatedSprites}
+                    />
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -559,7 +609,16 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
               label: 'Paste Pokémon',
               onClick: handlePastePokemon,
               icon: (
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M9 4.5h1.5a1.5 1.5 0 0 1 3 0H15a1 1 0 0 1 1 1V7H8V5.5a1 1 0 0 1 1-1Z" />
                   <path d="M8 6H6a1.5 1.5 0 0 0-1.5 1.5v12A1.5 1.5 0 0 0 6 21h12a1.5 1.5 0 0 0 1.5-1.5v-12A1.5 1.5 0 0 0 18 6h-2" />
                 </svg>
@@ -569,7 +628,16 @@ export default function BoxPage({ savedPokemonState, gameDataState, databaseStat
               label: 'Paste Showdown Text',
               onClick: handlePasteShowdownText,
               icon: (
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M6 3.5h9l4.5 4.5v12.5a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 4.5 20.5v-15A1.5 1.5 0 0 1 6 3.5Z" />
                   <path d="M9 12h6M9 15.5h6M9 8.5h2" />
                 </svg>

@@ -7,7 +7,14 @@
 
 import type { StatusCondition } from '../types/pokemon';
 
-export const STATUS_ORDER: StatusCondition[] = ['burn', 'freeze', 'paralysis', 'poison', 'badly-poisoned', 'sleep'];
+export const STATUS_ORDER: StatusCondition[] = [
+  'burn',
+  'freeze',
+  'paralysis',
+  'poison',
+  'badly-poisoned',
+  'sleep',
+];
 
 export const STATUS_LABELS: Record<StatusCondition, string> = {
   burn: 'Burn',
@@ -61,7 +68,7 @@ export function mapAilmentToStatus(
   moveName: string,
   ailment: string | undefined,
   ailmentChance: number | undefined,
-  category: 'physical' | 'special' | 'status' | undefined
+  category: 'physical' | 'special' | 'status' | undefined,
 ): StatusCondition | null {
   if (!ailment || ailment === 'none') return null;
   const isGuaranteed = category === 'status' || ailmentChance === 100;

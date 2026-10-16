@@ -54,9 +54,15 @@ describe('useReleaseNotes', () => {
     mockedFetchReleaseHistory.mockResolvedValueOnce([CURRENT_RELEASE]);
     const updateSettings = vi.fn().mockResolvedValue(true);
 
-    const { result } = renderHook(() => useReleaseNotes(makeSettings({ lastSeenReleaseNotesVersion: null }), false, updateSettings));
+    const { result } = renderHook(() =>
+      useReleaseNotes(makeSettings({ lastSeenReleaseNotesVersion: null }), false, updateSettings),
+    );
 
-    await waitFor(() => expect(updateSettings).toHaveBeenCalledWith({ lastSeenReleaseNotesVersion: CURRENT_APP_VERSION }));
+    await waitFor(() =>
+      expect(updateSettings).toHaveBeenCalledWith({
+        lastSeenReleaseNotesVersion: CURRENT_APP_VERSION,
+      }),
+    );
     expect(result.current.showPopup).toBe(false);
   });
 
@@ -64,7 +70,9 @@ describe('useReleaseNotes', () => {
     mockedFetchReleaseHistory.mockResolvedValueOnce([CURRENT_RELEASE]);
     const updateSettings = vi.fn().mockResolvedValue(true);
 
-    renderHook(() => useReleaseNotes(makeSettings({ lastSeenReleaseNotesVersion: null }), true, updateSettings));
+    renderHook(() =>
+      useReleaseNotes(makeSettings({ lastSeenReleaseNotesVersion: null }), true, updateSettings),
+    );
 
     await waitFor(() => expect(mockedFetchReleaseHistory).toHaveBeenCalled());
     expect(updateSettings).not.toHaveBeenCalled();
@@ -74,7 +82,13 @@ describe('useReleaseNotes', () => {
     mockedFetchReleaseHistory.mockResolvedValueOnce([CURRENT_RELEASE]);
     const updateSettings = vi.fn().mockResolvedValue(true);
 
-    const { result } = renderHook(() => useReleaseNotes(makeSettings({ lastSeenReleaseNotesVersion: '0.0.1' }), false, updateSettings));
+    const { result } = renderHook(() =>
+      useReleaseNotes(
+        makeSettings({ lastSeenReleaseNotesVersion: '0.0.1' }),
+        false,
+        updateSettings,
+      ),
+    );
 
     await waitFor(() => expect(result.current.showPopup).toBe(true));
     expect(updateSettings).not.toHaveBeenCalled();
@@ -84,7 +98,13 @@ describe('useReleaseNotes', () => {
     mockedFetchReleaseHistory.mockResolvedValueOnce([CURRENT_RELEASE]);
     const updateSettings = vi.fn().mockResolvedValue(true);
 
-    const { result } = renderHook(() => useReleaseNotes(makeSettings({ lastSeenReleaseNotesVersion: CURRENT_APP_VERSION }), false, updateSettings));
+    const { result } = renderHook(() =>
+      useReleaseNotes(
+        makeSettings({ lastSeenReleaseNotesVersion: CURRENT_APP_VERSION }),
+        false,
+        updateSettings,
+      ),
+    );
 
     await waitFor(() => expect(mockedFetchReleaseHistory).toHaveBeenCalled());
     expect(result.current.showPopup).toBe(false);
@@ -95,21 +115,35 @@ describe('useReleaseNotes', () => {
     mockedFetchReleaseHistory.mockResolvedValueOnce([CURRENT_RELEASE]);
     const updateSettings = vi.fn().mockResolvedValue(true);
 
-    const { result } = renderHook(() => useReleaseNotes(makeSettings({ lastSeenReleaseNotesVersion: '0.0.1' }), false, updateSettings));
+    const { result } = renderHook(() =>
+      useReleaseNotes(
+        makeSettings({ lastSeenReleaseNotesVersion: '0.0.1' }),
+        false,
+        updateSettings,
+      ),
+    );
     await waitFor(() => expect(result.current.showPopup).toBe(true));
 
     result.current.markAsSeen();
 
     await waitFor(() => expect(result.current.showPopup).toBe(false));
-    expect(updateSettings).toHaveBeenCalledWith({ lastSeenReleaseNotesVersion: CURRENT_APP_VERSION });
+    expect(updateSettings).toHaveBeenCalledWith({
+      lastSeenReleaseNotesVersion: CURRENT_APP_VERSION,
+    });
   });
 
-  it('exposes the running version\'s own history entry as currentReleaseNotes', async () => {
+  it("exposes the running version's own history entry as currentReleaseNotes", async () => {
     const older: GitHubRelease = { ...CURRENT_RELEASE, version: '0.0.1' };
     mockedFetchReleaseHistory.mockResolvedValueOnce([CURRENT_RELEASE, older]);
     const updateSettings = vi.fn().mockResolvedValue(true);
 
-    const { result } = renderHook(() => useReleaseNotes(makeSettings({ lastSeenReleaseNotesVersion: CURRENT_APP_VERSION }), false, updateSettings));
+    const { result } = renderHook(() =>
+      useReleaseNotes(
+        makeSettings({ lastSeenReleaseNotesVersion: CURRENT_APP_VERSION }),
+        false,
+        updateSettings,
+      ),
+    );
 
     await waitFor(() => expect(result.current.history).toHaveLength(2));
     expect(result.current.currentReleaseNotes).toEqual(CURRENT_RELEASE);
@@ -120,11 +154,15 @@ describe('useReleaseNotes', () => {
     mockedFetchReleaseHistory.mockRejectedValueOnce(new Error('network down'));
     const updateSettings = vi.fn().mockResolvedValue(true);
 
-    const { result } = renderHook(() => useReleaseNotes(makeSettings({ lastSeenReleaseNotesVersion: null }), false, updateSettings));
+    const { result } = renderHook(() =>
+      useReleaseNotes(makeSettings({ lastSeenReleaseNotesVersion: null }), false, updateSettings),
+    );
 
     await waitFor(() => expect(result.current.error).toBe('network down'));
     expect(consoleErrorSpy).toHaveBeenCalled();
-    expect(updateSettings).toHaveBeenCalledWith({ lastSeenReleaseNotesVersion: CURRENT_APP_VERSION });
+    expect(updateSettings).toHaveBeenCalledWith({
+      lastSeenReleaseNotesVersion: CURRENT_APP_VERSION,
+    });
     expect(result.current.currentReleaseNotes).toBeNull();
     consoleErrorSpy.mockRestore();
   });

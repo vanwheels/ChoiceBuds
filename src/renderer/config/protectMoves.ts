@@ -8,9 +8,18 @@
  */
 
 export const PROTECT_FAMILY_MOVES: string[] = [
-  'protect', 'detect', 'kings-shield', 'spiky-shield', 'baneful-bunker',
-  'obstruct', 'silk-trap', 'burning-bulwark', 'wide-guard', 'quick-guard',
-  'crafty-shield', 'mat-block',
+  'protect',
+  'detect',
+  'kings-shield',
+  'spiky-shield',
+  'baneful-bunker',
+  'obstruct',
+  'silk-trap',
+  'burning-bulwark',
+  'wide-guard',
+  'quick-guard',
+  'crafty-shield',
+  'mat-block',
 ];
 
 export function isProtectFamilyMove(move: string | undefined): boolean {

@@ -91,8 +91,12 @@ function normalize(name: string): string {
 }
 
 const gen = Generations.get(9);
-const KNOWN_MOVES = new Set(Array.from(gen.moves as unknown as Iterable<{ name: string }>).map((m) => normalize(m.name)));
-const KNOWN_ABILITIES = new Set(Array.from(gen.abilities as unknown as Iterable<{ name: string }>).map((a) => normalize(a.name)));
+const KNOWN_MOVES = new Set(
+  Array.from(gen.moves as unknown as Iterable<{ name: string }>).map((m) => normalize(m.name)),
+);
+const KNOWN_ABILITIES = new Set(
+  Array.from(gen.abilities as unknown as Iterable<{ name: string }>).map((a) => normalize(a.name)),
+);
 
 function parseFile(fileName: string): ts.SourceFile {
   const text = readFileSync(join(CONFIG_DIR, fileName), 'utf-8');
@@ -105,7 +109,12 @@ function parseFile(fileName: string): ts.SourceFile {
 function findConst(source: ts.SourceFile, name: string): ts.Expression {
   let found: ts.Expression | undefined;
   const visit = (node: ts.Node): void => {
-    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === name && node.initializer) {
+    if (
+      ts.isVariableDeclaration(node) &&
+      ts.isIdentifier(node.name) &&
+      node.name.text === name &&
+      node.initializer
+    ) {
       found = node.initializer;
     }
     node.forEachChild(visit);
@@ -171,11 +180,16 @@ function objectValueEntries(expr: ts.Expression): [string, string][] {
 /** `new Set([...])` of string literals - not every move list in this codebase is a plain array
  *  literal (e.g. typeChangingAbilities.ts's VARIABLE_TYPE_MOVES). */
 function newSetStringArray(expr: ts.Expression): string[] {
-  if (!ts.isNewExpression(expr) || !ts.isIdentifier(expr.expression) || expr.expression.text !== 'Set') {
+  if (
+    !ts.isNewExpression(expr) ||
+    !ts.isIdentifier(expr.expression) ||
+    expr.expression.text !== 'Set'
+  ) {
     throw new Error('expected a `new Set([...])` expression');
   }
   const arg = expr.arguments?.[0];
-  if (!arg || !ts.isArrayLiteralExpression(arg)) throw new Error('expected Set(...) to be called with an array literal');
+  if (!arg || !ts.isArrayLiteralExpression(arg))
+    throw new Error('expected Set(...) to be called with an array literal');
   return stringArrayLiteral(arg);
 }
 
@@ -189,7 +203,13 @@ interface RefIntegrityHit {
 
 const refHits: RefIntegrityHit[] = [];
 
-function checkKeysAgainst(file: string, table: string, keys: string[], known: Set<string>, kind: 'move' | 'ability'): void {
+function checkKeysAgainst(
+  file: string,
+  table: string,
+  keys: string[],
+  known: Set<string>,
+  kind: 'move' | 'ability',
+): void {
   for (const key of keys) {
     if (!known.has(normalize(key))) refHits.push({ file, table, slug: key, kind });
   }
@@ -198,7 +218,8 @@ function checkKeysAgainst(file: string, table: string, keys: string[], known: Se
 function checkMoveListAgainst(file: string, table: string, entries: [string, string[]][]): void {
   for (const [species, moves] of entries) {
     for (const move of moves) {
-      if (!KNOWN_MOVES.has(normalize(move))) refHits.push({ file, table, slug: move, kind: 'move', context: species });
+      if (!KNOWN_MOVES.has(normalize(move)))
+        refHits.push({ file, table, slug: move, kind: 'move', context: species });
     }
   }
 }
@@ -207,43 +228,85 @@ function checkMoveListAgainst(file: string, table: string, entries: [string, str
 {
   const file = 'moveStatEffects.ts';
   const source = parseFile(file);
-  checkKeysAgainst(file, 'MOVE_STAT_EFFECTS', objectKeys(findConst(source, 'MOVE_STAT_EFFECTS')), KNOWN_MOVES, 'move');
+  checkKeysAgainst(
+    file,
+    'MOVE_STAT_EFFECTS',
+    objectKeys(findConst(source, 'MOVE_STAT_EFFECTS')),
+    KNOWN_MOVES,
+    'move',
+  );
 }
 
 // --- onSwitchInAbilities.ts ---
 {
   const file = 'onSwitchInAbilities.ts';
   const source = parseFile(file);
-  checkKeysAgainst(file, 'SWITCH_IN_ABILITY_EFFECTS', objectKeys(findConst(source, 'SWITCH_IN_ABILITY_EFFECTS')), KNOWN_ABILITIES, 'ability');
+  checkKeysAgainst(
+    file,
+    'SWITCH_IN_ABILITY_EFFECTS',
+    objectKeys(findConst(source, 'SWITCH_IN_ABILITY_EFFECTS')),
+    KNOWN_ABILITIES,
+    'ability',
+  );
 }
 
 // --- reactiveAbilities.ts ---
 {
   const file = 'reactiveAbilities.ts';
   const source = parseFile(file);
-  checkKeysAgainst(file, 'REACTIVE_ON_STAT_LOWERED', objectKeys(findConst(source, 'REACTIVE_ON_STAT_LOWERED')), KNOWN_ABILITIES, 'ability');
+  checkKeysAgainst(
+    file,
+    'REACTIVE_ON_STAT_LOWERED',
+    objectKeys(findConst(source, 'REACTIVE_ON_STAT_LOWERED')),
+    KNOWN_ABILITIES,
+    'ability',
+  );
 }
 
 // --- hitReactiveAbilities.ts ---
 {
   const file = 'hitReactiveAbilities.ts';
   const source = parseFile(file);
-  checkKeysAgainst(file, 'HIT_REACTIVE_ABILITIES', objectKeys(findConst(source, 'HIT_REACTIVE_ABILITIES')), KNOWN_ABILITIES, 'ability');
+  checkKeysAgainst(
+    file,
+    'HIT_REACTIVE_ABILITIES',
+    objectKeys(findConst(source, 'HIT_REACTIVE_ABILITIES')),
+    KNOWN_ABILITIES,
+    'ability',
+  );
 }
 
 // --- championsMoveOverrides.ts ---
 {
   const file = 'championsMoveOverrides.ts';
   const source = parseFile(file);
-  checkKeysAgainst(file, 'CHAMPIONS_MOVE_OVERRIDES', objectKeys(findConst(source, 'CHAMPIONS_MOVE_OVERRIDES')), KNOWN_MOVES, 'move');
-  checkKeysAgainst(file, 'CHAMPIONS_PP_EXCEPTIONS', objectKeys(findConst(source, 'CHAMPIONS_PP_EXCEPTIONS')), KNOWN_MOVES, 'move');
+  checkKeysAgainst(
+    file,
+    'CHAMPIONS_MOVE_OVERRIDES',
+    objectKeys(findConst(source, 'CHAMPIONS_MOVE_OVERRIDES')),
+    KNOWN_MOVES,
+    'move',
+  );
+  checkKeysAgainst(
+    file,
+    'CHAMPIONS_PP_EXCEPTIONS',
+    objectKeys(findConst(source, 'CHAMPIONS_PP_EXCEPTIONS')),
+    KNOWN_MOVES,
+    'move',
+  );
 }
 
 // --- championsAbilityOverrides.ts ---
 {
   const file = 'championsAbilityOverrides.ts';
   const source = parseFile(file);
-  checkKeysAgainst(file, 'CHAMPIONS_ABILITY_OVERRIDES', objectKeys(findConst(source, 'CHAMPIONS_ABILITY_OVERRIDES')), KNOWN_ABILITIES, 'ability');
+  checkKeysAgainst(
+    file,
+    'CHAMPIONS_ABILITY_OVERRIDES',
+    objectKeys(findConst(source, 'CHAMPIONS_ABILITY_OVERRIDES')),
+    KNOWN_ABILITIES,
+    'ability',
+  );
 }
 
 // --- championsMovepoolChanges.ts ---
@@ -261,9 +324,17 @@ const movepoolContradictions: MovepoolContradictionHit[] = [];
   const removals = objectEntriesOfStringArrays(removalsExpr);
   checkMoveListAgainst(file, 'CHAMPIONS_MOVEPOOL_ADDITIONS', additions);
   checkMoveListAgainst(file, 'CHAMPIONS_MOVEPOOL_REMOVALS', removals);
-  checkKeysAgainst(file, 'GLOBALLY_REMOVED_MOVES', stringArrayLiteral(findConst(source, 'GLOBALLY_REMOVED_MOVES')), KNOWN_MOVES, 'move');
+  checkKeysAgainst(
+    file,
+    'GLOBALLY_REMOVED_MOVES',
+    stringArrayLiteral(findConst(source, 'GLOBALLY_REMOVED_MOVES')),
+    KNOWN_MOVES,
+    'move',
+  );
 
-  const removalsBySpecies = new Map(removals.map(([species, moves]) => [species, new Set(moves.map(normalize))]));
+  const removalsBySpecies = new Map(
+    removals.map(([species, moves]) => [species, new Set(moves.map(normalize))]),
+  );
   for (const [species, addedMoves] of additions) {
     const removedMoves = removalsBySpecies.get(species);
     if (!removedMoves) continue;
@@ -282,7 +353,13 @@ const movepoolContradictions: MovepoolContradictionHit[] = [];
 {
   const file = 'typeImmunityAbilities.ts';
   const source = parseFile(file);
-  checkKeysAgainst(file, 'TYPE_IMMUNITY_ABILITIES', objectKeys(findConst(source, 'TYPE_IMMUNITY_ABILITIES')), KNOWN_ABILITIES, 'ability');
+  checkKeysAgainst(
+    file,
+    'TYPE_IMMUNITY_ABILITIES',
+    objectKeys(findConst(source, 'TYPE_IMMUNITY_ABILITIES')),
+    KNOWN_ABILITIES,
+    'ability',
+  );
 }
 
 // --- moveBlockingAbilities.ts ---
@@ -296,7 +373,13 @@ let soundBasedMoves: string[] = [];
   // MOVE_BLOCKING_ABILITIES's type-immunity keys come in via a spread (see typeImmunityAbilities.ts
   // block above) and are skipped here since objectEntries only sees property assignments.
   const abilityEntries = objectEntries(findConst(source, 'MOVE_BLOCKING_ABILITIES'));
-  checkKeysAgainst(file, 'MOVE_BLOCKING_ABILITIES', abilityEntries.map(([key]) => key), KNOWN_ABILITIES, 'ability');
+  checkKeysAgainst(
+    file,
+    'MOVE_BLOCKING_ABILITIES',
+    abilityEntries.map(([key]) => key),
+    KNOWN_ABILITIES,
+    'ability',
+  );
   // BlockRule's 'move-list' variant nests its move array one level down as a `moves` property -
   // either an inline array literal, or (soundproof only) a reference to SOUND_BASED_MOVES above.
   for (const [ability, ruleExpr] of abilityEntries) {
@@ -304,11 +387,23 @@ let soundBasedMoves: string[] = [];
     const movesProp = ruleExpr.properties.find((p) => propKey(p) === 'moves');
     if (!movesProp || !ts.isPropertyAssignment(movesProp)) continue;
     let moves: string[] | undefined;
-    if (ts.isArrayLiteralExpression(movesProp.initializer)) moves = stringArrayLiteral(movesProp.initializer);
-    else if (ts.isIdentifier(movesProp.initializer) && movesProp.initializer.text === 'SOUND_BASED_MOVES') moves = soundBasedMoves;
+    if (ts.isArrayLiteralExpression(movesProp.initializer))
+      moves = stringArrayLiteral(movesProp.initializer);
+    else if (
+      ts.isIdentifier(movesProp.initializer) &&
+      movesProp.initializer.text === 'SOUND_BASED_MOVES'
+    )
+      moves = soundBasedMoves;
     if (!moves) continue;
     for (const move of moves) {
-      if (!KNOWN_MOVES.has(normalize(move))) refHits.push({ file, table: 'MOVE_BLOCKING_ABILITIES', slug: move, kind: 'move', context: ability });
+      if (!KNOWN_MOVES.has(normalize(move)))
+        refHits.push({
+          file,
+          table: 'MOVE_BLOCKING_ABILITIES',
+          slug: move,
+          kind: 'move',
+          context: ability,
+        });
     }
   }
 }
@@ -319,7 +414,14 @@ let soundBasedMoves: string[] = [];
   const source = parseFile(file);
   const entries = objectValueEntries(findConst(source, 'MEGA_ABILITIES'));
   for (const [megaSlug, ability] of entries) {
-    if (!KNOWN_ABILITIES.has(normalize(ability))) refHits.push({ file, table: 'MEGA_ABILITIES', slug: ability, kind: 'ability', context: megaSlug });
+    if (!KNOWN_ABILITIES.has(normalize(ability)))
+      refHits.push({
+        file,
+        table: 'MEGA_ABILITIES',
+        slug: ability,
+        kind: 'ability',
+        context: megaSlug,
+      });
   }
 }
 
@@ -327,14 +429,26 @@ let soundBasedMoves: string[] = [];
 {
   const file = 'moveFieldEffects.ts';
   const source = parseFile(file);
-  checkKeysAgainst(file, 'MOVE_FIELD_EFFECTS', objectKeys(findConst(source, 'MOVE_FIELD_EFFECTS')), KNOWN_MOVES, 'move');
+  checkKeysAgainst(
+    file,
+    'MOVE_FIELD_EFFECTS',
+    objectKeys(findConst(source, 'MOVE_FIELD_EFFECTS')),
+    KNOWN_MOVES,
+    'move',
+  );
 }
 
 // --- moveWeatherEffects.ts ---
 {
   const file = 'moveWeatherEffects.ts';
   const source = parseFile(file);
-  checkKeysAgainst(file, 'MOVE_WEATHER_EFFECTS', objectKeys(findConst(source, 'MOVE_WEATHER_EFFECTS')), KNOWN_MOVES, 'move');
+  checkKeysAgainst(
+    file,
+    'MOVE_WEATHER_EFFECTS',
+    objectKeys(findConst(source, 'MOVE_WEATHER_EFFECTS')),
+    KNOWN_MOVES,
+    'move',
+  );
 }
 
 // --- moveTargeting.ts --- (TARGET_CATEGORY_MAP is keyed by PokeAPI's raw `target` slug, not a
@@ -342,29 +456,59 @@ let soundBasedMoves: string[] = [];
 {
   const file = 'moveTargeting.ts';
   const source = parseFile(file);
-  checkKeysAgainst(file, 'MOVE_TARGET_OVERRIDES', objectKeys(findConst(source, 'MOVE_TARGET_OVERRIDES')), KNOWN_MOVES, 'move');
+  checkKeysAgainst(
+    file,
+    'MOVE_TARGET_OVERRIDES',
+    objectKeys(findConst(source, 'MOVE_TARGET_OVERRIDES')),
+    KNOWN_MOVES,
+    'move',
+  );
 }
 
 // --- typeChangingAbilities.ts ---
 {
   const file = 'typeChangingAbilities.ts';
   const source = parseFile(file);
-  checkKeysAgainst(file, 'TYPE_CHANGING_ABILITIES', objectKeys(findConst(source, 'TYPE_CHANGING_ABILITIES')), KNOWN_ABILITIES, 'ability');
-  checkKeysAgainst(file, 'VARIABLE_TYPE_MOVES', newSetStringArray(findConst(source, 'VARIABLE_TYPE_MOVES')), KNOWN_MOVES, 'move');
+  checkKeysAgainst(
+    file,
+    'TYPE_CHANGING_ABILITIES',
+    objectKeys(findConst(source, 'TYPE_CHANGING_ABILITIES')),
+    KNOWN_ABILITIES,
+    'ability',
+  );
+  checkKeysAgainst(
+    file,
+    'VARIABLE_TYPE_MOVES',
+    newSetStringArray(findConst(source, 'VARIABLE_TYPE_MOVES')),
+    KNOWN_MOVES,
+    'move',
+  );
 }
 
 // --- protectMoves.ts ---
 {
   const file = 'protectMoves.ts';
   const source = parseFile(file);
-  checkKeysAgainst(file, 'PROTECT_FAMILY_MOVES', stringArrayLiteral(findConst(source, 'PROTECT_FAMILY_MOVES')), KNOWN_MOVES, 'move');
+  checkKeysAgainst(
+    file,
+    'PROTECT_FAMILY_MOVES',
+    stringArrayLiteral(findConst(source, 'PROTECT_FAMILY_MOVES')),
+    KNOWN_MOVES,
+    'move',
+  );
 }
 
 // --- switchOutMoves.ts ---
 {
   const file = 'switchOutMoves.ts';
   const source = parseFile(file);
-  checkKeysAgainst(file, 'SWITCH_OUT_MOVES', stringArrayLiteral(findConst(source, 'SWITCH_OUT_MOVES')), KNOWN_MOVES, 'move');
+  checkKeysAgainst(
+    file,
+    'SWITCH_OUT_MOVES',
+    stringArrayLiteral(findConst(source, 'SWITCH_OUT_MOVES')),
+    KNOWN_MOVES,
+    'move',
+  );
 }
 
 // --- moveFlags.ts --- (CHAMPIONS_ADDED_FLAGS is keyed by move; its values are MoveFlagKey
@@ -372,7 +516,13 @@ let soundBasedMoves: string[] = [];
 {
   const file = 'moveFlags.ts';
   const source = parseFile(file);
-  checkKeysAgainst(file, 'CHAMPIONS_ADDED_FLAGS', objectKeys(findConst(source, 'CHAMPIONS_ADDED_FLAGS')), KNOWN_MOVES, 'move');
+  checkKeysAgainst(
+    file,
+    'CHAMPIONS_ADDED_FLAGS',
+    objectKeys(findConst(source, 'CHAMPIONS_ADDED_FLAGS')),
+    KNOWN_MOVES,
+    'move',
+  );
 }
 
 // --- report ---
@@ -381,12 +531,18 @@ console.log('=== Config-table referential-integrity audit ===\n');
 console.log(`Unrecognized move/ability slugs: ${refHits.length}`);
 for (const hit of refHits) {
   const where = hit.context ? ` (under "${hit.context}")` : '';
-  console.log(`  - ${hit.file}::${hit.table} — "${hit.slug}"${where} — no matching ${hit.kind} in the Gen 9 dex`);
+  console.log(
+    `  - ${hit.file}::${hit.table} — "${hit.slug}"${where} — no matching ${hit.kind} in the Gen 9 dex`,
+  );
 }
 
 console.log(`\nMovepool add/remove contradictions: ${movepoolContradictions.length}`);
 for (const hit of movepoolContradictions) {
-  console.log(`  - championsMovepoolChanges.ts — "${hit.species}" both adds and removes "${hit.move}"`);
+  console.log(
+    `  - championsMovepoolChanges.ts — "${hit.species}" both adds and removes "${hit.move}"`,
+  );
 }
 
-console.log(`\nTotals: refIntegrity=${refHits.length}, movepoolContradictions=${movepoolContradictions.length}`);
+console.log(
+  `\nTotals: refIntegrity=${refHits.length}, movepoolContradictions=${movepoolContradictions.length}`,
+);

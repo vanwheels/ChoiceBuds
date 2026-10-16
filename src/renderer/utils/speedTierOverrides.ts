@@ -71,7 +71,10 @@ export function defaultSpeedOverride(pokemon: ImportedPokemonInfo): TeamSpeedOve
  * yet - the common case, since most of a team's 6 mons stay untouched in any
  * one session.
  */
-export function applySpeedOverride(pokemon: ImportedPokemonInfo, override: TeamSpeedOverride | undefined): ImportedPokemonInfo {
+export function applySpeedOverride(
+  pokemon: ImportedPokemonInfo,
+  override: TeamSpeedOverride | undefined,
+): ImportedPokemonInfo {
   if (!override) return pokemon;
   const megaAbility = getMegaAbility(override.species.toLowerCase());
   return {
@@ -94,7 +97,10 @@ export function applySpeedOverride(pokemon: ImportedPokemonInfo, override: TeamS
  * purpose: no `species`/ability patch, since form stays preview-only (see
  * this file's header).
  */
-export function patchPokemonWithOverride(pokemon: ImportedPokemonInfo, override: TeamSpeedOverride): ImportedPokemonInfo {
+export function patchPokemonWithOverride(
+  pokemon: ImportedPokemonInfo,
+  override: TeamSpeedOverride,
+): ImportedPokemonInfo {
   return {
     ...pokemon,
     showdownData: {

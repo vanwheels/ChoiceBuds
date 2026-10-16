@@ -8,7 +8,12 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import type { ImportedPokemonInfo, SavedPokemonEntry, SavedPokemonDatabase, SyncTombstone } from '../types/pokemon';
+import type {
+  ImportedPokemonInfo,
+  SavedPokemonEntry,
+  SavedPokemonDatabase,
+  SyncTombstone,
+} from '../types/pokemon';
 import { getStorageAdapter } from '../services/storage';
 import { fixGenderSplitResourceSpeciesText } from '../config/pokemonRules';
 
@@ -20,11 +25,14 @@ import { fixGenderSplitResourceSpeciesText } from '../config/pokemonRules';
  * normalizeTeam.
  */
 function normalizeSavedPokemon(entries: SavedPokemonEntry[]): SavedPokemonEntry[] {
-  return entries.map(entry => ({
+  return entries.map((entry) => ({
     ...entry,
     pokemon: {
       ...entry.pokemon,
-      showdownData: { ...entry.pokemon.showdownData, species: fixGenderSplitResourceSpeciesText(entry.pokemon.showdownData.species) },
+      showdownData: {
+        ...entry.pokemon.showdownData,
+        species: fixGenderSplitResourceSpeciesText(entry.pokemon.showdownData.species),
+      },
     },
   }));
 }
@@ -42,7 +50,10 @@ function normalizeSavedPokemon(entries: SavedPokemonEntry[]): SavedPokemonEntry[
  * object reference, so a caller can cheaply detect "did anything change" via
  * reference comparison against `normalizedEntries` rather than re-diffing.
  */
-function bumpUpdatedAtForFixedEntries(rawEntries: SavedPokemonEntry[], normalizedEntries: SavedPokemonEntry[]): SavedPokemonEntry[] {
+function bumpUpdatedAtForFixedEntries(
+  rawEntries: SavedPokemonEntry[],
+  normalizedEntries: SavedPokemonEntry[],
+): SavedPokemonEntry[] {
   const now = Date.now();
   return normalizedEntries.map((entry, i) => {
     const rawSpecies = rawEntries[i]?.pokemon.showdownData.species;
@@ -86,7 +97,11 @@ export interface UseSavedPokemonReturn {
    * instead of having to guess which of the (possibly still-stale) returned
    * entries is the new one.
    */
-  addSavedPokemonBatch: (pokemonList: ImportedPokemonInfo[], labels?: string[], ids?: string[]) => Promise<boolean>;
+  addSavedPokemonBatch: (
+    pokemonList: ImportedPokemonInfo[],
+    labels?: string[],
+    ids?: string[],
+  ) => Promise<boolean>;
   renameSavedPokemon: (id: string, label: string) => Promise<boolean>;
   /**
    * Toggles an entry's `favorite` field (Box Tab: Favoriting, see TODO.md) -
@@ -186,7 +201,10 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
   // which now call it directly to persist the gender-split species fix for
   // real) - this project's lint config forbids referencing a same-scope
   // const before its declaration even from a deferred async closure.
-  const persistSavedPokemonToDisk = async (updated: SavedPokemonEntry[], updatedTombstones: SyncTombstone[]): Promise<boolean> => {
+  const persistSavedPokemonToDisk = async (
+    updated: SavedPokemonEntry[],
+    updatedTombstones: SyncTombstone[],
+  ): Promise<boolean> => {
     try {
       const database: SavedPokemonDatabase = {
         schemaVersion: SAVED_POKEMON_SCHEMA_VERSION,
@@ -277,7 +295,8 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
         }
       } catch (err) {
         if (ignore) return;
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load saved Pokemon sets';
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to load saved Pokemon sets';
         setError(errorMessage);
         console.error('Error loading saved Pokemon sets:', err);
       } finally {
@@ -290,87 +309,118 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     };
   }, []);
 
-  const addSavedPokemonBatch = useCallback(async (pokemonList: ImportedPokemonInfo[], labels?: string[], ids?: string[]): Promise<boolean> => {
-    const labelsSoFar = savedPokemon.map(e => e.label);
-    const now = Date.now();
+  const addSavedPokemonBatch = useCallback(
+    async (
+      pokemonList: ImportedPokemonInfo[],
+      labels?: string[],
+      ids?: string[],
+    ): Promise<boolean> => {
+      const labelsSoFar = savedPokemon.map((e) => e.label);
+      const now = Date.now();
 
-    const newEntries: SavedPokemonEntry[] = pokemonList.map((pokemon, i) => {
-      const base = labels?.[i]?.trim() || pokemon.showdownData.nickname || pokemon.showdownData.species;
-      const label = nextAvailableLabel(base, labelsSoFar);
-      labelsSoFar.push(label); // dedupe against sets earlier in this same batch too, not just pre-existing ones
-      return { id: ids?.[i] ?? crypto.randomUUID(), label, pokemon, savedAt: now, updatedAt: now };
-    });
+      const newEntries: SavedPokemonEntry[] = pokemonList.map((pokemon, i) => {
+        const base =
+          labels?.[i]?.trim() || pokemon.showdownData.nickname || pokemon.showdownData.species;
+        const label = nextAvailableLabel(base, labelsSoFar);
+        labelsSoFar.push(label); // dedupe against sets earlier in this same batch too, not just pre-existing ones
+        return {
+          id: ids?.[i] ?? crypto.randomUUID(),
+          label,
+          pokemon,
+          savedAt: now,
+          updatedAt: now,
+        };
+      });
 
-    const updated = [...newEntries, ...savedPokemon];
-    const success = await persistSavedPokemonToDisk(updated, tombstones);
+      const updated = [...newEntries, ...savedPokemon];
+      const success = await persistSavedPokemonToDisk(updated, tombstones);
 
-    if (success) {
-      setSavedPokemon(updated);
-      setError(null);
-    }
+      if (success) {
+        setSavedPokemon(updated);
+        setError(null);
+      }
 
-    return success;
-  }, [savedPokemon, tombstones]);
+      return success;
+    },
+    [savedPokemon, tombstones],
+  );
 
-  const renameSavedPokemon = useCallback(async (id: string, label: string): Promise<boolean> => {
-    const index = savedPokemon.findIndex(e => e.id === id);
-    if (index === -1) {
-      setError(`Saved Pokemon set with ID ${id} not found`);
-      return false;
-    }
+  const renameSavedPokemon = useCallback(
+    async (id: string, label: string): Promise<boolean> => {
+      const index = savedPokemon.findIndex((e) => e.id === id);
+      if (index === -1) {
+        setError(`Saved Pokemon set with ID ${id} not found`);
+        return false;
+      }
 
-    const updated = [...savedPokemon];
-    updated[index] = { ...updated[index], label, updatedAt: Date.now() };
+      const updated = [...savedPokemon];
+      updated[index] = { ...updated[index], label, updatedAt: Date.now() };
 
-    const success = await persistSavedPokemonToDisk(updated, tombstones);
+      const success = await persistSavedPokemonToDisk(updated, tombstones);
 
-    if (success) {
-      setSavedPokemon(updated);
-      setError(null);
-    }
+      if (success) {
+        setSavedPokemon(updated);
+        setError(null);
+      }
 
-    return success;
-  }, [savedPokemon, tombstones]);
+      return success;
+    },
+    [savedPokemon, tombstones],
+  );
 
-  const toggleSavedPokemonFavorite = useCallback(async (id: string): Promise<boolean> => {
-    const index = savedPokemon.findIndex(e => e.id === id);
-    if (index === -1) {
-      setError(`Saved Pokemon set with ID ${id} not found`);
-      return false;
-    }
+  const toggleSavedPokemonFavorite = useCallback(
+    async (id: string): Promise<boolean> => {
+      const index = savedPokemon.findIndex((e) => e.id === id);
+      if (index === -1) {
+        setError(`Saved Pokemon set with ID ${id} not found`);
+        return false;
+      }
 
-    const updated = [...savedPokemon];
-    updated[index] = { ...updated[index], favorite: !updated[index].favorite, updatedAt: Date.now() };
+      const updated = [...savedPokemon];
+      updated[index] = {
+        ...updated[index],
+        favorite: !updated[index].favorite,
+        updatedAt: Date.now(),
+      };
 
-    const success = await persistSavedPokemonToDisk(updated, tombstones);
+      const success = await persistSavedPokemonToDisk(updated, tombstones);
 
-    if (success) {
-      setSavedPokemon(updated);
-      setError(null);
-    }
+      if (success) {
+        setSavedPokemon(updated);
+        setError(null);
+      }
 
-    return success;
-  }, [savedPokemon, tombstones]);
+      return success;
+    },
+    [savedPokemon, tombstones],
+  );
 
-  const updateSavedPokemon = useCallback(async (id: string, updates: Partial<ImportedPokemonInfo>): Promise<boolean> => {
-    const index = savedPokemon.findIndex(e => e.id === id);
-    if (index === -1) {
-      setError(`Saved Pokemon set with ID ${id} not found`);
-      return false;
-    }
+  const updateSavedPokemon = useCallback(
+    async (id: string, updates: Partial<ImportedPokemonInfo>): Promise<boolean> => {
+      const index = savedPokemon.findIndex((e) => e.id === id);
+      if (index === -1) {
+        setError(`Saved Pokemon set with ID ${id} not found`);
+        return false;
+      }
 
-    const updated = [...savedPokemon];
-    updated[index] = { ...updated[index], pokemon: { ...updated[index].pokemon, ...updates }, updatedAt: Date.now() };
+      const updated = [...savedPokemon];
+      updated[index] = {
+        ...updated[index],
+        pokemon: { ...updated[index].pokemon, ...updates },
+        updatedAt: Date.now(),
+      };
 
-    const success = await persistSavedPokemonToDisk(updated, tombstones);
+      const success = await persistSavedPokemonToDisk(updated, tombstones);
 
-    if (success) {
-      setSavedPokemon(updated);
-      setError(null);
-    }
+      if (success) {
+        setSavedPokemon(updated);
+        setError(null);
+      }
 
-    return success;
-  }, [savedPokemon, tombstones]);
+      return success;
+    },
+    [savedPokemon, tombstones],
+  );
 
   /**
    * Bulk variant of updateSavedPokemon, for usePokedexNumberSelfHeal.ts's
@@ -383,69 +433,83 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
    * silently drop all but the last one's fix for a user with 2+ affected
    * Box entries.
    */
-  const applyPokedexNumberFixes = useCallback(async (fixes: { id: string; nationalDexNumber: number }[]): Promise<boolean> => {
-    const fixById = new Map(fixes.map(f => [f.id, f.nationalDexNumber]));
-    const updated = savedPokemon.map(entry => {
-      const nationalDexNumber = fixById.get(entry.id);
-      return nationalDexNumber === undefined
-        ? entry
-        : { ...entry, pokemon: { ...entry.pokemon, nationalDexNumber }, updatedAt: Date.now() };
-    });
+  const applyPokedexNumberFixes = useCallback(
+    async (fixes: { id: string; nationalDexNumber: number }[]): Promise<boolean> => {
+      const fixById = new Map(fixes.map((f) => [f.id, f.nationalDexNumber]));
+      const updated = savedPokemon.map((entry) => {
+        const nationalDexNumber = fixById.get(entry.id);
+        return nationalDexNumber === undefined
+          ? entry
+          : { ...entry, pokemon: { ...entry.pokemon, nationalDexNumber }, updatedAt: Date.now() };
+      });
 
-    const success = await persistSavedPokemonToDisk(updated, tombstones);
+      const success = await persistSavedPokemonToDisk(updated, tombstones);
 
-    if (success) {
-      setSavedPokemon(updated);
-      setError(null);
-    }
+      if (success) {
+        setSavedPokemon(updated);
+        setError(null);
+      }
 
-    return success;
-  }, [savedPokemon, tombstones]);
+      return success;
+    },
+    [savedPokemon, tombstones],
+  );
 
-  const duplicateSavedPokemon = useCallback(async (id: string): Promise<boolean> => {
-    const source = savedPokemon.find(e => e.id === id);
-    if (!source) {
-      setError(`Saved Pokemon set with ID ${id} not found`);
-      return false;
-    }
+  const duplicateSavedPokemon = useCallback(
+    async (id: string): Promise<boolean> => {
+      const source = savedPokemon.find((e) => e.id === id);
+      if (!source) {
+        setError(`Saved Pokemon set with ID ${id} not found`);
+        return false;
+      }
 
-    const now = Date.now();
-    const newEntry: SavedPokemonEntry = {
-      id: crypto.randomUUID(),
-      label: nextAvailableLabel(source.label, savedPokemon.map(e => e.label)),
-      pokemon: { ...source.pokemon, id: crypto.randomUUID() },
-      savedAt: now,
-      updatedAt: now,
-    };
+      const now = Date.now();
+      const newEntry: SavedPokemonEntry = {
+        id: crypto.randomUUID(),
+        label: nextAvailableLabel(
+          source.label,
+          savedPokemon.map((e) => e.label),
+        ),
+        pokemon: { ...source.pokemon, id: crypto.randomUUID() },
+        savedAt: now,
+        updatedAt: now,
+      };
 
-    const updated = [newEntry, ...savedPokemon];
-    const success = await persistSavedPokemonToDisk(updated, tombstones);
+      const updated = [newEntry, ...savedPokemon];
+      const success = await persistSavedPokemonToDisk(updated, tombstones);
 
-    if (success) {
-      setSavedPokemon(updated);
-      setError(null);
-    }
+      if (success) {
+        setSavedPokemon(updated);
+        setError(null);
+      }
 
-    return success;
-  }, [savedPokemon, tombstones]);
+      return success;
+    },
+    [savedPokemon, tombstones],
+  );
 
-  const setSavedPokemonOrder = useCallback(async (orderedIds: string[]): Promise<boolean> => {
-    const byId = new Map(savedPokemon.map(e => [e.id, e]));
-    const ordered = orderedIds.map(id => byId.get(id)).filter((e): e is SavedPokemonEntry => e !== undefined);
-    const orderedIdSet = new Set(ordered.map(e => e.id));
-    const leftover = savedPokemon.filter(e => !orderedIdSet.has(e.id));
-    const updated = [...ordered, ...leftover];
+  const setSavedPokemonOrder = useCallback(
+    async (orderedIds: string[]): Promise<boolean> => {
+      const byId = new Map(savedPokemon.map((e) => [e.id, e]));
+      const ordered = orderedIds
+        .map((id) => byId.get(id))
+        .filter((e): e is SavedPokemonEntry => e !== undefined);
+      const orderedIdSet = new Set(ordered.map((e) => e.id));
+      const leftover = savedPokemon.filter((e) => !orderedIdSet.has(e.id));
+      const updated = [...ordered, ...leftover];
 
-    const success = await persistSavedPokemonToDisk(updated, tombstones);
-    if (success) {
-      setSavedPokemon(updated);
-      setError(null);
-    }
-    return success;
-  }, [savedPokemon, tombstones]);
+      const success = await persistSavedPokemonToDisk(updated, tombstones);
+      if (success) {
+        setSavedPokemon(updated);
+        setError(null);
+      }
+      return success;
+    },
+    [savedPokemon, tombstones],
+  );
 
   const toggleCardExpansion = useCallback((id: string): void => {
-    setExpandedCardIds(prev => {
+    setExpandedCardIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
         next.delete(id);
@@ -461,29 +525,37 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
    * sync merge knows this id was intentionally removed here - cleared once
    * confirmed synced (applySyncedState below).
    */
-  const deleteSavedPokemon = useCallback(async (id: string): Promise<boolean> => {
-    const updated = savedPokemon.filter(e => e.id !== id);
-    const updatedTombstones = [...tombstones, { id, deletedAt: Date.now() }];
-    const success = await persistSavedPokemonToDisk(updated, updatedTombstones);
+  const deleteSavedPokemon = useCallback(
+    async (id: string): Promise<boolean> => {
+      const updated = savedPokemon.filter((e) => e.id !== id);
+      const updatedTombstones = [...tombstones, { id, deletedAt: Date.now() }];
+      const success = await persistSavedPokemonToDisk(updated, updatedTombstones);
 
-    if (success) {
-      setSavedPokemon(updated);
-      setTombstones(updatedTombstones);
-      setError(null);
-    }
+      if (success) {
+        setSavedPokemon(updated);
+        setTombstones(updatedTombstones);
+        setError(null);
+      }
 
-    return success;
-  }, [savedPokemon, tombstones]);
+      return success;
+    },
+    [savedPokemon, tombstones],
+  );
 
   const refreshSavedPokemon = useCallback(async (): Promise<void> => {
     await loadSavedPokemonFromDisk();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const getSavedSetsForSpecies = useCallback((species: string): SavedPokemonEntry[] => {
-    const normalized = species.toLowerCase().trim();
-    return savedPokemon.filter(e => e.pokemon.showdownData.species.toLowerCase().trim() === normalized);
-  }, [savedPokemon]);
+  const getSavedSetsForSpecies = useCallback(
+    (species: string): SavedPokemonEntry[] => {
+      const normalized = species.toLowerCase().trim();
+      return savedPokemon.filter(
+        (e) => e.pokemon.showdownData.species.toLowerCase().trim() === normalized,
+      );
+    },
+    [savedPokemon],
+  );
 
   const applySyncedState = useCallback(async (records: SavedPokemonEntry[]): Promise<boolean> => {
     const success = await persistSavedPokemonToDisk(records, []);

@@ -68,10 +68,14 @@ function needsBackfill(p: { pokedexNumber: number; nationalDexNumber?: number })
 export function usePokedexNumberSelfHeal(
   teamsState: UseTeamsReturn,
   savedPokemonState: UseSavedPokemonReturn,
-  databaseState: UseDatabaseReturn
+  databaseState: UseDatabaseReturn,
 ): void {
   const { teams, isLoading: teamsLoading, updateTeam } = teamsState;
-  const { savedPokemon, isLoading: savedPokemonLoading, applyPokedexNumberFixes } = savedPokemonState;
+  const {
+    savedPokemon,
+    isLoading: savedPokemonLoading,
+    applyPokedexNumberFixes,
+  } = savedPokemonState;
   const { isInitialized: isDatabaseInitialized, setCacheEntry } = databaseState;
 
   const hasRunRef = useRef(false);
@@ -85,14 +89,16 @@ export function usePokedexNumberSelfHeal(
       for (const p of team.pokemon) {
         if (!needsBackfill(p)) continue;
         const key = normalizeSpeciesForAPI(p.showdownData.species, p.showdownData.gender);
-        if (!toFetch.has(key)) toFetch.set(key, { species: p.showdownData.species, gender: p.showdownData.gender });
+        if (!toFetch.has(key))
+          toFetch.set(key, { species: p.showdownData.species, gender: p.showdownData.gender });
       }
     }
     for (const entry of savedPokemon) {
       const p = entry.pokemon;
       if (!needsBackfill(p)) continue;
       const key = normalizeSpeciesForAPI(p.showdownData.species, p.showdownData.gender);
-      if (!toFetch.has(key)) toFetch.set(key, { species: p.showdownData.species, gender: p.showdownData.gender });
+      if (!toFetch.has(key))
+        toFetch.set(key, { species: p.showdownData.species, gender: p.showdownData.gender });
     }
 
     if (toFetch.size === 0) {
@@ -113,7 +119,9 @@ export function usePokedexNumberSelfHeal(
             if (apiData.nationalDexNumber !== undefined) {
               correctedByKey.set(key, apiData.nationalDexNumber);
             } else {
-              console.warn(`[usePokedexNumberSelfHeal] Fetched "${key}" but its response had no species.url to derive a real dex number from`);
+              console.warn(
+                `[usePokedexNumberSelfHeal] Fetched "${key}" but its response had no species.url to derive a real dex number from`,
+              );
             }
             void setCacheEntry(key, apiData);
           } catch (err) {
@@ -124,15 +132,18 @@ export function usePokedexNumberSelfHeal(
             // already handles its own failure terminally (nothing added to
             // correctedByKey for this key), so there's nothing left for
             // runWithConcurrency's own catch to do with it.
-            console.warn(`[usePokedexNumberSelfHeal] Failed to fetch "${key}" for dex-number backfill:`, err);
+            console.warn(
+              `[usePokedexNumberSelfHeal] Failed to fetch "${key}" for dex-number backfill:`,
+              err,
+            );
           }
-        }
+        },
       );
 
       if (correctedByKey.size === 0) return; // every fetch failed (offline/rate-limited) or had no species url - a future launch retries
 
       for (const team of teams) {
-        const fixedPokemon: Team['pokemon'] = team.pokemon.map(p => {
+        const fixedPokemon: Team['pokemon'] = team.pokemon.map((p) => {
           if (!needsBackfill(p)) return p;
           const key = normalizeSpeciesForAPI(p.showdownData.species, p.showdownData.gender);
           const nationalDexNumber = correctedByKey.get(key);
@@ -149,9 +160,21 @@ export function usePokedexNumberSelfHeal(
         if (!needsBackfill(p)) continue;
         const key = normalizeSpeciesForAPI(p.showdownData.species, p.showdownData.gender);
         const nationalDexNumber = correctedByKey.get(key);
-        if (nationalDexNumber !== undefined) savedPokemonFixes.push({ id: entry.id, nationalDexNumber });
+        if (nationalDexNumber !== undefined)
+          savedPokemonFixes.push({ id: entry.id, nationalDexNumber });
       }
       if (savedPokemonFixes.length > 0) void applyPokedexNumberFixes(savedPokemonFixes);
-    })().catch(err => console.warn('[usePokedexNumberSelfHeal] Backfill pass failed unexpectedly:', err));
-  }, [teams, teamsLoading, savedPokemon, savedPokemonLoading, isDatabaseInitialized, updateTeam, applyPokedexNumberFixes, setCacheEntry]);
+    })().catch((err) =>
+      console.warn('[usePokedexNumberSelfHeal] Backfill pass failed unexpectedly:', err),
+    );
+  }, [
+    teams,
+    teamsLoading,
+    savedPokemon,
+    savedPokemonLoading,
+    isDatabaseInitialized,
+    updateTeam,
+    applyPokedexNumberFixes,
+    setCacheEntry,
+  ]);
 }

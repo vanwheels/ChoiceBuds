@@ -10,13 +10,13 @@ import { measureDropdownMaxHeight } from './measureDropdownHeight';
 function makeTrigger(cardEl: HTMLElement | null, top: number, bottom: number): HTMLElement {
   return {
     closest: () => cardEl,
-    getBoundingClientRect: () => ({ top, bottom } as DOMRect),
+    getBoundingClientRect: () => ({ top, bottom }) as DOMRect,
   } as unknown as HTMLElement;
 }
 
 function makeCard(top: number, bottom: number): HTMLElement {
   return {
-    getBoundingClientRect: () => ({ top, bottom } as DOMRect),
+    getBoundingClientRect: () => ({ top, bottom }) as DOMRect,
   } as unknown as HTMLElement;
 }
 

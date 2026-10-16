@@ -97,7 +97,11 @@ export function getCachedMegaSprite(apiSlug: string): MegaSpriteResult | null {
  * forme (Aegislash-Shield), or a still-cold cache the same way: none of
  * those have a cache entry, so this is just a no-op fallback for them.
  */
-export function resolveDisplaySpriteUrl(species: string, shiny: boolean, fallbackSpriteUrl: string): string {
+export function resolveDisplaySpriteUrl(
+  species: string,
+  shiny: boolean,
+  fallbackSpriteUrl: string,
+): string {
   const megaSprite = getCachedMegaSprite(species.toLowerCase());
   if (!megaSprite) return fallbackSpriteUrl;
   return shiny ? megaSprite.shinySpriteUrl : megaSprite.spriteUrl;
@@ -135,19 +139,23 @@ export function useMegaSpritePrefetch(): number {
   const [version, setVersion] = useState(0);
   useEffect(() => {
     let cancelled = false;
-    const slugs = [...CURATED_MEGA_FORM_SLUGS].filter(slug => !cache.has(slug));
+    const slugs = [...CURATED_MEGA_FORM_SLUGS].filter((slug) => !cache.has(slug));
     if (slugs.length === 0) return;
     runWithConcurrency(slugs, PREFETCH_CONCURRENCY, () => {}, fetchMegaSprite).then(() => {
-      if (!cancelled) setVersion(v => v + 1);
+      if (!cancelled) setVersion((v) => v + 1);
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
   return version;
 }
 
 /** `apiSlug` null means "not currently mega-eligible" - returns null immediately, no fetch */
 export function useMegaSprite(apiSlug: string | null): MegaSpriteResult | null {
-  const [result, setResult] = useState<MegaSpriteResult | null>(apiSlug ? cache.get(apiSlug) ?? null : null);
+  const [result, setResult] = useState<MegaSpriteResult | null>(
+    apiSlug ? (cache.get(apiSlug) ?? null) : null,
+  );
 
   // Re-derives synchronously from cache the moment apiSlug changes - set
   // during render rather than in an effect, see
@@ -155,14 +163,18 @@ export function useMegaSprite(apiSlug: string | null): MegaSpriteResult | null {
   const [resolvedForSlug, setResolvedForSlug] = useState(apiSlug);
   if (apiSlug !== resolvedForSlug) {
     setResolvedForSlug(apiSlug);
-    setResult(apiSlug ? cache.get(apiSlug) ?? null : null);
+    setResult(apiSlug ? (cache.get(apiSlug) ?? null) : null);
   }
 
   useEffect(() => {
     if (!apiSlug || cache.has(apiSlug)) return;
     let cancelled = false;
-    fetchMegaSprite(apiSlug).then(r => { if (!cancelled) setResult(r); });
-    return () => { cancelled = true; };
+    fetchMegaSprite(apiSlug).then((r) => {
+      if (!cancelled) setResult(r);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [apiSlug]);
 
   return result;

@@ -72,6 +72,6 @@ export default function Modal({ children, panelClassName = 'max-w-3xl max-h-[90v
         {children}
       </motion.div>
     </motion.div>,
-    document.body
+    document.body,
   );
 }

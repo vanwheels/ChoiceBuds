@@ -95,13 +95,15 @@ function rankCandidates<T extends string>(
   ranked: ChampionsUsageRankedEntry[],
 ): UsageRankedCandidate<T>[] {
   if (candidates.length === 0) return [];
-  const percentageBySlug = new Map(ranked.map(entry => [normalizeSlug(entry.name), entry.percentage]));
+  const percentageBySlug = new Map(
+    ranked.map((entry) => [normalizeSlug(entry.name), entry.percentage]),
+  );
   const withUsage = candidates
-    .map(value => ({ value, percentage: percentageBySlug.get(normalizeSlug(value)) }))
+    .map((value) => ({ value, percentage: percentageBySlug.get(normalizeSlug(value)) }))
     .filter((c): c is { value: T; percentage: number } => c.percentage !== undefined);
   // Never-empty-axis fallback: nothing on this axis has any ladder usage at
   // all - skip the filter and fall back to the full candidate list, unranked.
-  if (withUsage.length === 0) return candidates.map(value => ({ value, percentage: 0 }));
+  if (withUsage.length === 0) return candidates.map((value) => ({ value, percentage: 0 }));
   return withUsage.sort((a, b) => b.percentage - a.percentage);
 }
 
@@ -120,14 +122,20 @@ function rankCandidates<T extends string>(
  * every axis's usage view becomes an unranked mirror of its base candidates -
  * i.e. every axis behaves as if unranked/unfiltered.
  */
-export function applyUsageWeighting<T extends UsageWeightedAxes>(inference: T, usage: ChampionsUsageEntry | null): T {
+export function applyUsageWeighting<T extends UsageWeightedAxes>(
+  inference: T,
+  usage: ChampionsUsageEntry | null,
+): T {
   if (!usage) {
     return {
       ...inference,
-      natureUsageCandidates: inference.natureCandidates.map(value => ({ value, percentage: 0 })),
-      abilityUsageCandidates: inference.abilityCandidates.map(value => ({ value, percentage: 0 })),
-      itemUsageCandidates: inference.itemCandidates.map(value => ({ value, percentage: 0 })),
-      moveUsageCandidates: inference.moveCandidates.map(value => ({ value, percentage: 0 })),
+      natureUsageCandidates: inference.natureCandidates.map((value) => ({ value, percentage: 0 })),
+      abilityUsageCandidates: inference.abilityCandidates.map((value) => ({
+        value,
+        percentage: 0,
+      })),
+      itemUsageCandidates: inference.itemCandidates.map((value) => ({ value, percentage: 0 })),
+      moveUsageCandidates: inference.moveCandidates.map((value) => ({ value, percentage: 0 })),
     };
   }
 

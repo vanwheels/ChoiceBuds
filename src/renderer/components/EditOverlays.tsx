@@ -24,7 +24,14 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import type { MouseEvent } from 'react';
-import type { ImportedPokemonInfo, ItemData, MoveData, AbilityData, ShowdownPokemon, ChampionsUsageRankedEntry } from '../types/pokemon';
+import type {
+  ImportedPokemonInfo,
+  ItemData,
+  MoveData,
+  AbilityData,
+  ShowdownPokemon,
+  ChampionsUsageRankedEntry,
+} from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { RegulationId } from '../utils/pokemonRules';
 import { normalizeSlug } from '../utils/pokemonRules';
@@ -48,8 +55,21 @@ interface EditOverlaysProps {
   onUpdatePokemon: (updates: Partial<ShowdownPokemon>) => void;
 }
 
-export default function EditOverlays({ pokemon, gameDataState, rulesetId, resolveSprite, onUpdatePokemon }: EditOverlaysProps) {
-  const { items, getItemData, getAbilityData, getMoveData, getEnrichedSpeciesOptions, getChampionsUsage } = gameDataState;
+export default function EditOverlays({
+  pokemon,
+  gameDataState,
+  rulesetId,
+  resolveSprite,
+  onUpdatePokemon,
+}: EditOverlaysProps) {
+  const {
+    items,
+    getItemData,
+    getAbilityData,
+    getMoveData,
+    getEnrichedSpeciesOptions,
+    getChampionsUsage,
+  } = gameDataState;
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [activeMenuMaxHeight, setActiveMenuMaxHeight] = useState(400);
   const [activeMenuAnchorRect, setActiveMenuAnchorRect] = useState<DOMRect | null>(null);
@@ -58,7 +78,9 @@ export default function EditOverlays({ pokemon, gameDataState, rulesetId, resolv
   const [hoveredRect, setHoveredRect] = useState<DOMRect | null>(null);
   const [hoveredCardRect, setHoveredCardRect] = useState<DOMRect | null>(null);
   const [selectedItem, setSelectedItem] = useState<string>(pokemon.showdownData.item || '');
-  const [selectedAbility, setSelectedAbility] = useState<string>(pokemon.showdownData.ability || '');
+  const [selectedAbility, setSelectedAbility] = useState<string>(
+    pokemon.showdownData.ability || '',
+  );
   const [selectedMoves, setSelectedMoves] = useState<string[]>([
     pokemon.showdownData.moves[0] || '',
     pokemon.showdownData.moves[1] || '',
@@ -77,7 +99,7 @@ export default function EditOverlays({ pokemon, gameDataState, rulesetId, resolv
   // Web Bug Sweep Leg 4, TODO.md.
   const propItem = pokemon.showdownData.item || '';
   const propAbility = pokemon.showdownData.ability || '';
-  const propMovesKey = [0, 1, 2, 3].map(i => pokemon.showdownData.moves[i] || '').join('|');
+  const propMovesKey = [0, 1, 2, 3].map((i) => pokemon.showdownData.moves[i] || '').join('|');
   const [prevPropItem, setPrevPropItem] = useState(propItem);
   const [prevPropAbility, setPrevPropAbility] = useState(propAbility);
   const [prevPropMovesKey, setPrevPropMovesKey] = useState(propMovesKey);
@@ -91,7 +113,7 @@ export default function EditOverlays({ pokemon, gameDataState, rulesetId, resolv
   }
   if (propMovesKey !== prevPropMovesKey) {
     setPrevPropMovesKey(propMovesKey);
-    setSelectedMoves([0, 1, 2, 3].map(i => pokemon.showdownData.moves[i] || ''));
+    setSelectedMoves([0, 1, 2, 3].map((i) => pokemon.showdownData.moves[i] || ''));
   }
   const [legalMoves, setLegalMoves] = useState<MoveData[]>([]);
   const [legalAbilities, setLegalAbilities] = useState<AbilityData[]>([]);
@@ -101,7 +123,12 @@ export default function EditOverlays({ pokemon, gameDataState, rulesetId, resolv
   const [itemSpriteFailed, setItemSpriteFailed] = useState(false);
   const [itemFallbackSpriteFailed, setItemFallbackSpriteFailed] = useState(false);
   const [abilityData, setAbilityData] = useState<AbilityData | null>(null);
-  const [moveDataSlots, setMoveDataSlots] = useState<Array<MoveData | null>>([null, null, null, null]);
+  const [moveDataSlots, setMoveDataSlots] = useState<Array<MoveData | null>>([
+    null,
+    null,
+    null,
+    null,
+  ]);
 
   // Caps the panel at whatever room is left between the trigger and the
   // bottom of this PokemonCard, not a fixed height - see
@@ -114,7 +141,9 @@ export default function EditOverlays({ pokemon, gameDataState, rulesetId, resolv
     }
     setActiveMenuMaxHeight(measureDropdownMaxHeight(e.currentTarget));
     setActiveMenuAnchorRect(e.currentTarget.getBoundingClientRect());
-    setActiveMenuCardRect(e.currentTarget.closest<HTMLElement>('[data-pokemon-card]')?.getBoundingClientRect() ?? null);
+    setActiveMenuCardRect(
+      e.currentTarget.closest<HTMLElement>('[data-pokemon-card]')?.getBoundingClientRect() ?? null,
+    );
     setActiveMenu(menuName);
     setHoveredKey(null); // don't let the tooltip float over the same content as the picker
   };
@@ -123,9 +152,11 @@ export default function EditOverlays({ pokemon, gameDataState, rulesetId, resolv
   const hoverEnter = (key: HoverKey, triggerEl: HTMLElement) => {
     setHoveredKey(key);
     setHoveredRect(triggerEl.getBoundingClientRect());
-    setHoveredCardRect(triggerEl.closest<HTMLElement>('[data-pokemon-card]')?.getBoundingClientRect() ?? null);
+    setHoveredCardRect(
+      triggerEl.closest<HTMLElement>('[data-pokemon-card]')?.getBoundingClientRect() ?? null,
+    );
   };
-  const hoverLeave = (key: HoverKey) => setHoveredKey(prev => (prev === key ? null : prev));
+  const hoverLeave = (key: HoverKey) => setHoveredKey((prev) => (prev === key ? null : prev));
 
   const handleItemClick = (item: ItemData) => {
     // Store the readable form ("Fairy Feather"), not the raw API slug
@@ -148,13 +179,13 @@ export default function EditOverlays({ pokemon, gameDataState, rulesetId, resolv
   };
 
   const handleMoveClick = (index: number, move: MoveData) => {
-    setSelectedMoves(prev => {
+    setSelectedMoves((prev) => {
       const next = [...prev];
       next[index] = toReadableName(move.name);
       onUpdatePokemon({ moves: next });
       return next;
     });
-    setMoveDataSlots(prev => {
+    setMoveDataSlots((prev) => {
       const next = [...prev];
       next[index] = move;
       return next;
@@ -167,12 +198,12 @@ export default function EditOverlays({ pokemon, gameDataState, rulesetId, resolv
   // is what lets MoveBubbleGrid reset its own local drag order back to
   // identity once this commits.
   const handleMoveReorder = (newOrder: number[]) => {
-    setSelectedMoves(prev => {
-      const next = newOrder.map(i => prev[i]);
+    setSelectedMoves((prev) => {
+      const next = newOrder.map((i) => prev[i]);
       onUpdatePokemon({ moves: next });
       return next;
     });
-    setMoveDataSlots(prev => newOrder.map(i => prev[i]));
+    setMoveDataSlots((prev) => newOrder.map((i) => prev[i]));
   };
 
   // Real legal movepool + ability pool for this species (never a per-Pokemon fallback)
@@ -185,9 +216,12 @@ export default function EditOverlays({ pokemon, gameDataState, rulesetId, resolv
         setLegalAbilities(abilities);
       })
       .catch(() => {
-        if (!cancelled) console.warn(`No learnset data available for species: ${pokemon.showdownData.species}`);
+        if (!cancelled)
+          console.warn(`No learnset data available for species: ${pokemon.showdownData.species}`);
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [pokemon.showdownData.species, pokemon.showdownData.gender, getEnrichedSpeciesOptions]);
 
   // Champions ranked-ladder usage (same source/cache as the Calc page's
@@ -200,15 +234,20 @@ export default function EditOverlays({ pokemon, gameDataState, rulesetId, resolv
   useEffect(() => {
     let cancelled = false;
     getChampionsUsage(pokemon.showdownData.species)
-      .then(usage => {
+      .then((usage) => {
         if (cancelled) return;
         setMoveUsage(usage?.moves ?? []);
         setAbilityUsage(usage?.abilities ?? []);
       })
       .catch(() => {
-        if (!cancelled) { setMoveUsage([]); setAbilityUsage([]); }
+        if (!cancelled) {
+          setMoveUsage([]);
+          setAbilityUsage([]);
+        }
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [pokemon.showdownData.species, getChampionsUsage]);
 
   // Keyed by the same lowercase-hyphenated slug MoveData/AbilityData.name
@@ -216,24 +255,30 @@ export default function EditOverlays({ pokemon, gameDataState, rulesetId, resolv
   // this lines up with the API's Title Case usage names without a live
   // round-trip check.
   const movePercentByName = useMemo(
-    () => Object.fromEntries(moveUsage.map(m => [normalizeSlug(m.name), m.percentage])),
-    [moveUsage]
+    () => Object.fromEntries(moveUsage.map((m) => [normalizeSlug(m.name), m.percentage])),
+    [moveUsage],
   );
   const abilityPercentByName = useMemo(
-    () => Object.fromEntries(abilityUsage.map(a => [normalizeSlug(a.name), a.percentage])),
-    [abilityUsage]
+    () => Object.fromEntries(abilityUsage.map((a) => [normalizeSlug(a.name), a.percentage])),
+    [abilityUsage],
   );
 
   // Most-used-first; anything with no usage entry (percentage undefined)
   // sorts after every ranked entry, keeping its original relative order
   // (Array.sort is stable) rather than being shuffled to a random spot.
   const sortedLegalMoves = useMemo(
-    () => [...legalMoves].sort((a, b) => (movePercentByName[b.name] ?? -1) - (movePercentByName[a.name] ?? -1)),
-    [legalMoves, movePercentByName]
+    () =>
+      [...legalMoves].sort(
+        (a, b) => (movePercentByName[b.name] ?? -1) - (movePercentByName[a.name] ?? -1),
+      ),
+    [legalMoves, movePercentByName],
   );
   const sortedLegalAbilities = useMemo(
-    () => [...legalAbilities].sort((a, b) => (abilityPercentByName[b.name] ?? -1) - (abilityPercentByName[a.name] ?? -1)),
-    [legalAbilities, abilityPercentByName]
+    () =>
+      [...legalAbilities].sort(
+        (a, b) => (abilityPercentByName[b.name] ?? -1) - (abilityPercentByName[a.name] ?? -1),
+      ),
+    [legalAbilities, abilityPercentByName],
   );
 
   // Resets sprite-failed flags and clears stale item data the moment
@@ -251,8 +296,12 @@ export default function EditOverlays({ pokemon, gameDataState, rulesetId, resolv
   useEffect(() => {
     if (!selectedItem) return;
     let cancelled = false;
-    getItemData(selectedItem).then(data => { if (!cancelled) setItemData(data); });
-    return () => { cancelled = true; };
+    getItemData(selectedItem).then((data) => {
+      if (!cancelled) setItemData(data);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [selectedItem, getItemData]);
 
   // Clears stale ability data the moment selectedAbility changes - same render-time pattern as above
@@ -266,16 +315,25 @@ export default function EditOverlays({ pokemon, gameDataState, rulesetId, resolv
   useEffect(() => {
     if (!selectedAbility) return;
     let cancelled = false;
-    getAbilityData(selectedAbility).then(data => { if (!cancelled) setAbilityData(data); });
-    return () => { cancelled = true; };
+    getAbilityData(selectedAbility).then((data) => {
+      if (!cancelled) setAbilityData(data);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [selectedAbility, getAbilityData]);
 
   // Resolve full metadata (type/category/power/pp/accuracy/description) for the 4 equipped moves
   useEffect(() => {
     let cancelled = false;
-    Promise.all(selectedMoves.map(name => (name ? getMoveData(name) : Promise.resolve(null))))
-      .then(results => { if (!cancelled) setMoveDataSlots(results); });
-    return () => { cancelled = true; };
+    Promise.all(
+      selectedMoves.map((name) => (name ? getMoveData(name) : Promise.resolve(null))),
+    ).then((results) => {
+      if (!cancelled) setMoveDataSlots(results);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [selectedMoves, getMoveData]);
 
   // Parsed once for the floating move picker below rather than re-parsing
@@ -319,7 +377,13 @@ export default function EditOverlays({ pokemon, gameDataState, rulesetId, resolv
       {/* Active item/ability/move picker, floated over this region rather than replacing it - see FloatingCardPanel.tsx */}
       {activeMenu === 'item' && activeMenuAnchorRect && (
         <FloatingCardPanel anchorRect={activeMenuAnchorRect} cardRect={activeMenuCardRect}>
-          <ItemPickerPanel items={items} maxHeight={activeMenuMaxHeight} resolveSprite={resolveSprite} onSelect={handleItemClick} onClose={closeMenu} />
+          <ItemPickerPanel
+            items={items}
+            maxHeight={activeMenuMaxHeight}
+            resolveSprite={resolveSprite}
+            onSelect={handleItemClick}
+            onClose={closeMenu}
+          />
         </FloatingCardPanel>
       )}
       {activeMenu === 'ability' && activeMenuAnchorRect && (

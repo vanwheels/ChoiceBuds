@@ -92,7 +92,10 @@ export interface UseInitialSyncReturn {
 }
 
 /** Populates pokeapi-cache.json's species stats/types entry, skipping species already cached from a prior partial sync */
-export async function syncSpeciesStats(speciesName: string, databaseState: UseDatabaseReturn): Promise<void> {
+export async function syncSpeciesStats(
+  speciesName: string,
+  databaseState: UseDatabaseReturn,
+): Promise<void> {
   const cacheKey = normalizeSpeciesForAPI(speciesName);
   if (databaseState.getCachedEntry(cacheKey)) return;
   const entry = await fetchPokemonData(speciesName);
@@ -103,9 +106,13 @@ export function useInitialSync(
   gameDataState: UseGameDataReturn,
   speciesRosterState: UseSpeciesRosterReturn,
   spriteCacheState: UseSpriteCacheReturn,
-  databaseState: UseDatabaseReturn
+  databaseState: UseDatabaseReturn,
 ): UseInitialSyncReturn {
-  const [progress, setProgress] = useState<SyncProgress>({ label: 'Starting up...', current: 0, total: 1 });
+  const [progress, setProgress] = useState<SyncProgress>({
+    label: 'Starting up...',
+    current: 0,
+    total: 1,
+  });
   // A mutex for "a sync is currently running," not a one-shot "has this ever
   // run" latch - a manual cache reset (Settings' "Refresh Game Data") can
   // make unsyncedSpecies non-empty again after this hook already completed
@@ -113,14 +120,20 @@ export function useInitialSync(
   // trigger a second real sync pass, not be permanently ignored.
   const isSyncing = useRef(false);
 
-  const { isInitialized, getUnsyncedSpecies, markSpeciesSynced, getEnrichedSpeciesOptions, getItemData } = gameDataState;
+  const {
+    isInitialized,
+    getUnsyncedSpecies,
+    markSpeciesSynced,
+    getEnrichedSpeciesOptions,
+    getItemData,
+  } = gameDataState;
   const { roster, isLoading: isRosterLoading } = speciesRosterState;
   const { downloadSprite } = spriteCacheState;
   const { isInitialized: isDatabaseInitialized, getCachedEntry } = databaseState;
 
   const legalRoster = useMemo(
-    () => roster.filter(entry => validateSpeciesLegality(entry.name, LATEST_REGULATION_ID)),
-    [roster]
+    () => roster.filter((entry) => validateSpeciesLegality(entry.name, LATEST_REGULATION_ID)),
+    [roster],
   );
   // getUnsyncedSpecies alone trusts lastSyncedSpeciesNames, which a prior
   // pass's silently-skipped per-item failure (runWithConcurrency swallows
@@ -146,8 +159,13 @@ export function useInitialSync(
   const [healAttempted, setHealAttempted] = useState<ReadonlySet<string>>(() => new Set());
   const unsyncedSpecies = useMemo(() => {
     const flagged = getUnsyncedSpecies(legalRoster);
-    const flaggedNames = new Set(flagged.map(entry => entry.name));
-    const staleCached = legalRoster.filter(entry => !flaggedNames.has(entry.name) && !healAttempted.has(entry.name) && !getCachedEntry(normalizeSpeciesForAPI(entry.name)));
+    const flaggedNames = new Set(flagged.map((entry) => entry.name));
+    const staleCached = legalRoster.filter(
+      (entry) =>
+        !flaggedNames.has(entry.name) &&
+        !healAttempted.has(entry.name) &&
+        !getCachedEntry(normalizeSpeciesForAPI(entry.name)),
+    );
     // Returns `flagged` itself, unmodified, in the common case (nothing to
     // self-heal) - keeps the same reference stability getUnsyncedSpecies'
     // own mocked/real result already had, rather than a fresh array literal
@@ -171,7 +189,7 @@ export function useInitialSync(
 
     isSyncing.current = true;
 
-    const spriteUrls = unsyncedSpecies.flatMap(entry => [
+    const spriteUrls = unsyncedSpecies.flatMap((entry) => [
       entry.spriteUrl,
       entry.shinySpriteUrl,
       getAnimatedSpriteUrl(entry.name, 'M', false),
@@ -186,36 +204,64 @@ export function useInitialSync(
       setHeavySyncDone(false);
       setProgress({ label: 'Downloading Sprites', current: 0, total: spriteUrls.length });
       await runWithConcurrency(
-        spriteUrls, CONCURRENCY,
-        () => setProgress({ label: 'Downloading Sprites', current: ++completed, total: spriteUrls.length }),
-        url => downloadSprite(url)
+        spriteUrls,
+        CONCURRENCY,
+        () =>
+          setProgress({
+            label: 'Downloading Sprites',
+            current: ++completed,
+            total: spriteUrls.length,
+          }),
+        (url) => downloadSprite(url),
       );
 
       completed = 0;
       setProgress({ label: 'Downloading Species Data', current: 0, total: unsyncedSpecies.length });
       await runWithConcurrency(
-        unsyncedSpecies, CONCURRENCY,
-        () => setProgress({ label: 'Downloading Species Data', current: ++completed, total: unsyncedSpecies.length }),
-        entry => Promise.all([getEnrichedSpeciesOptions(entry.name), syncSpeciesStats(entry.name, databaseState)])
+        unsyncedSpecies,
+        CONCURRENCY,
+        () =>
+          setProgress({
+            label: 'Downloading Species Data',
+            current: ++completed,
+            total: unsyncedSpecies.length,
+          }),
+        (entry) =>
+          Promise.all([
+            getEnrichedSpeciesOptions(entry.name),
+            syncSpeciesStats(entry.name, databaseState),
+          ]),
       );
 
       completed = 0;
       setProgress({ label: 'Downloading Item Sprites', current: 0, total: VGC_ITEMS.length });
       await runWithConcurrency(
-        VGC_ITEMS, CONCURRENCY,
-        () => setProgress({ label: 'Downloading Item Sprites', current: ++completed, total: VGC_ITEMS.length }),
-        async itemName => {
+        VGC_ITEMS,
+        CONCURRENCY,
+        () =>
+          setProgress({
+            label: 'Downloading Item Sprites',
+            current: ++completed,
+            total: VGC_ITEMS.length,
+          }),
+        async (itemName) => {
           const item = await getItemData(itemName);
           if (item?.spriteUrl) await downloadSprite(item.spriteUrl);
-        }
+        },
       );
 
       completed = 0;
       setProgress({ label: 'Downloading Mega Sprites', current: 0, total: MEGA_API_SLUGS.length });
       await runWithConcurrency(
-        MEGA_API_SLUGS, CONCURRENCY,
-        () => setProgress({ label: 'Downloading Mega Sprites', current: ++completed, total: MEGA_API_SLUGS.length }),
-        async apiSlug => {
+        MEGA_API_SLUGS,
+        CONCURRENCY,
+        () =>
+          setProgress({
+            label: 'Downloading Mega Sprites',
+            current: ++completed,
+            total: MEGA_API_SLUGS.length,
+          }),
+        async (apiSlug) => {
           // A 404 here just means "no Mega sprite yet" (see useMegaSprite.ts) - skipped, not fatal.
           // The animated pair is downloaded unconditionally alongside it, even
           // though Showdown's own roster (unlike PokeAPI's) has no reliable
@@ -230,16 +276,24 @@ export function useInitialSync(
             downloadSprite(getAnimatedSpriteUrl(apiSlug, 'M', false)),
             downloadSprite(getAnimatedSpriteUrl(apiSlug, 'M', true)),
           ]);
-        }
+        },
       );
 
-      const syncedNames = unsyncedSpecies.map(entry => entry.name);
+      const syncedNames = unsyncedSpecies.map((entry) => entry.name);
       markSpeciesSynced(syncedNames);
-      setHealAttempted(prev => new Set([...prev, ...syncedNames]));
+      setHealAttempted((prev) => new Set([...prev, ...syncedNames]));
       isSyncing.current = false;
       setHeavySyncDone(true);
     })();
-  }, [ready, unsyncedSpecies, markSpeciesSynced, getEnrichedSpeciesOptions, getItemData, downloadSprite, databaseState]);
+  }, [
+    ready,
+    unsyncedSpecies,
+    markSpeciesSynced,
+    getEnrichedSpeciesOptions,
+    getItemData,
+    downloadSprite,
+    databaseState,
+  ]);
 
   return { isDone, progress };
 }

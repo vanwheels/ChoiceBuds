@@ -30,7 +30,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Generations, toID } from '@smogon/calc';
 import type { StatsTable, NatureName } from '@smogon/calc/dist/data/interface';
-import { validateSpeciesLegality, ALL_REGULATION_IDS, type RegulationId } from '../utils/pokemonRules';
+import {
+  validateSpeciesLegality,
+  ALL_REGULATION_IDS,
+  type RegulationId,
+} from '../utils/pokemonRules';
 import { getFormeFamily, type FormeFamily } from '../utils/calcFormes';
 import { resolveCalcSpecies } from '../utils/championsStats';
 import type { UseGameDataReturn } from './useGameData';
@@ -109,7 +113,10 @@ export interface UseDamageCalcReturn {
   selectedEntry: CalcMoveResultEntry | null;
 }
 
-export function useDamageCalc(gameDataState: UseGameDataReturn, defaultRegulation: RegulationId): UseDamageCalcReturn {
+export function useDamageCalc(
+  gameDataState: UseGameDataReturn,
+  defaultRegulation: RegulationId,
+): UseDamageCalcReturn {
   const [regulationId, setRegulationId] = useState<RegulationId>(defaultRegulation);
   const [pokemon1, setPokemon1State] = useState<CalcPokemonState>(defaultPokemonState);
   const [pokemon2, setPokemon2State] = useState<CalcPokemonState>(defaultPokemonState);
@@ -119,36 +126,76 @@ export function useDamageCalc(gameDataState: UseGameDataReturn, defaultRegulatio
   const [pokemon2LearnedSlugs, setPokemon2LearnedSlugs] = useState<Set<string> | null>(null);
 
   const gen = useMemo(() => Generations.get(GEN_NUM), []);
-  const allSpecies = useMemo(() => [...gen.species].map(s => ({ name: s.name, baseSpecies: s.baseSpecies })), [gen]);
+  const allSpecies = useMemo(
+    () => [...gen.species].map((s) => ({ name: s.name, baseSpecies: s.baseSpecies })),
+    [gen],
+  );
 
   const speciesOptions = useMemo(
-    () => [...gen.species].map(s => s.name).filter(name => validateSpeciesLegality(name, regulationId)).sort(),
-    [gen, regulationId]
+    () =>
+      [...gen.species]
+        .map((s) => s.name)
+        .filter((name) => validateSpeciesLegality(name, regulationId))
+        .sort(),
+    [gen, regulationId],
   );
-  const moveOptions = useMemo(() => [...gen.moves].map(m => m.name).sort(), [gen]);
-  const itemOptions = useMemo(() => [...gen.items].map(i => i.name).sort(), [gen]);
-  const abilityOptions = useMemo(() => [...gen.abilities].map(a => a.name).sort(), [gen]);
-  const natureOptions = useMemo(() => [...gen.natures].map(n => n.name).sort() as NatureName[], [gen]);
+  const moveOptions = useMemo(() => [...gen.moves].map((m) => m.name).sort(), [gen]);
+  const itemOptions = useMemo(() => [...gen.items].map((i) => i.name).sort(), [gen]);
+  const abilityOptions = useMemo(() => [...gen.abilities].map((a) => a.name).sort(), [gen]);
+  const natureOptions = useMemo(
+    () => [...gen.natures].map((n) => n.name).sort() as NatureName[],
+    [gen],
+  );
 
-  const pokemon1Formes = useMemo(() => getFormeFamily(allSpecies, pokemon1.species), [allSpecies, pokemon1.species]);
-  const pokemon2Formes = useMemo(() => getFormeFamily(allSpecies, pokemon2.species), [allSpecies, pokemon2.species]);
+  const pokemon1Formes = useMemo(
+    () => getFormeFamily(allSpecies, pokemon1.species),
+    [allSpecies, pokemon1.species],
+  );
+  const pokemon2Formes = useMemo(
+    () => getFormeFamily(allSpecies, pokemon2.species),
+    [allSpecies, pokemon2.species],
+  );
 
-  const pokemon1NatureEffect = useMemo(() => getNatureStatEffect(gen, pokemon1.nature), [gen, pokemon1.nature]);
-  const pokemon2NatureEffect = useMemo(() => getNatureStatEffect(gen, pokemon2.nature), [gen, pokemon2.nature]);
+  const pokemon1NatureEffect = useMemo(
+    () => getNatureStatEffect(gen, pokemon1.nature),
+    [gen, pokemon1.nature],
+  );
+  const pokemon2NatureEffect = useMemo(
+    () => getNatureStatEffect(gen, pokemon2.nature),
+    [gen, pokemon2.nature],
+  );
 
-  const pokemon1Speed = useMemo(() => computeEffectiveSpeed(gen, pokemon1, field.weather, field.terrain, field.pokemon1Side), [gen, pokemon1, field.weather, field.terrain, field.pokemon1Side]);
-  const pokemon2Speed = useMemo(() => computeEffectiveSpeed(gen, pokemon2, field.weather, field.terrain, field.pokemon2Side), [gen, pokemon2, field.weather, field.terrain, field.pokemon2Side]);
+  const pokemon1Speed = useMemo(
+    () => computeEffectiveSpeed(gen, pokemon1, field.weather, field.terrain, field.pokemon1Side),
+    [gen, pokemon1, field.weather, field.terrain, field.pokemon1Side],
+  );
+  const pokemon2Speed = useMemo(
+    () => computeEffectiveSpeed(gen, pokemon2, field.weather, field.terrain, field.pokemon2Side),
+    [gen, pokemon2, field.weather, field.terrain, field.pokemon2Side],
+  );
 
-  const pokemon1BoostedStats = useMemo(() => computeBoostedStats(gen, pokemon1, field.weather, field.terrain, field.pokemon1Side), [gen, pokemon1, field.weather, field.terrain, field.pokemon1Side]);
-  const pokemon2BoostedStats = useMemo(() => computeBoostedStats(gen, pokemon2, field.weather, field.terrain, field.pokemon2Side), [gen, pokemon2, field.weather, field.terrain, field.pokemon2Side]);
+  const pokemon1BoostedStats = useMemo(
+    () => computeBoostedStats(gen, pokemon1, field.weather, field.terrain, field.pokemon1Side),
+    [gen, pokemon1, field.weather, field.terrain, field.pokemon1Side],
+  );
+  const pokemon2BoostedStats = useMemo(
+    () => computeBoostedStats(gen, pokemon2, field.weather, field.terrain, field.pokemon2Side),
+    [gen, pokemon2, field.weather, field.terrain, field.pokemon2Side],
+  );
 
   const pokemon1BaseStats = useMemo(
-    () => (pokemon1.species ? gen.species.get(toID(resolveCalcSpecies(pokemon1.species)))?.baseStats ?? null : null),
-    [gen, pokemon1.species]
+    () =>
+      pokemon1.species
+        ? (gen.species.get(toID(resolveCalcSpecies(pokemon1.species)))?.baseStats ?? null)
+        : null,
+    [gen, pokemon1.species],
   );
   const pokemon2BaseStats = useMemo(
-    () => (pokemon2.species ? gen.species.get(toID(resolveCalcSpecies(pokemon2.species)))?.baseStats ?? null : null),
-    [gen, pokemon2.species]
+    () =>
+      pokemon2.species
+        ? (gen.species.get(toID(resolveCalcSpecies(pokemon2.species)))?.baseStats ?? null)
+        : null,
+    [gen, pokemon2.species],
   );
 
   const { getEnrichedSpeciesOptions } = gameDataState;
@@ -168,9 +215,16 @@ export function useDamageCalc(gameDataState: UseGameDataReturn, defaultRegulatio
     if (!pokemon1.species) return;
     let cancelled = false;
     getEnrichedSpeciesOptions(pokemon1.species, pokemon1.gender || undefined)
-      .then(({ moves }) => { if (!cancelled) setPokemon1LearnedSlugs(new Set(moves.map(m => normalizeMoveSlug(m.name)))); })
-      .catch(() => { if (!cancelled) setPokemon1LearnedSlugs(null); });
-    return () => { cancelled = true; };
+      .then(({ moves }) => {
+        if (!cancelled)
+          setPokemon1LearnedSlugs(new Set(moves.map((m) => normalizeMoveSlug(m.name))));
+      })
+      .catch(() => {
+        if (!cancelled) setPokemon1LearnedSlugs(null);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [pokemon1.species, pokemon1.gender, getEnrichedSpeciesOptions]);
 
   const [resolvedForSpecies2, setResolvedForSpecies2] = useState(pokemon2.species);
@@ -183,49 +237,84 @@ export function useDamageCalc(gameDataState: UseGameDataReturn, defaultRegulatio
     if (!pokemon2.species) return;
     let cancelled = false;
     getEnrichedSpeciesOptions(pokemon2.species, pokemon2.gender || undefined)
-      .then(({ moves }) => { if (!cancelled) setPokemon2LearnedSlugs(new Set(moves.map(m => normalizeMoveSlug(m.name)))); })
-      .catch(() => { if (!cancelled) setPokemon2LearnedSlugs(null); });
-    return () => { cancelled = true; };
+      .then(({ moves }) => {
+        if (!cancelled)
+          setPokemon2LearnedSlugs(new Set(moves.map((m) => normalizeMoveSlug(m.name))));
+      })
+      .catch(() => {
+        if (!cancelled) setPokemon2LearnedSlugs(null);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [pokemon2.species, pokemon2.gender, getEnrichedSpeciesOptions]);
 
   const pokemon1MoveOptions = useMemo(() => {
     if (!pokemon1LearnedSlugs) return moveOptions;
-    const filtered = moveOptions.filter(name => pokemon1LearnedSlugs.has(normalizeMoveSlug(name)));
+    const filtered = moveOptions.filter((name) =>
+      pokemon1LearnedSlugs.has(normalizeMoveSlug(name)),
+    );
     return filtered.length > 0 ? filtered : moveOptions;
   }, [moveOptions, pokemon1LearnedSlugs]);
   const pokemon2MoveOptions = useMemo(() => {
     if (!pokemon2LearnedSlugs) return moveOptions;
-    const filtered = moveOptions.filter(name => pokemon2LearnedSlugs.has(normalizeMoveSlug(name)));
+    const filtered = moveOptions.filter((name) =>
+      pokemon2LearnedSlugs.has(normalizeMoveSlug(name)),
+    );
     return filtered.length > 0 ? filtered : moveOptions;
   }, [moveOptions, pokemon2LearnedSlugs]);
 
-  const setPokemon1 = (updates: Partial<CalcPokemonState>) => setPokemon1State(prev => ({ ...prev, ...updates }));
-  const setPokemon2 = (updates: Partial<CalcPokemonState>) => setPokemon2State(prev => ({ ...prev, ...updates }));
+  const setPokemon1 = (updates: Partial<CalcPokemonState>) =>
+    setPokemon1State((prev) => ({ ...prev, ...updates }));
+  const setPokemon2 = (updates: Partial<CalcPokemonState>) =>
+    setPokemon2State((prev) => ({ ...prev, ...updates }));
 
   const setMoveAt = (side: 'p1' | 'p2', index: number, updates: Partial<CalcMoveSlot>) => {
     const setter = side === 'p1' ? setPokemon1State : setPokemon2State;
-    setter(prev => ({
+    setter((prev) => ({
       ...prev,
       moves: prev.moves.map((slot, i) => (i === index ? { ...slot, ...updates } : slot)),
     }));
   };
-  const setPokemon1Move = (index: number, updates: Partial<CalcMoveSlot>) => setMoveAt('p1', index, updates);
-  const setPokemon2Move = (index: number, updates: Partial<CalcMoveSlot>) => setMoveAt('p2', index, updates);
+  const setPokemon1Move = (index: number, updates: Partial<CalcMoveSlot>) =>
+    setMoveAt('p1', index, updates);
+  const setPokemon2Move = (index: number, updates: Partial<CalcMoveSlot>) =>
+    setMoveAt('p2', index, updates);
 
   const setField = (updates: Partial<Pick<CalcFieldState, 'gameType' | 'weather' | 'terrain'>>) =>
-    setFieldState(prev => ({ ...prev, ...updates }));
+    setFieldState((prev) => ({ ...prev, ...updates }));
   const setPokemon1Side = (updates: Partial<CalcSideConditions>) =>
-    setFieldState(prev => ({ ...prev, pokemon1Side: { ...prev.pokemon1Side, ...updates } }));
+    setFieldState((prev) => ({ ...prev, pokemon1Side: { ...prev.pokemon1Side, ...updates } }));
   const setPokemon2Side = (updates: Partial<CalcSideConditions>) =>
-    setFieldState(prev => ({ ...prev, pokemon2Side: { ...prev.pokemon2Side, ...updates } }));
+    setFieldState((prev) => ({ ...prev, pokemon2Side: { ...prev.pokemon2Side, ...updates } }));
 
   const p1Results = useMemo(
-    () => computeSideResults(gen, pokemon1, pokemon2, field.pokemon1Side, field.pokemon2Side, field.gameType, field.weather, field.terrain),
-    [gen, pokemon1, pokemon2, field]
+    () =>
+      computeSideResults(
+        gen,
+        pokemon1,
+        pokemon2,
+        field.pokemon1Side,
+        field.pokemon2Side,
+        field.gameType,
+        field.weather,
+        field.terrain,
+      ),
+    [gen, pokemon1, pokemon2, field],
   );
   const p2Results = useMemo(
-    () => computeSideResults(gen, pokemon2, pokemon1, field.pokemon2Side, field.pokemon1Side, field.gameType, field.weather, field.terrain),
-    [gen, pokemon1, pokemon2, field]
+    () =>
+      computeSideResults(
+        gen,
+        pokemon2,
+        pokemon1,
+        field.pokemon2Side,
+        field.pokemon1Side,
+        field.gameType,
+        field.weather,
+        field.terrain,
+      ),
+    [gen, pokemon1, pokemon2, field],
   );
 
   const selectedEntry = useMemo(() => {

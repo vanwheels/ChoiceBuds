@@ -36,9 +36,19 @@ function buildRow(overrides: {
   cells[33] = overrides.reportVideo ?? '';
   cells[34] = overrides.otherLinks ?? '';
   cells[35] = overrides.owner ?? 'SomeOwner';
-  (overrides.species ?? ['Raichu-Mega-Y', 'Staraptor-Mega', 'Rillaboom', 'Gholdengo', 'Sylveon', 'Incineroar'])
-    .forEach((species, i) => { cells[37 + i] = species; });
-  return cells.map(cell => `"${cell.replace(/"/g, '""')}"`).join(',');
+  (
+    overrides.species ?? [
+      'Raichu-Mega-Y',
+      'Staraptor-Mega',
+      'Rillaboom',
+      'Gholdengo',
+      'Sylveon',
+      'Incineroar',
+    ]
+  ).forEach((species, i) => {
+    cells[37 + i] = species;
+  });
+  return cells.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(',');
 }
 
 const HEADER_ROW = '"Team ID","Team Description"' + ',""'.repeat(41);
@@ -49,12 +59,7 @@ const patchedHeader = (() => {
 })();
 
 function buildFixtureCsv(dataRows: string[]): string {
-  return [
-    'junk row 1',
-    'junk row 2',
-    patchedHeader,
-    ...dataRows,
-  ].join('\n');
+  return ['junk row 1', 'junk row 2', patchedHeader, ...dataRows].join('\n');
 }
 
 describe('fetchVgcPasteRows', () => {
@@ -63,11 +68,14 @@ describe('fetchVgcPasteRows', () => {
   });
 
   function stubFetch(csvBody: string, ok = true, status = 200) {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok,
-      status,
-      text: () => Promise.resolve(csvBody),
-    }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok,
+        status,
+        text: () => Promise.resolve(csvBody),
+      }),
+    );
   }
 
   it('keeps only EVs == Yes rows', async () => {
@@ -79,7 +87,7 @@ describe('fetchVgcPasteRows', () => {
     stubFetch(csv);
 
     const rows = await fetchVgcPasteRows('Reg M-C');
-    expect(rows.map(r => r.id)).toEqual(['MC001']);
+    expect(rows.map((r) => r.id)).toEqual(['MC001']);
   });
 
   it('skips rows with no Team ID or no Pokepaste URL even if EVs == Yes', async () => {
@@ -91,7 +99,7 @@ describe('fetchVgcPasteRows', () => {
     stubFetch(csv);
 
     const rows = await fetchVgcPasteRows('Reg M-C');
-    expect(rows.map(r => r.id)).toEqual(['MC011']);
+    expect(rows.map((r) => r.id)).toEqual(['MC011']);
   });
 
   it('maps every field, trimmed, to VgcPasteTeamRow', async () => {
@@ -104,7 +112,14 @@ describe('fetchVgcPasteRows', () => {
         tournament: 'VR Septembeer Challenge',
         rank: 'Champion',
         owner: 'MichaelderBeste',
-        species: ['Raichu-Mega-Y', 'Staraptor-Mega', 'Arcanine-Hisui', 'Rillaboom', 'Gholdengo', 'Sylveon'],
+        species: [
+          'Raichu-Mega-Y',
+          'Staraptor-Mega',
+          'Arcanine-Hisui',
+          'Rillaboom',
+          'Gholdengo',
+          'Sylveon',
+        ],
         linkToSource: 'https://x.com/MichaelderBeste/status/2099221075389206539',
         reportVideo: '-',
         otherLinks: 'https://victoryroad.pro/vr-sep26/',
@@ -113,19 +128,28 @@ describe('fetchVgcPasteRows', () => {
     stubFetch(csv);
 
     const rows = await fetchVgcPasteRows('Reg M-C');
-    expect(rows).toEqual([{
-      id: 'MC254',
-      description: "MichaelderBeste's VR September Challenge Champion Team",
-      owner: 'MichaelderBeste',
-      tournament: 'VR Septembeer Challenge',
-      rank: 'Champion',
-      date: '13 Sep 2026',
-      pokepasteUrl: 'https://pokepast.es/421ae13bcb967417',
-      species: ['Raichu-Mega-Y', 'Staraptor-Mega', 'Arcanine-Hisui', 'Rillaboom', 'Gholdengo', 'Sylveon'],
-      linkToSource: 'https://x.com/MichaelderBeste/status/2099221075389206539',
-      reportVideo: '-',
-      otherLinks: 'https://victoryroad.pro/vr-sep26/',
-    }]);
+    expect(rows).toEqual([
+      {
+        id: 'MC254',
+        description: "MichaelderBeste's VR September Challenge Champion Team",
+        owner: 'MichaelderBeste',
+        tournament: 'VR Septembeer Challenge',
+        rank: 'Champion',
+        date: '13 Sep 2026',
+        pokepasteUrl: 'https://pokepast.es/421ae13bcb967417',
+        species: [
+          'Raichu-Mega-Y',
+          'Staraptor-Mega',
+          'Arcanine-Hisui',
+          'Rillaboom',
+          'Gholdengo',
+          'Sylveon',
+        ],
+        linkToSource: 'https://x.com/MichaelderBeste/status/2099221075389206539',
+        reportVideo: '-',
+        otherLinks: 'https://victoryroad.pro/vr-sep26/',
+      },
+    ]);
   });
 
   it('throws when the sheet layout no longer matches the expected header', async () => {
@@ -160,23 +184,27 @@ function buildCatalogRow(overrides: Partial<VgcPasteTeamRow> = {}): VgcPasteTeam
 describe('buildCatalogNotes', () => {
   it('returns undefined when every field is blank or the sheet\'s own "-" placeholder', () => {
     expect(buildCatalogNotes(buildCatalogRow())).toBeUndefined();
-    expect(buildCatalogNotes(buildCatalogRow({ tournament: '-', rank: '-', linkToSource: '-' }))).toBeUndefined();
+    expect(
+      buildCatalogNotes(buildCatalogRow({ tournament: '-', rank: '-', linkToSource: '-' })),
+    ).toBeUndefined();
   });
 
   it('builds one line per non-blank field, in sheet-column order', () => {
-    const notes = buildCatalogNotes(buildCatalogRow({
-      tournament: 'VR Septembeer Challenge',
-      rank: 'Champion',
-      linkToSource: 'https://x.com/MichaelderBeste/status/2099221075389206539',
-      reportVideo: '-',
-      otherLinks: 'https://victoryroad.pro/vr-sep26/',
-    }));
+    const notes = buildCatalogNotes(
+      buildCatalogRow({
+        tournament: 'VR Septembeer Challenge',
+        rank: 'Champion',
+        linkToSource: 'https://x.com/MichaelderBeste/status/2099221075389206539',
+        reportVideo: '-',
+        otherLinks: 'https://victoryroad.pro/vr-sep26/',
+      }),
+    );
 
     expect(notes).toBe(
       'Tournament / Event: VR Septembeer Challenge\n' +
-      'Rank: Champion\n' +
-      'Link to Source: https://x.com/MichaelderBeste/status/2099221075389206539\n' +
-      'Other Links: https://victoryroad.pro/vr-sep26/'
+        'Rank: Champion\n' +
+        'Link to Source: https://x.com/MichaelderBeste/status/2099221075389206539\n' +
+        'Other Links: https://victoryroad.pro/vr-sep26/',
     );
   });
 

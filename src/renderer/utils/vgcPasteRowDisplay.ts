@@ -52,7 +52,9 @@ const EV_LABELS: Array<[keyof EVSpread, string]> = [
 
 /** Formats an EV spread as "252 HP / 4 Def / 252 Spe", or "No EVs" if all zero. */
 export function formatEvs(evs: EVSpread): string {
-  const parts = EV_LABELS.filter(([key]) => evs[key] > 0).map(([key, label]) => `${evs[key]} ${label}`);
+  const parts = EV_LABELS.filter(([key]) => evs[key] > 0).map(
+    ([key, label]) => `${evs[key]} ${label}`,
+  );
   return parts.length > 0 ? parts.join(' / ') : 'No EVs';
 }
 
@@ -67,9 +69,12 @@ function normalizeForMatch(name: string): string {
  * spacing/hyphen differences on multi-word forms). Returns undefined on no
  * match rather than throwing; callers render an empty slot in that case.
  */
-export function findRosterEntry(speciesName: string, roster: SpeciesRosterEntry[]): SpeciesRosterEntry | undefined {
+export function findRosterEntry(
+  speciesName: string,
+  roster: SpeciesRosterEntry[],
+): SpeciesRosterEntry | undefined {
   const target = normalizeForMatch(speciesName);
-  return roster.find(entry => normalizeForMatch(entry.name) === target);
+  return roster.find((entry) => normalizeForMatch(entry.name) === target);
 }
 
 /**
@@ -120,7 +125,10 @@ const MEGA_SLUG_TEXT_OVERRIDES: Record<string, string> = {
  * expected rather than a bug.
  */
 function buildMegaSlugFromText(speciesText: string): string | null {
-  const lower = speciesText.toLowerCase().trim().replace(GENDER_TOKEN_BEFORE_MEGA_PATTERN, '-mega$2');
+  const lower = speciesText
+    .toLowerCase()
+    .trim()
+    .replace(GENDER_TOKEN_BEFORE_MEGA_PATTERN, '-mega$2');
   if (!MEGA_TEXT_SUFFIX_PATTERN.test(lower)) return null;
   const slug = MEGA_SLUG_TEXT_OVERRIDES[lower] ?? lower;
   return CURATED_MEGA_FORM_SLUGS.has(slug) ? slug : null;
@@ -148,11 +156,16 @@ export interface CatalogSpriteEntry {
  *      strip) or this tier is always a miss.
  * Returns null (render an empty slot) when none of the three resolve.
  */
-export function resolveCatalogSpriteEntry(speciesText: string, roster: SpeciesRosterEntry[]): CatalogSpriteEntry | MegaSpriteResult | null {
+export function resolveCatalogSpriteEntry(
+  speciesText: string,
+  roster: SpeciesRosterEntry[],
+): CatalogSpriteEntry | MegaSpriteResult | null {
   const direct = findRosterEntry(speciesText, roster);
   if (direct) return direct;
 
-  const apiSlug = SHEET_SPECIES_TEXT_OVERRIDES[speciesText.toLowerCase().trim()] ?? normalizeSpeciesForAPI(speciesText);
+  const apiSlug =
+    SHEET_SPECIES_TEXT_OVERRIDES[speciesText.toLowerCase().trim()] ??
+    normalizeSpeciesForAPI(speciesText);
   const viaApiSlug = findRosterEntry(apiSlug, roster);
   if (viaApiSlug) return viaApiSlug;
 

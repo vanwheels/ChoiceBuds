@@ -28,7 +28,7 @@ describe('mergeCollection', () => {
 
   it('adds a record present on only one side', () => {
     const result = mergeCollection([record('a', 100)], [], [record('b', 200)], []);
-    expect(result.records.map(r => r.id).sort()).toEqual(['a', 'b']);
+    expect(result.records.map((r) => r.id).sort()).toEqual(['a', 'b']);
   });
 
   it('a delete removes an older record and the tombstone survives', () => {
@@ -57,7 +57,10 @@ describe('mergeCollection', () => {
 
   it('unions tombstones from both sides, keeping the newer deletedAt per id', () => {
     const existingTombstones = [{ id: 'a', deletedAt: 100 }];
-    const incomingTombstones = [{ id: 'a', deletedAt: 50 }, { id: 'b', deletedAt: 300 }];
+    const incomingTombstones = [
+      { id: 'a', deletedAt: 50 },
+      { id: 'b', deletedAt: 300 },
+    ];
     const result = mergeCollection([], existingTombstones, [], incomingTombstones);
     expect(result.tombstones.sort((x, y) => x.id.localeCompare(y.id))).toEqual([
       { id: 'a', deletedAt: 100 },

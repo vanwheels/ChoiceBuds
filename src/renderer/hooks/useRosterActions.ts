@@ -6,7 +6,14 @@
  */
 
 import { useCallback } from 'react';
-import type { EVSpread, ImportedPokemonInfo, SavedPokemonEntry, ShowdownPokemon, Team, PokeAPICacheEntry } from '../types/pokemon';
+import type {
+  EVSpread,
+  ImportedPokemonInfo,
+  SavedPokemonEntry,
+  ShowdownPokemon,
+  Team,
+  PokeAPICacheEntry,
+} from '../types/pokemon';
 import type { UseGameDataReturn } from './useGameData';
 import { enrichPokemonWithAPI } from '../services/pokeapi';
 import { getFallbackGender } from '../config/pokemonRules';
@@ -48,7 +55,7 @@ export function useRosterActions(
   getCachedEntry: (species: string) => PokeAPICacheEntry | null,
   setCacheEntry: (species: string, entry: PokeAPICacheEntry) => Promise<boolean>,
   getEnrichedSpeciesOptions: UseGameDataReturn['getEnrichedSpeciesOptions'],
-  getChampionsUsage: UseGameDataReturn['getChampionsUsage']
+  getChampionsUsage: UseGameDataReturn['getChampionsUsage'],
 ): UseRosterActionsReturn {
   /**
    * Smart Slot Initialization: ability defaults to the species' most-used
@@ -76,55 +83,69 @@ export function useRosterActions(
    * freshly-added Pokemon's defaults fail legality checks that compare against the
    * Title Case move/ability lists.
    */
-  const buildSlot = useCallback(async (species: string, itemOverride?: string): Promise<ImportedPokemonInfo> => {
-    const gender = getFallbackGender(species);
-    const [{ moves, abilities }, usage] = await Promise.all([
-      getEnrichedSpeciesOptions(species, gender),
-      getChampionsUsage(species),
-    ]);
+  const buildSlot = useCallback(
+    async (species: string, itemOverride?: string): Promise<ImportedPokemonInfo> => {
+      const gender = getFallbackGender(species);
+      const [{ moves, abilities }, usage] = await Promise.all([
+        getEnrichedSpeciesOptions(species, gender),
+        getChampionsUsage(species),
+      ]);
 
-    if (usage) {
-      const moveRank = new Map(usage.moves.map(m => [normalizeSlug(m.name), m.percentage]));
-      const abilityRank = new Map(usage.abilities.map(a => [normalizeSlug(a.name), a.percentage]));
-      moves.sort((a, b) => (moveRank.get(b.name) ?? -1) - (moveRank.get(a.name) ?? -1));
-      abilities.sort((a, b) => (abilityRank.get(b.name) ?? -1) - (abilityRank.get(a.name) ?? -1));
-    }
+      if (usage) {
+        const moveRank = new Map(usage.moves.map((m) => [normalizeSlug(m.name), m.percentage]));
+        const abilityRank = new Map(
+          usage.abilities.map((a) => [normalizeSlug(a.name), a.percentage]),
+        );
+        moves.sort((a, b) => (moveRank.get(b.name) ?? -1) - (moveRank.get(a.name) ?? -1));
+        abilities.sort((a, b) => (abilityRank.get(b.name) ?? -1) - (abilityRank.get(a.name) ?? -1));
+      }
 
-    const showdownData: ShowdownPokemon = {
-      species,
-      gender,
-      item: itemOverride,
-      ability: abilities[0] ? toReadableName(abilities[0].name) : undefined,
-      level: 50,
-      shiny: false,
-      gigantamax: false,
-      happiness: 255,
-      evs: { ...ZERO_EVS },
-      moves: moves.slice(0, 4).map(move => toReadableName(move.name)),
-    };
+      const showdownData: ShowdownPokemon = {
+        species,
+        gender,
+        item: itemOverride,
+        ability: abilities[0] ? toReadableName(abilities[0].name) : undefined,
+        level: 50,
+        shiny: false,
+        gigantamax: false,
+        happiness: 255,
+        evs: { ...ZERO_EVS },
+        moves: moves.slice(0, 4).map((move) => toReadableName(move.name)),
+      };
 
-    return enrichPokemonWithAPI(showdownData, getCachedEntry, setCacheEntry);
-  }, [getEnrichedSpeciesOptions, getChampionsUsage, getCachedEntry, setCacheEntry]);
+      return enrichPokemonWithAPI(showdownData, getCachedEntry, setCacheEntry);
+    },
+    [getEnrichedSpeciesOptions, getChampionsUsage, getCachedEntry, setCacheEntry],
+  );
 
-  const swapSlot = useCallback(async (team: Team, index: number, species: string, itemOverride?: string): Promise<boolean> => {
-    const newSlot = await buildSlot(species, itemOverride);
-    const updatedPokemon = [...team.pokemon];
-    updatedPokemon[index] = newSlot;
-    return updateTeam(team.id, { pokemon: updatedPokemon });
-  }, [updateTeam, buildSlot]);
+  const swapSlot = useCallback(
+    async (team: Team, index: number, species: string, itemOverride?: string): Promise<boolean> => {
+      const newSlot = await buildSlot(species, itemOverride);
+      const updatedPokemon = [...team.pokemon];
+      updatedPokemon[index] = newSlot;
+      return updateTeam(team.id, { pokemon: updatedPokemon });
+    },
+    [updateTeam, buildSlot],
+  );
 
-  const addSlot = useCallback(async (team: Team, species: string, itemOverride?: string): Promise<boolean> => {
-    if (team.pokemon.length >= 6) return false;
-    const newSlot = await buildSlot(species, itemOverride);
-    return updateTeam(team.id, { pokemon: [...team.pokemon, newSlot] });
-  }, [updateTeam, buildSlot]);
+  const addSlot = useCallback(
+    async (team: Team, species: string, itemOverride?: string): Promise<boolean> => {
+      if (team.pokemon.length >= 6) return false;
+      const newSlot = await buildSlot(species, itemOverride);
+      return updateTeam(team.id, { pokemon: [...team.pokemon, newSlot] });
+    },
+    [updateTeam, buildSlot],
+  );
 
   // Removing an array element and keeping the rest already left-shifts every
   // subsequent slot - no index-shuffling logic needed beyond a plain filter.
-  const removeSlot = useCallback(async (team: Team, index: number): Promise<boolean> => {
-    const updatedPokemon = team.pokemon.filter((_, i) => i !== index);
-    return updateTeam(team.id, { pokemon: updatedPokemon });
-  }, [updateTeam]);
+  const removeSlot = useCallback(
+    async (team: Team, index: number): Promise<boolean> => {
+      const updatedPokemon = team.pokemon.filter((_, i) => i !== index);
+      return updateTeam(team.id, { pokemon: updatedPokemon });
+    },
+    [updateTeam],
+  );
 
   /**
    * Reuse a saved build (useSavedPokemon.ts) directly into a roster slot,
@@ -133,11 +154,14 @@ export function useRosterActions(
    * Team-Building Leg 1, see TODO.md). No enrichment/network call needed -
    * a saved entry already holds a fully-enriched ImportedPokemonInfo.
    */
-  const loadSavedSet = useCallback(async (team: Team, index: number, entry: SavedPokemonEntry): Promise<boolean> => {
-    const updatedPokemon = [...team.pokemon];
-    updatedPokemon[index] = cloneSavedPokemon(entry.pokemon);
-    return updateTeam(team.id, { pokemon: updatedPokemon });
-  }, [updateTeam]);
+  const loadSavedSet = useCallback(
+    async (team: Team, index: number, entry: SavedPokemonEntry): Promise<boolean> => {
+      const updatedPokemon = [...team.pokemon];
+      updatedPokemon[index] = cloneSavedPokemon(entry.pokemon);
+      return updateTeam(team.id, { pokemon: updatedPokemon });
+    },
+    [updateTeam],
+  );
 
   return { swapSlot, addSlot, removeSlot, loadSavedSet, buildSlot };
 }

@@ -64,101 +64,282 @@ interface MoveStatEffectEntry extends MoveStatEffect {
 const MOVE_STAT_EFFECTS: Record<string, MoveStatEffectEntry> = {
   // Self-lowering after use
   'draco-meteor': { changes: [{ stat: 'spa', stages: -2 }], appliesTo: 'self' },
-  'overheat': { changes: [{ stat: 'spa', stages: -2 }], appliesTo: 'self' },
+  overheat: { changes: [{ stat: 'spa', stages: -2 }], appliesTo: 'self' },
   'leaf-storm': { changes: [{ stat: 'spa', stages: -2 }], appliesTo: 'self' },
   'psycho-boost': { changes: [{ stat: 'spa', stages: -2 }], appliesTo: 'self' },
   'fleur-cannon': { changes: [{ stat: 'spa', stages: -2 }], appliesTo: 'self' },
   'make-it-rain': { changes: [{ stat: 'spa', stages: -2 }], appliesTo: 'self' },
-  'superpower': { changes: [{ stat: 'atk', stages: -1 }, { stat: 'def', stages: -1 }], appliesTo: 'self' },
-  'close-combat': { changes: [{ stat: 'def', stages: -1 }, { stat: 'spd', stages: -1 }], appliesTo: 'self' },
-  'v-create': { changes: [{ stat: 'def', stages: -1 }, { stat: 'spd', stages: -1 }, { stat: 'spe', stages: -1 }], appliesTo: 'self' },
+  superpower: {
+    changes: [
+      { stat: 'atk', stages: -1 },
+      { stat: 'def', stages: -1 },
+    ],
+    appliesTo: 'self',
+  },
+  'close-combat': {
+    changes: [
+      { stat: 'def', stages: -1 },
+      { stat: 'spd', stages: -1 },
+    ],
+    appliesTo: 'self',
+  },
+  'v-create': {
+    changes: [
+      { stat: 'def', stages: -1 },
+      { stat: 'spd', stages: -1 },
+      { stat: 'spe', stages: -1 },
+    ],
+    appliesTo: 'self',
+  },
 
   // Self-boosting
-  'shell-smash': { changes: [{ stat: 'atk', stages: 2 }, { stat: 'spa', stages: 2 }, { stat: 'spe', stages: 2 }, { stat: 'def', stages: -1 }, { stat: 'spd', stages: -1 }], appliesTo: 'self' },
-  'quiver-dance': { changes: [{ stat: 'spa', stages: 1 }, { stat: 'spd', stages: 1 }, { stat: 'spe', stages: 1 }], appliesTo: 'self' },
-  'agility': { changes: [{ stat: 'spe', stages: 2 }], appliesTo: 'self' },
+  'shell-smash': {
+    changes: [
+      { stat: 'atk', stages: 2 },
+      { stat: 'spa', stages: 2 },
+      { stat: 'spe', stages: 2 },
+      { stat: 'def', stages: -1 },
+      { stat: 'spd', stages: -1 },
+    ],
+    appliesTo: 'self',
+  },
+  'quiver-dance': {
+    changes: [
+      { stat: 'spa', stages: 1 },
+      { stat: 'spd', stages: 1 },
+      { stat: 'spe', stages: 1 },
+    ],
+    appliesTo: 'self',
+  },
+  agility: { changes: [{ stat: 'spe', stages: 2 }], appliesTo: 'self' },
   'rock-polish': { changes: [{ stat: 'spe', stages: 2 }], appliesTo: 'self' },
   'swords-dance': { changes: [{ stat: 'atk', stages: 2 }], appliesTo: 'self' },
   'nasty-plot': { changes: [{ stat: 'spa', stages: 2 }], appliesTo: 'self' },
-  'calm-mind': { changes: [{ stat: 'spa', stages: 1 }, { stat: 'spd', stages: 1 }], appliesTo: 'self' },
-  'bulk-up': { changes: [{ stat: 'atk', stages: 1 }, { stat: 'def', stages: 1 }], appliesTo: 'self' },
-  'dragon-dance': { changes: [{ stat: 'atk', stages: 1 }, { stat: 'spe', stages: 1 }], appliesTo: 'self' },
+  'calm-mind': {
+    changes: [
+      { stat: 'spa', stages: 1 },
+      { stat: 'spd', stages: 1 },
+    ],
+    appliesTo: 'self',
+  },
+  'bulk-up': {
+    changes: [
+      { stat: 'atk', stages: 1 },
+      { stat: 'def', stages: 1 },
+    ],
+    appliesTo: 'self',
+  },
+  'dragon-dance': {
+    changes: [
+      { stat: 'atk', stages: 1 },
+      { stat: 'spe', stages: 1 },
+    ],
+    appliesTo: 'self',
+  },
   'iron-defense': { changes: [{ stat: 'def', stages: 2 }], appliesTo: 'self' },
-  'amnesia': { changes: [{ stat: 'spd', stages: 2 }], appliesTo: 'self' },
+  amnesia: { changes: [{ stat: 'spd', stages: 2 }], appliesTo: 'self' },
   'acid-armor': { changes: [{ stat: 'def', stages: 2 }], appliesTo: 'self' },
   'cotton-guard': { changes: [{ stat: 'def', stages: 3 }], appliesTo: 'self' },
-  'coil': { changes: [{ stat: 'atk', stages: 1 }, { stat: 'def', stages: 1 }], appliesTo: 'self' },
-  'growth': {
-    changes: [{ stat: 'atk', stages: 1 }, { stat: 'spa', stages: 1 }],
+  coil: {
+    changes: [
+      { stat: 'atk', stages: 1 },
+      { stat: 'def', stages: 1 },
+    ],
     appliesTo: 'self',
-    inWeather: { sun: [{ stat: 'atk', stages: 2 }, { stat: 'spa', stages: 2 }] },
   },
-  'work-up': { changes: [{ stat: 'atk', stages: 1 }, { stat: 'spa', stages: 1 }], appliesTo: 'self' },
+  growth: {
+    changes: [
+      { stat: 'atk', stages: 1 },
+      { stat: 'spa', stages: 1 },
+    ],
+    appliesTo: 'self',
+    inWeather: {
+      sun: [
+        { stat: 'atk', stages: 2 },
+        { stat: 'spa', stages: 2 },
+      ],
+    },
+  },
+  'work-up': {
+    changes: [
+      { stat: 'atk', stages: 1 },
+      { stat: 'spa', stages: 1 },
+    ],
+    appliesTo: 'self',
+  },
   'hone-claws': { changes: [{ stat: 'atk', stages: 1 }], appliesTo: 'self' }, // also +1 accuracy - not a tracked stat
-  'cosmic-power': { changes: [{ stat: 'def', stages: 1 }, { stat: 'spd', stages: 1 }], appliesTo: 'self' },
-  'geomancy': { changes: [{ stat: 'spa', stages: 2 }, { stat: 'spd', stages: 2 }, { stat: 'spe', stages: 2 }], appliesTo: 'self' },
-  'shift-gear': { changes: [{ stat: 'atk', stages: 1 }, { stat: 'spe', stages: 2 }], appliesTo: 'self' },
-  'no-retreat': { changes: [{ stat: 'atk', stages: 1 }, { stat: 'def', stages: 1 }, { stat: 'spa', stages: 1 }, { stat: 'spd', stages: 1 }, { stat: 'spe', stages: 1 }], appliesTo: 'self' },
-  'clangorous-soul': { changes: [{ stat: 'atk', stages: 1 }, { stat: 'def', stages: 1 }, { stat: 'spa', stages: 1 }, { stat: 'spd', stages: 1 }, { stat: 'spe', stages: 1 }], appliesTo: 'self' },
-  'victory-dance': { changes: [{ stat: 'atk', stages: 1 }, { stat: 'def', stages: 1 }, { stat: 'spe', stages: 1 }], appliesTo: 'self' },
-  'fillet-away': { changes: [{ stat: 'atk', stages: 2 }, { stat: 'spa', stages: 2 }, { stat: 'spe', stages: 2 }], appliesTo: 'self' },
-  'tidy-up': { changes: [{ stat: 'atk', stages: 1 }, { stat: 'spe', stages: 1 }], appliesTo: 'self' },
-  'take-heart': { changes: [{ stat: 'spa', stages: 1 }, { stat: 'spd', stages: 1 }], appliesTo: 'self' },
-  'trailblaze': { changes: [{ stat: 'spe', stages: 1 }], appliesTo: 'self' },
+  'cosmic-power': {
+    changes: [
+      { stat: 'def', stages: 1 },
+      { stat: 'spd', stages: 1 },
+    ],
+    appliesTo: 'self',
+  },
+  geomancy: {
+    changes: [
+      { stat: 'spa', stages: 2 },
+      { stat: 'spd', stages: 2 },
+      { stat: 'spe', stages: 2 },
+    ],
+    appliesTo: 'self',
+  },
+  'shift-gear': {
+    changes: [
+      { stat: 'atk', stages: 1 },
+      { stat: 'spe', stages: 2 },
+    ],
+    appliesTo: 'self',
+  },
+  'no-retreat': {
+    changes: [
+      { stat: 'atk', stages: 1 },
+      { stat: 'def', stages: 1 },
+      { stat: 'spa', stages: 1 },
+      { stat: 'spd', stages: 1 },
+      { stat: 'spe', stages: 1 },
+    ],
+    appliesTo: 'self',
+  },
+  'clangorous-soul': {
+    changes: [
+      { stat: 'atk', stages: 1 },
+      { stat: 'def', stages: 1 },
+      { stat: 'spa', stages: 1 },
+      { stat: 'spd', stages: 1 },
+      { stat: 'spe', stages: 1 },
+    ],
+    appliesTo: 'self',
+  },
+  'victory-dance': {
+    changes: [
+      { stat: 'atk', stages: 1 },
+      { stat: 'def', stages: 1 },
+      { stat: 'spe', stages: 1 },
+    ],
+    appliesTo: 'self',
+  },
+  'fillet-away': {
+    changes: [
+      { stat: 'atk', stages: 2 },
+      { stat: 'spa', stages: 2 },
+      { stat: 'spe', stages: 2 },
+    ],
+    appliesTo: 'self',
+  },
+  'tidy-up': {
+    changes: [
+      { stat: 'atk', stages: 1 },
+      { stat: 'spe', stages: 1 },
+    ],
+    appliesTo: 'self',
+  },
+  'take-heart': {
+    changes: [
+      { stat: 'spa', stages: 1 },
+      { stat: 'spd', stages: 1 },
+    ],
+    appliesTo: 'self',
+  },
+  trailblaze: { changes: [{ stat: 'spe', stages: 1 }], appliesTo: 'self' },
   'psyshield-bash': { changes: [{ stat: 'def', stages: 1 }], appliesTo: 'self' },
   'torch-song': { changes: [{ stat: 'spa', stages: 1 }], appliesTo: 'self' },
   'mystical-power': { changes: [{ stat: 'spa', stages: 1 }], appliesTo: 'self' },
   'flame-charge': { changes: [{ stat: 'spe', stages: 1 }], appliesTo: 'self' },
   'electro-shot': { changes: [{ stat: 'spa', stages: 1 }], appliesTo: 'self' }, // rain only skips the charge turn, doesn't change the stage amount
-  'barrier': { changes: [{ stat: 'def', stages: 2 }], appliesTo: 'self' },
-  'withdraw': { changes: [{ stat: 'def', stages: 1 }], appliesTo: 'self' },
+  barrier: { changes: [{ stat: 'def', stages: 2 }], appliesTo: 'self' },
+  withdraw: { changes: [{ stat: 'def', stages: 1 }], appliesTo: 'self' },
   'defense-curl': { changes: [{ stat: 'def', stages: 1 }], appliesTo: 'self' },
-  'charge': { changes: [{ stat: 'spd', stages: 1 }], appliesTo: 'self' },
-  'stockpile': { changes: [{ stat: 'def', stages: 1 }, { stat: 'spd', stages: 1 }], appliesTo: 'self' },
+  charge: { changes: [{ stat: 'spd', stages: 1 }], appliesTo: 'self' },
+  stockpile: {
+    changes: [
+      { stat: 'def', stages: 1 },
+      { stat: 'spd', stages: 1 },
+    ],
+    appliesTo: 'self',
+  },
 
   // Target-lowering
-  'charm': { changes: [{ stat: 'atk', stages: -2 }], appliesTo: 'target' },
+  charm: { changes: [{ stat: 'atk', stages: -2 }], appliesTo: 'target' },
   'eerie-impulse': { changes: [{ stat: 'spa', stages: -2 }], appliesTo: 'target' },
-  'captivate': { changes: [{ stat: 'spa', stages: -2 }], appliesTo: 'target' },
+  captivate: { changes: [{ stat: 'spa', stages: -2 }], appliesTo: 'target' },
   'scary-face': { changes: [{ stat: 'spe', stages: -2 }], appliesTo: 'target' },
   'string-shot': { changes: [{ stat: 'spe', stages: -2 }], appliesTo: 'target' },
-  'parting-shot': { changes: [{ stat: 'atk', stages: -1 }, { stat: 'spa', stages: -1 }], appliesTo: 'target' },
-  'noble-roar': { changes: [{ stat: 'atk', stages: -1 }, { stat: 'spa', stages: -1 }], appliesTo: 'target' },
-  'growl': { changes: [{ stat: 'atk', stages: -1 }], appliesTo: 'target' },
+  'parting-shot': {
+    changes: [
+      { stat: 'atk', stages: -1 },
+      { stat: 'spa', stages: -1 },
+    ],
+    appliesTo: 'target',
+  },
+  'noble-roar': {
+    changes: [
+      { stat: 'atk', stages: -1 },
+      { stat: 'spa', stages: -1 },
+    ],
+    appliesTo: 'target',
+  },
+  growl: { changes: [{ stat: 'atk', stages: -1 }], appliesTo: 'target' },
   'tail-whip': { changes: [{ stat: 'def', stages: -1 }], appliesTo: 'target' },
-  'leer': { changes: [{ stat: 'def', stages: -1 }], appliesTo: 'target' },
-  'confide': { changes: [{ stat: 'spa', stages: -1 }], appliesTo: 'target' },
+  leer: { changes: [{ stat: 'def', stages: -1 }], appliesTo: 'target' },
+  confide: { changes: [{ stat: 'spa', stages: -1 }], appliesTo: 'target' },
   'play-nice': { changes: [{ stat: 'atk', stages: -1 }], appliesTo: 'target' },
   'baby-doll-eyes': { changes: [{ stat: 'atk', stages: -1 }], appliesTo: 'target' },
   'mystical-fire': { changes: [{ stat: 'spa', stages: -1 }], appliesTo: 'target' },
-  'snarl': { changes: [{ stat: 'spa', stages: -1 }], appliesTo: 'target' },
+  snarl: { changes: [{ stat: 'spa', stages: -1 }], appliesTo: 'target' },
   'struggle-bug': { changes: [{ stat: 'spa', stages: -1 }], appliesTo: 'target' },
   'acid-spray': { changes: [{ stat: 'spd', stages: -2 }], appliesTo: 'target' },
   'skitter-smack': { changes: [{ stat: 'spa', stages: -1 }], appliesTo: 'target' },
   'spirit-break': { changes: [{ stat: 'spa', stages: -1 }], appliesTo: 'target' },
   'bitter-malice': { changes: [{ stat: 'spa', stages: -1 }], appliesTo: 'target' },
-  'lunge': { changes: [{ stat: 'atk', stages: -1 }], appliesTo: 'target' },
+  lunge: { changes: [{ stat: 'atk', stages: -1 }], appliesTo: 'target' },
   'breaking-swipe': { changes: [{ stat: 'atk', stages: -1 }], appliesTo: 'target' },
   'trop-kick': { changes: [{ stat: 'atk', stages: -1 }], appliesTo: 'target' },
-  'screech': { changes: [{ stat: 'def', stages: -2 }], appliesTo: 'target' },
+  screech: { changes: [{ stat: 'def', stages: -2 }], appliesTo: 'target' },
   'metal-sound': { changes: [{ stat: 'spd', stages: -2 }], appliesTo: 'target' },
   'fake-tears': { changes: [{ stat: 'spd', stages: -2 }], appliesTo: 'target' },
   'cotton-spore': { changes: [{ stat: 'spe', stages: -2 }], appliesTo: 'target' },
-  'tickle': { changes: [{ stat: 'atk', stages: -1 }, { stat: 'def', stages: -1 }], appliesTo: 'target' },
-  'tearful-look': { changes: [{ stat: 'atk', stages: -1 }, { stat: 'spa', stages: -1 }], appliesTo: 'target' },
+  tickle: {
+    changes: [
+      { stat: 'atk', stages: -1 },
+      { stat: 'def', stages: -1 },
+    ],
+    appliesTo: 'target',
+  },
+  'tearful-look': {
+    changes: [
+      { stat: 'atk', stages: -1 },
+      { stat: 'spa', stages: -1 },
+    ],
+    appliesTo: 'target',
+  },
   'icy-wind': { changes: [{ stat: 'spe', stages: -1 }], appliesTo: 'target' },
-  'bulldoze': { changes: [{ stat: 'spe', stages: -1 }], appliesTo: 'target' },
+  bulldoze: { changes: [{ stat: 'spe', stages: -1 }], appliesTo: 'target' },
   'rock-tomb': { changes: [{ stat: 'spe', stages: -1 }], appliesTo: 'target' },
   'mud-shot': { changes: [{ stat: 'spe', stages: -1 }], appliesTo: 'target' },
 
   // Target-raising (ally support moves)
-  'decorate': { changes: [{ stat: 'atk', stages: 2 }, { stat: 'spa', stages: 2 }], appliesTo: 'target' },
-  'coaching': { changes: [{ stat: 'atk', stages: 1 }, { stat: 'def', stages: 1 }], appliesTo: 'target' },
+  decorate: {
+    changes: [
+      { stat: 'atk', stages: 2 },
+      { stat: 'spa', stages: 2 },
+    ],
+    appliesTo: 'target',
+  },
+  coaching: {
+    changes: [
+      { stat: 'atk', stages: 1 },
+      { stat: 'def', stages: 1 },
+    ],
+    appliesTo: 'target',
+  },
   'aromatic-mist': { changes: [{ stat: 'spd', stages: 1 }], appliesTo: 'target' },
   'flower-shield': { changes: [{ stat: 'def', stages: 1 }], appliesTo: 'target' },
 };
 
-export function getMoveStatEffect(move: string | undefined, weather?: WeatherType | null): MoveStatEffect | null {
+export function getMoveStatEffect(
+  move: string | undefined,
+  weather?: WeatherType | null,
+): MoveStatEffect | null {
   if (!move) return null;
   const entry = MOVE_STAT_EFFECTS[move.toLowerCase().trim().replace(/\s+/g, '-')];
   if (!entry) return null;

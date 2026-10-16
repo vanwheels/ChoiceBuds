@@ -43,23 +43,40 @@ export default function TeamValidationButton({ team, rulesetId }: TeamValidation
         onClick={handleValidate}
         className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[13px] text-zinc-300 hover:bg-zinc-800 transition-colors cursor-pointer"
       >
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500 shrink-0">
+        <svg
+          viewBox="0 0 24 24"
+          width="16"
+          height="16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="text-zinc-500 shrink-0"
+        >
           <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3Z" />
           <path d="m9 12 2 2 4-4" />
         </svg>
         <span>Validate Team</span>
       </button>
       {result && (
-        <div className="absolute z-50 top-full right-0 mt-1 w-full rounded-lg border-2 bg-slate-900 shadow-xl p-3"
+        <div
+          className="absolute z-50 top-full right-0 mt-1 w-full rounded-lg border-2 bg-slate-900 shadow-xl p-3"
           style={{ borderColor: result.valid ? '#10b981' : '#ef4444' }}
         >
           {result.valid ? (
-            <p className="text-sm font-bold text-emerald-400">✓ Team is legal for {getRegulationLabel(rulesetId)}</p>
+            <p className="text-sm font-bold text-emerald-400">
+              ✓ Team is legal for {getRegulationLabel(rulesetId)}
+            </p>
           ) : (
             <>
-              <p className="text-sm font-bold text-red-400 mb-1">✗ {result.issues.length} issue{result.issues.length === 1 ? '' : 's'} found</p>
+              <p className="text-sm font-bold text-red-400 mb-1">
+                ✗ {result.issues.length} issue{result.issues.length === 1 ? '' : 's'} found
+              </p>
               <ul className="text-xs text-zinc-300 list-disc list-inside space-y-0.5">
-                {result.issues.map((issue, idx) => <li key={idx}>{issue}</li>)}
+                {result.issues.map((issue, idx) => (
+                  <li key={idx}>{issue}</li>
+                ))}
               </ul>
             </>
           )}

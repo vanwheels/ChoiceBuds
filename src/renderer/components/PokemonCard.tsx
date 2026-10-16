@@ -17,8 +17,19 @@
 
 import { useState } from 'react';
 import { AnimatePresence, motion, useDragControls } from 'framer-motion';
-import type { CSSProperties, PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent } from 'react';
-import type { ImportedPokemonInfo, SavedPokemonEntry, Team, SpeciesRosterEntry, PokeAPICacheEntry, VgcRealSetBundle } from '../types/pokemon';
+import type {
+  CSSProperties,
+  PointerEvent as ReactPointerEvent,
+  MouseEvent as ReactMouseEvent,
+} from 'react';
+import type {
+  ImportedPokemonInfo,
+  SavedPokemonEntry,
+  Team,
+  SpeciesRosterEntry,
+  PokeAPICacheEntry,
+  VgcRealSetBundle,
+} from '../types/pokemon';
 import { toMotionDragProps, type GridReorderHandlers } from '../hooks/useGridReorder';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
@@ -65,7 +76,22 @@ interface PokemonCardProps {
   reorderHandlers: GridReorderHandlers;
 }
 
-export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, gameDataState, speciesRosterState, spriteCacheState, rosterActions, getCachedEntry, savedPokemonState, vgcPastesState, vgcRealSetsState, showAnimatedSprites, reorderHandlers }: PokemonCardProps) {
+export default function PokemonCard({
+  pokemon,
+  team,
+  pokemonIndex,
+  updateTeam,
+  gameDataState,
+  speciesRosterState,
+  spriteCacheState,
+  rosterActions,
+  getCachedEntry,
+  savedPokemonState,
+  vgcPastesState,
+  vgcRealSetsState,
+  showAnimatedSprites,
+  reorderHandlers,
+}: PokemonCardProps) {
   const { showdownData, types } = pokemon;
   const [isSwapPickerOpen, setIsSwapPickerOpen] = useState(false);
   // Set the instant a Roster Swap lands on a species with 1+ saved builds
@@ -73,7 +99,9 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
   // fresh usage-based default before committing the swap (Saved Builds
   // Database for Team-Building Leg 1, see TODO.md). null the rest of the
   // time, including right after the swap picker closes with no matches.
-  const [savedSetPickerSpecies, setSavedSetPickerSpecies] = useState<SpeciesRosterEntry | null>(null);
+  const [savedSetPickerSpecies, setSavedSetPickerSpecies] = useState<SpeciesRosterEntry | null>(
+    null,
+  );
   // Mega Stone chosen on a Mega row, held while SavedSetPicker's "Blank" choice is pending.
   const [pendingItemOverride, setPendingItemOverride] = useState<string | undefined>(undefined);
   const [isExportOpen, setIsExportOpen] = useState(false);
@@ -97,8 +125,14 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
   const rulesetId = toRegulationId(team.format);
   // Species Clause, same as TeamCard.tsx's add picker - but this slot's own species stays pickable.
-  const otherTeamSpecies = new Set(team.pokemon.filter((_, i) => i !== pokemonIndex).map(p => p.showdownData.species.toLowerCase()));
-  const swapRoster = speciesRosterState.roster.filter(s => !otherTeamSpecies.has(s.name.toLowerCase()));
+  const otherTeamSpecies = new Set(
+    team.pokemon
+      .filter((_, i) => i !== pokemonIndex)
+      .map((p) => p.showdownData.species.toLowerCase()),
+  );
+  const swapRoster = speciesRosterState.roster.filter(
+    (s) => !otherTeamSpecies.has(s.name.toLowerCase()),
+  );
   const [glowC1, glowC2] = getTypeGlowColors(types);
   const glowRingStyle = { '--glow-c1': glowC1, '--glow-c2': glowC2 } as CSSProperties;
 
@@ -162,7 +196,9 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
   // RealSetsButton's pick-a-bundle-to-fill-this-slot action - see
   // utils/teamRealSetImport.ts for why this is a trivial field copy.
   const handlePickRealSet = async (bundle: VgcRealSetBundle) => {
-    await updatePokemon({ showdownData: { ...pokemon.showdownData, ...realSetBundleToShowdownUpdates(bundle) } });
+    await updatePokemon({
+      showdownData: { ...pokemon.showdownData, ...realSetBundleToShowdownUpdates(bundle) },
+    });
   };
 
   const handlePastePokemon = async () => {
@@ -199,7 +235,6 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
     if ((e.target as HTMLElement).closest('input, button, [data-no-drag]')) return;
     dragControls.start(e);
   };
-
 
   return (
     // Outer ring wraps the actual card in a soft per-type colored glow (see
@@ -293,19 +328,19 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
         />
 
         <AnimatePresence>
-        {isSwapPickerOpen && (
-          <AddPokemonStatTable
-            roster={swapRoster}
-            rulesetId={rulesetId}
-            resolveSprite={spriteCacheState.resolveSprite}
-            getCachedEntry={getCachedEntry}
-            onSelect={handleSwapSelect}
-            onClose={() => setIsSwapPickerOpen(false)}
-          />
-        )}
-      </AnimatePresence>
+          {isSwapPickerOpen && (
+            <AddPokemonStatTable
+              roster={swapRoster}
+              rulesetId={rulesetId}
+              resolveSprite={spriteCacheState.resolveSprite}
+              getCachedEntry={getCachedEntry}
+              onSelect={handleSwapSelect}
+              onClose={() => setIsSwapPickerOpen(false)}
+            />
+          )}
+        </AnimatePresence>
 
-      <AnimatePresence>
+        <AnimatePresence>
           {isExportOpen && (
             <ExportTeamModal
               pokemonList={[showdownData]}
@@ -326,7 +361,16 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
                 label: 'Copy Pokémon',
                 onClick: handleCopyPokemon,
                 icon: (
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.75"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <rect x="9" y="9" width="11" height="11" rx="1.5" />
                     <path d="M5 15H4.5A1.5 1.5 0 0 1 3 13.5v-9A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5V5" />
                   </svg>
@@ -336,7 +380,16 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
                 label: 'Paste Pokémon',
                 onClick: handlePastePokemon,
                 icon: (
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.75"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <path d="M9 4.5h1.5a1.5 1.5 0 0 1 3 0H15a1 1 0 0 1 1 1V7H8V5.5a1 1 0 0 1 1-1Z" />
                     <path d="M8 6H6a1.5 1.5 0 0 0-1.5 1.5v12A1.5 1.5 0 0 0 6 21h12a1.5 1.5 0 0 0 1.5-1.5v-12A1.5 1.5 0 0 0 18 6h-2" />
                   </svg>
@@ -346,7 +399,16 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
                 label: 'Export',
                 onClick: () => setIsExportOpen(true),
                 icon: (
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.75"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <path d="M12 3v12" />
                     <path d="m7 10 5 5 5-5" />
                     <path d="M5 21h14" />
@@ -357,7 +419,16 @@ export default function PokemonCard({ pokemon, team, pokemonIndex, updateTeam, g
                 label: 'Save to Library',
                 onClick: () => setIsSaveToLibraryOpen(true),
                 icon: (
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.75"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <path d="M6 3.75A1.75 1.75 0 0 1 7.75 2h8.5A1.75 1.75 0 0 1 18 3.75V21l-6-3.5L6 21V3.75Z" />
                   </svg>
                 ),

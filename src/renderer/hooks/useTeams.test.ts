@@ -17,10 +17,25 @@ function makeTeam(overrides: Partial<Team> = {}): Team {
 
 function makePokemon(overrides: Partial<ImportedPokemonInfo> = {}): ImportedPokemonInfo {
   return {
-    showdownData: { species: 'Pikachu', level: 50, shiny: false, gigantamax: false, happiness: 255, evs: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 }, moves: [] },
+    showdownData: {
+      species: 'Pikachu',
+      level: 50,
+      shiny: false,
+      gigantamax: false,
+      happiness: 255,
+      evs: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
+      moves: [],
+    },
     pokedexNumber: 25,
     types: ['electric'],
-    baseStats: { hp: 35, attack: 55, defense: 40, specialAttack: 50, specialDefense: 50, speed: 90 },
+    baseStats: {
+      hp: 35,
+      attack: 55,
+      defense: 40,
+      specialAttack: 50,
+      specialDefense: 50,
+      speed: 90,
+    },
     spriteUrl: '',
     importedAt: 0,
     id: 'mon-1',
@@ -38,7 +53,12 @@ describe('useTeams', () => {
   });
 
   it('loads persisted teams on mount', async () => {
-    const database: TeamsDatabase = { schemaVersion: 1, teams: [makeTeam()], tombstones: [], lastModified: 0 };
+    const database: TeamsDatabase = {
+      schemaVersion: 1,
+      teams: [makeTeam()],
+      tombstones: [],
+      lastModified: 0,
+    };
     vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce(database);
 
     const { result } = renderHook(() => useTeams());
@@ -47,7 +67,11 @@ describe('useTeams', () => {
   });
 
   it('backfills an empty tombstones list for a database persisted before tombstones existed', async () => {
-    vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({ schemaVersion: 1, teams: [makeTeam()], lastModified: 0 });
+    vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({
+      schemaVersion: 1,
+      teams: [makeTeam()],
+      lastModified: 0,
+    });
 
     const { result } = renderHook(() => useTeams());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -55,7 +79,11 @@ describe('useTeams', () => {
   });
 
   it('backfills schemaVersion for a database persisted before the field existed', async () => {
-    vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({ teams: [makeTeam()], tombstones: [], lastModified: 0 });
+    vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({
+      teams: [makeTeam()],
+      tombstones: [],
+      lastModified: 0,
+    });
 
     const { result } = renderHook(() => useTeams());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -81,7 +109,7 @@ describe('useTeams', () => {
     const { result } = renderHook(() => useTeams());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-    expect(result.current.teams.map(t => t.name)).toEqual([
+    expect(result.current.teams.map((t) => t.name)).toEqual([
       'Rain Team',
       'Sun Team',
       'Sand Team',
@@ -97,9 +125,18 @@ describe('useTeams', () => {
         makeTeam({
           id: 'a',
           pokemon: [
-            makePokemon({ id: 'p1', showdownData: { ...makePokemon().showdownData, species: 'Indeedee-Female' } }),
-            makePokemon({ id: 'p2', showdownData: { ...makePokemon().showdownData, species: 'Indeedee-Male' } }),
-            makePokemon({ id: 'p3', showdownData: { ...makePokemon().showdownData, species: 'Pikachu' } }),
+            makePokemon({
+              id: 'p1',
+              showdownData: { ...makePokemon().showdownData, species: 'Indeedee-Female' },
+            }),
+            makePokemon({
+              id: 'p2',
+              showdownData: { ...makePokemon().showdownData, species: 'Indeedee-Male' },
+            }),
+            makePokemon({
+              id: 'p3',
+              showdownData: { ...makePokemon().showdownData, species: 'Pikachu' },
+            }),
           ],
         }),
       ],
@@ -111,8 +148,10 @@ describe('useTeams', () => {
     const { result } = renderHook(() => useTeams());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-    expect(result.current.teams[0].pokemon.map(p => p.showdownData.species)).toEqual([
-      'Indeedee-F', 'Indeedee', 'Pikachu',
+    expect(result.current.teams[0].pokemon.map((p) => p.showdownData.species)).toEqual([
+      'Indeedee-F',
+      'Indeedee',
+      'Pikachu',
     ]);
 
     // The display-only fix above isn't enough on its own to survive a sync
@@ -124,9 +163,9 @@ describe('useTeams', () => {
     const calls = vi.mocked(window.electron.writeTeamsDatabase).mock.calls;
     const [persisted] = calls[calls.length - 1];
     expect(persisted.teams[0].updatedAt).toBeGreaterThan(0);
-    expect(persisted.teams[0].pokemon.map((p: ImportedPokemonInfo) => p.showdownData.species)).toEqual([
-      'Indeedee-F', 'Indeedee', 'Pikachu',
-    ]);
+    expect(
+      persisted.teams[0].pokemon.map((p: ImportedPokemonInfo) => p.showdownData.species),
+    ).toEqual(['Indeedee-F', 'Indeedee', 'Pikachu']);
   });
 
   it('reports an error when loading throws', async () => {
@@ -149,7 +188,7 @@ describe('useTeams', () => {
 
     expect(result.current.teams[0].id).toBe('new-team');
     expect(window.electron.writeTeamsDatabase).toHaveBeenCalledWith(
-      expect.objectContaining({ teams: [expect.objectContaining({ id: 'new-team' })] })
+      expect.objectContaining({ teams: [expect.objectContaining({ id: 'new-team' })] }),
     );
   });
 
@@ -199,8 +238,8 @@ describe('useTeams', () => {
     // serializing+rebasing on the latest ref, the second call's stale base
     // (read before the first call's update applied) would overwrite it.
     vi.mocked(window.electron.writeTeamsDatabase)
-      .mockImplementationOnce(() => new Promise(resolve => setTimeout(() => resolve(true), 20)))
-      .mockImplementationOnce(() => new Promise(resolve => setTimeout(() => resolve(true), 5)));
+      .mockImplementationOnce(() => new Promise((resolve) => setTimeout(() => resolve(true), 20)))
+      .mockImplementationOnce(() => new Promise((resolve) => setTimeout(() => resolve(true), 5)));
 
     let firstCall: Promise<boolean>;
     let secondCall: Promise<boolean>;
@@ -248,7 +287,10 @@ describe('useTeams', () => {
     expect(result.current.expandedCardIds.has('team-1')).toBe(false);
     expect(result.current.tombstones).toEqual([{ id: 'team-1', deletedAt: expect.any(Number) }]);
     expect(window.electron.writeTeamsDatabase).toHaveBeenLastCalledWith(
-      expect.objectContaining({ teams: [], tombstones: [{ id: 'team-1', deletedAt: expect.any(Number) }] })
+      expect.objectContaining({
+        teams: [],
+        tombstones: [{ id: 'team-1', deletedAt: expect.any(Number) }],
+      }),
     );
   });
 
@@ -275,7 +317,7 @@ describe('useTeams', () => {
     expect(result.current.teams).toEqual([mergedTeam]);
     expect(result.current.tombstones).toEqual([]);
     expect(window.electron.writeTeamsDatabase).toHaveBeenLastCalledWith(
-      expect.objectContaining({ teams: [mergedTeam], tombstones: [] })
+      expect.objectContaining({ teams: [mergedTeam], tombstones: [] }),
     );
   });
 
@@ -293,7 +335,7 @@ describe('useTeams', () => {
     });
 
     // 'b' wasn't named in orderedIds - kept, appended after the given ones.
-    expect(result.current.teams.map(t => t.id)).toEqual(['c', 'a', 'b']);
+    expect(result.current.teams.map((t) => t.id)).toEqual(['c', 'a', 'b']);
   });
 
   it('setTeamOrder stamps an ascending sortOrder and a fresh updatedAt on every team', async () => {
@@ -304,7 +346,11 @@ describe('useTeams', () => {
     // in COMPLETED.md.
     vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({
       schemaVersion: 1,
-      teams: [makeTeam({ id: 'a', updatedAt: 1 }), makeTeam({ id: 'b', updatedAt: 1 }), makeTeam({ id: 'c', updatedAt: 1 })],
+      teams: [
+        makeTeam({ id: 'a', updatedAt: 1 }),
+        makeTeam({ id: 'b', updatedAt: 1 }),
+        makeTeam({ id: 'c', updatedAt: 1 }),
+      ],
       lastModified: 0,
     });
     const { result } = renderHook(() => useTeams());

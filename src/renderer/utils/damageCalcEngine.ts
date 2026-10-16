@@ -39,20 +39,36 @@ const ZERO_STATS: StatsTable = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 }
 
 // 'Hail' omitted - Gen 9 replaced it game-wide with 'Snow' (Ice Body/Snow
 // Warning etc. key off Snow, not Hail), so it's never a real Gen 9 state.
-export const WEATHER_OPTIONS: Weather[] = ['Sun', 'Rain', 'Sand', 'Snow', 'Harsh Sunshine', 'Heavy Rain', 'Strong Winds'];
+export const WEATHER_OPTIONS: Weather[] = [
+  'Sun',
+  'Rain',
+  'Sand',
+  'Snow',
+  'Harsh Sunshine',
+  'Heavy Rain',
+  'Strong Winds',
+];
 export const TERRAIN_OPTIONS: Terrain[] = ['Electric', 'Grassy', 'Psychic', 'Misty'];
 export const STATUS_OPTIONS: StatusName[] = ['slp', 'psn', 'brn', 'frz', 'par', 'tox'];
 /** Previously a local const duplicated in `CalcPokemonPanel.tsx`, hoisted
  * here alongside `STATUS_OPTIONS`. */
 export const STATUS_LABELS: Record<StatusName, string> = {
-  slp: 'Asleep', psn: 'Poisoned', brn: 'Burned', frz: 'Frozen', par: 'Paralyzed', tox: 'Badly Poisoned',
+  slp: 'Asleep',
+  psn: 'Poisoned',
+  brn: 'Burned',
+  frz: 'Frozen',
+  par: 'Paralyzed',
+  tox: 'Badly Poisoned',
 };
 export const GENDER_OPTIONS: GenderName[] = ['M', 'F', 'N'];
 
 /** Comparable form for matching PokeAPI's lowercase-hyphenated move slugs
  * (e.g. "flare-blitz") against @smogon/calc's Title Case names ("Flare Blitz"). */
 export function normalizeMoveSlug(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
 }
 
 /**
@@ -185,16 +201,30 @@ export interface CalcMoveResultEntry {
 
 function emptyEntry(moveName: string): CalcMoveResultEntry {
   return {
-    moveName, percent: null, desc: null, range: null, kochanceText: null, possibleDamages: [],
-    errorMessage: null, multihitRange: null, effectiveHits: null,
+    moveName,
+    percent: null,
+    desc: null,
+    range: null,
+    kochanceText: null,
+    possibleDamages: [],
+    errorMessage: null,
+    multihitRange: null,
+    effectiveHits: null,
   };
 }
 
 function errorEntry(moveName: string, err: unknown): CalcMoveResultEntry {
   return {
-    moveName, percent: null, desc: null, range: null, kochanceText: null, possibleDamages: [],
-    errorMessage: err instanceof Error ? err.message : 'Unable to calculate damage for this matchup',
-    multihitRange: null, effectiveHits: null,
+    moveName,
+    percent: null,
+    desc: null,
+    range: null,
+    kochanceText: null,
+    possibleDamages: [],
+    errorMessage:
+      err instanceof Error ? err.message : 'Unable to calculate damage for this matchup',
+    multihitRange: null,
+    effectiveHits: null,
   };
 }
 
@@ -226,8 +256,15 @@ function blockedEntry(
     ? `${attackerName}'s ${moveName} is blocked by ${defenderName}'s ${defenderAbility}`
     : `${attackerName}'s ${moveName} does not affect ${defenderName}`;
   return {
-    moveName, percent: '0.0 - 0.0%', desc, range, kochanceText: null, possibleDamages: [0],
-    errorMessage: null, multihitRange: null, effectiveHits: null,
+    moveName,
+    percent: '0.0 - 0.0%',
+    desc,
+    range,
+    kochanceText: null,
+    possibleDamages: [0],
+    errorMessage: null,
+    multihitRange: null,
+    effectiveHits: null,
   };
 }
 
@@ -250,8 +287,15 @@ function adjustedEntry(
 ): CalcMoveResultEntry {
   const percent = `${((range[0] / maxHP) * 100).toFixed(1)} - ${((range[1] / maxHP) * 100).toFixed(1)}%`;
   return {
-    moveName, percent, desc, range, kochanceText: null, possibleDamages,
-    errorMessage: null, multihitRange, effectiveHits,
+    moveName,
+    percent,
+    desc,
+    range,
+    kochanceText: null,
+    possibleDamages,
+    errorMessage: null,
+    multihitRange,
+    effectiveHits,
   };
 }
 
@@ -270,8 +314,10 @@ function adjustedEntry(
 const EV_STAT_PATTERN = /(\d+)([+-]?)( (?:HP|Atk|Def|SpA|SpD|Spe))\b/g;
 
 function convertDescEvsToSps(desc: string): string {
-  return desc.replace(EV_STAT_PATTERN, (_match, evs: string, sign: string, statPart: string) =>
-    `${evToSp(Number(evs))}${sign}${statPart}`
+  return desc.replace(
+    EV_STAT_PATTERN,
+    (_match, evs: string, sign: string, statPart: string) =>
+      `${evToSp(Number(evs))}${sign}${statPart}`,
   );
 }
 
@@ -339,10 +385,15 @@ export function computeBoostedStats(
   if (!state.species) return null;
   try {
     const pokemon = buildPokemon(gen, state);
-    const field = new Field({ weather: weather || undefined, terrain: terrain || undefined, attackerSide: side });
+    const field = new Field({
+      weather: weather || undefined,
+      terrain: terrain || undefined,
+      attackerSide: side,
+    });
     const keys = Object.keys(pokemon.rawStats) as (keyof StatsTable)[];
-    const entries = keys.map(key => {
-      if (key === 'spe') return [key, getFinalSpeed(gen, pokemon, field, field.attackerSide)] as const;
+    const entries = keys.map((key) => {
+      if (key === 'spe')
+        return [key, getFinalSpeed(gen, pokemon, field, field.attackerSide)] as const;
       const boosted = Math.floor(pokemon.rawStats[key] * boostMultiplier(state.boosts[key]));
       return [key, boosted] as const;
     });
@@ -365,7 +416,10 @@ export function computeEffectiveSpeed(
 /** Exported for reuse by utils/speedTiers.ts, which builds the same kind
  * of fully-known Pokemon from a CalcPokemonState for its own Speed math
  * rather than duplicating this construction logic. */
-export function buildPokemon(gen: Generation, state: CalcPokemonState): InstanceType<typeof Pokemon> {
+export function buildPokemon(
+  gen: Generation,
+  state: CalcPokemonState,
+): InstanceType<typeof Pokemon> {
   return new Pokemon(gen, resolveCalcSpecies(state.species), {
     level: state.level,
     gender: state.gender || undefined,
@@ -390,7 +444,7 @@ export function computeSideResults(
   terrain: Terrain | '',
 ): CalcMoveResultEntry[] {
   if (!attacker.species || !defender.species) {
-    return attacker.moves.map(m => emptyEntry(m.name));
+    return attacker.moves.map((m) => emptyEntry(m.name));
   }
 
   let atkPokemon: InstanceType<typeof Pokemon>;
@@ -399,7 +453,7 @@ export function computeSideResults(
     atkPokemon = buildPokemon(gen, attacker);
     defPokemon = buildPokemon(gen, defender);
   } catch (err) {
-    return attacker.moves.map(m => errorEntry(m.name, err));
+    return attacker.moves.map((m) => errorEntry(m.name, err));
   }
 
   const field = new Field({
@@ -410,7 +464,7 @@ export function computeSideResults(
     defenderSide,
   });
 
-  return attacker.moves.map(slot => {
+  return attacker.moves.map((slot) => {
     if (!slot.name) return emptyEntry('');
     const multihitRange = getMultihitRange(gen, slot.name);
     try {
@@ -425,7 +479,13 @@ export function computeSideResults(
       const result = calculate(gen, atkPokemon, defPokemon, move, field);
       const range = result.range();
       if (isFullyBlocked(range, move.category)) {
-        return blockedEntry(slot.name, range, attacker.species, defender.species, result.rawDesc.defenderAbility);
+        return blockedEntry(
+          slot.name,
+          range,
+          attacker.species,
+          defender.species,
+          result.rawDesc.defenderAbility,
+        );
       }
       const maxHP = defPokemon.maxHP();
 
@@ -434,27 +494,40 @@ export function computeSideResults(
       const defenderEffect = getChampionsAbilityDamageEffect(normalizeNameForAPI(defender.ability));
       let multiplier = 1;
       const descParts: string[] = [];
-      if (defenderSide.isProtected && isContact && attackerEffect?.throughProtectMultiplier != null) {
+      if (
+        defenderSide.isProtected &&
+        isContact &&
+        attackerEffect?.throughProtectMultiplier != null
+      ) {
         multiplier *= attackerEffect.throughProtectMultiplier;
         descParts.push(
           `${attacker.species}'s ${slot.name} hits through ${defender.species}'s Protect for ` +
-          `${Math.round(attackerEffect.throughProtectMultiplier * 100)}% damage (${attacker.ability})`
+            `${Math.round(attackerEffect.throughProtectMultiplier * 100)}% damage (${attacker.ability})`,
         );
       }
       if (isContact && defenderEffect?.contactDamageTakenMultiplier != null) {
         multiplier *= defenderEffect.contactDamageTakenMultiplier;
         descParts.push(
           `${defender.species}'s ${defender.ability} reduces the damage from ${slot.name} to ` +
-          `${Math.round(defenderEffect.contactDamageTakenMultiplier * 100)}%`
+            `${Math.round(defenderEffect.contactDamageTakenMultiplier * 100)}%`,
         );
       }
       if (descParts.length > 0) {
-        const adjustedRange: [number, number] = [Math.floor(range[0] * multiplier), Math.floor(range[1] * multiplier)];
-        const adjustedDamages = [...new Set(flattenDamage(result.damage).map(d => Math.floor(d * multiplier)))].sort((a, b) => a - b);
+        const adjustedRange: [number, number] = [
+          Math.floor(range[0] * multiplier),
+          Math.floor(range[1] * multiplier),
+        ];
+        const adjustedDamages = [
+          ...new Set(flattenDamage(result.damage).map((d) => Math.floor(d * multiplier))),
+        ].sort((a, b) => a - b);
         return adjustedEntry(
-          slot.name, adjustedRange, adjustedDamages, maxHP,
-          multihitRange, multihitRange ? move.hits : null,
-          descParts.join(' ')
+          slot.name,
+          adjustedRange,
+          adjustedDamages,
+          maxHP,
+          multihitRange,
+          multihitRange ? move.hits : null,
+          descParts.join(' '),
         );
       }
 

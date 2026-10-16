@@ -23,14 +23,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": [
-    "src/**/*",
-    "web/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "out",
-    "src/renderer/_archived"
-  ]
+  "include": ["src/**/*", "web/**/*"],
+  "exclude": ["node_modules", "dist", "out", "src/renderer/_archived"]
 }

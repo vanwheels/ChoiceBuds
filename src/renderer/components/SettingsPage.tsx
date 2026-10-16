@@ -33,7 +33,15 @@ interface SettingsPageProps {
   gameDataState: UseGameDataReturn;
 }
 
-export default function SettingsPage({ settingsState, syncState, teamsState, updateCheckState, releaseNotesState, databaseState, gameDataState }: SettingsPageProps) {
+export default function SettingsPage({
+  settingsState,
+  syncState,
+  teamsState,
+  updateCheckState,
+  releaseNotesState,
+  databaseState,
+  gameDataState,
+}: SettingsPageProps) {
   const { settings, setDefaultRegulation, updateSettings } = settingsState;
   const currentId = toRegulationId(settings.defaultRegulation);
 
@@ -44,11 +52,11 @@ export default function SettingsPage({ settingsState, syncState, teamsState, upd
       <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-4">
         <h2 className="text-sm font-semibold text-zinc-200">Default Regulation</h2>
         <p className="mt-1 text-xs text-zinc-400">
-          Used to pre-select the Format when importing a new team, and the
-          Calc tab's starting regulation.
+          Used to pre-select the Format when importing a new team, and the Calc tab's starting
+          regulation.
         </p>
         <div className="mt-3 flex gap-2">
-          {ALL_REGULATION_IDS.map(id => (
+          {ALL_REGULATION_IDS.map((id) => (
             <button
               key={id}
               onClick={() => setDefaultRegulation(getRegulationLabel(id))}
@@ -67,15 +75,14 @@ export default function SettingsPage({ settingsState, syncState, teamsState, upd
       <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-4">
         <h2 className="text-sm font-semibold text-zinc-200">Animated Sprites</h2>
         <p className="mt-1 text-xs text-zinc-400">
-          Swaps each team card's main sprite for Showdown's animated GIF
-          version. Only affects the Teams page's Pokémon cards - every other
-          sprite in the app stays static.
+          Swaps each team card's main sprite for Showdown's animated GIF version. Only affects the
+          Teams page's Pokémon cards - every other sprite in the app stays static.
         </p>
         <label className="mt-3 flex items-center gap-2 text-xs text-zinc-300 cursor-pointer w-fit">
           <input
             type="checkbox"
             checked={settings.showAnimatedSprites}
-            onChange={e => updateSettings({ showAnimatedSprites: e.target.checked })}
+            onChange={(e) => updateSettings({ showAnimatedSprites: e.target.checked })}
             className="cursor-pointer accent-accent-gold"
           />
           Show Animated Sprites

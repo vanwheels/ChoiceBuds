@@ -68,7 +68,7 @@ export async function createPokepaste(
   pokemonList: ShowdownPokemon[],
   title?: string,
   author?: string,
-  notes?: string
+  notes?: string,
 ): Promise<string | null> {
   if (!window.electron) return null;
   const paste = formatShowdownText(pokemonList);

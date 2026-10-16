@@ -42,7 +42,7 @@ type Kind = 'region' | 'gender' | 'mega' | 'gmax' | 'synthetic' | 'other';
 
 function classify(name: string): Kind {
   const lower = name.toLowerCase();
-  if (REGIONAL_SUFFIXES.some(suf => lower.endsWith(suf))) return 'region';
+  if (REGIONAL_SUFFIXES.some((suf) => lower.endsWith(suf))) return 'region';
   if (lower.endsWith(GENDER_SUFFIX)) return 'gender';
   if (MEGA_SUFFIX_RE.test(lower)) return 'mega';
   if (GMAX_SUFFIX_RE.test(lower)) return 'gmax';
@@ -78,26 +78,28 @@ export interface FormeFamily {
 export function getFormeFamily(allSpecies: CalcSpeciesRef[], speciesName: string): FormeFamily {
   if (!speciesName) return { root: '', statFormes: [], megaFormes: [] };
 
-  const byName = new Map(allSpecies.map(s => [s.name, s]));
+  const byName = new Map(allSpecies.map((s) => [s.name, s]));
   const root = findRoot(speciesName, byName);
-  const family = allSpecies.filter(s => s.name === root || findRoot(s.name, byName) === root);
+  const family = allSpecies.filter((s) => s.name === root || findRoot(s.name, byName) === root);
 
   return {
     root,
-    statFormes: family.filter(s => classify(s.name) === 'other').map(s => s.name),
+    statFormes: family.filter((s) => classify(s.name) === 'other').map((s) => s.name),
     megaFormes: family
-      .filter(s => classify(s.name) === 'mega' && CURATED_MEGA_FORM_SLUGS.has(s.name.toLowerCase()))
-      .map(s => s.name),
+      .filter(
+        (s) => classify(s.name) === 'mega' && CURATED_MEGA_FORM_SLUGS.has(s.name.toLowerCase()),
+      )
+      .map((s) => s.name),
   };
 }
 
 /** Common leading "-"-separated segments shared by every name in the group */
 function commonPrefixLength(names: string[]): number {
   if (names.length === 0) return 0;
-  const partsList = names.map(n => n.split('-'));
-  const minLen = Math.min(...partsList.map(p => p.length));
+  const partsList = names.map((n) => n.split('-'));
+  const minLen = Math.min(...partsList.map((p) => p.length));
   let i = 0;
-  while (i < minLen && partsList.every(p => p[i] === partsList[0][i])) i++;
+  while (i < minLen && partsList.every((p) => p[i] === partsList[0][i])) i++;
   return i;
 }
 

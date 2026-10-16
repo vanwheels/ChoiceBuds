@@ -91,7 +91,7 @@ function toDisplayName(apiName: string): string {
 
   return apiName
     .split('-')
-    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join('-');
 }
 
@@ -132,20 +132,29 @@ export function useSpeciesRoster(): UseSpeciesRosterReturn {
     if (cached) return;
     let cancelled = false;
     fetchJSON<PokeAPIPokemonListResponse>('/pokemon?limit=2000')
-      .then(data => {
+      .then((data) => {
         if (cancelled || !data) return;
         const entries: SpeciesRosterEntry[] = data.results
           .filter(({ name }) => !MEGA_FORM_PATTERN.test(name))
           .map(({ name, url }) => {
             const id = extractIdFromUrl(url);
-            return { name: toDisplayName(name), id, spriteUrl: getRosterSpriteUrl(id), shinySpriteUrl: getRosterShinySpriteUrl(id) };
+            return {
+              name: toDisplayName(name),
+              id,
+              spriteUrl: getRosterSpriteUrl(id),
+              shinySpriteUrl: getRosterShinySpriteUrl(id),
+            };
           });
         setRoster(entries);
         writeRosterCache(entries);
       })
-      .catch(err => console.error('Error loading species roster:', err))
-      .finally(() => { if (!cancelled) setIsLoading(false); });
-    return () => { cancelled = true; };
+      .catch((err) => console.error('Error loading species roster:', err))
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

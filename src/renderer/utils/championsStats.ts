@@ -27,8 +27,12 @@ export function spToEv(sp: number): number {
 
 export function spsToEvs(sps: StatsTable): StatsTable {
   return {
-    hp: spToEv(sps.hp), atk: spToEv(sps.atk), def: spToEv(sps.def),
-    spa: spToEv(sps.spa), spd: spToEv(sps.spd), spe: spToEv(sps.spe),
+    hp: spToEv(sps.hp),
+    atk: spToEv(sps.atk),
+    def: spToEv(sps.def),
+    spa: spToEv(sps.spa),
+    spd: spToEv(sps.spd),
+    spe: spToEv(sps.spe),
   };
 }
 

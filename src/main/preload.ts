@@ -9,7 +9,7 @@ import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 /**
  * Exposed API surface for renderer process
  * All file operations route through main process for security
- * 
+ *
  * Note: Using 'any' for data types to avoid importing renderer types,
  * which would cause duplicate bundling. The renderer will cast these
  * to the proper types defined in src/renderer/types/pokemon.ts
@@ -191,7 +191,12 @@ const electronAPI = {
    * pokepaste:create handler for why this can't be done from the renderer).
    * @returns Promise resolving to the new paste's URL, or null on failure
    */
-  createPokepaste: async (payload: { paste: string; title?: string; author?: string; notes?: string }): Promise<string | null> => {
+  createPokepaste: async (payload: {
+    paste: string;
+    title?: string;
+    author?: string;
+    notes?: string;
+  }): Promise<string | null> => {
     return ipcRenderer.invoke('pokepaste:create', payload);
   },
 

@@ -65,7 +65,20 @@ const slideVariants = {
   exit: (direction: number) => ({ x: direction > 0 ? -80 : 80, opacity: 0 }),
 };
 
-export default function MobileTeamSwipeOverlay({ team, initialIndex, updateTeam, databaseState, gameDataState, speciesRosterState, spriteCacheState, savedPokemonState, vgcPastesState, vgcRealSetsState, showAnimatedSprites, onClose }: MobileTeamSwipeOverlayProps) {
+export default function MobileTeamSwipeOverlay({
+  team,
+  initialIndex,
+  updateTeam,
+  databaseState,
+  gameDataState,
+  speciesRosterState,
+  spriteCacheState,
+  savedPokemonState,
+  vgcPastesState,
+  vgcRealSetsState,
+  showAnimatedSprites,
+  onClose,
+}: MobileTeamSwipeOverlayProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [direction, setDirection] = useState(0);
   // One instance per open overlay - same shape as TeamCard.tsx's own
@@ -77,7 +90,7 @@ export default function MobileTeamSwipeOverlay({ team, initialIndex, updateTeam,
     databaseState.getCachedEntry,
     databaseState.setCacheEntry,
     gameDataState.getEnrichedSpeciesOptions,
-    gameDataState.getChampionsUsage
+    gameDataState.getChampionsUsage,
   );
 
   const rosterLength = team.pokemon.length;
@@ -134,7 +147,10 @@ export default function MobileTeamSwipeOverlay({ team, initialIndex, updateTeam,
   const handleDragEnd = (_e: unknown, info: PanInfo) => {
     if (info.offset.x <= -SWIPE_OFFSET_THRESHOLD || info.velocity.x <= -SWIPE_VELOCITY_THRESHOLD) {
       paginate(1);
-    } else if (info.offset.x >= SWIPE_OFFSET_THRESHOLD || info.velocity.x >= SWIPE_VELOCITY_THRESHOLD) {
+    } else if (
+      info.offset.x >= SWIPE_OFFSET_THRESHOLD ||
+      info.velocity.x >= SWIPE_VELOCITY_THRESHOLD
+    ) {
       paginate(-1);
     }
   };
@@ -145,7 +161,9 @@ export default function MobileTeamSwipeOverlay({ team, initialIndex, updateTeam,
   return createPortal(
     <div className="fixed inset-0 z-[60] bg-zinc-950 flex flex-col">
       {/* Header - close affordance, team identity, page indicator */}
-      <div className={`flex items-center gap-3 px-4 py-3 border-b border-zinc-800 border-l-4 ${regulationTheme.accentBorder}`}>
+      <div
+        className={`flex items-center gap-3 px-4 py-3 border-b border-zinc-800 border-l-4 ${regulationTheme.accentBorder}`}
+      >
         <button
           onClick={onClose}
           aria-label="Close"
@@ -153,7 +171,9 @@ export default function MobileTeamSwipeOverlay({ team, initialIndex, updateTeam,
         >
           <CloseIcon />
         </button>
-        <span className="flex-1 min-w-0 truncate font-bold text-zinc-100">{team.name || 'Untitled Team'}</span>
+        <span className="flex-1 min-w-0 truncate font-bold text-zinc-100">
+          {team.name || 'Untitled Team'}
+        </span>
         <span className="shrink-0 text-xs font-semibold text-zinc-400 bg-zinc-800 border border-zinc-700 rounded-full px-2.5 py-1">
           {safeIndex + 1} / {rosterLength}
         </span>
@@ -205,7 +225,16 @@ export default function MobileTeamSwipeOverlay({ team, initialIndex, updateTeam,
             aria-label="Previous Pokémon"
             className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-zinc-800/80 border border-zinc-700 text-zinc-300 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer"
           >
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="m15 6-6 6 6 6" />
             </svg>
           </button>
@@ -216,13 +245,22 @@ export default function MobileTeamSwipeOverlay({ team, initialIndex, updateTeam,
             aria-label="Next Pokémon"
             className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-zinc-800/80 border border-zinc-700 text-zinc-300 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer"
           >
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="m9 6 6 6-6 6" />
             </svg>
           </button>
         )}
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

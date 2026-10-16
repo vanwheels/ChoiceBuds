@@ -56,8 +56,12 @@ function nearestCorner(clientX: number, clientY: number): CalcButtonCorner {
 
 function restingPosition(corner: CalcButtonCorner, width: number, height: number) {
   return {
-    left: corner.endsWith('right') ? window.innerWidth - width - CORNER_OFFSET_PX : CORNER_OFFSET_PX,
-    top: corner.startsWith('bottom') ? window.innerHeight - height - CORNER_OFFSET_PX : CORNER_OFFSET_PX,
+    left: corner.endsWith('right')
+      ? window.innerWidth - width - CORNER_OFFSET_PX
+      : CORNER_OFFSET_PX,
+    top: corner.startsWith('bottom')
+      ? window.innerHeight - height - CORNER_OFFSET_PX
+      : CORNER_OFFSET_PX,
   };
 }
 
@@ -88,30 +92,33 @@ export function CalcLauncherButton({ onOpen }: CalcLauncherButtonProps) {
     }
   }, []);
 
-  const handlePointerUp = useCallback((e: ReactPointerEvent<HTMLButtonElement>) => {
-    const btn = buttonRef.current;
-    if (isDragging.current && btn) {
-      const dropRect = btn.getBoundingClientRect();
-      const target = nearestCorner(e.clientX, e.clientY);
-      const rest = restingPosition(target, dropRect.width, dropRect.height);
-      // Cancel out the corner-class switch with an equal-and-opposite
-      // transform, so the button stays visually put at the drop point.
-      btn.style.transform = `translate(${dropRect.left - rest.left}px, ${dropRect.top - rest.top}px)`;
-      setCorner(target);
-      // Next frame, animate that transform back to 0 - sliding the button
-      // from the drop point into its real resting spot.
-      requestAnimationFrame(() => {
-        btn.style.transition = SNAP_TRANSITION;
-        btn.style.transform = '';
-        const clearTransition = () => {
-          btn.style.transition = '';
-          btn.removeEventListener('transitionend', clearTransition);
-        };
-        btn.addEventListener('transitionend', clearTransition);
-      });
-    }
-    pointerStart.current = null;
-  }, [setCorner]);
+  const handlePointerUp = useCallback(
+    (e: ReactPointerEvent<HTMLButtonElement>) => {
+      const btn = buttonRef.current;
+      if (isDragging.current && btn) {
+        const dropRect = btn.getBoundingClientRect();
+        const target = nearestCorner(e.clientX, e.clientY);
+        const rest = restingPosition(target, dropRect.width, dropRect.height);
+        // Cancel out the corner-class switch with an equal-and-opposite
+        // transform, so the button stays visually put at the drop point.
+        btn.style.transform = `translate(${dropRect.left - rest.left}px, ${dropRect.top - rest.top}px)`;
+        setCorner(target);
+        // Next frame, animate that transform back to 0 - sliding the button
+        // from the drop point into its real resting spot.
+        requestAnimationFrame(() => {
+          btn.style.transition = SNAP_TRANSITION;
+          btn.style.transform = '';
+          const clearTransition = () => {
+            btn.style.transition = '';
+            btn.removeEventListener('transitionend', clearTransition);
+          };
+          btn.addEventListener('transitionend', clearTransition);
+        });
+      }
+      pointerStart.current = null;
+    },
+    [setCorner],
+  );
 
   const handleClick = useCallback(() => {
     if (isDragging.current) {

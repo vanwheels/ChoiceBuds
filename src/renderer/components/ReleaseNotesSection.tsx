@@ -21,19 +21,23 @@ export default function ReleaseNotesSection({ releaseNotesState }: ReleaseNotesS
   return (
     <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-4">
       <h2 className="text-sm font-semibold text-zinc-200">Release Notes</h2>
-      <p className="mt-1 text-xs text-zinc-400">Full history of published releases, newest first.</p>
+      <p className="mt-1 text-xs text-zinc-400">
+        Full history of published releases, newest first.
+      </p>
 
       <div className="mt-3">
         {isLoading && <p className="text-xs text-zinc-500">Loading release history...</p>}
         {!isLoading && error && (
-          <p className="text-xs text-red-400">Couldn't load release history - check your connection.</p>
+          <p className="text-xs text-red-400">
+            Couldn't load release history - check your connection.
+          </p>
         )}
         {!isLoading && !error && history.length === 0 && (
           <p className="text-xs text-zinc-500">No releases published yet.</p>
         )}
         {!isLoading && !error && history.length > 0 && (
           <div className="max-h-96 overflow-y-auto divide-y divide-zinc-700 rounded border border-zinc-700 bg-zinc-900/40">
-            {history.map(release => (
+            {history.map((release) => (
               <div key={release.version} className="p-3">
                 <div className="flex items-baseline gap-2">
                   <span className="text-xs font-bold text-zinc-100">{release.version}</span>

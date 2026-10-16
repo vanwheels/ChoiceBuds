@@ -20,8 +20,14 @@ const mockedLogin = vi.mocked(login);
 const mockedPush = vi.mocked(pushSyncData);
 
 const PLAYER_PROFILE = {
-  playerName: '', ageDivision: '' as const, trainerNameInGame: '', playerId: '',
-  dateOfBirth: '', supportId: '', switchProfileName: '', updatedAt: 0,
+  playerName: '',
+  ageDivision: '' as const,
+  trainerNameInGame: '',
+  playerId: '',
+  dateOfBirth: '',
+  supportId: '',
+  switchProfileName: '',
+  updatedAt: 0,
 };
 
 function makeSettings(overrides: Partial<AppSettings> = {}): AppSettings {
@@ -43,21 +49,45 @@ function makeSettings(overrides: Partial<AppSettings> = {}): AppSettings {
 }
 
 function makeTeam(overrides: Partial<Team> = {}): Team {
-  return { id: 'team-1', name: 'Test Team', format: 'Reg M-B', pokemon: [], createdAt: Date.now(), updatedAt: Date.now(), ...overrides };
+  return {
+    id: 'team-1',
+    name: 'Test Team',
+    format: 'Reg M-B',
+    pokemon: [],
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    ...overrides,
+  };
 }
 
 function makePokemon(species: string): Team['pokemon'][number] {
   return {
-    showdownData: { species, level: 50, shiny: false, gigantamax: false, happiness: 255, evs: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 }, moves: [] },
-    pokedexNumber: 0, types: [], baseStats: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 }, spriteUrl: '', importedAt: 0, id: 'mon-1',
+    showdownData: {
+      species,
+      level: 50,
+      shiny: false,
+      gigantamax: false,
+      happiness: 255,
+      evs: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
+      moves: [],
+    },
+    pokedexNumber: 0,
+    types: [],
+    baseStats: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
+    spriteUrl: '',
+    importedAt: 0,
+    id: 'mon-1',
   };
 }
 
 function emptyMergedPayload(overrides: Partial<SyncPayload> = {}): SyncPayload {
   return {
-    teams: [], teamTombstones: [],
-    battles: [], battleTombstones: [],
-    savedPokemon: [], savedPokemonTombstones: [],
+    teams: [],
+    teamTombstones: [],
+    battles: [],
+    battleTombstones: [],
+    savedPokemon: [],
+    savedPokemonTombstones: [],
     savedAt: Date.now(),
     ...overrides,
   };
@@ -94,7 +124,10 @@ function setup(settingsOverrides: Partial<AppSettings> = {}) {
     // overwrites `teams` with the server's (always-fresh-reference) result -
     // that reference change is exactly what the skip-next-mutation-sync
     // mechanism under test exists to not mistake for a local edit.
-    applySyncedState: vi.fn(async (records: Team[]) => { teamsState.teams = records; return true; }),
+    applySyncedState: vi.fn(async (records: Team[]) => {
+      teamsState.teams = records;
+      return true;
+    }),
   };
 
   const battlesState: UseBattlesReturn = {
@@ -107,7 +140,10 @@ function setup(settingsOverrides: Partial<AppSettings> = {}) {
     deleteBattle: vi.fn(),
     refreshBattles: vi.fn().mockResolvedValue(undefined),
     getBattleById: vi.fn(),
-    applySyncedState: vi.fn(async (records) => { battlesState.battles = records; return true; }),
+    applySyncedState: vi.fn(async (records) => {
+      battlesState.battles = records;
+      return true;
+    }),
   };
 
   const savedPokemonState: UseSavedPokemonReturn = {
@@ -127,10 +163,15 @@ function setup(settingsOverrides: Partial<AppSettings> = {}) {
     refreshSavedPokemon: vi.fn().mockResolvedValue(undefined),
     getSavedSetsForSpecies: vi.fn().mockReturnValue([]),
     tombstones: [],
-    applySyncedState: vi.fn(async (records) => { savedPokemonState.savedPokemon = records; return true; }),
+    applySyncedState: vi.fn(async (records) => {
+      savedPokemonState.savedPokemon = records;
+      return true;
+    }),
   };
 
-  const { result, rerender } = renderHook(() => useSync(settingsState, teamsState, battlesState, savedPokemonState));
+  const { result, rerender } = renderHook(() =>
+    useSync(settingsState, teamsState, battlesState, savedPokemonState),
+  );
   return { result, rerender, updateSettings, teamsState, battlesState, savedPokemonState };
 }
 
@@ -184,7 +225,10 @@ describe('useSync', () => {
         outcome = await result.current.signUp('ethan', 'short');
       });
 
-      expect(outcome).toEqual({ ok: false, message: expect.stringContaining('at least 8 characters') });
+      expect(outcome).toEqual({
+        ok: false,
+        message: expect.stringContaining('at least 8 characters'),
+      });
       expect(mockedSignup).not.toHaveBeenCalled();
     });
 
@@ -288,7 +332,11 @@ describe('useSync', () => {
         await result.current.logOut();
       });
 
-      expect(updateSettings).toHaveBeenCalledWith({ syncUsername: null, syncToken: null, lastSyncedAt: null });
+      expect(updateSettings).toHaveBeenCalledWith({
+        syncUsername: null,
+        syncToken: null,
+        lastSyncedAt: null,
+      });
       expect(result.current.status).toBe('signed-out');
     });
   });
@@ -311,7 +359,10 @@ describe('useSync', () => {
       const merged = emptyMergedPayload({ teams: [remoteTeam], savedAt: 42_000 });
       mockedPush.mockResolvedValue(merged);
 
-      const { result, updateSettings, teamsState, battlesState, savedPokemonState } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
+      const { result, updateSettings, teamsState, battlesState, savedPokemonState } = setup({
+        syncUsername: 'ethan',
+        syncToken: 'tok',
+      });
       await waitFor(() => expect(mockedPush).toHaveBeenCalledTimes(1)); // mount-triggered auto-sync
 
       let outcome;
@@ -338,7 +389,9 @@ describe('useSync', () => {
 
     it('applies the merged playerProfile back when the Worker returns one', async () => {
       const remoteProfile = { ...PLAYER_PROFILE, playerName: 'Remote Name', updatedAt: 99_000 };
-      mockedPush.mockResolvedValue(emptyMergedPayload({ playerProfile: remoteProfile, savedAt: 42_000 }));
+      mockedPush.mockResolvedValue(
+        emptyMergedPayload({ playerProfile: remoteProfile, savedAt: 42_000 }),
+      );
 
       const { result, updateSettings } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
       await waitFor(() => expect(mockedPush).toHaveBeenCalledTimes(1)); // mount-triggered auto-sync
@@ -347,7 +400,10 @@ describe('useSync', () => {
         await result.current.syncNow();
       });
 
-      expect(updateSettings).toHaveBeenLastCalledWith({ lastSyncedAt: 42_000, playerProfile: remoteProfile });
+      expect(updateSettings).toHaveBeenLastCalledWith({
+        lastSyncedAt: 42_000,
+        playerProfile: remoteProfile,
+      });
     });
 
     it('leaves the local playerProfile untouched when the Worker omits it (un-redeployed account)', async () => {
@@ -381,7 +437,11 @@ describe('useSync', () => {
 
     it('shares one in-flight run across concurrent callers instead of double-pushing', async () => {
       let resolvePush: (payload: SyncPayload) => void;
-      mockedPush.mockReturnValue(new Promise(resolve => { resolvePush = resolve; }));
+      mockedPush.mockReturnValue(
+        new Promise((resolve) => {
+          resolvePush = resolve;
+        }),
+      );
 
       const { result } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
       await waitFor(() => expect(mockedPush).toHaveBeenCalledTimes(1)); // the pending mount-triggered call
@@ -437,7 +497,11 @@ describe('useSync', () => {
       rerender();
 
       mockedPush.mockClear();
-      const staleTeam = makeTeam({ id: 'stale', updatedAt: 1_000, pokemon: [makePokemon('Indeedee-Female')] });
+      const staleTeam = makeTeam({
+        id: 'stale',
+        updatedAt: 1_000,
+        pokemon: [makePokemon('Indeedee-Female')],
+      });
       teamsState.teams = [staleTeam];
       rerender();
 

@@ -43,7 +43,14 @@ interface RealSetsButtonProps {
   onPickBundle: (bundle: VgcRealSetBundle) => void;
 }
 
-export default function RealSetsButton({ species, item, regulation, vgcPastesState, vgcRealSetsState, onPickBundle }: RealSetsButtonProps) {
+export default function RealSetsButton({
+  species,
+  item,
+  regulation,
+  vgcPastesState,
+  vgcRealSetsState,
+  onPickBundle,
+}: RealSetsButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
   const [cardRect, setCardRect] = useState<DOMRect | null>(null);
@@ -63,7 +70,9 @@ export default function RealSetsButton({ species, item, regulation, vgcPastesSta
       return;
     }
     setAnchorRect(e.currentTarget.getBoundingClientRect());
-    setCardRect(e.currentTarget.closest<HTMLElement>('[data-pokemon-card]')?.getBoundingClientRect() ?? null);
+    setCardRect(
+      e.currentTarget.closest<HTMLElement>('[data-pokemon-card]')?.getBoundingClientRect() ?? null,
+    );
     setIsOpen(true);
     realSets.lookup(effectiveSpecies);
   };
@@ -87,7 +96,10 @@ export default function RealSetsButton({ species, item, regulation, vgcPastesSta
 
       {isOpen && anchorRect && (
         <FloatingCardPanel anchorRect={anchorRect} cardRect={cardRect}>
-          <div ref={dismissRef} className="w-full bg-zinc-800 border-2 border-accent-gold rounded-lg p-2">
+          <div
+            ref={dismissRef}
+            className="w-full bg-zinc-800 border-2 border-accent-gold rounded-lg p-2"
+          >
             <CalcRealSetsSection
               species={effectiveSpecies}
               regulation={regulation}

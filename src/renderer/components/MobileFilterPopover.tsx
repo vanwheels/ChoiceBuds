@@ -32,7 +32,12 @@ interface PopoverPos {
 const VIEWPORT_MARGIN = 8;
 const MIN_PANEL_HEIGHT = 100;
 
-export default function MobileFilterPopover({ label, icon, children, isActive }: MobileFilterPopoverProps) {
+export default function MobileFilterPopover({
+  label,
+  icon,
+  children,
+  isActive,
+}: MobileFilterPopoverProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [pos, setPos] = useState<PopoverPos | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -89,19 +94,23 @@ export default function MobileFilterPopover({ label, icon, children, isActive }:
         }`}
       >
         {icon}
-        {isActive && <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-accent-gold" />}
+        {isActive && (
+          <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-accent-gold" />
+        )}
       </button>
 
-      {isOpen && pos && createPortal(
-        <div
-          ref={panelRef}
-          className="fixed z-50 w-64 rounded-lg border border-zinc-800 bg-zinc-900 shadow-2xl p-2 overflow-y-auto"
-          style={{ top: pos.top, bottom: pos.bottom, right: pos.right, maxHeight: pos.maxHeight }}
-        >
-          {children}
-        </div>,
-        document.body
-      )}
+      {isOpen &&
+        pos &&
+        createPortal(
+          <div
+            ref={panelRef}
+            className="fixed z-50 w-64 rounded-lg border border-zinc-800 bg-zinc-900 shadow-2xl p-2 overflow-y-auto"
+            style={{ top: pos.top, bottom: pos.bottom, right: pos.right, maxHeight: pos.maxHeight }}
+          >
+            {children}
+          </div>,
+          document.body,
+        )}
     </>
   );
 }

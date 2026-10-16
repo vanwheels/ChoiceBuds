@@ -15,7 +15,8 @@
 import type { SideConditions, WeatherType, TerrainType } from '../types/pokemon';
 import { getTypeTheme, type TypeTheme } from './pokemonTheme';
 
-export type TurnTrackedCondition = 'tailwind' | 'reflect' | 'lightScreen' | 'auroraVeil' | 'safeguard' | 'mist';
+export type TurnTrackedCondition =
+  'tailwind' | 'reflect' | 'lightScreen' | 'auroraVeil' | 'safeguard' | 'mist';
 export type BooleanHazard = 'stealthRock' | 'stickyWeb';
 export type StackableHazard = 'spikes' | 'toxicSpikes';
 
@@ -31,7 +32,12 @@ export type StackableHazard = 'spikes' | 'toxicSpikes';
 export const FIELD_EVENT_ID = '__field__';
 
 export const TURN_TRACKED_CONDITIONS: TurnTrackedCondition[] = [
-  'tailwind', 'reflect', 'lightScreen', 'auroraVeil', 'safeguard', 'mist',
+  'tailwind',
+  'reflect',
+  'lightScreen',
+  'auroraVeil',
+  'safeguard',
+  'mist',
 ];
 export const BOOLEAN_HAZARDS: BooleanHazard[] = ['stealthRock', 'stickyWeb'];
 export const STACKABLE_HAZARDS: StackableHazard[] = ['spikes', 'toxicSpikes'];
@@ -64,7 +70,9 @@ export const SIDE_CONDITION_EXTENDED_DURATIONS: Partial<Record<TurnTrackedCondit
 };
 
 /** Maps a turn-tracked condition to its SideConditions "extended" flag key, for the 3 that have one. */
-export const SIDE_CONDITION_EXTENDED_FIELD: Partial<Record<TurnTrackedCondition, keyof SideConditions>> = {
+export const SIDE_CONDITION_EXTENDED_FIELD: Partial<
+  Record<TurnTrackedCondition, keyof SideConditions>
+> = {
   reflect: 'reflectExtended',
   lightScreen: 'lightScreenExtended',
   auroraVeil: 'auroraVeilExtended',
@@ -124,19 +132,25 @@ export function getTerrainTheme(terrain: TerrainType): TypeTheme {
 }
 
 /** Turns remaining given when a condition was set, its duration, and the current turn number. Never negative. */
-export function getRemainingTurns(setOnTurn: number, duration: number, currentTurn: number): number {
+export function getRemainingTurns(
+  setOnTurn: number,
+  duration: number,
+  currentTurn: number,
+): number {
   return Math.max(0, duration - (currentTurn - setOnTurn));
 }
 
 export function getSideConditionRemaining(
   conditions: SideConditions,
   key: TurnTrackedCondition,
-  currentTurn: number
+  currentTurn: number,
 ): number | null {
   const setOnTurn = conditions[key];
   if (setOnTurn == null) return null;
   const extendedField = SIDE_CONDITION_EXTENDED_FIELD[key];
   const isExtended = extendedField ? !!conditions[extendedField] : false;
-  const duration = isExtended ? SIDE_CONDITION_EXTENDED_DURATIONS[key]! : SIDE_CONDITION_DURATIONS[key];
+  const duration = isExtended
+    ? SIDE_CONDITION_EXTENDED_DURATIONS[key]!
+    : SIDE_CONDITION_DURATIONS[key];
   return getRemainingTurns(setOnTurn, duration, currentTurn);
 }

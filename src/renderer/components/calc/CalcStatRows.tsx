@@ -33,7 +33,15 @@ interface CalcStatRowsProps {
   onChangeBoost: (key: keyof StatsTable, value: number) => void;
 }
 
-export default function CalcStatRows({ baseStats, boostedStats, sps, boosts, natureEffect, onChangeSp, onChangeBoost }: CalcStatRowsProps) {
+export default function CalcStatRows({
+  baseStats,
+  boostedStats,
+  sps,
+  boosts,
+  natureEffect,
+  onChangeSp,
+  onChangeBoost,
+}: CalcStatRowsProps) {
   const total = Object.values(sps).reduce((sum, v) => sum + v, 0);
 
   return (
@@ -49,52 +57,67 @@ export default function CalcStatRows({ baseStats, boostedStats, sps, boosts, nat
         const isBoosted = natureEffect.plus === key;
         const isLowered = natureEffect.minus === key;
         return (
-        <div key={key} className="flex items-center gap-2">
-          <span
-            className={`w-8 text-[10px] uppercase shrink-0 ${
-              isBoosted ? 'text-red-400 font-bold' : isLowered ? 'text-blue-400 font-bold' : getStatLabelColor(label)
-            }`}
-            title={isBoosted ? 'Boosted by nature (+10%)' : isLowered ? 'Lowered by nature (-10%)' : undefined}
-          >
-            {label}{isBoosted ? '+' : isLowered ? '-' : ''}
-          </span>
-          <span className="w-10 text-center text-xs text-zinc-300 shrink-0">{baseStats ? baseStats[key] : '—'}</span>
-          <input
-            type="number"
-            min={0}
-            max={32}
-            value={sps[key]}
-            onChange={(e) => {
-              const parsed = Number(e.target.value);
-              if (!Number.isNaN(parsed)) onChangeSp(key, Math.max(0, Math.min(32, parsed)));
-            }}
-            title="Stat Points (0-32)"
-            className="w-10 shrink-0 px-1 py-0.5 text-xs text-center bg-zinc-900 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
-          />
-          <input
-            type="number"
-            min={-6}
-            max={6}
-            value={boosts[key]}
-            onChange={(e) => {
-              const parsed = Number(e.target.value);
-              if (!Number.isNaN(parsed)) onChangeBoost(key, Math.max(-6, Math.min(6, parsed)));
-            }}
-            title="Stat stage boost (-6 to +6)"
-            className="w-10 shrink-0 px-1 py-0.5 text-xs text-center bg-zinc-900 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
-          />
-          <span
-            className={`w-10 text-center text-xs font-bold shrink-0 ${
-              isBoosted ? 'text-red-400' : isLowered ? 'text-blue-400' : 'text-zinc-200'
-            }`}
-            title="Base + SP + nature + stage boost"
-          >
-            {boostedStats ? boostedStats[key] : '—'}
-          </span>
-        </div>
+          <div key={key} className="flex items-center gap-2">
+            <span
+              className={`w-8 text-[10px] uppercase shrink-0 ${
+                isBoosted
+                  ? 'text-red-400 font-bold'
+                  : isLowered
+                    ? 'text-blue-400 font-bold'
+                    : getStatLabelColor(label)
+              }`}
+              title={
+                isBoosted
+                  ? 'Boosted by nature (+10%)'
+                  : isLowered
+                    ? 'Lowered by nature (-10%)'
+                    : undefined
+              }
+            >
+              {label}
+              {isBoosted ? '+' : isLowered ? '-' : ''}
+            </span>
+            <span className="w-10 text-center text-xs text-zinc-300 shrink-0">
+              {baseStats ? baseStats[key] : '—'}
+            </span>
+            <input
+              type="number"
+              min={0}
+              max={32}
+              value={sps[key]}
+              onChange={(e) => {
+                const parsed = Number(e.target.value);
+                if (!Number.isNaN(parsed)) onChangeSp(key, Math.max(0, Math.min(32, parsed)));
+              }}
+              title="Stat Points (0-32)"
+              className="w-10 shrink-0 px-1 py-0.5 text-xs text-center bg-zinc-900 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
+            />
+            <input
+              type="number"
+              min={-6}
+              max={6}
+              value={boosts[key]}
+              onChange={(e) => {
+                const parsed = Number(e.target.value);
+                if (!Number.isNaN(parsed)) onChangeBoost(key, Math.max(-6, Math.min(6, parsed)));
+              }}
+              title="Stat stage boost (-6 to +6)"
+              className="w-10 shrink-0 px-1 py-0.5 text-xs text-center bg-zinc-900 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
+            />
+            <span
+              className={`w-10 text-center text-xs font-bold shrink-0 ${
+                isBoosted ? 'text-red-400' : isLowered ? 'text-blue-400' : 'text-zinc-200'
+              }`}
+              title="Base + SP + nature + stage boost"
+            >
+              {boostedStats ? boostedStats[key] : '—'}
+            </span>
+          </div>
         );
       })}
-      <p className={`text-[10px] text-right ${total > MAX_SP_TOTAL ? 'text-red-400' : 'text-zinc-500'}`}>
+      <p
+        className={`text-[10px] text-right ${total > MAX_SP_TOTAL ? 'text-red-400' : 'text-zinc-500'}`}
+      >
         {total} / {MAX_SP_TOTAL} SP total
       </p>
     </div>

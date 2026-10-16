@@ -2,7 +2,14 @@ import { describe, it, expect } from 'vitest';
 import { formatStatAlignment } from './statAlignment';
 import type { EVSpread } from '../types/pokemon';
 
-const zeroEvs: EVSpread = { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 };
+const zeroEvs: EVSpread = {
+  hp: 0,
+  attack: 0,
+  defense: 0,
+  specialAttack: 0,
+  specialDefense: 0,
+  speed: 0,
+};
 
 describe('formatStatAlignment', () => {
   it('formats a nature with a single non-zero stat', () => {
@@ -29,7 +36,16 @@ describe('formatStatAlignment', () => {
   });
 
   it('includes all six stats when every stat has points', () => {
-    const evs: EVSpread = { hp: 4, attack: 4, defense: 4, specialAttack: 4, specialDefense: 4, speed: 4 };
-    expect(formatStatAlignment('Jolly', evs)).toBe('Jolly - 4 HP / 4 Atk / 4 Def / 4 SpA / 4 SpD / 4 Spe');
+    const evs: EVSpread = {
+      hp: 4,
+      attack: 4,
+      defense: 4,
+      specialAttack: 4,
+      specialDefense: 4,
+      speed: 4,
+    };
+    expect(formatStatAlignment('Jolly', evs)).toBe(
+      'Jolly - 4 HP / 4 Atk / 4 Def / 4 SpA / 4 SpD / 4 Spe',
+    );
   });
 });

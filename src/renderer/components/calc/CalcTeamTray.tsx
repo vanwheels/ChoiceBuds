@@ -25,7 +25,10 @@ import { useState } from 'react';
 import type { DragEvent } from 'react';
 import type { Team, ImportedPokemonInfo } from '../../types/pokemon';
 import { getPixelSpriteUrl } from '../../utils/spriteUrl';
-import { CALC_TEAM_POKEMON_DRAG_TYPE, type CalcTeamPokemonDragPayload } from '../../utils/calcDragTypes';
+import {
+  CALC_TEAM_POKEMON_DRAG_TYPE,
+  type CalcTeamPokemonDragPayload,
+} from '../../utils/calcDragTypes';
 
 interface CalcTeamTrayProps {
   teams: Team[];
@@ -34,14 +37,19 @@ interface CalcTeamTrayProps {
   onLoadPokemon: (p: ImportedPokemonInfo) => void;
 }
 
-export default function CalcTeamTray({ teams, preferredTeamId, resolveSprite, onLoadPokemon }: CalcTeamTrayProps) {
+export default function CalcTeamTray({
+  teams,
+  preferredTeamId,
+  resolveSprite,
+  onLoadPokemon,
+}: CalcTeamTrayProps) {
   const [selectedTeamId, setSelectedTeamId] = useState(preferredTeamId ?? '');
   const [prevPreferredTeamId, setPrevPreferredTeamId] = useState(preferredTeamId);
   if (preferredTeamId !== prevPreferredTeamId) {
     setPrevPreferredTeamId(preferredTeamId);
     setSelectedTeamId(preferredTeamId ?? '');
   }
-  const selectedTeam = teams.find(t => t.id === selectedTeamId);
+  const selectedTeam = teams.find((t) => t.id === selectedTeamId);
 
   if (teams.length === 0) return null;
 
@@ -59,7 +67,11 @@ export default function CalcTeamTray({ teams, preferredTeamId, resolveSprite, on
         className="px-2 py-0.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
       >
         <option value="">Select a team...</option>
-        {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+        {teams.map((t) => (
+          <option key={t.id} value={t.id}>
+            {t.name}
+          </option>
+        ))}
       </select>
       {selectedTeam && (
         <div className="flex gap-1.5 flex-wrap">
@@ -74,7 +86,14 @@ export default function CalcTeamTray({ teams, preferredTeamId, resolveSprite, on
               className="w-9 h-9 shrink-0 rounded bg-zinc-800 border border-zinc-600 hover:border-accent-gold flex items-center justify-center cursor-grab transition-colors"
             >
               <img
-                src={resolveSprite(getPixelSpriteUrl(p.pokedexNumber, p.showdownData.species, p.showdownData.gender || 'M', p.showdownData.shiny))}
+                src={resolveSprite(
+                  getPixelSpriteUrl(
+                    p.pokedexNumber,
+                    p.showdownData.species,
+                    p.showdownData.gender || 'M',
+                    p.showdownData.shiny,
+                  ),
+                )}
                 alt={p.showdownData.species}
                 className="w-7 h-7 object-contain [image-rendering:pixelated]"
               />

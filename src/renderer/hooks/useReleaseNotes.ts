@@ -50,7 +50,9 @@ export interface UseReleaseNotesReturn {
 export function useReleaseNotes(
   settings: AppSettings,
   isSettingsLoading: boolean,
-  updateSettings: (partial: Partial<Omit<AppSettings, 'schemaVersion' | 'lastModified'>>) => Promise<boolean>
+  updateSettings: (
+    partial: Partial<Omit<AppSettings, 'schemaVersion' | 'lastModified'>>,
+  ) => Promise<boolean>,
 ): UseReleaseNotesReturn {
   const [history, setHistory] = useState<GitHubRelease[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -84,7 +86,10 @@ export function useReleaseNotes(
   // effect, evaluated at most once per mount via the hasResolvedSeenState gate.
   if (!hasResolvedSeenState && !isSettingsLoading) {
     setHasResolvedSeenState(true);
-    if (settings.lastSeenReleaseNotesVersion !== null && settings.lastSeenReleaseNotesVersion !== CURRENT_APP_VERSION) {
+    if (
+      settings.lastSeenReleaseNotesVersion !== null &&
+      settings.lastSeenReleaseNotesVersion !== CURRENT_APP_VERSION
+    ) {
       setShowPopup(true);
     }
   }
@@ -107,7 +112,7 @@ export function useReleaseNotes(
     isLoading,
     error,
     showPopup,
-    currentReleaseNotes: history.find(r => r.version === CURRENT_APP_VERSION) ?? null,
+    currentReleaseNotes: history.find((r) => r.version === CURRENT_APP_VERSION) ?? null,
     markAsSeen,
   };
 }

@@ -23,7 +23,16 @@ interface CalcMoveGridProps {
   usagePercentByName?: Record<string, number>;
 }
 
-export default function CalcMoveGrid({ title, moves, results, moveOptions, selectedIndex, onChangeMove, onSelect, usagePercentByName }: CalcMoveGridProps) {
+export default function CalcMoveGrid({
+  title,
+  moves,
+  results,
+  moveOptions,
+  selectedIndex,
+  onChangeMove,
+  onSelect,
+  usagePercentByName,
+}: CalcMoveGridProps) {
   return (
     <div className="flex-1 min-w-[280px] bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-1">
       <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wide">{title}</h3>
@@ -36,7 +45,9 @@ export default function CalcMoveGrid({ title, moves, results, moveOptions, selec
             key={index}
             onClick={() => slot.name && onSelect(index)}
             className={`flex flex-wrap items-center gap-2 px-2 py-0.5 rounded border transition-colors ${
-              isSelected ? 'border-accent-gold bg-accent-gold/10' : 'border-zinc-800 hover:border-zinc-700'
+              isSelected
+                ? 'border-accent-gold bg-accent-gold/10'
+                : 'border-zinc-800 hover:border-zinc-700'
             } ${slot.name ? 'cursor-pointer' : ''}`}
           >
             <div className="w-40 shrink-0" onClick={(e) => e.stopPropagation()}>
@@ -55,27 +66,37 @@ export default function CalcMoveGrid({ title, moves, results, moveOptions, selec
               {minHits !== null && maxHits !== null && (
                 <select
                   value={slot.hits ?? result?.effectiveHits ?? minHits}
-                  onChange={(e) => { e.stopPropagation(); onChangeMove(index, { hits: Number(e.target.value) }); }}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    onChangeMove(index, { hits: Number(e.target.value) });
+                  }}
                   onClick={(e) => e.stopPropagation()}
                   title="Number of hits"
                   className="px-1 py-0.5 text-xs bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold cursor-pointer"
                 >
-                  {Array.from({ length: maxHits - minHits + 1 }, (_, i) => minHits + i).map(n => (
-                    <option key={n} value={n}>×{n}</option>
+                  {Array.from({ length: maxHits - minHits + 1 }, (_, i) => minHits + i).map((n) => (
+                    <option key={n} value={n}>
+                      ×{n}
+                    </option>
                   ))}
                 </select>
               )}
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); onChangeMove(index, { isCrit: !slot.isCrit }); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onChangeMove(index, { isCrit: !slot.isCrit });
+                }}
                 className={`px-2 py-0.5 text-[10px] font-bold rounded transition-colors cursor-pointer shrink-0 ${
-                  slot.isCrit ? 'bg-accent-gold text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                  slot.isCrit
+                    ? 'bg-accent-gold text-zinc-900'
+                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
                 }`}
               >
                 Crit
               </button>
               <span className="w-28 text-right text-xs font-semibold text-zinc-200 shrink-0">
-                {result?.errorMessage ? '—' : result?.percent ?? ''}
+                {result?.errorMessage ? '—' : (result?.percent ?? '')}
               </span>
             </div>
           </div>

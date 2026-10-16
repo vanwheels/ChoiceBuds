@@ -3,7 +3,12 @@ import { getTotalSP, MAX_TOTAL_SP } from './evTotal';
 import type { EVSpread } from '../types/pokemon';
 
 const spread = (overrides: Partial<EVSpread> = {}): EVSpread => ({
-  hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0,
+  hp: 0,
+  attack: 0,
+  defense: 0,
+  specialAttack: 0,
+  specialDefense: 0,
+  speed: 0,
   ...overrides,
 });
 

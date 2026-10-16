@@ -30,7 +30,12 @@ describe('applyChampionsMovepoolChanges', () => {
 
   it("strips Leg 4a's former Floette carve-out moves now that Leg 4b confirmed they're globally absent", () => {
     const result = applyChampionsMovepoolChanges('floette', [
-      'vine-whip', 'tackle', 'razor-leaf', 'fairy-wind', 'magical-leaf', 'moonblast',
+      'vine-whip',
+      'tackle',
+      'razor-leaf',
+      'fairy-wind',
+      'magical-leaf',
+      'moonblast',
     ]);
     expect(result).toEqual(['moonblast']);
   });
@@ -41,24 +46,57 @@ describe('applyChampionsMovepoolChanges', () => {
   });
 
   it("adds back Baxcalibur's own signature move despite it being globally removed", () => {
-    const result = applyChampionsMovepoolChanges('baxcalibur', ['glaive-rush', 'icicle-spear', 'dragon-dance']);
+    const result = applyChampionsMovepoolChanges('baxcalibur', [
+      'glaive-rush',
+      'icicle-spear',
+      'dragon-dance',
+    ]);
     expect(result).toEqual(expect.arrayContaining(['glaive-rush', 'icicle-spear', 'dragon-dance']));
   });
 
   it("adds back Rillaboom's, Cinderace's, and Pincurchin's own signature moves despite being globally removed", () => {
-    expect(applyChampionsMovepoolChanges('rillaboom', ['drum-beating', 'wood-hammer'])).toContain('drum-beating');
-    expect(applyChampionsMovepoolChanges('cinderace', ['pyro-ball', 'flamethrower'])).toContain('pyro-ball');
-    expect(applyChampionsMovepoolChanges('pincurchin', ['zing-zap', 'spark'])).toContain('zing-zap');
+    expect(applyChampionsMovepoolChanges('rillaboom', ['drum-beating', 'wood-hammer'])).toContain(
+      'drum-beating',
+    );
+    expect(applyChampionsMovepoolChanges('cinderace', ['pyro-ball', 'flamethrower'])).toContain(
+      'pyro-ball',
+    );
+    expect(applyChampionsMovepoolChanges('pincurchin', ['zing-zap', 'spark'])).toContain(
+      'zing-zap',
+    );
   });
 
   it('adds back Golisopod moves absent from its PokeAPI all-time movepool entirely (likely Legends Z-A-exclusive)', () => {
     const result = applyChampionsMovepoolChanges('golisopod', ['first-impression', 'liquidation']);
-    expect(result).toEqual(expect.arrayContaining(['u-turn', 'gunk-shot', 'night-slash', 'superpower', 'first-impression', 'liquidation']));
+    expect(result).toEqual(
+      expect.arrayContaining([
+        'u-turn',
+        'gunk-shot',
+        'night-slash',
+        'superpower',
+        'first-impression',
+        'liquidation',
+      ]),
+    );
   });
 
   it("applies Wigglytuff's full Leg 1 sweep result (additions + a large per-species removal list)", () => {
-    const result = applyChampionsMovepoolChanges('wigglytuff', ['toxic', 'attract', 'double-edge', 'thunderbolt']);
-    expect(result).toEqual(expect.arrayContaining(['heal-pulse', 'moonblast', 'perish-song', 'wish', 'double-edge', 'thunderbolt']));
+    const result = applyChampionsMovepoolChanges('wigglytuff', [
+      'toxic',
+      'attract',
+      'double-edge',
+      'thunderbolt',
+    ]);
+    expect(result).toEqual(
+      expect.arrayContaining([
+        'heal-pulse',
+        'moonblast',
+        'perish-song',
+        'wish',
+        'double-edge',
+        'thunderbolt',
+      ]),
+    );
     expect(result).not.toContain('toxic');
     expect(result).not.toContain('attract');
   });
@@ -87,7 +125,11 @@ describe('applyChampionsMovepoolChanges', () => {
 
     it('applies a per-species removal on top of the globally-removed baseline', () => {
       CHAMPIONS_MOVEPOOL_REMOVALS['test-species'] = ['covet', 'final-gambit'];
-      const result = applyChampionsMovepoolChanges('test-species', ['covet', 'final-gambit', 'thunderbolt']);
+      const result = applyChampionsMovepoolChanges('test-species', [
+        'covet',
+        'final-gambit',
+        'thunderbolt',
+      ]);
       expect(result).not.toContain('covet'); // per-species removal
       expect(result).not.toContain('final-gambit'); // per-species removal
       expect(result).toContain('thunderbolt'); // untouched
@@ -97,7 +139,11 @@ describe('applyChampionsMovepoolChanges', () => {
 
 describe('applyChampionsPatchRemovals', () => {
   it("strips Archaludon's post-launch removals (Mirror Coat, Metal Burst)", () => {
-    const result = applyChampionsPatchRemovals('archaludon', ['mirror-coat', 'metal-burst', 'flash-cannon']);
+    const result = applyChampionsPatchRemovals('archaludon', [
+      'mirror-coat',
+      'metal-burst',
+      'flash-cannon',
+    ]);
     expect(result).toEqual(['flash-cannon']);
   });
 

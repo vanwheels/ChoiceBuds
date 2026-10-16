@@ -4,11 +4,21 @@
  * (see useSpeciesRoster.ts's form-level roster entries), so they must skip
  * the female/ folder path that cosmetic-only gender forms like Pikachu need.
  */
-export function getPixelSpriteUrl(id: number, name: string, gender: string, shiny: boolean): string {
+export function getPixelSpriteUrl(
+  id: number,
+  name: string,
+  gender: string,
+  shiny: boolean,
+): string {
   const n = name.toLowerCase().trim();
   const s = shiny ? 'shiny/' : '';
-  if (n.includes('basculegion') || n.includes('indeedee')) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${s}${id}.png`;
-  if (gender === 'F' && ['pikachu', 'eevee', 'venusaur', 'raichu', 'torchic', 'wobbuffet'].includes(n)) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${s}female/${id}.png`;
+  if (n.includes('basculegion') || n.includes('indeedee'))
+    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${s}${id}.png`;
+  if (
+    gender === 'F' &&
+    ['pikachu', 'eevee', 'venusaur', 'raichu', 'torchic', 'wobbuffet'].includes(n)
+  )
+    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${s}female/${id}.png`;
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${s}${id}.png`;
 }
 
@@ -20,7 +30,12 @@ export function getPixelSpriteUrl(id: number, name: string, gender: string, shin
  * form's own ID just appends "f" - there's no "-female"/"-male" convention
  * on this CDN the way PokeAPI has one).
  */
-const GENDER_DIVERGENT_BASE_SPECIES: readonly string[] = ['basculegion', 'indeedee', 'meowstic', 'oinkologne'];
+const GENDER_DIVERGENT_BASE_SPECIES: readonly string[] = [
+  'basculegion',
+  'indeedee',
+  'meowstic',
+  'oinkologne',
+];
 
 /**
  * Showdown's own internal ID scheme (what its client calls `toID()`):

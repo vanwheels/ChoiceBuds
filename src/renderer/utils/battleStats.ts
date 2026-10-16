@@ -57,12 +57,12 @@ function toRecord(wins: number, losses: number): WinLossRecord {
 }
 
 function completedBattles(battles: Battle[]): Battle[] {
-  return battles.filter(b => b.result !== 'in-progress');
+  return battles.filter((b) => b.result !== 'in-progress');
 }
 
 export function getOverallRecord(battles: Battle[]): WinLossRecord {
   const completed = completedBattles(battles);
-  const wins = completed.filter(b => b.result === 'win').length;
+  const wins = completed.filter((b) => b.result === 'win').length;
   return toRecord(wins, completed.length - wins);
 }
 
@@ -72,7 +72,8 @@ export function getRecordByFormat(battles: Battle[]): LabeledRecord[] {
 
   for (const battle of completed) {
     const entry = byFormat.get(battle.format) ?? { wins: 0, losses: 0 };
-    if (battle.result === 'win') entry.wins++; else entry.losses++;
+    if (battle.result === 'win') entry.wins++;
+    else entry.losses++;
     byFormat.set(battle.format, entry);
   }
 
@@ -90,22 +91,23 @@ export function getRecordBySeason(battles: Battle[]): LabeledRecord[] {
     const season = getSeasonForDate(battle.date);
     if (!season) continue;
     const entry = bySeason.get(season.label) ?? { wins: 0, losses: 0 };
-    if (battle.result === 'win') entry.wins++; else entry.losses++;
+    if (battle.result === 'win') entry.wins++;
+    else entry.losses++;
     bySeason.set(season.label, entry);
   }
 
-  return SEASONS
-    .filter(s => bySeason.has(s.label))
-    .map(s => {
-      const { wins, losses } = bySeason.get(s.label)!;
-      return { label: s.label, ...toRecord(wins, losses) };
-    });
+  return SEASONS.filter((s) => bySeason.has(s.label)).map((s) => {
+    const { wins, losses } = bySeason.get(s.label)!;
+    return { label: s.label, ...toRecord(wins, losses) };
+  });
 }
 
 /** Season rows (in their existing chronological SEASONS order) that have at least one battle logged - completed or in-progress - used to populate the Statistics page's season filter without listing seasons the user has no data for yet. */
 export function getSeasonsWithBattles(battles: Battle[]): SeasonDef[] {
-  const ids = new Set(battles.map(b => getSeasonForDate(b.date)?.id).filter((id): id is string => id != null));
-  return SEASONS.filter(s => ids.has(s.id));
+  const ids = new Set(
+    battles.map((b) => getSeasonForDate(b.date)?.id).filter((id): id is string => id != null),
+  );
+  return SEASONS.filter((s) => ids.has(s.id));
 }
 
 export function getRecordByTeam(battles: Battle[]): LabeledRecord[] {
@@ -114,7 +116,8 @@ export function getRecordByTeam(battles: Battle[]): LabeledRecord[] {
 
   for (const battle of completed) {
     const entry = byTeam.get(battle.teamId) ?? { label: battle.teamName, wins: 0, losses: 0 };
-    if (battle.result === 'win') entry.wins++; else entry.losses++;
+    if (battle.result === 'win') entry.wins++;
+    else entry.losses++;
     byTeam.set(battle.teamId, entry);
   }
 
@@ -132,18 +135,22 @@ export function getSetRecord(battles: Battle[]): WinLossRecord {
   for (const group of groups) {
     const outcome = getSetOutcome(group.battles);
     if (!outcome.decided) continue;
-    if (outcome.wins > outcome.losses) setsWon++; else setsLost++;
+    if (outcome.wins > outcome.losses) setsWon++;
+    else setsLost++;
   }
 
   return toRecord(setsWon, setsLost);
 }
 
-export function getRecentForm(battles: Battle[], limit = 20): { id: string; result: Battle['result'] }[] {
+export function getRecentForm(
+  battles: Battle[],
+  limit = 20,
+): { id: string; result: Battle['result'] }[] {
   return completedBattles(battles)
     .slice()
     .sort((a, b) => a.date - b.date)
     .slice(-limit)
-    .map(b => ({ id: b.id, result: b.result }));
+    .map((b) => ({ id: b.id, result: b.result }));
 }
 
 export function getMostUsedPokemon(battles: Battle[], topN = 10): PokemonUsageStat[] {
@@ -151,9 +158,13 @@ export function getMostUsedPokemon(battles: Battle[], topN = 10): PokemonUsageSt
   const bySpecies = new Map<string, { spriteUrl: string; wins: number; total: number }>();
 
   for (const battle of completed) {
-    const brought = battle.playerRoster.filter(p => battle.broughtIds.includes(p.id));
+    const brought = battle.playerRoster.filter((p) => battle.broughtIds.includes(p.id));
     for (const pokemon of brought) {
-      const entry = bySpecies.get(pokemon.species) ?? { spriteUrl: pokemon.spriteUrl, wins: 0, total: 0 };
+      const entry = bySpecies.get(pokemon.species) ?? {
+        spriteUrl: pokemon.spriteUrl,
+        wins: 0,
+        total: 0,
+      };
       entry.total++;
       if (battle.result === 'win') entry.wins++;
       bySpecies.set(pokemon.species, entry);
@@ -185,17 +196,28 @@ export function getMostUsedPokemon(battles: Battle[], topN = 10): PokemonUsageSt
  */
 export function getTeamRosterUsage(battles: Battle[]): TeamRosterUsage[] {
   const completed = completedBattles(battles);
-  const byTeam = new Map<string, {
-    teamName: string;
-    totalTeamBattles: number;
-    species: Map<string, { spriteUrl: string; broughtCount: number; battleCount: number }>;
-  }>();
+  const byTeam = new Map<
+    string,
+    {
+      teamName: string;
+      totalTeamBattles: number;
+      species: Map<string, { spriteUrl: string; broughtCount: number; battleCount: number }>;
+    }
+  >();
 
   for (const battle of completed) {
-    const team = byTeam.get(battle.teamId) ?? { teamName: battle.teamName, totalTeamBattles: 0, species: new Map() };
+    const team = byTeam.get(battle.teamId) ?? {
+      teamName: battle.teamName,
+      totalTeamBattles: 0,
+      species: new Map(),
+    };
     team.totalTeamBattles++;
     for (const pokemon of battle.playerRoster) {
-      const entry = team.species.get(pokemon.species) ?? { spriteUrl: pokemon.spriteUrl, broughtCount: 0, battleCount: 0 };
+      const entry = team.species.get(pokemon.species) ?? {
+        spriteUrl: pokemon.spriteUrl,
+        broughtCount: 0,
+        battleCount: 0,
+      };
       entry.battleCount++;
       if (battle.broughtIds.includes(pokemon.id)) entry.broughtCount++;
       team.species.set(pokemon.species, entry);
@@ -222,11 +244,19 @@ export function getTeamRosterUsage(battles: Battle[]): TeamRosterUsage[] {
 }
 
 export function getMostFacedOpponents(battles: Battle[], topN = 10): OpponentFacedStat[] {
-  const bySpecies = new Map<string, { spriteUrl: string; count: number; wins: number; losses: number }>();
+  const bySpecies = new Map<
+    string,
+    { spriteUrl: string; count: number; wins: number; losses: number }
+  >();
 
   for (const battle of battles) {
     for (const opponent of battle.opponentRoster) {
-      const entry = bySpecies.get(opponent.species) ?? { spriteUrl: opponent.spriteUrl, count: 0, wins: 0, losses: 0 };
+      const entry = bySpecies.get(opponent.species) ?? {
+        spriteUrl: opponent.spriteUrl,
+        count: 0,
+        wins: 0,
+        losses: 0,
+      };
       entry.count++;
       if (battle.result === 'win') entry.wins++;
       else if (battle.result === 'loss') entry.losses++;
@@ -235,8 +265,13 @@ export function getMostFacedOpponents(battles: Battle[], topN = 10): OpponentFac
   }
 
   return Array.from(bySpecies.entries())
-    .map(([species, { spriteUrl, count, wins, losses }]) => ({ species, spriteUrl, count, wins, losses }))
+    .map(([species, { spriteUrl, count, wins, losses }]) => ({
+      species,
+      spriteUrl,
+      count,
+      wins,
+      losses,
+    }))
     .sort((a, b) => b.count - a.count)
     .slice(0, topN);
 }
-

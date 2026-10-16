@@ -32,7 +32,6 @@ import MobileFilterPopover from './MobileFilterPopover';
 import MobileTeamsList from './MobileTeamsList';
 import { PlusIcon, CompassIcon, FilterIcon } from './icons/SidebarIcons';
 
-
 interface TeamsPageProps {
   teamsState: UseTeamsReturn;
   databaseState: UseDatabaseReturn;
@@ -86,7 +85,9 @@ export default function TeamsPage({
   // Pokémon & Teams via Right-Click Leg 2, see TODO.md). TeamCard's own
   // context-menu handlers stop propagation, so this only ever fires for a
   // right-click that didn't land on a team card in the first place.
-  const [pasteContextMenuPos, setPasteContextMenuPos] = useState<{ x: number; y: number } | null>(null);
+  const [pasteContextMenuPos, setPasteContextMenuPos] = useState<{ x: number; y: number } | null>(
+    null,
+  );
 
   const handleContentContextMenu = (e: ReactMouseEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -99,13 +100,19 @@ export default function TeamsPage({
   const handlePasteNewTeam = async () => {
     const pasted = await readTeamFromClipboard();
     if (!pasted) return;
-    await teamsState.addTeam(buildPastedTeam(pasted, teamsState.teams.map(t => t.name)));
+    await teamsState.addTeam(
+      buildPastedTeam(
+        pasted,
+        teamsState.teams.map((t) => t.name),
+      ),
+    );
   };
 
   // Filter teams based on active format filter
-  const filteredTeams = activeFilter === 'All'
-    ? teamsState.teams
-    : teamsState.teams.filter(team => team.format === activeFilter);
+  const filteredTeams =
+    activeFilter === 'All'
+      ? teamsState.teams
+      : teamsState.teams.filter((team) => team.format === activeFilter);
 
   // Favorited teams always sort to the top (across every regulation), then
   // by regulation newest-first, otherwise preserving each group's existing
@@ -125,17 +132,17 @@ export default function TeamsPage({
   // within it only ever reorders siblings sharing that same regulation
   // (and favorite status), never the cross-group order the "All" view
   // shows (see Leg 8/Leg 5 in TODO.md's Web Bug Sweep).
-  const sortedTeamIdsKey = sortedTeams.map(t => t.id).join('|');
-  const [orderedTeamIds, setOrderedTeamIds] = useState(() => sortedTeams.map(t => t.id));
+  const sortedTeamIdsKey = sortedTeams.map((t) => t.id).join('|');
+  const [orderedTeamIds, setOrderedTeamIds] = useState(() => sortedTeams.map((t) => t.id));
   const [prevSortedTeamIdsKey, setPrevSortedTeamIdsKey] = useState(sortedTeamIdsKey);
   if (sortedTeamIdsKey !== prevSortedTeamIdsKey) {
     setPrevSortedTeamIdsKey(sortedTeamIdsKey);
-    setOrderedTeamIds(sortedTeams.map(t => t.id));
+    setOrderedTeamIds(sortedTeams.map((t) => t.id));
   }
   const { containerRef: teamsGridRef, getHandlers: getTeamHandlers } = useGridReorder({
     orderedIds: orderedTeamIds,
     setOrderedIds: setOrderedTeamIds,
-    onCommit: ids => teamsState.setTeamOrder(ids),
+    onCommit: (ids) => teamsState.setTeamOrder(ids),
   });
 
   // Format filter buttons configuration
@@ -165,9 +172,13 @@ export default function TeamsPage({
       >
         <CompassIcon />
       </button>
-      <MobileFilterPopover label="Filter teams" icon={<FilterIcon />} isActive={activeFilter !== 'All'}>
+      <MobileFilterPopover
+        label="Filter teams"
+        icon={<FilterIcon />}
+        isActive={activeFilter !== 'All'}
+      >
         <div className="flex flex-col gap-1">
-          {filterButtons.map(filter => (
+          {filterButtons.map((filter) => (
             <button
               key={filter}
               onClick={() => setActiveFilter(filter)}
@@ -182,7 +193,7 @@ export default function TeamsPage({
           ))}
         </div>
       </MobileFilterPopover>
-    </>
+    </>,
   );
 
   return (
@@ -224,7 +235,7 @@ export default function TeamsPage({
 
         {/* Format Filter Buttons */}
         <div className="flex gap-2 mt-4 flex-wrap">
-          {filterButtons.map(filter => (
+          {filterButtons.map((filter) => (
             <button
               key={filter}
               onClick={() => setActiveFilter(filter)}
@@ -254,7 +265,11 @@ export default function TeamsPage({
           the DOM ancestor chain and diffing scrollHeight/clientHeight per
           ancestor before/after opening the dropdown - this was the only one
           whose clientHeight was exceeded. */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-0 py-6 @container" style={{ scrollbarGutter: 'stable' }} onContextMenu={handleContentContextMenu}>
+      <div
+        className="flex-1 overflow-y-auto px-4 md:px-0 py-6 @container"
+        style={{ scrollbarGutter: 'stable' }}
+        onContextMenu={handleContentContextMenu}
+      >
         {/* min-h-[calc(100%+1px)] - guarantees this scroll container always
             has at least 1px of real overflow (Responsive Layout Audit
             follow-up, see TODO.md). Confirmed live on iPhone Safari: when a
@@ -272,47 +287,47 @@ export default function TeamsPage({
             little actual content exists, without the dead space a fixed
             large padding would add. */}
         <div className="min-h-[calc(100%+1px)]">
-        {teamsState.isLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="text-zinc-400">Loading teams...</div>
-          </div>
-        ) : teamsState.error ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="text-red-400">Error: {teamsState.error}</div>
-          </div>
-        ) : filteredTeams.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-zinc-400">
-            <p className="text-lg">No teams found</p>
-            <p className="text-sm mt-2">Click "Add New Team" to import your first team</p>
-          </div>
-        ) : (
-          <>
-          {/* Compact team-preview list - mobile only (Full-Screen Swipeable
+          {teamsState.isLoading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-zinc-400">Loading teams...</div>
+            </div>
+          ) : teamsState.error ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-red-400">Error: {teamsState.error}</div>
+            </div>
+          ) : filteredTeams.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-64 text-zinc-400">
+              <p className="text-lg">No teams found</p>
+              <p className="text-sm mt-2">Click "Add New Team" to import your first team</p>
+            </div>
+          ) : (
+            <>
+              {/* Compact team-preview list - mobile only (Full-Screen Swipeable
               Pokémon Card + Teams List View Leg 1, see TODO.md). Renders
               instead of the desktop Reorder.Group grid below, not a
               responsive variant of it - no drag-reorder here (out of scope,
               see MobileTeamsList.tsx's header), tapping a row opens
               MobileTeamSwipeOverlay.tsx at index 0. */}
-          <div className="md:hidden">
-            <MobileTeamsList
-              teams={sortedTeams}
-              teamsState={teamsState}
-              databaseState={databaseState}
-              gameDataState={gameDataState}
-              speciesRosterState={speciesRosterState}
-              spriteCacheState={spriteCacheState}
-              settingsState={settingsState}
-              savedPokemonState={savedPokemonState}
-              vgcPastesState={vgcPastesState}
-              vgcRealSetsState={vgcRealSetsState}
-            />
-          </div>
+              <div className="md:hidden">
+                <MobileTeamsList
+                  teams={sortedTeams}
+                  teamsState={teamsState}
+                  databaseState={databaseState}
+                  gameDataState={gameDataState}
+                  speciesRosterState={speciesRosterState}
+                  spriteCacheState={spriteCacheState}
+                  settingsState={settingsState}
+                  savedPokemonState={savedPokemonState}
+                  vgcPastesState={vgcPastesState}
+                  vgcRealSetsState={vgcRealSetsState}
+                />
+              </div>
 
-          <div
-            ref={teamsGridRef}
-            className="hidden md:grid grid-cols-1 @[1700px]:grid-cols-2 gap-4 w-full"
-          >
-            {/* Responsive teams grid (carousel/grid rework leg 4, see TODO.md):
+              <div
+                ref={teamsGridRef}
+                className="hidden md:grid grid-cols-1 @[1700px]:grid-cols-2 gap-4 w-full"
+              >
+                {/* Responsive teams grid (carousel/grid rework leg 4, see TODO.md):
                 1 column by default, 2 once this wrapper's own @container width
                 (not viewport width - the sidebar eats into that) clears
                 1700px, capped at 2 no matter how wide the window gets
@@ -337,30 +352,30 @@ export default function TeamsPage({
                 single-column widths, not this 2-column state, so 2 teams
                 side-by-side may render 2x3 even where 1 team alone would
                 reach 1x6. */}
-            {orderedTeamIds.map(id => {
-              const team = sortedTeams.find(t => t.id === id);
-              if (!team) return null;
-              return (
-                <TeamCard
-                  key={id}
-                  team={team}
-                  onDelete={() => teamsState.deleteTeam(team.id)}
-                  teamsState={teamsState}
-                  databaseState={databaseState}
-                  gameDataState={gameDataState}
-                  speciesRosterState={speciesRosterState}
-                  spriteCacheState={spriteCacheState}
-                  settingsState={settingsState}
-                  savedPokemonState={savedPokemonState}
-                  vgcPastesState={vgcPastesState}
-                  vgcRealSetsState={vgcRealSetsState}
-                  reorderHandlers={getTeamHandlers(id)}
-                />
-              );
-            })}
-          </div>
-          </>
-        )}
+                {orderedTeamIds.map((id) => {
+                  const team = sortedTeams.find((t) => t.id === id);
+                  if (!team) return null;
+                  return (
+                    <TeamCard
+                      key={id}
+                      team={team}
+                      onDelete={() => teamsState.deleteTeam(team.id)}
+                      teamsState={teamsState}
+                      databaseState={databaseState}
+                      gameDataState={gameDataState}
+                      speciesRosterState={speciesRosterState}
+                      spriteCacheState={spriteCacheState}
+                      settingsState={settingsState}
+                      savedPokemonState={savedPokemonState}
+                      vgcPastesState={vgcPastesState}
+                      vgcRealSetsState={vgcRealSetsState}
+                      reorderHandlers={getTeamHandlers(id)}
+                    />
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -374,7 +389,7 @@ export default function TeamsPage({
             }}
             onImport={teamsState.addTeam}
             databaseState={databaseState}
-            existingTeamNames={teamsState.teams.map(team => team.name)}
+            existingTeamNames={teamsState.teams.map((team) => team.name)}
             defaultRegulation={settingsState.settings.defaultRegulation}
             catalogRow={importPrefillRow ?? undefined}
             syncUsername={settingsState.settings.syncUsername}
@@ -410,7 +425,16 @@ export default function TeamsPage({
               label: 'Paste as New Team',
               onClick: handlePasteNewTeam,
               icon: (
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M9 4.5h1.5a1.5 1.5 0 0 1 3 0H15a1 1 0 0 1 1 1V7H8V5.5a1 1 0 0 1 1-1Z" />
                   <path d="M8 6H6a1.5 1.5 0 0 0-1.5 1.5v12A1.5 1.5 0 0 0 6 21h12a1.5 1.5 0 0 0 1.5-1.5v-12A1.5 1.5 0 0 0 18 6h-2" />
                 </svg>

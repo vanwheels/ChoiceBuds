@@ -29,9 +29,23 @@ function makePokemon(overrides: Partial<ShowdownPokemon> = {}): ImportedPokemonI
     showdownData: makeShowdownPokemon(overrides),
     pokedexNumber: 94,
     types: ['ghost', 'poison'],
-    baseStats: { hp: 60, attack: 65, defense: 60, specialAttack: 130, specialDefense: 75, speed: 110 },
+    baseStats: {
+      hp: 60,
+      attack: 65,
+      defense: 60,
+      specialAttack: 130,
+      specialDefense: 75,
+      speed: 110,
+    },
     spriteUrl: 'https://example.com/gengar.png',
-    calculatedStats: { hp: 150, attack: 90, defense: 80, specialAttack: 200, specialDefense: 100, speed: 180 },
+    calculatedStats: {
+      hp: 150,
+      attack: 90,
+      defense: 80,
+      specialAttack: 200,
+      specialDefense: 100,
+      speed: 180,
+    },
     importedAt: Date.now(),
     id: crypto.randomUUID(),
   };
@@ -237,7 +251,11 @@ describe('useActiveEditor', () => {
     act(() => result.current.updateEVs({ attack: 100 }));
 
     expect(result.current.draftPokemon?.showdownData.evs).toEqual({
-      ...ZERO_EVS, specialAttack: 252, speed: 252, hp: 4, attack: 100,
+      ...ZERO_EVS,
+      specialAttack: 252,
+      speed: 252,
+      hp: 4,
+      attack: 100,
     });
   });
 
@@ -245,9 +263,16 @@ describe('useActiveEditor', () => {
     const { result } = renderHook(() => useActiveEditor());
     act(() => result.current.enterEditMode(makePokemon(), 0));
 
-    act(() => result.current.updateMoves(['Thunderbolt', 'Volt Switch', 'Protect', 'Taunt', 'Overheat']));
+    act(() =>
+      result.current.updateMoves(['Thunderbolt', 'Volt Switch', 'Protect', 'Taunt', 'Overheat']),
+    );
 
-    expect(result.current.draftPokemon?.showdownData.moves).toEqual(['Thunderbolt', 'Volt Switch', 'Protect', 'Taunt']);
+    expect(result.current.draftPokemon?.showdownData.moves).toEqual([
+      'Thunderbolt',
+      'Volt Switch',
+      'Protect',
+      'Taunt',
+    ]);
   });
 
   it('updateMove replaces a single slot by index and ignores out-of-range indices', () => {
@@ -255,13 +280,28 @@ describe('useActiveEditor', () => {
     act(() => result.current.enterEditMode(makePokemon(), 0));
 
     act(() => result.current.updateMove(1, 'Focus Blast'));
-    expect(result.current.draftPokemon?.showdownData.moves).toEqual(['Shadow Ball', 'Focus Blast', 'Protect', 'Nasty Plot']);
+    expect(result.current.draftPokemon?.showdownData.moves).toEqual([
+      'Shadow Ball',
+      'Focus Blast',
+      'Protect',
+      'Nasty Plot',
+    ]);
 
     act(() => result.current.updateMove(4, 'Should Not Apply'));
-    expect(result.current.draftPokemon?.showdownData.moves).toEqual(['Shadow Ball', 'Focus Blast', 'Protect', 'Nasty Plot']);
+    expect(result.current.draftPokemon?.showdownData.moves).toEqual([
+      'Shadow Ball',
+      'Focus Blast',
+      'Protect',
+      'Nasty Plot',
+    ]);
 
     act(() => result.current.updateMove(-1, 'Should Not Apply Either'));
-    expect(result.current.draftPokemon?.showdownData.moves).toEqual(['Shadow Ball', 'Focus Blast', 'Protect', 'Nasty Plot']);
+    expect(result.current.draftPokemon?.showdownData.moves).toEqual([
+      'Shadow Ball',
+      'Focus Blast',
+      'Protect',
+      'Nasty Plot',
+    ]);
   });
 
   it('getCommittableData returns null when not editing, and the draft once editing', () => {

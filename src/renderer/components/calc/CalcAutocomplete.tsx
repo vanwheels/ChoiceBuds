@@ -34,7 +34,15 @@ interface CalcAutocompleteProps {
   usagePercentByName?: Record<string, number>;
 }
 
-export default function CalcAutocomplete({ label, value, options, placeholder, onChange, onSelect, usagePercentByName }: CalcAutocompleteProps) {
+export default function CalcAutocomplete({
+  label,
+  value,
+  options,
+  placeholder,
+  onChange,
+  onSelect,
+  usagePercentByName,
+}: CalcAutocompleteProps) {
   const [query, setQuery] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
   const ref = useDismissable<HTMLDivElement>(() => {
@@ -56,8 +64,12 @@ export default function CalcAutocomplete({ label, value, options, placeholder, o
   // Array.sort is stable - same convention as EditOverlays.tsx's sort.
   const filtered = isOpen
     ? options
-        .filter(o => o.toLowerCase().includes(query.toLowerCase()))
-        .sort((a, b) => (usagePercentByName?.[normalizeSlug(b)] ?? -1) - (usagePercentByName?.[normalizeSlug(a)] ?? -1))
+        .filter((o) => o.toLowerCase().includes(query.toLowerCase()))
+        .sort(
+          (a, b) =>
+            (usagePercentByName?.[normalizeSlug(b)] ?? -1) -
+            (usagePercentByName?.[normalizeSlug(a)] ?? -1),
+        )
         .slice(0, MAX_RESULTS)
     : [];
 
@@ -70,18 +82,23 @@ export default function CalcAutocomplete({ label, value, options, placeholder, o
 
   return (
     <div ref={ref} className="relative flex flex-col gap-1">
-      {label && <label className="text-[10px] text-zinc-400 uppercase tracking-wide">{label}</label>}
+      {label && (
+        <label className="text-[10px] text-zinc-400 uppercase tracking-wide">{label}</label>
+      )}
       <input
         type="text"
         value={query}
         placeholder={placeholder}
-        onChange={(e) => { setQuery(e.target.value); setIsOpen(true); }}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          setIsOpen(true);
+        }}
         onFocus={() => setIsOpen(true)}
         className="px-2 py-0.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
       />
       {isOpen && filtered.length > 0 && (
         <div className="absolute z-50 top-full left-0 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-zinc-700 bg-slate-900 shadow-xl">
-          {filtered.map(option => {
+          {filtered.map((option) => {
             const percent = usagePercentByName?.[normalizeSlug(option)];
             return (
               <button
@@ -92,7 +109,9 @@ export default function CalcAutocomplete({ label, value, options, placeholder, o
               >
                 <span className="flex-1 truncate">{option}</span>
                 {percent != null && (
-                  <span className="text-accent-gold text-[10px] font-bold whitespace-nowrap">{percent.toFixed(1)}%</span>
+                  <span className="text-accent-gold text-[10px] font-bold whitespace-nowrap">
+                    {percent.toFixed(1)}%
+                  </span>
                 )}
               </button>
             );

@@ -32,7 +32,15 @@ interface SpeedTierFieldPanelProps {
 }
 
 /** Exported for reuse by SpeedTiersPage.tsx's own roster-scope toggle - same Tailwind-toggle shape, not a field-condition concern of this panel. */
-export function ToggleButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
+export function ToggleButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
   return (
     <button
       type="button"
@@ -46,48 +54,77 @@ export function ToggleButton({ active, onClick, children }: { active: boolean; o
   );
 }
 
-export default function SpeedTierFieldPanel({ field, onChangeField, trickRoom, onChangeTrickRoom }: SpeedTierFieldPanelProps) {
+export default function SpeedTierFieldPanel({
+  field,
+  onChangeField,
+  trickRoom,
+  onChangeTrickRoom,
+}: SpeedTierFieldPanelProps) {
   return (
     <div className="bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3 flex flex-wrap items-end gap-3">
       <div className="flex flex-col gap-1">
         <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Weather</label>
         <select
           value={field.weather}
-          onChange={e => onChangeField({ weather: e.target.value as SpeedFieldContext['weather'] })}
+          onChange={(e) =>
+            onChangeField({ weather: e.target.value as SpeedFieldContext['weather'] })
+          }
           className="px-2 py-1 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
         >
           <option value="">None</option>
-          {WEATHER_OPTIONS.map(w => <option key={w} value={w}>{w}</option>)}
+          {WEATHER_OPTIONS.map((w) => (
+            <option key={w} value={w}>
+              {w}
+            </option>
+          ))}
         </select>
       </div>
       <div className="flex flex-col gap-1">
         <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Terrain</label>
         <select
           value={field.terrain}
-          onChange={e => onChangeField({ terrain: e.target.value as SpeedFieldContext['terrain'] })}
+          onChange={(e) =>
+            onChangeField({ terrain: e.target.value as SpeedFieldContext['terrain'] })
+          }
           className="px-2 py-1 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
         >
           <option value="">None</option>
-          {TERRAIN_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+          {TERRAIN_OPTIONS.map((t) => (
+            <option key={t} value={t}>
+              {t}
+            </option>
+          ))}
         </select>
       </div>
       <div className="flex flex-col gap-1 min-w-[140px]">
         <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Your Tailwind</label>
-        <ToggleButton active={field.teamHasTailwind} onClick={() => onChangeField({ teamHasTailwind: !field.teamHasTailwind })}>
+        <ToggleButton
+          active={field.teamHasTailwind}
+          onClick={() => onChangeField({ teamHasTailwind: !field.teamHasTailwind })}
+        >
           {field.teamHasTailwind ? 'Active' : 'Off'}
         </ToggleButton>
       </div>
       <div className="flex flex-col gap-1 min-w-[140px]">
-        <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Threats' Tailwind</label>
-        <ToggleButton active={field.threatHasTailwind} onClick={() => onChangeField({ threatHasTailwind: !field.threatHasTailwind })}>
+        <label className="text-[10px] text-zinc-400 uppercase tracking-wide">
+          Threats' Tailwind
+        </label>
+        <ToggleButton
+          active={field.threatHasTailwind}
+          onClick={() => onChangeField({ threatHasTailwind: !field.threatHasTailwind })}
+        >
           {field.threatHasTailwind ? 'Active' : 'Off'}
         </ToggleButton>
       </div>
       <div className="flex flex-col gap-1 min-w-[180px]">
         <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Threats' Item</label>
         <div className="flex gap-1">
-          {THREAT_ITEM_OPTIONS.map(option => (
-            <ToggleButton key={option.value || 'none'} active={field.threatItem === option.value} onClick={() => onChangeField({ threatItem: option.value })}>
+          {THREAT_ITEM_OPTIONS.map((option) => (
+            <ToggleButton
+              key={option.value || 'none'}
+              active={field.threatItem === option.value}
+              onClick={() => onChangeField({ threatItem: option.value })}
+            >
               {option.label}
             </ToggleButton>
           ))}

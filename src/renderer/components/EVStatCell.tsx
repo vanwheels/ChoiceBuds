@@ -31,7 +31,11 @@ const EDITOR_ANCHOR = ['left-0', 'left-1/2 -translate-x-1/2', 'right-0'];
 
 const valueClassName = (exceedsMax: boolean, editableBorder: boolean) =>
   `text-sm font-mono font-bold rounded border ${
-    exceedsMax ? 'border-red-500 text-red-400 bg-red-950/20' : editableBorder ? 'border-zinc-600 bg-zinc-900 text-zinc-100' : 'border-transparent text-zinc-100'
+    exceedsMax
+      ? 'border-red-500 text-red-400 bg-red-950/20'
+      : editableBorder
+        ? 'border-zinc-600 bg-zinc-900 text-zinc-100'
+        : 'border-transparent text-zinc-100'
   }`;
 
 // Permanently editable (Always-On Editing Leg 1, see TODO.md) - no more
@@ -59,7 +63,9 @@ export default function EVStatCell({
         onClick={onActivate}
         className="flex flex-col items-center gap-0.5 rounded px-1 py-0.5 hover:bg-zinc-700/60 transition-colors cursor-pointer"
       >
-        <span className={`text-[10px] font-bold uppercase ${getStatLabelColor(label)}`}>{label}</span>
+        <span className={`text-[10px] font-bold uppercase ${getStatLabelColor(label)}`}>
+          {label}
+        </span>
         <span className={`${valueClassName(exceedsMax, false)} px-1.5 py-0.5`}>{value}</span>
       </button>
     );
@@ -68,13 +74,22 @@ export default function EVStatCell({
   return (
     <div className="relative flex flex-col items-center gap-0.5">
       <span className="text-[10px] font-bold text-zinc-400 uppercase">{label}</span>
-      <span aria-hidden className={`${valueClassName(false, false)} px-1.5 py-0.5 invisible`}>{value}</span>
-      <div className={`absolute bottom-0 z-10 flex items-center gap-0.5 rounded bg-zinc-800 ${EDITOR_ANCHOR[column] ?? EDITOR_ANCHOR[1]}`}>
+      <span aria-hidden className={`${valueClassName(false, false)} px-1.5 py-0.5 invisible`}>
+        {value}
+      </span>
+      <div
+        className={`absolute bottom-0 z-10 flex items-center gap-0.5 rounded bg-zinc-800 ${EDITOR_ANCHOR[column] ?? EDITOR_ANCHOR[1]}`}
+      >
         <button
           {...decRepeat}
           disabled={value <= 0}
           className="w-5 h-5 text-xs font-bold rounded border shrink-0"
-          style={{ backgroundColor: value <= 0 ? '#1f2937' : '#374151', color: value <= 0 ? '#6b7280' : '#f3f4f6', borderColor: '#4b5563', cursor: value <= 0 ? 'not-allowed' : 'pointer' }}
+          style={{
+            backgroundColor: value <= 0 ? '#1f2937' : '#374151',
+            color: value <= 0 ? '#6b7280' : '#f3f4f6',
+            borderColor: '#4b5563',
+            cursor: value <= 0 ? 'not-allowed' : 'pointer',
+          }}
         >
           −
         </button>
@@ -90,7 +105,12 @@ export default function EVStatCell({
           {...incRepeat}
           disabled={!canIncrement}
           className="w-5 h-5 text-xs font-bold rounded border shrink-0"
-          style={{ backgroundColor: !canIncrement ? '#1f2937' : '#374151', color: !canIncrement ? '#6b7280' : '#f3f4f6', borderColor: '#4b5563', cursor: !canIncrement ? 'not-allowed' : 'pointer' }}
+          style={{
+            backgroundColor: !canIncrement ? '#1f2937' : '#374151',
+            color: !canIncrement ? '#6b7280' : '#f3f4f6',
+            borderColor: '#4b5563',
+            cursor: !canIncrement ? 'not-allowed' : 'pointer',
+          }}
         >
           +
         </button>

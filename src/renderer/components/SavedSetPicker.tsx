@@ -39,15 +39,34 @@ interface SavedSetPickerProps {
   align?: 'left' | 'center';
 }
 
-export default function SavedSetPicker({ species, sets, resolveSprite, onPick, onBlank, onClose, align = 'left' }: SavedSetPickerProps) {
+export default function SavedSetPicker({
+  species,
+  sets,
+  resolveSprite,
+  onPick,
+  onBlank,
+  onClose,
+  align = 'left',
+}: SavedSetPickerProps) {
   const ref = useDismissable<HTMLDivElement>(onClose);
   const alignClass = align === 'center' ? 'left-1/2 -translate-x-1/2' : 'left-0';
 
   return (
-    <div ref={ref} className={`absolute z-50 top-full ${alignClass} mt-1 w-56 p-2 rounded-lg border border-zinc-700 bg-slate-900 shadow-xl flex flex-col gap-1`}>
+    <div
+      ref={ref}
+      className={`absolute z-50 top-full ${alignClass} mt-1 w-56 p-2 rounded-lg border border-zinc-700 bg-slate-900 shadow-xl flex flex-col gap-1`}
+    >
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide truncate">Saved {species} sets</span>
-        <button type="button" onClick={onClose} className="text-zinc-500 hover:text-red-400 cursor-pointer text-xs shrink-0">×</button>
+        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide truncate">
+          Saved {species} sets
+        </span>
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-zinc-500 hover:text-red-400 cursor-pointer text-xs shrink-0"
+        >
+          ×
+        </button>
       </div>
 
       <button
@@ -58,7 +77,7 @@ export default function SavedSetPicker({ species, sets, resolveSprite, onPick, o
         Blank
       </button>
 
-      {sets.map(entry => (
+      {sets.map((entry) => (
         <button
           key={entry.id}
           type="button"
@@ -66,12 +85,14 @@ export default function SavedSetPicker({ species, sets, resolveSprite, onPick, o
           className="flex items-center gap-2 px-2 py-1 rounded hover:bg-accent-gold hover:text-zinc-900 cursor-pointer transition-colors text-left"
         >
           <img
-            src={resolveSprite(getPixelSpriteUrl(
-              entry.pokemon.pokedexNumber,
-              entry.pokemon.showdownData.species,
-              entry.pokemon.showdownData.gender || 'M',
-              entry.pokemon.showdownData.shiny
-            ))}
+            src={resolveSprite(
+              getPixelSpriteUrl(
+                entry.pokemon.pokedexNumber,
+                entry.pokemon.showdownData.species,
+                entry.pokemon.showdownData.gender || 'M',
+                entry.pokemon.showdownData.shiny,
+              ),
+            )}
             alt={entry.pokemon.showdownData.species}
             className="w-6 h-6 object-contain [image-rendering:pixelated] shrink-0"
           />

@@ -24,7 +24,14 @@ function makePokemon(overrides: Partial<ShowdownPokemon> = {}): ImportedPokemonI
     showdownData: makeShowdownPokemon(overrides),
     pokedexNumber: 94,
     types: ['ghost', 'poison'],
-    baseStats: { hp: 60, attack: 65, defense: 60, specialAttack: 130, specialDefense: 75, speed: 110 },
+    baseStats: {
+      hp: 60,
+      attack: 65,
+      defense: 60,
+      specialAttack: 130,
+      specialDefense: 75,
+      speed: 110,
+    },
     spriteUrl: 'https://example.com/gengar.png',
     importedAt: Date.now(),
     id: crypto.randomUUID(),
@@ -43,7 +50,11 @@ function makeTeam(pokemon: ImportedPokemonInfo[], overrides: Partial<Team> = {})
   };
 }
 
-function makeMove(name: string, type: string, category: MoveData['category'] = 'special'): MoveData {
+function makeMove(
+  name: string,
+  type: string,
+  category: MoveData['category'] = 'special',
+): MoveData {
   return {
     name,
     type,
@@ -59,7 +70,9 @@ function makeMove(name: string, type: string, category: MoveData['category'] = '
   };
 }
 
-function makeGameData(getMoveData: (moveName: string) => Promise<MoveData | null>): UseGameDataReturn {
+function makeGameData(
+  getMoveData: (moveName: string) => Promise<MoveData | null>,
+): UseGameDataReturn {
   return { getMoveData } as unknown as UseGameDataReturn;
 }
 
@@ -77,10 +90,10 @@ describe('useTeamMoveTypes', () => {
     expect(result.current.isLoading).toBe(true);
   });
 
-  it('resolves each Pokemon\'s damaging move types once move data loads, excluding status moves', async () => {
+  it("resolves each Pokemon's damaging move types once move data loads, excluding status moves", async () => {
     const moves: Record<string, MoveData> = {
       'Shadow Ball': makeMove('Shadow Ball', 'ghost'),
-      'Protect': makeMove('Protect', 'normal', 'status'),
+      Protect: makeMove('Protect', 'normal', 'status'),
     };
     const getMoveData = vi.fn((name: string) => Promise.resolve(moves[name] ?? null));
     const gameData = makeGameData(getMoveData);
@@ -101,7 +114,7 @@ describe('useTeamMoveTypes', () => {
     expect(result.current.moveTypesByPokemon).toEqual([['fairy']]);
   });
 
-  it('drops a move entirely when its data can\'t be resolved', async () => {
+  it("drops a move entirely when its data can't be resolved", async () => {
     const getMoveData = vi.fn(() => Promise.resolve(null));
     const gameData = makeGameData(getMoveData);
     const team = makeTeam([makePokemon({ moves: ['Unknown Move'] })]);

@@ -19,11 +19,10 @@ const DEFAULT_EVS: EVSpread = {
   speed: 0,
 };
 
-
 /**
  * Splits Showdown/Pokepaste text into individual Pokémon blocks
  * Uses double newline as the delimiter to separate each Pokémon
- * 
+ *
  * @param text - Raw Showdown/Pokepaste format text
  * @returns Array of text blocks, one per Pokémon
  */
@@ -34,22 +33,20 @@ export function splitIntoBlocks(text: string): string[] {
 
   // Split on double newlines (with optional whitespace between)
   const blocks = text.split(/\n\s*\n/);
-  
+
   // Filter out empty blocks and trim whitespace
-  return blocks
-    .map(block => block.trim())
-    .filter(block => block.length > 0);
+  return blocks.map((block) => block.trim()).filter((block) => block.length > 0);
 }
 
 /**
  * Parses a single Pokémon block into a ShowdownPokemon object
- * 
+ *
  * @param block - Single Pokémon text block
  * @returns Parsed ShowdownPokemon object
  */
 export function parsePokemonBlock(block: string): ShowdownPokemon {
-  const lines = block.split('\n').map(line => line.trim());
-  
+  const lines = block.split('\n').map((line) => line.trim());
+
   // Initialize with defaults
   const pokemon: ShowdownPokemon = {
     species: '',
@@ -70,7 +67,7 @@ export function parsePokemonBlock(block: string): ShowdownPokemon {
   // Parse remaining lines
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
-    
+
     if (line.startsWith('Ability:')) {
       pokemon.ability = line.substring(8).trim();
     } else if (line.startsWith('Level:')) {
@@ -112,7 +109,7 @@ export function parsePokemonBlock(block: string): ShowdownPokemon {
  *   - "Sparky (Pikachu) (F) @ Light Ball"
  *   - "Charizard"
  *   - "Basculegion-F @ Choice Scarf"
- * 
+ *
  * @param line - First line of the Pokémon block
  * @param pokemon - Pokemon object to populate
  */
@@ -164,21 +161,21 @@ function parseFirstLine(line: string, pokemon: ShowdownPokemon): void {
 /**
  * Parses a stat line (EVs)
  * Format: "252 HP / 252 Atk / 4 Def"
- * 
+ *
  * @param line - Stat line content (without "EVs:" prefix)
  * @param stats - Stats object to populate
  */
 function parseStatLine(line: string, stats: EVSpread): void {
-  const parts = line.split('/').map(part => part.trim());
-  
+  const parts = line.split('/').map((part) => part.trim());
+
   for (const part of parts) {
     const match = part.match(/^(\d+)\s+(.+)$/);
     if (match) {
       const value = parseInt(match[1], 10);
       const statName = match[2].trim().toLowerCase();
-      
+
       if (isNaN(value)) continue;
-      
+
       // Map stat names to object keys
       switch (statName) {
         case 'hp':
@@ -221,8 +218,7 @@ function parseStatLine(line: string, stats: EVSpread): void {
  * without re-parsing plain text back into stat/value pairs.
  */
 export type FormattedLine =
-  | { kind: 'text'; text: string }
-  | { kind: 'evs'; parts: Array<{ stat: string; value: number }> };
+  { kind: 'text'; text: string } | { kind: 'evs'; parts: Array<{ stat: string; value: number }> };
 
 const EV_STAT_LABELS: Array<{ key: keyof EVSpread; label: string }> = [
   { key: 'hp', label: 'HP' },
@@ -254,13 +250,15 @@ const EV_STAT_LABELS: Array<{ key: keyof EVSpread; label: string }> = [
 export function formatPokemonLines(pokemon: ShowdownPokemon): FormattedLine[] {
   const lines: FormattedLine[] = [];
 
-  const namePart = pokemon.nickname && pokemon.nickname !== pokemon.species
-    ? `${pokemon.nickname} (${pokemon.species})`
-    : pokemon.species;
+  const namePart =
+    pokemon.nickname && pokemon.nickname !== pokemon.species
+      ? `${pokemon.nickname} (${pokemon.species})`
+      : pokemon.species;
   const fallbackGender = getFallbackGender(pokemon.species);
-  const genderPart = pokemon.gender && pokemon.gender !== 'N' && pokemon.gender !== fallbackGender
-    ? ` (${pokemon.gender})`
-    : '';
+  const genderPart =
+    pokemon.gender && pokemon.gender !== 'N' && pokemon.gender !== fallbackGender
+      ? ` (${pokemon.gender})`
+      : '';
   const itemPart = pokemon.item ? ` @ ${pokemon.item}` : '';
   lines.push({ kind: 'text', text: `${namePart}${genderPart}${itemPart}` });
 
@@ -268,12 +266,14 @@ export function formatPokemonLines(pokemon: ShowdownPokemon): FormattedLine[] {
   lines.push({ kind: 'text', text: `Level: ${pokemon.level}` });
   if (pokemon.shiny) lines.push({ kind: 'text', text: 'Shiny: Yes' });
   if (pokemon.gigantamax) lines.push({ kind: 'text', text: 'Gigantamax: Yes' });
-  if (pokemon.happiness !== 255) lines.push({ kind: 'text', text: `Happiness: ${pokemon.happiness}` });
+  if (pokemon.happiness !== 255)
+    lines.push({ kind: 'text', text: `Happiness: ${pokemon.happiness}` });
   if (pokemon.teraType) lines.push({ kind: 'text', text: `Tera Type: ${pokemon.teraType}` });
 
-  const evParts = EV_STAT_LABELS
-    .map(({ key, label }) => ({ stat: label, value: pokemon.evs[key] }))
-    .filter(part => part.value > 0);
+  const evParts = EV_STAT_LABELS.map(({ key, label }) => ({
+    stat: label,
+    value: pokemon.evs[key],
+  })).filter((part) => part.value > 0);
   if (evParts.length > 0) lines.push({ kind: 'evs', parts: evParts });
 
   if (pokemon.nature) lines.push({ kind: 'text', text: `${pokemon.nature} Nature` });
@@ -287,9 +287,11 @@ export function formatPokemonLines(pokemon: ShowdownPokemon): FormattedLine[] {
 
 function linesToText(lines: FormattedLine[]): string {
   return lines
-    .map(line => line.kind === 'text'
-      ? line.text
-      : `EVs: ${line.parts.map(p => `${p.value} ${p.stat}`).join(' / ')}`)
+    .map((line) =>
+      line.kind === 'text'
+        ? line.text
+        : `EVs: ${line.parts.map((p) => `${p.value} ${p.stat}`).join(' / ')}`,
+    )
     .join('\n');
 }
 
@@ -299,7 +301,7 @@ function linesToText(lines: FormattedLine[]): string {
  * matching splitIntoBlocks' own expected delimiter.
  */
 export function formatShowdownText(pokemonList: ShowdownPokemon[]): string {
-  return pokemonList.map(p => linesToText(formatPokemonLines(p))).join('\n\n');
+  return pokemonList.map((p) => linesToText(formatPokemonLines(p))).join('\n\n');
 }
 
 /**
@@ -311,10 +313,10 @@ export function formatShowdownText(pokemonList: ShowdownPokemon[]): string {
 export function parseShowdownText(text: string): ParseResult {
   const errors: string[] = [];
   const pokemon: ShowdownPokemon[] = [];
-  
+
   try {
     const blocks = splitIntoBlocks(text);
-    
+
     if (blocks.length === 0) {
       errors.push('No Pokémon data found in the provided text');
       return {
@@ -328,13 +330,13 @@ export function parseShowdownText(text: string): ParseResult {
     for (let i = 0; i < blocks.length; i++) {
       try {
         const parsed = parsePokemonBlock(blocks[i]);
-        
+
         // Validate that we at least got a species name
         if (!parsed.species || parsed.species.length === 0) {
           errors.push(`Block ${i + 1}: Could not determine Pokémon species`);
           continue;
         }
-        
+
         pokemon.push(parsed);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -351,7 +353,7 @@ export function parseShowdownText(text: string): ParseResult {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown parsing error';
     errors.push(`Fatal parsing error: ${errorMessage}`);
-    
+
     return {
       success: false,
       pokemon: [],

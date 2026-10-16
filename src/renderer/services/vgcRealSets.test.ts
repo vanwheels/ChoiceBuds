@@ -57,7 +57,7 @@ describe('matchesSpecies', () => {
     expect(matchesSpecies(['Salamence-Mega'], 'Salamence-Mega')).toBe(true);
   });
 
-  it('strips this app\'s own gender suffix on both sides', () => {
+  it("strips this app's own gender suffix on both sides", () => {
     expect(matchesSpecies(['Indeedee-F'], 'Indeedee')).toBe(true);
   });
 
@@ -73,18 +73,20 @@ describe('filterRowsBySpecies', () => {
       buildRow({ id: 'MC002', species: ['Gholdengo', 'Sylveon'] }),
       buildRow({ id: 'MC003', species: ['incineroar'] }),
     ];
-    expect(filterRowsBySpecies(rows, 'Incineroar').map(r => r.id)).toEqual(['MC001', 'MC003']);
+    expect(filterRowsBySpecies(rows, 'Incineroar').map((r) => r.id)).toEqual(['MC001', 'MC003']);
   });
 });
 
 describe('toRealSetBundle', () => {
   it('sorts moves alphabetically and carries the other fields through as-is', () => {
-    const bundle = toRealSetBundle(buildPokemon({
-      item: 'Assault Vest',
-      ability: 'Intimidate',
-      nature: 'Careful',
-      moves: ['Knock Off', 'Fake Out', 'Flare Blitz', 'Parting Shot'],
-    }));
+    const bundle = toRealSetBundle(
+      buildPokemon({
+        item: 'Assault Vest',
+        ability: 'Intimidate',
+        nature: 'Careful',
+        moves: ['Knock Off', 'Fake Out', 'Flare Blitz', 'Parting Shot'],
+      }),
+    );
     expect(bundle).toEqual<VgcRealSetBundle>({
       item: 'Assault Vest',
       ability: 'Intimidate',
@@ -99,8 +101,12 @@ describe('toRealSetBundle', () => {
 describe('mergeRealSetBundles', () => {
   it('collapses identical bundles into one with a summed occurrence count', () => {
     const bundle: VgcRealSetBundle = {
-      item: 'Assault Vest', ability: 'Intimidate', nature: 'Careful',
-      moves: ['Fake Out', 'Knock Off'], evs: ZERO_EVS, occurrences: 1,
+      item: 'Assault Vest',
+      ability: 'Intimidate',
+      nature: 'Careful',
+      moves: ['Fake Out', 'Knock Off'],
+      evs: ZERO_EVS,
+      occurrences: 1,
     };
     const merged = mergeRealSetBundles([bundle, { ...bundle }, { ...bundle }]);
     expect(merged).toEqual([{ ...bundle, occurrences: 3 }]);
@@ -113,8 +119,12 @@ describe('mergeRealSetBundles', () => {
   });
 
   it('treats item/ability/nature case differences as the same bundle', () => {
-    const a = toRealSetBundle(buildPokemon({ item: 'Assault Vest', ability: 'Intimidate', nature: 'Careful' }));
-    const b = toRealSetBundle(buildPokemon({ item: 'assault vest', ability: 'intimidate', nature: 'careful' }));
+    const a = toRealSetBundle(
+      buildPokemon({ item: 'Assault Vest', ability: 'Intimidate', nature: 'Careful' }),
+    );
+    const b = toRealSetBundle(
+      buildPokemon({ item: 'assault vest', ability: 'intimidate', nature: 'careful' }),
+    );
     expect(mergeRealSetBundles([a, b])).toHaveLength(1);
   });
 
@@ -128,7 +138,7 @@ describe('mergeRealSetBundles', () => {
     const common = toRealSetBundle(buildPokemon({ item: 'Assault Vest' }));
     const rare = toRealSetBundle(buildPokemon({ item: 'Leftovers' }));
     const merged = mergeRealSetBundles([rare, common, common]);
-    expect(merged.map(b => b.item)).toEqual(['Assault Vest', 'Leftovers']);
+    expect(merged.map((b) => b.item)).toEqual(['Assault Vest', 'Leftovers']);
   });
 });
 
@@ -171,12 +181,15 @@ describe('extractRealSetsForSpecies', () => {
   });
 
   function stubFetch(byUrl: Record<string, { paste: string }>) {
-    vi.stubGlobal('fetch', vi.fn((url: string) => {
-      const id = url.match(/pokepast\.es\/([a-f0-9]+)\/json/)?.[1];
-      const body = id ? byUrl[id] : undefined;
-      if (!body) return Promise.resolve({ ok: false, status: 404 });
-      return Promise.resolve({ ok: true, json: () => Promise.resolve(body) });
-    }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) => {
+        const id = url.match(/pokepast\.es\/([a-f0-9]+)\/json/)?.[1];
+        const body = id ? byUrl[id] : undefined;
+        if (!body) return Promise.resolve({ ok: false, status: 404 });
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(body) });
+      }),
+    );
   }
 
   it('fetches only matching rows and dedupes identical sets into one bundle with occurrences: 2', async () => {
@@ -200,7 +213,13 @@ describe('extractRealSetsForSpecies', () => {
 
   it('matches a Mega-Evolved target species despite parseShowdownText normalizing the fetched paste back to its base species (Real Sets: Mega Evolution Species Matching Bug fix)', async () => {
     stubFetch({ deadbeef01: { paste: SALAMENCE_MEGA_PASTE } });
-    const rows = [buildRow({ id: 'MC010', pokepasteUrl: 'https://pokepast.es/deadbeef01', species: ['Salamence-Mega'] })];
+    const rows = [
+      buildRow({
+        id: 'MC010',
+        pokepasteUrl: 'https://pokepast.es/deadbeef01',
+        species: ['Salamence-Mega'],
+      }),
+    ];
 
     const entry = await extractRealSetsForSpecies('Salamence-Mega', rows);
 

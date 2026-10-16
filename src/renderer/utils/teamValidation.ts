@@ -38,7 +38,7 @@ export function validateTeam(team: Team, rulesetId: RegulationId): TeamValidatio
     }
 
     const setMoves = showdownData.moves.filter(Boolean);
-    const uniqueMoves = new Set(setMoves.map(m => m.toLowerCase()));
+    const uniqueMoves = new Set(setMoves.map((m) => m.toLowerCase()));
     if (uniqueMoves.size !== setMoves.length) {
       issues.push(`${who}: has the same move in more than one slot`);
     }

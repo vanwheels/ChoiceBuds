@@ -32,10 +32,19 @@ function pokemonState(overrides: Partial<CalcPokemonState> = {}): CalcPokemonSta
   return { ...defaultPokemonState(), ...overrides };
 }
 
-function pokemonWithMove(species: string, moveName: string, moveOverrides: Partial<CalcMoveSlot> = {}): CalcPokemonState {
+function pokemonWithMove(
+  species: string,
+  moveName: string,
+  moveOverrides: Partial<CalcMoveSlot> = {},
+): CalcPokemonState {
   return pokemonState({
     species,
-    moves: [{ name: moveName, isCrit: false, ...moveOverrides }, { name: '', isCrit: false }, { name: '', isCrit: false }, { name: '', isCrit: false }],
+    moves: [
+      { name: moveName, isCrit: false, ...moveOverrides },
+      { name: '', isCrit: false },
+      { name: '', isCrit: false },
+      { name: '', isCrit: false },
+    ],
   });
 }
 
@@ -88,27 +97,36 @@ describe('computeBoostedStats / computeEffectiveSpeed', () => {
     const paralyzed = pokemonState({ species: 'Gengar', status: 'par' });
     expect(computeEffectiveSpeed(gen, paralyzed, '')).toBe(65); // floor(130 / 2)
 
-    const paralyzedAndBoosted = pokemonState({ species: 'Gengar', status: 'par', ability: 'Swift Swim' });
+    const paralyzedAndBoosted = pokemonState({
+      species: 'Gengar',
+      status: 'par',
+      ability: 'Swift Swim',
+    });
     expect(computeEffectiveSpeed(gen, paralyzedAndBoosted, 'Rain')).toBe(130); // floor(floor(130 * 2) / 2)
   });
 
-  it('applies Choice Scarf\'s 1.5x Speed multiplier - regression test for a Scarf set showing an unmodified Speed Total', () => {
+  it("applies Choice Scarf's 1.5x Speed multiplier - regression test for a Scarf set showing an unmodified Speed Total", () => {
     const scarfed = pokemonState({ species: 'Gengar', item: 'Choice Scarf' });
     expect(computeEffectiveSpeed(gen, scarfed, '')).toBe(195); // floor(130 * 1.5)
   });
 
-  it('applies Iron Ball\'s 0.5x Speed multiplier', () => {
+  it("applies Iron Ball's 0.5x Speed multiplier", () => {
     const ironBalled = pokemonState({ species: 'Gengar', item: 'Iron Ball' });
     expect(computeEffectiveSpeed(gen, ironBalled, '')).toBe(65); // floor(130 * 0.5)
   });
 
   it('stacks Choice Scarf with a stat-stage boost and paralysis, matching real modifier order', () => {
-    const state = pokemonState({ species: 'Gengar', item: 'Choice Scarf', status: 'par', boosts: { ...ZERO_STATS, spe: 1 } });
+    const state = pokemonState({
+      species: 'Gengar',
+      item: 'Choice Scarf',
+      status: 'par',
+      boosts: { ...ZERO_STATS, spe: 1 },
+    });
     // rawStats.spe(130) -> +1 stage (195) -> Scarf 1.5x (292) -> par 0.5x (146)
     expect(computeEffectiveSpeed(gen, state, '')).toBe(146);
   });
 
-  it('doubles Speed for a Tailwind on this Pokemon\'s own side, not otherwise - regression test for Tailwind not being threaded into the Calc tab\'s displayed Speed', () => {
+  it("doubles Speed for a Tailwind on this Pokemon's own side, not otherwise - regression test for Tailwind not being threaded into the Calc tab's displayed Speed", () => {
     const state = pokemonState({ species: 'Gengar' });
     const tailwindSide = { ...defaultFieldState().pokemon1Side, isTailwind: true };
     expect(computeEffectiveSpeed(gen, state, '', '', tailwindSide)).toBe(260); // floor(130 * 2)
@@ -140,7 +158,8 @@ describe('computeSideResults', () => {
     attacker.nature = 'Adamant'; // +atk
     attacker.sps = { ...ZERO_STATS, atk: 32 };
     const defender = pokemonState({
-      species: 'Farigiraf', nature: 'Impish', // +def
+      species: 'Farigiraf',
+      nature: 'Impish', // +def
       sps: { ...ZERO_STATS, hp: 29, def: 20 },
     });
 
@@ -175,7 +194,14 @@ describe('computeSideResults', () => {
     const defender = pokemonState({ species: 'Garchomp' });
 
     const [entry] = computeSideResults(
-      gen, pokemonWithMove('Gengar', 'Bullet Seed'), defender, noSide, noSide, 'Doubles', '', ''
+      gen,
+      pokemonWithMove('Gengar', 'Bullet Seed'),
+      defender,
+      noSide,
+      noSide,
+      'Doubles',
+      '',
+      '',
     );
     expect(entry.multihitRange).toEqual([2, 5]);
     expect(entry.effectiveHits).toBeGreaterThanOrEqual(2);
@@ -183,7 +209,14 @@ describe('computeSideResults', () => {
     expect(entry.possibleDamages.length).toBeGreaterThan(0);
 
     const [explicitHits] = computeSideResults(
-      gen, pokemonWithMove('Gengar', 'Bullet Seed', { hits: 3 }), defender, noSide, noSide, 'Doubles', '', ''
+      gen,
+      pokemonWithMove('Gengar', 'Bullet Seed', { hits: 3 }),
+      defender,
+      noSide,
+      noSide,
+      'Doubles',
+      '',
+      '',
     );
     expect(explicitHits.effectiveHits).toBe(3);
   });
@@ -197,8 +230,14 @@ describe('computeSideResults - Champions ability damage effects', () => {
     const defenderSide = { ...field.pokemon2Side, isProtected: true };
 
     const [entry] = computeSideResults(
-      gen, attacker, defender, field.pokemon1Side, defenderSide,
-      field.gameType, field.weather, field.terrain
+      gen,
+      attacker,
+      defender,
+      field.pokemon1Side,
+      defenderSide,
+      field.gameType,
+      field.weather,
+      field.terrain,
     );
 
     // Unscaled mainline range for this matchup is [128, 152] (@smogon/calc's
@@ -208,7 +247,7 @@ describe('computeSideResults - Champions ability damage effects', () => {
     expect(entry.possibleDamages).toEqual([32, 33, 34, 35, 36, 37, 38]);
     expect(entry.percent).toBe('20.6 - 24.5%');
     expect(entry.desc).toBe(
-      "Conkeldurr's Close Combat hits through Registeel's Protect for 25% damage (Unseen Fist)"
+      "Conkeldurr's Close Combat hits through Registeel's Protect for 25% damage (Unseen Fist)",
     );
     expect(entry.kochanceText).toBe(null);
     expect(entry.errorMessage).toBe(null);
@@ -220,22 +259,34 @@ describe('computeSideResults - Champions ability damage effects', () => {
     const defender = { ...defaultPokemonState(), species: 'Registeel' };
 
     const [entry] = computeSideResults(
-      gen, attacker, defender, field.pokemon1Side, field.pokemon2Side,
-      field.gameType, field.weather, field.terrain
+      gen,
+      attacker,
+      defender,
+      field.pokemon1Side,
+      field.pokemon2Side,
+      field.gameType,
+      field.weather,
+      field.terrain,
     );
 
     expect(entry.range).toEqual([128, 152]);
     expect(entry.desc).not.toContain('Unseen Fist');
   });
 
-  it("halves damage a contact move deals to a Aura Guard defender", () => {
+  it('halves damage a contact move deals to a Aura Guard defender', () => {
     const attacker = { ...defaultPokemonState(), species: 'Lucario' };
     attacker.moves[0] = { name: 'Close Combat', isCrit: false };
     const defender = { ...defaultPokemonState(), species: 'Registeel', ability: 'Aura Guard' };
 
     const [entry] = computeSideResults(
-      gen, attacker, defender, field.pokemon1Side, field.pokemon2Side,
-      field.gameType, field.weather, field.terrain
+      gen,
+      attacker,
+      defender,
+      field.pokemon1Side,
+      field.pokemon2Side,
+      field.gameType,
+      field.weather,
+      field.terrain,
     );
 
     // Unscaled range for this matchup is [104, 126] (@smogon/calc has no
@@ -255,8 +306,14 @@ describe('computeSideResults - Champions ability damage effects', () => {
     const defender = { ...defaultPokemonState(), species: 'Registeel', ability: 'Aura Guard' };
 
     const [entry] = computeSideResults(
-      gen, attacker, defender, field.pokemon1Side, field.pokemon2Side,
-      field.gameType, field.weather, field.terrain
+      gen,
+      attacker,
+      defender,
+      field.pokemon1Side,
+      field.pokemon2Side,
+      field.gameType,
+      field.weather,
+      field.terrain,
     );
 
     expect(entry.desc).not.toContain('Aura Guard');

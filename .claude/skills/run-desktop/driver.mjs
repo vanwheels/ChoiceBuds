@@ -16,7 +16,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 const APP_DIR = path.resolve(import.meta.dirname, '../../..');
-const SHOT_DIR = process.env.SCREENSHOT_DIR || path.join(APP_DIR, '.claude/skills/run-desktop/shots');
+const SHOT_DIR =
+  process.env.SCREENSHOT_DIR || path.join(APP_DIR, '.claude/skills/run-desktop/shots');
 fs.mkdirSync(SHOT_DIR, { recursive: true });
 
 let app = null;
@@ -29,7 +30,11 @@ let page = null;
 // path.txt the same way the electron package's own index.js does so this
 // resolves correctly on every platform.
 const electronPathFile = path.join(APP_DIR, 'node_modules/electron/path.txt');
-const electronBin = path.join(APP_DIR, 'node_modules/electron/dist', fs.readFileSync(electronPathFile, 'utf-8'));
+const electronBin = path.join(
+  APP_DIR,
+  'node_modules/electron/dist',
+  fs.readFileSync(electronPathFile, 'utf-8'),
+);
 
 const COMMANDS = {
   async launch() {
@@ -47,8 +52,8 @@ const COMMANDS = {
       timeout: 30_000,
     });
     page = await app.firstWindow();
-    page.on('console', msg => console.log('[console]', msg.type(), msg.text()));
-    page.on('pageerror', err => console.log('[pageerror]', err.message));
+    page.on('console', (msg) => console.log('[console]', msg.type(), msg.text()));
+    page.on('pageerror', (err) => console.log('[pageerror]', err.message));
     await page.waitForLoadState('domcontentloaded');
     console.log('launched.', app.windows().length, 'window(s):', page.url());
   },
@@ -62,9 +67,12 @@ const COMMANDS = {
     if (!app) return console.log('ERROR: launch first');
     const [w, h] = args.split(/\s+/).map(Number);
     if (!w || !h) return console.log('ERROR: usage - resize <width> <height>');
-    await app.evaluate(({ BrowserWindow }, [width, height]) => {
-      BrowserWindow.getAllWindows()[0]?.setContentSize(width, height);
-    }, [w, h]);
+    await app.evaluate(
+      ({ BrowserWindow }, [width, height]) => {
+        BrowserWindow.getAllWindows()[0]?.setContentSize(width, height);
+      },
+      [w, h],
+    );
     console.log('resized to', w, 'x', h, '(content size)');
   },
 
@@ -99,10 +107,11 @@ const COMMANDS = {
 
   async click(sel) {
     if (!page) return console.log('ERROR: launch first');
-    const r = await page.evaluate(s => {
+    const r = await page.evaluate((s) => {
       const el = document.querySelector(s);
       if (!el) return 'NOT_FOUND';
-      el.click(); return 'OK';
+      el.click();
+      return 'OK';
     }, sel);
     console.log('click', sel, '->', r);
   },
@@ -114,38 +123,61 @@ const COMMANDS = {
   // with matching text, not just the smallest text.
   async 'click-text'(text) {
     if (!page) return console.log('ERROR: launch first');
-    const r = await page.evaluate(t => {
+    const r = await page.evaluate((t) => {
       const all = [...document.querySelectorAll('body *')];
-      const exact = all.filter(e => e.textContent?.trim() === t);
-      const candidates = exact.length > 0 ? exact : all.filter(e => e.textContent?.includes(t));
+      const exact = all.filter((e) => e.textContent?.trim() === t);
+      const candidates = exact.length > 0 ? exact : all.filter((e) => e.textContent?.includes(t));
       if (candidates.length === 0) return 'NOT_FOUND';
-      const depth = el => { let d = 0, n = el; while (n.parentElement) { d++; n = n.parentElement; } return d; };
+      const depth = (el) => {
+        let d = 0,
+          n = el;
+        while (n.parentElement) {
+          d++;
+          n = n.parentElement;
+        }
+        return d;
+      };
       const el = candidates.reduce((a, b) => (depth(b) > depth(a) ? b : a));
-      el.click(); return 'OK: ' + el.tagName + (el.className ? '.' + String(el.className).split(' ')[0] : '');
+      el.click();
+      return 'OK: ' + el.tagName + (el.className ? '.' + String(el.className).split(' ')[0] : '');
     }, text);
     console.log('click-text', JSON.stringify(text), '->', r);
   },
 
-  async type(text)  { if (page) await page.keyboard.type(text, { delay: 30 }); },
-  async press(key)  { if (page) await page.keyboard.press(key); },
+  async type(text) {
+    if (page) await page.keyboard.type(text, { delay: 30 });
+  },
+  async press(key) {
+    if (page) await page.keyboard.press(key);
+  },
 
   async wait(sel) {
     if (!page) return console.log('ERROR: launch first');
-    try { await page.waitForSelector(sel, { timeout: 10_000 }); console.log('found:', sel); }
-    catch { console.log('TIMEOUT:', sel); }
+    try {
+      await page.waitForSelector(sel, { timeout: 10_000 });
+      console.log('found:', sel);
+    } catch {
+      console.log('TIMEOUT:', sel);
+    }
   },
 
   async eval(expr) {
     if (!page) return console.log('ERROR: launch first');
-    try { console.log(JSON.stringify(await page.evaluate(expr))); }
-    catch (e) { console.log('ERROR:', e.message); }
+    try {
+      console.log(JSON.stringify(await page.evaluate(expr)));
+    } catch (e) {
+      console.log('ERROR:', e.message);
+    }
   },
 
   async text(sel) {
     if (!page) return console.log('ERROR: launch first');
-    console.log(await page.evaluate(
-      s => (s ? document.querySelector(s) : document.body)?.innerText ?? '(null)',
-      sel || null));
+    console.log(
+      await page.evaluate(
+        (s) => (s ? document.querySelector(s) : document.body)?.innerText ?? '(null)',
+        sel || null,
+      ),
+    );
   },
 
   async windows() {
@@ -153,8 +185,14 @@ const COMMANDS = {
     for (const w of app.windows()) console.log(' ', w.url());
   },
 
-  async quit() { if (app) await app.close().catch(() => {}); app = null; page = null; },
-  help() { console.log('commands:', Object.keys(COMMANDS).join(', ')); },
+  async quit() {
+    if (app) await app.close().catch(() => {});
+    app = null;
+    page = null;
+  },
+  help() {
+    console.log('commands:', Object.keys(COMMANDS).join(', '));
+  },
 };
 
 // A heredoc/pipe delivers all commands in one stdin chunk. readline's
@@ -174,7 +212,11 @@ async function runLine(line) {
   if (!cmd) return;
   const fn = COMMANDS[cmd];
   if (!fn) return console.log('unknown:', cmd, '- try: help');
-  try { await fn(rest.join(' ')); } catch (e) { console.log('ERROR:', e.message); }
+  try {
+    await fn(rest.join(' '));
+  } catch (e) {
+    console.log('ERROR:', e.message);
+  }
 }
 
 console.log('ChoiceBuds driver - "help" for commands, "launch" to start');

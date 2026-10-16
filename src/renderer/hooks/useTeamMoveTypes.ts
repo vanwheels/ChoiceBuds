@@ -30,7 +30,10 @@ export interface UseTeamMoveTypesReturn {
   isLoading: boolean;
 }
 
-export function useTeamMoveTypes(team: Team | undefined, gameDataState: UseGameDataReturn): UseTeamMoveTypesReturn {
+export function useTeamMoveTypes(
+  team: Team | undefined,
+  gameDataState: UseGameDataReturn,
+): UseTeamMoveTypesReturn {
   const { getMoveData } = gameDataState;
   const [moveTypesByPokemon, setMoveTypesByPokemon] = useState<string[][]>([]);
   const [resolvedForTeamId, setResolvedForTeamId] = useState<string | undefined>(undefined);
@@ -39,19 +42,21 @@ export function useTeamMoveTypes(team: Team | undefined, gameDataState: UseGameD
     if (!team) return;
     let cancelled = false;
     Promise.all(
-      team.pokemon.map(p =>
-        Promise.all(p.showdownData.moves.map(name => getMoveData(name))).then(results =>
+      team.pokemon.map((p) =>
+        Promise.all(p.showdownData.moves.map((name) => getMoveData(name))).then((results) =>
           results
             .filter((m): m is NonNullable<typeof m> => !!m && m.category !== 'status')
-            .map(m => getEffectiveMoveType(m.name, m.type, p.showdownData.ability))
-        )
-      )
-    ).then(results => {
+            .map((m) => getEffectiveMoveType(m.name, m.type, p.showdownData.ability)),
+        ),
+      ),
+    ).then((results) => {
       if (cancelled) return;
       setMoveTypesByPokemon(results);
       setResolvedForTeamId(team.id);
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [team, getMoveData]);
 
   if (!team) return { moveTypesByPokemon: [], isLoading: false };

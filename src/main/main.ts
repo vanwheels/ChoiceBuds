@@ -7,7 +7,13 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import { fileURLToPath } from 'url';
 import path from 'path';
-import { DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, loadWindowState, scheduleWindowStateSave, saveWindowStateSync } from './windowState';
+import {
+  DEFAULT_WINDOW_WIDTH,
+  DEFAULT_WINDOW_HEIGHT,
+  loadWindowState,
+  scheduleWindowStateSave,
+  saveWindowStateSync,
+} from './windowState';
 import { registerFileHandlers } from './ipc/fileHandlers';
 import { registerShellHandlers } from './ipc/shellHandlers';
 import { registerSpriteHandlers } from './ipc/spriteHandlers';
@@ -83,7 +89,11 @@ async function createWindow(): Promise<void> {
   });
 }
 
-type UpdateStatusPayload = { state: 'checking-native' | 'downloading' | 'ready-to-install' | 'not-available' | 'error'; version?: string; percent?: number };
+type UpdateStatusPayload = {
+  state: 'checking-native' | 'downloading' | 'ready-to-install' | 'not-available' | 'error';
+  version?: string;
+  percent?: number;
+};
 
 // Latest status registerAutoUpdater has sent, kept alongside the push below
 // so the renderer can pull it on mount instead of only relying on the push

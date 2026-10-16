@@ -2,7 +2,10 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { normalizeSpeciesForAPI, fetchPokemonData } from './pokeapi';
 
 function mockFetchOnce(json: unknown) {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 200, json: () => Promise.resolve(json) }));
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue({ ok: true, status: 200, json: () => Promise.resolve(json) }),
+  );
 }
 
 const INDEEDEE_FEMALE_RESPONSE = {

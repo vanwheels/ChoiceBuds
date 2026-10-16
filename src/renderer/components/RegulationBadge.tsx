@@ -33,7 +33,7 @@ export default function RegulationBadge({ team, onChange }: RegulationBadgeProps
       </button>
       {isOpen && (
         <div className="absolute z-50 top-full left-0 mt-1 w-24 rounded-lg border border-zinc-700 bg-slate-900 shadow-xl overflow-hidden">
-          {ALL_REGULATION_IDS.map(id => (
+          {ALL_REGULATION_IDS.map((id) => (
             <button
               key={id}
               onClick={() => {
@@ -41,7 +41,9 @@ export default function RegulationBadge({ team, onChange }: RegulationBadgeProps
                 setIsOpen(false);
               }}
               className={`w-full text-left px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
-                id === currentId ? 'bg-accent-gold text-zinc-900' : 'text-zinc-300 hover:bg-zinc-800'
+                id === currentId
+                  ? 'bg-accent-gold text-zinc-900'
+                  : 'text-zinc-300 hover:bg-zinc-800'
               }`}
             >
               {getRegulationLabel(id)}

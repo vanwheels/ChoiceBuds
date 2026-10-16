@@ -78,7 +78,14 @@ interface MenuPos {
 const VIEWPORT_MARGIN = 8;
 const MIN_MENU_HEIGHT = 140;
 
-export default function TeamOverflowMenu({ team, rulesetId, onExport, onExportImage, onExportPdf, onDelete }: TeamOverflowMenuProps) {
+export default function TeamOverflowMenu({
+  team,
+  rulesetId,
+  onExport,
+  onExportImage,
+  onExportPdf,
+  onDelete,
+}: TeamOverflowMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [menuPos, setMenuPos] = useState<MenuPos | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -163,71 +170,126 @@ export default function TeamOverflowMenu({ team, rulesetId, onExport, onExportIm
         </svg>
       </button>
 
-      {isOpen && menuPos && createPortal(
-        <div
-          ref={menuRef}
-          className="fixed z-50 w-56 rounded-lg border border-zinc-800 bg-zinc-900 shadow-2xl p-1.5 overflow-y-auto"
-          style={{ top: menuPos.top, bottom: menuPos.bottom, right: menuPos.right, maxHeight: menuPos.maxHeight }}
-        >
-          <TeamValidationButton team={team} rulesetId={rulesetId} />
+      {isOpen &&
+        menuPos &&
+        createPortal(
+          <div
+            ref={menuRef}
+            className="fixed z-50 w-56 rounded-lg border border-zinc-800 bg-zinc-900 shadow-2xl p-1.5 overflow-y-auto"
+            style={{
+              top: menuPos.top,
+              bottom: menuPos.bottom,
+              right: menuPos.right,
+              maxHeight: menuPos.maxHeight,
+            }}
+          >
+            <TeamValidationButton team={team} rulesetId={rulesetId} />
 
-          <MenuRow
-            onClick={() => { onExport(); setIsOpen(false); }}
-            label="Export (Showdown text)"
-            icon={
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 3v12" />
-                <path d="m7 10 5 5 5-5" />
-                <path d="M5 21h14" />
-              </svg>
-            }
-          />
+            <MenuRow
+              onClick={() => {
+                onExport();
+                setIsOpen(false);
+              }}
+              label="Export (Showdown text)"
+              icon={
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 3v12" />
+                  <path d="m7 10 5 5 5-5" />
+                  <path d="M5 21h14" />
+                </svg>
+              }
+            />
 
-          <MenuRow
-            onClick={() => { onExportImage(); setIsOpen(false); }}
-            label="Export Image"
-            icon={
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="4" width="18" height="16" rx="2" />
-                <circle cx="9" cy="10" r="1.6" fill="currentColor" stroke="none" />
-                <path d="m5 18 5-5 4 4 3-3 3 3" />
-              </svg>
-            }
-          />
+            <MenuRow
+              onClick={() => {
+                onExportImage();
+                setIsOpen(false);
+              }}
+              label="Export Image"
+              icon={
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="3" y="4" width="18" height="16" rx="2" />
+                  <circle cx="9" cy="10" r="1.6" fill="currentColor" stroke="none" />
+                  <path d="m5 18 5-5 4 4 3-3 3 3" />
+                </svg>
+              }
+            />
 
-          <MenuRow
-            onClick={() => { onExportPdf(); setIsOpen(false); }}
-            label="Export PDF"
-            icon={
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M8 3h6l4 4v13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" />
-                <path d="M14 3v4h4" />
-                <path d="M9 13h6M9 17h6" />
-              </svg>
-            }
-          />
+            <MenuRow
+              onClick={() => {
+                onExportPdf();
+                setIsOpen(false);
+              }}
+              label="Export PDF"
+              icon={
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M8 3h6l4 4v13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" />
+                  <path d="M14 3v4h4" />
+                  <path d="M9 13h6M9 17h6" />
+                </svg>
+              }
+            />
 
-          {onDelete && (
-            <>
-              <div className="h-px bg-zinc-800 my-1 mx-1" />
-              <MenuRow
-                onClick={() => { onDelete(); setIsOpen(false); }}
-                label="Delete Team"
-                danger
-                icon={
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 7h16" />
-                    <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                    <path d="M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
-                    <path d="M10 11v6M14 11v6" />
-                  </svg>
-                }
-              />
-            </>
-          )}
-        </div>,
-        document.body
-      )}
+            {onDelete && (
+              <>
+                <div className="h-px bg-zinc-800 my-1 mx-1" />
+                <MenuRow
+                  onClick={() => {
+                    onDelete();
+                    setIsOpen(false);
+                  }}
+                  label="Delete Team"
+                  danger
+                  icon={
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="16"
+                      height="16"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M4 7h16" />
+                      <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                      <path d="M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
+                      <path d="M10 11v6M14 11v6" />
+                    </svg>
+                  }
+                />
+              </>
+            )}
+          </div>,
+          document.body,
+        )}
     </>
   );
 }

@@ -9,17 +9,27 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Generations } from '@smogon/calc';
 import type { ChampionsUsageEntry, ImportedPokemonInfo } from '../types/pokemon';
-import { computeTeamSpeed, computeThreatSpeedProfile, defaultSpeedFieldContext, type SpeedFieldContext, type ThreatSpeedInput } from './speedTiers';
+import {
+  computeTeamSpeed,
+  computeThreatSpeedProfile,
+  defaultSpeedFieldContext,
+  type SpeedFieldContext,
+  type ThreatSpeedInput,
+} from './speedTiers';
 import { resolveDisplaySpriteUrl } from '../hooks/useMegaSprite';
 
 vi.mock('../hooks/useMegaSprite', () => ({
-  resolveDisplaySpriteUrl: vi.fn((_species: string, _shiny: boolean, fallbackSpriteUrl: string) => fallbackSpriteUrl),
+  resolveDisplaySpriteUrl: vi.fn(
+    (_species: string, _shiny: boolean, fallbackSpriteUrl: string) => fallbackSpriteUrl,
+  ),
 }));
 const mockedResolveDisplaySpriteUrl = vi.mocked(resolveDisplaySpriteUrl);
 
 const gen = Generations.get(9);
 
-function teamPokemon(overrides: Partial<ImportedPokemonInfo['showdownData']> = {}): ImportedPokemonInfo {
+function teamPokemon(
+  overrides: Partial<ImportedPokemonInfo['showdownData']> = {},
+): ImportedPokemonInfo {
   return {
     showdownData: {
       species: 'Incineroar',
@@ -36,7 +46,14 @@ function teamPokemon(overrides: Partial<ImportedPokemonInfo['showdownData']> = {
     },
     pokedexNumber: 727,
     types: ['fire', 'dark'],
-    baseStats: { hp: 95, attack: 115, defense: 90, specialAttack: 80, specialDefense: 90, speed: 60 },
+    baseStats: {
+      hp: 95,
+      attack: 115,
+      defense: 90,
+      specialAttack: 80,
+      specialDefense: 90,
+      speed: 60,
+    },
     spriteUrl: 'https://example.com/incineroar.png',
     importedAt: 0,
     id: 'test-id',
@@ -93,12 +110,20 @@ describe('computeTeamSpeed', () => {
 
   it('boosts Speed for a Choice Scarf on the team mon itself', () => {
     const noItem = computeTeamSpeed(gen, teamPokemon(), defaultSpeedFieldContext());
-    const scarfed = computeTeamSpeed(gen, teamPokemon({ item: 'Choice Scarf' }), defaultSpeedFieldContext());
+    const scarfed = computeTeamSpeed(
+      gen,
+      teamPokemon({ item: 'Choice Scarf' }),
+      defaultSpeedFieldContext(),
+    );
     expect(scarfed?.speed).toBe(Math.floor(noItem!.speed * 1.5));
   });
 
   it('returns null for an unresolvable species', () => {
-    const result = computeTeamSpeed(gen, teamPokemon({ species: 'Not A Real Species' }), defaultSpeedFieldContext());
+    const result = computeTeamSpeed(
+      gen,
+      teamPokemon({ species: 'Not A Real Species' }),
+      defaultSpeedFieldContext(),
+    );
     expect(result).toBeNull();
   });
 
@@ -106,7 +131,11 @@ describe('computeTeamSpeed', () => {
     mockedResolveDisplaySpriteUrl.mockReturnValueOnce('https://example.com/garchomp-mega.png');
     const mon = teamPokemon({ species: 'Garchomp-Mega', shiny: true });
     const result = computeTeamSpeed(gen, mon, defaultSpeedFieldContext());
-    expect(mockedResolveDisplaySpriteUrl).toHaveBeenCalledWith('Garchomp-Mega', true, mon.spriteUrl);
+    expect(mockedResolveDisplaySpriteUrl).toHaveBeenCalledWith(
+      'Garchomp-Mega',
+      true,
+      mon.spriteUrl,
+    );
     expect(result?.spriteUrl).toBe('https://example.com/garchomp-mega.png');
   });
 });
@@ -120,24 +149,39 @@ describe('computeThreatSpeedProfile', () => {
       ],
     });
     const profile = computeThreatSpeedProfile(gen, threatInput(usage), defaultSpeedFieldContext());
-    expect(profile?.spreads.map(s => s.percentage)).toEqual([60, 20]);
+    expect(profile?.spreads.map((s) => s.percentage)).toEqual([60, 20]);
   });
 
   it('only boosts a weather-keyed ability when the field context supplies matching weather', () => {
     const usage = usageEntry({ abilities: [{ name: 'Chlorophyll', percentage: 90 }] });
-    const noWeather = computeThreatSpeedProfile(gen, threatInput(usage), defaultSpeedFieldContext());
-    const sun = computeThreatSpeedProfile(gen, threatInput(usage), { ...defaultSpeedFieldContext(), weather: 'Sun' });
+    const noWeather = computeThreatSpeedProfile(
+      gen,
+      threatInput(usage),
+      defaultSpeedFieldContext(),
+    );
+    const sun = computeThreatSpeedProfile(gen, threatInput(usage), {
+      ...defaultSpeedFieldContext(),
+      weather: 'Sun',
+    });
     expect(sun?.spreads[0].speed).toBe(noWeather!.spreads[0].speed * 2);
   });
 
   it('computes min/neutral/max bounds independent of any ranked spread, in ascending order', () => {
-    const profile = computeThreatSpeedProfile(gen, threatInput(usageEntry()), defaultSpeedFieldContext());
+    const profile = computeThreatSpeedProfile(
+      gen,
+      threatInput(usageEntry()),
+      defaultSpeedFieldContext(),
+    );
     expect(profile?.bounds.min).toBeLessThan(profile!.bounds.neutral);
     expect(profile?.bounds.neutral).toBeLessThan(profile!.bounds.max);
   });
 
   it('still computes bounds when a threat has no ranked stat spreads at all', () => {
-    const profile = computeThreatSpeedProfile(gen, threatInput(usageEntry({ statSpreads: [] })), defaultSpeedFieldContext());
+    const profile = computeThreatSpeedProfile(
+      gen,
+      threatInput(usageEntry({ statSpreads: [] })),
+      defaultSpeedFieldContext(),
+    );
     expect(profile?.spreads).toEqual([]);
     expect(profile?.bounds.max).toBeGreaterThan(0);
   });
@@ -145,19 +189,30 @@ describe('computeThreatSpeedProfile', () => {
   it('boosts every spread and bound under the global Choice Scarf threat-item toggle', () => {
     const usage = usageEntry();
     const noItem = computeThreatSpeedProfile(gen, threatInput(usage), defaultSpeedFieldContext());
-    const scarfed = computeThreatSpeedProfile(gen, threatInput(usage), { ...defaultSpeedFieldContext(), threatItem: 'Choice Scarf' });
+    const scarfed = computeThreatSpeedProfile(gen, threatInput(usage), {
+      ...defaultSpeedFieldContext(),
+      threatItem: 'Choice Scarf',
+    });
     expect(scarfed?.spreads[0].speed).toBe(Math.floor(noItem!.spreads[0].speed * 1.5));
     expect(scarfed?.bounds.max).toBe(Math.floor(noItem!.bounds.max * 1.5));
   });
 
   it('still computes bounds (but no spreads) for a species with no usage data at all', () => {
-    const profile = computeThreatSpeedProfile(gen, { species: 'Incineroar', ability: 'Intimidate', usage: null }, defaultSpeedFieldContext());
+    const profile = computeThreatSpeedProfile(
+      gen,
+      { species: 'Incineroar', ability: 'Intimidate', usage: null },
+      defaultSpeedFieldContext(),
+    );
     expect(profile?.spreads).toEqual([]);
     expect(profile?.bounds.min).toBeLessThan(profile!.bounds.max);
   });
 
   it('returns null for an unresolvable species', () => {
-    const result = computeThreatSpeedProfile(gen, { species: 'Not A Real Species', ability: '', usage: null }, defaultSpeedFieldContext());
+    const result = computeThreatSpeedProfile(
+      gen,
+      { species: 'Not A Real Species', ability: '', usage: null },
+      defaultSpeedFieldContext(),
+    );
     expect(result).toBeNull();
   });
 });

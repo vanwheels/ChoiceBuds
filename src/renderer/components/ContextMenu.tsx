@@ -81,18 +81,23 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
       {items.map((item) => (
         <button
           key={item.label}
-          onClick={() => { item.onClick(); onClose(); }}
+          onClick={() => {
+            item.onClick();
+            onClose();
+          }}
           className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[13px] transition-colors cursor-pointer ${
             item.danger ? 'text-red-400 hover:bg-red-500/10' : 'text-zinc-300 hover:bg-zinc-800'
           }`}
         >
           {item.icon && (
-            <span className={`shrink-0 flex ${item.danger ? 'text-red-400' : 'text-zinc-500'}`}>{item.icon}</span>
+            <span className={`shrink-0 flex ${item.danger ? 'text-red-400' : 'text-zinc-500'}`}>
+              {item.icon}
+            </span>
           )}
           <span>{item.label}</span>
         </button>
       ))}
     </div>,
-    document.body
+    document.body,
   );
 }

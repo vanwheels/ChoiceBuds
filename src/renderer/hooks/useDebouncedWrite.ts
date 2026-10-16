@@ -33,7 +33,7 @@ export function useDebouncedWrite<T>(
   writeFn: (value: T) => Promise<unknown>,
   errorMessage: string,
   delayMs: number = CACHE_WRITE_DEBOUNCE_MS,
-  diskSnapshot?: string
+  diskSnapshot?: string,
 ): void {
   useEffect(() => {
     if (!ready || value === null) return;

@@ -23,9 +23,9 @@ export type MoveFieldEffect =
 const MOVE_FIELD_EFFECTS: Record<string, MoveFieldEffect> = {
   'sunny-day': { kind: 'weather', weather: 'sun' },
   'rain-dance': { kind: 'weather', weather: 'rain' },
-  'sandstorm': { kind: 'weather', weather: 'sand' },
-  'snowscape': { kind: 'weather', weather: 'snow' },
-  'hail': { kind: 'weather', weather: 'snow' },
+  sandstorm: { kind: 'weather', weather: 'sand' },
+  snowscape: { kind: 'weather', weather: 'snow' },
+  hail: { kind: 'weather', weather: 'snow' },
   'chilly-reception': { kind: 'weather', weather: 'snow' },
 
   'electric-terrain': { kind: 'terrain', terrain: 'electric' },
@@ -35,16 +35,16 @@ const MOVE_FIELD_EFFECTS: Record<string, MoveFieldEffect> = {
 
   'trick-room': { kind: 'trickRoom' },
 
-  'tailwind': { kind: 'sideCondition', key: 'tailwind' },
-  'reflect': { kind: 'sideCondition', key: 'reflect' },
+  tailwind: { kind: 'sideCondition', key: 'tailwind' },
+  reflect: { kind: 'sideCondition', key: 'reflect' },
   'light-screen': { kind: 'sideCondition', key: 'lightScreen' },
   'aurora-veil': { kind: 'sideCondition', key: 'auroraVeil' },
-  'safeguard': { kind: 'sideCondition', key: 'safeguard' },
-  'mist': { kind: 'sideCondition', key: 'mist' },
+  safeguard: { kind: 'sideCondition', key: 'safeguard' },
+  mist: { kind: 'sideCondition', key: 'mist' },
 
   'stealth-rock': { kind: 'booleanHazard', key: 'stealthRock' },
   'sticky-web': { kind: 'booleanHazard', key: 'stickyWeb' },
-  'spikes': { kind: 'stackableHazard', key: 'spikes' },
+  spikes: { kind: 'stackableHazard', key: 'spikes' },
   'toxic-spikes': { kind: 'stackableHazard', key: 'toxicSpikes' },
 };
 

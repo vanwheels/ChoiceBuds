@@ -20,5 +20,8 @@ export function parseTagFilter(search: string): string | null {
 export function parseTagFilters(search: string): string[] {
   const trimmed = search.trim();
   if (!trimmed.startsWith('#')) return [];
-  return trimmed.split('#').slice(1).map(tag => tag.trim().toLowerCase());
+  return trimmed
+    .split('#')
+    .slice(1)
+    .map((tag) => tag.trim().toLowerCase());
 }

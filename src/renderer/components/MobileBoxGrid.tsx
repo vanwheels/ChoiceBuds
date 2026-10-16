@@ -47,7 +47,18 @@ interface MobileBoxGridProps {
   emptyStateContent: ReactNode | null;
 }
 
-export default function MobileBoxGrid({ entries, savedPokemonState, gameDataState, rulesetId, resolveSprite, showAnimatedSprites, onAddToTeam, onNewBuild, isBuildingSpecies, emptyStateContent }: MobileBoxGridProps) {
+export default function MobileBoxGrid({
+  entries,
+  savedPokemonState,
+  gameDataState,
+  rulesetId,
+  resolveSprite,
+  showAnimatedSprites,
+  onAddToTeam,
+  onNewBuild,
+  isBuildingSpecies,
+  emptyStateContent,
+}: MobileBoxGridProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const handleToggleFavorite = (e: ReactMouseEvent<HTMLButtonElement>, entryId: string) => {
@@ -63,7 +74,9 @@ export default function MobileBoxGrid({ entries, savedPokemonState, gameDataStat
           disabled={isBuildingSpecies}
           className="flex items-center justify-center aspect-square rounded-lg border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-wait"
         >
-          <span className="text-[11px] font-semibold text-center px-1">{isBuildingSpecies ? 'Building…' : '+ New Build'}</span>
+          <span className="text-[11px] font-semibold text-center px-1">
+            {isBuildingSpecies ? 'Building…' : '+ New Build'}
+          </span>
         </button>
 
         {entries.map((entry, idx) => (
@@ -74,17 +87,21 @@ export default function MobileBoxGrid({ entries, savedPokemonState, gameDataStat
             className="relative flex flex-col items-center justify-center gap-0.5 aspect-square p-1.5 rounded-lg bg-zinc-700 border border-zinc-600 active:bg-zinc-600 transition-colors cursor-pointer"
           >
             <img
-              src={resolveSprite(getPixelSpriteUrl(
-                entry.pokemon.pokedexNumber,
-                entry.pokemon.showdownData.species,
-                entry.pokemon.showdownData.gender || 'M',
-                entry.pokemon.showdownData.shiny
-              ))}
+              src={resolveSprite(
+                getPixelSpriteUrl(
+                  entry.pokemon.pokedexNumber,
+                  entry.pokemon.showdownData.species,
+                  entry.pokemon.showdownData.gender || 'M',
+                  entry.pokemon.showdownData.shiny,
+                ),
+              )}
               alt={entry.pokemon.showdownData.species}
               draggable={false}
               className="w-10 h-10 object-contain [image-rendering:pixelated]"
             />
-            <span className="text-[10px] font-semibold text-zinc-200 truncate w-full text-center">{entry.label}</span>
+            <span className="text-[10px] font-semibold text-zinc-200 truncate w-full text-center">
+              {entry.label}
+            </span>
 
             <button
               type="button"
@@ -94,7 +111,16 @@ export default function MobileBoxGrid({ entries, savedPokemonState, gameDataStat
                 entry.favorite ? 'text-accent-gold' : 'text-zinc-500'
               }`}
             >
-              <svg viewBox="0 0 24 24" width="11" height="11" fill={entry.favorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                viewBox="0 0 24 24"
+                width="11"
+                height="11"
+                fill={entry.favorite ? 'currentColor' : 'none'}
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M12 3.5l2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" />
               </svg>
             </button>

@@ -2,7 +2,13 @@ import { describe, it, expect, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useRosterActions } from './useRosterActions';
 import type { UseGameDataReturn } from './useGameData';
-import type { ImportedPokemonInfo, PokeAPICacheEntry, SavedPokemonEntry, ShowdownPokemon, Team } from '../types/pokemon';
+import type {
+  ImportedPokemonInfo,
+  PokeAPICacheEntry,
+  SavedPokemonEntry,
+  ShowdownPokemon,
+  Team,
+} from '../types/pokemon';
 
 const ZERO_EVS = { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 };
 
@@ -24,7 +30,14 @@ function makePokemon(overrides: Partial<ShowdownPokemon> = {}): ImportedPokemonI
     showdownData: makeShowdownPokemon(overrides),
     pokedexNumber: 94,
     types: ['ghost', 'poison'],
-    baseStats: { hp: 60, attack: 65, defense: 60, specialAttack: 130, specialDefense: 75, speed: 110 },
+    baseStats: {
+      hp: 60,
+      attack: 65,
+      defense: 60,
+      specialAttack: 130,
+      specialDefense: 75,
+      speed: 110,
+    },
     spriteUrl: 'https://example.com/gengar.png',
     importedAt: Date.now(),
     id: crypto.randomUUID(),
@@ -46,25 +59,59 @@ const CACHE_ENTRY: PokeAPICacheEntry = {
   species: 'gengar',
   pokedexNumber: 94,
   types: ['ghost', 'poison'],
-  baseStats: { hp: 60, attack: 65, defense: 60, specialAttack: 130, specialDefense: 75, speed: 110 },
+  baseStats: {
+    hp: 60,
+    attack: 65,
+    defense: 60,
+    specialAttack: 130,
+    specialDefense: 75,
+    speed: 110,
+  },
   spriteUrl: 'https://example.com/gengar.png',
   abilities: ['cursed-body'],
   cachedAt: Date.now(),
   expiresAt: Date.now() + 100_000,
 };
 
-function setup(overrides: { getEnrichedSpeciesOptions?: UseGameDataReturn['getEnrichedSpeciesOptions']; getChampionsUsage?: UseGameDataReturn['getChampionsUsage'] } = {}) {
+function setup(
+  overrides: {
+    getEnrichedSpeciesOptions?: UseGameDataReturn['getEnrichedSpeciesOptions'];
+    getChampionsUsage?: UseGameDataReturn['getChampionsUsage'];
+  } = {},
+) {
   const updateTeam = vi.fn().mockResolvedValue(true);
   const getCachedEntry = vi.fn().mockReturnValue(CACHE_ENTRY); // always a cache hit - no real fetch needed
   const setCacheEntry = vi.fn().mockResolvedValue(true);
-  const getEnrichedSpeciesOptions = overrides.getEnrichedSpeciesOptions ?? vi.fn().mockResolvedValue({
-    moves: [{ name: 'shadow-ball' }, { name: 'sludge-bomb' }, { name: 'protect' }, { name: 'nasty-plot' }],
-    abilities: [{ name: 'cursed-body' }],
-  });
+  const getEnrichedSpeciesOptions =
+    overrides.getEnrichedSpeciesOptions ??
+    vi.fn().mockResolvedValue({
+      moves: [
+        { name: 'shadow-ball' },
+        { name: 'sludge-bomb' },
+        { name: 'protect' },
+        { name: 'nasty-plot' },
+      ],
+      abilities: [{ name: 'cursed-body' }],
+    });
   const getChampionsUsage = overrides.getChampionsUsage ?? vi.fn().mockResolvedValue(null);
 
-  const { result } = renderHook(() => useRosterActions(updateTeam, getCachedEntry, setCacheEntry, getEnrichedSpeciesOptions, getChampionsUsage));
-  return { result, updateTeam, getCachedEntry, setCacheEntry, getEnrichedSpeciesOptions, getChampionsUsage };
+  const { result } = renderHook(() =>
+    useRosterActions(
+      updateTeam,
+      getCachedEntry,
+      setCacheEntry,
+      getEnrichedSpeciesOptions,
+      getChampionsUsage,
+    ),
+  );
+  return {
+    result,
+    updateTeam,
+    getCachedEntry,
+    setCacheEntry,
+    getEnrichedSpeciesOptions,
+    getChampionsUsage,
+  };
 }
 
 describe('useRosterActions', () => {
@@ -81,13 +128,21 @@ describe('useRosterActions', () => {
     expect(updates.pokemon).toHaveLength(2);
     expect(updates.pokemon[0]).toBe(team.pokemon[0]); // untouched slot preserved by reference
     expect(updates.pokemon[1].showdownData.species).toBe('Gengar');
-    expect(updates.pokemon[1].showdownData.moves).toEqual(['Shadow Ball', 'Sludge Bomb', 'Protect', 'Nasty Plot']);
+    expect(updates.pokemon[1].showdownData.moves).toEqual([
+      'Shadow Ball',
+      'Sludge Bomb',
+      'Protect',
+      'Nasty Plot',
+    ]);
     expect(updates.pokemon[1].showdownData.ability).toBe('Cursed Body');
   });
 
   it('sorts moves/abilities by live Champions usage percentage when available, overriding learnset order', async () => {
     const getChampionsUsage = vi.fn().mockResolvedValue({
-      moves: [{ name: 'shadow-ball', percentage: 10 }, { name: 'protect', percentage: 90 }],
+      moves: [
+        { name: 'shadow-ball', percentage: 10 },
+        { name: 'protect', percentage: 90 },
+      ],
       abilities: [{ name: 'cursed-body', percentage: 100 }],
     });
     const getEnrichedSpeciesOptions = vi.fn().mockResolvedValue({
@@ -127,18 +182,35 @@ describe('useRosterActions', () => {
   });
 
   it('removeSlot filters out the target index and left-shifts the rest', async () => {
-    const team = makeTeam([makePokemon({ species: 'A' }), makePokemon({ species: 'B' }), makePokemon({ species: 'C' })]);
+    const team = makeTeam([
+      makePokemon({ species: 'A' }),
+      makePokemon({ species: 'B' }),
+      makePokemon({ species: 'C' }),
+    ]);
     const { result, updateTeam } = setup();
 
     await result.current.removeSlot(team, 1);
 
     const [, updates] = updateTeam.mock.calls[0];
-    expect(updates.pokemon.map((p: ImportedPokemonInfo) => p.showdownData.species)).toEqual(['A', 'C']);
+    expect(updates.pokemon.map((p: ImportedPokemonInfo) => p.showdownData.species)).toEqual([
+      'A',
+      'C',
+    ]);
   });
 
-  it('loadSavedSet places a saved entry\'s Pokemon into the slot, without touching other slots', async () => {
-    const savedPokemon = makePokemon({ species: 'Rillaboom', ability: 'Grassy Surge', moves: ['Fake Out', 'Wood Hammer'] });
-    const entry: SavedPokemonEntry = { id: 'saved-1', label: 'Defensive Rilla', pokemon: savedPokemon, savedAt: Date.now(), updatedAt: Date.now() };
+  it("loadSavedSet places a saved entry's Pokemon into the slot, without touching other slots", async () => {
+    const savedPokemon = makePokemon({
+      species: 'Rillaboom',
+      ability: 'Grassy Surge',
+      moves: ['Fake Out', 'Wood Hammer'],
+    });
+    const entry: SavedPokemonEntry = {
+      id: 'saved-1',
+      label: 'Defensive Rilla',
+      pokemon: savedPokemon,
+      savedAt: Date.now(),
+      updatedAt: Date.now(),
+    };
     const team = makeTeam([makePokemon(), makePokemon({ species: 'B' })]);
     const { result, updateTeam } = setup();
 
@@ -159,14 +231,25 @@ describe('useRosterActions', () => {
     const built = await result.current.buildSlot('Gengar');
 
     expect(built.showdownData.species).toBe('Gengar');
-    expect(built.showdownData.moves).toEqual(['Shadow Ball', 'Sludge Bomb', 'Protect', 'Nasty Plot']);
+    expect(built.showdownData.moves).toEqual([
+      'Shadow Ball',
+      'Sludge Bomb',
+      'Protect',
+      'Nasty Plot',
+    ]);
     expect(built.showdownData.ability).toBe('Cursed Body');
     expect(updateTeam).not.toHaveBeenCalled();
   });
 
-  it('loadSavedSet assigns a fresh id, distinct from the saved entry\'s own stored Pokemon', async () => {
+  it("loadSavedSet assigns a fresh id, distinct from the saved entry's own stored Pokemon", async () => {
     const savedPokemon = makePokemon({ species: 'Rillaboom' });
-    const entry: SavedPokemonEntry = { id: 'saved-1', label: 'Defensive Rilla', pokemon: savedPokemon, savedAt: Date.now(), updatedAt: Date.now() };
+    const entry: SavedPokemonEntry = {
+      id: 'saved-1',
+      label: 'Defensive Rilla',
+      pokemon: savedPokemon,
+      savedAt: Date.now(),
+      updatedAt: Date.now(),
+    };
     const team = makeTeam([makePokemon()]);
     const { result, updateTeam } = setup();
 

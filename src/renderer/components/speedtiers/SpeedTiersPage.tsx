@@ -81,9 +81,25 @@ import { toReadableName } from '../../utils/displayName';
 import { getFormeFamily } from '../../utils/calcFormes';
 import { getMegaAbility } from '../../config/megaAbilities';
 import { getCachedMegaSprite, useMegaSpritePrefetch } from '../../hooks/useMegaSprite';
-import { computeTeamSpeed, computeThreatSpeedProfile, defaultSpeedFieldContext, type SpeedFieldContext } from '../../utils/speedTiers';
-import { buildSpeedTierEntries, filterSpeedTierEntries, groupSpeedTiers, DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT, type ThreatTierInput } from '../../utils/speedTierList';
-import { applySpeedOverride, defaultSpeedOverride, patchPokemonWithOverride, type TeamSpeedOverride } from '../../utils/speedTierOverrides';
+import {
+  computeTeamSpeed,
+  computeThreatSpeedProfile,
+  defaultSpeedFieldContext,
+  type SpeedFieldContext,
+} from '../../utils/speedTiers';
+import {
+  buildSpeedTierEntries,
+  filterSpeedTierEntries,
+  groupSpeedTiers,
+  DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT,
+  type ThreatTierInput,
+} from '../../utils/speedTierList';
+import {
+  applySpeedOverride,
+  defaultSpeedOverride,
+  patchPokemonWithOverride,
+  type TeamSpeedOverride,
+} from '../../utils/speedTierOverrides';
 import { slotResistsThreat } from '../../utils/usageThreats';
 import SpeedTierFieldPanel, { ToggleButton } from './SpeedTierFieldPanel';
 import SpeedTierList from './SpeedTierList';
@@ -137,10 +153,16 @@ interface SpeedTiersPageProps {
   speciesRosterState: UseSpeciesRosterReturn;
 }
 
-export default function SpeedTiersPage({ teamsState, gameDataState, databaseState, spriteCacheState, speciesRosterState }: SpeedTiersPageProps) {
+export default function SpeedTiersPage({
+  teamsState,
+  gameDataState,
+  databaseState,
+  spriteCacheState,
+  speciesRosterState,
+}: SpeedTiersPageProps) {
   const { teams } = teamsState;
   const [selectedTeamId, setSelectedTeamId] = useState('');
-  const selectedTeam = teams.find(t => t.id === selectedTeamId);
+  const selectedTeam = teams.find((t) => t.id === selectedTeamId);
 
   const [field, setField] = useState<SpeedFieldContext>(defaultSpeedFieldContext());
   const [trickRoom, setTrickRoom] = useState(false);
@@ -149,8 +171,14 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
   const gen = useMemo(() => Generations.get(GEN_NUM), []);
   // Same construction useDamageCalc.ts uses for its own Calc-tab forme
   // toggles - see TeamPreviewCard.tsx's Mega/stat-forme rows.
-  const allSpecies = useMemo(() => [...gen.species].map(s => ({ name: s.name, baseSpecies: s.baseSpecies })), [gen]);
-  const natureOptions = useMemo(() => [...gen.natures].map(n => n.name).sort() as NatureName[], [gen]);
+  const allSpecies = useMemo(
+    () => [...gen.species].map((s) => ({ name: s.name, baseSpecies: s.baseSpecies })),
+    [gen],
+  );
+  const natureOptions = useMemo(
+    () => [...gen.natures].map((n) => n.name).sort() as NatureName[],
+    [gen],
+  );
 
   const { cache: gameDataCache } = gameDataState;
   const { getCachedEntry } = databaseState;
@@ -163,8 +191,11 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
   // render.
   const megaSpriteVersion = useMegaSpritePrefetch();
 
-  const updateSpeedOverride = (pokemon: ImportedPokemonInfo, updates: Partial<TeamSpeedOverride>) => {
-    setSpeedOverrides(prev => {
+  const updateSpeedOverride = (
+    pokemon: ImportedPokemonInfo,
+    updates: Partial<TeamSpeedOverride>,
+  ) => {
+    setSpeedOverrides((prev) => {
       const next = new Map(prev);
       const current = prev.get(pokemon.id) ?? defaultSpeedOverride(pokemon);
       next.set(pokemon.id, { ...current, ...updates });
@@ -180,10 +211,12 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
     if (!selectedTeam) return;
     const override = speedOverrides.get(pokemon.id);
     if (!override) return;
-    const updatedPokemon = selectedTeam.pokemon.map(p => (p.id === pokemon.id ? patchPokemonWithOverride(p, override) : p));
+    const updatedPokemon = selectedTeam.pokemon.map((p) =>
+      p.id === pokemon.id ? patchPokemonWithOverride(p, override) : p,
+    );
     const success = await teamsState.updateTeam(selectedTeam.id, { pokemon: updatedPokemon });
     if (success) {
-      setSpeedOverrides(prev => {
+      setSpeedOverrides((prev) => {
         const next = new Map(prev);
         next.delete(pokemon.id);
         return next;
@@ -195,7 +228,7 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
   // the real team in one updateTeam call, then clears all of them.
   const saveAllOverrides = async () => {
     if (!selectedTeam || speedOverrides.size === 0) return;
-    const updatedPokemon = selectedTeam.pokemon.map(p => {
+    const updatedPokemon = selectedTeam.pokemon.map((p) => {
       const override = speedOverrides.get(p.id);
       return override ? patchPokemonWithOverride(p, override) : p;
     });
@@ -211,7 +244,8 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
   const usageEntryBySpecies = useMemo(() => {
     const map = new Map<string, ChampionsUsageEntry>();
     if (gameDataCache) {
-      for (const entry of Object.values(gameDataCache.usage)) map.set(entry.species.toLowerCase(), entry);
+      for (const entry of Object.values(gameDataCache.usage))
+        map.set(entry.species.toLowerCase(), entry);
     }
     return map;
   }, [gameDataCache]);
@@ -223,15 +257,18 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
   const legalRoster = useMemo(() => {
     if (!selectedTeam) return [];
     const rulesetId = toRegulationId(selectedTeam.format);
-    return speciesRosterState.roster.filter(entry => validateSpeciesLegality(entry.name, rulesetId));
+    return speciesRosterState.roster.filter((entry) =>
+      validateSpeciesLegality(entry.name, rulesetId),
+    );
   }, [selectedTeam, speciesRosterState.roster]);
 
   const teamSpeedEntries = useMemo(
-    () => (selectedTeam?.pokemon ?? []).flatMap(p => {
-      const entry = computeTeamSpeed(gen, applySpeedOverride(p, speedOverrides.get(p.id)), field);
-      return entry ? [entry] : [];
-    }),
-    [selectedTeam, gen, field, speedOverrides]
+    () =>
+      (selectedTeam?.pokemon ?? []).flatMap((p) => {
+        const entry = computeTeamSpeed(gen, applySpeedOverride(p, speedOverrides.get(p.id)), field);
+        return entry ? [entry] : [];
+      }),
+    [selectedTeam, gen, field, speedOverrides],
   );
 
   // One candidate per legal roster species, plus one more per Champions-legal
@@ -260,8 +297,16 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
       // this species' own default ability (dbEntry.abilities is a lowercase
       // PokeAPI slug list - see gameData.ts's PokeAPICacheEntry - so it needs
       // the same slug->display conversion as PokemonCard/AbilityPickerPanel).
-      const ability = usage?.abilities[0]?.name || (dbEntry.abilities[0] ? toReadableName(dbEntry.abilities[0]) : '');
-      candidates.push({ species: rosterEntry.name, ability, usage, spriteUrl: dbEntry.spriteUrl, types: dbEntry.types });
+      const ability =
+        usage?.abilities[0]?.name ||
+        (dbEntry.abilities[0] ? toReadableName(dbEntry.abilities[0]) : '');
+      candidates.push({
+        species: rosterEntry.name,
+        ability,
+        usage,
+        spriteUrl: dbEntry.spriteUrl,
+        types: dbEntry.types,
+      });
 
       for (const megaName of getFormeFamily(allSpecies, rosterEntry.name).megaFormes) {
         if (addedMegaFormes.has(megaName)) continue;
@@ -295,25 +340,38 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
   // "Threats Only" checkbox's own defending slots - same construction
   // TypeMatchupPage.tsx already builds for its own usage-threat check.
   const defensiveSlots = useMemo(
-    () => (selectedTeam?.pokemon ?? []).map(p => ({ types: p.types, ability: p.showdownData.ability })),
-    [selectedTeam]
+    () =>
+      (selectedTeam?.pokemon ?? []).map((p) => ({
+        types: p.types,
+        ability: p.showdownData.ability,
+      })),
+    [selectedTeam],
   );
 
   const threatTierInputs = useMemo<ThreatTierInput[]>(() => {
     const cutoff = rosterScope === 'top60' ? 60 : rosterScope === 'top120' ? 120 : null;
     return rosterCandidates.flatMap((candidate): ThreatTierInput[] => {
-      if (cutoff !== null && (!candidate.usage || candidate.usage.columnPosition > cutoff)) return [];
+      if (cutoff !== null && (!candidate.usage || candidate.usage.columnPosition > cutoff))
+        return [];
       // "Threats Only": drop any candidate at least one team slot already
       // resists/is immune to - see this file's header.
-      if (threatsOnly && defensiveSlots.some(d => slotResistsThreat(candidate.types, d))) return [];
-      const profile = computeThreatSpeedProfile(gen, { species: candidate.species, ability: candidate.ability, usage: candidate.usage }, field);
+      if (threatsOnly && defensiveSlots.some((d) => slotResistsThreat(candidate.types, d)))
+        return [];
+      const profile = computeThreatSpeedProfile(
+        gen,
+        { species: candidate.species, ability: candidate.ability, usage: candidate.usage },
+        field,
+      );
       if (!profile) return [];
       return [{ spriteUrl: candidate.spriteUrl, profile, types: candidate.types }];
     });
   }, [rosterCandidates, gen, field, rosterScope, threatsOnly, defensiveSlots]);
 
   const tierGroups = useMemo(() => {
-    const entries = filterSpeedTierEntries(buildSpeedTierEntries(teamSpeedEntries, threatTierInputs, spreadUsageCutoff, boundsOnly), speciesFilter);
+    const entries = filterSpeedTierEntries(
+      buildSpeedTierEntries(teamSpeedEntries, threatTierInputs, spreadUsageCutoff, boundsOnly),
+      speciesFilter,
+    );
     return groupSpeedTiers(entries, trickRoom);
   }, [teamSpeedEntries, threatTierInputs, trickRoom, speciesFilter, spreadUsageCutoff, boundsOnly]);
 
@@ -322,9 +380,9 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
       <div>
         <h1 className="text-xl font-bold text-zinc-100">Speed Tiers</h1>
         <p className="text-sm text-zinc-400 mt-1">
-          See a team's real, field-modified Speed against every Pokemon legal in its regulation - not just theoretical
-          threats, since a specific team member often needs to hit a specific matchup's speed, not just the team's
-          overall weak points.
+          See a team's real, field-modified Speed against every Pokemon legal in its regulation -
+          not just theoretical threats, since a specific team member often needs to hit a specific
+          matchup's speed, not just the team's overall weak points.
         </p>
       </div>
 
@@ -332,11 +390,11 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
         <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Team</label>
         <select
           value={selectedTeamId}
-          onChange={e => setSelectedTeamId(e.target.value)}
+          onChange={(e) => setSelectedTeamId(e.target.value)}
           className="px-3 py-2 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
         >
           <option value="">Select a team...</option>
-          {teams.map(t => (
+          {teams.map((t) => (
             <option key={t.id} value={t.id}>
               {t.name}
             </option>
@@ -346,7 +404,9 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
 
       {!selectedTeam ? (
         <p className="text-sm text-zinc-400">
-          {teams.length === 0 ? 'Import or create a team first to see its speed tiers.' : 'Pick a team above to see its speed tiers.'}
+          {teams.length === 0
+            ? 'Import or create a team first to see its speed tiers.'
+            : 'Pick a team above to see its speed tiers.'}
         </p>
       ) : (
         <>
@@ -360,23 +420,36 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
             onSaveAllOverrides={saveAllOverrides}
             spriteCacheState={spriteCacheState}
           />
-          <SpeedTierFieldPanel field={field} onChangeField={updates => setField(prev => ({ ...prev, ...updates }))} trickRoom={trickRoom} onChangeTrickRoom={setTrickRoom} />
+          <SpeedTierFieldPanel
+            field={field}
+            onChangeField={(updates) => setField((prev) => ({ ...prev, ...updates }))}
+            trickRoom={trickRoom}
+            onChangeTrickRoom={setTrickRoom}
+          />
           <div className="flex flex-wrap items-end gap-3">
             <div className="flex flex-col gap-1.5 max-w-xs">
-              <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Filter by species</label>
+              <label className="text-[10px] text-zinc-400 uppercase tracking-wide">
+                Filter by species
+              </label>
               <input
                 type="text"
                 value={speciesFilter}
-                onChange={e => setSpeciesFilter(e.target.value)}
+                onChange={(e) => setSpeciesFilter(e.target.value)}
                 placeholder="Pokémon name..."
                 className="px-3 py-2 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold placeholder:text-zinc-500"
               />
             </div>
             <div className="flex flex-col gap-1.5 min-w-[220px]">
-              <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Roster (by ladder usage)</label>
+              <label className="text-[10px] text-zinc-400 uppercase tracking-wide">
+                Roster (by ladder usage)
+              </label>
               <div className="flex gap-1">
-                {ROSTER_SCOPE_OPTIONS.map(option => (
-                  <ToggleButton key={option.value} active={rosterScope === option.value} onClick={() => setRosterScope(option.value)}>
+                {ROSTER_SCOPE_OPTIONS.map((option) => (
+                  <ToggleButton
+                    key={option.value}
+                    active={rosterScope === option.value}
+                    onClick={() => setRosterScope(option.value)}
+                  >
                     {option.label}
                   </ToggleButton>
                 ))}
@@ -386,7 +459,7 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
               <input
                 type="checkbox"
                 checked={threatsOnly}
-                onChange={e => setThreatsOnly(e.target.checked)}
+                onChange={(e) => setThreatsOnly(e.target.checked)}
                 className="cursor-pointer accent-accent-gold"
               />
               Threats Only
@@ -395,26 +468,38 @@ export default function SpeedTiersPage({ teamsState, gameDataState, databaseStat
               <input
                 type="checkbox"
                 checked={boundsOnly}
-                onChange={e => setBoundsOnly(e.target.checked)}
+                onChange={(e) => setBoundsOnly(e.target.checked)}
                 className="cursor-pointer accent-accent-gold"
               />
               Bounds Only
             </label>
             <div className={`flex flex-col gap-1.5 ${boundsOnly ? 'opacity-40' : ''}`}>
-              <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Min Spread Usage</label>
+              <label className="text-[10px] text-zinc-400 uppercase tracking-wide">
+                Min Spread Usage
+              </label>
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  onClick={() => setSpreadUsageCutoff(v => Math.max(SPREAD_USAGE_CUTOFF_MIN, v - SPREAD_USAGE_CUTOFF_STEP))}
+                  onClick={() =>
+                    setSpreadUsageCutoff((v) =>
+                      Math.max(SPREAD_USAGE_CUTOFF_MIN, v - SPREAD_USAGE_CUTOFF_STEP),
+                    )
+                  }
                   disabled={boundsOnly || spreadUsageCutoff <= SPREAD_USAGE_CUTOFF_MIN}
                   className="w-7 h-7 flex items-center justify-center text-sm font-bold bg-zinc-800 border border-zinc-600 rounded text-white hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 >
                   −
                 </button>
-                <span className="min-w-[3.5ch] text-center text-sm text-zinc-200">{spreadUsageCutoff}%</span>
+                <span className="min-w-[3.5ch] text-center text-sm text-zinc-200">
+                  {spreadUsageCutoff}%
+                </span>
                 <button
                   type="button"
-                  onClick={() => setSpreadUsageCutoff(v => Math.min(SPREAD_USAGE_CUTOFF_MAX, v + SPREAD_USAGE_CUTOFF_STEP))}
+                  onClick={() =>
+                    setSpreadUsageCutoff((v) =>
+                      Math.min(SPREAD_USAGE_CUTOFF_MAX, v + SPREAD_USAGE_CUTOFF_STEP),
+                    )
+                  }
                   disabled={boundsOnly || spreadUsageCutoff >= SPREAD_USAGE_CUTOFF_MAX}
                   className="w-7 h-7 flex items-center justify-center text-sm font-bold bg-zinc-800 border border-zinc-600 rounded text-white hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 >

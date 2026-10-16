@@ -1,9 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import type { TeamSpeedEntry, ThreatSpeedProfile } from './speedTiers';
-import { buildSpeedTierEntries, filterSpeedTierEntries, groupSpeedTiers, DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT, type ThreatTierInput } from './speedTierList';
+import {
+  buildSpeedTierEntries,
+  filterSpeedTierEntries,
+  groupSpeedTiers,
+  DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT,
+  type ThreatTierInput,
+} from './speedTierList';
 
 function teamEntry(overrides: Partial<TeamSpeedEntry> = {}): TeamSpeedEntry {
-  return { pokemonId: 'p1', species: 'Incineroar', spriteUrl: 'incineroar.png', speed: 100, ...overrides };
+  return {
+    pokemonId: 'p1',
+    species: 'Incineroar',
+    spriteUrl: 'incineroar.png',
+    speed: 100,
+    ...overrides,
+  };
 }
 
 function threatInput(overrides: Partial<ThreatSpeedProfile> = {}): ThreatTierInput {
@@ -23,18 +35,44 @@ describe('buildSpeedTierEntries', () => {
   it('emits one row per team member', () => {
     const entries = buildSpeedTierEntries([teamEntry()], []);
     expect(entries).toEqual([
-      { key: 'team-p1', kind: 'team', species: 'Incineroar', spriteUrl: 'incineroar.png', speed: 100 },
+      {
+        key: 'team-p1',
+        kind: 'team',
+        species: 'Incineroar',
+        spriteUrl: 'incineroar.png',
+        speed: 100,
+      },
     ]);
   });
 
   it('emits one row per threat spread above the usage cutoff, plus 3 min/neutral/max bound rows', () => {
     const entries = buildSpeedTierEntries([], [threatInput()]);
     expect(entries).toHaveLength(5); // 2 spreads (both above cutoff) + 3 bounds
-    expect(entries[0]).toMatchObject({ key: 'threat-Chien-Pao-spread-0', speed: 200, percentage: 60 });
-    expect(entries[1]).toMatchObject({ key: 'threat-Chien-Pao-spread-1', speed: 180, percentage: 30 });
-    expect(entries[2]).toMatchObject({ key: 'threat-Chien-Pao-bound-min', speed: 90, boundLabel: 'Min' });
-    expect(entries[3]).toMatchObject({ key: 'threat-Chien-Pao-bound-neutral', speed: 150, boundLabel: 'Neutral' });
-    expect(entries[4]).toMatchObject({ key: 'threat-Chien-Pao-bound-max', speed: 300, boundLabel: 'Max' });
+    expect(entries[0]).toMatchObject({
+      key: 'threat-Chien-Pao-spread-0',
+      speed: 200,
+      percentage: 60,
+    });
+    expect(entries[1]).toMatchObject({
+      key: 'threat-Chien-Pao-spread-1',
+      speed: 180,
+      percentage: 30,
+    });
+    expect(entries[2]).toMatchObject({
+      key: 'threat-Chien-Pao-bound-min',
+      speed: 90,
+      boundLabel: 'Min',
+    });
+    expect(entries[3]).toMatchObject({
+      key: 'threat-Chien-Pao-bound-neutral',
+      speed: 150,
+      boundLabel: 'Neutral',
+    });
+    expect(entries[4]).toMatchObject({
+      key: 'threat-Chien-Pao-bound-max',
+      speed: 300,
+      boundLabel: 'Max',
+    });
   });
 
   it('drops a spread at or below the usage cutoff but keeps the bound rows', () => {
@@ -45,21 +83,26 @@ describe('buildSpeedTierEntries', () => {
       ],
     });
     const entries = buildSpeedTierEntries([], [belowCutoff]);
-    expect(entries.filter(e => e.percentage !== undefined)).toHaveLength(1);
-    expect(entries.filter(e => e.boundLabel !== undefined)).toHaveLength(3);
+    expect(entries.filter((e) => e.percentage !== undefined)).toHaveLength(1);
+    expect(entries.filter((e) => e.boundLabel !== undefined)).toHaveLength(3);
   });
 
   it('honors a caller-supplied usage cutoff over the default', () => {
     const entries = buildSpeedTierEntries([], [threatInput()], 45);
     // Only the 60% spread clears a 45% cutoff; the 30% one now falls below it.
-    expect(entries.filter(e => e.percentage !== undefined)).toHaveLength(1);
-    expect(entries.filter(e => e.boundLabel !== undefined)).toHaveLength(3);
+    expect(entries.filter((e) => e.percentage !== undefined)).toHaveLength(1);
+    expect(entries.filter((e) => e.boundLabel !== undefined)).toHaveLength(3);
   });
 
   it('drops all spread rows but keeps bound rows when boundsOnly is set', () => {
-    const entries = buildSpeedTierEntries([], [threatInput()], DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT, true);
-    expect(entries.filter(e => e.percentage !== undefined)).toHaveLength(0);
-    expect(entries.filter(e => e.boundLabel !== undefined)).toHaveLength(3);
+    const entries = buildSpeedTierEntries(
+      [],
+      [threatInput()],
+      DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT,
+      true,
+    );
+    expect(entries.filter((e) => e.percentage !== undefined)).toHaveLength(0);
+    expect(entries.filter((e) => e.boundLabel !== undefined)).toHaveLength(3);
     expect(entries).toHaveLength(3);
   });
 
@@ -78,7 +121,7 @@ describe('filterSpeedTierEntries', () => {
 
   it('keeps only entries whose species matches, case-insensitively', () => {
     const filtered = filterSpeedTierEntries(entries, 'chien');
-    expect(filtered.every(e => e.species === 'Chien-Pao')).toBe(true);
+    expect(filtered.every((e) => e.species === 'Chien-Pao')).toBe(true);
     expect(filtered.length).toBeGreaterThan(0);
     expect(filtered.length).toBeLessThan(entries.length);
   });
@@ -92,15 +135,15 @@ describe('groupSpeedTiers', () => {
   it('sorts descending by default and groups equal-speed entries together', () => {
     const entries = buildSpeedTierEntries([teamEntry({ speed: 180 })], [threatInput()]);
     const groups = groupSpeedTiers(entries, false);
-    expect(groups.map(g => g.speed)).toEqual([300, 200, 180, 150, 90]);
-    const tieGroup = groups.find(g => g.speed === 180);
+    expect(groups.map((g) => g.speed)).toEqual([300, 200, 180, 150, 90]);
+    const tieGroup = groups.find((g) => g.speed === 180);
     expect(tieGroup?.entries).toHaveLength(2); // team's 180 ties the threat's second spread
   });
 
   it('sorts ascending under Trick Room', () => {
     const entries = buildSpeedTierEntries([teamEntry({ speed: 50 })], [threatInput()]);
     const groups = groupSpeedTiers(entries, true);
-    expect(groups.map(g => g.speed)).toEqual([50, 90, 150, 180, 200, 300]);
+    expect(groups.map((g) => g.speed)).toEqual([50, 90, 150, 180, 200, 300]);
   });
 
   it('returns no groups for an empty entry list', () => {

@@ -24,11 +24,19 @@ interface AbilityPickerPanelProps {
   onClose: () => void;
 }
 
-export default function AbilityPickerPanel({ abilities, usagePercentByName, maxHeight, onSelect, onClose }: AbilityPickerPanelProps) {
+export default function AbilityPickerPanel({
+  abilities,
+  usagePercentByName,
+  maxHeight,
+  onSelect,
+  onClose,
+}: AbilityPickerPanelProps) {
   const [search, setSearch] = useState('');
   const ref = useDismissable<HTMLDivElement>(onClose);
 
-  const filtered = abilities.filter(ability => toReadableName(ability.name).toLowerCase().includes(search.toLowerCase()));
+  const filtered = abilities.filter((ability) =>
+    toReadableName(ability.name).toLowerCase().includes(search.toLowerCase()),
+  );
 
   return (
     <div
@@ -57,9 +65,13 @@ export default function AbilityPickerPanel({ abilities, usagePercentByName, maxH
                 className="px-2 py-1 rounded hover:bg-zinc-700 cursor-pointer transition-colors"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-white text-sm font-medium truncate">{toReadableName(ability.name)}</span>
+                  <span className="text-white text-sm font-medium truncate">
+                    {toReadableName(ability.name)}
+                  </span>
                   {percent != null && (
-                    <span className="text-accent-gold text-xs font-bold shrink-0">{percent.toFixed(1)}%</span>
+                    <span className="text-accent-gold text-xs font-bold shrink-0">
+                      {percent.toFixed(1)}%
+                    </span>
                   )}
                 </div>
                 <div className="text-zinc-400 text-xs truncate">{ability.description}</div>

@@ -19,12 +19,13 @@ export default function PokemonUsagePanel({ stats, resolveSprite }: PokemonUsage
         <p className="text-sm text-zinc-500">No completed battles yet.</p>
       ) : (
         <div className="flex flex-col gap-2">
-          {stats.map(stat => (
+          {stats.map((stat) => (
             <div key={stat.species} className="flex items-center gap-2">
               <img src={resolveSprite(stat.spriteUrl)} alt={stat.species} className="w-8 h-8" />
               <span className="flex-1 min-w-0 text-sm text-zinc-200 truncate">{stat.species}</span>
               <span className="text-xs text-zinc-400">
-                {stat.count} battle{stat.count === 1 ? '' : 's'} - {Math.round(stat.winRate * 100)}% win
+                {stat.count} battle{stat.count === 1 ? '' : 's'} - {Math.round(stat.winRate * 100)}%
+                win
               </span>
             </div>
           ))}

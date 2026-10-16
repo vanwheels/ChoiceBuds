@@ -8,7 +8,9 @@
 
 import { useEffect, useRef } from 'react';
 
-export function useDismissable<T extends HTMLElement>(onDismiss: () => void): React.RefObject<T | null> {
+export function useDismissable<T extends HTMLElement>(
+  onDismiss: () => void,
+): React.RefObject<T | null> {
   const ref = useRef<T>(null);
 
   useEffect(() => {

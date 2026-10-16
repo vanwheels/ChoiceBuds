@@ -18,7 +18,10 @@ import { useState, useEffect } from 'react';
 import { fetchAllMoveNames } from '../services/pokeapiService';
 
 function formatMoveName(slug: string): string {
-  return slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  return slug
+    .split('-')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 }
 
 let cache: string[] | null = null;
@@ -28,7 +31,7 @@ async function loadMoveNames(): Promise<string[]> {
   if (cache) return cache;
   if (!inflight) {
     inflight = fetchAllMoveNames()
-      .then(names => {
+      .then((names) => {
         cache = names.map(formatMoveName);
         return cache;
       })
@@ -43,8 +46,12 @@ export function useMoveNameList(): string[] {
   useEffect(() => {
     if (cache) return;
     let cancelled = false;
-    loadMoveNames().then(result => { if (!cancelled) setNames(result); });
-    return () => { cancelled = true; };
+    loadMoveNames().then((result) => {
+      if (!cancelled) setNames(result);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return names;

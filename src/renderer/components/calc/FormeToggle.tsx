@@ -18,13 +18,15 @@ interface FormeToggleProps {
 export default function FormeToggle({ group, current, onSelect }: FormeToggleProps) {
   return (
     <div className="flex gap-1 flex-wrap">
-      {group.map(name => (
+      {group.map((name) => (
         <button
           key={name}
           type="button"
           onClick={() => onSelect(name)}
           className={`px-2 py-1 text-xs font-bold rounded transition-colors cursor-pointer ${
-            current === name ? 'bg-accent-gold text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+            current === name
+              ? 'bg-accent-gold text-zinc-900'
+              : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
           }`}
         >
           {formeDisplayLabel(group, name)}

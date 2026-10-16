@@ -31,10 +31,9 @@ export default function AbilityCapsule({
   onToggleMenu,
 }: AbilityCapsuleProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const longPress = useLongPress(
-    () => { if (ref.current) onHoverEnter(ref.current); },
-    onHoverLeave
-  );
+  const longPress = useLongPress(() => {
+    if (ref.current) onHoverEnter(ref.current);
+  }, onHoverLeave);
 
   return (
     <div

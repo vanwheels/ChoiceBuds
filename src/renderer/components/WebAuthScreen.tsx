@@ -39,9 +39,10 @@ export default function WebAuthScreen({ syncState, onClose }: WebAuthScreenProps
     }
 
     setIsSubmitting(true);
-    const result = mode === 'signup'
-      ? await signUp(username, password, email.trim() || undefined)
-      : await logIn(username, password);
+    const result =
+      mode === 'signup'
+        ? await signUp(username, password, email.trim() || undefined)
+        : await logIn(username, password);
     setIsSubmitting(false);
 
     if (!result.ok) {
@@ -58,7 +59,7 @@ export default function WebAuthScreen({ syncState, onClose }: WebAuthScreenProps
     >
       <div
         className="w-full max-w-sm rounded-lg border border-zinc-700 bg-zinc-800 p-6"
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between">
           <h1 className="text-lg font-bold text-zinc-100">Sign in to sync</h1>
@@ -79,18 +80,28 @@ export default function WebAuthScreen({ syncState, onClose }: WebAuthScreenProps
         <div className="mt-4 flex gap-1 rounded-lg bg-zinc-900 p-1">
           <button
             type="button"
-            onClick={() => { setMode('signup'); setError(null); }}
+            onClick={() => {
+              setMode('signup');
+              setError(null);
+            }}
             className={`flex-1 rounded px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
-              mode === 'signup' ? 'bg-accent-gold text-zinc-900' : 'text-zinc-400 hover:text-zinc-200'
+              mode === 'signup'
+                ? 'bg-accent-gold text-zinc-900'
+                : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
             Sign up
           </button>
           <button
             type="button"
-            onClick={() => { setMode('login'); setError(null); }}
+            onClick={() => {
+              setMode('login');
+              setError(null);
+            }}
             className={`flex-1 rounded px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
-              mode === 'login' ? 'bg-accent-gold text-zinc-900' : 'text-zinc-400 hover:text-zinc-200'
+              mode === 'login'
+                ? 'bg-accent-gold text-zinc-900'
+                : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
             Log in
@@ -100,7 +111,7 @@ export default function WebAuthScreen({ syncState, onClose }: WebAuthScreenProps
         <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-2">
           <input
             value={username}
-            onChange={e => setUsername(e.target.value)}
+            onChange={(e) => setUsername(e.target.value)}
             placeholder="username"
             autoComplete="username"
             className="px-3 py-1.5 text-sm bg-zinc-900 border border-zinc-600 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
@@ -108,7 +119,7 @@ export default function WebAuthScreen({ syncState, onClose }: WebAuthScreenProps
           <input
             type="password"
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             placeholder={mode === 'signup' ? 'password (min 8 characters)' : 'password'}
             autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
             className="px-3 py-1.5 text-sm bg-zinc-900 border border-zinc-600 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
@@ -118,14 +129,14 @@ export default function WebAuthScreen({ syncState, onClose }: WebAuthScreenProps
               <input
                 type="password"
                 value={passwordConfirm}
-                onChange={e => setPasswordConfirm(e.target.value)}
+                onChange={(e) => setPasswordConfirm(e.target.value)}
                 placeholder="confirm password"
                 autoComplete="new-password"
                 className="px-3 py-1.5 text-sm bg-zinc-900 border border-zinc-600 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
               />
               <input
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="email (optional, for a future password reset)"
                 autoComplete="email"
                 className="px-3 py-1.5 text-sm bg-zinc-900 border border-zinc-600 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
@@ -140,7 +151,13 @@ export default function WebAuthScreen({ syncState, onClose }: WebAuthScreenProps
             disabled={isSubmitting || !username.trim() || !password}
             className="mt-1 px-3 py-1.5 text-xs font-bold rounded bg-accent-gold text-zinc-900 hover:bg-accent-gold-deep disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
-            {isSubmitting ? (mode === 'signup' ? 'Signing up...' : 'Logging in...') : (mode === 'signup' ? 'Sign up' : 'Log in')}
+            {isSubmitting
+              ? mode === 'signup'
+                ? 'Signing up...'
+                : 'Logging in...'
+              : mode === 'signup'
+                ? 'Sign up'
+                : 'Log in'}
           </button>
         </form>
       </div>

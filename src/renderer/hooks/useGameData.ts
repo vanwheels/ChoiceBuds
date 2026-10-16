@@ -5,7 +5,15 @@
  */
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import type { GameDataCache, MoveData, ItemData, AbilityData, SpeciesLearnsetEntry, ChampionsUsageEntry, SpeciesRosterEntry } from '../types/pokemon';
+import type {
+  GameDataCache,
+  MoveData,
+  ItemData,
+  AbilityData,
+  SpeciesLearnsetEntry,
+  ChampionsUsageEntry,
+  SpeciesRosterEntry,
+} from '../types/pokemon';
 import { VGC_ITEMS } from '../config/vgcData';
 import { normalizeSpeciesForAPI } from '../services/pokeapi';
 import {
@@ -17,14 +25,23 @@ import {
 } from '../services/pokeapiService';
 import { fetchChampionsUsage, normalizeUsageCacheKey } from '../services/championsBattleData';
 import { normalizeSlug } from '../utils/pokemonRules';
-import { readCacheEntry, runCachedFetch, withCacheEntry, createEmptyGameDataCache, migrateGameDataCache } from '../utils/cacheManager';
+import {
+  readCacheEntry,
+  runCachedFetch,
+  withCacheEntry,
+  createEmptyGameDataCache,
+  migrateGameDataCache,
+} from '../utils/cacheManager';
 import { useDebouncedWrite } from './useDebouncedWrite';
 import { getStorageAdapter } from '../services/storage';
 import { NEVER_EXPIRES } from '../utils/cacheExpiry';
 import { applyChampionsMoveOverride } from '../config/championsMoveOverrides';
 import { applyMoveFlags } from '../config/moveFlags';
 import { applyChampionsAbilityOverride } from '../config/championsAbilityOverrides';
-import { applyChampionsMovepoolChanges, applyChampionsPatchRemovals } from '../config/championsMovepoolChanges';
+import {
+  applyChampionsMovepoolChanges,
+  applyChampionsPatchRemovals,
+} from '../config/championsMovepoolChanges';
 
 type Gender = 'M' | 'F' | 'N' | '';
 
@@ -52,7 +69,10 @@ export interface UseGameDataReturn {
   // real ability pool from this pipeline instead of @smogon/calc's own
   // bundled (and sometimes stale/incomplete) species data.
   getCachedSpeciesLearnset: (species: string, gender?: Gender) => SpeciesLearnsetEntry | null;
-  getEnrichedSpeciesOptions: (species: string, gender?: Gender) => Promise<{ moves: MoveData[]; abilities: AbilityData[] }>;
+  getEnrichedSpeciesOptions: (
+    species: string,
+    gender?: Gender,
+  ) => Promise<{ moves: MoveData[]; abilities: AbilityData[] }>;
 
   // Pokemon Champions ranked-usage suggestions (championsbattledata.com) -
   // null means the species has no Champions usage page, not an error
@@ -111,7 +131,8 @@ export function useGameData(): UseGameDataReturn {
   // meaning move/item/ability/learnset data could never survive a restart.
   useEffect(() => {
     let cancelled = false;
-    getStorageAdapter().read<GameDataCache>('game-data-cache')
+    getStorageAdapter()
+      .read<GameDataCache>('game-data-cache')
       .then((persisted: GameDataCache | null) => {
         if (cancelled) return;
         setDiskSnapshot(persisted ? JSON.stringify(persisted) : undefined);
@@ -130,7 +151,9 @@ export function useGameData(): UseGameDataReturn {
         setCache(createEmptyGameDataCache());
         setIsInitialized(true);
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Debounced write-through to disk, once initialized - see
@@ -139,7 +162,14 @@ export function useGameData(): UseGameDataReturn {
   // useUsageSync.ts's TTL-expiry wave, used to serialize into one full
   // multi-MB write per mutation) - and for why diskSnapshot is passed
   // through, to skip the redundant rewrite of a cache loaded unchanged.
-  useDebouncedWrite(cache, isInitialized, (value) => getStorageAdapter().write('game-data-cache', value), 'Error persisting game data cache:', undefined, diskSnapshot);
+  useDebouncedWrite(
+    cache,
+    isInitialized,
+    (value) => getStorageAdapter().write('game-data-cache', value),
+    'Error persisting game data cache:',
+    undefined,
+    diskSnapshot,
+  );
 
   // Champions overrides are applied at this read boundary (not baked into
   // what's fetched/cached) so corrections are self-healing against data
@@ -198,68 +228,117 @@ export function useGameData(): UseGameDataReturn {
       : { ...learnset, moves: applyChampionsMovepoolChanges(learnset.species, patched) };
   };
 
-  const getCachedSpeciesLearnset = useCallback((species: string, gender?: Gender): SpeciesLearnsetEntry | null => {
-    const learnset = readCacheEntry(cacheRef.current?.learnsets, normalizeSpeciesForAPI(species, gender));
-    // hasChampionsMoveData was added 2026-07-19 - an entry cached before that
-    // (still valid for 30 days) predates the field despite the type now
-    // claiming it's required. Same self-healing treatment as getCachedMove's
-    // target/meta check above: treat it as a cache miss so users get the
-    // corrected trust-PokeAPI-first behavior on next fetch rather than
-    // silently defaulting to "apply the hand table" for up to 30 days.
-    //
-    // `=== false` gets the same forced-miss treatment (added 2026-09-01,
-    // Prune Dead championsMovepoolChanges.ts Entries Leg 1): a NEVER_EXPIRES
-    // entry cached back when PokeAPI hadn't yet back-filled a species'
-    // "champions"-tagged moves would otherwise stay false forever with no
-    // TTL to force a re-check. Champions Data Leg 4a/6's audits confirmed
-    // every current-roster species now has real PokeAPI champions move data,
-    // so the one live re-fetch this forces self-heals the entry to true.
-    if (!learnset || learnset.hasChampionsMoveData !== true) return null;
-    return applyMovepoolChangesIfNeeded(learnset);
-  }, []);
+  const getCachedSpeciesLearnset = useCallback(
+    (species: string, gender?: Gender): SpeciesLearnsetEntry | null => {
+      const learnset = readCacheEntry(
+        cacheRef.current?.learnsets,
+        normalizeSpeciesForAPI(species, gender),
+      );
+      // hasChampionsMoveData was added 2026-07-19 - an entry cached before that
+      // (still valid for 30 days) predates the field despite the type now
+      // claiming it's required. Same self-healing treatment as getCachedMove's
+      // target/meta check above: treat it as a cache miss so users get the
+      // corrected trust-PokeAPI-first behavior on next fetch rather than
+      // silently defaulting to "apply the hand table" for up to 30 days.
+      //
+      // `=== false` gets the same forced-miss treatment (added 2026-09-01,
+      // Prune Dead championsMovepoolChanges.ts Entries Leg 1): a NEVER_EXPIRES
+      // entry cached back when PokeAPI hadn't yet back-filled a species'
+      // "champions"-tagged moves would otherwise stay false forever with no
+      // TTL to force a re-check. Champions Data Leg 4a/6's audits confirmed
+      // every current-roster species now has real PokeAPI champions move data,
+      // so the one live re-fetch this forces self-heals the entry to true.
+      if (!learnset || learnset.hasChampionsMoveData !== true) return null;
+      return applyMovepoolChangesIfNeeded(learnset);
+    },
+    [],
+  );
 
-  const getMoveData = useCallback(async (moveName: string): Promise<MoveData | null> => {
-    const cached = getCachedMove(moveName);
-    if (cached) return cached;
-    const normalizedName = normalizeNameForAPI(moveName);
-    const fresh = await runCachedFetch(setCache, setIsLoading, setError, 'moves', normalizedName,
-      () => fetchMoveData(normalizedName), `Failed to fetch move "${moveName}"`);
-    return fresh ? applyMoveFlags(applyChampionsMoveOverride(fresh)) : null;
-  }, [getCachedMove]);
+  const getMoveData = useCallback(
+    async (moveName: string): Promise<MoveData | null> => {
+      const cached = getCachedMove(moveName);
+      if (cached) return cached;
+      const normalizedName = normalizeNameForAPI(moveName);
+      const fresh = await runCachedFetch(
+        setCache,
+        setIsLoading,
+        setError,
+        'moves',
+        normalizedName,
+        () => fetchMoveData(normalizedName),
+        `Failed to fetch move "${moveName}"`,
+      );
+      return fresh ? applyMoveFlags(applyChampionsMoveOverride(fresh)) : null;
+    },
+    [getCachedMove],
+  );
 
-  const getItemData = useCallback(async (itemName: string): Promise<ItemData | null> => {
-    const cached = getCachedItem(itemName);
-    if (cached) return cached;
-    const normalizedName = normalizeNameForAPI(itemName);
-    return runCachedFetch(setCache, setIsLoading, setError, 'items', normalizedName,
-      () => fetchItemData(normalizedName), `Failed to fetch item "${itemName}"`);
-  }, [getCachedItem]);
+  const getItemData = useCallback(
+    async (itemName: string): Promise<ItemData | null> => {
+      const cached = getCachedItem(itemName);
+      if (cached) return cached;
+      const normalizedName = normalizeNameForAPI(itemName);
+      return runCachedFetch(
+        setCache,
+        setIsLoading,
+        setError,
+        'items',
+        normalizedName,
+        () => fetchItemData(normalizedName),
+        `Failed to fetch item "${itemName}"`,
+      );
+    },
+    [getCachedItem],
+  );
 
-  const getAbilityData = useCallback(async (abilityName: string): Promise<AbilityData | null> => {
-    const cached = getCachedAbility(abilityName);
-    if (cached) return cached;
-    const normalizedName = normalizeNameForAPI(abilityName);
-    const fresh = await runCachedFetch(setCache, setIsLoading, setError, 'abilities', normalizedName,
-      () => fetchAbilityData(normalizedName), `Failed to fetch ability "${abilityName}"`);
-    return fresh ? applyChampionsAbilityOverride(fresh) : null;
-  }, [getCachedAbility]);
+  const getAbilityData = useCallback(
+    async (abilityName: string): Promise<AbilityData | null> => {
+      const cached = getCachedAbility(abilityName);
+      if (cached) return cached;
+      const normalizedName = normalizeNameForAPI(abilityName);
+      const fresh = await runCachedFetch(
+        setCache,
+        setIsLoading,
+        setError,
+        'abilities',
+        normalizedName,
+        () => fetchAbilityData(normalizedName),
+        `Failed to fetch ability "${abilityName}"`,
+      );
+      return fresh ? applyChampionsAbilityOverride(fresh) : null;
+    },
+    [getCachedAbility],
+  );
 
   // Cache-only (never triggers a live fetch) - moved above
   // getEnrichedSpeciesOptions since that reads it synchronously for the
   // most-used-first sort below; see getChampionsUsage further down for the
   // on-demand fetch-and-cache version callers use when they need to
   // guarantee fresh data for one specific species.
-  const getCachedChampionsUsage = useCallback((species: string): ChampionsUsageEntry | null =>
-    readCacheEntry(cacheRef.current?.usage, normalizeUsageCacheKey(species)), []);
+  const getCachedChampionsUsage = useCallback(
+    (species: string): ChampionsUsageEntry | null =>
+      readCacheEntry(cacheRef.current?.usage, normalizeUsageCacheKey(species)),
+    [],
+  );
 
-  const getSpeciesLearnset = useCallback(async (species: string, gender?: Gender): Promise<SpeciesLearnsetEntry | null> => {
-    const cached = getCachedSpeciesLearnset(species, gender);
-    if (cached) return cached;
-    const normalizedSpecies = normalizeSpeciesForAPI(species, gender);
-    const fresh = await runCachedFetch(setCache, setIsLoading, setError, 'learnsets', normalizedSpecies,
-      () => fetchSpeciesLearnset(species, gender), `Failed to fetch learnset for "${species}"`);
-    return fresh ? applyMovepoolChangesIfNeeded(fresh) : null;
-  }, [getCachedSpeciesLearnset]);
+  const getSpeciesLearnset = useCallback(
+    async (species: string, gender?: Gender): Promise<SpeciesLearnsetEntry | null> => {
+      const cached = getCachedSpeciesLearnset(species, gender);
+      if (cached) return cached;
+      const normalizedSpecies = normalizeSpeciesForAPI(species, gender);
+      const fresh = await runCachedFetch(
+        setCache,
+        setIsLoading,
+        setError,
+        'learnsets',
+        normalizedSpecies,
+        () => fetchSpeciesLearnset(species, gender),
+        `Failed to fetch learnset for "${species}"`,
+      );
+      return fresh ? applyMovepoolChangesIfNeeded(fresh) : null;
+    },
+    [getCachedSpeciesLearnset],
+  );
 
   /**
    * Resolve a species' full legal option set: its real learnable moves and real
@@ -279,33 +358,40 @@ export function useGameData(): UseGameDataReturn {
    * panels show, then re-sorts client-side with that fresher data - see
    * its own comment for why a live fetch is fine there but not here).
    */
-  const getEnrichedSpeciesOptions = useCallback(async (
-    species: string,
-    gender?: Gender
-  ): Promise<{ moves: MoveData[]; abilities: AbilityData[] }> => {
-    const learnset = await getSpeciesLearnset(species, gender);
-    if (!learnset) {
-      return { moves: [], abilities: [] };
-    }
+  const getEnrichedSpeciesOptions = useCallback(
+    async (
+      species: string,
+      gender?: Gender,
+    ): Promise<{ moves: MoveData[]; abilities: AbilityData[] }> => {
+      const learnset = await getSpeciesLearnset(species, gender);
+      if (!learnset) {
+        return { moves: [], abilities: [] };
+      }
 
-    const [moveResults, abilityResults] = await Promise.all([
-      Promise.all(learnset.moves.map(name => getMoveData(name))),
-      Promise.all(learnset.abilities.map(name => getAbilityData(name))),
-    ]);
+      const [moveResults, abilityResults] = await Promise.all([
+        Promise.all(learnset.moves.map((name) => getMoveData(name))),
+        Promise.all(learnset.abilities.map((name) => getAbilityData(name))),
+      ]);
 
-    const moves = moveResults.filter((move): move is MoveData => move !== null);
-    const abilities = abilityResults.filter((ability): ability is AbilityData => ability !== null);
+      const moves = moveResults.filter((move): move is MoveData => move !== null);
+      const abilities = abilityResults.filter(
+        (ability): ability is AbilityData => ability !== null,
+      );
 
-    const usage = getCachedChampionsUsage(species);
-    if (usage) {
-      const moveRank = new Map(usage.moves.map(m => [normalizeSlug(m.name), m.percentage]));
-      const abilityRank = new Map(usage.abilities.map(a => [normalizeSlug(a.name), a.percentage]));
-      moves.sort((a, b) => (moveRank.get(b.name) ?? -1) - (moveRank.get(a.name) ?? -1));
-      abilities.sort((a, b) => (abilityRank.get(b.name) ?? -1) - (abilityRank.get(a.name) ?? -1));
-    }
+      const usage = getCachedChampionsUsage(species);
+      if (usage) {
+        const moveRank = new Map(usage.moves.map((m) => [normalizeSlug(m.name), m.percentage]));
+        const abilityRank = new Map(
+          usage.abilities.map((a) => [normalizeSlug(a.name), a.percentage]),
+        );
+        moves.sort((a, b) => (moveRank.get(b.name) ?? -1) - (moveRank.get(a.name) ?? -1));
+        abilities.sort((a, b) => (abilityRank.get(b.name) ?? -1) - (abilityRank.get(a.name) ?? -1));
+      }
 
-    return { moves, abilities };
-  }, [getSpeciesLearnset, getMoveData, getAbilityData, getCachedChampionsUsage]);
+      return { moves, abilities };
+    },
+    [getSpeciesLearnset, getMoveData, getAbilityData, getCachedChampionsUsage],
+  );
 
   /**
    * The true global items collection: every VGC-legal item (config/vgcData.ts),
@@ -322,9 +408,9 @@ export function useGameData(): UseGameDataReturn {
    */
   const items = useMemo((): ItemData[] => {
     if (!cache) return [];
-    return VGC_ITEMS
-      .map(itemName => readCacheEntry(cache.items, normalizeNameForAPI(itemName)))
-      .filter((item): item is ItemData => item !== null);
+    return VGC_ITEMS.map((itemName) =>
+      readCacheEntry(cache.items, normalizeNameForAPI(itemName)),
+    ).filter((item): item is ItemData => item !== null);
   }, [cache]);
 
   /**
@@ -340,34 +426,42 @@ export function useGameData(): UseGameDataReturn {
    */
   useEffect(() => {
     if (!isInitialized) return;
-    VGC_ITEMS
-      .filter(itemName => !getCachedItem(itemName))
-      .forEach(itemName => {
-        getItemData(itemName).then(data => {
-          if (data) return;
-          const normalizedName = normalizeNameForAPI(itemName);
-          const now = Date.now();
-          const fallback: ItemData = {
-            name: normalizedName,
-            category: 'unknown',
-            effect: 'No effect data available',
-            description: 'No description available',
-            spriteUrl: '', // empty spriteUrl is what getCachedItem treats as a permanent miss, so this keeps retrying every launch instead of being frozen forever
-            cachedAt: now,
-            expiresAt: NEVER_EXPIRES,
-          };
-          setCache(prev => prev ? withCacheEntry(prev, 'items', normalizedName, fallback) : prev);
-        });
+    VGC_ITEMS.filter((itemName) => !getCachedItem(itemName)).forEach((itemName) => {
+      getItemData(itemName).then((data) => {
+        if (data) return;
+        const normalizedName = normalizeNameForAPI(itemName);
+        const now = Date.now();
+        const fallback: ItemData = {
+          name: normalizedName,
+          category: 'unknown',
+          effect: 'No effect data available',
+          description: 'No description available',
+          spriteUrl: '', // empty spriteUrl is what getCachedItem treats as a permanent miss, so this keeps retrying every launch instead of being frozen forever
+          cachedAt: now,
+          expiresAt: NEVER_EXPIRES,
+        };
+        setCache((prev) => (prev ? withCacheEntry(prev, 'items', normalizedName, fallback) : prev));
       });
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isInitialized]);
 
-  const getChampionsUsage = useCallback(async (species: string): Promise<ChampionsUsageEntry | null> => {
-    const cached = getCachedChampionsUsage(species);
-    if (cached) return cached;
-    return runCachedFetch(setCache, setIsLoading, setError, 'usage', normalizeUsageCacheKey(species),
-      () => fetchChampionsUsage(species), `Failed to fetch usage data for "${species}"`);
-  }, [getCachedChampionsUsage]);
+  const getChampionsUsage = useCallback(
+    async (species: string): Promise<ChampionsUsageEntry | null> => {
+      const cached = getCachedChampionsUsage(species);
+      if (cached) return cached;
+      return runCachedFetch(
+        setCache,
+        setIsLoading,
+        setError,
+        'usage',
+        normalizeUsageCacheKey(species),
+        () => fetchChampionsUsage(species),
+        `Failed to fetch usage data for "${species}"`,
+      );
+    },
+    [getCachedChampionsUsage],
+  );
 
   const clearCache = useCallback(async (): Promise<boolean> => {
     setCache(createEmptyGameDataCache());
@@ -375,13 +469,16 @@ export function useGameData(): UseGameDataReturn {
     return true;
   }, []);
 
-  const getUnsyncedSpecies = useCallback((legalRoster: SpeciesRosterEntry[]): SpeciesRosterEntry[] => {
-    const synced = new Set(cache?.lastSyncedSpeciesNames ?? []);
-    return legalRoster.filter(entry => !synced.has(entry.name));
-  }, [cache]);
+  const getUnsyncedSpecies = useCallback(
+    (legalRoster: SpeciesRosterEntry[]): SpeciesRosterEntry[] => {
+      const synced = new Set(cache?.lastSyncedSpeciesNames ?? []);
+      return legalRoster.filter((entry) => !synced.has(entry.name));
+    },
+    [cache],
+  );
 
   const markSpeciesSynced = useCallback((names: string[]) => {
-    setCache(prev => {
+    setCache((prev) => {
       if (!prev) return prev;
       const merged = new Set([...prev.lastSyncedSpeciesNames, ...names]);
       return { ...prev, lastSyncedSpeciesNames: [...merged] };

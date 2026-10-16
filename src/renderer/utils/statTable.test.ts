@@ -3,13 +3,29 @@ import { computeBST, nextStatTableSort, sortStatTableRows } from './statTable';
 import type { PokemonStats } from '../types/pokemon';
 
 const stats = (overrides: Partial<PokemonStats> = {}): PokemonStats => ({
-  hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0,
+  hp: 0,
+  attack: 0,
+  defense: 0,
+  specialAttack: 0,
+  specialDefense: 0,
+  speed: 0,
   ...overrides,
 });
 
 describe('computeBST', () => {
   it('sums all six stats', () => {
-    expect(computeBST(stats({ hp: 100, attack: 50, defense: 50, specialAttack: 50, specialDefense: 50, speed: 50 }))).toBe(350);
+    expect(
+      computeBST(
+        stats({
+          hp: 100,
+          attack: 50,
+          defense: 50,
+          specialAttack: 50,
+          specialDefense: 50,
+          speed: 50,
+        }),
+      ),
+    ).toBe(350);
   });
 
   it('returns 0 for an all-zero spread', () => {
@@ -42,16 +58,16 @@ describe('sortStatTableRows', () => {
     { name: 'c', value: null as number | null },
     { name: 'd', value: 75 },
   ];
-  const getValue = (row: typeof rows[number]) => row.value;
+  const getValue = (row: (typeof rows)[number]) => row.value;
 
   it('sorts descending by resolved value', () => {
     const sorted = sortStatTableRows(rows, { key: 'bst', direction: 'desc' }, getValue);
-    expect(sorted.map(r => r.name)).toEqual(['b', 'd', 'a', 'c']);
+    expect(sorted.map((r) => r.name)).toEqual(['b', 'd', 'a', 'c']);
   });
 
   it('sorts ascending by resolved value', () => {
     const sorted = sortStatTableRows(rows, { key: 'bst', direction: 'asc' }, getValue);
-    expect(sorted.map(r => r.name)).toEqual(['a', 'd', 'b', 'c']);
+    expect(sorted.map((r) => r.name)).toEqual(['a', 'd', 'b', 'c']);
   });
 
   it('pushes rows with no cached value to the bottom regardless of direction', () => {

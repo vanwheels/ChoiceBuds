@@ -13,11 +13,11 @@ export interface UseActiveEditorReturn {
   editingPokemonIndex: number | null;
   draftPokemon: ImportedPokemonInfo | null;
   isDirty: boolean;
-  
+
   // Edit mode control
   enterEditMode: (pokemon: ImportedPokemonInfo, index: number) => void;
   exitEditMode: () => void;
-  
+
   // Draft modifications
   updateNickname: (nickname: string) => void;
   updateSpecies: (species: string) => void;
@@ -33,7 +33,7 @@ export interface UseActiveEditorReturn {
   updateEVs: (evs: Partial<EVSpread>) => void;
   updateMoves: (moves: string[]) => void;
   updateMove: (index: number, move: string) => void;
-  
+
   // Commit/discard
   getCommittableData: () => ImportedPokemonInfo | null;
   discardChanges: () => void;
@@ -80,7 +80,7 @@ export function useActiveEditor(): UseActiveEditorReturn {
       importedAt: pokemon.importedAt,
       id: pokemon.id,
     };
-    
+
     setDraftPokemon(clonedPokemon);
     setEditingPokemonIndex(index);
     setIsEditing(true);
@@ -100,205 +100,250 @@ export function useActiveEditor(): UseActiveEditorReturn {
   /**
    * Internal: Update draft Pokémon and mark as dirty
    */
-  const updateDraft = useCallback((updater: (draft: ImportedPokemonInfo) => ImportedPokemonInfo): void => {
-    setDraftPokemon(prev => {
-      if (!prev) return null;
-      const updated = updater(prev);
-      setIsDirty(true);
-      return updated;
-    });
-  }, []);
+  const updateDraft = useCallback(
+    (updater: (draft: ImportedPokemonInfo) => ImportedPokemonInfo): void => {
+      setDraftPokemon((prev) => {
+        if (!prev) return null;
+        const updated = updater(prev);
+        setIsDirty(true);
+        return updated;
+      });
+    },
+    [],
+  );
 
   /**
    * Update nickname in draft
    */
-  const updateNickname = useCallback((nickname: string): void => {
-    updateDraft(draft => ({
-      ...draft,
-      showdownData: {
-        ...draft.showdownData,
-        nickname: nickname || undefined,
-      },
-    }));
-  }, [updateDraft]);
+  const updateNickname = useCallback(
+    (nickname: string): void => {
+      updateDraft((draft) => ({
+        ...draft,
+        showdownData: {
+          ...draft.showdownData,
+          nickname: nickname || undefined,
+        },
+      }));
+    },
+    [updateDraft],
+  );
 
   /**
    * Update species in draft
    */
-  const updateSpecies = useCallback((species: string): void => {
-    updateDraft(draft => ({
-      ...draft,
-      showdownData: {
-        ...draft.showdownData,
-        species,
-      },
-    }));
-  }, [updateDraft]);
+  const updateSpecies = useCallback(
+    (species: string): void => {
+      updateDraft((draft) => ({
+        ...draft,
+        showdownData: {
+          ...draft.showdownData,
+          species,
+        },
+      }));
+    },
+    [updateDraft],
+  );
 
   /**
    * Update gender in draft
    */
-  const updateGender = useCallback((gender: 'M' | 'F' | ''): void => {
-    updateDraft(draft => ({
-      ...draft,
-      showdownData: {
-        ...draft.showdownData,
-        gender: gender || undefined,
-      },
-    }));
-  }, [updateDraft]);
+  const updateGender = useCallback(
+    (gender: 'M' | 'F' | ''): void => {
+      updateDraft((draft) => ({
+        ...draft,
+        showdownData: {
+          ...draft.showdownData,
+          gender: gender || undefined,
+        },
+      }));
+    },
+    [updateDraft],
+  );
 
   /**
    * Update held item in draft
    */
-  const updateItem = useCallback((item: string): void => {
-    updateDraft(draft => ({
-      ...draft,
-      showdownData: {
-        ...draft.showdownData,
-        item: item || undefined,
-      },
-    }));
-  }, [updateDraft]);
+  const updateItem = useCallback(
+    (item: string): void => {
+      updateDraft((draft) => ({
+        ...draft,
+        showdownData: {
+          ...draft.showdownData,
+          item: item || undefined,
+        },
+      }));
+    },
+    [updateDraft],
+  );
 
   /**
    * Update ability in draft
    */
-  const updateAbility = useCallback((ability: string): void => {
-    updateDraft(draft => ({
-      ...draft,
-      showdownData: {
-        ...draft.showdownData,
-        ability: ability || undefined,
-      },
-    }));
-  }, [updateDraft]);
+  const updateAbility = useCallback(
+    (ability: string): void => {
+      updateDraft((draft) => ({
+        ...draft,
+        showdownData: {
+          ...draft.showdownData,
+          ability: ability || undefined,
+        },
+      }));
+    },
+    [updateDraft],
+  );
 
   /**
    * Update level in draft
    */
-  const updateLevel = useCallback((level: number): void => {
-    updateDraft(draft => ({
-      ...draft,
-      showdownData: {
-        ...draft.showdownData,
-        level: Math.max(1, Math.min(100, level)),
-      },
-    }));
-  }, [updateDraft]);
+  const updateLevel = useCallback(
+    (level: number): void => {
+      updateDraft((draft) => ({
+        ...draft,
+        showdownData: {
+          ...draft.showdownData,
+          level: Math.max(1, Math.min(100, level)),
+        },
+      }));
+    },
+    [updateDraft],
+  );
 
   /**
    * Update shiny status in draft
    */
-  const updateShiny = useCallback((shiny: boolean): void => {
-    updateDraft(draft => ({
-      ...draft,
-      showdownData: {
-        ...draft.showdownData,
-        shiny,
-      },
-    }));
-  }, [updateDraft]);
+  const updateShiny = useCallback(
+    (shiny: boolean): void => {
+      updateDraft((draft) => ({
+        ...draft,
+        showdownData: {
+          ...draft.showdownData,
+          shiny,
+        },
+      }));
+    },
+    [updateDraft],
+  );
 
   /**
    * Update Gigantamax status in draft
    */
-  const updateGigantamax = useCallback((gigantamax: boolean): void => {
-    updateDraft(draft => ({
-      ...draft,
-      showdownData: {
-        ...draft.showdownData,
-        gigantamax,
-      },
-    }));
-  }, [updateDraft]);
+  const updateGigantamax = useCallback(
+    (gigantamax: boolean): void => {
+      updateDraft((draft) => ({
+        ...draft,
+        showdownData: {
+          ...draft.showdownData,
+          gigantamax,
+        },
+      }));
+    },
+    [updateDraft],
+  );
 
   /**
    * Update happiness in draft
    */
-  const updateHappiness = useCallback((happiness: number): void => {
-    updateDraft(draft => ({
-      ...draft,
-      showdownData: {
-        ...draft.showdownData,
-        happiness: Math.max(0, Math.min(255, happiness)),
-      },
-    }));
-  }, [updateDraft]);
+  const updateHappiness = useCallback(
+    (happiness: number): void => {
+      updateDraft((draft) => ({
+        ...draft,
+        showdownData: {
+          ...draft.showdownData,
+          happiness: Math.max(0, Math.min(255, happiness)),
+        },
+      }));
+    },
+    [updateDraft],
+  );
 
   /**
    * Update Tera Type in draft
    */
-  const updateTeraType = useCallback((teraType: string): void => {
-    updateDraft(draft => ({
-      ...draft,
-      showdownData: {
-        ...draft.showdownData,
-        teraType: teraType || undefined,
-      },
-    }));
-  }, [updateDraft]);
+  const updateTeraType = useCallback(
+    (teraType: string): void => {
+      updateDraft((draft) => ({
+        ...draft,
+        showdownData: {
+          ...draft.showdownData,
+          teraType: teraType || undefined,
+        },
+      }));
+    },
+    [updateDraft],
+  );
 
   /**
    * Update nature in draft
    */
-  const updateNature = useCallback((nature: string): void => {
-    updateDraft(draft => ({
-      ...draft,
-      showdownData: {
-        ...draft.showdownData,
-        nature: nature || undefined,
-      },
-    }));
-  }, [updateDraft]);
+  const updateNature = useCallback(
+    (nature: string): void => {
+      updateDraft((draft) => ({
+        ...draft,
+        showdownData: {
+          ...draft.showdownData,
+          nature: nature || undefined,
+        },
+      }));
+    },
+    [updateDraft],
+  );
 
   /**
    * Update EVs in draft (partial update)
    */
-  const updateEVs = useCallback((evs: Partial<EVSpread>): void => {
-    updateDraft(draft => ({
-      ...draft,
-      showdownData: {
-        ...draft.showdownData,
-        evs: {
-          ...draft.showdownData.evs,
-          ...evs,
+  const updateEVs = useCallback(
+    (evs: Partial<EVSpread>): void => {
+      updateDraft((draft) => ({
+        ...draft,
+        showdownData: {
+          ...draft.showdownData,
+          evs: {
+            ...draft.showdownData.evs,
+            ...evs,
+          },
         },
-      },
-    }));
-  }, [updateDraft]);
+      }));
+    },
+    [updateDraft],
+  );
 
   /**
    * Update all moves in draft
    */
-  const updateMoves = useCallback((moves: string[]): void => {
-    updateDraft(draft => ({
-      ...draft,
-      showdownData: {
-        ...draft.showdownData,
-        moves: moves.slice(0, 4), // Max 4 moves
-      },
-    }));
-  }, [updateDraft]);
+  const updateMoves = useCallback(
+    (moves: string[]): void => {
+      updateDraft((draft) => ({
+        ...draft,
+        showdownData: {
+          ...draft.showdownData,
+          moves: moves.slice(0, 4), // Max 4 moves
+        },
+      }));
+    },
+    [updateDraft],
+  );
 
   /**
    * Update a specific move by index in draft
    */
-  const updateMove = useCallback((index: number, move: string): void => {
-    updateDraft(draft => {
-      const moves = [...draft.showdownData.moves];
-      if (index >= 0 && index < 4) {
-        moves[index] = move;
-      }
-      return {
-        ...draft,
-        showdownData: {
-          ...draft.showdownData,
-          moves,
-        },
-      };
-    });
-  }, [updateDraft]);
+  const updateMove = useCallback(
+    (index: number, move: string): void => {
+      updateDraft((draft) => {
+        const moves = [...draft.showdownData.moves];
+        if (index >= 0 && index < 4) {
+          moves[index] = move;
+        }
+        return {
+          ...draft,
+          showdownData: {
+            ...draft.showdownData,
+            moves,
+          },
+        };
+      });
+    },
+    [updateDraft],
+  );
 
   /**
    * Get committable data for saving to main state

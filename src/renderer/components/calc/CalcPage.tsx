@@ -46,8 +46,15 @@ interface CalcPageProps {
 }
 
 export default function CalcPage({
-  gameDataState, teamsState, databaseState, savedPokemonState, spriteCacheState, settingsState,
-  battleLogOpponentRoster, onUpdateOpponentEntry, battleLogPlayerTeamId,
+  gameDataState,
+  teamsState,
+  databaseState,
+  savedPokemonState,
+  spriteCacheState,
+  settingsState,
+  battleLogOpponentRoster,
+  onUpdateOpponentEntry,
+  battleLogPlayerTeamId,
 }: CalcPageProps) {
   const [isSavedSetsOpen, setIsSavedSetsOpen] = useState(false);
   // Which opponent-roster entry (if any) the Pokemon 2 panel's "Load from
@@ -60,7 +67,9 @@ export default function CalcPage({
   // starting, ending, or being replaced by a different one) - a link must
   // never survive into an unrelated session.
   const [linkedEntryId, setLinkedEntryId] = useState<string | null>(null);
-  const [prevOnUpdateOpponentEntry, setPrevOnUpdateOpponentEntry] = useState(() => onUpdateOpponentEntry);
+  const [prevOnUpdateOpponentEntry, setPrevOnUpdateOpponentEntry] = useState(
+    () => onUpdateOpponentEntry,
+  );
   if (onUpdateOpponentEntry !== prevOnUpdateOpponentEntry) {
     setPrevOnUpdateOpponentEntry(() => onUpdateOpponentEntry);
     setLinkedEntryId(null);
@@ -69,9 +78,16 @@ export default function CalcPage({
   // ChampionsUsageEntry lives) and lifted up here purely to reach the move
   // grids above, which CalcPage renders as CalcPokemonPanel's siblings, not
   // its children - see CalcPokemonPanel.tsx's header comment.
-  const [pokemon1MovePercentByName, setPokemon1MovePercentByName] = useState<Record<string, number>>({});
-  const [pokemon2MovePercentByName, setPokemon2MovePercentByName] = useState<Record<string, number>>({});
-  const calcState = useDamageCalc(gameDataState, toRegulationId(settingsState.settings.defaultRegulation));
+  const [pokemon1MovePercentByName, setPokemon1MovePercentByName] = useState<
+    Record<string, number>
+  >({});
+  const [pokemon2MovePercentByName, setPokemon2MovePercentByName] = useState<
+    Record<string, number>
+  >({});
+  const calcState = useDamageCalc(
+    gameDataState,
+    toRegulationId(settingsState.settings.defaultRegulation),
+  );
   // Mounted once here (not per-panel) and threaded down to both
   // CalcPokemonPanel instances as a shared instance, matching how
   // gameDataState/databaseState are already threaded in from App.tsx -
@@ -81,14 +97,39 @@ export default function CalcPage({
   const vgcPastesState = useVgcPastesCache();
   const vgcRealSetsState = useVgcRealSetsCache();
   const {
-    regulationId, setRegulationId,
-    pokemon1, pokemon2, setPokemon1, setPokemon2, setPokemon1Move, setPokemon2Move,
-    field, setField, setPokemon1Side, setPokemon2Side,
-    speciesOptions, pokemon1MoveOptions, pokemon2MoveOptions, itemOptions, abilityOptions, natureOptions,
-    pokemon1Formes, pokemon2Formes, pokemon1BaseStats, pokemon2BaseStats,
-    pokemon1BoostedStats, pokemon2BoostedStats,
-    pokemon1NatureEffect, pokemon2NatureEffect, pokemon1Speed, pokemon2Speed,
-    p1Results, p2Results, selectedResult, setSelectedResult, selectedEntry,
+    regulationId,
+    setRegulationId,
+    pokemon1,
+    pokemon2,
+    setPokemon1,
+    setPokemon2,
+    setPokemon1Move,
+    setPokemon2Move,
+    field,
+    setField,
+    setPokemon1Side,
+    setPokemon2Side,
+    speciesOptions,
+    pokemon1MoveOptions,
+    pokemon2MoveOptions,
+    itemOptions,
+    abilityOptions,
+    natureOptions,
+    pokemon1Formes,
+    pokemon2Formes,
+    pokemon1BaseStats,
+    pokemon2BaseStats,
+    pokemon1BoostedStats,
+    pokemon2BoostedStats,
+    pokemon1NatureEffect,
+    pokemon2NatureEffect,
+    pokemon1Speed,
+    pokemon2Speed,
+    p1Results,
+    p2Results,
+    selectedResult,
+    setSelectedResult,
+    selectedEntry,
   } = calcState;
 
   // Write-back to the linked opponent entry (Regular Calc Battle Log
@@ -111,18 +152,28 @@ export default function CalcPage({
   // for the same reason - editing slot 0 must not resurface slot 1's still-
   // stale leftover name as if it were newly set. Establishing a new link's
   // baseline (a fresh linkedEntryId) reports nothing.
-  const linkBaselineRef = useRef<{ entryId: string; moves: string[]; ability: string; item: string } | null>(null);
+  const linkBaselineRef = useRef<{
+    entryId: string;
+    moves: string[];
+    ability: string;
+    item: string;
+  } | null>(null);
   useEffect(() => {
     if (!onUpdateOpponentEntry || !linkedEntryId) {
       linkBaselineRef.current = null;
       return;
     }
-    const currentMoves = pokemon2.moves.map(m => m.name);
+    const currentMoves = pokemon2.moves.map((m) => m.name);
     const currentAbility = pokemon2.ability;
     const currentItem = pokemon2.item;
     const baseline = linkBaselineRef.current;
     if (!baseline || baseline.entryId !== linkedEntryId) {
-      linkBaselineRef.current = { entryId: linkedEntryId, moves: currentMoves, ability: currentAbility, item: currentItem };
+      linkBaselineRef.current = {
+        entryId: linkedEntryId,
+        moves: currentMoves,
+        ability: currentAbility,
+        item: currentItem,
+      };
       return;
     }
 
@@ -134,7 +185,12 @@ export default function CalcPage({
 
     if (Object.keys(updates).length > 0) {
       onUpdateOpponentEntry(linkedEntryId, updates);
-      linkBaselineRef.current = { entryId: linkedEntryId, moves: currentMoves, ability: currentAbility, item: currentItem };
+      linkBaselineRef.current = {
+        entryId: linkedEntryId,
+        moves: currentMoves,
+        ability: currentAbility,
+        item: currentItem,
+      };
     }
   }, [onUpdateOpponentEntry, linkedEntryId, pokemon2.moves, pokemon2.ability, pokemon2.item]);
 
@@ -147,12 +203,14 @@ export default function CalcPage({
         >
           Saved Sets
         </button>
-        {ALL_REGULATION_IDS.map(id => (
+        {ALL_REGULATION_IDS.map((id) => (
           <button
             key={id}
             onClick={() => setRegulationId(id)}
             className={`px-3 py-1 text-xs font-bold uppercase tracking-wide rounded transition-colors cursor-pointer ${
-              regulationId === id ? 'bg-accent-gold text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+              regulationId === id
+                ? 'bg-accent-gold text-zinc-900'
+                : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
             }`}
           >
             {getRegulationLabel(id)}

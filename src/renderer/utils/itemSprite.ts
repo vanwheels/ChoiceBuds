@@ -10,12 +10,14 @@ import { VGC_MEGA_STONES } from '../config/vgcData';
  * Returns null for anything else so ordinary items keep the 🎒 fallback.
  */
 const SEREBII_FALLBACK_ITEMS: ReadonlySet<string> = new Set(
-  [...VGC_MEGA_STONES, 'Fairy Feather'].map(name => name.toLowerCase().replace(/[\s-]/g, ''))
+  [...VGC_MEGA_STONES, 'Fairy Feather'].map((name) => name.toLowerCase().replace(/[\s-]/g, '')),
 );
 
 export function getItemFallbackSpriteUrl(itemName: string): string | null {
   const id = itemName.toLowerCase().replace(/[\s-]/g, '');
-  return SEREBII_FALLBACK_ITEMS.has(id) ? `https://www.serebii.net/itemdex/sprites/${id}.png` : null;
+  return SEREBII_FALLBACK_ITEMS.has(id)
+    ? `https://www.serebii.net/itemdex/sprites/${id}.png`
+    : null;
 }
 
 /** PokeAPI's sprite when it has one, otherwise the Serebii fallback (or ''). */

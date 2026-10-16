@@ -27,7 +27,15 @@ interface SpeedTierListProps {
   spriteCacheState: UseSpriteCacheReturn;
 }
 
-function EntryTile({ entry, tied, spriteCacheState }: { entry: SpeedTierEntry; tied: boolean; spriteCacheState: UseSpriteCacheReturn }) {
+function EntryTile({
+  entry,
+  tied,
+  spriteCacheState,
+}: {
+  entry: SpeedTierEntry;
+  tied: boolean;
+  spriteCacheState: UseSpriteCacheReturn;
+}) {
   const isBound = !!entry.boundLabel;
   return (
     <div
@@ -46,11 +54,17 @@ function EntryTile({ entry, tied, spriteCacheState }: { entry: SpeedTierEntry; t
         alt={entry.species}
         className="w-8 h-8 object-contain [image-rendering:pixelated]"
       />
-      <span className={`text-[10px] text-center leading-tight truncate w-full ${entry.kind === 'team' ? 'text-accent-gold font-semibold' : 'text-zinc-200'}`}>
+      <span
+        className={`text-[10px] text-center leading-tight truncate w-full ${entry.kind === 'team' ? 'text-accent-gold font-semibold' : 'text-zinc-200'}`}
+      >
         {entry.species}
       </span>
       <span className="text-[9px] text-zinc-500">
-        {entry.kind === 'team' ? 'You' : isBound ? entry.boundLabel : `${entry.percentage?.toFixed(0)}%`}
+        {entry.kind === 'team'
+          ? 'You'
+          : isBound
+            ? entry.boundLabel
+            : `${entry.percentage?.toFixed(0)}%`}
       </span>
     </div>
   );
@@ -58,15 +72,24 @@ function EntryTile({ entry, tied, spriteCacheState }: { entry: SpeedTierEntry; t
 
 export default function SpeedTierList({ groups, spriteCacheState }: SpeedTierListProps) {
   if (groups.length === 0) {
-    return <p className="text-sm text-zinc-400">Select a team to see its speed tiers against real usage threats.</p>;
+    return (
+      <p className="text-sm text-zinc-400">
+        Select a team to see its speed tiers against real usage threats.
+      </p>
+    );
   }
 
   return (
     <div className="flex flex-wrap gap-2">
-      {groups.flatMap(group =>
-        group.entries.map(entry => (
-          <EntryTile key={entry.key} entry={entry} tied={group.entries.length > 1} spriteCacheState={spriteCacheState} />
-        ))
+      {groups.flatMap((group) =>
+        group.entries.map((entry) => (
+          <EntryTile
+            key={entry.key}
+            entry={entry}
+            tied={group.entries.length > 1}
+            spriteCacheState={spriteCacheState}
+          />
+        )),
       )}
     </div>
   );

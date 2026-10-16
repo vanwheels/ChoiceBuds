@@ -39,12 +39,22 @@ interface TeamClipboardPayload {
 type ClipboardPayload = PokemonClipboardPayload | TeamClipboardPayload;
 
 export async function copyPokemonToClipboard(pokemon: ImportedPokemonInfo): Promise<void> {
-  const payload: PokemonClipboardPayload = { signature: SIGNATURE, kind: 'pokemon', version: SCHEMA_VERSION, data: pokemon };
+  const payload: PokemonClipboardPayload = {
+    signature: SIGNATURE,
+    kind: 'pokemon',
+    version: SCHEMA_VERSION,
+    data: pokemon,
+  };
   await navigator.clipboard.writeText(JSON.stringify(payload));
 }
 
 export async function copyTeamToClipboard(team: Team): Promise<void> {
-  const payload: TeamClipboardPayload = { signature: SIGNATURE, kind: 'team', version: SCHEMA_VERSION, data: team };
+  const payload: TeamClipboardPayload = {
+    signature: SIGNATURE,
+    kind: 'team',
+    version: SCHEMA_VERSION,
+    data: team,
+  };
   await navigator.clipboard.writeText(JSON.stringify(payload));
 }
 

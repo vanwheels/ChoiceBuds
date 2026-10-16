@@ -38,7 +38,7 @@ export function mergeCollection<T extends HasIdAndUpdatedAt>(
   existingRecords: T[],
   existingTombstones: SyncTombstone[],
   incomingRecords: T[],
-  incomingTombstones: SyncTombstone[]
+  incomingTombstones: SyncTombstone[],
 ): MergeResult<T> {
   const recordsById = new Map<string, T>();
   for (const record of existingRecords) recordsById.set(record.id, record);
@@ -86,7 +86,10 @@ interface HasUpdatedAt {
  * client/stored blob simply never sent one, which isn't a conflict to
  * resolve, just "no data yet on that side."
  */
-export function mergeSingleton<T extends HasUpdatedAt>(existing: T | undefined, incoming: T | undefined): T | undefined {
+export function mergeSingleton<T extends HasUpdatedAt>(
+  existing: T | undefined,
+  incoming: T | undefined,
+): T | undefined {
   if (!existing) return incoming;
   if (!incoming) return existing;
   return incoming.updatedAt >= existing.updatedAt ? incoming : existing;

@@ -9,16 +9,19 @@ const ZERO_STATS = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
 function createDeferred<T>() {
   let resolve!: (value: T) => void;
   let reject!: (err: unknown) => void;
-  const promise = new Promise<T>((res, rej) => { resolve = res; reject = rej; });
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
   return { promise, resolve, reject };
 }
 
 function setup(
   overrides: { getEnrichedSpeciesOptions?: UseGameDataReturn['getEnrichedSpeciesOptions'] } = {},
-  defaultRegulation: RegulationId = 'REG-MB'
+  defaultRegulation: RegulationId = 'REG-MB',
 ) {
-  const getEnrichedSpeciesOptions = overrides.getEnrichedSpeciesOptions
-    ?? vi.fn().mockResolvedValue({ moves: [], abilities: [] });
+  const getEnrichedSpeciesOptions =
+    overrides.getEnrichedSpeciesOptions ?? vi.fn().mockResolvedValue({ moves: [], abilities: [] });
   const gameDataState: UseGameDataReturn = {
     cache: null,
     isInitialized: true,
@@ -51,9 +54,21 @@ describe('useDamageCalc', () => {
 
     expect(result.current.regulationId).toBe('REG-MA');
     expect(result.current.pokemon1).toEqual({
-      species: '', gender: '', level: 50, item: '', ability: '', nature: 'Hardy', status: '',
-      sps: ZERO_STATS, boosts: ZERO_STATS,
-      moves: [{ name: '', isCrit: false }, { name: '', isCrit: false }, { name: '', isCrit: false }, { name: '', isCrit: false }],
+      species: '',
+      gender: '',
+      level: 50,
+      item: '',
+      ability: '',
+      nature: 'Hardy',
+      status: '',
+      sps: ZERO_STATS,
+      boosts: ZERO_STATS,
+      moves: [
+        { name: '', isCrit: false },
+        { name: '', isCrit: false },
+        { name: '', isCrit: false },
+        { name: '', isCrit: false },
+      ],
     });
     expect(result.current.pokemon2).toEqual(result.current.pokemon1);
     expect(result.current.field.gameType).toBe('Doubles');
@@ -65,7 +80,7 @@ describe('useDamageCalc', () => {
     expect(result.current.selectedEntry).toBe(null);
   });
 
-  it('speciesOptions is filtered to the selected regulation\'s legal roster', () => {
+  it("speciesOptions is filtered to the selected regulation's legal roster", () => {
     const { result } = setup({}, 'REG-MA');
 
     // Gengar is REG-MA-legal; Swampert is only added in REG-MB; Mewtwo (a
@@ -81,7 +96,7 @@ describe('useDamageCalc', () => {
     expect(result.current.speciesOptions).not.toContain('Mewtwo');
   });
 
-  it('itemOptions/abilityOptions/natureOptions are sorted and sourced from @smogon/calc\'s real Gen 9 data', () => {
+  it("itemOptions/abilityOptions/natureOptions are sorted and sourced from @smogon/calc's real Gen 9 data", () => {
     const { result } = setup();
 
     expect(result.current.itemOptions).toContain('Life Orb');
@@ -142,7 +157,14 @@ describe('useDamageCalc', () => {
 
     act(() => result.current.setPokemon1({ species: 'Gengar' }));
 
-    expect(result.current.pokemon1BaseStats).toEqual({ hp: 60, atk: 65, def: 60, spa: 130, spd: 75, spe: 110 });
+    expect(result.current.pokemon1BaseStats).toEqual({
+      hp: 60,
+      atk: 65,
+      def: 60,
+      spa: 130,
+      spd: 75,
+      spe: 110,
+    });
   });
 
   it('pokemon*NatureEffect is empty for a genuinely neutral nature and the real plus/minus otherwise', () => {
@@ -206,7 +228,9 @@ describe('useDamageCalc', () => {
 
   it('applies weather-boost before paralysis-halving, matching in-game modifier order', () => {
     const { result } = setup();
-    act(() => result.current.setPokemon1({ species: 'Gengar', ability: 'Swift Swim', status: 'par' }));
+    act(() =>
+      result.current.setPokemon1({ species: 'Gengar', ability: 'Swift Swim', status: 'par' }),
+    );
     act(() => result.current.setField({ weather: 'Rain' }));
 
     expect(result.current.pokemon1Speed).toBe(130); // floor(floor(130 * 2) / 2)
@@ -220,7 +244,7 @@ describe('useDamageCalc', () => {
 
     expect(result.current.pokemon1Formes.root).toBe('Charizard');
     expect(result.current.pokemon1Formes.megaFormes).toEqual(
-      expect.arrayContaining(['Charizard-Mega-X', 'Charizard-Mega-Y'])
+      expect.arrayContaining(['Charizard-Mega-X', 'Charizard-Mega-Y']),
     );
   });
 
@@ -228,12 +252,14 @@ describe('useDamageCalc', () => {
     const { result } = setup();
 
     expect(result.current.p1Results).toHaveLength(4);
-    expect(result.current.p1Results.every(e => e.percent === null && e.errorMessage === null)).toBe(true);
+    expect(
+      result.current.p1Results.every((e) => e.percent === null && e.errorMessage === null),
+    ).toBe(true);
 
     act(() => result.current.setPokemon1({ species: 'Gengar' }));
     // p2 still has no species - still empty entries for both sides.
-    expect(result.current.p1Results.every(e => e.percent === null)).toBe(true);
-    expect(result.current.p2Results.every(e => e.percent === null)).toBe(true);
+    expect(result.current.p1Results.every((e) => e.percent === null)).toBe(true);
+    expect(result.current.p2Results.every((e) => e.percent === null)).toBe(true);
   });
 
   it('calculates a real damage result once both sides and a move are set', () => {
@@ -266,7 +292,7 @@ describe('useDamageCalc', () => {
     expect(result.current.p1Results[0].range).toEqual([99, 117]);
   });
 
-  it('exposes a multihit move\'s selectable hit-count range and the engine-chosen default hit count', () => {
+  it("exposes a multihit move's selectable hit-count range and the engine-chosen default hit count", () => {
     const { result } = setup();
     act(() => {
       result.current.setPokemon1({ species: 'Gengar' });
@@ -292,7 +318,7 @@ describe('useDamageCalc', () => {
     expect(result.current.p1Results[0].effectiveHits).toBe(3);
   });
 
-  it('a move fully blocked by the defender\'s ability produces a clean blocked entry, not an error', () => {
+  it("a move fully blocked by the defender's ability produces a clean blocked entry, not an error", () => {
     const { result } = setup();
     act(() => {
       result.current.setPokemon1({ species: 'Garchomp' });
@@ -365,7 +391,7 @@ describe('useDamageCalc', () => {
     expect(result.current.pokemon1MoveOptions).toBe(fullOptions);
   });
 
-  it('filters pokemon1MoveOptions down to the species\' learned moves once the fetch resolves', async () => {
+  it("filters pokemon1MoveOptions down to the species' learned moves once the fetch resolves", async () => {
     const getEnrichedSpeciesOptions = vi.fn().mockResolvedValue({
       moves: [{ name: 'shadow-ball' }, { name: 'toxic' }],
       abilities: [],
@@ -374,7 +400,9 @@ describe('useDamageCalc', () => {
 
     act(() => result.current.setPokemon1({ species: 'Gengar' }));
 
-    await waitFor(() => expect(result.current.pokemon1MoveOptions).toEqual(['Shadow Ball', 'Toxic']));
+    await waitFor(() =>
+      expect(result.current.pokemon1MoveOptions).toEqual(['Shadow Ball', 'Toxic']),
+    );
     expect(getEnrichedSpeciesOptions).toHaveBeenCalledWith('Gengar', undefined);
   });
 
@@ -422,7 +450,8 @@ describe('useDamageCalc', () => {
   it('ignores a stale in-flight learnset fetch once a newer species change has superseded it', async () => {
     const staleFetch = createDeferred<{ moves: { name: string }[]; abilities: never[] }>();
     const freshFetch = createDeferred<{ moves: { name: string }[]; abilities: never[] }>();
-    const getEnrichedSpeciesOptions = vi.fn()
+    const getEnrichedSpeciesOptions = vi
+      .fn()
       .mockReturnValueOnce(staleFetch.promise)
       .mockReturnValueOnce(freshFetch.promise);
     const { result } = setup({ getEnrichedSpeciesOptions });
@@ -431,10 +460,14 @@ describe('useDamageCalc', () => {
     act(() => result.current.setPokemon1({ species: 'Rillaboom' }));
 
     // The stale (Gengar) fetch resolves after the species has already moved on to Rillaboom.
-    await act(async () => { staleFetch.resolve({ moves: [{ name: 'shadow-ball' }], abilities: [] }); });
+    await act(async () => {
+      staleFetch.resolve({ moves: [{ name: 'shadow-ball' }], abilities: [] });
+    });
     expect(result.current.pokemon1MoveOptions).not.toEqual(['Shadow Ball']);
 
-    await act(async () => { freshFetch.resolve({ moves: [{ name: 'grassy-glide' }], abilities: [] }); });
+    await act(async () => {
+      freshFetch.resolve({ moves: [{ name: 'grassy-glide' }], abilities: [] });
+    });
     await waitFor(() => expect(result.current.pokemon1MoveOptions).toEqual(['Grassy Glide']));
   });
 });

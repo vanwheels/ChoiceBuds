@@ -37,7 +37,16 @@ interface TeamPreviewStripProps {
   spriteCacheState: UseSpriteCacheReturn;
 }
 
-export default function TeamPreviewStrip({ pokemon, allSpecies, natureOptions, overrides, onChangeOverride, onSaveOverride, onSaveAllOverrides, spriteCacheState }: TeamPreviewStripProps) {
+export default function TeamPreviewStrip({
+  pokemon,
+  allSpecies,
+  natureOptions,
+  overrides,
+  onChangeOverride,
+  onSaveOverride,
+  onSaveAllOverrides,
+  spriteCacheState,
+}: TeamPreviewStripProps) {
   if (pokemon.length === 0) return null;
 
   const hasAnyOverride = overrides.size > 0;
@@ -46,22 +55,24 @@ export default function TeamPreviewStrip({ pokemon, allSpecies, natureOptions, o
     <div className="bg-zinc-800 rounded-lg p-3">
       <div className="flex items-start justify-between gap-3 mb-2">
         <p className="text-[10px] text-zinc-400 uppercase tracking-wide">
-          Team Preview - session-only Speed SP / nature / form overrides. Save writes Speed SP + nature back to the
-          team (form stays preview-only).
+          Team Preview - session-only Speed SP / nature / form overrides. Save writes Speed SP +
+          nature back to the team (form stays preview-only).
         </p>
         <button
           type="button"
           onClick={onSaveAllOverrides}
           disabled={!hasAnyOverride}
           className={`px-2 py-1 text-[10px] font-bold rounded shrink-0 transition-colors ${
-            hasAnyOverride ? 'bg-accent-gold text-zinc-900 hover:bg-accent-gold/90 cursor-pointer' : 'bg-zinc-700 text-zinc-500 cursor-not-allowed'
+            hasAnyOverride
+              ? 'bg-accent-gold text-zinc-900 hover:bg-accent-gold/90 cursor-pointer'
+              : 'bg-zinc-700 text-zinc-500 cursor-not-allowed'
           }`}
         >
           Save All
         </button>
       </div>
       <div className="flex flex-wrap gap-2">
-        {pokemon.map(p => {
+        {pokemon.map((p) => {
           const hasOverride = overrides.has(p.id);
           const override = overrides.get(p.id) ?? defaultSpeedOverride(p);
           const formes = getFormeFamily(allSpecies, override.species);

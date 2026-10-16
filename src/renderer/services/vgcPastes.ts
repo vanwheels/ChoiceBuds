@@ -81,7 +81,7 @@ function toRow(cells: string[]): VgcPasteTeamRow | null {
     rank: cells[COL_RANK]?.trim() ?? '',
     date: cells[COL_DATE]?.trim() ?? '',
     pokepasteUrl,
-    species: SPECIES_COLUMNS.map(col => cells[col]?.trim() ?? '').filter(Boolean),
+    species: SPECIES_COLUMNS.map((col) => cells[col]?.trim() ?? '').filter(Boolean),
     linkToSource: cells[COL_LINK_TO_SOURCE]?.trim() ?? '',
     reportVideo: cells[COL_REPORT_VIDEO]?.trim() ?? '',
     otherLinks: cells[COL_OTHER_LINKS]?.trim() ?? '',

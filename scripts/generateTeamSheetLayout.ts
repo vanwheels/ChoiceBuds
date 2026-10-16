@@ -59,8 +59,17 @@ const HEADER_FIELD_SIZE = 10;
 // columns wouldn't silently go stale here.
 const STAT_BOX_RIGHT_EDGE_A = 308;
 
-interface TextItem { x: number; y: number; w: number; str: string }
-interface Pos { x: number; y: number; size: number }
+interface TextItem {
+  x: number;
+  y: number;
+  w: number;
+  str: string;
+}
+interface Pos {
+  x: number;
+  y: number;
+  size: number;
+}
 
 function value(item: TextItem, size: number): Pos {
   return { x: Number((item.x + item.w + GAP_X).toFixed(1)), y: Number(item.y.toFixed(1)), size };
@@ -70,24 +79,33 @@ async function getPageItems(doc: pdfjsLib.PDFDocumentProxy, pageNum: number): Pr
   const page = await doc.getPage(pageNum);
   const content = await page.getTextContent();
   return content.items
-    .map((item: any) => ({ x: item.transform[4], y: item.transform[5], w: item.width, str: item.str }))
+    .map((item: any) => ({
+      x: item.transform[4],
+      y: item.transform[5],
+      w: item.width,
+      str: item.str,
+    }))
     .filter((item: TextItem) => item.str.trim());
 }
 
 function findAll(items: TextItem[], str: string): TextItem[] {
-  return items.filter(i => i.str === str);
+  return items.filter((i) => i.str === str);
 }
 
 function findOne(items: TextItem[], str: string): TextItem {
   const matches = findAll(items, str);
-  if (matches.length !== 1) throw new Error(`Expected exactly 1 match for "${str}", found ${matches.length}`);
+  if (matches.length !== 1)
+    throw new Error(`Expected exactly 1 match for "${str}", found ${matches.length}`);
   return matches[0];
 }
 
 /** Column A (left) per-mon labels sit at x<200; column B (right) at 300<=x<450 - excludes the staff stat-table columns at x~248/540, which are deliberately never filled (see teamSheetLayout.ts header). */
 function findColumnRows(items: TextItem[], str: string, column: 'A' | 'B'): TextItem[] {
-  const matches = items.filter(i => i.str === str && (column === 'A' ? i.x < 200 : i.x >= 300 && i.x < 450));
-  if (matches.length !== 3) throw new Error(`Expected 3 rows for "${str}" col ${column}, found ${matches.length}`);
+  const matches = items.filter(
+    (i) => i.str === str && (column === 'A' ? i.x < 200 : i.x >= 300 && i.x < 450),
+  );
+  if (matches.length !== 3)
+    throw new Error(`Expected 3 rows for "${str}" col ${column}, found ${matches.length}`);
   return matches.sort((a, b) => b.y - a.y);
 }
 
@@ -102,15 +120,27 @@ function buildPokemonSlots(items: TextItem[]) {
     ['move3', 'Move 3'],
     ['move4', 'Move 4'],
   ];
-  const colA = Object.fromEntries(fieldLabels.map(([key, label]) => [key, findColumnRows(items, label, 'A')]));
-  const colB = Object.fromEntries(fieldLabels.map(([key, label]) => [key, findColumnRows(items, label, 'B')]));
+  const colA = Object.fromEntries(
+    fieldLabels.map(([key, label]) => [key, findColumnRows(items, label, 'A')]),
+  );
+  const colB = Object.fromEntries(
+    fieldLabels.map(([key, label]) => [key, findColumnRows(items, label, 'B')]),
+  );
 
   const slots = [];
   for (let row = 0; row < 3; row++) {
-    slots.push(Object.fromEntries(fieldLabels.map(([key]) => [key, value(colA[key][row], PER_MON_FIELD_SIZE)])));
+    slots.push(
+      Object.fromEntries(
+        fieldLabels.map(([key]) => [key, value(colA[key][row], PER_MON_FIELD_SIZE)]),
+      ),
+    );
   }
   for (let row = 0; row < 3; row++) {
-    slots.push(Object.fromEntries(fieldLabels.map(([key]) => [key, value(colB[key][row], PER_MON_FIELD_SIZE)])));
+    slots.push(
+      Object.fromEntries(
+        fieldLabels.map(([key]) => [key, value(colB[key][row], PER_MON_FIELD_SIZE)]),
+      ),
+    );
   }
   return slots;
 }
@@ -126,8 +156,11 @@ const STAT_FIELD_LABELS: [key: string, label: string][] = [
 
 /** The per-Pokémon stat side-table sits further right than the Ability/Held Item/Move columns it lines up with - colA's numbers at 200<=x<300, colB's at x>=500, distinct from both per-mon field column ranges above. */
 function findStatColumnRows(items: TextItem[], str: string, column: 'A' | 'B'): TextItem[] {
-  const matches = items.filter(i => i.str === str && (column === 'A' ? (i.x >= 200 && i.x < 300) : i.x >= 500));
-  if (matches.length !== 3) throw new Error(`Expected 3 rows for stat "${str}" col ${column}, found ${matches.length}`);
+  const matches = items.filter(
+    (i) => i.str === str && (column === 'A' ? i.x >= 200 && i.x < 300 : i.x >= 500),
+  );
+  if (matches.length !== 3)
+    throw new Error(`Expected 3 rows for stat "${str}" col ${column}, found ${matches.length}`);
   return matches.sort((a, b) => b.y - a.y);
 }
 
@@ -146,10 +179,12 @@ function findStatColumnRows(items: TextItem[], str: string, column: 'A' | 'B'): 
  * fixed width up front, since "162" and "8" aren't the same width.
  */
 function statColumnAnchorX(colItems: Record<string, TextItem[]>, boxRightEdge: number): number {
-  const maxLabelEnd = Math.max(...STAT_FIELD_LABELS.map(([key]) => {
-    const item = colItems[key][0];
-    return item.x + item.w;
-  }));
+  const maxLabelEnd = Math.max(
+    ...STAT_FIELD_LABELS.map(([key]) => {
+      const item = colItems[key][0];
+      return item.x + item.w;
+    }),
+  );
   const left = maxLabelEnd + GAP_X;
   const right = boxRightEdge - 3;
   return Number(((left + right) / 2).toFixed(1));
@@ -170,27 +205,47 @@ function statColumnAnchorX(colItems: Record<string, TextItem[]>, boxRightEdge: n
 const STAT_VALUE_Y_NUDGE = 2;
 
 function buildStatsTables(items: TextItem[]) {
-  const colA = Object.fromEntries(STAT_FIELD_LABELS.map(([key, label]) => [key, findStatColumnRows(items, label, 'A')]));
-  const colB = Object.fromEntries(STAT_FIELD_LABELS.map(([key, label]) => [key, findStatColumnRows(items, label, 'B')]));
+  const colA = Object.fromEntries(
+    STAT_FIELD_LABELS.map(([key, label]) => [key, findStatColumnRows(items, label, 'A')]),
+  );
+  const colB = Object.fromEntries(
+    STAT_FIELD_LABELS.map(([key, label]) => [key, findStatColumnRows(items, label, 'B')]),
+  );
 
   // Column B is column A's exact layout shifted right by the same delta as
   // the "Pokémon" label's own colA->colB offset (both columns are
   // identically laid out, just mirrored across the page).
   const pokemonLabels = findAll(items, 'Pokémon');
-  const colShiftX = pokemonLabels.filter(i => i.x >= 300)[0].x - pokemonLabels.filter(i => i.x < 200)[0].x;
+  const colShiftX =
+    pokemonLabels.filter((i) => i.x >= 300)[0].x - pokemonLabels.filter((i) => i.x < 200)[0].x;
   const anchorA = statColumnAnchorX(colA, STAT_BOX_RIGHT_EDGE_A);
   const anchorB = statColumnAnchorX(colB, STAT_BOX_RIGHT_EDGE_A + colShiftX);
 
   const statKeys = STAT_FIELD_LABELS.map(([key]) => key);
   const cellHeight = colA[statKeys[0]][0].y - colA[statKeys[1]][0].y; // HP row's y minus Atk row's y
-  const valueY = (labelY: number) => Number((labelY - cellHeight / 2 - STAT_VALUE_Y_NUDGE).toFixed(1));
+  const valueY = (labelY: number) =>
+    Number((labelY - cellHeight / 2 - STAT_VALUE_Y_NUDGE).toFixed(1));
 
   const tables = [];
   for (let row = 0; row < 3; row++) {
-    tables.push(Object.fromEntries(STAT_FIELD_LABELS.map(([key]) => [key, { x: anchorA, y: valueY(colA[key][row].y), size: PER_MON_FIELD_SIZE }])));
+    tables.push(
+      Object.fromEntries(
+        STAT_FIELD_LABELS.map(([key]) => [
+          key,
+          { x: anchorA, y: valueY(colA[key][row].y), size: PER_MON_FIELD_SIZE },
+        ]),
+      ),
+    );
   }
   for (let row = 0; row < 3; row++) {
-    tables.push(Object.fromEntries(STAT_FIELD_LABELS.map(([key]) => [key, { x: anchorB, y: valueY(colB[key][row].y), size: PER_MON_FIELD_SIZE }])));
+    tables.push(
+      Object.fromEntries(
+        STAT_FIELD_LABELS.map(([key]) => [
+          key,
+          { x: anchorB, y: valueY(colB[key][row].y), size: PER_MON_FIELD_SIZE },
+        ]),
+      ),
+    );
   }
   return tables;
 }
@@ -198,16 +253,31 @@ function buildStatsTables(items: TextItem[]) {
 function buildHeaderStaffOnly(items: TextItem[]) {
   const playerId = findOne(items, 'Player ID:');
   const dob = findOne(items, 'Date of Birth:');
-  const slashes = findAll(items, '/').filter(i => Math.abs(i.y - dob.y) < 1).sort((a, b) => a.x - b.x);
-  if (slashes.length !== 2) throw new Error(`Expected 2 slashes on Date of Birth line, found ${slashes.length}`);
+  const slashes = findAll(items, '/')
+    .filter((i) => Math.abs(i.y - dob.y) < 1)
+    .sort((a, b) => a.x - b.x);
+  if (slashes.length !== 2)
+    throw new Error(`Expected 2 slashes on Date of Birth line, found ${slashes.length}`);
   const [slash1, slash2] = slashes;
   const supportId = findOne(items, 'Support ID');
   return {
     playerId: value(playerId, HEADER_FIELD_SIZE),
     dateOfBirth: {
-      month: { x: Number((dob.x + dob.w + GAP_X).toFixed(1)), y: Number(dob.y.toFixed(1)), size: HEADER_FIELD_SIZE },
-      day: { x: Number((slash1.x + slash1.w + GAP_X).toFixed(1)), y: Number(dob.y.toFixed(1)), size: HEADER_FIELD_SIZE },
-      year: { x: Number((slash2.x + slash2.w + GAP_X).toFixed(1)), y: Number(dob.y.toFixed(1)), size: HEADER_FIELD_SIZE },
+      month: {
+        x: Number((dob.x + dob.w + GAP_X).toFixed(1)),
+        y: Number(dob.y.toFixed(1)),
+        size: HEADER_FIELD_SIZE,
+      },
+      day: {
+        x: Number((slash1.x + slash1.w + GAP_X).toFixed(1)),
+        y: Number(dob.y.toFixed(1)),
+        size: HEADER_FIELD_SIZE,
+      },
+      year: {
+        x: Number((slash2.x + slash2.w + GAP_X).toFixed(1)),
+        y: Number(dob.y.toFixed(1)),
+        size: HEADER_FIELD_SIZE,
+      },
     },
     supportId: value(supportId, HEADER_FIELD_SIZE),
   };
@@ -219,7 +289,11 @@ function buildHeaderShared(items: TextItem[]) {
   const masters = findOne(items, 'Masters');
   return {
     playerName: value(findOne(items, 'Player Name:'), HEADER_FIELD_SIZE),
-    ageDivision: { juniors: value(juniors, HEADER_FIELD_SIZE), seniors: value(seniors, HEADER_FIELD_SIZE), masters: value(masters, HEADER_FIELD_SIZE) },
+    ageDivision: {
+      juniors: value(juniors, HEADER_FIELD_SIZE),
+      seniors: value(seniors, HEADER_FIELD_SIZE),
+      masters: value(masters, HEADER_FIELD_SIZE),
+    },
     trainerNameInGame: value(findOne(items, 'Trainer Name in Game:'), HEADER_FIELD_SIZE),
     battleTeamNumberName: value(findOne(items, 'Battle Team Number / Name:'), HEADER_FIELD_SIZE),
     switchProfileName: value(findOne(items, 'Switch Profile Name:'), HEADER_FIELD_SIZE),
@@ -238,12 +312,17 @@ const page1Items = await getPageItems(doc, 2);
 const page0StatsTables = buildStatsTables(page0Items);
 
 const layout = {
-  page0: { // "1 of 2: For Tournament Staff"
+  page0: {
+    // "1 of 2: For Tournament Staff"
     ...buildHeaderShared(page0Items),
     ...buildHeaderStaffOnly(page0Items),
-    pokemonSlots: buildPokemonSlots(page0Items).map((slot, i) => ({ ...slot, stats: page0StatsTables[i] })),
+    pokemonSlots: buildPokemonSlots(page0Items).map((slot, i) => ({
+      ...slot,
+      stats: page0StatsTables[i],
+    })),
   },
-  page1: { // "2 of 2: For Opponents"
+  page1: {
+    // "2 of 2: For Opponents"
     ...buildHeaderShared(page1Items),
     pokemonSlots: buildPokemonSlots(page1Items),
   },

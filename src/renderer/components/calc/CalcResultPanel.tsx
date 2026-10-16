@@ -16,7 +16,9 @@ export default function CalcResultPanel({ entry }: CalcResultPanelProps) {
     <div className="bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-1.5">
       <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wide">Result</h3>
       {!entry ? (
-        <p className="text-sm text-zinc-500">Set up both Pokémon, pick a move, then click a move row to see the full result.</p>
+        <p className="text-sm text-zinc-500">
+          Set up both Pokémon, pick a move, then click a move row to see the full result.
+        </p>
       ) : entry.errorMessage ? (
         <p className="text-sm text-red-400">{entry.errorMessage}</p>
       ) : entry.desc && entry.range ? (
@@ -33,7 +35,9 @@ export default function CalcResultPanel({ entry }: CalcResultPanelProps) {
           )}
         </>
       ) : (
-        <p className="text-sm text-zinc-500">Pick a species for both sides and a move to see a damage result.</p>
+        <p className="text-sm text-zinc-500">
+          Pick a species for both sides and a move to see a damage result.
+        </p>
       )}
     </div>
   );

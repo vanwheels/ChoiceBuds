@@ -39,7 +39,12 @@ describe('useBattles', () => {
   });
 
   it('loads and normalizes persisted battles on mount', async () => {
-    const database: BattlesDatabase = { schemaVersion: 1, battles: [makeBattle()], tombstones: [], lastModified: 0 };
+    const database: BattlesDatabase = {
+      schemaVersion: 1,
+      battles: [makeBattle()],
+      tombstones: [],
+      lastModified: 0,
+    };
     vi.mocked(window.electron.readBattlesDatabase).mockResolvedValueOnce(database);
 
     const { result } = renderHook(() => useBattles());
@@ -48,7 +53,11 @@ describe('useBattles', () => {
   });
 
   it('backfills an empty tombstones list for a database persisted before tombstones existed', async () => {
-    vi.mocked(window.electron.readBattlesDatabase).mockResolvedValueOnce({ schemaVersion: 1, battles: [makeBattle()], lastModified: 0 });
+    vi.mocked(window.electron.readBattlesDatabase).mockResolvedValueOnce({
+      schemaVersion: 1,
+      battles: [makeBattle()],
+      lastModified: 0,
+    });
 
     const { result } = renderHook(() => useBattles());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -56,7 +65,11 @@ describe('useBattles', () => {
   });
 
   it('backfills schemaVersion for a database persisted before the field existed', async () => {
-    vi.mocked(window.electron.readBattlesDatabase).mockResolvedValueOnce({ battles: [makeBattle()], tombstones: [], lastModified: 0 });
+    vi.mocked(window.electron.readBattlesDatabase).mockResolvedValueOnce({
+      battles: [makeBattle()],
+      tombstones: [],
+      lastModified: 0,
+    });
 
     const { result } = renderHook(() => useBattles());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -83,7 +96,7 @@ describe('useBattles', () => {
 
     expect(result.current.battles[0].id).toBe('new-battle');
     expect(window.electron.writeBattlesDatabase).toHaveBeenCalledWith(
-      expect.objectContaining({ battles: [expect.objectContaining({ id: 'new-battle' })] })
+      expect.objectContaining({ battles: [expect.objectContaining({ id: 'new-battle' })] }),
     );
   });
 

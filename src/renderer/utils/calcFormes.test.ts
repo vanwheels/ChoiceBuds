@@ -42,7 +42,13 @@ const ABSOL_FAMILY: CalcSpeciesRef[] = [
   { name: 'Absol-Mega-Z', baseSpecies: 'Absol' },
 ];
 
-const ALL_SPECIES = [...CHARIZARD_FAMILY, ...AEGISLASH_FAMILY, ...UNRELATED, ...UNCURATED_MEGA_FAMILY, ...ABSOL_FAMILY];
+const ALL_SPECIES = [
+  ...CHARIZARD_FAMILY,
+  ...AEGISLASH_FAMILY,
+  ...UNRELATED,
+  ...UNCURATED_MEGA_FAMILY,
+  ...ABSOL_FAMILY,
+];
 
 describe('getFormeFamily', () => {
   it('returns an empty family for an empty species name', () => {
@@ -97,7 +103,7 @@ describe('getFormeFamily', () => {
     expect(family.statFormes).toEqual(['Mewtwo']);
   });
 
-  it('lists both of Reg M-C\'s curated Mega formes for the same species (ordinary Mega + Mega Z)', () => {
+  it("lists both of Reg M-C's curated Mega formes for the same species (ordinary Mega + Mega Z)", () => {
     const family = getFormeFamily(ALL_SPECIES, 'Absol');
     expect(family.megaFormes).toEqual(['Absol-Mega', 'Absol-Mega-Z']);
   });

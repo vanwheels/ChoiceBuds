@@ -70,7 +70,11 @@ export interface PartiallyCoveredUsageThreat extends UsageThreat {
  * threat's likely moves' effective types rather than its raw species types.
  */
 export function slotResistsThreat(threatTypes: string[], defender: DefendingSlot): boolean {
-  return Math.max(...threatTypes.map(t => getDefensiveMultiplier(t, defender.types, defender.ability))) < 1;
+  return (
+    Math.max(
+      ...threatTypes.map((t) => getDefensiveMultiplier(t, defender.types, defender.ability)),
+    ) < 1
+  );
 }
 
 /**
@@ -78,10 +82,13 @@ export function slotResistsThreat(threatTypes: string[], defender: DefendingSlot
  * (columnPosition <= USAGE_THREAT_RANK_CUTOFF) that no team slot resists or
  * is immune to.
  */
-export function computeUsageThreats(defenders: DefendingSlot[], candidates: UsageThreat[]): UsageThreat[] {
+export function computeUsageThreats(
+  defenders: DefendingSlot[],
+  candidates: UsageThreat[],
+): UsageThreat[] {
   return candidates
-    .filter(c => c.columnPosition <= USAGE_THREAT_RANK_CUTOFF)
-    .filter(c => defenders.every(d => !slotResistsThreat(c.types, d)))
+    .filter((c) => c.columnPosition <= USAGE_THREAT_RANK_CUTOFF)
+    .filter((c) => defenders.every((d) => !slotResistsThreat(c.types, d)))
     .sort((a, b) => a.columnPosition - b.columnPosition);
 }
 
@@ -93,11 +100,14 @@ export function computeUsageThreats(defenders: DefendingSlot[], candidates: Usag
  */
 export function computePartiallyCoveredUsageThreats(
   defenders: DefendingSlot[],
-  candidates: UsageThreat[]
+  candidates: UsageThreat[],
 ): PartiallyCoveredUsageThreat[] {
   return candidates
-    .filter(c => c.columnPosition <= USAGE_THREAT_RANK_CUTOFF)
-    .map(c => ({ ...c, resistCount: defenders.filter(d => slotResistsThreat(c.types, d)).length }))
-    .filter(c => c.resistCount === 1)
+    .filter((c) => c.columnPosition <= USAGE_THREAT_RANK_CUTOFF)
+    .map((c) => ({
+      ...c,
+      resistCount: defenders.filter((d) => slotResistsThreat(c.types, d)).length,
+    }))
+    .filter((c) => c.resistCount === 1)
     .sort((a, b) => a.columnPosition - b.columnPosition);
 }

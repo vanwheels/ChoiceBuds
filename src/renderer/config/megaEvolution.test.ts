@@ -10,7 +10,12 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { CURATED_MEGA_FORM_SLUGS, formatMegaLabel, getMegaApiSlug, getMegaFormsForSpecies } from './megaEvolution';
+import {
+  CURATED_MEGA_FORM_SLUGS,
+  formatMegaLabel,
+  getMegaApiSlug,
+  getMegaFormsForSpecies,
+} from './megaEvolution';
 
 describe('Floette Mega Evolution exception', () => {
   it('resolves the held-item match against floette-eternal, not bare floette', () => {
@@ -19,7 +24,9 @@ describe('Floette Mega Evolution exception', () => {
   });
 
   it('lists floettite under floette-eternal for getMegaFormsForSpecies', () => {
-    expect(getMegaFormsForSpecies('floette-eternal')).toEqual([{ item: 'floettite', suffix: 'mega' }]);
+    expect(getMegaFormsForSpecies('floette-eternal')).toEqual([
+      { item: 'floettite', suffix: 'mega' },
+    ]);
     expect(getMegaFormsForSpecies('floette')).toEqual([]);
   });
 
@@ -39,7 +46,7 @@ describe('formatMegaLabel (Add Pokémon Table: Mega Form Rows Leg 2)', () => {
     expect(formatMegaLabel('Charizard', 'mega-y')).toBe('Mega Charizard Y');
   });
 
-  it("labels Reg M-C's second \"Mega Z\" form, matching megaAbilities.ts's own naming", () => {
+  it('labels Reg M-C\'s second "Mega Z" form, matching megaAbilities.ts\'s own naming', () => {
     expect(formatMegaLabel('Absol', 'mega-z')).toBe('Mega Absol Z');
   });
 });

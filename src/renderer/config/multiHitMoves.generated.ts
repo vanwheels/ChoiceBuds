@@ -9,128 +9,128 @@
  * from this table isn't multi-hit.
  */
 export const MULTI_HIT_MOVES_DATA: Record<string, { min: number; max: number }> = {
-  "arm-thrust": {
-    "min": 2,
-    "max": 5
+  'arm-thrust': {
+    min: 2,
+    max: 5,
   },
-  "barrage": {
-    "min": 2,
-    "max": 5
+  barrage: {
+    min: 2,
+    max: 5,
   },
-  "bone-rush": {
-    "min": 2,
-    "max": 5
+  'bone-rush': {
+    min: 2,
+    max: 5,
   },
-  "bonemerang": {
-    "min": 2,
-    "max": 2
+  bonemerang: {
+    min: 2,
+    max: 2,
   },
-  "bullet-seed": {
-    "min": 2,
-    "max": 5
+  'bullet-seed': {
+    min: 2,
+    max: 5,
   },
-  "comet-punch": {
-    "min": 2,
-    "max": 5
+  'comet-punch': {
+    min: 2,
+    max: 5,
   },
-  "double-hit": {
-    "min": 2,
-    "max": 2
+  'double-hit': {
+    min: 2,
+    max: 2,
   },
-  "double-iron-bash": {
-    "min": 2,
-    "max": 2
+  'double-iron-bash': {
+    min: 2,
+    max: 2,
   },
-  "double-kick": {
-    "min": 2,
-    "max": 2
+  'double-kick': {
+    min: 2,
+    max: 2,
   },
-  "double-slap": {
-    "min": 2,
-    "max": 5
+  'double-slap': {
+    min: 2,
+    max: 5,
   },
-  "dragon-darts": {
-    "min": 2,
-    "max": 2
+  'dragon-darts': {
+    min: 2,
+    max: 2,
   },
-  "dual-chop": {
-    "min": 2,
-    "max": 2
+  'dual-chop': {
+    min: 2,
+    max: 2,
   },
-  "dual-wingbeat": {
-    "min": 2,
-    "max": 2
+  'dual-wingbeat': {
+    min: 2,
+    max: 2,
   },
-  "fury-attack": {
-    "min": 2,
-    "max": 5
+  'fury-attack': {
+    min: 2,
+    max: 5,
   },
-  "fury-swipes": {
-    "min": 2,
-    "max": 5
+  'fury-swipes': {
+    min: 2,
+    max: 5,
   },
-  "gear-grind": {
-    "min": 2,
-    "max": 2
+  'gear-grind': {
+    min: 2,
+    max: 2,
   },
-  "icicle-spear": {
-    "min": 2,
-    "max": 5
+  'icicle-spear': {
+    min: 2,
+    max: 5,
   },
-  "pin-missile": {
-    "min": 2,
-    "max": 5
+  'pin-missile': {
+    min: 2,
+    max: 5,
   },
-  "population-bomb": {
-    "min": 1,
-    "max": 10
+  'population-bomb': {
+    min: 1,
+    max: 10,
   },
-  "rock-blast": {
-    "min": 2,
-    "max": 5
+  'rock-blast': {
+    min: 2,
+    max: 5,
   },
-  "scale-shot": {
-    "min": 2,
-    "max": 5
+  'scale-shot': {
+    min: 2,
+    max: 5,
   },
-  "spike-cannon": {
-    "min": 2,
-    "max": 5
+  'spike-cannon': {
+    min: 2,
+    max: 5,
   },
-  "surging-strikes": {
-    "min": 3,
-    "max": 3
+  'surging-strikes': {
+    min: 3,
+    max: 3,
   },
-  "tachyon-cutter": {
-    "min": 2,
-    "max": 2
+  'tachyon-cutter': {
+    min: 2,
+    max: 2,
   },
-  "tail-slap": {
-    "min": 2,
-    "max": 5
+  'tail-slap': {
+    min: 2,
+    max: 5,
   },
-  "triple-axel": {
-    "min": 1,
-    "max": 3
+  'triple-axel': {
+    min: 1,
+    max: 3,
   },
-  "triple-dive": {
-    "min": 3,
-    "max": 3
+  'triple-dive': {
+    min: 3,
+    max: 3,
   },
-  "triple-kick": {
-    "min": 1,
-    "max": 3
+  'triple-kick': {
+    min: 1,
+    max: 3,
   },
-  "twin-beam": {
-    "min": 2,
-    "max": 2
+  'twin-beam': {
+    min: 2,
+    max: 2,
   },
-  "twineedle": {
-    "min": 2,
-    "max": 2
+  twineedle: {
+    min: 2,
+    max: 2,
   },
-  "water-shuriken": {
-    "min": 2,
-    "max": 5
-  }
+  'water-shuriken': {
+    min: 2,
+    max: 5,
+  },
 };

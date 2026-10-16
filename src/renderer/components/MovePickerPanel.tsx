@@ -30,13 +30,23 @@ function matchesTag(move: MoveData, tag: string): boolean {
   return move.category === tag || move.type.toLowerCase() === tag;
 }
 
-export default function MovePickerPanel({ moveIndex, moves, usagePercentByName, rulesetId, maxHeight, onSelect, onClose }: MovePickerPanelProps) {
+export default function MovePickerPanel({
+  moveIndex,
+  moves,
+  usagePercentByName,
+  rulesetId,
+  maxHeight,
+  onSelect,
+  onClose,
+}: MovePickerPanelProps) {
   const [search, setSearch] = useState('');
   const ref = useDismissable<HTMLDivElement>(onClose);
 
   const tag = parseTagFilter(search);
-  const filtered = moves.filter(move =>
-    tag !== null ? matchesTag(move, tag) : toReadableName(move.name).toLowerCase().includes(search.toLowerCase())
+  const filtered = moves.filter((move) =>
+    tag !== null
+      ? matchesTag(move, tag)
+      : toReadableName(move.name).toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
@@ -45,7 +55,9 @@ export default function MovePickerPanel({ moveIndex, moves, usagePercentByName, 
       className="w-full flex flex-col gap-2 bg-zinc-800 border-2 border-accent-gold rounded-lg p-2 overflow-hidden"
       style={{ maxHeight }}
     >
-      <p className="text-[10px] font-bold text-zinc-400 uppercase text-center">Select Move {moveIndex + 1}</p>
+      <p className="text-[10px] font-bold text-zinc-400 uppercase text-center">
+        Select Move {moveIndex + 1}
+      </p>
       <input
         type="text"
         value={search}
@@ -69,8 +81,16 @@ export default function MovePickerPanel({ moveIndex, moves, usagePercentByName, 
                 className={`px-2 py-1.5 hover:bg-zinc-700 cursor-pointer transition-colors ${!isLegal ? 'opacity-50' : ''}`}
               >
                 <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                  <span className={`text-sm font-medium ${isLegal ? 'text-white' : 'text-zinc-400'}`}>{toReadableName(move.name)}</span>
-                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${theme.bg} ${theme.text}`}>{move.type}</span>
+                  <span
+                    className={`text-sm font-medium ${isLegal ? 'text-white' : 'text-zinc-400'}`}
+                  >
+                    {toReadableName(move.name)}
+                  </span>
+                  <span
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${theme.bg} ${theme.text}`}
+                  >
+                    {move.type}
+                  </span>
                   <span className="text-zinc-300 text-xs capitalize">{move.category}</span>
                   {!isLegal && (
                     <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-red-900/40 text-red-300 border border-red-800 whitespace-nowrap">
@@ -78,7 +98,9 @@ export default function MovePickerPanel({ moveIndex, moves, usagePercentByName, 
                     </span>
                   )}
                   {percent != null && (
-                    <span className="text-accent-gold text-[10px] font-bold whitespace-nowrap">{percent.toFixed(1)}%</span>
+                    <span className="text-accent-gold text-[10px] font-bold whitespace-nowrap">
+                      {percent.toFixed(1)}%
+                    </span>
                   )}
                   <span className="text-zinc-400 text-[10px] ml-auto whitespace-nowrap">
                     Pow {move.power ?? '--'} · Acc {move.accuracy ?? '--'} · PP {move.pp}

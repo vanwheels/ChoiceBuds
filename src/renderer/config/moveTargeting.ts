@@ -20,12 +20,12 @@ export type TargetCategory =
   | 'unknown';
 
 const TARGET_CATEGORY_MAP: Record<string, TargetCategory> = {
-  'user': 'self',
+  user: 'self',
   'selected-pokemon': 'single-foe',
   'selected-pokemon-me-first': 'single-foe',
   'random-opponent': 'single-foe',
   'all-opponents': 'all-foes',
-  'ally': 'single-ally',
+  ally: 'single-ally',
   'user-or-ally': 'single-ally',
   // PokeAPI distinguishes these two: 'user-and-allies' includes the mover
   // itself (e.g. Life Dew), 'all-allies' means every OTHER Pokemon on the
@@ -55,11 +55,16 @@ const TARGET_CATEGORY_MAP: Record<string, TargetCategory> = {
  * of power/accuracy/description.
  */
 const MOVE_TARGET_OVERRIDES: Record<string, TargetCategory> = {
-  'coaching': 'other-allies',
+  coaching: 'other-allies',
 };
 
-export function getTargetCategory(rawTarget: string | undefined, moveName?: string): TargetCategory {
-  const override = moveName ? MOVE_TARGET_OVERRIDES[moveName.toLowerCase().trim().replace(/\s+/g, '-')] : undefined;
+export function getTargetCategory(
+  rawTarget: string | undefined,
+  moveName?: string,
+): TargetCategory {
+  const override = moveName
+    ? MOVE_TARGET_OVERRIDES[moveName.toLowerCase().trim().replace(/\s+/g, '-')]
+    : undefined;
   if (override) return override;
   if (!rawTarget) return 'unknown';
   return TARGET_CATEGORY_MAP[rawTarget] ?? 'unknown';

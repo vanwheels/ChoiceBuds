@@ -8,7 +8,11 @@
  * the one coordinate (Age Division checkboxes) that's an estimate rather
  * than an exact measurement.
  */
-export interface TeamSheetFieldPos { x: number; y: number; size: number }
+export interface TeamSheetFieldPos {
+  x: number;
+  y: number;
+  size: number;
+}
 export interface TeamSheetStatsTable {
   hp: TeamSheetFieldPos;
   atk: TeamSheetFieldPos;
@@ -32,7 +36,11 @@ export interface TeamSheetStaffPokemonSlot extends TeamSheetPokemonSlot {
 }
 export interface TeamSheetPageLayout {
   playerName: TeamSheetFieldPos;
-  ageDivision: { juniors: TeamSheetFieldPos; seniors: TeamSheetFieldPos; masters: TeamSheetFieldPos };
+  ageDivision: {
+    juniors: TeamSheetFieldPos;
+    seniors: TeamSheetFieldPos;
+    masters: TeamSheetFieldPos;
+  };
   trainerNameInGame: TeamSheetFieldPos;
   battleTeamNumberName: TeamSheetFieldPos;
   switchProfileName: TeamSheetFieldPos;
@@ -45,809 +53,809 @@ export interface TeamSheetStaffPageLayout extends Omit<TeamSheetPageLayout, 'pok
   pokemonSlots: TeamSheetStaffPokemonSlot[];
 }
 export const TEAM_SHEET_LAYOUT: { page0: TeamSheetStaffPageLayout; page1: TeamSheetPageLayout } = {
-  "page0": {
-    "playerName": {
-      "x": 142.4,
-      "y": 706.4,
-      "size": 10
+  page0: {
+    playerName: {
+      x: 142.4,
+      y: 706.4,
+      size: 10,
     },
-    "ageDivision": {
-      "juniors": {
-        "x": 470,
-        "y": 706.4,
-        "size": 10
+    ageDivision: {
+      juniors: {
+        x: 470,
+        y: 706.4,
+        size: 10,
       },
-      "seniors": {
-        "x": 523.2,
-        "y": 706.4,
-        "size": 10
+      seniors: {
+        x: 523.2,
+        y: 706.4,
+        size: 10,
       },
-      "masters": {
-        "x": 577.1,
-        "y": 706.4,
-        "size": 10
-      }
-    },
-    "trainerNameInGame": {
-      "x": 142.5,
-      "y": 684.3,
-      "size": 10
-    },
-    "battleTeamNumberName": {
-      "x": 142.6,
-      "y": 664.4,
-      "size": 10
-    },
-    "switchProfileName": {
-      "x": 142.5,
-      "y": 639.9,
-      "size": 10
-    },
-    "playerId": {
-      "x": 434.7,
-      "y": 684.3,
-      "size": 10
-    },
-    "dateOfBirth": {
-      "month": {
-        "x": 434.7,
-        "y": 664.4,
-        "size": 10
+      masters: {
+        x: 577.1,
+        y: 706.4,
+        size: 10,
       },
-      "day": {
-        "x": 488.3,
-        "y": 664.4,
-        "size": 10
+    },
+    trainerNameInGame: {
+      x: 142.5,
+      y: 684.3,
+      size: 10,
+    },
+    battleTeamNumberName: {
+      x: 142.6,
+      y: 664.4,
+      size: 10,
+    },
+    switchProfileName: {
+      x: 142.5,
+      y: 639.9,
+      size: 10,
+    },
+    playerId: {
+      x: 434.7,
+      y: 684.3,
+      size: 10,
+    },
+    dateOfBirth: {
+      month: {
+        x: 434.7,
+        y: 664.4,
+        size: 10,
       },
-      "year": {
-        "x": 544.1,
-        "y": 664.4,
-        "size": 10
-      }
+      day: {
+        x: 488.3,
+        y: 664.4,
+        size: 10,
+      },
+      year: {
+        x: 544.1,
+        y: 664.4,
+        size: 10,
+      },
     },
-    "supportId": {
-      "x": 434.6,
-      "y": 639.9,
-      "size": 10
+    supportId: {
+      x: 434.6,
+      y: 639.9,
+      size: 10,
     },
-    "pokemonSlots": [
+    pokemonSlots: [
       {
-        "species": {
-          "x": 86.1,
-          "y": 610.7,
-          "size": 9
+        species: {
+          x: 86.1,
+          y: 610.7,
+          size: 9,
         },
-        "statAlignment": {
-          "x": 86.7,
-          "y": 584.6,
-          "size": 9
+        statAlignment: {
+          x: 86.7,
+          y: 584.6,
+          size: 9,
         },
-        "ability": {
-          "x": 86.1,
-          "y": 559.8,
-          "size": 9
+        ability: {
+          x: 86.1,
+          y: 559.8,
+          size: 9,
         },
-        "heldItem": {
-          "x": 86.1,
-          "y": 536.6,
-          "size": 9
+        heldItem: {
+          x: 86.1,
+          y: 536.6,
+          size: 9,
         },
-        "move1": {
-          "x": 86.1,
-          "y": 513.4,
-          "size": 9
+        move1: {
+          x: 86.1,
+          y: 513.4,
+          size: 9,
         },
-        "move2": {
-          "x": 86.1,
-          "y": 490.3,
-          "size": 9
+        move2: {
+          x: 86.1,
+          y: 490.3,
+          size: 9,
         },
-        "move3": {
-          "x": 86.1,
-          "y": 467.1,
-          "size": 9
+        move3: {
+          x: 86.1,
+          y: 467.1,
+          size: 9,
         },
-        "move4": {
-          "x": 86.1,
-          "y": 443.9,
-          "size": 9
+        move4: {
+          x: 86.1,
+          y: 443.9,
+          size: 9,
         },
-        "stats": {
-          "hp": {
-            "x": 287.3,
-            "y": 556.6,
-            "size": 9
+        stats: {
+          hp: {
+            x: 287.3,
+            y: 556.6,
+            size: 9,
           },
-          "atk": {
-            "x": 287.3,
-            "y": 533.5,
-            "size": 9
+          atk: {
+            x: 287.3,
+            y: 533.5,
+            size: 9,
           },
-          "def": {
-            "x": 287.3,
-            "y": 510.3,
-            "size": 9
+          def: {
+            x: 287.3,
+            y: 510.3,
+            size: 9,
           },
-          "spa": {
-            "x": 287.3,
-            "y": 487.1,
-            "size": 9
+          spa: {
+            x: 287.3,
+            y: 487.1,
+            size: 9,
           },
-          "spd": {
-            "x": 287.3,
-            "y": 464,
-            "size": 9
+          spd: {
+            x: 287.3,
+            y: 464,
+            size: 9,
           },
-          "spe": {
-            "x": 287.3,
-            "y": 440.8,
-            "size": 9
-          }
-        }
-      },
-      {
-        "species": {
-          "x": 86.1,
-          "y": 409.3,
-          "size": 9
+          spe: {
+            x: 287.3,
+            y: 440.8,
+            size: 9,
+          },
         },
-        "statAlignment": {
-          "x": 86.7,
-          "y": 383.2,
-          "size": 9
-        },
-        "ability": {
-          "x": 86.1,
-          "y": 358.4,
-          "size": 9
-        },
-        "heldItem": {
-          "x": 86.1,
-          "y": 335.2,
-          "size": 9
-        },
-        "move1": {
-          "x": 86.1,
-          "y": 312.1,
-          "size": 9
-        },
-        "move2": {
-          "x": 86.1,
-          "y": 288.9,
-          "size": 9
-        },
-        "move3": {
-          "x": 86.1,
-          "y": 265.7,
-          "size": 9
-        },
-        "move4": {
-          "x": 86.1,
-          "y": 242.6,
-          "size": 9
-        },
-        "stats": {
-          "hp": {
-            "x": 287.3,
-            "y": 355.2,
-            "size": 9
-          },
-          "atk": {
-            "x": 287.3,
-            "y": 332.1,
-            "size": 9
-          },
-          "def": {
-            "x": 287.3,
-            "y": 308.9,
-            "size": 9
-          },
-          "spa": {
-            "x": 287.3,
-            "y": 285.7,
-            "size": 9
-          },
-          "spd": {
-            "x": 287.3,
-            "y": 262.6,
-            "size": 9
-          },
-          "spe": {
-            "x": 287.3,
-            "y": 239.4,
-            "size": 9
-          }
-        }
       },
       {
-        "species": {
-          "x": 86.1,
-          "y": 207.9,
-          "size": 9
+        species: {
+          x: 86.1,
+          y: 409.3,
+          size: 9,
         },
-        "statAlignment": {
-          "x": 86.7,
-          "y": 181.8,
-          "size": 9
+        statAlignment: {
+          x: 86.7,
+          y: 383.2,
+          size: 9,
         },
-        "ability": {
-          "x": 86.1,
-          "y": 157,
-          "size": 9
+        ability: {
+          x: 86.1,
+          y: 358.4,
+          size: 9,
         },
-        "heldItem": {
-          "x": 86.1,
-          "y": 133.8,
-          "size": 9
+        heldItem: {
+          x: 86.1,
+          y: 335.2,
+          size: 9,
         },
-        "move1": {
-          "x": 86.1,
-          "y": 110.7,
-          "size": 9
+        move1: {
+          x: 86.1,
+          y: 312.1,
+          size: 9,
         },
-        "move2": {
-          "x": 86.1,
-          "y": 87.5,
-          "size": 9
+        move2: {
+          x: 86.1,
+          y: 288.9,
+          size: 9,
         },
-        "move3": {
-          "x": 86.1,
-          "y": 65.9,
-          "size": 9
+        move3: {
+          x: 86.1,
+          y: 265.7,
+          size: 9,
         },
-        "move4": {
-          "x": 86.1,
-          "y": 44.2,
-          "size": 9
+        move4: {
+          x: 86.1,
+          y: 242.6,
+          size: 9,
         },
-        "stats": {
-          "hp": {
-            "x": 287.3,
-            "y": 153.8,
-            "size": 9
+        stats: {
+          hp: {
+            x: 287.3,
+            y: 355.2,
+            size: 9,
           },
-          "atk": {
-            "x": 287.3,
-            "y": 130.7,
-            "size": 9
+          atk: {
+            x: 287.3,
+            y: 332.1,
+            size: 9,
           },
-          "def": {
-            "x": 287.3,
-            "y": 107.5,
-            "size": 9
+          def: {
+            x: 287.3,
+            y: 308.9,
+            size: 9,
           },
-          "spa": {
-            "x": 287.3,
-            "y": 84.4,
-            "size": 9
+          spa: {
+            x: 287.3,
+            y: 285.7,
+            size: 9,
           },
-          "spd": {
-            "x": 287.3,
-            "y": 61.2,
-            "size": 9
+          spd: {
+            x: 287.3,
+            y: 262.6,
+            size: 9,
           },
-          "spe": {
-            "x": 287.3,
-            "y": 41,
-            "size": 9
-          }
-        }
+          spe: {
+            x: 287.3,
+            y: 239.4,
+            size: 9,
+          },
+        },
       },
       {
-        "species": {
-          "x": 378.2,
-          "y": 610.7,
-          "size": 9
+        species: {
+          x: 86.1,
+          y: 207.9,
+          size: 9,
         },
-        "statAlignment": {
-          "x": 378.8,
-          "y": 584.6,
-          "size": 9
+        statAlignment: {
+          x: 86.7,
+          y: 181.8,
+          size: 9,
         },
-        "ability": {
-          "x": 378.2,
-          "y": 559.8,
-          "size": 9
+        ability: {
+          x: 86.1,
+          y: 157,
+          size: 9,
         },
-        "heldItem": {
-          "x": 378.2,
-          "y": 536.6,
-          "size": 9
+        heldItem: {
+          x: 86.1,
+          y: 133.8,
+          size: 9,
         },
-        "move1": {
-          "x": 378.2,
-          "y": 513.4,
-          "size": 9
+        move1: {
+          x: 86.1,
+          y: 110.7,
+          size: 9,
         },
-        "move2": {
-          "x": 378.2,
-          "y": 490.3,
-          "size": 9
+        move2: {
+          x: 86.1,
+          y: 87.5,
+          size: 9,
         },
-        "move3": {
-          "x": 378.2,
-          "y": 467.1,
-          "size": 9
+        move3: {
+          x: 86.1,
+          y: 65.9,
+          size: 9,
         },
-        "move4": {
-          "x": 378.2,
-          "y": 443.9,
-          "size": 9
+        move4: {
+          x: 86.1,
+          y: 44.2,
+          size: 9,
         },
-        "stats": {
-          "hp": {
-            "x": 579.4,
-            "y": 556.6,
-            "size": 9
+        stats: {
+          hp: {
+            x: 287.3,
+            y: 153.8,
+            size: 9,
           },
-          "atk": {
-            "x": 579.4,
-            "y": 533.5,
-            "size": 9
+          atk: {
+            x: 287.3,
+            y: 130.7,
+            size: 9,
           },
-          "def": {
-            "x": 579.4,
-            "y": 510.3,
-            "size": 9
+          def: {
+            x: 287.3,
+            y: 107.5,
+            size: 9,
           },
-          "spa": {
-            "x": 579.4,
-            "y": 487.1,
-            "size": 9
+          spa: {
+            x: 287.3,
+            y: 84.4,
+            size: 9,
           },
-          "spd": {
-            "x": 579.4,
-            "y": 464,
-            "size": 9
+          spd: {
+            x: 287.3,
+            y: 61.2,
+            size: 9,
           },
-          "spe": {
-            "x": 579.4,
-            "y": 440.8,
-            "size": 9
-          }
-        }
+          spe: {
+            x: 287.3,
+            y: 41,
+            size: 9,
+          },
+        },
       },
       {
-        "species": {
-          "x": 378.2,
-          "y": 409.3,
-          "size": 9
+        species: {
+          x: 378.2,
+          y: 610.7,
+          size: 9,
         },
-        "statAlignment": {
-          "x": 378.8,
-          "y": 383.2,
-          "size": 9
+        statAlignment: {
+          x: 378.8,
+          y: 584.6,
+          size: 9,
         },
-        "ability": {
-          "x": 378.2,
-          "y": 358.4,
-          "size": 9
+        ability: {
+          x: 378.2,
+          y: 559.8,
+          size: 9,
         },
-        "heldItem": {
-          "x": 378.2,
-          "y": 335.2,
-          "size": 9
+        heldItem: {
+          x: 378.2,
+          y: 536.6,
+          size: 9,
         },
-        "move1": {
-          "x": 378.2,
-          "y": 312.1,
-          "size": 9
+        move1: {
+          x: 378.2,
+          y: 513.4,
+          size: 9,
         },
-        "move2": {
-          "x": 378.2,
-          "y": 288.9,
-          "size": 9
+        move2: {
+          x: 378.2,
+          y: 490.3,
+          size: 9,
         },
-        "move3": {
-          "x": 378.2,
-          "y": 265.7,
-          "size": 9
+        move3: {
+          x: 378.2,
+          y: 467.1,
+          size: 9,
         },
-        "move4": {
-          "x": 378.2,
-          "y": 242.6,
-          "size": 9
+        move4: {
+          x: 378.2,
+          y: 443.9,
+          size: 9,
         },
-        "stats": {
-          "hp": {
-            "x": 579.4,
-            "y": 355.2,
-            "size": 9
+        stats: {
+          hp: {
+            x: 579.4,
+            y: 556.6,
+            size: 9,
           },
-          "atk": {
-            "x": 579.4,
-            "y": 332.1,
-            "size": 9
+          atk: {
+            x: 579.4,
+            y: 533.5,
+            size: 9,
           },
-          "def": {
-            "x": 579.4,
-            "y": 308.9,
-            "size": 9
+          def: {
+            x: 579.4,
+            y: 510.3,
+            size: 9,
           },
-          "spa": {
-            "x": 579.4,
-            "y": 285.7,
-            "size": 9
+          spa: {
+            x: 579.4,
+            y: 487.1,
+            size: 9,
           },
-          "spd": {
-            "x": 579.4,
-            "y": 262.6,
-            "size": 9
+          spd: {
+            x: 579.4,
+            y: 464,
+            size: 9,
           },
-          "spe": {
-            "x": 579.4,
-            "y": 239.4,
-            "size": 9
-          }
-        }
+          spe: {
+            x: 579.4,
+            y: 440.8,
+            size: 9,
+          },
+        },
       },
       {
-        "species": {
-          "x": 378.2,
-          "y": 207.9,
-          "size": 9
+        species: {
+          x: 378.2,
+          y: 409.3,
+          size: 9,
         },
-        "statAlignment": {
-          "x": 378.8,
-          "y": 181.8,
-          "size": 9
+        statAlignment: {
+          x: 378.8,
+          y: 383.2,
+          size: 9,
         },
-        "ability": {
-          "x": 378.2,
-          "y": 157,
-          "size": 9
+        ability: {
+          x: 378.2,
+          y: 358.4,
+          size: 9,
         },
-        "heldItem": {
-          "x": 378.2,
-          "y": 133.8,
-          "size": 9
+        heldItem: {
+          x: 378.2,
+          y: 335.2,
+          size: 9,
         },
-        "move1": {
-          "x": 378.2,
-          "y": 110.7,
-          "size": 9
+        move1: {
+          x: 378.2,
+          y: 312.1,
+          size: 9,
         },
-        "move2": {
-          "x": 378.2,
-          "y": 87.5,
-          "size": 9
+        move2: {
+          x: 378.2,
+          y: 288.9,
+          size: 9,
         },
-        "move3": {
-          "x": 378.2,
-          "y": 65.9,
-          "size": 9
+        move3: {
+          x: 378.2,
+          y: 265.7,
+          size: 9,
         },
-        "move4": {
-          "x": 378.2,
-          "y": 44.2,
-          "size": 9
+        move4: {
+          x: 378.2,
+          y: 242.6,
+          size: 9,
         },
-        "stats": {
-          "hp": {
-            "x": 579.4,
-            "y": 153.8,
-            "size": 9
+        stats: {
+          hp: {
+            x: 579.4,
+            y: 355.2,
+            size: 9,
           },
-          "atk": {
-            "x": 579.4,
-            "y": 130.7,
-            "size": 9
+          atk: {
+            x: 579.4,
+            y: 332.1,
+            size: 9,
           },
-          "def": {
-            "x": 579.4,
-            "y": 107.5,
-            "size": 9
+          def: {
+            x: 579.4,
+            y: 308.9,
+            size: 9,
           },
-          "spa": {
-            "x": 579.4,
-            "y": 84.4,
-            "size": 9
+          spa: {
+            x: 579.4,
+            y: 285.7,
+            size: 9,
           },
-          "spd": {
-            "x": 579.4,
-            "y": 61.2,
-            "size": 9
+          spd: {
+            x: 579.4,
+            y: 262.6,
+            size: 9,
           },
-          "spe": {
-            "x": 579.4,
-            "y": 41,
-            "size": 9
-          }
-        }
-      }
-    ]
+          spe: {
+            x: 579.4,
+            y: 239.4,
+            size: 9,
+          },
+        },
+      },
+      {
+        species: {
+          x: 378.2,
+          y: 207.9,
+          size: 9,
+        },
+        statAlignment: {
+          x: 378.8,
+          y: 181.8,
+          size: 9,
+        },
+        ability: {
+          x: 378.2,
+          y: 157,
+          size: 9,
+        },
+        heldItem: {
+          x: 378.2,
+          y: 133.8,
+          size: 9,
+        },
+        move1: {
+          x: 378.2,
+          y: 110.7,
+          size: 9,
+        },
+        move2: {
+          x: 378.2,
+          y: 87.5,
+          size: 9,
+        },
+        move3: {
+          x: 378.2,
+          y: 65.9,
+          size: 9,
+        },
+        move4: {
+          x: 378.2,
+          y: 44.2,
+          size: 9,
+        },
+        stats: {
+          hp: {
+            x: 579.4,
+            y: 153.8,
+            size: 9,
+          },
+          atk: {
+            x: 579.4,
+            y: 130.7,
+            size: 9,
+          },
+          def: {
+            x: 579.4,
+            y: 107.5,
+            size: 9,
+          },
+          spa: {
+            x: 579.4,
+            y: 84.4,
+            size: 9,
+          },
+          spd: {
+            x: 579.4,
+            y: 61.2,
+            size: 9,
+          },
+          spe: {
+            x: 579.4,
+            y: 41,
+            size: 9,
+          },
+        },
+      },
+    ],
   },
-  "page1": {
-    "playerName": {
-      "x": 142.4,
-      "y": 708.2,
-      "size": 10
+  page1: {
+    playerName: {
+      x: 142.4,
+      y: 708.2,
+      size: 10,
     },
-    "ageDivision": {
-      "juniors": {
-        "x": 470,
-        "y": 708.2,
-        "size": 10
+    ageDivision: {
+      juniors: {
+        x: 470,
+        y: 708.2,
+        size: 10,
       },
-      "seniors": {
-        "x": 523.2,
-        "y": 708.2,
-        "size": 10
+      seniors: {
+        x: 523.2,
+        y: 708.2,
+        size: 10,
       },
-      "masters": {
-        "x": 577.1,
-        "y": 708.2,
-        "size": 10
-      }
+      masters: {
+        x: 577.1,
+        y: 708.2,
+        size: 10,
+      },
     },
-    "trainerNameInGame": {
-      "x": 142.5,
-      "y": 686.1,
-      "size": 10
+    trainerNameInGame: {
+      x: 142.5,
+      y: 686.1,
+      size: 10,
     },
-    "battleTeamNumberName": {
-      "x": 142.6,
-      "y": 664.8,
-      "size": 10
+    battleTeamNumberName: {
+      x: 142.6,
+      y: 664.8,
+      size: 10,
     },
-    "switchProfileName": {
-      "x": 142.5,
-      "y": 641.7,
-      "size": 10
+    switchProfileName: {
+      x: 142.5,
+      y: 641.7,
+      size: 10,
     },
-    "pokemonSlots": [
+    pokemonSlots: [
       {
-        "species": {
-          "x": 86.1,
-          "y": 612.9,
-          "size": 9
+        species: {
+          x: 86.1,
+          y: 612.9,
+          size: 9,
         },
-        "statAlignment": {
-          "x": 86.7,
-          "y": 586.9,
-          "size": 9
+        statAlignment: {
+          x: 86.7,
+          y: 586.9,
+          size: 9,
         },
-        "ability": {
-          "x": 86.1,
-          "y": 562.1,
-          "size": 9
+        ability: {
+          x: 86.1,
+          y: 562.1,
+          size: 9,
         },
-        "heldItem": {
-          "x": 86.1,
-          "y": 538.9,
-          "size": 9
+        heldItem: {
+          x: 86.1,
+          y: 538.9,
+          size: 9,
         },
-        "move1": {
-          "x": 86.1,
-          "y": 515.7,
-          "size": 9
+        move1: {
+          x: 86.1,
+          y: 515.7,
+          size: 9,
         },
-        "move2": {
-          "x": 86.1,
-          "y": 492.6,
-          "size": 9
+        move2: {
+          x: 86.1,
+          y: 492.6,
+          size: 9,
         },
-        "move3": {
-          "x": 86.1,
-          "y": 469.4,
-          "size": 9
+        move3: {
+          x: 86.1,
+          y: 469.4,
+          size: 9,
         },
-        "move4": {
-          "x": 86.1,
-          "y": 446.2,
-          "size": 9
-        }
+        move4: {
+          x: 86.1,
+          y: 446.2,
+          size: 9,
+        },
       },
       {
-        "species": {
-          "x": 86.1,
-          "y": 411.6,
-          "size": 9
+        species: {
+          x: 86.1,
+          y: 411.6,
+          size: 9,
         },
-        "statAlignment": {
-          "x": 86.7,
-          "y": 385.5,
-          "size": 9
+        statAlignment: {
+          x: 86.7,
+          y: 385.5,
+          size: 9,
         },
-        "ability": {
-          "x": 86.1,
-          "y": 360.6,
-          "size": 9
+        ability: {
+          x: 86.1,
+          y: 360.6,
+          size: 9,
         },
-        "heldItem": {
-          "x": 86.1,
-          "y": 337.5,
-          "size": 9
+        heldItem: {
+          x: 86.1,
+          y: 337.5,
+          size: 9,
         },
-        "move1": {
-          "x": 86.1,
-          "y": 314.3,
-          "size": 9
+        move1: {
+          x: 86.1,
+          y: 314.3,
+          size: 9,
         },
-        "move2": {
-          "x": 86.1,
-          "y": 291.2,
-          "size": 9
+        move2: {
+          x: 86.1,
+          y: 291.2,
+          size: 9,
         },
-        "move3": {
-          "x": 86.1,
-          "y": 268,
-          "size": 9
+        move3: {
+          x: 86.1,
+          y: 268,
+          size: 9,
         },
-        "move4": {
-          "x": 86.1,
-          "y": 244.8,
-          "size": 9
-        }
+        move4: {
+          x: 86.1,
+          y: 244.8,
+          size: 9,
+        },
       },
       {
-        "species": {
-          "x": 86.1,
-          "y": 210.1,
-          "size": 9
+        species: {
+          x: 86.1,
+          y: 210.1,
+          size: 9,
         },
-        "statAlignment": {
-          "x": 86.7,
-          "y": 184.1,
-          "size": 9
+        statAlignment: {
+          x: 86.7,
+          y: 184.1,
+          size: 9,
         },
-        "ability": {
-          "x": 86.1,
-          "y": 159.3,
-          "size": 9
+        ability: {
+          x: 86.1,
+          y: 159.3,
+          size: 9,
         },
-        "heldItem": {
-          "x": 86.1,
-          "y": 136.1,
-          "size": 9
+        heldItem: {
+          x: 86.1,
+          y: 136.1,
+          size: 9,
         },
-        "move1": {
-          "x": 86.1,
-          "y": 112.9,
-          "size": 9
+        move1: {
+          x: 86.1,
+          y: 112.9,
+          size: 9,
         },
-        "move2": {
-          "x": 86.1,
-          "y": 89.8,
-          "size": 9
+        move2: {
+          x: 86.1,
+          y: 89.8,
+          size: 9,
         },
-        "move3": {
-          "x": 86.1,
-          "y": 66.6,
-          "size": 9
+        move3: {
+          x: 86.1,
+          y: 66.6,
+          size: 9,
         },
-        "move4": {
-          "x": 86.1,
-          "y": 43.4,
-          "size": 9
-        }
+        move4: {
+          x: 86.1,
+          y: 43.4,
+          size: 9,
+        },
       },
       {
-        "species": {
-          "x": 378.2,
-          "y": 612.9,
-          "size": 9
+        species: {
+          x: 378.2,
+          y: 612.9,
+          size: 9,
         },
-        "statAlignment": {
-          "x": 378.8,
-          "y": 586.9,
-          "size": 9
+        statAlignment: {
+          x: 378.8,
+          y: 586.9,
+          size: 9,
         },
-        "ability": {
-          "x": 378.2,
-          "y": 562.1,
-          "size": 9
+        ability: {
+          x: 378.2,
+          y: 562.1,
+          size: 9,
         },
-        "heldItem": {
-          "x": 378.2,
-          "y": 538.9,
-          "size": 9
+        heldItem: {
+          x: 378.2,
+          y: 538.9,
+          size: 9,
         },
-        "move1": {
-          "x": 378.2,
-          "y": 515.7,
-          "size": 9
+        move1: {
+          x: 378.2,
+          y: 515.7,
+          size: 9,
         },
-        "move2": {
-          "x": 378.2,
-          "y": 492.6,
-          "size": 9
+        move2: {
+          x: 378.2,
+          y: 492.6,
+          size: 9,
         },
-        "move3": {
-          "x": 378.2,
-          "y": 469.4,
-          "size": 9
+        move3: {
+          x: 378.2,
+          y: 469.4,
+          size: 9,
         },
-        "move4": {
-          "x": 378.2,
-          "y": 446.2,
-          "size": 9
-        }
+        move4: {
+          x: 378.2,
+          y: 446.2,
+          size: 9,
+        },
       },
       {
-        "species": {
-          "x": 378.2,
-          "y": 411.6,
-          "size": 9
+        species: {
+          x: 378.2,
+          y: 411.6,
+          size: 9,
         },
-        "statAlignment": {
-          "x": 378.8,
-          "y": 385.5,
-          "size": 9
+        statAlignment: {
+          x: 378.8,
+          y: 385.5,
+          size: 9,
         },
-        "ability": {
-          "x": 378.2,
-          "y": 360.6,
-          "size": 9
+        ability: {
+          x: 378.2,
+          y: 360.6,
+          size: 9,
         },
-        "heldItem": {
-          "x": 378.2,
-          "y": 337.5,
-          "size": 9
+        heldItem: {
+          x: 378.2,
+          y: 337.5,
+          size: 9,
         },
-        "move1": {
-          "x": 378.2,
-          "y": 314.3,
-          "size": 9
+        move1: {
+          x: 378.2,
+          y: 314.3,
+          size: 9,
         },
-        "move2": {
-          "x": 378.2,
-          "y": 291.2,
-          "size": 9
+        move2: {
+          x: 378.2,
+          y: 291.2,
+          size: 9,
         },
-        "move3": {
-          "x": 378.2,
-          "y": 268,
-          "size": 9
+        move3: {
+          x: 378.2,
+          y: 268,
+          size: 9,
         },
-        "move4": {
-          "x": 378.2,
-          "y": 244.8,
-          "size": 9
-        }
+        move4: {
+          x: 378.2,
+          y: 244.8,
+          size: 9,
+        },
       },
       {
-        "species": {
-          "x": 378.2,
-          "y": 210.1,
-          "size": 9
+        species: {
+          x: 378.2,
+          y: 210.1,
+          size: 9,
         },
-        "statAlignment": {
-          "x": 378.8,
-          "y": 184.1,
-          "size": 9
+        statAlignment: {
+          x: 378.8,
+          y: 184.1,
+          size: 9,
         },
-        "ability": {
-          "x": 378.2,
-          "y": 159.3,
-          "size": 9
+        ability: {
+          x: 378.2,
+          y: 159.3,
+          size: 9,
         },
-        "heldItem": {
-          "x": 378.2,
-          "y": 136.1,
-          "size": 9
+        heldItem: {
+          x: 378.2,
+          y: 136.1,
+          size: 9,
         },
-        "move1": {
-          "x": 378.2,
-          "y": 112.9,
-          "size": 9
+        move1: {
+          x: 378.2,
+          y: 112.9,
+          size: 9,
         },
-        "move2": {
-          "x": 378.2,
-          "y": 89.8,
-          "size": 9
+        move2: {
+          x: 378.2,
+          y: 89.8,
+          size: 9,
         },
-        "move3": {
-          "x": 378.2,
-          "y": 66.6,
-          "size": 9
+        move3: {
+          x: 378.2,
+          y: 66.6,
+          size: 9,
         },
-        "move4": {
-          "x": 378.2,
-          "y": 43.4,
-          "size": 9
-        }
-      }
-    ]
-  }
+        move4: {
+          x: 378.2,
+          y: 43.4,
+          size: 9,
+        },
+      },
+    ],
+  },
 };

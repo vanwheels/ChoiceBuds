@@ -24,7 +24,9 @@ const moveLearnerCache = new Map<string, Set<string> | null>();
 async function fetchMoveLearners(move: string): Promise<Set<string> | null> {
   if (moveLearnerCache.has(move)) return moveLearnerCache.get(move)!;
   const data = await fetchJSON<PokeAPIMoveLearnersResponse>(`/move/${move}`);
-  const result = data ? new Set((data.learned_by_pokemon ?? []).map(p => p.name.toLowerCase())) : null;
+  const result = data
+    ? new Set((data.learned_by_pokemon ?? []).map((p) => p.name.toLowerCase()))
+    : null;
   moveLearnerCache.set(move, result);
   return result;
 }
@@ -53,7 +55,9 @@ function buildResultMap(moves: string[]): Map<string, Set<string> | null> {
  * An empty `moves` array resolves to an empty Map immediately, with no fetch.
  */
 export function usePokemonMoveFilter(moves: string[]): Map<string, Set<string> | null> {
-  const [result, setResult] = useState<Map<string, Set<string> | null>>(() => buildResultMap(moves));
+  const [result, setResult] = useState<Map<string, Set<string> | null>>(() =>
+    buildResultMap(moves),
+  );
 
   // Re-derives synchronously from cache the moment the requested moves
   // change - set during render rather than in an effect, see
@@ -68,13 +72,15 @@ export function usePokemonMoveFilter(moves: string[]): Map<string, Set<string> |
   }
 
   useEffect(() => {
-    const missing = moves.filter(move => !moveLearnerCache.has(move));
+    const missing = moves.filter((move) => !moveLearnerCache.has(move));
     if (missing.length === 0) return;
     let cancelled = false;
     Promise.all(missing.map(fetchMoveLearners)).then(() => {
       if (!cancelled) setResult(buildResultMap(moves));
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
     // Depends on `key` (a stable stringified snapshot of `moves`), not
     // `moves` itself - a fresh array reference every render would otherwise
     // rerun this effect on every keystroke even when the tags didn't change.

@@ -18,7 +18,14 @@ export interface StatTableSort {
 }
 
 export function computeBST(stats: PokemonStats): number {
-  return stats.hp + stats.attack + stats.defense + stats.specialAttack + stats.specialDefense + stats.speed;
+  return (
+    stats.hp +
+    stats.attack +
+    stats.defense +
+    stats.specialAttack +
+    stats.specialDefense +
+    stats.speed
+  );
 }
 
 /**
@@ -27,7 +34,10 @@ export function computeBST(stats: PokemonStats): number {
  * species hits hardest"); clicking the already-active column flips direction
  * instead of cycling back to unsorted.
  */
-export function nextStatTableSort(current: StatTableSort | null, key: StatTableSortKey): StatTableSort {
+export function nextStatTableSort(
+  current: StatTableSort | null,
+  key: StatTableSortKey,
+): StatTableSort {
   if (!current || current.key !== key) return { key, direction: 'desc' };
   return { key, direction: current.direction === 'desc' ? 'asc' : 'desc' };
 }
@@ -40,13 +50,17 @@ export function nextStatTableSort(current: StatTableSort | null, key: StatTableS
  * direction, rather than being treated as 0 and cluttering the top of an
  * ascending sort.
  */
-export function sortStatTableRows<T>(rows: T[], sort: StatTableSort, getValue: (row: T) => number | null): T[] {
-  const withValue = rows.map(row => ({ row, value: getValue(row) }));
+export function sortStatTableRows<T>(
+  rows: T[],
+  sort: StatTableSort,
+  getValue: (row: T) => number | null,
+): T[] {
+  const withValue = rows.map((row) => ({ row, value: getValue(row) }));
   withValue.sort((a, b) => {
     if (a.value === null && b.value === null) return 0;
     if (a.value === null) return 1;
     if (b.value === null) return -1;
     return sort.direction === 'asc' ? a.value - b.value : b.value - a.value;
   });
-  return withValue.map(w => w.row);
+  return withValue.map((w) => w.row);
 }

@@ -33,7 +33,12 @@ describe('useUpdateCheck', () => {
   });
 
   it('reports up-to-date and stores the release info when the latest release matches', async () => {
-    mockedFetchLatestRelease.mockResolvedValueOnce({ version: CURRENT_APP_VERSION, releaseUrl: 'https://example.com/r', body: '', publishedAt: '2026-01-01T00:00:00Z' });
+    mockedFetchLatestRelease.mockResolvedValueOnce({
+      version: CURRENT_APP_VERSION,
+      releaseUrl: 'https://example.com/r',
+      body: '',
+      publishedAt: '2026-01-01T00:00:00Z',
+    });
     const { result } = renderHook(() => useUpdateCheck());
     await waitFor(() => expect(result.current.status).toBe('up-to-date'));
     expect(result.current.latestVersion).toBe(CURRENT_APP_VERSION);
@@ -41,7 +46,12 @@ describe('useUpdateCheck', () => {
   });
 
   it('reports update-available for a newer release', async () => {
-    mockedFetchLatestRelease.mockResolvedValueOnce({ version: '999.0.0', releaseUrl: 'https://example.com/r2', body: '', publishedAt: '2026-01-01T00:00:00Z' });
+    mockedFetchLatestRelease.mockResolvedValueOnce({
+      version: '999.0.0',
+      releaseUrl: 'https://example.com/r2',
+      body: '',
+      publishedAt: '2026-01-01T00:00:00Z',
+    });
     const { result } = renderHook(() => useUpdateCheck());
     await waitFor(() => expect(result.current.status).toBe('update-available'));
   });
@@ -57,8 +67,9 @@ describe('useUpdateCheck', () => {
 
   it('reports downloading progress pushed from the main process, overriding the GitHub-API status', async () => {
     mockedFetchLatestRelease.mockResolvedValueOnce(null); // would otherwise settle on no-releases
-    let statusCallback: ((s: { state: string; version?: string; percent?: number }) => void) | undefined;
-    vi.mocked(window.electron.onUpdateStatus).mockImplementation(cb => {
+    let statusCallback:
+      ((s: { state: string; version?: string; percent?: number }) => void) | undefined;
+    vi.mocked(window.electron.onUpdateStatus).mockImplementation((cb) => {
       statusCallback = cb;
       return () => {};
     });
@@ -74,8 +85,9 @@ describe('useUpdateCheck', () => {
 
   it('reports ready-to-install once the main process finishes downloading', async () => {
     mockedFetchLatestRelease.mockResolvedValueOnce(null);
-    let statusCallback: ((s: { state: string; version?: string; percent?: number }) => void) | undefined;
-    vi.mocked(window.electron.onUpdateStatus).mockImplementation(cb => {
+    let statusCallback:
+      ((s: { state: string; version?: string; percent?: number }) => void) | undefined;
+    vi.mocked(window.electron.onUpdateStatus).mockImplementation((cb) => {
       statusCallback = cb;
       return () => {};
     });
@@ -97,9 +109,15 @@ describe('useUpdateCheck', () => {
   });
 
   it('sets nativeCheckPending on checking-native and clears it on not-available, leaving status alone', async () => {
-    mockedFetchLatestRelease.mockResolvedValueOnce({ version: '999.0.0', releaseUrl: 'https://example.com/r2', body: '', publishedAt: '2026-01-01T00:00:00Z' });
-    let statusCallback: ((s: { state: string; version?: string; percent?: number }) => void) | undefined;
-    vi.mocked(window.electron.onUpdateStatus).mockImplementation(cb => {
+    mockedFetchLatestRelease.mockResolvedValueOnce({
+      version: '999.0.0',
+      releaseUrl: 'https://example.com/r2',
+      body: '',
+      publishedAt: '2026-01-01T00:00:00Z',
+    });
+    let statusCallback:
+      ((s: { state: string; version?: string; percent?: number }) => void) | undefined;
+    vi.mocked(window.electron.onUpdateStatus).mockImplementation((cb) => {
       statusCallback = cb;
       return () => {};
     });
@@ -116,8 +134,9 @@ describe('useUpdateCheck', () => {
 
   it('clears nativeCheckPending on error without touching status', async () => {
     mockedFetchLatestRelease.mockResolvedValueOnce(null);
-    let statusCallback: ((s: { state: string; version?: string; percent?: number }) => void) | undefined;
-    vi.mocked(window.electron.onUpdateStatus).mockImplementation(cb => {
+    let statusCallback:
+      ((s: { state: string; version?: string; percent?: number }) => void) | undefined;
+    vi.mocked(window.electron.onUpdateStatus).mockImplementation((cb) => {
       statusCallback = cb;
       return () => {};
     });
@@ -134,8 +153,9 @@ describe('useUpdateCheck', () => {
 
   it('clears nativeCheckPending when the native flow starts downloading', async () => {
     mockedFetchLatestRelease.mockResolvedValueOnce(null);
-    let statusCallback: ((s: { state: string; version?: string; percent?: number }) => void) | undefined;
-    vi.mocked(window.electron.onUpdateStatus).mockImplementation(cb => {
+    let statusCallback:
+      ((s: { state: string; version?: string; percent?: number }) => void) | undefined;
+    vi.mocked(window.electron.onUpdateStatus).mockImplementation((cb) => {
       statusCallback = cb;
       return () => {};
     });
@@ -151,7 +171,12 @@ describe('useUpdateCheck', () => {
   });
 
   it('picks up a status missed by the push (e.g. checking-native sent before this hook subscribed) via the getUpdateStatus pull', async () => {
-    mockedFetchLatestRelease.mockResolvedValueOnce({ version: '999.0.0', releaseUrl: 'https://example.com/r2', body: '', publishedAt: '2026-01-01T00:00:00Z' });
+    mockedFetchLatestRelease.mockResolvedValueOnce({
+      version: '999.0.0',
+      releaseUrl: 'https://example.com/r2',
+      body: '',
+      publishedAt: '2026-01-01T00:00:00Z',
+    });
     vi.mocked(window.electron.onUpdateStatus).mockReturnValue(() => {});
     vi.mocked(window.electron.getUpdateStatus).mockResolvedValueOnce({ state: 'checking-native' });
 
@@ -165,8 +190,9 @@ describe('useUpdateCheck', () => {
     // unrelated GitHub-check effect's own setStatus call can't interfere -
     // this test is isolated to the push-vs-pull ordering guard specifically.
     mockedFetchLatestRelease.mockReturnValue(new Promise(() => {}));
-    let statusCallback: ((s: { state: string; version?: string; percent?: number }) => void) | undefined;
-    vi.mocked(window.electron.onUpdateStatus).mockImplementation(cb => {
+    let statusCallback:
+      ((s: { state: string; version?: string; percent?: number }) => void) | undefined;
+    vi.mocked(window.electron.onUpdateStatus).mockImplementation((cb) => {
       statusCallback = cb;
       // Fire the push synchronously on subscription, before the pull's own
       // promise below has a chance to resolve.

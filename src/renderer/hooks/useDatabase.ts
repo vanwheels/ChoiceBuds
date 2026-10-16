@@ -15,12 +15,12 @@ export interface UseDatabaseReturn {
   isInitialized: boolean;
   isRevalidating: boolean;
   error: string | null;
-  
+
   // Cache operations
   getCachedEntry: (species: string) => PokeAPICacheEntry | null;
   setCacheEntry: (species: string, entry: PokeAPICacheEntry) => Promise<boolean>;
   isCacheEntryValid: (species: string) => boolean;
-  
+
   // Maintenance
   cleanExpiredEntries: () => Promise<boolean>;
   clearCache: () => Promise<boolean>;
@@ -62,57 +62,63 @@ export function useDatabase(): UseDatabaseReturn {
    * done here directly - it goes through the debounced write-through
    * effect below, same as every other cache mutation in this hook.
    */
-  const cleanExpiredEntriesInternal = useCallback(async (currentCache: PokeAPICache): Promise<boolean> => {
-    try {
-      const now = Date.now();
-      const cleanedEntries: Record<string, PokeAPICacheEntry> = {};
-      let removedCount = 0;
+  const cleanExpiredEntriesInternal = useCallback(
+    async (currentCache: PokeAPICache): Promise<boolean> => {
+      try {
+        const now = Date.now();
+        const cleanedEntries: Record<string, PokeAPICacheEntry> = {};
+        let removedCount = 0;
 
-      // Filter out expired entries
-      for (const [species, entry] of Object.entries(currentCache.entries)) {
-        if (entry.expiresAt > now) {
-          cleanedEntries[species] = entry;
-        } else {
-          removedCount++;
+        // Filter out expired entries
+        for (const [species, entry] of Object.entries(currentCache.entries)) {
+          if (entry.expiresAt > now) {
+            cleanedEntries[species] = entry;
+          } else {
+            removedCount++;
+          }
         }
+
+        const updatedCache: PokeAPICache = {
+          ...currentCache,
+          entries: cleanedEntries,
+          lastCleaned: now,
+        };
+
+        setCache(updatedCache);
+        console.log(`[useDatabase] Cleaned ${removedCount} expired cache entries`);
+        return true;
+      } catch (err) {
+        console.error('Error cleaning cache:', err);
+        return false;
       }
-
-      const updatedCache: PokeAPICache = {
-        ...currentCache,
-        entries: cleanedEntries,
-        lastCleaned: now,
-      };
-
-      setCache(updatedCache);
-      console.log(`[useDatabase] Cleaned ${removedCount} expired cache entries`);
-      return true;
-    } catch (err) {
-      console.error('Error cleaning cache:', err);
-      return false;
-    }
-  }, []);
+    },
+    [],
+  );
 
   /**
    * Internal: Perform background revalidation checks
    * Quietly validates cache health and performs maintenance if needed
    */
-  const performBackgroundRevalidation = useCallback(async (currentCache: PokeAPICache): Promise<void> => {
-    try {
-      const now = Date.now();
-      const timeSinceLastClean = now - currentCache.lastCleaned;
+  const performBackgroundRevalidation = useCallback(
+    async (currentCache: PokeAPICache): Promise<void> => {
+      try {
+        const now = Date.now();
+        const timeSinceLastClean = now - currentCache.lastCleaned;
 
-      // Check if cache cleaning is due
-      if (timeSinceLastClean > CACHE_CLEAN_INTERVAL_MS) {
-        console.log('[useDatabase] Background revalidation: Cleaning expired entries');
-        await cleanExpiredEntriesInternal(currentCache);
-      } else {
-        console.log('[useDatabase] Background revalidation: Cache is healthy');
+        // Check if cache cleaning is due
+        if (timeSinceLastClean > CACHE_CLEAN_INTERVAL_MS) {
+          console.log('[useDatabase] Background revalidation: Cleaning expired entries');
+          await cleanExpiredEntriesInternal(currentCache);
+        } else {
+          console.log('[useDatabase] Background revalidation: Cache is healthy');
+        }
+      } catch (err) {
+        console.error('[useDatabase] Background revalidation failed:', err);
+        // Don't set error state - this is a background operation
       }
-    } catch (err) {
-      console.error('[useDatabase] Background revalidation failed:', err);
-      // Don't set error state - this is a background operation
-    }
-  }, [cleanExpiredEntriesInternal]);
+    },
+    [cleanExpiredEntriesInternal],
+  );
 
   /**
    * Internal: Initialize cache using Stale-While-Revalidate pattern
@@ -263,26 +269,36 @@ export function useDatabase(): UseDatabaseReturn {
   // each call site's own immediate write - and diskSnapshot's header
   // above for why it's passed through, to skip the redundant rewrite of a
   // cache loaded unchanged.
-  useDebouncedWrite(cache, isInitialized, (value) => getStorageAdapter().write('pokeapi-cache', value), 'Error persisting PokeAPI cache:', undefined, diskSnapshot);
+  useDebouncedWrite(
+    cache,
+    isInitialized,
+    (value) => getStorageAdapter().write('pokeapi-cache', value),
+    'Error persisting PokeAPI cache:',
+    undefined,
+    diskSnapshot,
+  );
 
   /**
    * Get a cached entry for a specific species
    */
-  const getCachedEntry = useCallback((species: string): PokeAPICacheEntry | null => {
-    if (!cache) return null;
-    
-    const normalizedSpecies = species.toLowerCase().trim();
-    const entry = cache.entries[normalizedSpecies];
-    
-    if (!entry) return null;
-    
-    // Check if entry is expired
-    if (entry.expiresAt < Date.now()) {
-      return null;
-    }
-    
-    return entry;
-  }, [cache]);
+  const getCachedEntry = useCallback(
+    (species: string): PokeAPICacheEntry | null => {
+      if (!cache) return null;
+
+      const normalizedSpecies = species.toLowerCase().trim();
+      const entry = cache.entries[normalizedSpecies];
+
+      if (!entry) return null;
+
+      // Check if entry is expired
+      if (entry.expiresAt < Date.now()) {
+        return null;
+      }
+
+      return entry;
+    },
+    [cache],
+  );
 
   /**
    * Set a cache entry for a specific species. Persistence goes through the
@@ -302,30 +318,37 @@ export function useDatabase(): UseDatabaseReturn {
    * self-heal then re-detected every pass - the LoadingScreen's
    * "downloading forever" loop. Also keeps this callback's identity stable.
    */
-  const setCacheEntry = useCallback(async (
-    species: string,
-    entry: PokeAPICacheEntry
-  ): Promise<boolean> => {
-    const normalizedSpecies = species.toLowerCase().trim();
+  const setCacheEntry = useCallback(
+    async (species: string, entry: PokeAPICacheEntry): Promise<boolean> => {
+      const normalizedSpecies = species.toLowerCase().trim();
 
-    setCache(prev => prev ? {
-      ...prev,
-      entries: {
-        ...prev.entries,
-        [normalizedSpecies]: entry,
-      },
-    } : prev);
-    setError(null);
-    return true;
-  }, []);
+      setCache((prev) =>
+        prev
+          ? {
+              ...prev,
+              entries: {
+                ...prev.entries,
+                [normalizedSpecies]: entry,
+              },
+            }
+          : prev,
+      );
+      setError(null);
+      return true;
+    },
+    [],
+  );
 
   /**
    * Check if a cache entry is valid (exists and not expired)
    */
-  const isCacheEntryValid = useCallback((species: string): boolean => {
-    const entry = getCachedEntry(species);
-    return entry !== null;
-  }, [getCachedEntry]);
+  const isCacheEntryValid = useCallback(
+    (species: string): boolean => {
+      const entry = getCachedEntry(species);
+      return entry !== null;
+    },
+    [getCachedEntry],
+  );
 
   /**
    * Manually clean expired entries from cache
@@ -380,12 +403,19 @@ export function createCacheEntry(
   species: string,
   pokedexNumber: number,
   types: string[],
-  baseStats: { hp: number; attack: number; defense: number; specialAttack: number; specialDefense: number; speed: number },
+  baseStats: {
+    hp: number;
+    attack: number;
+    defense: number;
+    specialAttack: number;
+    specialDefense: number;
+    speed: number;
+  },
   spriteUrl: string,
-  abilities: string[]
+  abilities: string[],
 ): PokeAPICacheEntry {
   const now = Date.now();
-  
+
   return {
     species: species.toLowerCase().trim(),
     pokedexNumber,

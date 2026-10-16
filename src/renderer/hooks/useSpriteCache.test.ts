@@ -26,18 +26,24 @@ describe('useSpriteCache', () => {
     const remote = 'https://example.com/found.png';
     result.current.resolveSprite(remote);
 
-    await waitFor(() => expect(result.current.resolveSprite(remote)).toBe('data:image/png;base64,cached'));
+    await waitFor(() =>
+      expect(result.current.resolveSprite(remote)).toBe('data:image/png;base64,cached'),
+    );
   });
 
   it('falls back to downloadSprite when getSpritePath finds nothing cached', async () => {
     vi.mocked(window.electron.getSpritePath).mockResolvedValueOnce(null);
-    vi.mocked(window.electron.downloadSprite).mockResolvedValueOnce('data:image/png;base64,downloaded');
+    vi.mocked(window.electron.downloadSprite).mockResolvedValueOnce(
+      'data:image/png;base64,downloaded',
+    );
     const { result } = renderHook(() => useSpriteCache());
     const remote = 'https://example.com/missing.png';
     result.current.resolveSprite(remote);
 
     await waitFor(() => expect(window.electron.downloadSprite).toHaveBeenCalledWith(remote));
-    await waitFor(() => expect(result.current.resolveSprite(remote)).toBe('data:image/png;base64,downloaded'));
+    await waitFor(() =>
+      expect(result.current.resolveSprite(remote)).toBe('data:image/png;base64,downloaded'),
+    );
   });
 
   it('only checks a given URL once even if resolveSprite is called again before it resolves', () => {
@@ -69,7 +75,9 @@ describe('useSpriteCache', () => {
     vi.mocked(window.electron.getSpritePath).mockResolvedValueOnce('data:image/png;base64,retried');
     result.current.resolveSprite(remote);
     await waitFor(() => expect(window.electron.getSpritePath).toHaveBeenCalledTimes(2));
-    await waitFor(() => expect(result.current.resolveSprite(remote)).toBe('data:image/png;base64,retried'));
+    await waitFor(() =>
+      expect(result.current.resolveSprite(remote)).toBe('data:image/png;base64,retried'),
+    );
   });
 
   it('downloadSprite resolves to and stores the local URL directly', async () => {

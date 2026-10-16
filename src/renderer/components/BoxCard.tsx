@@ -60,7 +60,11 @@
 
 import { useState } from 'react';
 import { toMotionDragProps, type GridReorderHandlers } from '../hooks/useGridReorder';
-import type { CSSProperties, PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent } from 'react';
+import type {
+  CSSProperties,
+  PointerEvent as ReactPointerEvent,
+  MouseEvent as ReactMouseEvent,
+} from 'react';
 import { AnimatePresence, motion, useDragControls } from 'framer-motion';
 import type { ImportedPokemonInfo, SavedPokemonEntry } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
@@ -94,7 +98,23 @@ interface BoxCardProps {
   showAnimatedSprites: boolean;
 }
 
-export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePokemon, onAddToTeam, onRename, onDuplicate, onToggleFavorite, onDelete, canReorder, reorderHandlers, gameDataState, rulesetId, resolveSprite, showAnimatedSprites }: BoxCardProps) {
+export default function BoxCard({
+  entry,
+  isExpanded,
+  onToggleExpand,
+  onUpdatePokemon,
+  onAddToTeam,
+  onRename,
+  onDuplicate,
+  onToggleFavorite,
+  onDelete,
+  canReorder,
+  reorderHandlers,
+  gameDataState,
+  rulesetId,
+  resolveSprite,
+  showAnimatedSprites,
+}: BoxCardProps) {
   const { pokemon, label, favorite } = entry;
 
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
@@ -149,10 +169,21 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
       onClick={handleToggleFavorite}
       title={favorite ? 'Unfavorite' : 'Favorite'}
       className={`${className} flex items-center justify-center rounded-full transition-colors cursor-pointer ${
-        favorite ? 'text-accent-gold hover:text-accent-gold-deep' : 'text-zinc-400 hover:text-zinc-200'
+        favorite
+          ? 'text-accent-gold hover:text-accent-gold-deep'
+          : 'text-zinc-400 hover:text-zinc-200'
       }`}
     >
-      <svg viewBox="0 0 24 24" width="12" height="12" fill={favorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        viewBox="0 0 24 24"
+        width="12"
+        height="12"
+        fill={favorite ? 'currentColor' : 'none'}
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <path d="M12 3.5l2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" />
       </svg>
     </button>
@@ -163,7 +194,16 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
       label: 'Copy Pokémon',
       onClick: handleCopyPokemon,
       icon: (
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          viewBox="0 0 24 24"
+          width="16"
+          height="16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <rect x="9" y="9" width="11" height="11" rx="1.5" />
           <path d="M5 15H4.5A1.5 1.5 0 0 1 3 13.5v-9A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5V5" />
         </svg>
@@ -173,7 +213,16 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
       label: 'Export',
       onClick: () => setIsExportOpen(true),
       icon: (
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          viewBox="0 0 24 24"
+          width="16"
+          height="16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M12 3v12" />
           <path d="m7 10 5 5 5-5" />
           <path d="M5 21h14" />
@@ -184,7 +233,16 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
       label: 'Add to Team…',
       onClick: onAddToTeam,
       icon: (
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          viewBox="0 0 24 24"
+          width="16"
+          height="16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
           <circle cx="9" cy="7" r="4" />
           <path d="M19 8v6M22 11h-6" />
@@ -195,7 +253,16 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
       label: 'Rename',
       onClick: startRename,
       icon: (
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          viewBox="0 0 24 24"
+          width="16"
+          height="16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M17 3a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
         </svg>
       ),
@@ -204,7 +271,16 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
       label: 'Duplicate',
       onClick: onDuplicate,
       icon: (
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          viewBox="0 0 24 24"
+          width="16"
+          height="16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <rect x="9" y="9" width="11" height="11" rx="1.5" />
           <path d="M5 15H4.5A1.5 1.5 0 0 1 3 13.5v-9A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5V5" />
         </svg>
@@ -215,7 +291,16 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
       onClick: onDelete,
       danger: true,
       icon: (
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          viewBox="0 0 24 24"
+          width="16"
+          height="16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M4 7h16" />
           <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
           <path d="M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
@@ -226,7 +311,12 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
   ];
 
   const contextMenu = contextMenuPos && (
-    <ContextMenu x={contextMenuPos.x} y={contextMenuPos.y} onClose={() => setContextMenuPos(null)} items={menuItems} />
+    <ContextMenu
+      x={contextMenuPos.x}
+      y={contextMenuPos.y}
+      onClose={() => setContextMenuPos(null)}
+      items={menuItems}
+    />
   );
 
   const exportModal = (
@@ -250,12 +340,14 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
       // wider w-28 frame.
       <div className="relative w-16 h-16">
         <img
-          src={resolveSprite(getPixelSpriteUrl(
-            pokemon.pokedexNumber,
-            pokemon.showdownData.species,
-            pokemon.showdownData.gender || 'M',
-            pokemon.showdownData.shiny
-          ))}
+          src={resolveSprite(
+            getPixelSpriteUrl(
+              pokemon.pokedexNumber,
+              pokemon.showdownData.species,
+              pokemon.showdownData.gender || 'M',
+              pokemon.showdownData.shiny,
+            ),
+          )}
           alt={pokemon.showdownData.species}
           draggable={false}
           className="w-16 h-16 object-contain [image-rendering:pixelated]"
@@ -278,7 +370,17 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
       // on pointerdown (this card's own earlier attempt) has no movement
       // threshold at all and swallowed the plain click-to-expand outright.
       // canReorder/isRenaming still gate whether dragging can start at all.
-      <motion.div layout="position" drag dragSnapToOrigin dragMomentum={false} dragElastic={0} data-reorder-id={entry.id} dragListener={canReorder && !isRenaming} transition={DRAG_REORDER_TRANSITION} {...toMotionDragProps(reorderHandlers)}>
+      <motion.div
+        layout="position"
+        drag
+        dragSnapToOrigin
+        dragMomentum={false}
+        dragElastic={0}
+        data-reorder-id={entry.id}
+        dragListener={canReorder && !isRenaming}
+        transition={DRAG_REORDER_TRANSITION}
+        {...toMotionDragProps(reorderHandlers)}
+      >
         <div
           onContextMenu={handleContextMenu}
           title={isRenaming ? undefined : label}
@@ -306,9 +408,14 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
             // Plain div rather than a button (as this used to be) - the
             // favorite star above nests its own button on top of the
             // sprite, and a button-in-button isn't valid HTML.
-            <div onClick={onToggleExpand} className="flex flex-col items-center gap-1 w-full cursor-pointer">
+            <div
+              onClick={onToggleExpand}
+              className="flex flex-col items-center gap-1 w-full cursor-pointer"
+            >
               {sprite}
-              <span className="text-xs font-semibold text-zinc-200 truncate w-full text-center">{label}</span>
+              <span className="text-xs font-semibold text-zinc-200 truncate w-full text-center">
+                {label}
+              </span>
             </div>
           )}
 
@@ -379,7 +486,9 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
             left is unclaimed in every sort mode (top-right is Collapse,
             top-left is the Custom-mode-only drag handle above), so favorite
             lives here instead of competing with the handle for top-left. */}
-        {favoriteButton('absolute -bottom-2.5 -left-2.5 z-10 w-8 h-8 md:w-6 md:h-6 border border-zinc-600 bg-zinc-800 hover:border-accent-gold')}
+        {favoriteButton(
+          'absolute -bottom-2.5 -left-2.5 z-10 w-8 h-8 md:w-6 md:h-6 border border-zinc-600 bg-zinc-800 hover:border-accent-gold',
+        )}
 
         {isRenaming ? (
           <input
@@ -395,7 +504,9 @@ export default function BoxCard({ entry, isExpanded, onToggleExpand, onUpdatePok
             className="text-center text-xs font-bold text-accent-gold uppercase tracking-wide bg-zinc-800 border border-accent-gold rounded px-2 py-1 mx-4 outline-none"
           />
         ) : (
-          <p className="text-center text-xs font-bold text-accent-gold uppercase tracking-wide truncate px-4">{label}</p>
+          <p className="text-center text-xs font-bold text-accent-gold uppercase tracking-wide truncate px-4">
+            {label}
+          </p>
         )}
 
         <EditablePokemonCore

@@ -66,14 +66,18 @@ function makeGameDataState(overrides: Partial<UseGameDataReturn> = {}): UseGameD
   } as UseGameDataReturn;
 }
 
-function makeSpeciesRosterState(overrides: Partial<UseSpeciesRosterReturn> = {}): UseSpeciesRosterReturn {
+function makeSpeciesRosterState(
+  overrides: Partial<UseSpeciesRosterReturn> = {},
+): UseSpeciesRosterReturn {
   return { roster: [makeRosterEntry()], isLoading: false, ...overrides };
 }
 
-function setup(overrides: {
-  gameData?: Partial<UseGameDataReturn>;
-  speciesRoster?: Partial<UseSpeciesRosterReturn>;
-} = {}) {
+function setup(
+  overrides: {
+    gameData?: Partial<UseGameDataReturn>;
+    speciesRoster?: Partial<UseSpeciesRosterReturn>;
+  } = {},
+) {
   const gameDataState = makeGameDataState(overrides.gameData);
   const speciesRosterState = makeSpeciesRosterState(overrides.speciesRoster);
   const { result } = renderHook(() => useUsageSync(gameDataState, speciesRosterState));
@@ -87,24 +91,31 @@ describe('useUsageSync', () => {
 
   it('reports not-done while gameData is not initialized or the roster is still loading/empty', () => {
     expect(setup({ gameData: { isInitialized: false } }).result.current.isDone).toBe(false);
-    expect(setup({ speciesRoster: { isLoading: true, roster: [] } }).result.current.isDone).toBe(false);
-    expect(setup({ speciesRoster: { isLoading: false, roster: [] } }).result.current.isDone).toBe(false);
+    expect(setup({ speciesRoster: { isLoading: true, roster: [] } }).result.current.isDone).toBe(
+      false,
+    );
+    expect(setup({ speciesRoster: { isLoading: false, roster: [] } }).result.current.isDone).toBe(
+      false,
+    );
   });
 
   it('is immediately done with no fetches when every legal species already has cached usage', () => {
     const getChampionsUsage = vi.fn();
     const { result } = setup({
-      gameData: { getCachedChampionsUsage: vi.fn().mockReturnValue(makeUsage()), getChampionsUsage },
+      gameData: {
+        getCachedChampionsUsage: vi.fn().mockReturnValue(makeUsage()),
+        getChampionsUsage,
+      },
     });
 
     expect(result.current.isDone).toBe(true);
     expect(getChampionsUsage).not.toHaveBeenCalled();
   });
 
-  it('filters the roster to the latest regulation\'s legal set before checking for stale usage', () => {
+  it("filters the roster to the latest regulation's legal set before checking for stale usage", () => {
     const illegal = makeRosterEntry({ name: 'Not-A-Real-Mon', id: 9999 });
     const legal = makeRosterEntry();
-    mockedValidateLegality.mockImplementation(name => name === 'Gengar');
+    mockedValidateLegality.mockImplementation((name) => name === 'Gengar');
     const getCachedChampionsUsage = vi.fn().mockReturnValue(makeUsage());
 
     setup({ speciesRoster: { roster: [illegal, legal] }, gameData: { getCachedChampionsUsage } });
@@ -115,7 +126,9 @@ describe('useUsageSync', () => {
 
   it('fetches usage only for species missing (or with expired) cached usage, then reports done', async () => {
     const roster = [makeRosterEntry(), makeRosterEntry({ name: 'Rillaboom', id: 812 })];
-    const getCachedChampionsUsage = vi.fn(name => name === 'Rillaboom' ? makeUsage({ species: 'rillaboom' }) : null);
+    const getCachedChampionsUsage = vi.fn((name) =>
+      name === 'Rillaboom' ? makeUsage({ species: 'rillaboom' }) : null,
+    );
     const getChampionsUsage = vi.fn().mockResolvedValue(makeUsage());
 
     const { result } = setup({
@@ -131,7 +144,8 @@ describe('useUsageSync', () => {
 
   it('a single failing species does not abort the rest of the batch', async () => {
     const roster = [makeRosterEntry(), makeRosterEntry({ name: 'Rillaboom', id: 812 })];
-    const getChampionsUsage = vi.fn()
+    const getChampionsUsage = vi
+      .fn()
       .mockRejectedValueOnce(new Error('network blip'))
       .mockResolvedValue(makeUsage({ species: 'rillaboom' }));
 

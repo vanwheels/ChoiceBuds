@@ -42,7 +42,13 @@ describe('computeMovesetCoverageGaps', () => {
   it('includes a candidate whose move type lands neutral or better on every slot', () => {
     const groundMove = makeCandidate({ topMoves: [{ name: 'Earthquake', type: 'ground' }] });
     expect(computeMovesetCoverageGaps([slot(['water'])], [groundMove])).toEqual([
-      { species: 'Gengar', types: ['ground'], columnPosition: 1, spriteUrl: 'https://example.com/sprite.png', speed: 100 },
+      {
+        species: 'Gengar',
+        types: ['ground'],
+        columnPosition: 1,
+        spriteUrl: 'https://example.com/sprite.png',
+        speed: 100,
+      },
     ]);
   });
 
@@ -53,25 +59,39 @@ describe('computeMovesetCoverageGaps', () => {
       topMoves: [{ name: 'Ice Beam', type: 'ice' }],
     });
     expect(computeMovesetCoverageGaps([slot(['flying'])], [iceCoverage])).toEqual([
-      { species: 'Ground Mon', types: ['ice'], columnPosition: 1, spriteUrl: 'https://example.com/sprite.png', speed: 100 },
+      {
+        species: 'Ground Mon',
+        types: ['ice'],
+        columnPosition: 1,
+        spriteUrl: 'https://example.com/sprite.png',
+        speed: 100,
+      },
     ]);
   });
 
-  it('resolves a move\'s effective type through the threat\'s own top-ranked ability', () => {
+  it("resolves a move's effective type through the threat's own top-ranked ability", () => {
     // Pixilate retypes a Normal move to Fairy - Fairy is unresisted by a Steel slot's own typing but this checks the move, not the species.
     const pixilateUser = makeCandidate({
       topAbility: 'Pixilate',
       topMoves: [{ name: 'Hyper Voice', type: 'normal' }],
     });
     expect(computeMovesetCoverageGaps([slot(['normal'])], [pixilateUser])).toEqual([
-      { species: 'Gengar', types: ['fairy'], columnPosition: 1, spriteUrl: 'https://example.com/sprite.png', speed: 100 },
+      {
+        species: 'Gengar',
+        types: ['fairy'],
+        columnPosition: 1,
+        spriteUrl: 'https://example.com/sprite.png',
+        speed: 100,
+      },
     ]);
   });
 
   it('excludes a candidate whose ability-immunized move is fully no-sold by a team slot', () => {
     // Motor Drive fully no-sells Electric
     const electricMove = makeCandidate({ topMoves: [{ name: 'Thunderbolt', type: 'electric' }] });
-    expect(computeMovesetCoverageGaps([slot(['flying'], 'Motor Drive')], [electricMove])).toEqual([]);
+    expect(computeMovesetCoverageGaps([slot(['flying'], 'Motor Drive')], [electricMove])).toEqual(
+      [],
+    );
   });
 
   it('dedupes repeated effective types across considered moves', () => {
@@ -91,7 +111,7 @@ describe('computeMovesetCoverageGaps', () => {
     const first = makeCandidate({ species: 'A', columnPosition: 5 });
     const second = makeCandidate({ species: 'B', columnPosition: 15 });
     expect(
-      computeMovesetCoverageGaps([slot(['fire'])], [third, first, second]).map(t => t.species)
+      computeMovesetCoverageGaps([slot(['fire'])], [third, first, second]).map((t) => t.species),
     ).toEqual(['A', 'B', 'C']);
   });
 
@@ -99,7 +119,7 @@ describe('computeMovesetCoverageGaps', () => {
     expect(computeMovesetCoverageGaps([slot(['water'])], [])).toEqual([]);
   });
 
-  it('passes a candidate\'s speed through unchanged', () => {
+  it("passes a candidate's speed through unchanged", () => {
     const fast = makeCandidate({
       topMoves: [{ name: 'Earthquake', type: 'ground' }],
       speed: 130,

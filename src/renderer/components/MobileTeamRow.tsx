@@ -43,7 +43,14 @@ interface MobileTeamRowProps {
   onOpen: () => void;
 }
 
-export default function MobileTeamRow({ team, teamsState, gameDataState, settingsState, spriteCacheState, onOpen }: MobileTeamRowProps) {
+export default function MobileTeamRow({
+  team,
+  teamsState,
+  gameDataState,
+  settingsState,
+  spriteCacheState,
+  onOpen,
+}: MobileTeamRowProps) {
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isImageExportOpen, setIsImageExportOpen] = useState(false);
   const [isPdfExportOpen, setIsPdfExportOpen] = useState(false);
@@ -65,15 +72,24 @@ export default function MobileTeamRow({ team, teamsState, gameDataState, setting
       </div>
 
       <div className="flex-1 min-w-0 flex flex-col gap-1">
-        <span className="font-bold text-sm text-zinc-100 truncate">{team.name || 'Untitled Team'}</span>
+        <span className="font-bold text-sm text-zinc-100 truncate">
+          {team.name || 'Untitled Team'}
+        </span>
         <div className="flex items-center gap-1">
           {Array.from({ length: 6 }, (_, idx) => team.pokemon?.[idx]).map((p, idx) => {
             if (!p) return null;
             const megaApiSlug = getMegaApiSlug(p.showdownData.item, p.showdownData.species);
             const megaSprite = megaApiSlug ? getCachedMegaSprite(megaApiSlug) : null;
             const spriteUrl = megaSprite
-              ? (p.showdownData.shiny ? megaSprite.shinySpriteUrl : megaSprite.spriteUrl)
-              : getPixelSpriteUrl(p.pokedexNumber, p.showdownData.species, p.showdownData.gender || 'M', p.showdownData.shiny);
+              ? p.showdownData.shiny
+                ? megaSprite.shinySpriteUrl
+                : megaSprite.spriteUrl
+              : getPixelSpriteUrl(
+                  p.pokedexNumber,
+                  p.showdownData.species,
+                  p.showdownData.gender || 'M',
+                  p.showdownData.shiny,
+                );
             return (
               <img
                 key={idx}
@@ -87,13 +103,25 @@ export default function MobileTeamRow({ team, teamsState, gameDataState, setting
       </div>
 
       <button
-        onClick={(e) => { stop(e); updateTeam(team.id, { favorite: !team.favorite }); }}
+        onClick={(e) => {
+          stop(e);
+          updateTeam(team.id, { favorite: !team.favorite });
+        }}
         title={team.favorite ? 'Unfavorite' : 'Favorite'}
         className={`shrink-0 w-9 h-9 flex items-center justify-center rounded-full transition-colors cursor-pointer ${
           team.favorite ? 'text-accent-gold' : 'text-zinc-500'
         }`}
       >
-        <svg viewBox="0 0 24 24" width="16" height="16" fill={team.favorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          viewBox="0 0 24 24"
+          width="16"
+          height="16"
+          fill={team.favorite ? 'currentColor' : 'none'}
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M12 3.5l2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" />
         </svg>
       </button>
@@ -112,7 +140,7 @@ export default function MobileTeamRow({ team, teamsState, gameDataState, setting
       <AnimatePresence>
         {isExportOpen && (
           <ExportTeamModal
-            pokemonList={team.pokemon.map(p => p.showdownData)}
+            pokemonList={team.pokemon.map((p) => p.showdownData)}
             title="Export Team"
             pasteTitle={team.name}
             pasteAuthor={team.author}

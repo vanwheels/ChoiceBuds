@@ -78,9 +78,9 @@ export function buildSpeedTierEntries(
   team: TeamSpeedEntry[],
   threats: ThreatTierInput[],
   usageCutoffPercent: number = DEFAULT_SPREAD_USAGE_CUTOFF_PERCENT,
-  boundsOnly: boolean = false
+  boundsOnly: boolean = false,
 ): SpeedTierEntry[] {
-  const teamRows: SpeedTierEntry[] = team.map(t => ({
+  const teamRows: SpeedTierEntry[] = team.map((t) => ({
     key: `team-${t.pokemonId}`,
     kind: 'team',
     species: t.species,
@@ -92,7 +92,7 @@ export function buildSpeedTierEntries(
     const spreadRows: SpeedTierEntry[] = boundsOnly
       ? []
       : profile.spreads
-          .filter(spread => spread.percentage >= usageCutoffPercent)
+          .filter((spread) => spread.percentage >= usageCutoffPercent)
           .map((spread, i) => ({
             key: `threat-${profile.species}-spread-${i}`,
             kind: 'threat' as const,
@@ -121,7 +121,7 @@ export function buildSpeedTierEntries(
 export function filterSpeedTierEntries(entries: SpeedTierEntry[], query: string): SpeedTierEntry[] {
   const trimmed = query.trim().toLowerCase();
   if (!trimmed) return entries;
-  return entries.filter(entry => entry.species.toLowerCase().includes(trimmed));
+  return entries.filter((entry) => entry.species.toLowerCase().includes(trimmed));
 }
 
 /**

@@ -27,7 +27,7 @@ export function useSidebarCollapsed(): UseSidebarCollapsedReturn {
   const [collapsed, setCollapsed] = useState<boolean>(readInitial);
 
   const toggleCollapsed = useCallback(() => {
-    setCollapsed(prev => {
+    setCollapsed((prev) => {
       const next = !prev;
       try {
         localStorage.setItem(STORAGE_KEY, String(next));

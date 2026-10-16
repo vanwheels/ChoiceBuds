@@ -48,7 +48,7 @@ export const VGC_HOLD_ITEMS = [
   'Heat Rock',
   'Icy Rock',
   'Iron Ball',
-  'King\'s Rock',
+  "King's Rock",
   'Leek',
   'Leftovers',
   'Life Orb',
@@ -222,9 +222,9 @@ function toSlug(name: string): string {
 }
 
 const ITEM_CATEGORY_MAP: Record<string, ItemCategoryTag> = Object.fromEntries([
-  ...VGC_HOLD_ITEMS.map(name => [toSlug(name), 'hold-item' as const]),
-  ...VGC_MEGA_STONES.map(name => [toSlug(name), 'mega-stone' as const]),
-  ...VGC_BERRIES.map(name => [toSlug(name), 'berry' as const]),
+  ...VGC_HOLD_ITEMS.map((name) => [toSlug(name), 'hold-item' as const]),
+  ...VGC_MEGA_STONES.map((name) => [toSlug(name), 'mega-stone' as const]),
+  ...VGC_BERRIES.map((name) => [toSlug(name), 'berry' as const]),
 ]);
 
 /** '#megastone', '#mega', '#berry', '#berries', '#holditem', '#item' all match their category */
@@ -266,7 +266,7 @@ export function isConsumableItem(itemName: string | undefined): boolean {
 /**
  * Type for VGC items
  */
-export type VGCItem = typeof VGC_ITEMS[number];
+export type VGCItem = (typeof VGC_ITEMS)[number];
 
 /**
  * All 25 mainline natures - unrestricted in every VGC/Champions regulation,
@@ -276,11 +276,31 @@ export type VGCItem = typeof VGC_ITEMS[number];
  * generation object on hand.
  */
 export const NATURES = [
-  'Hardy', 'Lonely', 'Brave', 'Adamant', 'Naughty',
-  'Bold', 'Docile', 'Relaxed', 'Impish', 'Lax',
-  'Timid', 'Hasty', 'Serious', 'Jolly', 'Naive',
-  'Modest', 'Mild', 'Quiet', 'Bashful', 'Rash',
-  'Calm', 'Gentle', 'Sassy', 'Careful', 'Quirky',
+  'Hardy',
+  'Lonely',
+  'Brave',
+  'Adamant',
+  'Naughty',
+  'Bold',
+  'Docile',
+  'Relaxed',
+  'Impish',
+  'Lax',
+  'Timid',
+  'Hasty',
+  'Serious',
+  'Jolly',
+  'Naive',
+  'Modest',
+  'Mild',
+  'Quiet',
+  'Bashful',
+  'Rash',
+  'Calm',
+  'Gentle',
+  'Sassy',
+  'Careful',
+  'Quirky',
 ] as const;
 
 /** The 5 stats a nature can actually affect - HP is never boosted/lowered by nature in any generation. */

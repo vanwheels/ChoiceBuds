@@ -47,7 +47,7 @@ export interface UseCalcRealSetsLookupReturn {
 export function useCalcRealSetsLookup(
   regulation: RegulationLabel,
   vgcPastesState: UseVgcPastesCacheReturn,
-  vgcRealSetsState: UseVgcRealSetsCacheReturn
+  vgcRealSetsState: UseVgcRealSetsCacheReturn,
 ): UseCalcRealSetsLookupReturn {
   // Guards a slower, now-superseded lookup from clobbering a faster one -
   // same pattern as CalcPokemonPanel.tsx's own autoFillRequestRef.
@@ -57,49 +57,63 @@ export function useCalcRealSetsLookup(
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<RealSetsLookupProgress | null>(null);
 
-  const lookup = useCallback(async (species: string) => {
-    const requestId = ++requestRef.current;
-    setEntry(null);
-    setError(null);
-    setProgress(null);
-    const rows = vgcPastesState.getRows(regulation);
-    if (rows.length === 0) return;
-    setIsLoading(true);
-    const result = await vgcRealSetsState.getRealSets(regulation, species, rows, (sampleProgress) => {
-      if (requestRef.current !== requestId) return;
-      setProgress({ processedRows: sampleProgress.processedRows, totalRows: sampleProgress.totalRows });
-      // Populate-as-it-loads (Web Bug Sweep Leg 12, see TODO.md): render the
-      // merged-so-far bundles immediately rather than only once the whole
-      // sequential sample-paste fetch loop finishes. Overwritten by the
-      // final, cached `result` below once the lookup completes.
-      setEntry({
-        species: normalizeUsageCacheKey(species),
-        sampledTeamCount: sampleProgress.sampledTeamCount,
-        bundles: sampleProgress.bundles,
-        fetchedAt: Date.now(),
-      });
-    });
-    if (requestRef.current !== requestId) return;
-    setIsLoading(false);
-    setProgress(null);
-    if (result) {
-      setEntry(result);
-    } else {
-      // getRealSets() swallows its own fetch/parse errors internally (see
-      // services/vgcRealSets.ts) and returns null on a genuine failure here
-      // (rows were already confirmed non-empty above) - vgcRealSetsState's
-      // own `error` is the best signal available, best-effort since that
-      // hook instance is shared with the other panel (see this file's
-      // header comment).
+  const lookup = useCallback(
+    async (species: string) => {
+      const requestId = ++requestRef.current;
       setEntry(null);
-      setError(vgcRealSetsState.error ?? `Failed to load real sets for "${species}"`);
-    }
-  }, [regulation, vgcPastesState, vgcRealSetsState]);
+      setError(null);
+      setProgress(null);
+      const rows = vgcPastesState.getRows(regulation);
+      if (rows.length === 0) return;
+      setIsLoading(true);
+      const result = await vgcRealSetsState.getRealSets(
+        regulation,
+        species,
+        rows,
+        (sampleProgress) => {
+          if (requestRef.current !== requestId) return;
+          setProgress({
+            processedRows: sampleProgress.processedRows,
+            totalRows: sampleProgress.totalRows,
+          });
+          // Populate-as-it-loads (Web Bug Sweep Leg 12, see TODO.md): render the
+          // merged-so-far bundles immediately rather than only once the whole
+          // sequential sample-paste fetch loop finishes. Overwritten by the
+          // final, cached `result` below once the lookup completes.
+          setEntry({
+            species: normalizeUsageCacheKey(species),
+            sampledTeamCount: sampleProgress.sampledTeamCount,
+            bundles: sampleProgress.bundles,
+            fetchedAt: Date.now(),
+          });
+        },
+      );
+      if (requestRef.current !== requestId) return;
+      setIsLoading(false);
+      setProgress(null);
+      if (result) {
+        setEntry(result);
+      } else {
+        // getRealSets() swallows its own fetch/parse errors internally (see
+        // services/vgcRealSets.ts) and returns null on a genuine failure here
+        // (rows were already confirmed non-empty above) - vgcRealSetsState's
+        // own `error` is the best signal available, best-effort since that
+        // hook instance is shared with the other panel (see this file's
+        // header comment).
+        setEntry(null);
+        setError(vgcRealSetsState.error ?? `Failed to load real sets for "${species}"`);
+      }
+    },
+    [regulation, vgcPastesState, vgcRealSetsState],
+  );
 
-  const refreshCatalogAndRetry = useCallback(async (species: string) => {
-    const success = await vgcPastesState.refresh(regulation);
-    if (success && species) await lookup(species);
-  }, [regulation, vgcPastesState, lookup]);
+  const refreshCatalogAndRetry = useCallback(
+    async (species: string) => {
+      const success = await vgcPastesState.refresh(regulation);
+      if (success && species) await lookup(species);
+    },
+    [regulation, vgcPastesState, lookup],
+  );
 
   return { entry, isLoading, error, progress, lookup, refreshCatalogAndRetry };
 }

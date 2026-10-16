@@ -195,7 +195,8 @@ export interface FieldState {
  * this single-slot model can't express. Not modeled yet; revisit as its own
  * follow-up if it turns out to matter for logging.
  */
-export type StatusCondition = 'burn' | 'freeze' | 'paralysis' | 'poison' | 'badly-poisoned' | 'sleep';
+export type StatusCondition =
+  'burn' | 'freeze' | 'paralysis' | 'poison' | 'badly-poisoned' | 'sleep';
 
 /**
  * One manually-logged Pokemon Champions VGC battle (doubles). See

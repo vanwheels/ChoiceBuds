@@ -24,7 +24,11 @@ interface FloatingCardPanelProps {
   cardRect: DOMRect | null;
 }
 
-export default function FloatingCardPanel({ children, anchorRect, cardRect }: FloatingCardPanelProps) {
+export default function FloatingCardPanel({
+  children,
+  anchorRect,
+  cardRect,
+}: FloatingCardPanelProps) {
   const style = computeFloatingCardPanelStyle(anchorRect, cardRect);
 
   return (

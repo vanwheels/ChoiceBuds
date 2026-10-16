@@ -24,9 +24,10 @@ let cachedAdapter: StorageAdapter | null = null;
 
 export function getStorageAdapter(): StorageAdapter {
   if (!cachedAdapter) {
-    cachedAdapter = typeof window !== 'undefined' && window.electron
-      ? new ElectronStorageAdapter()
-      : new IndexedDBStorageAdapter();
+    cachedAdapter =
+      typeof window !== 'undefined' && window.electron
+        ? new ElectronStorageAdapter()
+        : new IndexedDBStorageAdapter();
   }
   return cachedAdapter;
 }

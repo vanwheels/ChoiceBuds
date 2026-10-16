@@ -36,7 +36,6 @@ export interface EVSpread {
   speed: number;
 }
 
-
 /**
  * Parsed Pokémon data from Showdown/Pokepaste format
  * This represents the raw imported data before API enrichment

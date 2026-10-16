@@ -29,7 +29,12 @@ interface AddToTeamDialogProps {
   onClose: () => void;
 }
 
-export default function AddToTeamDialog({ pokemon, teams, onAddToTeam, onClose }: AddToTeamDialogProps) {
+export default function AddToTeamDialog({
+  pokemon,
+  teams,
+  onAddToTeam,
+  onClose,
+}: AddToTeamDialogProps) {
   const [pendingTeamId, setPendingTeamId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,16 +55,26 @@ export default function AddToTeamDialog({ pokemon, teams, onAddToTeam, onClose }
     <Modal panelClassName="max-w-sm">
       <div className="px-5 py-4 border-b border-zinc-700 flex items-center justify-between">
         <h2 className="text-base font-bold text-zinc-100">Add to Team</h2>
-        <button onClick={onClose} className="text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer">
+        <button
+          onClick={onClose}
+          className="text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
+        >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
 
       <div className="p-5 flex flex-col gap-3">
         {teams.length === 0 ? (
-          <p className="text-sm text-zinc-400">No teams yet - create one from the Teams tab first.</p>
+          <p className="text-sm text-zinc-400">
+            No teams yet - create one from the Teams tab first.
+          </p>
         ) : (
           <div className="flex flex-col gap-1.5 max-h-72 overflow-y-auto">
             {teams.map((team) => {

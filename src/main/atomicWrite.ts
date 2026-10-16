@@ -23,11 +23,16 @@ const writeQueues = new Map<string, Promise<void>>();
  */
 export async function atomicWriteFile(filePath: string, content: string): Promise<void> {
   const previous = writeQueues.get(filePath) ?? Promise.resolve();
-  const run = previous.catch(() => {}).then(async () => {
-    const tempPath = `${filePath}.tmp`;
-    await fs.writeFile(tempPath, content, 'utf-8');
-    await fs.rename(tempPath, filePath);
-  });
-  writeQueues.set(filePath, run.catch(() => {}));
+  const run = previous
+    .catch(() => {})
+    .then(async () => {
+      const tempPath = `${filePath}.tmp`;
+      await fs.writeFile(tempPath, content, 'utf-8');
+      await fs.rename(tempPath, filePath);
+    });
+  writeQueues.set(
+    filePath,
+    run.catch(() => {}),
+  );
   return run;
 }

@@ -41,7 +41,12 @@ interface VgcPasteCatalogRowProps {
   spriteCacheState: UseSpriteCacheReturn;
 }
 
-export default function VgcPasteCatalogRow({ row, onPick, roster, spriteCacheState }: VgcPasteCatalogRowProps) {
+export default function VgcPasteCatalogRow({
+  row,
+  onPick,
+  roster,
+  spriteCacheState,
+}: VgcPasteCatalogRowProps) {
   // Warms hooks/useMegaSprite.ts's shared id/URL cache, same as
   // TeamCard.tsx's own mini sprite strip - resolveCatalogSpriteEntry's Mega
   // tier reads that cache synchronously and can't populate it itself.
@@ -58,7 +63,7 @@ export default function VgcPasteCatalogRow({ row, onPick, roster, spriteCacheSta
 
     const pasteId = extractPokepasteId(row.pokepasteUrl);
     if (!pasteId) {
-      setPreviewError('Could not read this row\'s Pokepaste link.');
+      setPreviewError("Could not read this row's Pokepaste link.");
       return;
     }
 
@@ -107,7 +112,16 @@ export default function VgcPasteCatalogRow({ row, onPick, roster, spriteCacheSta
               isExpanded ? 'bg-zinc-600 text-zinc-200' : ''
             }`}
           >
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.75"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="m6 9 6 6 6-6" />
             </svg>
           </button>
@@ -129,10 +143,12 @@ export default function VgcPasteCatalogRow({ row, onPick, roster, spriteCacheSta
               {previewPokemon.map((p, idx) => (
                 <div key={idx} className="text-xs">
                   <p className="font-semibold text-zinc-100 truncate">
-                    {p.species}{p.item ? ` @ ${p.item}` : ''}
+                    {p.species}
+                    {p.item ? ` @ ${p.item}` : ''}
                   </p>
                   <p className="text-zinc-400 truncate">
-                    {[p.ability, p.nature && `${p.nature} Nature`].filter(Boolean).join(' · ') || ' '}
+                    {[p.ability, p.nature && `${p.nature} Nature`].filter(Boolean).join(' · ') ||
+                      ' '}
                   </p>
                   <p className="text-zinc-400">{formatEvs(p.evs)}</p>
                   <p className="text-zinc-500 truncate">{p.moves.join(' / ') || 'No moves'}</p>

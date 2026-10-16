@@ -40,7 +40,7 @@ describe('usePokemonTypeFilter', () => {
     mockedFetchJSON.mockImplementation(async (url: string) =>
       url === '/type/fire-test-2'
         ? { pokemon: [{ pokemon: { name: 'charizard' } }] }
-        : { pokemon: [{ pokemon: { name: 'squirtle' } }] }
+        : { pokemon: [{ pokemon: { name: 'squirtle' } }] },
     );
     const { result } = renderHook(() => usePokemonTypeFilter(['fire-test-2', 'water-test-2']));
 

@@ -33,7 +33,11 @@ import type { UseDatabaseReturn } from '../../hooks/useDatabase';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import { useTeamMoveTypes } from '../../hooks/useTeamMoveTypes';
 import { computeOffensiveCoverage, computeDefensiveCoverage } from '../../utils/typeCoverage';
-import { computeUsageThreats, computePartiallyCoveredUsageThreats, type UsageThreat } from '../../utils/usageThreats';
+import {
+  computeUsageThreats,
+  computePartiallyCoveredUsageThreats,
+  type UsageThreat,
+} from '../../utils/usageThreats';
 import {
   computeMovesetCoverageGaps,
   COVERAGE_GAP_MOVE_CUTOFF,
@@ -49,27 +53,39 @@ interface TypeMatchupPageProps {
   spriteCacheState: UseSpriteCacheReturn;
 }
 
-export default function TypeMatchupPage({ teamsState, gameDataState, databaseState, spriteCacheState }: TypeMatchupPageProps) {
+export default function TypeMatchupPage({
+  teamsState,
+  gameDataState,
+  databaseState,
+  spriteCacheState,
+}: TypeMatchupPageProps) {
   const { teams } = teamsState;
   const [selectedTeamId, setSelectedTeamId] = useState('');
-  const selectedTeam = teams.find(t => t.id === selectedTeamId);
+  const selectedTeam = teams.find((t) => t.id === selectedTeamId);
 
   const { moveTypesByPokemon, isLoading } = useTeamMoveTypes(selectedTeam, gameDataState);
   const { cache: gameDataCache } = gameDataState;
   const { getCachedEntry } = databaseState;
 
   const defensiveSlots = useMemo(
-    () => (selectedTeam?.pokemon ?? []).map(p => ({ types: p.types, ability: p.showdownData.ability })),
-    [selectedTeam]
+    () =>
+      (selectedTeam?.pokemon ?? []).map((p) => ({
+        types: p.types,
+        ability: p.showdownData.ability,
+      })),
+    [selectedTeam],
   );
   // Team's own raw base-Speed range, for Speed Annotation (see
   // utils/usageThreats.ts's UsageThreat.speed doc comment) - base stat only,
   // same as the threat side, not each slot's actual EV'd speed.
   const teamSpeedRange = useMemo(() => {
-    const speeds = (selectedTeam?.pokemon ?? []).map(p => p.baseStats.speed);
+    const speeds = (selectedTeam?.pokemon ?? []).map((p) => p.baseStats.speed);
     return speeds.length > 0 ? { min: Math.min(...speeds), max: Math.max(...speeds) } : null;
   }, [selectedTeam]);
-  const offensiveRows = useMemo(() => computeOffensiveCoverage(moveTypesByPokemon), [moveTypesByPokemon]);
+  const offensiveRows = useMemo(
+    () => computeOffensiveCoverage(moveTypesByPokemon),
+    [moveTypesByPokemon],
+  );
   const defensiveRows = useMemo(() => computeDefensiveCoverage(defensiveSlots), [defensiveSlots]);
 
   const usageCandidates = useMemo<UsageThreat[]>(() => {
@@ -90,11 +106,11 @@ export default function TypeMatchupPage({ teamsState, gameDataState, databaseSta
   }, [gameDataCache, getCachedEntry]);
   const usageThreats = useMemo(
     () => computeUsageThreats(defensiveSlots, usageCandidates),
-    [defensiveSlots, usageCandidates]
+    [defensiveSlots, usageCandidates],
   );
   const partiallyCoveredUsageThreats = useMemo(
     () => computePartiallyCoveredUsageThreats(defensiveSlots, usageCandidates),
-    [defensiveSlots, usageCandidates]
+    [defensiveSlots, usageCandidates],
   );
 
   const movesetGapCandidates = useMemo<MovesetGapCandidate[]>(() => {
@@ -105,7 +121,7 @@ export default function TypeMatchupPage({ teamsState, gameDataState, databaseSta
         if (!dbEntry) return null;
         const topMoves = entry.moves
           .slice(0, COVERAGE_GAP_MOVE_CUTOFF)
-          .map(m => {
+          .map((m) => {
             const moveData = gameDataCache.moves[m.name.toLowerCase()];
             return moveData ? { name: m.name, type: moveData.type } : null;
           })
@@ -123,7 +139,7 @@ export default function TypeMatchupPage({ teamsState, gameDataState, databaseSta
   }, [gameDataCache, getCachedEntry]);
   const movesetCoverageGaps = useMemo(
     () => computeMovesetCoverageGaps(defensiveSlots, movesetGapCandidates),
-    [defensiveSlots, movesetGapCandidates]
+    [defensiveSlots, movesetGapCandidates],
   );
 
   return (
@@ -131,7 +147,8 @@ export default function TypeMatchupPage({ teamsState, gameDataState, databaseSta
       <div>
         <h1 className="text-xl font-bold text-zinc-100">Type Matchup</h1>
         <p className="text-sm text-zinc-400 mt-1">
-          Select a team to see its offensive move coverage and defensive type weaknesses at a glance.
+          Select a team to see its offensive move coverage and defensive type weaknesses at a
+          glance.
         </p>
       </div>
 
@@ -139,11 +156,11 @@ export default function TypeMatchupPage({ teamsState, gameDataState, databaseSta
         <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Team</label>
         <select
           value={selectedTeamId}
-          onChange={e => setSelectedTeamId(e.target.value)}
+          onChange={(e) => setSelectedTeamId(e.target.value)}
           className="px-3 py-2 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
         >
           <option value="">Select a team...</option>
-          {teams.map(t => (
+          {teams.map((t) => (
             <option key={t.id} value={t.id}>
               {t.name}
             </option>
@@ -153,7 +170,9 @@ export default function TypeMatchupPage({ teamsState, gameDataState, databaseSta
 
       {!selectedTeam ? (
         <p className="text-sm text-zinc-400">
-          {teams.length === 0 ? 'Import or create a team first to see its type coverage.' : 'Pick a team above to see its type coverage.'}
+          {teams.length === 0
+            ? 'Import or create a team first to see its type coverage.'
+            : 'Pick a team above to see its type coverage.'}
         </p>
       ) : isLoading ? (
         <p className="text-sm text-zinc-400">Loading move data...</p>

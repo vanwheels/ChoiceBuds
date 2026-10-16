@@ -16,9 +16,18 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import type { RegulationLabel, VgcPasteTeamRow, VgcRealSetsCache, VgcRealSetsEntry } from '../types/pokemon';
+import type {
+  RegulationLabel,
+  VgcPasteTeamRow,
+  VgcRealSetsCache,
+  VgcRealSetsEntry,
+} from '../types/pokemon';
 import { normalizeUsageCacheKey } from '../services/championsBattleData';
-import { filterRowsBySpecies, extractRealSetsForSpecies, type VgcRealSetsExtractionProgress } from '../services/vgcRealSets';
+import {
+  filterRowsBySpecies,
+  extractRealSetsForSpecies,
+  type VgcRealSetsExtractionProgress,
+} from '../services/vgcRealSets';
 import { useDebouncedWrite } from './useDebouncedWrite';
 import { getStorageAdapter } from '../services/storage';
 
@@ -33,7 +42,7 @@ export interface UseVgcRealSetsCacheReturn {
     regulation: RegulationLabel,
     species: string,
     availableRows: VgcPasteTeamRow[],
-    onProgress?: (progress: VgcRealSetsExtractionProgress) => void
+    onProgress?: (progress: VgcRealSetsExtractionProgress) => void,
   ) => Promise<VgcRealSetsEntry | null>;
 }
 
@@ -53,7 +62,8 @@ export function useVgcRealSetsCache(): UseVgcRealSetsCacheReturn {
 
   useEffect(() => {
     let cancelled = false;
-    getStorageAdapter().read<VgcRealSetsCache>('vgc-real-sets-cache')
+    getStorageAdapter()
+      .read<VgcRealSetsCache>('vgc-real-sets-cache')
       .then((persisted: VgcRealSetsCache | null) => {
         if (cancelled) return;
         setDiskSnapshot(persisted ? JSON.stringify(persisted) : undefined);
@@ -67,55 +77,72 @@ export function useVgcRealSetsCache(): UseVgcRealSetsCacheReturn {
         setCache(createEmptyCache());
         setIsInitialized(true);
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  useDebouncedWrite(cache, isInitialized, (value) => getStorageAdapter().write('vgc-real-sets-cache', value), 'Error persisting VGC real-sets cache:', undefined, diskSnapshot);
+  useDebouncedWrite(
+    cache,
+    isInitialized,
+    (value) => getStorageAdapter().write('vgc-real-sets-cache', value),
+    'Error persisting VGC real-sets cache:',
+    undefined,
+    diskSnapshot,
+  );
 
-  const getCachedRealSets = useCallback((regulation: RegulationLabel, species: string): VgcRealSetsEntry | null => {
-    const key = normalizeUsageCacheKey(species);
-    return cache?.entriesByRegulation[regulation]?.[key] ?? null;
-  }, [cache]);
-
-  const getRealSets = useCallback(async (
-    regulation: RegulationLabel,
-    species: string,
-    availableRows: VgcPasteTeamRow[],
-    onProgress?: (progress: VgcRealSetsExtractionProgress) => void
-  ): Promise<VgcRealSetsEntry | null> => {
-    const cached = getCachedRealSets(regulation, species);
-    if (cached) return cached;
-
-    // Empty availableRows means this regulation's catalog hasn't been
-    // refreshed yet (useVgcPastesCache.ts), not that the species genuinely
-    // has zero real sets - skip extracting, and skip caching a false "0
-    // sampled" verdict, until the catalog is actually populated.
-    if (availableRows.length === 0) return null;
-
-    setIsLoading(true);
-    setError(null);
-    try {
-      const matchingRows = filterRowsBySpecies(availableRows, species);
-      const entry = await extractRealSetsForSpecies(species, matchingRows, onProgress);
+  const getCachedRealSets = useCallback(
+    (regulation: RegulationLabel, species: string): VgcRealSetsEntry | null => {
       const key = normalizeUsageCacheKey(species);
-      setCache(prev => {
-        const base = prev ?? createEmptyCache();
-        return {
-          ...base,
-          entriesByRegulation: {
-            ...base.entriesByRegulation,
-            [regulation]: { ...base.entriesByRegulation[regulation], [key]: entry },
-          },
-        };
-      });
-      return entry;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : `Failed to extract real sets for "${species}"`);
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [getCachedRealSets]);
+      return cache?.entriesByRegulation[regulation]?.[key] ?? null;
+    },
+    [cache],
+  );
+
+  const getRealSets = useCallback(
+    async (
+      regulation: RegulationLabel,
+      species: string,
+      availableRows: VgcPasteTeamRow[],
+      onProgress?: (progress: VgcRealSetsExtractionProgress) => void,
+    ): Promise<VgcRealSetsEntry | null> => {
+      const cached = getCachedRealSets(regulation, species);
+      if (cached) return cached;
+
+      // Empty availableRows means this regulation's catalog hasn't been
+      // refreshed yet (useVgcPastesCache.ts), not that the species genuinely
+      // has zero real sets - skip extracting, and skip caching a false "0
+      // sampled" verdict, until the catalog is actually populated.
+      if (availableRows.length === 0) return null;
+
+      setIsLoading(true);
+      setError(null);
+      try {
+        const matchingRows = filterRowsBySpecies(availableRows, species);
+        const entry = await extractRealSetsForSpecies(species, matchingRows, onProgress);
+        const key = normalizeUsageCacheKey(species);
+        setCache((prev) => {
+          const base = prev ?? createEmptyCache();
+          return {
+            ...base,
+            entriesByRegulation: {
+              ...base.entriesByRegulation,
+              [regulation]: { ...base.entriesByRegulation[regulation], [key]: entry },
+            },
+          };
+        });
+        return entry;
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : `Failed to extract real sets for "${species}"`,
+        );
+        return null;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [getCachedRealSets],
+  );
 
   return { cache, isInitialized, isLoading, error, getCachedRealSets, getRealSets };
 }

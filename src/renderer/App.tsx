@@ -47,7 +47,8 @@ const TypeMatchupPage = lazy(() => import('./components/typematchup/TypeMatchupP
 const SpeedTiersPage = lazy(() => import('./components/speedtiers/SpeedTiersPage'));
 const SettingsPage = lazy(() => import('./components/SettingsPage'));
 
-export type ActiveTab = 'teams' | 'box' | 'battles' | 'statistics' | 'typeMatchup' | 'speedTiers' | 'settings';
+export type ActiveTab =
+  'teams' | 'box' | 'battles' | 'statistics' | 'typeMatchup' | 'speedTiers' | 'settings';
 
 /**
  * Main application shell component
@@ -78,7 +79,7 @@ export default function App() {
   const [visitedTabs, setVisitedTabs] = useState<Set<ActiveTab>>(() => new Set(['teams']));
   const goToTab = (tab: ActiveTab) => {
     setActiveTab(tab);
-    setVisitedTabs(prev => prev.has(tab) ? prev : new Set(prev).add(tab));
+    setVisitedTabs((prev) => (prev.has(tab) ? prev : new Set(prev).add(tab)));
   };
   // Same lazy-once/hidden-after-first-open lifecycle as visitedTabs above,
   // applied to the Calc popup instead of a sidebar tab - see CalcPopup.tsx's
@@ -123,8 +124,17 @@ export default function App() {
   // own it. See useSync.ts's own header comment.
   const syncState = useSync(settingsState, teamsState, battlesState, savedPokemonState);
   const updateCheckState = useUpdateCheck();
-  const releaseNotesState = useReleaseNotes(settingsState.settings, settingsState.isLoading, settingsState.updateSettings);
-  const { isDone: isInitialSyncDone, progress: initialSyncProgress } = useInitialSync(gameDataState, speciesRosterState, spriteCacheState, databaseState);
+  const releaseNotesState = useReleaseNotes(
+    settingsState.settings,
+    settingsState.isLoading,
+    settingsState.updateSettings,
+  );
+  const { isDone: isInitialSyncDone, progress: initialSyncProgress } = useInitialSync(
+    gameDataState,
+    speciesRosterState,
+    spriteCacheState,
+    databaseState,
+  );
   // Background batched sync of Champions ranked-usage data (Team Gap
   // Analysis Leg 1, see TODO.md) - never gates the LoadingScreen, see
   // useUsageSync.ts's own header comment.
@@ -145,36 +155,38 @@ export default function App() {
     // collapses toward near-instant when the OS-level prefers-reduced-motion
     // setting is on, rather than each component having to check for it itself.
     <MotionConfig reducedMotion="user">
-    {/* Mobile Compact Top Bar: Teams & Box leg (see TODO.md) - lets
+      {/* Mobile Compact Top Bar: Teams & Box leg (see TODO.md) - lets
         TeamsPage/BoxPage publish their own mobile top-bar title/actions into
         Sidebar's mobile bar below; needs to wrap both Sidebar (the reader)
         and <main>'s pages (the registrants) since they're siblings here. */}
-    <MobileHeaderActionsProvider>
-      <div className="flex flex-col md:flex-row h-screen bg-zinc-900 text-zinc-100">
-        <AnimatePresence>
-          {releaseNotesState.showPopup && <ReleaseNotesModal releaseNotesState={releaseNotesState} />}
-        </AnimatePresence>
+      <MobileHeaderActionsProvider>
+        <div className="flex flex-col md:flex-row h-screen bg-zinc-900 text-zinc-100">
+          <AnimatePresence>
+            {releaseNotesState.showPopup && (
+              <ReleaseNotesModal releaseNotesState={releaseNotesState} />
+            )}
+          </AnimatePresence>
 
-        <Sidebar
-          activeTab={activeTab}
-          onTabChange={goToTab}
-          mobileTopBarEnd={
-            <button
-              onClick={openCalcPopup}
-              aria-label="Open Calc"
-              className="flex items-center justify-center rounded-lg p-2 text-accent-gold transition-colors cursor-pointer hover:bg-zinc-700"
-            >
-              <CalcIcon />
-            </button>
-          }
-        />
+          <Sidebar
+            activeTab={activeTab}
+            onTabChange={goToTab}
+            mobileTopBarEnd={
+              <button
+                onClick={openCalcPopup}
+                aria-label="Open Calc"
+                className="flex items-center justify-center rounded-lg p-2 text-accent-gold transition-colors cursor-pointer hover:bg-zinc-700"
+              >
+                <CalcIcon />
+              </button>
+            }
+          />
 
-        {/* Primary Content Viewport - Right Side */}
-        {/* Each visited tab stays mounted (display:none when inactive) rather
+          {/* Primary Content Viewport - Right Side */}
+          {/* Each visited tab stays mounted (display:none when inactive) rather
             than being unmounted - see goToTab's comment above. Still gated on
             visitedTabs so a tab never visited this session never even pays
             for its React.lazy() import. */}
-        {/* scrollbarGutter: 'stable' reserves the scrollbar's track width whether or
+          {/* scrollbarGutter: 'stable' reserves the scrollbar's track width whether or
             not it's actually showing, so content shifting past one page's height
             doesn't shrink whatever's rendered here the instant the scrollbar pops
             in - reported 2026-08-29. This is the outer scroll container shared by
@@ -183,89 +195,116 @@ export default function App() {
             each needing this same treatment independently - fixing this one alone
             doesn't cover a shift happening on an inner container whose height gets
             fixed below this one's. */}
-        <main className="flex-1 overflow-y-auto" style={{ paddingLeft: '2rem', paddingRight: '2rem', paddingTop: '1.5rem', paddingBottom: '1.5rem', scrollbarGutter: 'stable' }}>
-          <div style={{ display: activeTab === 'teams' ? 'block' : 'none' }}>
-            <TeamsPage
-              teamsState={teamsState}
-              databaseState={databaseState}
-              editorState={editorState}
-              gameDataState={gameDataState}
-              speciesRosterState={speciesRosterState}
-              spriteCacheState={spriteCacheState}
-              settingsState={settingsState}
-              savedPokemonState={savedPokemonState}
-            />
-          </div>
-          {visitedTabs.has('box') && (
-            <div style={{ display: activeTab === 'box' ? 'block' : 'none' }}>
-              <Suspense fallback={<div className="text-zinc-400 text-sm">Loading box...</div>}>
-                <BoxPage
-                  savedPokemonState={savedPokemonState}
-                  gameDataState={gameDataState}
-                  databaseState={databaseState}
-                  speciesRosterState={speciesRosterState}
-                  spriteCacheState={spriteCacheState}
-                  settingsState={settingsState}
-                  teamsState={teamsState}
-                />
-              </Suspense>
+          <main
+            className="flex-1 overflow-y-auto"
+            style={{
+              paddingLeft: '2rem',
+              paddingRight: '2rem',
+              paddingTop: '1.5rem',
+              paddingBottom: '1.5rem',
+              scrollbarGutter: 'stable',
+            }}
+          >
+            <div style={{ display: activeTab === 'teams' ? 'block' : 'none' }}>
+              <TeamsPage
+                teamsState={teamsState}
+                databaseState={databaseState}
+                editorState={editorState}
+                gameDataState={gameDataState}
+                speciesRosterState={speciesRosterState}
+                spriteCacheState={spriteCacheState}
+                settingsState={settingsState}
+                savedPokemonState={savedPokemonState}
+              />
             </div>
-          )}
-          {visitedTabs.has('battles') && (
-            <div style={{ display: activeTab === 'battles' ? 'block' : 'none' }}>
-              <Suspense fallback={<div className="text-zinc-400 text-sm">Loading battle log...</div>}>
-                <BattleLogPage
-                  battlesState={battlesState}
-                  teamsState={teamsState}
-                  speciesRosterState={speciesRosterState}
-                  spriteCacheState={spriteCacheState}
-                  registerBattleLogSession={setBattleLogSession}
-                />
-              </Suspense>
-            </div>
-          )}
-          {visitedTabs.has('statistics') && (
-            <div style={{ display: activeTab === 'statistics' ? 'block' : 'none' }}>
-              <Suspense fallback={<div className="text-zinc-400 text-sm">Loading statistics...</div>}>
-                <StatisticsPage battlesState={battlesState} spriteCacheState={spriteCacheState} />
-              </Suspense>
-            </div>
-          )}
-          {visitedTabs.has('typeMatchup') && (
-            <div style={{ display: activeTab === 'typeMatchup' ? 'block' : 'none' }}>
-              <Suspense fallback={<div className="text-zinc-400 text-sm">Loading type matchup...</div>}>
-                <TypeMatchupPage
-                  teamsState={teamsState}
-                  gameDataState={gameDataState}
-                  databaseState={databaseState}
-                  spriteCacheState={spriteCacheState}
-                />
-              </Suspense>
-            </div>
-          )}
-          {visitedTabs.has('speedTiers') && (
-            <div style={{ display: activeTab === 'speedTiers' ? 'block' : 'none' }}>
-              <Suspense fallback={<div className="text-zinc-400 text-sm">Loading speed tiers...</div>}>
-                <SpeedTiersPage
-                  teamsState={teamsState}
-                  gameDataState={gameDataState}
-                  databaseState={databaseState}
-                  spriteCacheState={spriteCacheState}
-                  speciesRosterState={speciesRosterState}
-                />
-              </Suspense>
-            </div>
-          )}
-          {visitedTabs.has('settings') && (
-            <div style={{ display: activeTab === 'settings' ? 'block' : 'none' }}>
-              <Suspense fallback={<div className="text-zinc-400 text-sm">Loading settings...</div>}>
-                <SettingsPage settingsState={settingsState} syncState={syncState} teamsState={teamsState} updateCheckState={updateCheckState} releaseNotesState={releaseNotesState} databaseState={databaseState} gameDataState={gameDataState} />
-              </Suspense>
-            </div>
-          )}
-        </main>
+            {visitedTabs.has('box') && (
+              <div style={{ display: activeTab === 'box' ? 'block' : 'none' }}>
+                <Suspense fallback={<div className="text-zinc-400 text-sm">Loading box...</div>}>
+                  <BoxPage
+                    savedPokemonState={savedPokemonState}
+                    gameDataState={gameDataState}
+                    databaseState={databaseState}
+                    speciesRosterState={speciesRosterState}
+                    spriteCacheState={spriteCacheState}
+                    settingsState={settingsState}
+                    teamsState={teamsState}
+                  />
+                </Suspense>
+              </div>
+            )}
+            {visitedTabs.has('battles') && (
+              <div style={{ display: activeTab === 'battles' ? 'block' : 'none' }}>
+                <Suspense
+                  fallback={<div className="text-zinc-400 text-sm">Loading battle log...</div>}
+                >
+                  <BattleLogPage
+                    battlesState={battlesState}
+                    teamsState={teamsState}
+                    speciesRosterState={speciesRosterState}
+                    spriteCacheState={spriteCacheState}
+                    registerBattleLogSession={setBattleLogSession}
+                  />
+                </Suspense>
+              </div>
+            )}
+            {visitedTabs.has('statistics') && (
+              <div style={{ display: activeTab === 'statistics' ? 'block' : 'none' }}>
+                <Suspense
+                  fallback={<div className="text-zinc-400 text-sm">Loading statistics...</div>}
+                >
+                  <StatisticsPage battlesState={battlesState} spriteCacheState={spriteCacheState} />
+                </Suspense>
+              </div>
+            )}
+            {visitedTabs.has('typeMatchup') && (
+              <div style={{ display: activeTab === 'typeMatchup' ? 'block' : 'none' }}>
+                <Suspense
+                  fallback={<div className="text-zinc-400 text-sm">Loading type matchup...</div>}
+                >
+                  <TypeMatchupPage
+                    teamsState={teamsState}
+                    gameDataState={gameDataState}
+                    databaseState={databaseState}
+                    spriteCacheState={spriteCacheState}
+                  />
+                </Suspense>
+              </div>
+            )}
+            {visitedTabs.has('speedTiers') && (
+              <div style={{ display: activeTab === 'speedTiers' ? 'block' : 'none' }}>
+                <Suspense
+                  fallback={<div className="text-zinc-400 text-sm">Loading speed tiers...</div>}
+                >
+                  <SpeedTiersPage
+                    teamsState={teamsState}
+                    gameDataState={gameDataState}
+                    databaseState={databaseState}
+                    spriteCacheState={spriteCacheState}
+                    speciesRosterState={speciesRosterState}
+                  />
+                </Suspense>
+              </div>
+            )}
+            {visitedTabs.has('settings') && (
+              <div style={{ display: activeTab === 'settings' ? 'block' : 'none' }}>
+                <Suspense
+                  fallback={<div className="text-zinc-400 text-sm">Loading settings...</div>}
+                >
+                  <SettingsPage
+                    settingsState={settingsState}
+                    syncState={syncState}
+                    teamsState={teamsState}
+                    updateCheckState={updateCheckState}
+                    releaseNotesState={releaseNotesState}
+                    databaseState={databaseState}
+                    gameDataState={gameDataState}
+                  />
+                </Suspense>
+              </div>
+            )}
+          </main>
 
-        {/* Rendered outside <main> so it survives tab switches - visible
+          {/* Rendered outside <main> so it survives tab switches - visible
             regardless of which tab is active or whether the sidebar is
             collapsed, since the Calc tab it replaces no longer exists to
             double as the trigger (Regular Calc Popup Launcher Leg 1).
@@ -276,27 +315,27 @@ export default function App() {
             (reported live), so Sidebar.tsx's mobile top bar gets a compact
             version instead (`mobileTopBarEnd` above) rather than this one
             being duplicated or repositioned in place. */}
-        <CalcLauncherButton onOpen={openCalcPopup} />
+          <CalcLauncherButton onOpen={openCalcPopup} />
 
-        {hasOpenedCalcPopup && (
-          <Suspense fallback={null}>
-            <CalcPopup
-              isOpen={isCalcPopupOpen}
-              onClose={() => setIsCalcPopupOpen(false)}
-              gameDataState={gameDataState}
-              teamsState={teamsState}
-              databaseState={databaseState}
-              savedPokemonState={savedPokemonState}
-              spriteCacheState={spriteCacheState}
-              settingsState={settingsState}
-              battleLogOpponentRoster={battleLogSession?.roster}
-              onUpdateOpponentEntry={battleLogSession?.onUpdateEntry}
-              battleLogPlayerTeamId={battleLogSession?.teamId}
-            />
-          </Suspense>
-        )}
-      </div>
-    </MobileHeaderActionsProvider>
+          {hasOpenedCalcPopup && (
+            <Suspense fallback={null}>
+              <CalcPopup
+                isOpen={isCalcPopupOpen}
+                onClose={() => setIsCalcPopupOpen(false)}
+                gameDataState={gameDataState}
+                teamsState={teamsState}
+                databaseState={databaseState}
+                savedPokemonState={savedPokemonState}
+                spriteCacheState={spriteCacheState}
+                settingsState={settingsState}
+                battleLogOpponentRoster={battleLogSession?.roster}
+                onUpdateOpponentEntry={battleLogSession?.onUpdateEntry}
+                battleLogPlayerTeamId={battleLogSession?.teamId}
+              />
+            </Suspense>
+          )}
+        </div>
+      </MobileHeaderActionsProvider>
     </MotionConfig>
   );
 }

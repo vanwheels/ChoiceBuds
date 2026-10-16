@@ -29,14 +29,20 @@ interface CalcOpponentTrayProps {
   onLoadPokemon: (entry: OpponentPokemonEntry) => void;
 }
 
-export default function CalcOpponentTray({ opponentRoster, resolveSprite, onLoadPokemon }: CalcOpponentTrayProps) {
+export default function CalcOpponentTray({
+  opponentRoster,
+  resolveSprite,
+  onLoadPokemon,
+}: CalcOpponentTrayProps) {
   if (opponentRoster.length === 0) return null;
 
   return (
     <div className="flex flex-col gap-1.5 pb-2 border-b border-zinc-800">
-      <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Load from Opponent</label>
+      <label className="text-[10px] text-zinc-400 uppercase tracking-wide">
+        Load from Opponent
+      </label>
       <div className="flex gap-1.5 flex-wrap">
-        {opponentRoster.map(entry => (
+        {opponentRoster.map((entry) => (
           <button
             key={entry.id}
             type="button"

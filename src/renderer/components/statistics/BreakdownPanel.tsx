@@ -21,8 +21,14 @@ export default function BreakdownPanel({ title, records, emptyMessage }: Breakdo
         <p className="text-sm text-zinc-500">{emptyMessage}</p>
       ) : (
         <div className="flex flex-col gap-3">
-          {records.map(record => (
-            <StatBar key={record.label} label={record.label} wins={record.wins} losses={record.losses} winRate={record.winRate} />
+          {records.map((record) => (
+            <StatBar
+              key={record.label}
+              label={record.label}
+              wins={record.wins}
+              losses={record.losses}
+              winRate={record.winRate}
+            />
           ))}
         </div>
       )}
