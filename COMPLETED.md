@@ -32,7 +32,7 @@ Entries prior to this file's oldest are in:
   `layout-breakpoint-verification.md` (`macbook-pass`/`ui-polish-
   performance`, scoped to `components/**`), and `lookup-table-coverage.md`
   (`vgcpastes-real-set-sourcing`, scoped to `config/**`). See commit
-  TBD.
+  `999e9e8`.
 
 - **[Project Revision v2] — Leg 2 (CLAUDE.md Slim)** — 2026-10-16
   Moved CLAUDE.md's Architecture section into a new root `ARCHITECTURE.md`,
