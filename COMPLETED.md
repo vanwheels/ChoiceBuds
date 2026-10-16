@@ -31,8 +31,15 @@ Entries prior to this file's oldest are in:
   pre-existing `no-use-before-define` error in `useSettings.ts`
   (`persistSettingsToDisk` referenced above its own declaration) that had
   never been caught before since no CI step ran lint prior to this leg;
-  fixed by reordering, then reran clean. See commit e610fc8 (fix) and
-  4e5362f (gate).
+  fixed by reordering, then reran clean. Separately verified `release.yml`
+  live too (initially skipped - a version-tag push was first blocked by
+  the session's auto-mode classifier, retried successfully after the user
+  asked to be thorough): pushed a throwaway `v0.0.0-gatetest` tag off a
+  disposable branch with a deliberately failing test, confirmed both
+  `build-windows` and `build-mac` passed lint, then failed at `npm run
+  test`, never reaching `npm run build`/electron-builder, then deleted the
+  tag, its auto-created draft release, and the branch. See commit e610fc8
+  (fix) and 4e5362f (gate).
 
 - **[Team Notes/Name/Author Don't Resync After Sync Pull] — Leg 1**
   (2026-10-09) - See commit `0453286`. `TeamCard.tsx`'s local
