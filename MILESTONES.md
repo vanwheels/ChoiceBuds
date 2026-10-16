@@ -57,3 +57,5 @@ milestone.
 - **Sync & Clipboard Reliability Fixes** — 2026-10-09 to 2026-10-11 —
   Shipped —
   [post-mortem](docs/postmortems/sync-clipboard-reliability-fixes.md)
+- **Project Revision v2** — 2026-10-16 — Shipped —
+  [post-mortem](docs/postmortems/project-revision-v2.md)

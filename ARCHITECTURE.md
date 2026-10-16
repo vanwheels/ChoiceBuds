@@ -33,6 +33,19 @@ lives in `COMPLETED.md`/`MILESTONES.md`, not here.
 **Hard rule:** `src/main/**` must never import from `src/renderer/**`, for the
 HMR-breaking reason above.
 
+## Persisted data versioning
+
+Every persisted collection (`TeamsDatabase`, `BattlesDatabase`,
+`SavedPokemonDatabase`, `GameDataCache`, `AppSettings`) carries a
+`schemaVersion` field (currently `1` for all of them) and a matching
+migration hook — `migrateTeamsDatabase`/`migrateBattlesDatabase`/
+`migrateSavedPokemonDatabase` in their respective hooks,
+`migrateGameDataCache` in `utils/cacheManager.ts`, and `useSettings.ts`'s
+existing spread-over-defaults merge. Each hook backfills a missing
+`schemaVersion` to `1` in memory on load rather than rewriting the file; a
+future format change bumps the number and adds the real migration logic to
+the matching hook.
+
 ## Renderer layers
 
 - `src/renderer/types/` — single source of truth for all data contracts,

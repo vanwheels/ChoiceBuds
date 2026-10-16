@@ -16,16 +16,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Project Revision v2
-
-Brings the project up to global conventions v2 (see
-`docs/investigations/project-revision-v2-audit.md` for the full audit this
-milestone is scoped from). Stamps CLAUDE.md's `Conventions: v2` line once
-every leg below lands.
-
-All 6 legs are now done (see COMPLETED.md) and CLAUDE.md is stamped
-`Conventions: v2`. Ready for `/close-milestone`.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
