@@ -16,6 +16,85 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
+## Current Milestone: Maintenance & Code Health Sweep
+
+Done when:
+- `useActiveEditor` hook, its test file, and the unused prop plumbing are
+  fully removed.
+- All four sibling hooks (`useSavedPokemon`, `useBattles`, `useSettings`,
+  `useDatabase`) have a documented race-pattern finding, and any hook found
+  to have the same lost-update race as `useTeams` has the same ref+queue
+  fix applied.
+- `TeamCard.tsx`, `BoxPage.tsx`, `useSync.test.ts`, and
+  `CalcPokemonPanel.tsx` are each split below the 500-line hard cap with no
+  behavior change.
+
+- **[Delete Dead useActiveEditor Hook] — Leg 1** *(Last touched: 2026-10-16
+  · Re-checks: 0)*
+  Remove `useActiveEditor.ts`, its test file, and the dead prop plumbing
+  threading `editorState` through `App.tsx`/`AppWeb.tsx` into `TeamsPage`
+  (never consumed there since Always-On Editing replaced the flow). Confirm
+  no remaining references via grep before deleting.
+  Done check: grep for `useActiveEditor`/`editorState` prop returns nothing
+  outside git history; `npm run build` and `npm run test` pass.
+  Manual verification: no. Review: no.
+
+- **[Audit Sibling Hooks for useTeams' Lost-Update Race] — Leg 1** *(Last
+  touched: 2026-10-16 · Re-checks: 0)*
+  Audit `useSavedPokemon`, `useBattles`, `useSettings`, and `useDatabase`
+  for the same "closure over state array at render time + no serialization
+  between concurrent mutations" pattern that caused `useTeams`' lost-update
+  race (fixed, see COMPLETED.md). Record a yes/no finding per hook with
+  specific line references in
+  `docs/investigations/sibling-hooks-lost-update-audit.md`. No code changes
+  this leg.
+  Done check: all 4 hooks have a documented finding in the investigation
+  doc.
+  Manual verification: no. Review: no.
+
+- **[Audit Sibling Hooks for useTeams' Lost-Update Race] — Leg 2** *(Last
+  touched: 2026-10-16 · Re-checks: 0)*
+  Apply the same ref+queue fix `useTeams` got to any hook Leg 1 found to
+  have the race. Scope depends entirely on Leg 1's findings — if Leg 1
+  finds zero affected hooks, this leg is a no-op and closes immediately
+  citing that.
+  Done check: every hook flagged "yes" in Leg 1 has the fix applied and its
+  existing tests still pass (or the leg closes noting zero hooks needed
+  it).
+  Manual verification: no. Review: yes (persisted-state mutation hooks).
+
+- **[File Cap Splits: TeamCard.tsx] — Leg 1** *(Last touched: 2026-10-16 ·
+  Re-checks: 0)*
+  Split `src/renderer/components/TeamCard.tsx` (761 lines) into smaller
+  single-purpose sub-components per the Style rules' cohesive-file smell
+  test, with no behavior change.
+  Done check: resulting file(s) under ~500 lines each, `npm run build`/
+  `lint`/`test` pass, no visual/behavior regression.
+  Manual verification: yes. Review: no.
+
+- **[File Cap Splits: BoxPage.tsx] — Leg 1** *(Last touched: 2026-10-16 ·
+  Re-checks: 0)*
+  Split `src/renderer/components/BoxPage.tsx` (583 lines) the same way.
+  Done check: resulting file(s) under ~500 lines each, `npm run build`/
+  `lint`/`test` pass, no visual/behavior regression.
+  Manual verification: yes. Review: no.
+
+- **[File Cap Splits: useSync.test.ts] — Leg 1** *(Last touched: 2026-10-16
+  · Re-checks: 0)*
+  Split `src/renderer/hooks/useSync.test.ts` (514 lines) into smaller test
+  files by concern, with no behavior change.
+  Done check: resulting file(s) under ~500 lines each, all tests still
+  pass.
+  Manual verification: no. Review: no.
+
+- **[File Cap Splits: CalcPokemonPanel.tsx] — Leg 1** *(Last touched:
+  2026-10-16 · Re-checks: 0)*
+  Split `src/renderer/components/calc/CalcPokemonPanel.tsx` (511 lines) the
+  same way.
+  Done check: resulting file(s) under ~500 lines each, `npm run build`/
+  `lint`/`test` pass, no visual/behavior regression.
+  Manual verification: yes. Review: no.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -44,29 +123,6 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-- **[Delete Dead useActiveEditor Hook] — Leg 1** *(Last touched: 2026-10-08 ·
-  Re-checks: 0)*
-  Found during Web Bug Sweep Leg 1's investigation: `useActiveEditor.ts`
-  (draft/commit scratchpad for the old modal-based edit flow) is mounted in
-  both `App.tsx` and `AppWeb.tsx` and passed into `TeamsPage` as
-  `editorState`, but `TeamsPage` never destructures or forwards it to
-  anything - Always-On Editing replaced that whole flow with direct
-  `onUpdatePokemon`/`updateTeam` calls and nothing was ever wired back up.
-  Fully dead code (hook + its test file + the unused prop plumbing) -
-  safe to delete outright.
-
-- **[Audit Sibling Hooks for useTeams' Lost-Update Race] — Leg 1** *(Last
-  touched: 2026-10-08 · Re-checks: 0)*
-  `useTeams.ts` had a lost-update race (fixed, see COMPLETED.md/TODO.md's
-  Web Bug Sweep Leg 1) from its mutators rebuilding "next state" off a
-  `teams` value closured at render time instead of a synchronously-updated
-  ref, with no serialization between concurrent mutations. `useSavedPokemon`,
-  `useBattles`, `useSettings`, and `useDatabase` all follow the same
-  "closure over state array + persist via storage adapter" shape and
-  plausibly share the same race - not fixed proactively here (out of Leg 1's
-  scope), but worth auditing each for the same pattern and applying the same
-  ref+queue fix where it applies.
-
 - **[UI Shift Assessment Sweep — Post Card UI Polish] — Leg 1** *(Last
   touched: 2026-09-08 · Re-checks: 0)*
   Continue scoping/assessing UI shifts and changes to the rest of the app,
@@ -75,30 +131,14 @@ unblocked.
   screens/components haven't had a UI-focused pass yet before it turns
   into concrete legs.
 
-- **[Write Up Web-Transition Playbook for GW2 Squaded Handoff] — Leg 1**
-  *(Last touched: 2026-10-08 · Re-checks: 0)*
-  Done - see `docs/web-transition-playbook.md`. Covers the storage-adapter
-  pattern, the separate `AppWeb.tsx`/`web/` entry point, the GitHub Pages
-  deploy, the lost-update-race and stale-local-state-prop-resync bug
-  classes this sweep found and fixed, and the decisions ChoiceBuds deferred
-  (mobile support, account model, sync shape) that GW2 Squaded should make
-  earlier than ChoiceBuds did. Kept as its own TODO item rather than moved
-  to COMPLETED.md since it's a standalone reference doc, not tied to a
-  commit - revisit/update it if ChoiceBuds' web effort surfaces more
-  transferable lessons before GW2 Squaded's web work actually starts.
-
 ## Future Milestones (unscheduled)
 
-File Cap Splits (flagged 2026-10-16 by the Project Revision v2 audit,
-`docs/investigations/project-revision-v2-audit.md`): logic files over the
-500-line hard cap, excluding generated data files. Splitting large files is
-risky refactor work and deliberately isn't bundled into the revision legs
-above. `src/renderer/components/TeamCard.tsx` (761 lines),
-`src/renderer/components/BoxPage.tsx` (583), `src/renderer/hooks/
-useSync.test.ts` (514), `src/renderer/components/calc/CalcPokemonPanel.tsx`
-(511). Also `src/renderer/_archived/battle-logger/hooks/
-useBattleLogActions.ts` (1,001 lines) but that's dead/archived code, not a
-live split candidate.
+`src/renderer/_archived/battle-logger/hooks/useBattleLogActions.ts` (1,001
+lines) is also over the 500-line hard cap flagged by the Project Revision v2
+audit (`docs/investigations/project-revision-v2-audit.md`), but it's dead/
+archived code, not a live split candidate — the other four files that audit
+flagged are now legs under the Maintenance & Code Health Sweep milestone
+above.
 
 2026-09-10 feedback pass batched into 4 candidate milestones; Battle Logger
 Overhaul, Statistics Improvements, and Team Management QoL were each
