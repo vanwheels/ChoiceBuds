@@ -1,0 +1,6 @@
+# Commits listed here are ignored by `git blame` (configure with
+# `git config blame.ignoreRevsFile .git-blame-ignore-revs`), so a
+# whitespace-only reformat doesn't bury the real author of a line.
+
+# style: format codebase with Prettier
+70f3efdcb58e73e7741c92ce6c4c2f090828264c
