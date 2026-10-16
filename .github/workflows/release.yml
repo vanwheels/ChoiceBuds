@@ -46,6 +46,8 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - run: npm run lint
+      - run: npm run test
       - run: npm run build
       - run: npx electron-builder --win --publish always
         env:
@@ -61,6 +63,8 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - run: npm run lint
+      - run: npm run test
       - run: npm run build
       - run: npx electron-builder --mac --universal --publish always
         env:
