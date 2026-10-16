@@ -26,6 +26,24 @@ Entries prior to this file's oldest are in:
   everything shipped between them, split out at the 2026-10-16 Project
   Revision v2 boundary)
 
+**Prettier Adoption — Leg 3** (2026-10-16)
+Added a `format:check` step (next to `lint`) to `deploy-web.yml` and to
+`release.yml`'s `build-windows`/`build-mac` jobs, closing out the Prettier
+Adoption milestone's "CI fails on unformatted pushes" done check. Running
+`format:check` locally first surfaced a real problem before it reached
+CI: with `core.autocrlf=true` (the default on this Windows dev machine and
+on GitHub's `windows-latest` runners), Prettier's default `endOfLine: "lf"`
+disagreed with the CRLF line endings git writes to disk on checkout,
+flagging all 302 files as "unformatted" even though their content matched -
+not an actual regression from Leg 2's reformat. Fixed by setting
+`endOfLine: "auto"` in `.prettierrc` (preserves each file's existing line
+ending instead of forcing LF) rather than touching git/autocrlf config.
+Verified the fix via the `deploy-web.yml` run on push
+(github.com/vanwheels/ChoiceBuds/actions/runs/38981802205) - `format:check`
+passed alongside `lint`/`test`/`build:web`. `release.yml`'s build-windows/
+build-mac jobs only run on version tags, so they'll get their first real
+exercise at the next release tag push. See commit bc66643.
+
 **Prettier Adoption — Leg 2** (2026-10-16)
 Ran `prettier --write` across the codebase (288 files) and committed the
 result as a single `style: format codebase with Prettier` commit, with

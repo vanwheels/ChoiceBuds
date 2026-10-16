@@ -27,12 +27,8 @@ Done when:
   hash is recorded in `.git-blame-ignore-revs`.
 - CI fails if someone pushes unformatted code.
 
-- **[Prettier Adoption] — Leg 3** *(Last touched: 2026-10-16 · Re-checks: 0)*
-  Add a `format:check` step (next to the existing `lint` step) to
-  `deploy-web.yml` and to `release.yml`'s `build-windows` and `build-mac`
-  jobs.
-  Done check: a push to main shows the step passing in GitHub Actions.
-  Manual verification: no. Review: no.
+All three "Done when" criteria are now met - see COMPLETED.md's Leg 3 entry.
+Milestone is ready to close via `/close-milestone`.
 
 ## Blocked
 
