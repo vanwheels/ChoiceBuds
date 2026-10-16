@@ -27,7 +27,7 @@ Entries prior to this file's oldest are in:
   (one-paragraph project description, the AI-assisted-development
   disclosure line, and a "not affiliated with Game Freak/Nintendo/The
   Pokémon Company" notice), per `rules/docs.md`'s public-README
-  requirements. See commit TBD.
+  requirements. See commit `9b2334b`.
 
 - **[Project Revision v2] — Leg 4 (Memory Cleanup)** — 2026-10-16
   Deleted two memory entries: `feedback_ask_before_os_automation` (redundant
