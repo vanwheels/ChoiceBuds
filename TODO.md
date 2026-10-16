@@ -40,7 +40,9 @@ Done when:
   audit doc's finding) — no fix needed there.
   Done check: `useSavedPokemon.ts`, `useBattles.ts`, and `useSettings.ts`
   each have the ref+queue fix applied and their existing tests still pass.
-  Manual verification: no. Review: yes (persisted-state mutation hooks).
+  Fix applied 2026-10-16; `type-check`/`lint`/`test` all pass (780 tests).
+  Manual verification: no. Review: yes (persisted-state mutation hooks) —
+  **not yet run, do not close this item until it has.**
 
 - **[File Cap Splits: TeamCard.tsx] — Leg 1** *(Last touched: 2026-10-16 ·
   Re-checks: 0)*

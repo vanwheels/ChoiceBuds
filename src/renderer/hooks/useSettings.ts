@@ -3,7 +3,7 @@
  * Mirrors useTeams.ts's load-on-mount / persist-on-write shape for settings.json
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { AppSettings, PlayerProfile, RegulationLabel } from '../types/pokemon';
 import { getStorageAdapter } from '../services/storage';
 import { getLatestSeason } from '../config/seasons';
@@ -52,6 +52,31 @@ export function useSettings(): UseSettingsReturn {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Mirror of `settings` that both mutators below read as their base
+  // instead of the `settings` closure variable, plus a queue serializing
+  // every mutation - same useTeams.ts-style ref+queue fix for the
+  // lost-update race (see
+  // docs/investigations/sibling-hooks-lost-update-audit.md), applied to a
+  // single object rather than an array: two calls issued close together
+  // (e.g. a sync completing and writing syncUsername/syncToken/lastSyncedAt
+  // via updateSettings at the same moment the user flips defaultRegulation)
+  // used to both read the same stale `settings` closure, each build their
+  // own full-object snapshot, and persist independently, silently
+  // discarding whichever call's field changes lost the race. Updated
+  // synchronously the instant a mutation computes its result, and only
+  // ever read/written by code running inside enqueueMutation below.
+  const settingsRef = useRef<AppSettings>(settings);
+  const writeQueueRef = useRef<Promise<unknown>>(Promise.resolve());
+
+  const enqueueMutation = useCallback(<T>(job: () => Promise<T>): Promise<T> => {
+    const run = writeQueueRef.current.then(job, job);
+    writeQueueRef.current = run.then(
+      () => undefined,
+      () => undefined,
+    );
+    return run;
+  }, []);
 
   /**
    * Internal: Persist updated settings to disk
@@ -114,6 +139,7 @@ export function useSettings(): UseSettingsReturn {
           void persistSettingsToDisk(merged);
         }
 
+        settingsRef.current = merged;
         setSettings(merged);
       } catch (err) {
         if (ignore) return;
@@ -134,23 +160,25 @@ export function useSettings(): UseSettingsReturn {
    * Set the default regulation used when importing new teams
    */
   const setDefaultRegulation = useCallback(
-    async (format: RegulationLabel): Promise<boolean> => {
-      const updated: AppSettings = {
-        ...settings,
-        defaultRegulation: format,
-        lastModified: Date.now(),
-      };
+    (format: RegulationLabel): Promise<boolean> =>
+      enqueueMutation(async () => {
+        const updated: AppSettings = {
+          ...settingsRef.current,
+          defaultRegulation: format,
+          lastModified: Date.now(),
+        };
 
-      const success = await persistSettingsToDisk(updated);
+        const success = await persistSettingsToDisk(updated);
 
-      if (success) {
-        setSettings(updated);
-        setError(null);
-      }
+        if (success) {
+          settingsRef.current = updated;
+          setSettings(updated);
+          setError(null);
+        }
 
-      return success;
-    },
-    [settings],
+        return success;
+      }),
+    [enqueueMutation],
   );
 
   /**
@@ -158,23 +186,25 @@ export function useSettings(): UseSettingsReturn {
    * syncUsername/syncToken/lastSyncedAt together in one write
    */
   const updateSettings = useCallback(
-    async (partial: Partial<Omit<AppSettings, 'version' | 'lastModified'>>): Promise<boolean> => {
-      const updated: AppSettings = {
-        ...settings,
-        ...partial,
-        lastModified: Date.now(),
-      };
+    (partial: Partial<Omit<AppSettings, 'version' | 'lastModified'>>): Promise<boolean> =>
+      enqueueMutation(async () => {
+        const updated: AppSettings = {
+          ...settingsRef.current,
+          ...partial,
+          lastModified: Date.now(),
+        };
 
-      const success = await persistSettingsToDisk(updated);
+        const success = await persistSettingsToDisk(updated);
 
-      if (success) {
-        setSettings(updated);
-        setError(null);
-      }
+        if (success) {
+          settingsRef.current = updated;
+          setSettings(updated);
+          setError(null);
+        }
 
-      return success;
-    },
-    [settings],
+        return success;
+      }),
+    [enqueueMutation],
   );
 
   return {

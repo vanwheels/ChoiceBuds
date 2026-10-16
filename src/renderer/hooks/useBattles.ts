@@ -6,7 +6,7 @@
  * Pokemon, etc.) built on top of updateBattle here.
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type {
   Battle,
   BattleAction,
@@ -129,6 +129,32 @@ export function useBattles(): UseBattlesReturn {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Mirrors of `battles`/`tombstones` that every mutator below reads as its
+  // base instead of the `battles`/`tombstones` closure variables, plus a
+  // queue serializing every mutation - same useTeams.ts-style ref+queue fix
+  // for the lost-update race (see
+  // docs/investigations/sibling-hooks-lost-update-audit.md): two mutations
+  // fired before React re-renders used to both read the same stale
+  // `battles` closure (most exposed in practice via updateBattle, the
+  // single mutator useBattleLogActions.ts funnels every live
+  // battle-logging edit through), each build their own "base + my one
+  // change" snapshot, and persist independently, silently dropping
+  // whichever edit lost the race. Updated synchronously the instant a
+  // mutation computes its result, and only ever read/written by code
+  // running inside enqueueMutation below.
+  const battlesRef = useRef<Battle[]>(battles);
+  const tombstonesRef = useRef<SyncTombstone[]>(tombstones);
+  const writeQueueRef = useRef<Promise<unknown>>(Promise.resolve());
+
+  const enqueueMutation = useCallback(<T>(job: () => Promise<T>): Promise<T> => {
+    const run = writeQueueRef.current.then(job, job);
+    writeQueueRef.current = run.then(
+      () => undefined,
+      () => undefined,
+    );
+    return run;
+  }, []);
+
   /**
    * Internal: Load battles from disk via preload bridge. Only called from
    * refreshBattles() now - the mount path below inlines its own copy of
@@ -143,9 +169,15 @@ export function useBattles(): UseBattlesReturn {
       const database = raw ? migrateBattlesDatabase(raw) : null;
 
       if (database) {
-        setBattles(database.battles.map(normalizeBattle));
-        setTombstones(database.tombstones ?? []);
+        const loadedBattles = database.battles.map(normalizeBattle);
+        const loadedTombstones = database.tombstones ?? [];
+        battlesRef.current = loadedBattles;
+        tombstonesRef.current = loadedTombstones;
+        setBattles(loadedBattles);
+        setTombstones(loadedTombstones);
       } else {
+        battlesRef.current = [];
+        tombstonesRef.current = [];
         setBattles([]);
         setTombstones([]);
       }
@@ -178,9 +210,15 @@ export function useBattles(): UseBattlesReturn {
         const database = raw ? migrateBattlesDatabase(raw) : null;
 
         if (database) {
-          setBattles(database.battles.map(normalizeBattle));
-          setTombstones(database.tombstones ?? []);
+          const loadedBattles = database.battles.map(normalizeBattle);
+          const loadedTombstones = database.tombstones ?? [];
+          battlesRef.current = loadedBattles;
+          tombstonesRef.current = loadedTombstones;
+          setBattles(loadedBattles);
+          setTombstones(loadedTombstones);
         } else {
+          battlesRef.current = [];
+          tombstonesRef.current = [];
           setBattles([]);
           setTombstones([]);
         }
@@ -227,46 +265,51 @@ export function useBattles(): UseBattlesReturn {
   };
 
   const addBattle = useCallback(
-    async (battle: Battle): Promise<boolean> => {
-      const updatedBattles = [battle, ...battles];
-      const success = await persistBattlesToDisk(updatedBattles, tombstones);
+    (battle: Battle): Promise<boolean> =>
+      enqueueMutation(async () => {
+        const updatedBattles = [battle, ...battlesRef.current];
+        const success = await persistBattlesToDisk(updatedBattles, tombstonesRef.current);
 
-      if (success) {
-        setBattles(updatedBattles);
-        setError(null);
-      }
+        if (success) {
+          battlesRef.current = updatedBattles;
+          setBattles(updatedBattles);
+          setError(null);
+        }
 
-      return success;
-    },
-    [battles, tombstones],
+        return success;
+      }),
+    [enqueueMutation],
   );
 
   const updateBattle = useCallback(
-    async (battleId: string, updates: Partial<Battle>): Promise<boolean> => {
-      const battleIndex = battles.findIndex((b) => b.id === battleId);
+    (battleId: string, updates: Partial<Battle>): Promise<boolean> =>
+      enqueueMutation(async () => {
+        const base = battlesRef.current;
+        const battleIndex = base.findIndex((b) => b.id === battleId);
 
-      if (battleIndex === -1) {
-        setError(`Battle with ID ${battleId} not found`);
-        return false;
-      }
+        if (battleIndex === -1) {
+          setError(`Battle with ID ${battleId} not found`);
+          return false;
+        }
 
-      const updatedBattles = [...battles];
-      updatedBattles[battleIndex] = {
-        ...updatedBattles[battleIndex],
-        ...updates,
-        updatedAt: Date.now(),
-      };
+        const updatedBattles = [...base];
+        updatedBattles[battleIndex] = {
+          ...updatedBattles[battleIndex],
+          ...updates,
+          updatedAt: Date.now(),
+        };
 
-      const success = await persistBattlesToDisk(updatedBattles, tombstones);
+        const success = await persistBattlesToDisk(updatedBattles, tombstonesRef.current);
 
-      if (success) {
-        setBattles(updatedBattles);
-        setError(null);
-      }
+        if (success) {
+          battlesRef.current = updatedBattles;
+          setBattles(updatedBattles);
+          setError(null);
+        }
 
-      return success;
-    },
-    [battles, tombstones],
+        return success;
+      }),
+    [enqueueMutation],
   );
 
   /**
@@ -275,25 +318,38 @@ export function useBattles(): UseBattlesReturn {
    * confirmed synced (applySyncedState below).
    */
   const deleteBattle = useCallback(
-    async (battleId: string): Promise<boolean> => {
-      const updatedBattles = battles.filter((b) => b.id !== battleId);
-      const updatedTombstones = [...tombstones, { id: battleId, deletedAt: Date.now() }];
-      const success = await persistBattlesToDisk(updatedBattles, updatedTombstones);
+    (battleId: string): Promise<boolean> =>
+      enqueueMutation(async () => {
+        const updatedBattles = battlesRef.current.filter((b) => b.id !== battleId);
+        const updatedTombstones = [
+          ...tombstonesRef.current,
+          { id: battleId, deletedAt: Date.now() },
+        ];
+        const success = await persistBattlesToDisk(updatedBattles, updatedTombstones);
 
-      if (success) {
-        setBattles(updatedBattles);
-        setTombstones(updatedTombstones);
-        setError(null);
-      }
+        if (success) {
+          battlesRef.current = updatedBattles;
+          tombstonesRef.current = updatedTombstones;
+          setBattles(updatedBattles);
+          setTombstones(updatedTombstones);
+          setError(null);
+        }
 
-      return success;
-    },
-    [battles, tombstones],
+        return success;
+      }),
+    [enqueueMutation],
   );
 
-  const refreshBattles = useCallback(async (): Promise<void> => {
-    await loadBattlesFromDisk();
-  }, []);
+  /**
+   * Queued behind any in-flight mutation (same enqueueMutation as the
+   * mutators above) so it can't read the disk mid-write and then stomp
+   * battlesRef/state with a pre-write snapshot once that write actually
+   * lands - mirrors useTeams.ts::refreshTeams.
+   */
+  const refreshBattles = useCallback(
+    (): Promise<void> => enqueueMutation(loadBattlesFromDisk),
+    [enqueueMutation],
+  );
 
   const getBattleById = useCallback(
     (battleId: string): Battle | undefined => {
@@ -302,15 +358,21 @@ export function useBattles(): UseBattlesReturn {
     [battles],
   );
 
-  const applySyncedState = useCallback(async (records: Battle[]): Promise<boolean> => {
-    const success = await persistBattlesToDisk(records, []);
-    if (success) {
-      setBattles(records);
-      setTombstones([]);
-      setError(null);
-    }
-    return success;
-  }, []);
+  const applySyncedState = useCallback(
+    (records: Battle[]): Promise<boolean> =>
+      enqueueMutation(async () => {
+        const success = await persistBattlesToDisk(records, []);
+        if (success) {
+          battlesRef.current = records;
+          tombstonesRef.current = [];
+          setBattles(records);
+          setTombstones([]);
+          setError(null);
+        }
+        return success;
+      }),
+    [enqueueMutation],
+  );
 
   return {
     battles,
