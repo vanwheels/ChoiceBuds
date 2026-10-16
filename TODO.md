@@ -23,14 +23,6 @@ Brings the project up to global conventions v2 (see
 milestone is scoped from). Stamps CLAUDE.md's `Conventions: v2` line once
 every leg below lands.
 
-- **[Project Revision v2] — Leg 5** *(Last touched: 2026-10-16 ·
-  Re-checks: 0)*
-  Docs Cleanup. Add a title/intro to `README.md` ahead of its Credits
-  section, plus the AI-assisted-development disclosure line and a "not
-  affiliated with Game Freak/Nintendo/The Pokémon Company" notice, per
-  `rules/docs.md`. Done check: both required lines present at the top of
-  the README. Manual verification: no.
-
 - **[Project Revision v2] — Leg 6** *(Last touched: 2026-10-16 ·
   Re-checks: 0)*
   Schema Version. Add a `schemaVersion` field (starting at 1) to every

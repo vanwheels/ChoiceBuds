@@ -22,6 +22,13 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[Project Revision v2] — Leg 5 (Docs Cleanup)** — 2026-10-16
+  Added a title/intro section to `README.md` ahead of its Credits section
+  (one-paragraph project description, the AI-assisted-development
+  disclosure line, and a "not affiliated with Game Freak/Nintendo/The
+  Pokémon Company" notice), per `rules/docs.md`'s public-README
+  requirements. See commit TBD.
+
 - **[Project Revision v2] — Leg 4 (Memory Cleanup)** — 2026-10-16
   Deleted two memory entries: `feedback_ask_before_os_automation` (redundant
   with CLAUDE.md's existing OS-automation prohibition) and

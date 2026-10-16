@@ -1,3 +1,14 @@
+# ChoiceBuds
+
+ChoiceBuds is a desktop app for importing and managing Pokémon VGC (Video
+Game Championships) teams from Showdown/Pokepaste export text, with a damage
+calculator, battle logging, and statistics built around them.
+
+AI-assisted development; design, direction and verification by Vanny.
+
+ChoiceBuds is a fan project and is not affiliated with Game Freak, Nintendo,
+or The Pokémon Company.
+
 ## 🎨 Credits & Data Asset Pipelines
 
 ChoiceBuds is built on top of incredible open-source datasets, asset pipelines, and community-driven tools. I want to extend our immense gratitude to the creators and maintainers of the following resources that make this VGC teambuilder possible:
