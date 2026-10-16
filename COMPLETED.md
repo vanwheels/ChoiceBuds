@@ -29,3 +29,11 @@ Entries prior to this file's oldest are in:
   (the Prettier Adoption milestone's three legs, split out at the
   2026-10-16 Prettier Adoption boundary)
 
+**Delete Dead useActiveEditor Hook — Leg 1** (2026-10-16)
+Removed `useActiveEditor.ts` and its test file, plus the dead `editorState`
+prop threaded through `App.tsx`/`AppWeb.tsx` into `TeamsPage` (never
+consumed there since Always-On Editing replaced that flow). Confirmed via
+grep that no references remained outside git history and archived docs
+before deleting; `npm run build`, `lint`, and `test` all passed afterward.
+See commit dcc0f7e.
+
