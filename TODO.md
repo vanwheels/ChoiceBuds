@@ -16,6 +16,80 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
+## Current Milestone: Project Revision v2
+
+Brings the project up to global conventions v2 (see
+`docs/investigations/project-revision-v2-audit.md` for the full audit this
+milestone is scoped from). Stamps CLAUDE.md's `Conventions: v2` line once
+every leg below lands.
+
+- **[Project Revision v2] — Leg 1** *(Last touched: 2026-10-16 ·
+  Re-checks: 0)*
+  CI Gate. Add an `npm run lint` and `npm run test` step before the build
+  step in both `.github/workflows/release.yml` (`build-windows`/`build-mac`)
+  and `.github/workflows/deploy-web.yml`, so a failing test or lint error
+  stops a release build or a live web deploy before anything gets built.
+  Done check: both workflows run lint+test ahead of their build/publish
+  step. Manual verification: yes — push a throwaway failing test on a
+  branch to confirm the gate actually blocks, then remove it.
+
+- **[Project Revision v2] — Leg 2** *(Last touched: 2026-10-16 ·
+  Re-checks: 0)*
+  CLAUDE.md Slim (with ARCHITECTURE.md). Move CLAUDE.md's existing
+  Architecture section into a new root `ARCHITECTURE.md`. Reflow/shorten
+  the eight external-data-source exception paragraphs (currently up to
+  1,600+ chars on one line) and move that whole policy into
+  `.claude/rules/external-data-sources.md`, scoped via `paths` to
+  `src/renderer/services/**` and `src/renderer/config/**`. Re-verify every
+  remaining concrete claim in CLAUDE.md against the code while touching it.
+  Done check: CLAUDE.md's longest line is well under the ~200-char range,
+  ARCHITECTURE.md exists and matches current code. Manual verification: no.
+
+- **[Project Revision v2] — Leg 3** *(Last touched: 2026-10-16 ·
+  Re-checks: 0)*
+  Lessons to Rules. Promote the five durable postmortem lessons identified
+  in the audit — stale-data `updatedAt`-bump + grep-before-field-rename
+  (`sync-clipboard-reliability-fixes`), render-body side-effect smell +
+  corrupted-data handling (`battle-logger-overhaul`), ref-returning-hook/
+  render-function separation (`fixes-and-adjustments`), DOM-overflow
+  breakpoint verification + wrong-anchor-node check (`macbook-pass`/
+  `ui-polish-performance`), and lookup-table coverage spot-check
+  (`vgcpastes-real-set-sourcing`) — into `.claude/rules/` with appropriate
+  `paths` scoping. Done check: each lesson has a corresponding rule file.
+  Manual verification: no.
+
+- **[Project Revision v2] — Leg 4** *(Last touched: 2026-10-16 ·
+  Re-checks: 0)*
+  Memory Cleanup. Delete the `feedback_ask_before_os_automation` (redundant
+  with CLAUDE.md's existing OS-automation prohibition) and
+  `project_web_mobile_friendliness_concern` (stale — that pass already
+  shipped 2026-09-30) memory entries. Promote `feedback_web_account_optional`
+  into CLAUDE.md's Web build section and `feedback_web_tests_on_live` into
+  its Workflow Conventions section, then delete those memory files too.
+  Update `MEMORY.md`'s index to match what's left. Done check: index
+  matches remaining files; both promoted rules appear in CLAUDE.md. Manual
+  verification: no.
+
+- **[Project Revision v2] — Leg 5** *(Last touched: 2026-10-16 ·
+  Re-checks: 0)*
+  Docs Cleanup. Add a title/intro to `README.md` ahead of its Credits
+  section, plus the AI-assisted-development disclosure line and a "not
+  affiliated with Game Freak/Nintendo/The Pokémon Company" notice, per
+  `rules/docs.md`. Done check: both required lines present at the top of
+  the README. Manual verification: no.
+
+- **[Project Revision v2] — Leg 6** *(Last touched: 2026-10-16 ·
+  Re-checks: 0)*
+  Schema Version. Add a `schemaVersion` field (starting at 1) to every
+  persisted collection's type (`TeamsDatabase`, `BattlesDatabase`,
+  `SavedPokemonDatabase`, `GameDataCache`, settings), write it on every save
+  through the storage adapter, and add one test per hook that loads an
+  old-format fixture lacking the field and confirms it still loads — just
+  the field and a migration hook point, not a migration system. Bump
+  CLAUDE.md's `Conventions:` line to v2 once this leg and all prior legs
+  land. Done check: `schemaVersion` present and tested on every persisted
+  collection; CLAUDE.md stamped. Manual verification: no.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -88,6 +162,17 @@ unblocked.
   transferable lessons before GW2 Squaded's web work actually starts.
 
 ## Future Milestones (unscheduled)
+
+File Cap Splits (flagged 2026-10-16 by the Project Revision v2 audit,
+`docs/investigations/project-revision-v2-audit.md`): logic files over the
+500-line hard cap, excluding generated data files. Splitting large files is
+risky refactor work and deliberately isn't bundled into the revision legs
+above. `src/renderer/components/TeamCard.tsx` (761 lines),
+`src/renderer/components/BoxPage.tsx` (583), `src/renderer/hooks/
+useSync.test.ts` (514), `src/renderer/components/calc/CalcPokemonPanel.tsx`
+(511). Also `src/renderer/_archived/battle-logger/hooks/
+useBattleLogActions.ts` (1,001 lines) but that's dead/archived code, not a
+live split candidate.
 
 2026-09-10 feedback pass batched into 4 candidate milestones; Battle Logger
 Overhaul, Statistics Improvements, and Team Management QoL were each
