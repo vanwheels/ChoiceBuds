@@ -36,7 +36,7 @@ Entries prior to this file's oldest are in:
   field and the hook point, not a migration system. Added one test per
   hook loading an old-format fixture lacking the field. Stamped CLAUDE.md
   `Conventions: v2`, closing out Project Revision v2's final leg. See
-  commit TBD.
+  commit `3871eb4`.
 
 - **[Project Revision v2] — Leg 5 (Docs Cleanup)** — 2026-10-16
   Added a title/intro section to `README.md` ahead of its Credits section
