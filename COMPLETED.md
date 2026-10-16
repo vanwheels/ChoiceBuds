@@ -26,6 +26,20 @@ Entries prior to this file's oldest are in:
   everything shipped between them, split out at the 2026-10-16 Project
   Revision v2 boundary)
 
+**Prettier Adoption — Leg 2** (2026-10-16)
+Ran `prettier --write` across the codebase (288 files) and committed the
+result as a single `style: format codebase with Prettier` commit, with
+`.git-blame-ignore-revs` recording its hash in a follow-up commit. The
+reformat moved an `eslint-disable-next-line react-hooks/purity` comment in
+`PlayerProfileSection.tsx` off the line it was meant to suppress (Prettier
+wrapped a single-line `updateSettings({...})` call across three lines,
+pushing `Date.now()` to a line the comment no longer covered) - relocated
+the comment to the correct line as part of the same commit so lint stayed
+clean. Full suite (lint/type-check/test/build) passed post-reformat; manual
+smoke check via `run-desktop` confirmed the app still launches and renders
+(nav, Teams page with real data, What's New modal) with the real dev
+server. See commits 70f3efd, 9781709.
+
 **Prettier Adoption — Leg 1** (2026-10-16)
 Installed `prettier` + `eslint-config-prettier`, added `.prettierrc`/
 `.prettierignore`, and wired `eslintConfigPrettier` into `eslint.config.js`
