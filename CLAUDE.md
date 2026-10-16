@@ -128,16 +128,17 @@ running on.
   always create a fresh disposable battle/team for it rather than testing
   against the user's real data, and clean it up afterward. Still never fall
   back to OS-level mouse/keyboard automation.
-- **Web verification happens on the live site** (confirmed 2026-10-08 during
-  Web Bug Sweep Leg 3): the user tests web-client changes on the deployed
-  site (choicebuds.vannyproductions.com, via `.github/workflows/
-  deploy-web.yml` on push to `main`), not `npm run dev:web`'s local dev
-  server. For any web-only fix, commit and push to `main` first so it
-  actually ships, then ask for a live retest (note the GitHub Pages deploy
-  takes a couple minutes) — don't just suggest a dev-server/browser refresh.
-  If a fix needs live verification before it's safe to commit/push (still
-  iterating), say so explicitly rather than assuming a local refresh shows
-  the real result.
+- **Web verification: dev server to iterate, live site to close** (revised
+  2026-10-16 now that `deploy-web.yml` runs lint/test/`build:web` — which
+  itself runs `tsc` — before every deploy and stops on failure; the original
+  live-only rule from 2026-10-08's Web Bug Sweep Leg 3 was really working
+  around a push that hadn't gone out yet, not evidence `dev:web` was
+  unreliable). Default to `npm run dev:web`'s local dev server
+  (`http://localhost:5174`) while iterating on a web-only fix. Once it looks
+  right locally, commit and push to `main`, then do one live retest on
+  choicebuds.vannyproductions.com (via `deploy-web.yml`, takes a couple
+  minutes to land) before calling the fix done — base-path/routing and
+  GitHub Pages-specific behavior only show up there, not on localhost.
 - **Curated effect tables** (`config/moveStatEffects.ts`,
   `config/onSwitchInAbilities.ts`, `config/reactiveAbilities.ts`,
   `config/hitReactiveAbilities.ts`) should hold comprehensive,
