@@ -16,6 +16,43 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
+## Current Milestone: Prettier Adoption
+
+Done when:
+- Prettier + `eslint-config-prettier` are installed and wired into
+  `eslint.config.js` (style rules that fight Prettier turned off).
+- The whole codebase (code only - `.prettierignore` excludes markdown/docs
+  and `src/renderer/_archived/**`, matching `eslint.config.js`'s existing
+  ignore list) is reformatted in one dedicated commit, and that commit's
+  hash is recorded in `.git-blame-ignore-revs`.
+- CI fails if someone pushes unformatted code.
+
+- **[Prettier Adoption] — Leg 1** *(Last touched: 2026-10-16 · Re-checks: 0)*
+  Install `prettier` + `eslint-config-prettier`, add `.prettierrc` and
+  `.prettierignore` (excluding markdown/docs and
+  `src/renderer/_archived/**`), append the prettier config to
+  `eslint.config.js` so conflicting style rules are turned off, and add
+  `format`/`format:check` npm scripts.
+  Done check: `npm run lint` passes clean.
+  Manual verification: no. Review: no.
+
+- **[Prettier Adoption] — Leg 2** *(Last touched: 2026-10-16 · Re-checks: 0)*
+  Run `prettier --write` across the codebase (code only, per Leg 1's
+  `.prettierignore` scope) and commit the result as a single
+  `style: format codebase with Prettier` commit. Create
+  `.git-blame-ignore-revs` and record that commit's hash in it.
+  Done check: full suite (`lint`/`type-check`/`test`/`build`) still passes
+  post-reformat.
+  Manual verification: yes (quick smoke check that the app still launches -
+  mechanical change, but it touches nearly every file). Review: no.
+
+- **[Prettier Adoption] — Leg 3** *(Last touched: 2026-10-16 · Re-checks: 0)*
+  Add a `format:check` step (next to the existing `lint` step) to
+  `deploy-web.yml` and to `release.yml`'s `build-windows` and `build-mac`
+  jobs.
+  Done check: a push to main shows the step passing in GitHub Actions.
+  Manual verification: no. Review: no.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
