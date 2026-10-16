@@ -4,12 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-ChoiceBuds — an Electron + React + TypeScript desktop app for importing and managing Pokémon VGC (Video Game Championships) teams from Showdown/Pokepaste export text. Teams and a PokeAPI response cache are persisted as JSON files in the OS userData directory (no database).
+ChoiceBuds — an Electron + React + TypeScript desktop app for importing and
+managing Pokémon VGC (Video Game Championships) teams from Showdown/Pokepaste
+export text. Teams and a PokeAPI response cache are persisted as JSON files
+in the OS userData directory (no database).
 
 ## Commands
 
 - `npm run dev` — start Vite + Electron in development (renderer at `http://localhost:5173`, hot reload)
-- `npm run dev:web` — start the web build's own Vite dev server (`http://localhost:5174`) — see Architecture's Web build section
+- `npm run dev:web` — start the web build's own Vite dev server (`http://localhost:5174`) — see `ARCHITECTURE.md`'s Web build section
 - `npm run build` — type-check (`tsc`) then production build via `vite build`
 - `npm run build:web` — type-check then production build of the web entry, output to `dist/web/`
 - `npm run type-check` — `tsc --noEmit` only
@@ -29,99 +32,109 @@ ChoiceBuds — an Electron + React + TypeScript desktop app for importing and ma
 
 ## Architecture
 
-### Process split (Electron)
-
-- `src/main/main.ts` — main process. Owns the `BrowserWindow`, and all filesystem I/O for `teams.json` and `pokeapi-cache.json` in `app.getPath('userData')`, exposed to the renderer via `ipcMain.handle('file:*', ...)`.
-- `src/main/preload.ts` — contextBridge script exposing `window.electron.{readTeamsDatabase, writeTeamsDatabase, readPokeAPICache, writePokeAPICache, getUserDataPath}`.
-- `src/renderer/` — the React app (Vite root aliases `@` → `src/renderer`).
-
-**Hard rule:** `src/main/**` must never import from `src/renderer/**`. The preload script intentionally types its IPC payloads as `any` instead of importing renderer types. Previously `preload.ts` imported a type from `../renderer/types/pokemon`, which caused Vite's electron plugin to bundle every renderer component twice — once for the renderer entry, once for the separately-compiled preload build — since importing from the renderer directory pulls all of that code into whichever bundle references it. That broke HMR (DevTools Sources showed every component appearing twice, and file edits stopped being picked up). The renderer casts `window.electron` results to the real types from `src/renderer/types/pokemon.ts` itself instead.
-
-### Renderer layers
-
-- `src/renderer/types/` — single source of truth for all data contracts, split into four domain files (113+ files import from `types/pokemon` regardless of which one actually defines a given type — not worth a mass path rewrite):
-  - `pokemon.ts` — the barrel; every other file's import path. Holds the core team/Pokémon-set types itself (`PokemonStats`, `EVSpread`, `ShowdownPokemon`, `ImportedPokemonInfo`, `Team`, `TeamsDatabase`, `SavedPokemonEntry`, `SavedPokemonDatabase`, `EditorState`, `ValidationError`, `ParseResult`, `StatKey`, `StatStages`) and re-exports the other three.
-  - `battle.ts` — Battle Logger domain types (`Battle`, `BattlesDatabase`, `Turn`, `BattleAction`, `BroughtPokemonSnapshot`, `OpponentPokemonEntry`, `FieldState`, `SideConditions`, `StatusCondition`, `WeatherType`, `TerrainType`, `BattleSide`). Battle Logger's UI is archived, but `Battle`/`BattlesDatabase` are still live (`useBattles.ts` persists them, `useSync.ts` syncs them).
-  - `settings.ts` — persisted app-settings/player-profile types (`AppSettings`, `PlayerProfile`, `SyncPayload`).
-  - `gameData.ts` — cached PokeAPI/Champions-usage types (`PokeAPICache`, `PokeAPICacheEntry`, `MoveData`, `ItemData`, `AbilityData`, `SpeciesLearnsetEntry`, `SpeciesRosterEntry`, `ChampionsUsageEntry` and its ranked-entry sub-types, `GameDataCache`).
-
-  Add new fields to whichever domain file actually owns the type — team/roster shapes in `pokemon.ts`, battle-log shapes in `battle.ts`, settings/sync-payload shapes in `settings.ts`, cached game-data shapes in `gameData.ts` — never import from anything but `types/pokemon` at call sites.
-- `src/renderer/hooks/` — all state lives here; components stay presentational. Notable hooks:
-  - `useTeams` — CRUD over the teams array, persists through the storage-adapter interface (see Web build below) on every mutation, also owns UI-only expanded-card-id state.
-  - `useDatabase` — persisted cache of PokeAPI species data (`pokeapi-cache.json`), also through the storage adapter. Entries never expire once cached (`utils/cacheExpiry.ts`'s `NEVER_EXPIRES`) — see `useInitialSync` below for how the app stays offline-capable without periodic re-validation.
-  - `useGameData` — persisted cache of move/item/ability/learnset/Champions-usage lookups (`game-data-cache.json`), fetched live from PokeAPI/championsbattledata.com on demand. Everything except usage data (`ChampionsUsageEntry`, still a 5-day TTL) never expires once cached, same as `useDatabase`.
-  - `useInitialSync` — on every launch, diffs the current legal species roster against `GameDataCache.lastSyncedSpeciesNames` and bulk-syncs (sprites, moves/abilities/learnset, species stats) whatever's missing - the full legal roster on a fresh install, just the delta after a future regulation update adds species. Gates the app behind a `LoadingScreen` until that pass (if any) completes. This is the *only* thing that needs network after first launch besides Champions usage data's own 5-day refresh - there is no other background re-validation.
-  - `useActiveEditor` — scratchpad/draft state for the Pokémon edit overlay; mutations only apply to the draft clone and are committed to `useTeams` explicitly on save.
-- `src/renderer/services/parser.ts` — pure, offline, regex-based Showdown/Pokepaste text parser. No API calls, no side effects. Produces `ShowdownPokemon[]`.
-- `src/renderer/services/pokeapi.ts` — all `fetch` calls to `https://pokeapi.co/api/v2`. Handles species-name normalization for gender-divergent forms (Basculegion, Indeedee, Oinkologne, Meowstic all have separate `-male`/`-female` PokeAPI slugs) and enriches parsed Showdown data with API stats/types/sprites, going through the `useDatabase` cache getter/setter.
-- `src/renderer/config/` — static lookup tables only: `pokemonRules.ts` (gender-lock/genderless/gendered-form species lists + `getFallbackGender`), `pokemonTheme.ts` (type/category → Tailwind class maps), `vgcData.ts` (VGC-legal items/moves lists), `championsMoveOverrides.ts`/`championsAbilityOverrides.ts`/`championsMovepoolAdditions.ts`/`championsMechanics.ts` (Pokemon Champions balance-patch corrections over PokeAPI's mainline-only data — applied at the read boundary in `useGameData.ts`, not baked into the cache). No hardcoded colors or species lists belong anywhere else.
-- `src/renderer/components/` — presentational only; each stays under ~250 lines by design (see below).
-
-### Data flow for an import
-
-1. User pastes Showdown text into `ImportTeamModal` → `parseShowdownText()` (pure, sync) → `ShowdownPokemon[]`.
-2. Each parsed Pokémon is enriched via `enrichPokemonWithAPI()` in `pokeapi.ts`, which checks `useDatabase`'s cache first and only calls PokeAPI on a miss, then writes the result back through `setCacheEntry`.
-3. The resulting `ImportedPokemonInfo[]` is wrapped into a `Team` and persisted via `useTeams().addTeam()`, which writes the full `TeamsDatabase` to disk through the preload bridge.
-4. Editing an existing team's Pokémon goes through `useActiveEditor`: `enterEditMode` deep-clones the target `ImportedPokemonInfo` into a draft, all `update*` calls mutate only the draft, and `getCommittableData()`/`updateTeam()` is what actually persists.
-
-### Cross-device sync (Worker)
-
-- `worker/` — a standalone Cloudflare Worker (own `package.json`/`wrangler.toml`, not part of the Vite/Electron build), storing one JSON blob per pairing identifier in Workers KV via `PUT`/`GET /sync/:identifier`. No accounts, no auth beyond the identifier itself. This is infrastructure each user deploys and owns themselves — see `worker/README.md` for first-time deploy steps and free-tier limits.
-- `src/renderer/services/syncApi.ts` — the only renderer code that talks to the Worker's HTTP API (`SYNC_WORKER_URL`); pushes/pulls the app's `TeamsDatabase`/`BattlesDatabase` as one `SyncPayload`.
-- `src/renderer/hooks/useSync.ts` — orchestrates sync. Deliberately manual and one-directional-at-a-time (push *or* pull, user-triggered) rather than continuous background sync, since there's no backend arbitrating real conflicts. Status computation is factored into a pure, setState-free `computeSyncStatus()` so both the mount effect and `refreshStatus()` can share it without tripping the `set-state-in-effect` lint rule — see `docs/investigations/set-state-in-effect-lint-fix.md`.
-- `src/renderer/components/SyncSection.tsx` — the Settings-page UI for pairing an identifier and triggering push/pull.
-- Unrelated despite the similar name: `useUsageSync.ts` keeps `ChampionsUsageEntry` ladder-usage data fresh from championsbattledata.com (see `useGameData` above) — it has nothing to do with this cross-device Worker sync.
-
-### Web build
-
-- `src/renderer/services/storage/` — the `StorageAdapter` interface (`read<T>(key)`/`write<T>(key, value)`, keyed by a closed `StorageKey` union) that `useTeams`/`useDatabase` persist through, plus its two implementations: `electronAdapter.ts` (delegates to `window.electron`, used whenever it exists — desktop app and Vitest's `setupElectronMock.ts`) and `indexedDBAdapter.ts` (one `choicebuds` IndexedDB database, one `kv` object store keyed by `StorageKey`, used on web). `index.ts`'s `getStorageAdapter()` lazily picks between them on first call rather than at module-eval time, since Vitest's mock isn't installed until a `beforeEach` runs, after the module graph is first imported. Other hooks that touch `window.electron` directly (`useSavedPokemon`, `useGameData`, `useSettings`, etc.) haven't been ported yet — see `TODO.md`'s Web Teams/Box Parity legs.
-- `web/` — a second Vite entry (`web/index.html`/`main.tsx`/`vite.config.ts`) sibling to `worker/`, but unlike `worker/` it shares the root `package.json`'s `node_modules` rather than being a standalone project — it's an alternate front door onto the same `src/renderer/` code, not a separate runtime. Builds to `dist/web/`, dev server on port 5174 (Electron's Vite dev server stays on 5173, so both can run at once).
-- `src/renderer/AppWeb.tsx` — the web shell, sibling to `App.tsx` (not a modification of it). Only wires up `useTeams`/`useDatabase` (the two hooks ported to the storage adapter so far) with a minimal Teams/Box nav — real `TeamsPage`/`BoxPage` parity is deferred to their own legs, since those components transitively depend on several more `window.electron`-calling hooks that aren't ported yet.
-
-### Gender/form handling
-
-VGC-legal species have two gender concerns that must stay in sync across two files:
-- Parsing-time fallback (`config/pokemonRules.ts::getFallbackGender`) — used when Showdown text omits an explicit `(M)`/`(F)`.
-- API-slug normalization (`services/pokeapi.ts::normalizeSpeciesForAPI`) — PokeAPI models Basculegion/Indeedee/Oinkologne/Meowstic as distinct `-male`/`-female` resources, not a single gender-neutral entry.
-
-When adding a new gender-divergent or gender-locked/genderless species, update both files.
+See `ARCHITECTURE.md` for the process split, renderer layers, data flow,
+cross-device sync, web build, and gender/form handling.
 
 ## Style rules
 
 - Strict decoupled architecture — no monolithic files.
-- `src/renderer/components/*` should stay small and single-purpose; extract sub-components when a file starts mixing unrelated concerns rather than growing one file. This used to be a hard 250-line cap — that number was tuned for a previous pay-per-token AI workflow's cost pressure, not for its own sake. Treat it as a smell test now (does this file still do one thing?), not a line-count gate — a cohesive file a bit over 250 lines doesn't need to be split just to hit a number, but a file dragging in unrelated responsibilities should still be split regardless of length.
+- `src/renderer/components/*` should stay small and single-purpose; extract
+  sub-components when a file starts mixing unrelated concerns rather than
+  growing one file. This used to be a hard 250-line cap — that number was
+  tuned for a previous pay-per-token AI workflow's cost pressure, not for its
+  own sake. Treat it as a smell test now (does this file still do one
+  thing?), not a line-count gate — a cohesive file a bit over 250 lines
+  doesn't need to be split just to hit a number, but a file dragging in
+  unrelated responsibilities should still be split regardless of length.
 - All core app state changes flow through custom hooks in `src/renderer/hooks/`; never manage cross-render state directly in JSX/markup.
 - Static theme tables, hex colors, and type/category maps live in `src/renderer/config/`, never inlined in components or utilities.
-- Only direct JSON `fetch` calls to `pokeapi.co` are allowed for game data at runtime — no scraping, no third-party proxy middleware. PokeAPI models mainline Scarlet/Violet only, with no concept of Pokemon Champions' own balance patches — see `config/championsMoveOverrides.ts`/`championsAbilityOverrides.ts`/`championsMovepoolAdditions.ts` for how that gap is hand-corrected. **Exception (project policy — a decision made for this codebase, not a documented grant of permission from either site):** `serebii.net` and `bulbapedia.bulbagarden.net` may be used two ways:
-  1. Hotlinked as a static `<img>` source for assets PokeAPI doesn't cleanly provide (move category badges, item sprite fallbacks like Fairy Feather) — image hotlinking only, never fetched/parsed as JSON, never a stand-in for the pokeapi.co endpoints above.
-  2. Read manually (a one-off fetch during development, never a live runtime call) as a factual reference to hand-author static config in `src/renderer/config/`/`utils/` (e.g. VGC-legal item lists, regulation legality tables, Mega Stone mappings, Champions balance-patch overrides) when no other source has the data. This covers extracting individual game-mechanics facts into our own config structures only — never copying either site's written text or page layout wholesale, and never a live/automated scrape.
-
-  **Second exception (also project policy, decided 2026-07-08):** `pokepast.es` may be fetched live at runtime, but *only* through its own `/<id>/json` endpoint (`services/pokepaste.ts`), and *only* to import a team a user explicitly pastes a `pokepast.es/<id>` link for in `ImportTeamModal.tsx` — never HTML-scraped, never polled/background-fetched, never used as a stand-in for the pokeapi.co endpoints above. The endpoint returns the paste's own `title`/`author`/`notes`/`paste` fields directly as JSON, so there's no scraping involved.
-
-  **Third exception (also project policy, decided 2026-07-09):** `api.github.com`'s public `/repos/vanwheels/ChoiceBuds/releases/latest` endpoint (`services/github.ts`) may be polled automatically once per app launch, read-only, solely to compare the running version (`utils/appVersion.ts`, sourced from `package.json`) against the latest published GitHub Release, surfacing the result on the Settings page (`useUpdateCheck.ts`/`UpdateCheckSection.tsx`). This is the app's first *automatic*, non-user-triggered external call — every other external fetch above is either on-demand/cached (PokeAPI) or explicitly user-initiated (Pokepaste) — worth calling out as its own category rather than folding it silently into the on-demand/user-initiated exceptions.
-
-  **Fourth exception (also project policy, decided 2026-07-16):** `championsbattledata.com`'s public `/api/*` JSON endpoints (e.g. `/api/index`, `/api/battle/:format/:name`, `/api/pokemon/:name`, `/api/metadata/:name`) may be fetched for Pokémon Champions ranked-ladder usage data (per-species move/held-item/ability/nature ("stat_alignment") rankings, EV-equivalent-on-Champions'-own-0-32-scale ("stat_points") rankings, and teammate co-occurrence) to power stat-inference features. No auth/key required, CORS-enabled, plain JSON responses (never HTML-scraped, never a stand-in for the pokeapi.co endpoints above). It's a fan-made project (not affiliated with Game Freak/Nintendo/The Pokémon Company), so, matching the RoiDadadou-spreadsheet caution elsewhere in this doc, spot-check individual values that look off rather than trusting the feed blindly. Its `stat_points` fields are already on this app's native 0-32 Stat Point scale (see `utils/championsStats.ts`) — no EV-scale conversion needed to consume them.
-
-  **Fifth exception (also project policy, decided 2026-08-31):** `play.pokemonshowdown.com`'s static sprite CDN (`/sprites/ani/` and `/sprites/ani-shiny/`) may be hotlinked as an `<img>` source, same shape as the serebii/bulbapedia image-hotlink exception #1 above — image hotlinking only, never fetched/parsed as JSON, never a stand-in for the pokeapi.co endpoints above. This is the animated-GIF sprite source for the Settings' "Show Animated Sprites" toggle (`utils/spriteUrl.ts::getAnimatedSpriteUrl`), scoped to `PokemonCard.tsx`'s main 96px sprite only — chosen over PokeAPI's own animated sprite field for its Gen 6+/Mega coverage. Falls back to the existing static PNG (`getPixelSpriteUrl`) via `onError` when Showdown's roster doesn't yet have a given species/form (e.g. a newly-revealed Mega ahead of Showdown adding its sprite).
-
-  **Sixth exception (also project policy, decided 2026-09-01):** `smogon/pokemon-showdown`'s public GitHub repo, specifically its code-level `champions` mod (`data/mods/champions/*.ts`, e.g. `moves.ts`/`abilities.ts`/`items.ts`/`scripts.ts`), may be read manually (a one-off fetch during development via GitHub's raw-content URLs, never a live runtime call or a fetched/parsed-as-JSON dependency) as a factual reference for hand-authoring the same static config this project already maintains under exception #2 above — same one-off, dev-time-only shape as that exception, not a new runtime data source. It's a stronger source than exception #2 or the RoiDadadou spreadsheet for balance-patch specifics (move BP/accuracy/PP/type overrides, ability behavior changes, Mega Stone legality): it's the actual simulator code the Showdown ladder runs, not a summarized wiki page or a screenshot-relayed community spreadsheet, so it's ladder-verified rather than crowd-verified. Still spot-check anything non-obvious against exception #2's sources when a value looks surprising, same numeric-fact discipline as elsewhere in this doc — e.g. `moves.ts`'s raw `pp` field is a pre-transform value (Champions' actual displayed PP runs it through `scripts.ts`'s `calculatePP`), not the final number to copy directly.
-
-  **Seventh exception (also project policy, decided 2026-09-01):** `pokepast.es/create` may be POSTed to, but *only* from the **main process** (`main.ts`'s `pokepaste:create` IPC handler, via Node's raw `https.request()` — not `fetch()`, whose redirect handling can't expose the response's `Location` header the way a raw request can), and *only* to publish a paste of a team/Pokémon the user explicitly triggers an export for (`ExportTeamModal.tsx`'s "Create Pokepaste Link" button, wired through `services/pokepaste.ts::createPokepaste`). This is the app's first **main-process-initiated** external call — a new category alongside the existing on-demand/user-initiated (Pokepaste read, exception above), automatic-poll (GitHub releases, exception #3), and cached (PokeAPI/Champions data) ones, because `pokepast.es/create`'s response carries no CORS headers at all: a renderer-side `fetch()` POST can reach the endpoint and the write succeeds server-side, but the response can never be read back, so the renderer would have no way to learn the new paste's URL. Main-process network calls aren't subject to browser CORS, so proxying the POST through IPC (same shape as the existing `file:*`/`sprite:download` handlers) sidesteps this cleanly. Scoped tightly to this one endpoint/shape, same as the read-side Pokepaste exception — not a general allowance for main-process-initiated calls elsewhere.
-
-  **Eighth exception (also project policy, decided 2026-09-14):** the public VGCPastes Google Sheet (`docs.google.com/spreadsheets/d/1axlwmzPA49rYkqXh7zHvAtSP-TKbM0ijGYBPRflLSWw`, community-run, tabs per regulation) may be bulk-fetched via its own `gviz/tq?tqx=out:csv&sheet=<tab name>` CSV export endpoint (no auth), and each row's linked `pokepast.es` URL may be bulk-fetched through the existing `/<id>/json` read endpoint (`services/pokepaste.ts`), to power the sample-team catalog (and, later, per-species real-set extraction). This is a distinct bulk-ingestion shape from the Pokepaste-read exception above, which is scoped to a single user-triggered paste at a time — this one is scoped to: manual, user-triggered refresh only (no scheduled or background job, including on first load — see `useVgcPastesCache.ts`); only rows flagged `EVs == Yes` in the sheet are pulled (`services/vgcPastes.ts`); read-only against both services, no writes. Same crowd-sourced reliability tier as `championsbattledata.com` (exception #4) — the sheet's own header admits most teams are sourced from Twitter — so the same spot-check discipline applies to anything surfaced from it. (This leg's catalog use case never bulk-fetches individual pokepastes itself — the sheet's own species-list column already covers the catalog's display needs, and a picked row's paste is only fetched the normal user-triggered way via `ImportTeamModal.tsx`'s existing prefill path; a future per-species-extraction leg that does bulk-fetch individual pastes should fetch them politely/sequentially, never parallel-blasted.)
-
-  Any new external data or asset source (a new site to hotlink from, a new npm package supplying game data, a new API) needs a matching entry added to README.md's Credits section in the same change that introduces it — don't let Credits drift out of date. (The GitHub-releases update check above is an exception to *this* sub-rule too: it's checking the app's own release history, not crediting a third-party data/asset source, so it doesn't get a Credits entry.)
+- External data/asset sources for game data (PokeAPI plus nine specific,
+  dated exceptions covering Serebii/Bulbapedia, Pokepaste, GitHub Releases,
+  championsbattledata.com, Showdown sprites/source, and the VGCPastes
+  sheet) are governed by `.claude/rules/external-data-sources.md`, scoped to
+  `src/renderer/services/**` and `src/renderer/config/**`.
 - Use explicit TypeScript interfaces for every data contract; `as any` is forbidden except at external boundary wrappers (e.g. the preload bridge, per the rule above).
-- When researching a Bulbapedia/Serebii fact for a config file under the exception above: for "what's the complete set of X" questions, use Bulbapedia's category-listing pages (e.g. `Category:Moves_by_stat_modification`) rather than a freeform-summarized reference page — a category page just enumerates its members, so there's nothing for a summarizer to drop. For "what exactly does X do," fetch that entry's own dedicated page individually and cross-check anything with more than one effect or a non-obvious percentage before hardcoding it into a config file — a shared prose reference page condensed into a summary has silently dropped stat/effect count and mislabeled chance-based vs. guaranteed effects before.
 
 ## Workflow conventions
 
-These reflect how the user actually wants to work in this project, independent of which machine (Windows or macOS) Claude Code happens to be running on.
+These reflect how the user actually wants to work in this project,
+independent of which machine (Windows or macOS) Claude Code happens to be
+running on.
 
-- **Task tracking** lives in `TODO.md` at the repo root (active/in-progress work), with finished work archived to `COMPLETED.md`. Read `TODO.md` first when resuming work or asked what's next; only open `COMPLETED.md` for historical detail on how/why something already-done was built.
-- **Commit messages** (updated 2026-07-13): Claude now runs `git commit`/`git push` directly — the user handed this over ("starting with this one"), replacing the prior GitHub Desktop-only workflow. Still proactively draft a commit summary + description after finishing a meaningful checkpoint (a `TODO.md` item, a live-verified fix) — don't wait to be asked — and still put the summary and description in two separate fenced code blocks when discussing a commit in chat, since that's independently useful for the user to read/copy. But the actual `git commit`/`git push` no longer needs separate permission each time; treat it like any other local, reversible action on this solo `main` branch (no PR review gate in place).
-- **GitHub Releases** (process changed 2026-07-16 by the release-build-automation item below — read that first): tag matches `package.json`'s `version` with a leading `v` (e.g. `v0.1.0` for `"0.1.0"` — the update checker in `services/github.ts` strips the `v` before comparing, so they must match). Sequencing now matters: **push the version tag first** (`git tag vX.Y.Z && git push origin vX.Y.Z`) and let `.github/workflows/release.yml` build and attach installers to a fresh **draft** release — do not run `gh release create` first, since that would create the release+tag itself and the workflow's own build would then find an existing non-draft-incompatible release for that tag and skip attaching anything (confirmed live 2026-07-16 with a throwaway test tag — see `TODO.md`). Once the workflow's run finishes, draft the title + body the same two-fenced-code-block way as before, then fill them in with `gh release edit vX.Y.Z --title "..." --notes "..."` (not `gh release create` — the release object already exists as a draft). Only flip it live (`gh release edit vX.Y.Z --draft=false`) once the user confirms the content and gives the go-ahead — a Release is a visible, external, public-facing action, so always confirm before publishing one, unlike a routine commit/push.
-- **Release build automation** (added 2026-07-16, verified live the same day with a throwaway tag — see `TODO.md` for the full trail): `.github/workflows/release.yml` builds the Windows and macOS installers on any `v*.*.*` tag push and attaches them to a GitHub Release via `electron-builder --publish always`. electron-builder resolves the target release by `package.json`'s `version` field, not by the pushed git tag directly, and lands as a **draft** release when none exists yet for that version — see the sequencing note in the GitHub Releases bullet above for why the tag must be pushed before `gh release create`/`gh release edit` touches that version at all. No signing secrets are configured, so output is unsigned, matching current manual builds.
-- **Live UI testing** (narrowed 2026-08-31 for token efficiency — matches the global default now): default to manual verification for visual/UI changes, same as other projects — the user checks the running app themselves. Reserve `.claude/skills/run-desktop` (Playwright-based, cross-platform — see its `SKILL.md`) for cases manual checking doesn't reliably cover: verifying a fix against persisted-state mutations (faint toggles, switch-ins, team edits) where a wrong result doesn't show up as "looks off" on screen, a pre-release regression pass, or whenever explicitly asked to test/verify. When it's used for a state-mutating case, always create a fresh disposable battle/team for it rather than testing against the user's real data, and clean it up afterward. Still never fall back to OS-level mouse/keyboard automation.
-- **Curated effect tables** (`config/moveStatEffects.ts`, `config/onSwitchInAbilities.ts`, `config/reactiveAbilities.ts`, `config/hitReactiveAbilities.ts`) should hold comprehensive, research-backed coverage of their effect category, not a hand-picked subset. If asked to add one specific missing move/ability, treat that as a signal the whole category needs auditing rather than a request for just that row, and document in the file's header what's deliberately excluded (chance-based effects, data the app doesn't track yet) instead of silently omitting it.
-- **Batching into legs, with `/clear` in between** (added 2026-08-29, carried over from the user's GW2 Squaded project): when a piece of work naturally splits into multiple chunks (a manual-testing batch's individual items, a multi-phase feature's phases), break it into discrete legs — each one a self-contained unit that gets implemented and verified (and ideally committed) before moving on. Durable state belongs in `TODO.md`/`COMPLETED.md`/git, not conversation memory, specifically so a leg boundary is a safe place for the user to run `/clear` and free up context without losing anything real. Call out the boundary explicitly when a leg finishes ("that's one leg done, safe to `/clear` before the next") rather than silently plowing into the next leg in the same context.
+- **Task tracking** lives in `TODO.md` at the repo root (active/in-progress
+  work), with finished work archived to `COMPLETED.md`. Read `TODO.md` first
+  when resuming work or asked what's next; only open `COMPLETED.md` for
+  historical detail on how/why something already-done was built.
+- **Commit messages** (updated 2026-07-13): Claude now runs `git commit`/
+  `git push` directly — the user handed this over ("starting with this
+  one"), replacing the prior GitHub Desktop-only workflow. Still proactively
+  draft a commit summary + description after finishing a meaningful
+  checkpoint (a `TODO.md` item, a live-verified fix) — don't wait to be
+  asked — and still put the summary and description in two separate fenced
+  code blocks when discussing a commit in chat, since that's independently
+  useful for the user to read/copy. But the actual `git commit`/`git push`
+  no longer needs separate permission each time; treat it like any other
+  local, reversible action on this solo `main` branch (no PR review gate in
+  place).
+- **GitHub Releases** (process changed 2026-07-16 by the release-build-
+  automation item below — read that first): tag matches `package.json`'s
+  `version` with a leading `v` (e.g. `v0.1.0` for `"0.1.0"` — the update
+  checker in `services/github.ts` strips the `v` before comparing, so they
+  must match). Sequencing now matters: **push the version tag first**
+  (`git tag vX.Y.Z && git push origin vX.Y.Z`) and let
+  `.github/workflows/release.yml` build and attach installers to a fresh
+  **draft** release — do not run `gh release create` first, since that would
+  create the release+tag itself and the workflow's own build would then
+  find an existing non-draft-incompatible release for that tag and skip
+  attaching anything (confirmed live 2026-07-16 with a throwaway test tag —
+  see `TODO.md`). Once the workflow's run finishes, draft the title + body
+  the same two-fenced-code-block way as before, then fill them in with
+  `gh release edit vX.Y.Z --title "..." --notes "..."` (not
+  `gh release create` — the release object already exists as a draft). Only
+  flip it live (`gh release edit vX.Y.Z --draft=false`) once the user
+  confirms the content and gives the go-ahead — a Release is a visible,
+  external, public-facing action, so always confirm before publishing one,
+  unlike a routine commit/push.
+- **Release build automation** (added 2026-07-16, verified live the same
+  day with a throwaway tag — see `TODO.md` for the full trail):
+  `.github/workflows/release.yml` builds the Windows and macOS installers on
+  any `v*.*.*` tag push and attaches them to a GitHub Release via
+  `electron-builder --publish always`. electron-builder resolves the target
+  release by `package.json`'s `version` field, not by the pushed git tag
+  directly, and lands as a **draft** release when none exists yet for that
+  version — see the sequencing note in the GitHub Releases bullet above for
+  why the tag must be pushed before `gh release create`/`gh release edit`
+  touches that version at all. No signing secrets are configured, so output
+  is unsigned, matching current manual builds.
+- **Live UI testing** (narrowed 2026-08-31 for token efficiency — matches
+  the global default now): default to manual verification for visual/UI
+  changes, same as other projects — the user checks the running app
+  themselves. Reserve `.claude/skills/run-desktop` (Playwright-based,
+  cross-platform — see its `SKILL.md`) for cases manual checking doesn't
+  reliably cover: verifying a fix against persisted-state mutations (faint
+  toggles, switch-ins, team edits) where a wrong result doesn't show up as
+  "looks off" on screen, a pre-release regression pass, or whenever
+  explicitly asked to test/verify. When it's used for a state-mutating case,
+  always create a fresh disposable battle/team for it rather than testing
+  against the user's real data, and clean it up afterward. Still never fall
+  back to OS-level mouse/keyboard automation.
+- **Curated effect tables** (`config/moveStatEffects.ts`,
+  `config/onSwitchInAbilities.ts`, `config/reactiveAbilities.ts`,
+  `config/hitReactiveAbilities.ts`) should hold comprehensive,
+  research-backed coverage of their effect category, not a hand-picked
+  subset. If asked to add one specific missing move/ability, treat that as a
+  signal the whole category needs auditing rather than a request for just
+  that row, and document in the file's header what's deliberately excluded
+  (chance-based effects, data the app doesn't track yet) instead of silently
+  omitting it.
+- **Batching into legs, with `/clear` in between** (added 2026-08-29,
+  carried over from the user's GW2 Squaded project): when a piece of work
+  naturally splits into multiple chunks (a manual-testing batch's individual
+  items, a multi-phase feature's phases), break it into discrete legs — each
+  one a self-contained unit that gets implemented and verified (and ideally
+  committed) before moving on. Durable state belongs in
+  `TODO.md`/`COMPLETED.md`/git, not conversation memory, specifically so a
+  leg boundary is a safe place for the user to run `/clear` and free up
+  context without losing anything real. Call out the boundary explicitly
+  when a leg finishes ("that's one leg done, safe to `/clear` before the
+  next") rather than silently plowing into the next leg in the same context.

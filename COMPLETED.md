@@ -22,6 +22,26 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[Project Revision v2] — Leg 2 (CLAUDE.md Slim)** — 2026-10-16
+  Moved CLAUDE.md's Architecture section into a new root `ARCHITECTURE.md`,
+  and moved the eight-exception external-data-source policy out of Style
+  rules into `.claude/rules/external-data-sources.md` (scoped via `paths`
+  to `src/renderer/services/**`/`src/renderer/config/**`), reflowing every
+  remaining long single-line paragraph in both files to normal widths.
+  Re-verifying every concrete claim against the code surfaced several stale
+  ones, now corrected: `config/championsMovepoolAdditions.ts` doesn't exist
+  (renamed `championsMovepoolChanges.ts` long ago); IPC handlers moved out
+  of `main.ts` into domain files under `src/main/ipc/` (file/shell/sprite/
+  pokepaste) a while back, and `preload.ts` exposes far more than the five
+  methods CLAUDE.md listed; `useActiveEditor` is dead code (still mounted
+  in `App.tsx`/`AppWeb.tsx`, never read by `TeamsPage`) since Always-On
+  Editing replaced its draft/commit flow with direct `updateTeam()` calls
+  (already tracked as its own TODO item); and the "Web build" section was
+  badly out of date — the web build now has full `Sidebar`-tab parity with
+  desktop (Teams/Box/Battle Log/Statistics/Settings/sync/nav shell all
+  ported), not the "minimal Teams/Box nav" it described. CLAUDE.md is now
+  140 lines with no line over ~200 chars. See commit (pending).
+
 - **[Project Revision v2] — Leg 1 (CI Gate)** — 2026-10-16
   Added `npm run lint` + `npm run test` ahead of the build step in
   `release.yml`'s `build-windows`/`build-mac` jobs and `deploy-web.yml`'s

@@ -23,18 +23,6 @@ Brings the project up to global conventions v2 (see
 milestone is scoped from). Stamps CLAUDE.md's `Conventions: v2` line once
 every leg below lands.
 
-- **[Project Revision v2] — Leg 2** *(Last touched: 2026-10-16 ·
-  Re-checks: 0)*
-  CLAUDE.md Slim (with ARCHITECTURE.md). Move CLAUDE.md's existing
-  Architecture section into a new root `ARCHITECTURE.md`. Reflow/shorten
-  the eight external-data-source exception paragraphs (currently up to
-  1,600+ chars on one line) and move that whole policy into
-  `.claude/rules/external-data-sources.md`, scoped via `paths` to
-  `src/renderer/services/**` and `src/renderer/config/**`. Re-verify every
-  remaining concrete claim in CLAUDE.md against the code while touching it.
-  Done check: CLAUDE.md's longest line is well under the ~200-char range,
-  ARCHITECTURE.md exists and matches current code. Manual verification: no.
-
 - **[Project Revision v2] — Leg 3** *(Last touched: 2026-10-16 ·
   Re-checks: 0)*
   Lessons to Rules. Promote the five durable postmortem lessons identified
