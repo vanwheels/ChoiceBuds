@@ -52,6 +52,26 @@ export function useSettings(): UseSettingsReturn {
   const [error, setError] = useState<string | null>(null);
 
   /**
+   * Internal: Persist updated settings to disk
+   */
+  const persistSettingsToDisk = async (updated: AppSettings): Promise<boolean> => {
+    try {
+      const success = await getStorageAdapter().write('settings', updated);
+
+      if (!success) {
+        throw new Error('Failed to write settings');
+      }
+
+      return true;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to save settings';
+      setError(errorMessage);
+      console.error('Error persisting settings:', err);
+      return false;
+    }
+  };
+
+  /**
    * Load settings from disk on mount. Inlined directly in the effect (rather
    * than a separate outer-scope loader called by reference) to match React's
    * own recognized fetch-in-effect idiom - see
@@ -104,26 +124,6 @@ export function useSettings(): UseSettingsReturn {
       ignore = true;
     };
   }, []);
-
-  /**
-   * Internal: Persist updated settings to disk
-   */
-  const persistSettingsToDisk = async (updated: AppSettings): Promise<boolean> => {
-    try {
-      const success = await getStorageAdapter().write('settings', updated);
-
-      if (!success) {
-        throw new Error('Failed to write settings');
-      }
-
-      return true;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to save settings';
-      setError(errorMessage);
-      console.error('Error persisting settings:', err);
-      return false;
-    }
-  };
 
   /**
    * Set the default regulation used when importing new teams
