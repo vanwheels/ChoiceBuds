@@ -22,6 +22,18 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[Project Revision v2] — Leg 1 (CI Gate)** — 2026-10-16
+  Added `npm run lint` + `npm run test` ahead of the build step in
+  `release.yml`'s `build-windows`/`build-mac` jobs and `deploy-web.yml`'s
+  `deploy` job, so a failing test or lint error blocks a release build or
+  web deploy before anything gets built. Verified live: the gate's first
+  real run on `main` failed at `npm run lint`, catching a genuine
+  pre-existing `no-use-before-define` error in `useSettings.ts`
+  (`persistSettingsToDisk` referenced above its own declaration) that had
+  never been caught before since no CI step ran lint prior to this leg;
+  fixed by reordering, then reran clean. See commit e610fc8 (fix) and
+  4e5362f (gate).
+
 - **[Team Notes/Name/Author Don't Resync After Sync Pull] — Leg 1**
   (2026-10-09) - See commit `0453286`. `TeamCard.tsx`'s local
   name/author/notes `useState` fields never resynced when the `team` prop

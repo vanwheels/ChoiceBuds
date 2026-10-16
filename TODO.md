@@ -23,16 +23,6 @@ Brings the project up to global conventions v2 (see
 milestone is scoped from). Stamps CLAUDE.md's `Conventions: v2` line once
 every leg below lands.
 
-- **[Project Revision v2] — Leg 1** *(Last touched: 2026-10-16 ·
-  Re-checks: 0)*
-  CI Gate. Add an `npm run lint` and `npm run test` step before the build
-  step in both `.github/workflows/release.yml` (`build-windows`/`build-mac`)
-  and `.github/workflows/deploy-web.yml`, so a failing test or lint error
-  stops a release build or a live web deploy before anything gets built.
-  Done check: both workflows run lint+test ahead of their build/publish
-  step. Manual verification: yes — push a throwaway failing test on a
-  branch to confirm the gate actually blocks, then remove it.
-
 - **[Project Revision v2] — Leg 2** *(Last touched: 2026-10-16 ·
   Re-checks: 0)*
   CLAUDE.md Slim (with ARCHITECTURE.md). Move CLAUDE.md's existing
