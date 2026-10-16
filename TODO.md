@@ -23,17 +23,8 @@ Brings the project up to global conventions v2 (see
 milestone is scoped from). Stamps CLAUDE.md's `Conventions: v2` line once
 every leg below lands.
 
-- **[Project Revision v2] — Leg 6** *(Last touched: 2026-10-16 ·
-  Re-checks: 0)*
-  Schema Version. Add a `schemaVersion` field (starting at 1) to every
-  persisted collection's type (`TeamsDatabase`, `BattlesDatabase`,
-  `SavedPokemonDatabase`, `GameDataCache`, settings), write it on every save
-  through the storage adapter, and add one test per hook that loads an
-  old-format fixture lacking the field and confirms it still loads — just
-  the field and a migration hook point, not a migration system. Bump
-  CLAUDE.md's `Conventions:` line to v2 once this leg and all prior legs
-  land. Done check: `schemaVersion` present and tested on every persisted
-  collection; CLAUDE.md stamped. Manual verification: no.
+All 6 legs are now done (see COMPLETED.md) and CLAUDE.md is stamped
+`Conventions: v2`. Ready for `/close-milestone`.
 
 ## Blocked
 

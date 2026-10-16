@@ -79,7 +79,7 @@ function makeUsage(overrides: Partial<ChampionsUsageEntry> = {}): ChampionsUsage
 
 function makeCache(overrides: Partial<GameDataCache> = {}): GameDataCache {
   return {
-    version: 1,
+    schemaVersion: 1,
     moves: {},
     items: {},
     abilities: {},
@@ -95,7 +95,7 @@ describe('useGameData', () => {
   it('initializes an empty cache when none is persisted', async () => {
     const { result } = renderHook(() => useGameData());
     await waitFor(() => expect(result.current.isInitialized).toBe(true));
-    expect(result.current.cache).toEqual(expect.objectContaining({ version: 1, moves: {}, lastSyncedSpeciesNames: [] }));
+    expect(result.current.cache).toEqual(expect.objectContaining({ schemaVersion: 1, moves: {}, lastSyncedSpeciesNames: [] }));
   });
 
   it('loads a persisted cache, normalizing a legacy cache missing lastSyncedSpeciesNames', async () => {
@@ -109,13 +109,24 @@ describe('useGameData', () => {
     expect(result.current.cache?.lastSyncedSpeciesNames).toEqual([]);
   });
 
+  it('backfills schemaVersion for a cache persisted before the field existed', async () => {
+    const legacyCache = makeCache();
+    // @ts-expect-error - simulating a cache file written before the field existed
+    delete legacyCache.schemaVersion;
+    vi.mocked(window.electron.readGameDataCache).mockResolvedValueOnce(legacyCache);
+
+    const { result } = renderHook(() => useGameData());
+    await waitFor(() => expect(result.current.isInitialized).toBe(true));
+    expect(result.current.cache?.schemaVersion).toBe(1);
+  });
+
   it('falls back to an empty cache when reading throws', async () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.mocked(window.electron.readGameDataCache).mockRejectedValueOnce(new Error('disk error'));
 
     const { result } = renderHook(() => useGameData());
     await waitFor(() => expect(result.current.isInitialized).toBe(true));
-    expect(result.current.cache).toEqual(expect.objectContaining({ version: 1, moves: {} }));
+    expect(result.current.cache).toEqual(expect.objectContaining({ schemaVersion: 1, moves: {} }));
     consoleErrorSpy.mockRestore();
   });
 

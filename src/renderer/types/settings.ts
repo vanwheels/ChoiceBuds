@@ -55,7 +55,12 @@ export type TeamsFilter = 'All' | RegulationLabel;
  * Persisted user preferences, stored as settings.json in userData directory
  */
 export interface AppSettings {
-  version: number;
+  // Bumped when this collection's on-disk shape changes - see
+  // useSettings.ts's load effect (the existing spread-over-DEFAULT_SETTINGS
+  // merge already backfills a missing/old value; that merge is this
+  // collection's migration hook point). Settings persisted before this
+  // field existed are treated as schemaVersion 1.
+  schemaVersion: number;
   defaultRegulation: RegulationLabel;
   teamsFilter: TeamsFilter;
   syncUsername: string | null; // account username, once signed up/logged in

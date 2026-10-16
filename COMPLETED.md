@@ -22,6 +22,22 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[Project Revision v2] — Leg 6 (Schema Version)** — 2026-10-16
+  Added `schemaVersion` (starting at 1) to `TeamsDatabase`,
+  `BattlesDatabase`, `SavedPokemonDatabase`, `GameDataCache`, and
+  `AppSettings` — renamed in place from an existing `version` field that
+  was always hardcoded to 1 and never actually read anywhere (confirmed via
+  grep), rather than adding a redundant second field. Added a migration
+  hook point per collection (`migrateTeamsDatabase`/`migrateBattlesDatabase`/
+  `migrateSavedPokemonDatabase` in their hooks, `migrateGameDataCache` in
+  `utils/cacheManager.ts`, and `useSettings.ts`'s existing
+  spread-over-defaults merge for settings) that backfills a missing
+  `schemaVersion` to 1 in memory without rewriting the file — just the
+  field and the hook point, not a migration system. Added one test per
+  hook loading an old-format fixture lacking the field. Stamped CLAUDE.md
+  `Conventions: v2`, closing out Project Revision v2's final leg. See
+  commit TBD.
+
 - **[Project Revision v2] — Leg 5 (Docs Cleanup)** — 2026-10-16
   Added a title/intro section to `README.md` ahead of its Credits section
   (one-paragraph project description, the AI-assisted-development

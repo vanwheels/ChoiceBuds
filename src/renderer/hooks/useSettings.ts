@@ -20,7 +20,7 @@ const DEFAULT_PLAYER_PROFILE: PlayerProfile = {
 };
 
 const DEFAULT_SETTINGS: AppSettings = {
-  version: 1,
+  schemaVersion: 1,
   defaultRegulation: getLatestSeason().regulation,
   teamsFilter: 'All',
   syncUsername: null,
@@ -39,7 +39,7 @@ export interface UseSettingsReturn {
   isLoading: boolean;
   error: string | null;
   setDefaultRegulation: (format: RegulationLabel) => Promise<boolean>;
-  updateSettings: (partial: Partial<Omit<AppSettings, 'version' | 'lastModified'>>) => Promise<boolean>;
+  updateSettings: (partial: Partial<Omit<AppSettings, 'schemaVersion' | 'lastModified'>>) => Promise<boolean>;
 }
 
 /**
@@ -94,8 +94,11 @@ export function useSettings(): UseSettingsReturn {
         if (ignore) return;
 
         // Spread over DEFAULT_SETTINGS so a settings.json written before a
-        // field existed (e.g. sync fields, added after defaultRegulation)
-        // still loads with a valid value instead of undefined.
+        // field existed (e.g. sync fields, added after defaultRegulation,
+        // or schemaVersion itself) still loads with a valid value instead
+        // of undefined - this is AppSettings's migration hook point: a
+        // future on-disk shape change branches on merged.schemaVersion here
+        // the same way the defaultRegulation fix below already does.
         let merged = database ? { ...DEFAULT_SETTINGS, ...database } : DEFAULT_SETTINGS;
 
         // One-time migration: every settings record written before this fix

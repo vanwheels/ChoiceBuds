@@ -50,7 +50,7 @@ export interface UseReleaseNotesReturn {
 export function useReleaseNotes(
   settings: AppSettings,
   isSettingsLoading: boolean,
-  updateSettings: (partial: Partial<Omit<AppSettings, 'version' | 'lastModified'>>) => Promise<boolean>
+  updateSettings: (partial: Partial<Omit<AppSettings, 'schemaVersion' | 'lastModified'>>) => Promise<boolean>
 ): UseReleaseNotesReturn {
   const [history, setHistory] = useState<GitHubRelease[]>([]);
   const [isLoading, setIsLoading] = useState(true);

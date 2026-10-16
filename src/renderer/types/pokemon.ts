@@ -166,7 +166,11 @@ export interface SyncTombstone {
  * Represents the persisted state in userData directory
  */
 export interface TeamsDatabase {
-  version: number;
+  // Bumped when this collection's on-disk shape changes - see
+  // useTeams.ts's migrateTeamsDatabase, the migration hook point this
+  // feeds. Databases persisted before this field existed are treated as
+  // schemaVersion 1.
+  schemaVersion: number;
   teams: Team[];
   tombstones: SyncTombstone[];
   lastModified: number; // Unix timestamp
@@ -197,7 +201,11 @@ export interface SavedPokemonEntry {
  * Database schema state for saved-Pokemon-set storage (savedPokemon.json)
  */
 export interface SavedPokemonDatabase {
-  version: number;
+  // Bumped when this collection's on-disk shape changes - see
+  // useSavedPokemon.ts's migrateSavedPokemonDatabase, the migration hook
+  // point this feeds. Databases persisted before this field existed are
+  // treated as schemaVersion 1.
+  schemaVersion: number;
   savedPokemon: SavedPokemonEntry[];
   tombstones: SyncTombstone[];
   lastModified: number; // Unix timestamp

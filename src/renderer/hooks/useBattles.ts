@@ -33,6 +33,21 @@ function toActiveSlots(ids: (string | null)[] | undefined): (string | null)[] {
   return [arr[0] ?? null, arr[1] ?? null];
 }
 
+/** Current on-disk shape version for BattlesDatabase - see BattlesDatabase.schemaVersion. */
+const BATTLES_SCHEMA_VERSION = 1;
+
+/**
+ * Migration hook point for BattlesDatabase - runs once per load, before
+ * normalizeBattle's per-battle backfills below. No migrations exist yet
+ * (schemaVersion 1 is the first version); a future on-disk shape change
+ * bumps BATTLES_SCHEMA_VERSION and adds its upgrade step here, keyed off
+ * database.schemaVersion. A database persisted before schemaVersion
+ * existed is treated as version 1.
+ */
+function migrateBattlesDatabase(database: BattlesDatabase): BattlesDatabase {
+  return { ...database, schemaVersion: database.schemaVersion ?? BATTLES_SCHEMA_VERSION };
+}
+
 /**
  * Backfills battles saved before a schema change, at the read boundary
  * (mirrors the Champions data-override pattern elsewhere in the app) so
@@ -116,7 +131,8 @@ export function useBattles(): UseBattlesReturn {
     setError(null);
 
     try {
-      const database = await getStorageAdapter().read<BattlesDatabase>('battles-database');
+      const raw = await getStorageAdapter().read<BattlesDatabase>('battles-database');
+      const database = raw ? migrateBattlesDatabase(raw) : null;
 
       if (database) {
         setBattles(database.battles.map(normalizeBattle));
@@ -149,8 +165,9 @@ export function useBattles(): UseBattlesReturn {
       setError(null);
 
       try {
-        const database = await getStorageAdapter().read<BattlesDatabase>('battles-database');
+        const raw = await getStorageAdapter().read<BattlesDatabase>('battles-database');
         if (ignore) return;
+        const database = raw ? migrateBattlesDatabase(raw) : null;
 
         if (database) {
           setBattles(database.battles.map(normalizeBattle));
@@ -177,7 +194,7 @@ export function useBattles(): UseBattlesReturn {
   const persistBattlesToDisk = async (updatedBattles: Battle[], updatedTombstones: SyncTombstone[]): Promise<boolean> => {
     try {
       const database: BattlesDatabase = {
-        version: 1,
+        schemaVersion: BATTLES_SCHEMA_VERSION,
         battles: updatedBattles,
         tombstones: updatedTombstones,
         lastModified: Date.now(),

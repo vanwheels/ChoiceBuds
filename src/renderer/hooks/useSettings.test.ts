@@ -17,7 +17,7 @@ describe('useSettings', () => {
 
   it('merges a persisted partial settings object over the defaults, so a pre-sync-fields file still loads valid values', async () => {
     vi.mocked(window.electron.readSettings).mockResolvedValueOnce({
-      version: 1,
+      schemaVersion: 1,
       defaultRegulation: 'Reg M-B',
       lastModified: 12345,
     } as unknown as AppSettings);
@@ -30,9 +30,22 @@ describe('useSettings', () => {
     expect(result.current.settings.lastModified).toBe(12345); // real field preserved, not overwritten
   });
 
+  it('backfills schemaVersion for a settings file persisted before the field existed', async () => {
+    vi.mocked(window.electron.readSettings).mockResolvedValueOnce({
+      defaultRegulation: 'Reg M-B',
+      lastModified: 12345,
+    } as unknown as AppSettings);
+
+    const { result } = renderHook(() => useSettings());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.settings.schemaVersion).toBe(1);
+    expect(result.current.settings.defaultRegulation).toBe('Reg M-B');
+  });
+
   it('migrates a persisted "Reg M-A" default (the old hardcoded fallback) to the current regulation, and persists the correction', async () => {
     vi.mocked(window.electron.readSettings).mockResolvedValueOnce({
-      version: 1,
+      schemaVersion: 1,
       defaultRegulation: 'Reg M-A',
       lastModified: 12345,
     } as unknown as AppSettings);

@@ -82,7 +82,7 @@ describe('createEmptyGameDataCache', () => {
     expect(cache.learnsets).toEqual({});
     expect(cache.usage).toEqual({});
     expect(cache.lastSyncedSpeciesNames).toEqual([]);
-    expect(cache.version).toBe(1);
+    expect(cache.schemaVersion).toBe(1);
   });
 });
 

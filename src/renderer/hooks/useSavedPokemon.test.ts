@@ -40,7 +40,7 @@ describe('useSavedPokemon', () => {
 
   it('loads the persisted saved-Pokemon list on mount', async () => {
     const database: SavedPokemonDatabase = {
-      version: 1,
+      schemaVersion: 1,
       savedPokemon: [{ id: 'a', label: 'Gengar', pokemon: makePokemon(), savedAt: 1, updatedAt: 1 }],
       tombstones: [],
       lastModified: 1,
@@ -54,7 +54,7 @@ describe('useSavedPokemon', () => {
 
   it('self-heals a species stored as PokeAPI\'s raw "-Male"/"-Female" resource text on load', async () => {
     const database: SavedPokemonDatabase = {
-      version: 1,
+      schemaVersion: 1,
       savedPokemon: [
         { id: 'a', label: 'Indeedee', pokemon: makePokemon({ species: 'Indeedee-Female' }), savedAt: 1, updatedAt: 1 },
         { id: 'b', label: 'Indeedee 2', pokemon: makePokemon({ species: 'Indeedee-Male' }), savedAt: 1, updatedAt: 1 },
@@ -83,7 +83,7 @@ describe('useSavedPokemon', () => {
 
   it('backfills an empty tombstones list for a database persisted before tombstones existed', async () => {
     vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
-      version: 1,
+      schemaVersion: 1,
       savedPokemon: [{ id: 'a', label: 'Gengar', pokemon: makePokemon(), savedAt: 1, updatedAt: 1 }],
       lastModified: 1,
     });
@@ -91,6 +91,18 @@ describe('useSavedPokemon', () => {
     const { result } = renderHook(() => useSavedPokemon());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.tombstones).toEqual([]);
+  });
+
+  it('backfills schemaVersion for a database persisted before the field existed', async () => {
+    vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
+      savedPokemon: [{ id: 'a', label: 'Gengar', pokemon: makePokemon(), savedAt: 1, updatedAt: 1 }],
+      tombstones: [],
+      lastModified: 1,
+    });
+
+    const { result } = renderHook(() => useSavedPokemon());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.savedPokemon).toHaveLength(1);
   });
 
   it('reports an error when loading throws', async () => {
@@ -120,7 +132,7 @@ describe('useSavedPokemon', () => {
 
   it('addSavedPokemonBatch dedupes against an existing label, not just others in the same batch', async () => {
     vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
-      version: 1,
+      schemaVersion: 1,
       savedPokemon: [{ id: 'existing', label: 'Gengar', pokemon: makePokemon(), savedAt: 0, updatedAt: 0 }],
       lastModified: 0,
     });
@@ -137,7 +149,7 @@ describe('useSavedPokemon', () => {
 
   it('addSavedPokemonBatch prefers a supplied label over nickname/species, still deduping it', async () => {
     vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
-      version: 1,
+      schemaVersion: 1,
       savedPokemon: [{ id: 'existing', label: 'My Gengar', pokemon: makePokemon(), savedAt: 0, updatedAt: 0 }],
       lastModified: 0,
     });
@@ -164,7 +176,7 @@ describe('useSavedPokemon', () => {
 
   it('renameSavedPokemon updates the label of the matching entry only', async () => {
     vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
-      version: 1,
+      schemaVersion: 1,
       savedPokemon: [
         { id: 'a', label: 'Gengar', pokemon: makePokemon(), savedAt: 0, updatedAt: 0 },
         { id: 'b', label: 'Rillaboom', pokemon: makePokemon({ species: 'Rillaboom' }), savedAt: 0, updatedAt: 0 },
@@ -199,7 +211,7 @@ describe('useSavedPokemon', () => {
 
   it('toggleSavedPokemonFavorite flips only the matching entry', async () => {
     vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
-      version: 1,
+      schemaVersion: 1,
       savedPokemon: [
         { id: 'a', label: 'Gengar', pokemon: makePokemon(), savedAt: 0, updatedAt: 0 },
         { id: 'b', label: 'Rillaboom', pokemon: makePokemon({ species: 'Rillaboom' }), savedAt: 0, updatedAt: 0 },
@@ -240,7 +252,7 @@ describe('useSavedPokemon', () => {
 
   it('deleteSavedPokemon removes only the targeted entry and records a tombstone', async () => {
     vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
-      version: 1,
+      schemaVersion: 1,
       savedPokemon: [
         { id: 'a', label: 'Gengar', pokemon: makePokemon(), savedAt: 0, updatedAt: 0 },
         { id: 'b', label: 'Rillaboom', pokemon: makePokemon({ species: 'Rillaboom' }), savedAt: 0, updatedAt: 0 },
@@ -261,7 +273,7 @@ describe('useSavedPokemon', () => {
 
   it('applySyncedState overwrites savedPokemon with the given records and clears pending tombstones', async () => {
     vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
-      version: 1,
+      schemaVersion: 1,
       savedPokemon: [{ id: 'a', label: 'Gengar', pokemon: makePokemon(), savedAt: 0, updatedAt: 0 }],
       tombstones: [],
       lastModified: 0,
@@ -288,7 +300,7 @@ describe('useSavedPokemon', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
-      version: 1,
+      schemaVersion: 1,
       savedPokemon: [{ id: 'a', label: 'Gengar', pokemon: makePokemon(), savedAt: 0, updatedAt: 0 }],
       lastModified: 0,
     });
@@ -302,7 +314,7 @@ describe('useSavedPokemon', () => {
 
   it('updateSavedPokemon merges into the entry\'s pokemon field and bumps updatedAt, leaving other entries untouched', async () => {
     vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
-      version: 1,
+      schemaVersion: 1,
       savedPokemon: [
         { id: 'a', label: 'Gengar', pokemon: makePokemon(), savedAt: 0, updatedAt: 0 },
         { id: 'b', label: 'Rillaboom', pokemon: makePokemon({ species: 'Rillaboom' }), savedAt: 0, updatedAt: 0 },
@@ -355,7 +367,7 @@ describe('useSavedPokemon', () => {
 
   it('setSavedPokemonOrder reorders to match the given ids, appending any leftover entries untouched', async () => {
     vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
-      version: 1,
+      schemaVersion: 1,
       savedPokemon: [
         { id: 'a', label: 'Gengar', pokemon: makePokemon(), savedAt: 0, updatedAt: 0 },
         { id: 'b', label: 'Rillaboom', pokemon: makePokemon({ species: 'Rillaboom' }), savedAt: 0, updatedAt: 0 },
@@ -376,7 +388,7 @@ describe('useSavedPokemon', () => {
 
   it('getSavedSetsForSpecies matches case-insensitively against the stored species', async () => {
     vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
-      version: 1,
+      schemaVersion: 1,
       savedPokemon: [
         { id: 'a', label: 'Gengar', pokemon: makePokemon({ species: 'Gengar' }), savedAt: 0, updatedAt: 0 },
         { id: 'b', label: 'Rillaboom', pokemon: makePokemon({ species: 'Rillaboom' }), savedAt: 0, updatedAt: 0 },

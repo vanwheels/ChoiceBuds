@@ -17,7 +17,7 @@ import {
 } from '../services/pokeapiService';
 import { fetchChampionsUsage, normalizeUsageCacheKey } from '../services/championsBattleData';
 import { normalizeSlug } from '../utils/pokemonRules';
-import { readCacheEntry, runCachedFetch, withCacheEntry, createEmptyGameDataCache } from '../utils/cacheManager';
+import { readCacheEntry, runCachedFetch, withCacheEntry, createEmptyGameDataCache, migrateGameDataCache } from '../utils/cacheManager';
 import { useDebouncedWrite } from './useDebouncedWrite';
 import { getStorageAdapter } from '../services/storage';
 import { NEVER_EXPIRES } from '../utils/cacheExpiry';
@@ -115,14 +115,12 @@ export function useGameData(): UseGameDataReturn {
       .then((persisted: GameDataCache | null) => {
         if (cancelled) return;
         setDiskSnapshot(persisted ? JSON.stringify(persisted) : undefined);
-        // A cache file written before lastSyncedSpeciesNames existed (was
-        // called initialBulkSyncCompletedAt) predates the field entirely -
-        // undefined, not an empty array - so every read/write site that
-        // touches it needs this normalized to a real array right here,
-        // once, rather than defending against undefined everywhere else.
-        setCache(persisted
-          ? { ...persisted, lastSyncedSpeciesNames: persisted.lastSyncedSpeciesNames ?? [] }
-          : createEmptyGameDataCache());
+        // migrateGameDataCache backfills schemaVersion and
+        // lastSyncedSpeciesNames (the latter was called
+        // initialBulkSyncCompletedAt and predates the field entirely) for a
+        // cache written before either existed, right here, once, rather
+        // than defending against undefined everywhere else.
+        setCache(persisted ? migrateGameDataCache(persisted) : createEmptyGameDataCache());
         setIsInitialized(true);
       })
       .catch((err: unknown) => {

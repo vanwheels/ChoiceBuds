@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+Conventions: v2.
+
 ## Project
 
 ChoiceBuds — an Electron + React + TypeScript desktop app for importing and

@@ -38,7 +38,7 @@ describe('useTeams', () => {
   });
 
   it('loads persisted teams on mount', async () => {
-    const database: TeamsDatabase = { version: 1, teams: [makeTeam()], tombstones: [], lastModified: 0 };
+    const database: TeamsDatabase = { schemaVersion: 1, teams: [makeTeam()], tombstones: [], lastModified: 0 };
     vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce(database);
 
     const { result } = renderHook(() => useTeams());
@@ -47,16 +47,25 @@ describe('useTeams', () => {
   });
 
   it('backfills an empty tombstones list for a database persisted before tombstones existed', async () => {
-    vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({ version: 1, teams: [makeTeam()], lastModified: 0 });
+    vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({ schemaVersion: 1, teams: [makeTeam()], lastModified: 0 });
 
     const { result } = renderHook(() => useTeams());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.tombstones).toEqual([]);
   });
 
+  it('backfills schemaVersion for a database persisted before the field existed', async () => {
+    vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({ teams: [makeTeam()], tombstones: [], lastModified: 0 });
+
+    const { result } = renderHook(() => useTeams());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.teams).toEqual([makeTeam()]);
+    expect(window.electron.writeTeamsDatabase).not.toHaveBeenCalled();
+  });
+
   it('strips a stale "Reg M-A/B/C " prefix from a team name on load', async () => {
     const database: TeamsDatabase = {
-      version: 1,
+      schemaVersion: 1,
       teams: [
         makeTeam({ id: 'a', name: 'Reg M-A Rain Team' }),
         makeTeam({ id: 'b', name: 'Reg M-B Sun Team' }),
@@ -83,7 +92,7 @@ describe('useTeams', () => {
 
   it('self-heals a species stored as PokeAPI\'s raw "-Male"/"-Female" resource text on load', async () => {
     const database: TeamsDatabase = {
-      version: 1,
+      schemaVersion: 1,
       teams: [
         makeTeam({
           id: 'a',
@@ -161,7 +170,7 @@ describe('useTeams', () => {
 
   it('updateTeam merges updates into the matching team and bumps updatedAt', async () => {
     vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({
-      version: 1,
+      schemaVersion: 1,
       teams: [makeTeam({ updatedAt: 1 })],
       lastModified: 0,
     });
@@ -178,7 +187,7 @@ describe('useTeams', () => {
 
   it('updateTeam serializes concurrent calls so a slower write landing later never drops an earlier one (TODO.md Team Edit Needs Double Action)', async () => {
     vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({
-      version: 1,
+      schemaVersion: 1,
       teams: [makeTeam({ pokemon: [] })],
       lastModified: 0,
     });
@@ -220,7 +229,7 @@ describe('useTeams', () => {
 
   it('deleteTeam removes the team, clears its expansion state, and records a tombstone', async () => {
     vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({
-      version: 1,
+      schemaVersion: 1,
       teams: [makeTeam()],
       tombstones: [],
       lastModified: 0,
@@ -245,7 +254,7 @@ describe('useTeams', () => {
 
   it('applySyncedState overwrites teams with the given records and clears pending tombstones', async () => {
     vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({
-      version: 1,
+      schemaVersion: 1,
       teams: [makeTeam()],
       tombstones: [],
       lastModified: 0,
@@ -272,7 +281,7 @@ describe('useTeams', () => {
 
   it('setTeamOrder reorders to match the given ids, appending any leftover teams untouched', async () => {
     vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({
-      version: 1,
+      schemaVersion: 1,
       teams: [makeTeam({ id: 'a' }), makeTeam({ id: 'b' }), makeTeam({ id: 'c' })],
       lastModified: 0,
     });
@@ -294,7 +303,7 @@ describe('useTeams', () => {
     // position - see Team.sortOrder's doc comment and Web Bug Sweep Leg 7
     // in COMPLETED.md.
     vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({
-      version: 1,
+      schemaVersion: 1,
       teams: [makeTeam({ id: 'a', updatedAt: 1 }), makeTeam({ id: 'b', updatedAt: 1 }), makeTeam({ id: 'c', updatedAt: 1 })],
       lastModified: 0,
     });
@@ -341,7 +350,7 @@ describe('useTeams', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({
-      version: 1,
+      schemaVersion: 1,
       teams: [makeTeam({ id: 'refreshed' })],
       lastModified: 0,
     });

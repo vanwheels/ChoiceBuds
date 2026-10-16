@@ -187,7 +187,11 @@ export interface ChampionsUsageEntry {
  * Reduces redundant API calls by caching game metadata
  */
 export interface GameDataCache {
-  version: number;
+  // Bumped when this collection's on-disk shape changes - see
+  // utils/cacheManager.ts's migrateGameDataCache, the migration hook point
+  // this feeds. Caches persisted before this field existed are treated as
+  // schemaVersion 1.
+  schemaVersion: number;
   moves: Record<string, MoveData>; // Key: lowercase move name
   items: Record<string, ItemData>; // Key: lowercase item name
   abilities: Record<string, AbilityData>; // Key: lowercase ability name

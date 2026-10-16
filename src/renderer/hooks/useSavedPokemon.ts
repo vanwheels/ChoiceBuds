@@ -151,6 +151,21 @@ export interface UseSavedPokemonReturn {
   applySyncedState: (records: SavedPokemonEntry[]) => Promise<boolean>;
 }
 
+/** Current on-disk shape version for SavedPokemonDatabase - see SavedPokemonDatabase.schemaVersion. */
+const SAVED_POKEMON_SCHEMA_VERSION = 1;
+
+/**
+ * Migration hook point for SavedPokemonDatabase - runs once per load,
+ * before normalizeSavedPokemon's per-entry backfills below. No migrations
+ * exist yet (schemaVersion 1 is the first version); a future on-disk shape
+ * change bumps SAVED_POKEMON_SCHEMA_VERSION and adds its upgrade step here,
+ * keyed off database.schemaVersion. A database persisted before
+ * schemaVersion existed is treated as version 1.
+ */
+function migrateSavedPokemonDatabase(database: SavedPokemonDatabase): SavedPokemonDatabase {
+  return { ...database, schemaVersion: database.schemaVersion ?? SAVED_POKEMON_SCHEMA_VERSION };
+}
+
 /** "Dracovish" -> "Dracovish (2)" -> "Dracovish (3)"... - same smallest-unused-suffix pattern as ImportTeamModal.tsx::nextGenericTeamName. */
 function nextAvailableLabel(base: string, existingLabels: string[]): string {
   const taken = new Set(existingLabels);
@@ -174,7 +189,7 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
   const persistSavedPokemonToDisk = async (updated: SavedPokemonEntry[], updatedTombstones: SyncTombstone[]): Promise<boolean> => {
     try {
       const database: SavedPokemonDatabase = {
-        version: 1,
+        schemaVersion: SAVED_POKEMON_SCHEMA_VERSION,
         savedPokemon: updated,
         tombstones: updatedTombstones,
         lastModified: Date.now(),
@@ -205,7 +220,8 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
     setError(null);
 
     try {
-      const database = await getStorageAdapter().read<SavedPokemonDatabase>('saved-pokemon-database');
+      const raw = await getStorageAdapter().read<SavedPokemonDatabase>('saved-pokemon-database');
+      const database = raw ? migrateSavedPokemonDatabase(raw) : null;
 
       if (database) {
         const normalized = normalizeSavedPokemon(database.savedPokemon);
@@ -243,8 +259,9 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
       setError(null);
 
       try {
-        const database = await getStorageAdapter().read<SavedPokemonDatabase>('saved-pokemon-database');
+        const raw = await getStorageAdapter().read<SavedPokemonDatabase>('saved-pokemon-database');
         if (ignore) return;
+        const database = raw ? migrateSavedPokemonDatabase(raw) : null;
 
         if (database) {
           const normalized = normalizeSavedPokemon(database.savedPokemon);

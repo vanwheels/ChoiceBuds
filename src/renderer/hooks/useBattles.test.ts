@@ -39,7 +39,7 @@ describe('useBattles', () => {
   });
 
   it('loads and normalizes persisted battles on mount', async () => {
-    const database: BattlesDatabase = { version: 1, battles: [makeBattle()], tombstones: [], lastModified: 0 };
+    const database: BattlesDatabase = { schemaVersion: 1, battles: [makeBattle()], tombstones: [], lastModified: 0 };
     vi.mocked(window.electron.readBattlesDatabase).mockResolvedValueOnce(database);
 
     const { result } = renderHook(() => useBattles());
@@ -48,11 +48,19 @@ describe('useBattles', () => {
   });
 
   it('backfills an empty tombstones list for a database persisted before tombstones existed', async () => {
-    vi.mocked(window.electron.readBattlesDatabase).mockResolvedValueOnce({ version: 1, battles: [makeBattle()], lastModified: 0 });
+    vi.mocked(window.electron.readBattlesDatabase).mockResolvedValueOnce({ schemaVersion: 1, battles: [makeBattle()], lastModified: 0 });
 
     const { result } = renderHook(() => useBattles());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.tombstones).toEqual([]);
+  });
+
+  it('backfills schemaVersion for a database persisted before the field existed', async () => {
+    vi.mocked(window.electron.readBattlesDatabase).mockResolvedValueOnce({ battles: [makeBattle()], tombstones: [], lastModified: 0 });
+
+    const { result } = renderHook(() => useBattles());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.battles).toEqual([makeBattle()]);
   });
 
   it('reports an error when loading throws', async () => {
@@ -96,7 +104,7 @@ describe('useBattles', () => {
 
   it('updateBattle merges updates into the matching battle and bumps updatedAt', async () => {
     vi.mocked(window.electron.readBattlesDatabase).mockResolvedValueOnce({
-      version: 1,
+      schemaVersion: 1,
       battles: [makeBattle({ updatedAt: 1 })],
       lastModified: 0,
     });
@@ -126,7 +134,7 @@ describe('useBattles', () => {
 
   it('deleteBattle removes the battle and records a tombstone', async () => {
     vi.mocked(window.electron.readBattlesDatabase).mockResolvedValueOnce({
-      version: 1,
+      schemaVersion: 1,
       battles: [makeBattle()],
       tombstones: [],
       lastModified: 0,
@@ -144,7 +152,7 @@ describe('useBattles', () => {
 
   it('applySyncedState overwrites battles with the given records and clears pending tombstones', async () => {
     vi.mocked(window.electron.readBattlesDatabase).mockResolvedValueOnce({
-      version: 1,
+      schemaVersion: 1,
       battles: [makeBattle()],
       tombstones: [],
       lastModified: 0,
@@ -171,7 +179,7 @@ describe('useBattles', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     vi.mocked(window.electron.readBattlesDatabase).mockResolvedValueOnce({
-      version: 1,
+      schemaVersion: 1,
       battles: [makeBattle({ id: 'refreshed' })],
       lastModified: 0,
     });

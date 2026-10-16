@@ -254,7 +254,11 @@ export interface Battle {
 }
 
 export interface BattlesDatabase {
-  version: number;
+  // Bumped when this collection's on-disk shape changes - see
+  // useBattles.ts's migrateBattlesDatabase, the migration hook point this
+  // feeds. Databases persisted before this field existed are treated as
+  // schemaVersion 1.
+  schemaVersion: number;
   battles: Battle[];
   tombstones: SyncTombstone[];
   lastModified: number; // Unix timestamp

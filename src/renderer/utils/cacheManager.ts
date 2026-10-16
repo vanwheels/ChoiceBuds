@@ -47,12 +47,15 @@ export function withCacheEntry<K extends CacheSection>(
   };
 }
 
+/** Current on-disk shape version for GameDataCache - see GameDataCache.schemaVersion. */
+const GAME_DATA_CACHE_SCHEMA_VERSION = 1;
+
 /**
  * Builds a fresh, empty GameDataCache (used on init and on clear)
  */
 export function createEmptyGameDataCache(): GameDataCache {
   return {
-    version: 1,
+    schemaVersion: GAME_DATA_CACHE_SCHEMA_VERSION,
     moves: {},
     items: {},
     abilities: {},
@@ -60,6 +63,22 @@ export function createEmptyGameDataCache(): GameDataCache {
     usage: {},
     lastCleaned: Date.now(),
     lastSyncedSpeciesNames: [],
+  };
+}
+
+/**
+ * Migration hook point for GameDataCache - runs once per load (see
+ * useGameData.ts's mount effect). No migrations exist yet beyond
+ * backfilling schemaVersion and lastSyncedSpeciesNames for a cache written
+ * before they existed; a future on-disk shape change bumps
+ * GAME_DATA_CACHE_SCHEMA_VERSION and adds its upgrade step here, keyed off
+ * persisted.schemaVersion.
+ */
+export function migrateGameDataCache(persisted: GameDataCache): GameDataCache {
+  return {
+    ...persisted,
+    schemaVersion: persisted.schemaVersion ?? GAME_DATA_CACHE_SCHEMA_VERSION,
+    lastSyncedSpeciesNames: persisted.lastSyncedSpeciesNames ?? [],
   };
 }
 

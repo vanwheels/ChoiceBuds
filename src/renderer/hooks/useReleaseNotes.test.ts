@@ -13,7 +13,7 @@ const mockedFetchReleaseHistory = vi.mocked(fetchReleaseHistory);
 
 function makeSettings(overrides: Partial<AppSettings> = {}): AppSettings {
   return {
-    version: 1,
+    schemaVersion: 1,
     defaultRegulation: 'Reg M-B',
     teamsFilter: 'All',
     syncUsername: null,

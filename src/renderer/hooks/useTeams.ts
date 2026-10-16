@@ -18,6 +18,21 @@ import { fixGenderSplitResourceSpeciesText } from '../config/pokemonRules';
  */
 const REG_PREFIX_PATTERN = /^Reg M-[ABC] /;
 
+/** Current on-disk shape version for TeamsDatabase - see TeamsDatabase.schemaVersion. */
+const TEAMS_SCHEMA_VERSION = 1;
+
+/**
+ * Migration hook point for TeamsDatabase - runs once per load, before
+ * normalizeTeam's per-team backfills below. No migrations exist yet
+ * (schemaVersion 1 is the first version); a future on-disk shape change
+ * bumps TEAMS_SCHEMA_VERSION and adds its upgrade step here, keyed off
+ * database.schemaVersion. A database persisted before schemaVersion
+ * existed is treated as version 1.
+ */
+function migrateTeamsDatabase(database: TeamsDatabase): TeamsDatabase {
+  return { ...database, schemaVersion: database.schemaVersion ?? TEAMS_SCHEMA_VERSION };
+}
+
 /**
  * Backfills a per-Pokemon `id` for teams persisted before that field existed
  * (added for the roster drag-reorder animation, leg 4 - see TODO.md and
@@ -163,7 +178,8 @@ export function useTeams(): UseTeamsReturn {
     setError(null);
 
     try {
-      const database = await getStorageAdapter().read<TeamsDatabase>('teams-database');
+      const raw = await getStorageAdapter().read<TeamsDatabase>('teams-database');
+      const database = raw ? migrateTeamsDatabase(raw) : null;
 
       const loadedTeams = database ? database.teams.map(normalizeTeam) : [];
       const loadedTombstones = database?.tombstones ?? [];
@@ -197,8 +213,9 @@ export function useTeams(): UseTeamsReturn {
       setError(null);
 
       try {
-        const database = await getStorageAdapter().read<TeamsDatabase>('teams-database');
+        const raw = await getStorageAdapter().read<TeamsDatabase>('teams-database');
         if (ignore) return;
+        const database = raw ? migrateTeamsDatabase(raw) : null;
 
         const loadedTeams = database ? database.teams.map(normalizeTeam) : [];
         const loadedTombstones = database?.tombstones ?? [];
@@ -228,7 +245,7 @@ export function useTeams(): UseTeamsReturn {
   const persistTeamsToDisk = async (updatedTeams: Team[], updatedTombstones: SyncTombstone[]): Promise<boolean> => {
     try {
       const database: TeamsDatabase = {
-        version: 1,
+        schemaVersion: TEAMS_SCHEMA_VERSION,
         teams: updatedTeams,
         tombstones: updatedTombstones,
         lastModified: Date.now(),
