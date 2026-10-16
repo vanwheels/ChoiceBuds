@@ -2,12 +2,21 @@ import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
+import eslintConfigPrettier from 'eslint-config-prettier';
 
 export default tseslint.config(
   // src/renderer/_archived/** holds retired code kept for reference only
   // (see its README.md) - nothing imports from it, so it's excluded from
   // lint/type-check the same way dist/release output is.
-  { ignores: ['dist/**', 'dist-electron/**', 'release/**', 'node_modules/**', 'src/renderer/_archived/**'] },
+  {
+    ignores: [
+      'dist/**',
+      'dist-electron/**',
+      'release/**',
+      'node_modules/**',
+      'src/renderer/_archived/**',
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
@@ -42,5 +51,8 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
     },
-  }
+  },
+  // Must stay last - turns off core/TS rules that conflict with Prettier's
+  // own formatting so the two never fight over the same code.
+  eslintConfigPrettier,
 );

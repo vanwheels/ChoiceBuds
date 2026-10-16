@@ -1,0 +1,8 @@
+dist/**
+dist-electron/**
+release/**
+node_modules/**
+src/renderer/_archived/**
+
+# Docs/markdown are left in prose formatting, not Prettier's.
+**/*.md
