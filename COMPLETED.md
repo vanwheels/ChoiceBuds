@@ -30,7 +30,7 @@ Entries prior to this file's oldest are in:
   CLAUDE.md "Web build" section and `feedback_web_tests_on_live` into
   Workflow Conventions as a "Web verification happens on the live site"
   bullet, then deleted those two memory files and updated `MEMORY.md`'s
-  index to match. See commit `<pending>`.
+  index to match. See commit `6cf4ce6`.
 
 - **[Project Revision v2] — Leg 3 (Lessons to Rules)** — 2026-10-16
   Promoted the five durable postmortem lessons identified in the audit into
