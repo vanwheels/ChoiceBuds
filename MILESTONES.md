@@ -59,3 +59,5 @@ milestone.
   [post-mortem](docs/postmortems/sync-clipboard-reliability-fixes.md)
 - **Project Revision v2** — 2026-10-16 — Shipped —
   [post-mortem](docs/postmortems/project-revision-v2.md)
+- **Prettier Adoption** — 2026-10-16 — Shipped —
+  [post-mortem](docs/postmortems/prettier-adoption.md)

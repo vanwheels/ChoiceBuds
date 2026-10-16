@@ -16,20 +16,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Prettier Adoption
-
-Done when:
-- Prettier + `eslint-config-prettier` are installed and wired into
-  `eslint.config.js` (style rules that fight Prettier turned off).
-- The whole codebase (code only - `.prettierignore` excludes markdown/docs
-  and `src/renderer/_archived/**`, matching `eslint.config.js`'s existing
-  ignore list) is reformatted in one dedicated commit, and that commit's
-  hash is recorded in `.git-blame-ignore-revs`.
-- CI fails if someone pushes unformatted code.
-
-All three "Done when" criteria are now met - see COMPLETED.md's Leg 3 entry.
-Milestone is ready to close via `/close-milestone`.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
