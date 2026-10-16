@@ -22,6 +22,18 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[Project Revision v2] — Leg 3 (Lessons to Rules)** — 2026-10-16
+  Promoted the five durable postmortem lessons identified in the audit into
+  new `.claude/rules/` files, each scoped via `paths`:
+  `persisted-data-corrections.md` (`sync-clipboard-reliability-fixes`,
+  scoped to `hooks/**`/`services/**`), `render-side-effects-and-corrupted-
+  data.md` (`battle-logger-overhaul`, scoped to `components/**`/`hooks/**`),
+  `ref-returning-hooks.md` (`fixes-and-adjustments`, scoped to `hooks/**`),
+  `layout-breakpoint-verification.md` (`macbook-pass`/`ui-polish-
+  performance`, scoped to `components/**`), and `lookup-table-coverage.md`
+  (`vgcpastes-real-set-sourcing`, scoped to `config/**`). See commit
+  TBD.
+
 - **[Project Revision v2] — Leg 2 (CLAUDE.md Slim)** — 2026-10-16
   Moved CLAUDE.md's Architecture section into a new root `ARCHITECTURE.md`,
   and moved the eight-exception external-data-source policy out of Style

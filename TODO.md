@@ -23,19 +23,6 @@ Brings the project up to global conventions v2 (see
 milestone is scoped from). Stamps CLAUDE.md's `Conventions: v2` line once
 every leg below lands.
 
-- **[Project Revision v2] — Leg 3** *(Last touched: 2026-10-16 ·
-  Re-checks: 0)*
-  Lessons to Rules. Promote the five durable postmortem lessons identified
-  in the audit — stale-data `updatedAt`-bump + grep-before-field-rename
-  (`sync-clipboard-reliability-fixes`), render-body side-effect smell +
-  corrupted-data handling (`battle-logger-overhaul`), ref-returning-hook/
-  render-function separation (`fixes-and-adjustments`), DOM-overflow
-  breakpoint verification + wrong-anchor-node check (`macbook-pass`/
-  `ui-polish-performance`), and lookup-table coverage spot-check
-  (`vgcpastes-real-set-sourcing`) — into `.claude/rules/` with appropriate
-  `paths` scoping. Done check: each lesson has a corresponding rule file.
-  Manual verification: no.
-
 - **[Project Revision v2] — Leg 4** *(Last touched: 2026-10-16 ·
   Re-checks: 0)*
   Memory Cleanup. Delete the `feedback_ask_before_os_automation` (redundant
