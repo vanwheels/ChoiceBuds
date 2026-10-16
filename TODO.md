@@ -29,28 +29,17 @@ Done when:
   `CalcPokemonPanel.tsx` are each split below the 500-line hard cap with no
   behavior change.
 
-- **[Audit Sibling Hooks for useTeams' Lost-Update Race] — Leg 1** *(Last
-  touched: 2026-10-16 · Re-checks: 0)*
-  Audit `useSavedPokemon`, `useBattles`, `useSettings`, and `useDatabase`
-  for the same "closure over state array at render time + no serialization
-  between concurrent mutations" pattern that caused `useTeams`' lost-update
-  race (fixed, see COMPLETED.md). Record a yes/no finding per hook with
-  specific line references in
-  `docs/investigations/sibling-hooks-lost-update-audit.md`. No code changes
-  this leg.
-  Done check: all 4 hooks have a documented finding in the investigation
-  doc.
-  Manual verification: no. Review: no.
-
 - **[Audit Sibling Hooks for useTeams' Lost-Update Race] — Leg 2** *(Last
   touched: 2026-10-16 · Re-checks: 0)*
-  Apply the same ref+queue fix `useTeams` got to any hook Leg 1 found to
-  have the race. Scope depends entirely on Leg 1's findings — if Leg 1
-  finds zero affected hooks, this leg is a no-op and closes immediately
-  citing that.
-  Done check: every hook flagged "yes" in Leg 1 has the fix applied and its
-  existing tests still pass (or the leg closes noting zero hooks needed
-  it).
+  Apply the same ref+queue fix `useTeams` got to `useSavedPokemon.ts`,
+  `useBattles.ts`, and `useSettings.ts` — Leg 1's audit
+  (`docs/investigations/sibling-hooks-lost-update-audit.md`) found all
+  three have the race, each with specific line references. `useDatabase.ts`
+  is excluded: its hot path already uses a functional `setState` update
+  that's immune to the same bug class for a different reason (see the
+  audit doc's finding) — no fix needed there.
+  Done check: `useSavedPokemon.ts`, `useBattles.ts`, and `useSettings.ts`
+  each have the ref+queue fix applied and their existing tests still pass.
   Manual verification: no. Review: yes (persisted-state mutation hooks).
 
 - **[File Cap Splits: TeamCard.tsx] — Leg 1** *(Last touched: 2026-10-16 ·

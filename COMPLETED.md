@@ -29,6 +29,17 @@ Entries prior to this file's oldest are in:
   (the Prettier Adoption milestone's three legs, split out at the
   2026-10-16 Prettier Adoption boundary)
 
+**Audit Sibling Hooks for useTeams' Lost-Update Race — Leg 1** (2026-10-16)
+Audited `useSavedPokemon.ts`, `useBattles.ts`, `useSettings.ts`, and
+`useDatabase.ts` for `useTeams.ts`'s pre-fix "closure over state at render
+time + no serialization between concurrent mutations" pattern. Found the
+race present in the first three (each reads its state closure directly
+with no ref mirror or mutation queue); `useDatabase.ts`'s hot path is
+already immune via a different fix (a functional `setState` update, added
+earlier for an unrelated incident). Findings with line references in
+`docs/investigations/sibling-hooks-lost-update-audit.md`; no code changed.
+See commit TBD.
+
 **Delete Dead useActiveEditor Hook — Leg 1** (2026-10-16)
 Removed `useActiveEditor.ts` and its test file, plus the dead `editorState`
 prop threaded through `App.tsx`/`AppWeb.tsx` into `TeamsPage` (never
