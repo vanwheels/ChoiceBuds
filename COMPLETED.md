@@ -38,7 +38,7 @@ with no ref mirror or mutation queue); `useDatabase.ts`'s hot path is
 already immune via a different fix (a functional `setState` update, added
 earlier for an unrelated incident). Findings with line references in
 `docs/investigations/sibling-hooks-lost-update-audit.md`; no code changed.
-See commit TBD.
+See commit 7dee38d.
 
 **Delete Dead useActiveEditor Hook — Leg 1** (2026-10-16)
 Removed `useActiveEditor.ts` and its test file, plus the dead `editorState`
