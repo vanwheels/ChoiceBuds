@@ -22,6 +22,16 @@ Entries prior to this file's oldest are in:
   shipped between them, split out at the 2026-09-30 Post-Parity Polish
   boundary)
 
+- **[Project Revision v2] — Leg 4 (Memory Cleanup)** — 2026-10-16
+  Deleted two memory entries: `feedback_ask_before_os_automation` (redundant
+  with CLAUDE.md's existing OS-automation prohibition) and
+  `project_web_mobile_friendliness_concern` (stale — that pass already
+  shipped 2026-09-30). Promoted `feedback_web_account_optional` into a new
+  CLAUDE.md "Web build" section and `feedback_web_tests_on_live` into
+  Workflow Conventions as a "Web verification happens on the live site"
+  bullet, then deleted those two memory files and updated `MEMORY.md`'s
+  index to match. See commit `<pending>`.
+
 - **[Project Revision v2] — Leg 3 (Lessons to Rules)** — 2026-10-16
   Promoted the five durable postmortem lessons identified in the audit into
   new `.claude/rules/` files, each scoped via `paths`:

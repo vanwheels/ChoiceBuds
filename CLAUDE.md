@@ -35,6 +35,16 @@ in the OS userData directory (no database).
 See `ARCHITECTURE.md` for the process split, renderer layers, data flow,
 cross-device sync, web build, and gender/form handling.
 
+## Web build
+
+- **Hard rule:** the web app must never require an account to be usable.
+  Teams/Box/the calc (and any future web feature) always work fully
+  signed-out, stored only in that browser's local storage (IndexedDB) — same
+  model as Pokémon Showdown. Signing in only turns on cross-session/
+  cross-device sync; it is never a prerequisite for using the app, so no
+  web-only feature or onboarding flow should gate behind sign-up/log-in (a
+  sidebar prompt or dismissible modal, not a route/render gate).
+
 ## Style rules
 
 - Strict decoupled architecture — no monolithic files.
@@ -118,6 +128,16 @@ running on.
   always create a fresh disposable battle/team for it rather than testing
   against the user's real data, and clean it up afterward. Still never fall
   back to OS-level mouse/keyboard automation.
+- **Web verification happens on the live site** (confirmed 2026-10-08 during
+  Web Bug Sweep Leg 3): the user tests web-client changes on the deployed
+  site (choicebuds.vannyproductions.com, via `.github/workflows/
+  deploy-web.yml` on push to `main`), not `npm run dev:web`'s local dev
+  server. For any web-only fix, commit and push to `main` first so it
+  actually ships, then ask for a live retest (note the GitHub Pages deploy
+  takes a couple minutes) — don't just suggest a dev-server/browser refresh.
+  If a fix needs live verification before it's safe to commit/push (still
+  iterating), say so explicitly rather than assuming a local refresh shows
+  the real result.
 - **Curated effect tables** (`config/moveStatEffects.ts`,
   `config/onSwitchInAbilities.ts`, `config/reactiveAbilities.ts`,
   `config/hitReactiveAbilities.ts`) should hold comprehensive,

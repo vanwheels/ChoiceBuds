@@ -23,18 +23,6 @@ Brings the project up to global conventions v2 (see
 milestone is scoped from). Stamps CLAUDE.md's `Conventions: v2` line once
 every leg below lands.
 
-- **[Project Revision v2] — Leg 4** *(Last touched: 2026-10-16 ·
-  Re-checks: 0)*
-  Memory Cleanup. Delete the `feedback_ask_before_os_automation` (redundant
-  with CLAUDE.md's existing OS-automation prohibition) and
-  `project_web_mobile_friendliness_concern` (stale — that pass already
-  shipped 2026-09-30) memory entries. Promote `feedback_web_account_optional`
-  into CLAUDE.md's Web build section and `feedback_web_tests_on_live` into
-  its Workflow Conventions section, then delete those memory files too.
-  Update `MEMORY.md`'s index to match what's left. Done check: index
-  matches remaining files; both promoted rules appear in CLAUDE.md. Manual
-  verification: no.
-
 - **[Project Revision v2] — Leg 5** *(Last touched: 2026-10-16 ·
   Re-checks: 0)*
   Docs Cleanup. Add a title/intro to `README.md` ahead of its Credits
