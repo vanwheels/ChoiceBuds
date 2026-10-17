@@ -26,18 +26,6 @@ Done when:
   other items.
 - Paste Team jump is either fixed or explicitly deferred with reasoning.
 
-- **[TeamCard Overflow Menu: Validate Popup Covers Own Dropdown] — Leg 1**
-  *(Last touched: 2026-10-16 · Re-checks: 0)*
-  Flagged live during the TeamCard.tsx split's manual verification (see
-  COMPLETED.md), explicitly deferred by Vanny. `TeamOverflowMenu.tsx`'s
-  "Validate Team" result popup renders on top of the "⋮" dropdown's other
-  items (Export/Export Image/Export PDF/Delete), so they're unreachable
-  until you click away to dismiss the popup first - annoying but not
-  broken (the popup does eventually dismiss and the menu works normally
-  after). Likely a z-index/stacking-order or positioning fix scoped to
-  that one component.
-  Manual verification: yes. Review: no.
-
 - **[TeamCard Paste Team: Pasted Card Jumps Before Re-sort] — Leg 1** *(Last
   touched: 2026-10-16 · Re-checks: 0)*
   Flagged live during the TeamCard.tsx split's manual verification (see

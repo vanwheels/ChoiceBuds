@@ -34,6 +34,13 @@ Entries prior to this file's oldest are in:
   milestone slug since it shares its date range with the Prettier Adoption
   archive above)
 
+## TeamCard Overflow Menu: Validate Popup Covers Own Dropdown — Leg 1 — 2026-10-17
+
+`TeamValidationButton.tsx`'s result popup was `absolute`-positioned over
+`TeamOverflowMenu.tsx`'s dropdown, overlaying Export/Export Image/Export
+PDF/Delete instead of displacing them. Made it a normal in-flow element so
+it pushes the rows below down instead. Verified live. See commit 636b522.
+
 ## TeamCard Notes: Data Loss on First Blur After Expand — Leg 2 — 2026-10-17
 
 `/leg-review` on Leg 1's fix below found it left the same blind-overwrite
