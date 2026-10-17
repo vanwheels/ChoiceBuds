@@ -162,8 +162,22 @@ export interface UseSavedPokemonReturn {
   // Pending deletes not yet confirmed synced (see TODO.md's Sync Data Model
   // leg) - included in the next sync push, then cleared by applySyncedState.
   tombstones: SyncTombstone[];
-  /** Overwrites savedPokemon with a sync merge's authoritative result and clears pending tombstones - mirrors useTeams.ts::applySyncedState. */
-  applySyncedState: (records: SavedPokemonEntry[]) => Promise<boolean>;
+  /**
+   * Reconciles local state with a sync merge's result - mirrors
+   * useTeams.ts::applySyncedState exactly (same race, same fix; see its own
+   * doc comment and docs/investigations/teamcard-notes-sync-race.md for the
+   * full rationale). Per entry, keeps whichever side has the newer
+   * `updatedAt`; keeps any local-only entry `records` doesn't know about
+   * yet, preserving its local list position rather than appending it;
+   * drops a `records` entry whose id still has a pending local tombstone
+   * instead of letting a locally-deleted entry resurrect. `pushedTombstones`
+   * is the tombstone list actually included in the push this response
+   * answers - only those are cleared from `tombstones`.
+   */
+  applySyncedState: (
+    records: SavedPokemonEntry[],
+    pushedTombstones: SyncTombstone[],
+  ) => Promise<boolean>;
 }
 
 /** Current on-disk shape version for SavedPokemonDatabase - see SavedPokemonDatabase.schemaVersion. */
@@ -621,14 +635,27 @@ export function useSavedPokemon(): UseSavedPokemonReturn {
   );
 
   const applySyncedState = useCallback(
-    (records: SavedPokemonEntry[]): Promise<boolean> =>
+    (records: SavedPokemonEntry[], pushedTombstones: SyncTombstone[]): Promise<boolean> =>
       enqueueMutation(async () => {
-        const success = await persistSavedPokemonToDisk(records, []);
+        const remoteById = new Map(records.map((e) => [e.id, e]));
+        const localIds = new Set(savedPokemonRef.current.map((e) => e.id));
+        const tombstonedIds = new Set(tombstonesRef.current.map((t) => t.id));
+        const reconciled = [
+          ...savedPokemonRef.current.map((local) => {
+            const remote = remoteById.get(local.id);
+            return remote && remote.updatedAt > local.updatedAt ? remote : local;
+          }),
+          ...records.filter((remote) => !localIds.has(remote.id) && !tombstonedIds.has(remote.id)),
+        ];
+        const pushedIds = new Set(pushedTombstones.map((t) => t.id));
+        const remainingTombstones = tombstonesRef.current.filter((t) => !pushedIds.has(t.id));
+
+        const success = await persistSavedPokemonToDisk(reconciled, remainingTombstones);
         if (success) {
-          savedPokemonRef.current = records;
-          tombstonesRef.current = [];
-          setSavedPokemon(records);
-          setTombstones([]);
+          savedPokemonRef.current = reconciled;
+          tombstonesRef.current = remainingTombstones;
+          setSavedPokemon(reconciled);
+          setTombstones(remainingTombstones);
           setError(null);
         }
         return success;

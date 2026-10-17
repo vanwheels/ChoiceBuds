@@ -262,8 +262,8 @@ export function useSync(
         };
         await Promise.all([
           teamsState.applySyncedState(merged.teams, payload.teamTombstones),
-          battlesState.applySyncedState(merged.battles),
-          savedPokemonState.applySyncedState(merged.savedPokemon),
+          battlesState.applySyncedState(merged.battles, payload.battleTombstones),
+          savedPokemonState.applySyncedState(merged.savedPokemon, payload.savedPokemonTombstones),
         ]);
 
         // merged.playerProfile is missing when the account's Worker hasn't

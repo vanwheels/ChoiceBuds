@@ -37,5 +37,28 @@ Entries prior to this file's oldest are in:
   (the TeamCard Bug Fixes & Dev Tooling milestone's four legs, split out at
   the 2026-10-17 TeamCard Bug Fixes & Dev Tooling boundary)
 
-No entries yet since the last milestone boundary.
+## Sibling Hooks' applySyncedState Stale-Overwrite Race — 2026-10-17
+
+Flagged while fixing TeamCard Notes: Data Loss on First Blur After Expand
+(see `docs/investigations/teamcard-notes-sync-race.md`): `useBattles.ts`'s
+and `useSavedPokemon.ts`'s own `applySyncedState` shared the exact same
+blind-overwrite shape that bug's fix closed in `useTeams.ts`'s - a debounced
+auto-sync response landing after a local edit already won the
+`enqueueMutation` queue would silently discard that edit, same mechanism,
+different collections (battle notes/edits, Box entries). Both hooks now
+take the same per-record `updatedAt` reconciliation, local-order-preserving
+base (a local-only record keeps its own list position instead of landing
+at the end), and tombstone-aware drop/clear `useTeams.ts` already had -
+`applySyncedState` on both now takes a second argument, `pushedTombstones`,
+mirroring `useTeams.ts`'s signature. `useSync.ts`'s `syncNow` now passes
+`payload.battleTombstones`/`payload.savedPokemonTombstones` through to each
+call (previously computed but unused for these two). Four new regression
+tests in each of `useBattles.test.ts`/`useSavedPokemon.test.ts`, mirroring
+`useTeams.test.ts`'s existing `applySyncedState` cases (overwrite + clear
+tombstones, local-edit-wins-the-race, local-only-record-keeps-position,
+delete-not-resurrected). Not manually verified live - same reasoning as the
+Teams fix, this is a queue-ordering race unit tests cover more reliably
+than a live repro. See commit TBD.
+
+No other entries yet since the last milestone boundary.
 

@@ -119,8 +119,19 @@ export interface UseBattlesReturn {
 
   refreshBattles: () => Promise<void>;
   getBattleById: (battleId: string) => Battle | undefined;
-  /** Overwrites battles with a sync merge's authoritative result and clears pending tombstones - mirrors useTeams.ts::applySyncedState. */
-  applySyncedState: (records: Battle[]) => Promise<boolean>;
+  /**
+   * Reconciles local state with a sync merge's result - mirrors
+   * useTeams.ts::applySyncedState exactly (same race, same fix; see its own
+   * doc comment and docs/investigations/teamcard-notes-sync-race.md for the
+   * full rationale). Per battle, keeps whichever side has the newer
+   * `updatedAt`; keeps any local-only battle `records` doesn't know about
+   * yet, preserving its local list position rather than appending it;
+   * drops a `records` entry whose id still has a pending local tombstone
+   * instead of letting a locally-deleted battle resurrect. `pushedTombstones`
+   * is the tombstone list actually included in the push this response
+   * answers - only those are cleared from `tombstones`.
+   */
+  applySyncedState: (records: Battle[], pushedTombstones: SyncTombstone[]) => Promise<boolean>;
 }
 
 export function useBattles(): UseBattlesReturn {
@@ -359,14 +370,27 @@ export function useBattles(): UseBattlesReturn {
   );
 
   const applySyncedState = useCallback(
-    (records: Battle[]): Promise<boolean> =>
+    (records: Battle[], pushedTombstones: SyncTombstone[]): Promise<boolean> =>
       enqueueMutation(async () => {
-        const success = await persistBattlesToDisk(records, []);
+        const remoteById = new Map(records.map((b) => [b.id, b]));
+        const localIds = new Set(battlesRef.current.map((b) => b.id));
+        const tombstonedIds = new Set(tombstonesRef.current.map((t) => t.id));
+        const reconciled = [
+          ...battlesRef.current.map((local) => {
+            const remote = remoteById.get(local.id);
+            return remote && remote.updatedAt > local.updatedAt ? remote : local;
+          }),
+          ...records.filter((remote) => !localIds.has(remote.id) && !tombstonedIds.has(remote.id)),
+        ];
+        const pushedIds = new Set(pushedTombstones.map((t) => t.id));
+        const remainingTombstones = tombstonesRef.current.filter((t) => !pushedIds.has(t.id));
+
+        const success = await persistBattlesToDisk(reconciled, remainingTombstones);
         if (success) {
-          battlesRef.current = records;
-          tombstonesRef.current = [];
-          setBattles(records);
-          setTombstones([]);
+          battlesRef.current = reconciled;
+          tombstonesRef.current = remainingTombstones;
+          setBattles(reconciled);
+          setTombstones(remainingTombstones);
           setError(null);
         }
         return success;

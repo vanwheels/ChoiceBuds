@@ -25,31 +25,6 @@ Done when:
 3. Both web-facing legs (landing page, padding fix) are verified live on
    choicebuds.vannyproductions.com, not just on `dev:web`.
 
-- **[Sibling Hooks' applySyncedState Stale-Overwrite Race] — Leg 1** *(Last
-  touched: 2026-10-17 · Re-checks: 0)*
-  Flagged while fixing TeamCard Notes: Data Loss on First Blur After
-  Expand (see `docs/investigations/teamcard-notes-sync-race.md`).
-  `useBattles.ts::applySyncedState` and `useSavedPokemon.ts::
-  applySyncedState` share the exact same blind-overwrite shape that bug's
-  fix just closed in `useTeams.ts::applySyncedState` (the former's own doc
-  comment says "mirrors useTeams.ts::applySyncedState") - a debounced
-  auto-sync response landing after a local edit already won the
-  `enqueueMutation` queue would silently discard that edit, same mechanism,
-  different collections (battle notes/edits, Box entries). Not verified
-  live as an actual reported symptom yet, unlike the Teams case. Likely
-  fix mirrors `useTeams.ts`'s: reconcile per-record on `updatedAt` instead
-  of overwriting wholesale, plus keep local-only records the sync response
-  doesn't know about yet.
-  Done check: same reconciliation applied to both hooks' `applySyncedState`,
-  regression tests mirroring `useTeams.test.ts`'s two new cases, full suite
-  passes. "Two new cases" now means three: `useTeams.ts::applySyncedState`
-  picked up a second fix 2026-10-17 (TeamCard Paste Team card-jump leg,
-  Last touched above) - its `reconciled` base order now walks local array
-  order instead of `records`' order, so a local-only record keeps its
-  position instead of landing at the end. Mirror that one here too.
-  Manual verification: no (unit-test coverage is sufficient, same as the
-  Teams fix). Review: recommended - touches sync/persisted-data merge logic.
-
 - **[Web Download/Landing Page] — Leg 2** *(Last touched: 2026-10-17 ·
   Re-checks: 0)*
   Scoped 2026-10-17 out of the Web Hosting & Domain fast-follow note below.

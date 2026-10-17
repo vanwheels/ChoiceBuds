@@ -206,12 +206,81 @@ describe('useBattles', () => {
     expect(result.current.tombstones).not.toEqual([]);
 
     const mergedBattle = makeBattle({ id: 'from-server' });
+    const pushedTombstones = result.current.tombstones; // simulates this push having included it
     await act(async () => {
-      await result.current.applySyncedState([mergedBattle]);
+      await result.current.applySyncedState([mergedBattle], pushedTombstones);
     });
 
     expect(result.current.battles).toEqual([mergedBattle]);
     expect(result.current.tombstones).toEqual([]);
+    expect(window.electron.writeBattlesDatabase).toHaveBeenLastCalledWith(
+      expect.objectContaining({ battles: [mergedBattle], tombstones: [] }),
+    );
+  });
+
+  it('applySyncedState keeps a local edit that lands first in the queue over a stale sync snapshot (mirrors the TeamCard Notes blur bug)', async () => {
+    vi.mocked(window.electron.readBattlesDatabase).mockResolvedValueOnce({
+      schemaVersion: 1,
+      battles: [makeBattle({ updatedAt: 1 })],
+      tombstones: [],
+      lastModified: 0,
+    });
+    const { result } = renderHook(() => useBattles());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    let updateCall: Promise<boolean>;
+    let syncCall: Promise<boolean>;
+    await act(async () => {
+      updateCall = result.current.updateBattle('battle-1', { result: 'win' });
+      syncCall = result.current.applySyncedState([makeBattle({ updatedAt: 1 })], []);
+      await Promise.all([updateCall, syncCall]);
+    });
+
+    expect(result.current.battles[0].result).toBe('win');
+  });
+
+  it('applySyncedState keeps a locally-added battle the sync response does not know about yet, at its own list position', async () => {
+    vi.mocked(window.electron.readBattlesDatabase).mockResolvedValueOnce({
+      schemaVersion: 1,
+      battles: [makeBattle({ id: 'existing-1', updatedAt: 1 })],
+      tombstones: [],
+      lastModified: 0,
+    });
+    const { result } = renderHook(() => useBattles());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.addBattle(makeBattle({ id: 'new-local', updatedAt: 5 }));
+    });
+    expect(result.current.battles.map((b) => b.id)).toEqual(['new-local', 'existing-1']);
+
+    await act(async () => {
+      await result.current.applySyncedState([makeBattle({ id: 'existing-1', updatedAt: 1 })], []);
+    });
+
+    expect(result.current.battles.map((b) => b.id)).toEqual(['new-local', 'existing-1']);
+  });
+
+  it('applySyncedState does not resurrect a battle deleted locally after the push snapshot was taken, and keeps its tombstone for the next push', async () => {
+    vi.mocked(window.electron.readBattlesDatabase).mockResolvedValueOnce({
+      schemaVersion: 1,
+      battles: [makeBattle({ id: 'battle-1' })],
+      tombstones: [],
+      lastModified: 0,
+    });
+    const { result } = renderHook(() => useBattles());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    let deleteCall: Promise<boolean>;
+    let syncCall: Promise<boolean>;
+    await act(async () => {
+      deleteCall = result.current.deleteBattle('battle-1');
+      syncCall = result.current.applySyncedState([makeBattle({ id: 'battle-1' })], []);
+      await Promise.all([deleteCall, syncCall]);
+    });
+
+    expect(result.current.battles).toEqual([]);
+    expect(result.current.tombstones).toEqual([{ id: 'battle-1', deletedAt: expect.any(Number) }]);
   });
 
   it('refreshBattles reloads from disk and getBattleById looks up by id', async () => {

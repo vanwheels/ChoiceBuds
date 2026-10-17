@@ -361,12 +361,90 @@ describe('useSavedPokemon', () => {
       savedAt: 0,
       updatedAt: 0,
     };
+    const pushedTombstones = result.current.tombstones; // simulates this push having included it
     await act(async () => {
-      await result.current.applySyncedState([merged]);
+      await result.current.applySyncedState([merged], pushedTombstones);
     });
 
     expect(result.current.savedPokemon).toEqual([merged]);
     expect(result.current.tombstones).toEqual([]);
+    expect(window.electron.writeSavedPokemonDatabase).toHaveBeenLastCalledWith(
+      expect.objectContaining({ savedPokemon: [merged], tombstones: [] }),
+    );
+  });
+
+  it('applySyncedState keeps a local edit that lands first in the queue over a stale sync snapshot (mirrors the TeamCard Notes blur bug)', async () => {
+    const existing = { id: 'a', label: 'Gengar', pokemon: makePokemon(), savedAt: 0, updatedAt: 1 };
+    vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
+      schemaVersion: 1,
+      savedPokemon: [existing],
+      tombstones: [],
+      lastModified: 0,
+    });
+    const { result } = renderHook(() => useSavedPokemon());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    let renameCall: Promise<boolean>;
+    let syncCall: Promise<boolean>;
+    await act(async () => {
+      renameCall = result.current.renameSavedPokemon('a', 'renamed locally');
+      syncCall = result.current.applySyncedState([existing], []);
+      await Promise.all([renameCall, syncCall]);
+    });
+
+    expect(result.current.savedPokemon[0].label).toBe('renamed locally');
+  });
+
+  it('applySyncedState keeps a locally-added entry the sync response does not know about yet, at its own list position', async () => {
+    const existing = {
+      id: 'existing-1',
+      label: 'Gengar',
+      pokemon: makePokemon(),
+      savedAt: 0,
+      updatedAt: 1,
+    };
+    vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
+      schemaVersion: 1,
+      savedPokemon: [existing],
+      tombstones: [],
+      lastModified: 0,
+    });
+    const { result } = renderHook(() => useSavedPokemon());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.addSavedPokemonBatch([makePokemon()], ['new local'], ['new-local']);
+    });
+    expect(result.current.savedPokemon.map((e) => e.id)).toEqual(['new-local', 'existing-1']);
+
+    await act(async () => {
+      await result.current.applySyncedState([existing], []);
+    });
+
+    expect(result.current.savedPokemon.map((e) => e.id)).toEqual(['new-local', 'existing-1']);
+  });
+
+  it('applySyncedState does not resurrect an entry deleted locally after the push snapshot was taken, and keeps its tombstone for the next push', async () => {
+    const existing = { id: 'a', label: 'Gengar', pokemon: makePokemon(), savedAt: 0, updatedAt: 0 };
+    vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
+      schemaVersion: 1,
+      savedPokemon: [existing],
+      tombstones: [],
+      lastModified: 0,
+    });
+    const { result } = renderHook(() => useSavedPokemon());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    let deleteCall: Promise<boolean>;
+    let syncCall: Promise<boolean>;
+    await act(async () => {
+      deleteCall = result.current.deleteSavedPokemon('a');
+      syncCall = result.current.applySyncedState([existing], []);
+      await Promise.all([deleteCall, syncCall]);
+    });
+
+    expect(result.current.savedPokemon).toEqual([]);
+    expect(result.current.tombstones).toEqual([{ id: 'a', deletedAt: expect.any(Number) }]);
   });
 
   it('refreshSavedPokemon reloads from disk', async () => {

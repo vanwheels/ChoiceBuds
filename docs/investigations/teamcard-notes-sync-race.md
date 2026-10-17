@@ -98,16 +98,29 @@ rather than falling back to `remote`, and only tombstones named in
 stays pending for the next cycle. New regression test in `useTeams.test.ts`
 right after the two Leg 1 tests.
 
-## Known follow-up (not fixed here, out of this leg's scope)
+## Leg 3: the same fix, mirrored into the sibling hooks
 
 `useBattles.ts::applySyncedState` and `useSavedPokemon.ts::applySyncedState`
-share the exact same shape (the former's own doc comment says so
-explicitly: "mirrors useTeams.ts::applySyncedState") and so share this same
+shared the exact same shape (the former's own doc comment said so
+explicitly: "mirrors useTeams.ts::applySyncedState") and so shared this same
 race, unverified live but almost certainly real for the same reason. Not
-fixed in this leg since it wasn't the reported bug and touching three sync
-paths at once is more than one leg should carry - flagged as a new
-TODO.md item instead. This is a different bug class from the closure-based
-lost-update race `sibling-hooks-lost-update-audit.md` already covered (that
-one was about concurrent mutations racing on a stale `useState` closure;
-this one is about a sync response racing a local mutation that already won
-the `enqueueMutation` queue).
+fixed in Leg 1/2 since it wasn't the reported bug and touching three sync
+paths at once was more than one leg should carry - flagged as its own
+TODO.md item instead ("Sibling Hooks' applySyncedState Stale-Overwrite
+Race"), now closed: both hooks' `applySyncedState` take the exact same
+per-record `updatedAt` reconciliation, local-order-preserving base, and
+tombstone-aware drop/clear as `useTeams.ts`'s (Leg 1 + Leg 2 combined, since
+these two hooks never had a separate ordering-only follow-up the way Teams
+did). `useSync.ts`'s `syncNow` now passes `payload.battleTombstones`/
+`payload.savedPokemonTombstones` through to each call, mirroring the
+`teamTombstones` wiring already in place for Teams. New regression tests
+mirror all four of `useTeams.test.ts`'s `applySyncedState` cases (overwrite
++ clear tombstones, local-edit-wins-the-race, local-only-record-keeps-
+position, delete-not-resurrected) in both `useBattles.test.ts` and
+`useSavedPokemon.test.ts`.
+
+This is a different bug class from the closure-based lost-update race
+`sibling-hooks-lost-update-audit.md` already covered (that one was about
+concurrent mutations racing on a stale `useState` closure; this one is
+about a sync response racing a local mutation that already won the
+`enqueueMutation` queue).
