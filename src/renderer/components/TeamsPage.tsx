@@ -10,6 +10,7 @@ import type { MouseEvent as ReactMouseEvent } from 'react';
 import type { VgcPasteTeamRow } from '../types/pokemon';
 import type { TeamsFilter } from '../types/settings';
 import { sortTeams } from '../utils/teamSort';
+import { teamMatchesSearch } from '../utils/teamSearch';
 import { useGridReorder } from '../hooks/useGridReorder';
 import type { UseTeamsReturn } from '../hooks/useTeams';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
@@ -29,7 +30,7 @@ import TeamCard from './TeamCard';
 import ContextMenu from './ContextMenu';
 import MobileFilterPopover from './MobileFilterPopover';
 import MobileTeamsList from './MobileTeamsList';
-import { PlusIcon, CompassIcon, FilterIcon } from './icons/SidebarIcons';
+import { PlusIcon, CompassIcon, FilterIcon, SearchIcon } from './icons/SidebarIcons';
 
 interface TeamsPageProps {
   teamsState: UseTeamsReturn;
@@ -63,6 +64,11 @@ export default function TeamsPage({
   };
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isCatalogModalOpen, setIsCatalogModalOpen] = useState(false);
+  // Teams Tab Search Bar (see TODO.md) - plain text, not persisted (same as
+  // BoxPage.tsx's own `search` state). Filters by species/nickname across a
+  // team's roster (utils/teamSearch.ts), layered on top of the format
+  // filter below rather than replacing it.
+  const [search, setSearch] = useState('');
   // Set when a VgcPasteCatalogModal row's "Import" button is picked - passed
   // through to ImportTeamModal as catalogRow (the whole row, not just its
   // pokepast.es URL, so the modal can prefer the row's own
@@ -106,11 +112,16 @@ export default function TeamsPage({
     );
   };
 
-  // Filter teams based on active format filter
-  const filteredTeams =
+  // Filter teams based on active format filter, then on the search bar
+  // (species/nickname substring match, see utils/teamSearch.ts) - same
+  // composition order BoxPage.tsx layers its own search over sort-mode
+  // selection.
+  const formatFilteredTeams =
     activeFilter === 'All'
       ? teamsState.teams
       : teamsState.teams.filter((team) => team.format === activeFilter);
+  const filteredTeams = formatFilteredTeams.filter((team) => teamMatchesSearch(team, search));
+  const isSearching = search.trim().length > 0;
 
   // Favorited teams always sort to the top (across every regulation), then
   // by regulation newest-first, otherwise preserving each group's existing
@@ -170,6 +181,15 @@ export default function TeamsPage({
       >
         <CompassIcon />
       </button>
+      <MobileFilterPopover label="Search teams" icon={<SearchIcon />} isActive={isSearching}>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by Pokémon name..."
+          className="w-full px-3 py-2 text-sm text-white bg-zinc-800 border border-zinc-700 rounded-md outline-none focus:border-accent-gold placeholder:text-zinc-500"
+        />
+      </MobileFilterPopover>
       <MobileFilterPopover
         label="Filter teams"
         icon={<FilterIcon />}
@@ -212,6 +232,17 @@ export default function TeamsPage({
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
+            {/* Search (Teams Tab Search Bar, see TODO.md) - species/nickname
+                substring match across each team's roster, same input style
+                as BoxPageToolbar.tsx's own search. */}
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by Pokémon name..."
+              className="w-full md:w-64 px-3 py-2 text-sm text-white bg-zinc-700 border border-zinc-600 rounded-lg outline-none focus:border-accent-gold placeholder:text-zinc-500"
+            />
+
             {/* Browse Sample Teams Button - VGCPastes real-team catalog (TODO.md's VGCPastes Sample Team Catalog leg) */}
             <button
               onClick={() => setIsCatalogModalOpen(true)}
@@ -295,8 +326,14 @@ export default function TeamsPage({
             </div>
           ) : filteredTeams.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-zinc-400">
-              <p className="text-lg">No teams found</p>
-              <p className="text-sm mt-2">Click "Add New Team" to import your first team</p>
+              {isSearching ? (
+                <p className="text-lg">No teams match search</p>
+              ) : (
+                <>
+                  <p className="text-lg">No teams found</p>
+                  <p className="text-sm mt-2">Click "Add New Team" to import your first team</p>
+                </>
+              )}
             </div>
           ) : (
             <>
