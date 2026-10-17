@@ -35,6 +35,7 @@ import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import { groupBattlesBySet, getSetOutcome } from '../../utils/battleSets';
 import { toRegulationId } from '../../utils/pokemonRules';
 import SpeciesPickerCard from '../SpeciesPickerCard';
+import TeamPickerDropdown from '../TeamPickerDropdown';
 import BroughtToggleTile from './BroughtToggleTile';
 
 const MAX_BROUGHT = 4;
@@ -276,7 +277,7 @@ export default function RecordMatchForm({
         }),
       );
     },
-    [],
+    [setOpponentRoster],
   );
 
   // Keeps the global Calc popup's opponent-roster snapshot (and this
@@ -357,18 +358,12 @@ export default function RecordMatchForm({
             No saved teams with at least 4 Pokemon yet - build one in the Teams tab first.
           </p>
         ) : (
-          <select
-            value={teamId}
-            onChange={(e) => handleSelectTeam(e.target.value)}
-            className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-accent-gold"
-          >
-            <option value="">Select a team...</option>
-            {eligibleTeams.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name} ({t.format})
-              </option>
-            ))}
-          </select>
+          <TeamPickerDropdown
+            teams={eligibleTeams}
+            selectedTeamId={teamId}
+            onSelect={handleSelectTeam}
+            resolveSprite={spriteCacheState.resolveSprite}
+          />
         )}
       </div>
 

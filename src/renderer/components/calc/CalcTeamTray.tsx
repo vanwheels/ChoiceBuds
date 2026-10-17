@@ -29,6 +29,7 @@ import {
   CALC_TEAM_POKEMON_DRAG_TYPE,
   type CalcTeamPokemonDragPayload,
 } from '../../utils/calcDragTypes';
+import TeamPickerDropdown from '../TeamPickerDropdown';
 
 interface CalcTeamTrayProps {
   teams: Team[];
@@ -61,18 +62,12 @@ export default function CalcTeamTray({
   return (
     <div className="flex flex-col gap-1.5 pb-2 border-b border-zinc-800">
       <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Load from Team</label>
-      <select
-        value={selectedTeamId}
-        onChange={(e) => setSelectedTeamId(e.target.value)}
-        className="px-2 py-0.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
-      >
-        <option value="">Select a team...</option>
-        {teams.map((t) => (
-          <option key={t.id} value={t.id}>
-            {t.name}
-          </option>
-        ))}
-      </select>
+      <TeamPickerDropdown
+        teams={teams}
+        selectedTeamId={selectedTeamId}
+        onSelect={setSelectedTeamId}
+        resolveSprite={resolveSprite}
+      />
       {selectedTeam && (
         <div className="flex gap-1.5 flex-wrap">
           {selectedTeam.pokemon.map((p, i) => (

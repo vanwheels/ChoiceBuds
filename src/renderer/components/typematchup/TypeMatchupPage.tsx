@@ -43,6 +43,7 @@ import {
   COVERAGE_GAP_MOVE_CUTOFF,
   type MovesetGapCandidate,
 } from '../../utils/usageCoverageGaps';
+import TeamPickerDropdown from '../TeamPickerDropdown';
 import CoverageTable from './CoverageTable';
 import UsageThreatsList from './UsageThreatsList';
 
@@ -154,18 +155,12 @@ export default function TypeMatchupPage({
 
       <div className="flex flex-col gap-1.5 max-w-xs">
         <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Team</label>
-        <select
-          value={selectedTeamId}
-          onChange={(e) => setSelectedTeamId(e.target.value)}
-          className="px-3 py-2 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
-        >
-          <option value="">Select a team...</option>
-          {teams.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name}
-            </option>
-          ))}
-        </select>
+        <TeamPickerDropdown
+          teams={teams}
+          selectedTeamId={selectedTeamId}
+          onSelect={setSelectedTeamId}
+          resolveSprite={spriteCacheState.resolveSprite}
+        />
       </div>
 
       {!selectedTeam ? (

@@ -101,6 +101,7 @@ import {
   type TeamSpeedOverride,
 } from '../../utils/speedTierOverrides';
 import { slotResistsThreat } from '../../utils/usageThreats';
+import TeamPickerDropdown from '../TeamPickerDropdown';
 import SpeedTierFieldPanel, { ToggleButton } from './SpeedTierFieldPanel';
 import SpeedTierList from './SpeedTierList';
 import TeamPreviewStrip from './TeamPreviewStrip';
@@ -388,18 +389,12 @@ export default function SpeedTiersPage({
 
       <div className="flex flex-col gap-1.5 max-w-xs">
         <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Team</label>
-        <select
-          value={selectedTeamId}
-          onChange={(e) => setSelectedTeamId(e.target.value)}
-          className="px-3 py-2 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
-        >
-          <option value="">Select a team...</option>
-          {teams.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name}
-            </option>
-          ))}
-        </select>
+        <TeamPickerDropdown
+          teams={teams}
+          selectedTeamId={selectedTeamId}
+          onSelect={setSelectedTeamId}
+          resolveSprite={spriteCacheState.resolveSprite}
+        />
       </div>
 
       {!selectedTeam ? (
