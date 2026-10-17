@@ -209,7 +209,15 @@ export default function AppWeb() {
           <WebAuthScreen syncState={syncState} onClose={() => setShowAuthModal(false)} />
         )}
 
-        <main className="flex-1 overflow-y-auto">
+        {/* md:px-8/md:py-6 mirrors App.tsx's unconditional 2rem/1.5rem <main>
+          padding, but only from md up: TeamsPage's own content div
+          (px-4 md:px-0) and BoxPageGrid's (px-4 md:px-8) already supply
+          their own mobile padding and expect `<main>` to stay at 0 below
+          md, so an unconditional match here would double-pad them on
+          mobile. Pages with no padding of their own (Battle Log,
+          Statistics, Type Matchup, Speed Tiers, Settings) are still
+          edge-to-edge below md - see TODO.md. */}
+        <main className="flex-1 overflow-y-auto md:px-8 md:py-6">
           <div style={{ display: activeTab === 'teams' ? 'block' : 'none' }} className="h-full">
             <TeamsPage
               teamsState={teamsState}
