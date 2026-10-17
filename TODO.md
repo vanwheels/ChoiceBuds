@@ -16,6 +16,83 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
+## Current Milestone: Bug Fix & Small Features Sweep
+
+Done when:
+1. All 5 legs below are implemented and pass their individual done checks.
+2. Full test suite passes, including new regression coverage for the
+   sync-race fix.
+3. Both web-facing legs (landing page, padding fix) are verified live on
+   choicebuds.vannyproductions.com, not just on `dev:web`.
+
+- **[Sibling Hooks' applySyncedState Stale-Overwrite Race] — Leg 1** *(Last
+  touched: 2026-10-17 · Re-checks: 0)*
+  Flagged while fixing TeamCard Notes: Data Loss on First Blur After
+  Expand (see `docs/investigations/teamcard-notes-sync-race.md`).
+  `useBattles.ts::applySyncedState` and `useSavedPokemon.ts::
+  applySyncedState` share the exact same blind-overwrite shape that bug's
+  fix just closed in `useTeams.ts::applySyncedState` (the former's own doc
+  comment says "mirrors useTeams.ts::applySyncedState") - a debounced
+  auto-sync response landing after a local edit already won the
+  `enqueueMutation` queue would silently discard that edit, same mechanism,
+  different collections (battle notes/edits, Box entries). Not verified
+  live as an actual reported symptom yet, unlike the Teams case. Likely
+  fix mirrors `useTeams.ts`'s: reconcile per-record on `updatedAt` instead
+  of overwriting wholesale, plus keep local-only records the sync response
+  doesn't know about yet.
+  Done check: same reconciliation applied to both hooks' `applySyncedState`,
+  regression tests mirroring `useTeams.test.ts`'s two new cases, full suite
+  passes. "Two new cases" now means three: `useTeams.ts::applySyncedState`
+  picked up a second fix 2026-10-17 (TeamCard Paste Team card-jump leg,
+  Last touched above) - its `reconciled` base order now walks local array
+  order instead of `records`' order, so a local-only record keeps its
+  position instead of landing at the end. Mirror that one here too.
+  Manual verification: no (unit-test coverage is sufficient, same as the
+  Teams fix). Review: recommended - touches sync/persisted-data merge logic.
+
+- **[Web Download/Landing Page] — Leg 2** *(Last touched: 2026-10-17 ·
+  Re-checks: 0)*
+  Scoped 2026-10-17 out of the Web Hosting & Domain fast-follow note below.
+  A landing/download page on choicebuds.vannyproductions.com that calls
+  `api.github.com/repos/vanwheels/ChoiceBuds/releases/latest` (same call
+  `services/github.ts`'s in-app update checker already makes), detects the
+  visitor's OS, and links to that release's OS-appropriate installer asset.
+  GitHub Releases stays the actual file host — no universal/self-fetching
+  installer needed.
+  Done check: OS detection correct on both Windows and macOS, links resolve
+  to the right asset, page deployed live and reachable.
+  Manual verification: yes. Review: no.
+
+- **[Web Content-Area Padding Fix] — Leg 3** *(Last touched: 2026-10-17 ·
+  Re-checks: 0)*
+  Scoped 2026-10-17, originally flagged 2026-09-30 during live verification
+  of Battle Log & Statistics Parity. `AppWeb.tsx`'s `<main>` has no padding
+  at all, unlike `App.tsx`'s desktop `<main>` (2rem/1.5rem inline styles),
+  so ported pages render edge-to-edge in the browser — visible on the
+  Battle Log page's card grid butting against the viewport edges. Fix:
+  mirror `App.tsx`'s `<main>` padding onto `AppWeb.tsx`. Confirm first that
+  no existing web page relies on `<main>` having zero padding before
+  applying it everywhere.
+  Manual verification: yes. Review: no.
+
+- **[Teams Tab Search Bar] — Leg 4** *(Last touched: 2026-10-17 ·
+  Re-checks: 0)*
+  Scoped 2026-10-17, proposed 2026-09-29. Search for a specific Pokémon by
+  name and surface which of the user's saved Teams include it. Partial
+  (substring) match on species or nickname; Teams-only, not the Box.
+  Done check: typing a partial species/nickname name filters the Teams list
+  to matching teams live.
+  Manual verification: yes. Review: no.
+
+- **[Item Usage Percentage Ordering] — Leg 5** *(Last touched: 2026-10-17 ·
+  Re-checks: 0)*
+  Scoped 2026-10-17. `championsBattleData.ts` already fetches `held_item`
+  usage rows (`items: rowsFor('held_item')`) from the same
+  championsbattledata.com source the existing move/ability usage-percentage
+  ordering already uses — this wires that existing data into
+  `ItemPickerPanel.tsx`'s ordering, mirroring the move/ability pattern.
+  Manual verification: yes. Review: no.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -43,74 +120,6 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
-
-- **[Sibling Hooks' applySyncedState Stale-Overwrite Race] — Leg 1** *(Last
-  touched: 2026-10-17 · Re-checks: 0)*
-  Flagged while fixing TeamCard Notes: Data Loss on First Blur After
-  Expand (see `docs/investigations/teamcard-notes-sync-race.md`).
-  `useBattles.ts::applySyncedState` and `useSavedPokemon.ts::
-  applySyncedState` share the exact same blind-overwrite shape that bug's
-  fix just closed in `useTeams.ts::applySyncedState` (the former's own doc
-  comment says "mirrors useTeams.ts::applySyncedState") - a debounced
-  auto-sync response landing after a local edit already won the
-  `enqueueMutation` queue would silently discard that edit, same mechanism,
-  different collections (battle notes/edits, Box entries). Not verified
-  live as an actual reported symptom yet, unlike the Teams case. Likely
-  fix mirrors `useTeams.ts`'s: reconcile per-record on `updatedAt` instead
-  of overwriting wholesale, plus keep local-only records the sync response
-  doesn't know about yet.
-  Done check: same reconciliation applied to both hooks' `applySyncedState`,
-  regression tests mirroring `useTeams.test.ts`'s two new cases, full suite
-  passes. "Two new cases" now means three: `useTeams.ts::applySyncedState`
-  picked up a second fix 2026-10-17 (TeamCard Paste Team card-jump leg,
-  Last touched above) - its `reconciled` base order now walks local array
-  order instead of `records`' order, so a local-only record keeps its
-  position instead of landing at the end. Mirror that one here too.
-  Manual verification: no (unit-test coverage is sufficient, same as the
-  Teams fix). Review: recommended - touches sync/persisted-data merge logic.
-
-- **[Web Download/Landing Page] — Leg 1** *(Last touched: 2026-10-17 ·
-  Re-checks: 0)*
-  Scoped 2026-10-17 out of the Web Hosting & Domain fast-follow note below.
-  A landing/download page on choicebuds.vannyproductions.com that calls
-  `api.github.com/repos/vanwheels/ChoiceBuds/releases/latest` (same call
-  `services/github.ts`'s in-app update checker already makes), detects the
-  visitor's OS, and links to that release's OS-appropriate installer asset.
-  GitHub Releases stays the actual file host — no universal/self-fetching
-  installer needed.
-  Done check: OS detection correct on both Windows and macOS, links resolve
-  to the right asset, page deployed live and reachable.
-  Manual verification: yes. Review: no.
-
-- **[Web Content-Area Padding Fix] — Leg 1** *(Last touched: 2026-10-17 ·
-  Re-checks: 0)*
-  Scoped 2026-10-17, originally flagged 2026-09-30 during live verification
-  of Battle Log & Statistics Parity. `AppWeb.tsx`'s `<main>` has no padding
-  at all, unlike `App.tsx`'s desktop `<main>` (2rem/1.5rem inline styles),
-  so ported pages render edge-to-edge in the browser — visible on the
-  Battle Log page's card grid butting against the viewport edges. Fix:
-  mirror `App.tsx`'s `<main>` padding onto `AppWeb.tsx`. Confirm first that
-  no existing web page relies on `<main>` having zero padding before
-  applying it everywhere.
-  Manual verification: yes. Review: no.
-
-- **[Teams Tab Search Bar] — Leg 1** *(Last touched: 2026-10-17 ·
-  Re-checks: 0)*
-  Scoped 2026-10-17, proposed 2026-09-29. Search for a specific Pokémon by
-  name and surface which of the user's saved Teams include it. Partial
-  (substring) match on species or nickname; Teams-only, not the Box.
-  Done check: typing a partial species/nickname name filters the Teams list
-  to matching teams live.
-  Manual verification: yes. Review: no.
-
-- **[Item Usage Percentage Ordering] — Leg 1** *(Last touched: 2026-10-17 ·
-  Re-checks: 0)*
-  Scoped 2026-10-17. `championsBattleData.ts` already fetches `held_item`
-  usage rows (`items: rowsFor('held_item')`) from the same
-  championsbattledata.com source the existing move/ability usage-percentage
-  ordering already uses — this wires that existing data into
-  `ItemPickerPanel.tsx`'s ordering, mirroring the move/ability pattern.
-  Manual verification: yes. Review: no.
 
 ## Future Milestones (unscheduled)
 
