@@ -86,7 +86,7 @@ import TeamsPage from './components/TeamsPage';
 import WebAuthScreen from './components/WebAuthScreen';
 import Sidebar from './components/Sidebar';
 import { CalcLauncherButton } from './components/CalcLauncherButton';
-import { CalcIcon } from './components/icons/SidebarIcons';
+import { CalcIcon, DownloadIcon } from './components/icons/SidebarIcons';
 import { MobileHeaderActionsProvider } from './hooks/useMobileHeaderActions';
 
 const BoxPage = lazy(() => import('./components/BoxPage'));
@@ -156,9 +156,10 @@ export default function AppWeb() {
               <div className="flex flex-col gap-1 px-1.5">
                 <a
                   href="/download/"
-                  className="mb-1 self-start text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors"
+                  className="mb-2 flex items-center justify-center gap-1.5 rounded-md bg-accent-gold px-2 py-1.5 text-[11px] font-bold text-zinc-900 transition-colors hover:bg-accent-gold-deep"
                 >
-                  Get the desktop app
+                  <DownloadIcon />
+                  Desktop App
                 </a>
                 {syncState.syncUsername ? (
                   <>

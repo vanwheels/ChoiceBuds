@@ -226,15 +226,19 @@ export default function Sidebar({
           )}
         </nav>
 
-        <div className="mt-auto w-full border-t border-zinc-700 pt-2">
+        {renderFooter && (
+          <div className="mt-auto w-full border-t border-zinc-700 pt-2">
+            {renderFooter(collapsed)}
+          </div>
+        )}
+
+        <div
+          className={`w-full border-t border-zinc-700 pt-2 ${renderFooter ? 'mt-2' : 'mt-auto'}`}
+        >
           {BOTTOM_NAV_ITEMS.map((item) =>
             renderNavItem(item, collapsed, () => onTabChange(item.tab)),
           )}
         </div>
-
-        {renderFooter && (
-          <div className="mt-2 w-full border-t border-zinc-700 pt-2">{renderFooter(collapsed)}</div>
-        )}
       </motion.aside>
 
       {/*
@@ -328,17 +332,19 @@ export default function Sidebar({
                   )}
                 </nav>
 
-                <div className="mt-auto w-full border-t border-zinc-700 pt-2">
+                {renderFooter && (
+                  <div className="mt-auto w-full border-t border-zinc-700 pt-2">
+                    {renderFooter(false)}
+                  </div>
+                )}
+
+                <div
+                  className={`w-full border-t border-zinc-700 pt-2 ${renderFooter ? 'mt-2' : 'mt-auto'}`}
+                >
                   {BOTTOM_NAV_ITEMS.map((item) =>
                     renderNavItem(item, false, () => goToTabFromDrawer(item.tab)),
                   )}
                 </div>
-
-                {renderFooter && (
-                  <div className="mt-2 w-full border-t border-zinc-700 pt-2">
-                    {renderFooter(false)}
-                  </div>
-                )}
               </motion.div>
             </div>
           )}
