@@ -35,6 +35,29 @@ app.commandLine.appendSwitch('disable-direct-composition');
 // be called before app.whenReady() / any BrowserWindow is created.
 app.disableHardwareAcceleration();
 
+// Forces Chromium to map CSS pixels 1:1 to physical pixels instead of
+// letting Windows' DPI virtualization bitmap-scale the rendered surface
+// after the fact. Without this (confirmed live 2026-10-16, see TODO.md's
+// Mobile/App/Web dev-environment entry), on a scaled Windows display the
+// window's actual *physical* size - what width/minWidth below set to
+// 1280x720 - was ending up mapped to a much smaller *logical* CSS viewport,
+// small enough to fall under Tailwind's 768px `md:` breakpoint despite the
+// enforced minimum width: the app rendered its phone/mobile layout inside a
+// window that looked plenty wide. Resizing past that point crossed back
+// into the desktop breakpoint, but Windows then had to upscale the
+// already-smaller rendered surface to fill the larger window, producing the
+// blurry/"zoomed" look reported alongside it. Very likely an interaction
+// with disableHardwareAcceleration() above forcing a software render path
+// that doesn't correctly report the monitor's scale factor. Windows-only -
+// macOS already resolves Retina scaling correctly without this, and forcing
+// scale factor 1 there would make a real Retina display render blurry
+// instead of fixing anything. Must be called before app.whenReady() / any
+// BrowserWindow is created.
+if (process.platform === 'win32') {
+  app.commandLine.appendSwitch('high-dpi-support', '1');
+  app.commandLine.appendSwitch('force-device-scale-factor', '1');
+}
+
 let mainWindow: BrowserWindow | null = null;
 
 /**
