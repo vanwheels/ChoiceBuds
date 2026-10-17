@@ -53,7 +53,7 @@ Leg 1 (still described a blind overwrite). New regression test in
 `useTeams.test.ts`; full trail in
 `docs/investigations/teamcard-notes-sync-race.md`. Not manually verified
 live - same reasoning as Leg 1, this is a queue-ordering race unit tests
-cover more reliably than a live repro. See commit TBD.
+cover more reliably than a live repro. See commit `f17db5b`.
 
 ## TeamCard Notes: Data Loss on First Blur After Expand — Leg 1 — 2026-10-17
 
