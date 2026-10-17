@@ -79,4 +79,11 @@ describe('buildPastedTeam', () => {
     expect(pasted.author).toBe('Ash');
     expect(pasted.notes).toBe('Bring rain');
   });
+
+  it('clears sortOrder even when the source team has one, so it behaves like a fresh import rather than tying with the source in teamSort.ts', () => {
+    const source = makeTeam({ sortOrder: 3 });
+    const pasted = buildPastedTeam(source, []);
+
+    expect(pasted.sortOrder).toBeUndefined();
+  });
 });

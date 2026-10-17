@@ -33,6 +33,15 @@ function nextPastedTeamName(baseName: string, existingNames: string[]): string {
  * of the same copy), a disambiguated name (see nextPastedTeamName above),
  * and `favorite` explicitly reset - a pasted team is new and hasn't been
  * favorited by the user yet, even if the team it was copied from was.
+ * `sortOrder` is explicitly cleared too, not carried over by the `...pasted`
+ * spread below: a pasted team is meant to behave like a fresh import (see
+ * TeamCard.tsx's handlePasteTeam comment), which never has a `sortOrder` of
+ * its own. Inheriting the source's `sortOrder` made teamSort.ts's tiebreaker
+ * treat the new team as tied specifically with the team it was copied from
+ * instead of generally untied like any other new team, so it would render
+ * adjacent to that one team and then visibly jump once anything reordered
+ * the underlying teams array for an unrelated reason (e.g. an auto-sync
+ * round-trip) - see TODO.md's Paste Team card-jump entry.
  */
 export function buildPastedTeam(pasted: Team, existingTeamNames: string[]): Team {
   return {
@@ -41,6 +50,7 @@ export function buildPastedTeam(pasted: Team, existingTeamNames: string[]): Team
     name: nextPastedTeamName(pasted.name, existingTeamNames),
     pokemon: pasted.pokemon.map((p) => ({ ...p, id: crypto.randomUUID() })),
     favorite: false,
+    sortOrder: undefined,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };

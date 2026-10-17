@@ -27,16 +27,20 @@ Done when:
 - Paste Team jump is either fixed or explicitly deferred with reasoning.
 
 - **[TeamCard Paste Team: Pasted Card Jumps Before Re-sort] — Leg 1** *(Last
-  touched: 2026-10-16 · Re-checks: 0)*
-  Flagged live during the TeamCard.tsx split's manual verification (see
-  COMPLETED.md) - "for what it's worth," not urgent. Pasting a team via the
-  right-click "Paste as New Team" menu always inserts the new card directly
-  above the team it was copied from, then a couple seconds later it visibly
-  jumps down to its real alphabetical-sort position. End state is correct;
-  only the transient placement is off. Likely `addTeam`'s insertion point
-  vs. whatever drives the list's sort-order animation being out of sync
-  for one render/settle cycle.
-  Manual verification: yes. Review: no.
+  touched: 2026-10-17 · Re-checks: 0)*
+  Root cause found: `utils/teamPaste.ts::buildPastedTeam`'s `...pasted`
+  spread carried over the source team's `sortOrder` verbatim, so
+  `teamSort.ts`'s tiebreaker treated the new card as tied specifically with
+  the team it was copied from (landing it directly above that one team)
+  instead of untied like a fresh import. It then visibly "jumped" once
+  anything else reordered the raw teams array (e.g. the next auto-sync
+  round-trip), since the false tie no longer held. Fixed by explicitly
+  clearing `sortOrder` in `buildPastedTeam`, matching "pasted team behaves
+  like a fresh import" (same as `TeamCard.tsx`'s own `handlePasteTeam`
+  comment already says). Regression test added to `teamPaste.test.ts`.
+  Manual verification: pending (fix lands correct-on-first-render per the
+  sort logic traced through; not yet confirmed live in the running app).
+  Review: no.
 
 ## Blocked
 
