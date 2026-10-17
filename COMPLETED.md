@@ -37,6 +37,15 @@ Entries prior to this file's oldest are in:
   (the TeamCard Bug Fixes & Dev Tooling milestone's four legs, split out at
   the 2026-10-17 TeamCard Bug Fixes & Dev Tooling boundary)
 
+## Teams Tab Search Bar — 2026-10-17
+
+Added a search input to `TeamsPage.tsx` (desktop header + mobile search
+popover, mirroring `BoxPageToolbar.tsx`'s own pattern) that filters the
+Teams list live by partial, case-insensitive species/nickname match across
+each team's roster. New `utils/teamSearch.ts::teamMatchesSearch`, layered
+on top of the existing format filter rather than replacing it; tested.
+Verified live by Vanny. See commit 9f34fe6.
+
 ## Web Content-Area Padding Fix — 2026-10-17
 
 `AppWeb.tsx`'s `<main>` had no padding at all, unlike `App.tsx`'s desktop

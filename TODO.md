@@ -25,15 +25,6 @@ Done when:
 3. Both web-facing legs (landing page, padding fix) are verified live on
    choicebuds.vannyproductions.com, not just on `dev:web`.
 
-- **[Teams Tab Search Bar] — Leg 4** *(Last touched: 2026-10-17 ·
-  Re-checks: 0)*
-  Scoped 2026-10-17, proposed 2026-09-29. Search for a specific Pokémon by
-  name and surface which of the user's saved Teams include it. Partial
-  (substring) match on species or nickname; Teams-only, not the Box.
-  Done check: typing a partial species/nickname name filters the Teams list
-  to matching teams live.
-  Manual verification: yes. Review: no.
-
 - **[Item Usage Percentage Ordering] — Leg 5** *(Last touched: 2026-10-17 ·
   Re-checks: 0)*
   Scoped 2026-10-17. `championsBattleData.ts` already fetches `held_item`
