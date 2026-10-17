@@ -34,14 +34,13 @@
  * entry for that species as a side effect (setCacheEntry), benefiting any
  * other already-correct Pokémon of the same species too.
  *
- * Persists through the real updateTeam mutator (useTeams.ts's own
- * enqueueMutation already serializes concurrent calls safely) and the
- * bulk applyPokedexNumberFixes mutator (useSavedPokemon.ts has no such
- * serialization yet, so N individual updateSavedPokemon calls in a loop
- * would race each other's stale closures for 2+ affected Box entries - see
- * that method's own doc comment) - both bump `updatedAt` for real, so the
- * fix can win a future sync merge, same reasoning as the gender-split
- * species-text self-heal in those same two hooks.
+ * Persists through the real updateTeam mutator and the bulk
+ * applyPokedexNumberFixes mutator - both hooks' own enqueueMutation already
+ * serializes concurrent calls safely (see that method's own doc comment for
+ * why the bulk variant is still preferable to N individual
+ * updateSavedPokemon calls in a loop regardless) - both bump `updatedAt`
+ * for real, so the fix can win a future sync merge, same reasoning as the
+ * gender-split species-text self-heal in those same two hooks.
  */
 
 import { useEffect, useRef } from 'react';

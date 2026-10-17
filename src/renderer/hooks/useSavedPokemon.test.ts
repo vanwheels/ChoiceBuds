@@ -423,6 +423,38 @@ describe('useSavedPokemon', () => {
     );
   });
 
+  it('updateSavedPokemon serializes concurrent calls so a slower write landing later never drops an earlier one', async () => {
+    vi.mocked(window.electron.readSavedPokemonDatabase).mockResolvedValueOnce({
+      schemaVersion: 1,
+      savedPokemon: [
+        { id: 'a', label: 'Gengar', pokemon: makePokemon(), savedAt: 0, updatedAt: 0 },
+      ],
+      lastModified: 0,
+    });
+    const { result } = renderHook(() => useSavedPokemon());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    // First call's own write resolves *after* the second call's, same as a
+    // real IndexedDB/Electron write landing out of issue-order - without
+    // serializing+rebasing on the latest ref, the second call's stale base
+    // (read before the first call's update applied) would overwrite it.
+    vi.mocked(window.electron.writeSavedPokemonDatabase)
+      .mockImplementationOnce(() => new Promise((resolve) => setTimeout(() => resolve(true), 20)))
+      .mockImplementationOnce(() => new Promise((resolve) => setTimeout(() => resolve(true), 5)));
+
+    await act(async () => {
+      const firstCall = result.current.updateSavedPokemon('a', {
+        spriteUrl: 'https://example.com/first.png',
+      });
+      const secondCall = result.current.updateSavedPokemon('a', { nationalDexNumber: 94 });
+      await Promise.all([firstCall, secondCall]);
+    });
+
+    const updated = result.current.savedPokemon.find((e) => e.id === 'a');
+    expect(updated?.pokemon.spriteUrl).toBe('https://example.com/first.png');
+    expect(updated?.pokemon.nationalDexNumber).toBe(94);
+  });
+
   it('updateSavedPokemon fails with an error for an unknown id', async () => {
     const { result } = renderHook(() => useSavedPokemon());
     await waitFor(() => expect(result.current.isLoading).toBe(false));

@@ -132,6 +132,33 @@ describe('useBattles', () => {
     expect(result.current.battles[0].updatedAt).toBeGreaterThan(1);
   });
 
+  it('updateBattle serializes concurrent calls so a slower write landing later never drops an earlier one', async () => {
+    vi.mocked(window.electron.readBattlesDatabase).mockResolvedValueOnce({
+      schemaVersion: 1,
+      battles: [makeBattle()],
+      lastModified: 0,
+    });
+    const { result } = renderHook(() => useBattles());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    // First call's own write resolves *after* the second call's, same as a
+    // real IndexedDB/Electron write landing out of issue-order - without
+    // serializing+rebasing on the latest ref, the second call's stale base
+    // (read before the first call's update applied) would overwrite it.
+    vi.mocked(window.electron.writeBattlesDatabase)
+      .mockImplementationOnce(() => new Promise((resolve) => setTimeout(() => resolve(true), 20)))
+      .mockImplementationOnce(() => new Promise((resolve) => setTimeout(() => resolve(true), 5)));
+
+    await act(async () => {
+      const firstCall = result.current.updateBattle('battle-1', { result: 'win' });
+      const secondCall = result.current.updateBattle('battle-1', { teamName: 'Second Edit' });
+      await Promise.all([firstCall, secondCall]);
+    });
+
+    expect(result.current.battles[0].result).toBe('win');
+    expect(result.current.battles[0].teamName).toBe('Second Edit');
+  });
+
   it('updateBattle fails with an error for an unknown battle id', async () => {
     const { result } = renderHook(() => useBattles());
     await waitFor(() => expect(result.current.isLoading).toBe(false));

@@ -29,6 +29,18 @@ Entries prior to this file's oldest are in:
   (the Prettier Adoption milestone's three legs, split out at the
   2026-10-16 Prettier Adoption boundary)
 
+**Audit Sibling Hooks for useTeams' Lost-Update Race — Leg 2** (2026-10-16)
+Applied the same ref+queue fix `useTeams.ts` got to `useSavedPokemon.ts`,
+`useBattles.ts`, and `useSettings.ts` per Leg 1's audit findings below.
+`/leg-review` flagged two gaps in the first pass: no regression test
+proving the fix itself (unlike `useTeams.test.ts`'s existing concurrent-
+write test) and a stale cross-referencing comment in
+`usePokedexNumberSelfHeal.ts` still describing `useSavedPokemon.ts` as
+unserialized. Added a concurrent-write regression test to each of the
+three hooks' test files (modeled on `useTeams.test.ts`'s) and corrected the
+stale comment. `type-check`/`lint`/`test` all pass (783 tests). Manual
+verification: no. Review: re-reviewed, no further findings.
+
 **Audit Sibling Hooks for useTeams' Lost-Update Race — Leg 1** (2026-10-16)
 Audited `useSavedPokemon.ts`, `useBattles.ts`, `useSettings.ts`, and
 `useDatabase.ts` for `useTeams.ts`'s pre-fix "closure over state at render

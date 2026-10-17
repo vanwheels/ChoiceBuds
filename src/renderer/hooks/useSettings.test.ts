@@ -103,6 +103,28 @@ describe('useSettings', () => {
     expect(result.current.error).toBe('Failed to write settings');
   });
 
+  it('serializes concurrent setDefaultRegulation/updateSettings calls so a slower write landing later never drops an earlier one', async () => {
+    const { result } = renderHook(() => useSettings());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    // First call's own write resolves *after* the second call's, same as a
+    // real IndexedDB/Electron write landing out of issue-order - without
+    // serializing+rebasing on the latest ref, the second call's stale base
+    // (read before the first call's update applied) would overwrite it.
+    vi.mocked(window.electron.writeSettings)
+      .mockImplementationOnce(() => new Promise((resolve) => setTimeout(() => resolve(true), 20)))
+      .mockImplementationOnce(() => new Promise((resolve) => setTimeout(() => resolve(true), 5)));
+
+    await act(async () => {
+      const firstCall = result.current.setDefaultRegulation('Reg M-B');
+      const secondCall = result.current.updateSettings({ syncUsername: 'trainer' });
+      await Promise.all([firstCall, secondCall]);
+    });
+
+    expect(result.current.settings.defaultRegulation).toBe('Reg M-B');
+    expect(result.current.settings.syncUsername).toBe('trainer');
+  });
+
   it('updateSettings persists a multi-field partial update in one write, as used by the sync feature', async () => {
     const { result } = renderHook(() => useSettings());
     await waitFor(() => expect(result.current.isLoading).toBe(false));

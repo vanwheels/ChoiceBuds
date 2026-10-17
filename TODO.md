@@ -29,21 +29,6 @@ Done when:
   `CalcPokemonPanel.tsx` are each split below the 500-line hard cap with no
   behavior change.
 
-- **[Audit Sibling Hooks for useTeams' Lost-Update Race] — Leg 2** *(Last
-  touched: 2026-10-16 · Re-checks: 0)*
-  Apply the same ref+queue fix `useTeams` got to `useSavedPokemon.ts`,
-  `useBattles.ts`, and `useSettings.ts` — Leg 1's audit
-  (`docs/investigations/sibling-hooks-lost-update-audit.md`) found all
-  three have the race, each with specific line references. `useDatabase.ts`
-  is excluded: its hot path already uses a functional `setState` update
-  that's immune to the same bug class for a different reason (see the
-  audit doc's finding) — no fix needed there.
-  Done check: `useSavedPokemon.ts`, `useBattles.ts`, and `useSettings.ts`
-  each have the ref+queue fix applied and their existing tests still pass.
-  Fix applied 2026-10-16; `type-check`/`lint`/`test` all pass (780 tests).
-  Manual verification: no. Review: yes (persisted-state mutation hooks) —
-  **not yet run, do not close this item until it has.**
-
 - **[File Cap Splits: TeamCard.tsx] — Leg 1** *(Last touched: 2026-10-16 ·
   Re-checks: 0)*
   Split `src/renderer/components/TeamCard.tsx` (761 lines) into smaller
