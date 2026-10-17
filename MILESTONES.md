@@ -65,3 +65,5 @@ milestone.
   [post-mortem](docs/postmortems/maintenance-code-health-sweep.md)
 - **TeamCard Bug Fixes & Dev Tooling** — 2026-10-17 — Shipped —
   [post-mortem](docs/postmortems/teamcard-bug-fixes-dev-tooling.md)
+- **Bug Fix & Small Features Sweep** — 2026-10-17 — Shipped —
+  [post-mortem](docs/postmortems/bug-fix-small-features-sweep.md)

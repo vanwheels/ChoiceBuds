@@ -16,19 +16,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Bug Fix & Small Features Sweep
-
-Done when:
-1. All 5 legs below are implemented and pass their individual done checks -
-   all five done (see `COMPLETED.md`).
-2. Full test suite passes, including new regression coverage for the
-   sync-race fix - confirmed passing (809 tests) as of Leg 5.
-3. Both web-facing legs (landing page, padding fix) are verified live on
-   choicebuds.vannyproductions.com, not just on `dev:web` - both verified
-   live (see their `COMPLETED.md` entries).
-
-All three done-when criteria satisfied; milestone ready for `/close-milestone`.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something

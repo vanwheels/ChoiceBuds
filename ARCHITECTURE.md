@@ -156,6 +156,16 @@ the matching hook.
   standalone project — an alternate front door onto `src/renderer/`, not a
   separate runtime. Builds to `dist/web/`, dev server on port 5174 (Electron's
   stays on 5173, so both can run at once).
+- `web/download/` — a third Vite entry mounting
+  `components/DownloadPage.tsx`, independent of `web/`'s main app bundle.
+  Serves `choicebuds.vannyproductions.com/download/`: fetches the latest
+  release via `services/github.ts::fetchLatestRelease()` (the same call the
+  in-app update checker uses), sniffs Windows vs. macOS
+  (`utils/detectPlatform.ts`), and picks the matching electron-builder
+  artifact (`utils/releaseAssets.ts`) — falling back to a GitHub Releases
+  link if the fetch fails or a platform's assets are missing. The signed-out
+  Teams/Box web app keeps the domain root; this is a separate landing page,
+  not a route inside `AppWeb.tsx`.
 - `src/renderer/AppWeb.tsx` — the web shell, sibling to `App.tsx`. Every
   `Sidebar` tab now renders its real page on web (Teams, Box, Battle Log,
   Statistics, Type Matchup, Speed Tiers, Settings, Calc) — full UI parity
