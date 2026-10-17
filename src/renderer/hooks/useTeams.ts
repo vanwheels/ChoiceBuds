@@ -482,16 +482,48 @@ export function useTeams(): UseTeamsReturn {
 
   /**
    * Overwrites teams with a sync merge's authoritative result and clears
-   * pendingtombstones (see UseTeamsReturn's doc comment).
+   * pending tombstones (see UseTeamsReturn's doc comment).
+   *
+   * `records` is a snapshot from whenever useSync.ts's debounced push
+   * captured `teamsState.teams` - by the time this resolves (a full
+   * network round-trip later), a real local mutation (e.g. a notes-field
+   * blur) can have already landed on `teamsRef.current` via this same
+   * enqueueMutation queue, ahead of this call. Blindly overwriting with
+   * `records` would silently discard that newer local edit even though the
+   * queue ran it first - this was TODO.md's "TeamCard Notes: Data Loss on
+   * First Blur After Expand" (see
+   * docs/investigations/teamcard-notes-sync-race.md): typing notes right
+   * after some other roster edit (which schedules the debounced sync)
+   * landed inside that sync's in-flight window often enough to be a real,
+   * reproducible bug, not just a hypothetical one.
+   *
+   * Fix: per team, keep whichever side has the newer `updatedAt` - the
+   * sync's merge wins for everything nothing raced locally, and a team
+   * that got a genuinely newer local write during the round-trip keeps
+   * that write until the *next* sync cycle (debounced off the resulting
+   * `teams` reference change) pushes it for real. Also keeps any local-only
+   * team `records` doesn't know about yet (e.g. `addTeam` mid-flight) -
+   * same overwrite flaw, one `records.map` away from silently dropping a
+   * brand-new team instead of just a field.
    */
   const applySyncedState = useCallback(
     (records: Team[]): Promise<boolean> =>
       enqueueMutation(async () => {
-        const success = await persistTeamsToDisk(records, []);
+        const localById = new Map(teamsRef.current.map((t) => [t.id, t]));
+        const remoteIds = new Set(records.map((t) => t.id));
+        const reconciled = [
+          ...records.map((remote) => {
+            const local = localById.get(remote.id);
+            return local && local.updatedAt > remote.updatedAt ? local : remote;
+          }),
+          ...teamsRef.current.filter((t) => !remoteIds.has(t.id)),
+        ];
+
+        const success = await persistTeamsToDisk(reconciled, []);
         if (success) {
-          teamsRef.current = records;
+          teamsRef.current = reconciled;
           tombstonesRef.current = [];
-          setTeams(records);
+          setTeams(reconciled);
           setTombstones([]);
           setError(null);
         }

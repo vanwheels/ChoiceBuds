@@ -321,6 +321,46 @@ describe('useTeams', () => {
     );
   });
 
+  it('applySyncedState keeps a local edit that lands first in the queue over a stale sync snapshot (TODO.md TeamCard Notes blur bug)', async () => {
+    vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({
+      schemaVersion: 1,
+      teams: [makeTeam({ notes: undefined, updatedAt: 1 })],
+      tombstones: [],
+      lastModified: 0,
+    });
+    const { result } = renderHook(() => useTeams());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    // Same issue order as the real race: the debounced sync's push reads
+    // `teams` before the user types anything, so by the time its response
+    // comes back as `records` here, a `updateTeam` call for the same field
+    // has already been issued (and queued ahead of it).
+    let updateCall: Promise<boolean>;
+    let syncCall: Promise<boolean>;
+    await act(async () => {
+      updateCall = result.current.updateTeam('team-1', { notes: 'typed notes' });
+      syncCall = result.current.applySyncedState([makeTeam({ notes: undefined, updatedAt: 1 })]);
+      await Promise.all([updateCall, syncCall]);
+    });
+
+    expect(result.current.teams[0].notes).toBe('typed notes');
+  });
+
+  it('applySyncedState keeps a locally-added team the sync response does not know about yet', async () => {
+    const { result } = renderHook(() => useTeams());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.addTeam(makeTeam({ id: 'local-only', updatedAt: 5 }));
+    });
+
+    await act(async () => {
+      await result.current.applySyncedState([]);
+    });
+
+    expect(result.current.teams.map((t) => t.id)).toEqual(['local-only']);
+  });
+
   it('setTeamOrder reorders to match the given ids, appending any leftover teams untouched', async () => {
     vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({
       schemaVersion: 1,

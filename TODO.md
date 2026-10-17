@@ -26,24 +26,26 @@ Done when:
   other items.
 - Paste Team jump is either fixed or explicitly deferred with reasoning.
 
-- **[TeamCard Notes: Data Loss on First Blur After Expand] — Leg 1** *(Last
-  touched: 2026-10-16 · Re-checks: 0)*
-  Found live during the TeamCard.tsx split's manual verification (see
-  COMPLETED.md) - pre-existing, not a regression from that split (the
-  notes `onBlur` handler is byte-for-byte unchanged, just relocated into
-  `TeamCardRosterGrid.tsx`). Typing into a team's Strategy Notes textarea
-  and clicking out cleared what was typed the *first* time after expanding
-  a card; typing again and blurring a second time saved correctly. Smells
-  like the "adjust state during render" `prevPropNotes`/`localNotes` resync
-  pattern (same shape as `StatsColumn.tsx`'s own fix, see TODO.md's Web Bug
-  Sweep Leg 1) racing against the async `updateTeam` call on first blur,
-  but needs an actual repro/investigation pass before guessing at a fix -
-  intermittent (didn't reproduce on the second attempt), and name/author
-  fields in the same card (same pattern, in `TeamCardHeader.tsx`) didn't
-  show the issue.
-  Done check: reliable repro steps found, root cause identified, fix
-  verified live across several expand/type/blur cycles.
-  Manual verification: yes. Review: no.
+- **[TeamCard Notes: Data Loss on First Blur After Expand] — Leg 2** *(Last
+  touched: 2026-10-17 · Re-checks: 0)*
+  `/leg-review` on Leg 1's fix found it left the same blind-overwrite flaw
+  open for a different race: `applySyncedState`'s `reconciled` list falls
+  back to `remote` for any id missing from `localById`, which also matches
+  a team deleted locally after the push snapshot was taken but before the
+  response landed - so the deleted team gets put back, and the unconditional
+  `tombstonesRef.current = []` on the same success path throws away the
+  tombstone that would've told the server about the deletion on the next
+  sync. Fix: check `tombstonesRef.current` for ids being dropped before
+  falling back to `remote`, and only clear the tombstones that were actually
+  included in this sync's push, not all of them. Also fix `applySyncedState`'s
+  public doc comment on `UseTeamsReturn` (still says records are "stored
+  exactly as given" - no longer true post-Leg-1).
+  Done check: new regression test covering "local delete wins" (mirroring
+  the existing "local edit wins" / "local-only new team survives" tests),
+  doc comment matches actual behavior, full suite/lint/type-check pass.
+  Manual verification: no - unit-test coverage of the queue-ordering race is
+  sufficient, same reasoning as Leg 1. Review: recommended - same
+  sync/persisted-data merge logic as Leg 1.
 
 - **[TeamCard Overflow Menu: Validate Popup Covers Own Dropdown] — Leg 1**
   *(Last touched: 2026-10-16 · Re-checks: 0)*
@@ -96,6 +98,38 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+- **[applySyncedState Reconciliation Loses Local-Only Team's List Position]
+  — Leg 1** *(Last touched: 2026-10-17 · Re-checks: 0)*
+  Flagged by `/leg-review` on the TeamCard Notes data-loss fix (Leg 2 of
+  that item). `useTeams.ts::applySyncedState`'s `reconciled` array appends
+  surviving local-only teams after all of `records`, rather than preserving
+  their original position - a team added during the sync race window (no
+  `sortOrder` yet) lands at the end of the list instead of the front
+  `addTeam` normally inserts at. Cosmetic and self-correcting on the next
+  reorder/sync; low priority.
+  Manual verification: no. Review: no.
+
+- **[Sibling Hooks' applySyncedState Stale-Overwrite Race] — Leg 1** *(Last
+  touched: 2026-10-17 · Re-checks: 0)*
+  Flagged while fixing TeamCard Notes: Data Loss on First Blur After
+  Expand (see `docs/investigations/teamcard-notes-sync-race.md`).
+  `useBattles.ts::applySyncedState` and `useSavedPokemon.ts::
+  applySyncedState` share the exact same blind-overwrite shape that bug's
+  fix just closed in `useTeams.ts::applySyncedState` (the former's own doc
+  comment says "mirrors useTeams.ts::applySyncedState") - a debounced
+  auto-sync response landing after a local edit already won the
+  `enqueueMutation` queue would silently discard that edit, same mechanism,
+  different collections (battle notes/edits, Box entries). Not verified
+  live as an actual reported symptom yet, unlike the Teams case. Likely
+  fix mirrors `useTeams.ts`'s: reconcile per-record on `updatedAt` instead
+  of overwriting wholesale, plus keep local-only records the sync response
+  doesn't know about yet.
+  Done check: same reconciliation applied to both hooks' `applySyncedState`,
+  regression tests mirroring `useTeams.test.ts`'s two new cases, full suite
+  passes.
+  Manual verification: no (unit-test coverage is sufficient, same as the
+  Teams fix). Review: recommended - touches sync/persisted-data merge logic.
 
 - **[Web Download/Landing Page] — Leg 1** *(Last touched: 2026-10-17 ·
   Re-checks: 0)*

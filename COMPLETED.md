@@ -34,6 +34,28 @@ Entries prior to this file's oldest are in:
   milestone slug since it shares its date range with the Prettier Adoption
   archive above)
 
+## TeamCard Notes: Data Loss on First Blur After Expand — Leg 1 — 2026-10-17
+
+Root cause wasn't the card-expand animation or the `prevPropNotes`/
+`localNotes` resync pattern in `TeamCard.tsx` (both initial suspects, ruled
+out) - it was `useSync.ts`'s debounced auto-sync racing a local edit.
+Any team mutation schedules a push 5s later; if Notes is typed and blurred
+after that but before the push's response lands, `useTeams.ts
+::applySyncedState` blindly overwrote local state with the stale pre-edit
+snapshot once the response arrived, discarding the just-saved edit even
+though it had already won the `enqueueMutation` queue. Full trail,
+including why scripted repro attempts against the expand animation came
+back clean, in `docs/investigations/teamcard-notes-sync-race.md`. Fixed by
+having `applySyncedState` keep whichever side (local vs. synced) has the
+newer `updatedAt` per team, plus keep any local-only team the sync response
+doesn't know about yet - same flaw, would otherwise drop a brand-new team
+instead of just a field. Two new regression tests in `useTeams.test.ts`;
+`/leg-review` on this fix separately found a related delete-race flaw, now
+tracked as its own TODO.md leg. Verified live across several expand/type/
+blur cycles plus a deliberate race-window repro (mutate to reset the 5s
+debounce, then type+blur Notes before it fires) against disposable test
+teams. See commit TBD.
+
 ## Dev Environment: Electron Zoom-Persistence Fix + Mobile Web Preview Script — 2026-10-17
 
 Electron zoom fix and the new `npm run dev:mobile` script both landed
