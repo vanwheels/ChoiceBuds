@@ -16,6 +16,64 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
+## Current Milestone: Mobile Web & UI Polish
+
+Done when:
+- The 5 unpadded mobile-web tabs (Battle Log, Statistics, Type Matchup,
+  Speed Tiers, Settings) each supply their own mobile content-area padding,
+  matching TeamsPage/BoxPageGrid's existing pattern.
+- The "Get the desktop app" sidebar link in the web app is more
+  discoverable (styling/placement improved from its current small/easy-to-
+  miss state).
+- All 4 team-picker call sites (`CalcTeamTray.tsx`, `SpeedTierFieldPanel.tsx`,
+  `TypeMatchupPage.tsx`, `RecordMatchForm.tsx`) use a shared sprite-aware
+  dropdown component instead of a plain native `<select>`.
+
+- **[Mobile Web Content-Area Padding Fix] — Leg 1** *(Last touched:
+  2026-10-17 · Re-checks: 0)*
+  Battle Log, Statistics, Type Matchup, Speed Tiers, and Settings render
+  edge-to-edge below the `md` breakpoint since `AppWeb.tsx`'s `<main>` is
+  deliberately unpadded (to avoid doubling up with TeamsPage/BoxPageGrid's
+  own mobile padding). Give each of these 5 pages its own mobile `px-4`-
+  style padding, matching the TeamsPage/BoxPageGrid pattern, rather than
+  another `<main>`-level fix.
+  Done check: all 5 tabs show proper side padding on `dev:mobile`
+  (375x812 phone viewport), with no double-padding regression on
+  Teams/Box.
+  Manual verification: yes. Review: no.
+
+- **[Download App Sidebar Link Visibility] — Leg 2** *(Last touched:
+  2026-10-17 · Re-checks: 0)*
+  The `/download/` link added to `AppWeb.tsx`'s sidebar footer is small and
+  easy to miss. Improve its styling/placement so it reads as a real call to
+  action without overpowering the rest of the sidebar footer.
+  Done check: link is visually distinct and easy to notice in the sidebar
+  footer on both desktop and mobile web widths.
+  Manual verification: yes. Review: no.
+
+- **[Team Picker Sprites: Shared Component] — Leg 3** *(Last touched:
+  2026-10-17 · Re-checks: 0)*
+  `CalcTeamTray.tsx`, `SpeedTierFieldPanel.tsx`, `TypeMatchupPage.tsx`, and
+  `RecordMatchForm.tsx` all pick a team via a plain native `<select>` with
+  text-only options, which can't show sprites inline. Build one shared
+  sprite-aware team-picker dropdown component, following the existing
+  icon-row dropdown pattern already implemented in
+  `AbilityPickerPanel.tsx`/`ItemPickerPanel.tsx`.
+  Done check: new component renders a team list with sprites per option,
+  matching the look/interaction of the existing ability/item picker
+  pattern; not yet wired into any of the 4 call sites.
+  Manual verification: yes. Review: no.
+
+- **[Team Picker Sprites: Adoption] — Leg 4** *(Last touched: 2026-10-17 ·
+  Re-checks: 0)*
+  Depends on Leg 3. Replace the native `<select>` in `CalcTeamTray.tsx`,
+  `SpeedTierFieldPanel.tsx`, `TypeMatchupPage.tsx`, and `RecordMatchForm.tsx`
+  with the shared sprite-aware component from Leg 3.
+  Done check: all 4 call sites use the shared component; team selection
+  still works correctly at each site (including any site-specific
+  behavior, e.g. `CalcTeamTray`'s existing sprite row below the dropdown).
+  Manual verification: yes. Review: no.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -44,20 +102,7 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-Mobile web content-area padding (flagged 2026-10-17 during Web
-Content-Area Padding Fix - Leg 3, see that item/its COMPLETED.md entry):
-below the `md` breakpoint, `AppWeb.tsx`'s `<main>` is deliberately still
-unpadded so it doesn't double up with TeamsPage/BoxPageGrid's own mobile
-padding - but Battle Log, Statistics, Type Matchup, Speed Tiers, and
-Settings have no padding of their own, so those 5 tabs render edge-to-edge
-on mobile web (`dev:mobile`/phone-width browser). Needs a per-page decision
-(give each a self-supplied `px-4`-style mobile padding, matching
-TeamsPage/BoxPageGrid's pattern) rather than another `<main>`-level fix.
-
-"Get the desktop app" sidebar link visibility (flagged 2026-10-17 by Vanny
-after live-verifying Web Download/Landing Page - see `COMPLETED.md`): the
-link to `/download/` added to `AppWeb.tsx`'s sidebar footer is small/easy
-to miss. Not important right now - revisit styling/placement later.
+(none currently)
 
 ## Future Milestones (unscheduled)
 
@@ -104,20 +149,6 @@ separate field). Candidate legs:
    abuse/moderation model for a public upload database. Flagged as needing
    its own dedicated scoping pass before any legs get written here; not
    leg-ready yet.
-
-**Team Picker Sprites** (proposed 2026-10-17): the "Load From Team"
-dropdown (`CalcTeamTray.tsx`), Speed Tiers (`SpeedTierFieldPanel.tsx`),
-Type Matchup (`TypeMatchupPage.tsx`), and Battle Log's `RecordMatchForm.tsx`
-all currently pick a team via a plain native `<select>` with text-only
-options - team names aren't always a reliable indicator of what's on the
-team, and a native `<select>` can't render sprites inside its own option
-list (you only see sprites after picking, e.g. `CalcTeamTray`'s sprite row
-below the dropdown). `AbilityPickerPanel.tsx`/`ItemPickerPanel.tsx` already
-implement a custom icon-row dropdown pattern elsewhere in the app, so this
-is building one shared sprite-aware team-picker component against that
-existing pattern and adopting it in the 4 call sites above, not 4 one-off
-fixes. Likely 2 legs: the shared component, then adoption across the 4
-sites.
 
 **Pokepaste Format Research** (proposed 2026-10-17): Vanny recalled
 Showdown moving away from Pokepaste integration toward its own newer
