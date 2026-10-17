@@ -29,6 +29,18 @@ Entries prior to this file's oldest are in:
   (the Prettier Adoption milestone's three legs, split out at the
   2026-10-16 Prettier Adoption boundary)
 
+**File Cap Splits: BoxPage.tsx — Leg 1** (2026-10-16)
+Split `src/renderer/components/BoxPage.tsx` (583 lines) into
+`BoxPageToolbar.tsx` (search + sort-mode header), `BoxPageGrid.tsx`
+(loading/error states, mobile compact grid, desktop Reorder.Group card
+grid), and `BoxPageOverlays.tsx` (New Build picker/save-name dialog,
+Add-to-Team dialog, grid-level paste context menu) - same header/roster-
+grid/overlays split shape as `TeamCard.tsx`'s own split below. `BoxPage.tsx`
+itself is now a 483-line state/handler orchestrator; all three new files
+stay well under the 500-line cap. `npm run build`/`lint`/`test` all pass,
+and the user live-verified the Box tab in the running app with no
+regression. See commit e70baea.
+
 **File Cap Splits: TeamCard.tsx — Leg 1** (2026-10-16)
 Split `src/renderer/components/TeamCard.tsx` (761 lines) into
 `TeamCardHeader.tsx` (identity/sprite-strip/controls header row),
