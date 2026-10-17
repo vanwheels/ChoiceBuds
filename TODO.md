@@ -28,19 +28,33 @@ Done when:
 
 - **[TeamCard Paste Team: Pasted Card Jumps Before Re-sort] — Leg 1** *(Last
   touched: 2026-10-17 · Re-checks: 0)*
-  Root cause found: `utils/teamPaste.ts::buildPastedTeam`'s `...pasted`
-  spread carried over the source team's `sortOrder` verbatim, so
-  `teamSort.ts`'s tiebreaker treated the new card as tied specifically with
-  the team it was copied from (landing it directly above that one team)
-  instead of untied like a fresh import. It then visibly "jumped" once
-  anything else reordered the raw teams array (e.g. the next auto-sync
-  round-trip), since the false tie no longer held. Fixed by explicitly
-  clearing `sortOrder` in `buildPastedTeam`, matching "pasted team behaves
-  like a fresh import" (same as `TeamCard.tsx`'s own `handlePasteTeam`
-  comment already says). Regression test added to `teamPaste.test.ts`.
-  Manual verification: pending (fix lands correct-on-first-render per the
-  sort logic traced through; not yet confirmed live in the running app).
-  Review: no.
+  Two compounding root causes, found across two passes. (1)
+  `utils/teamPaste.ts::buildPastedTeam`'s `...pasted` spread carried over
+  the source team's `sortOrder` verbatim, so `teamSort.ts`'s tiebreaker
+  treated the new card as tied specifically with the team it was copied
+  from instead of untied like a fresh import - fixed by explicitly clearing
+  `sortOrder` there, matching "pasted team behaves like a fresh import"
+  (`TeamCard.tsx`'s own `handlePasteTeam` comment). That alone surfaced the
+  second, pre-existing bug live: once untied, the pasted card correctly
+  rendered at the front of its group, but ~3s later jumped to the *bottom*
+  of the whole list - `useTeams.ts::applySyncedState`'s `reconciled` array
+  built its base order from `records` (the sync response), appending any
+  team the response didn't know about yet yet (e.g. the just-pasted one,
+  mid-flight) after everything else, regardless of its real local position.
+  This is the same mechanism already tracked as this file's now-removed
+  "applySyncedState Reconciliation Loses Local-Only Team's List Position"
+  entry - fixed together here, not separately, since the paste bug's live
+  repro is what proved it out: it isn't cosmetic/self-correcting, it's the
+  actual mechanism behind this entire bug. Fix: `reconciled` now walks
+  `teamsRef.current` (local order) as its base, merging in the synced
+  version per id only where the remote side is newer, and appends only
+  truly remote-only records (teams synced from another device, no local
+  position to preserve) at the end. Regression tests added to
+  `teamPaste.test.ts` and `useTeams.test.ts`.
+  Manual verification: pending re-test (user's first live check after pass
+  1 caught the second bug above; pass 2 not yet re-verified live).
+  Review: recommended - touches sync/persisted-data merge logic
+  (`applySyncedState`).
 
 ## Blocked
 
@@ -70,17 +84,6 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-- **[applySyncedState Reconciliation Loses Local-Only Team's List Position]
-  — Leg 1** *(Last touched: 2026-10-17 · Re-checks: 0)*
-  Flagged by `/leg-review` on the TeamCard Notes data-loss fix (Leg 2 of
-  that item). `useTeams.ts::applySyncedState`'s `reconciled` array appends
-  surviving local-only teams after all of `records`, rather than preserving
-  their original position - a team added during the sync race window (no
-  `sortOrder` yet) lands at the end of the list instead of the front
-  `addTeam` normally inserts at. Cosmetic and self-correcting on the next
-  reorder/sync; low priority.
-  Manual verification: no. Review: no.
-
 - **[Sibling Hooks' applySyncedState Stale-Overwrite Race] — Leg 1** *(Last
   touched: 2026-10-17 · Re-checks: 0)*
   Flagged while fixing TeamCard Notes: Data Loss on First Blur After
@@ -98,7 +101,11 @@ unblocked.
   doesn't know about yet.
   Done check: same reconciliation applied to both hooks' `applySyncedState`,
   regression tests mirroring `useTeams.test.ts`'s two new cases, full suite
-  passes.
+  passes. "Two new cases" now means three: `useTeams.ts::applySyncedState`
+  picked up a second fix 2026-10-17 (TeamCard Paste Team card-jump leg,
+  Last touched above) - its `reconciled` base order now walks local array
+  order instead of `records`' order, so a local-only record keeps its
+  position instead of landing at the end. Mirror that one here too.
   Manual verification: no (unit-test coverage is sufficient, same as the
   Teams fix). Review: recommended - touches sync/persisted-data merge logic.
 

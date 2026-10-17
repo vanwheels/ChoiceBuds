@@ -522,21 +522,34 @@ export function useTeams(): UseTeamsReturn {
    * `pushedTombstones` get cleared here - an unconditional clear would
    * discard the very tombstone that needs to tell the server about the
    * deletion on the next sync.
+   *
+   * `reconciled`'s base order walks `teamsRef.current` (local order), not
+   * `records` (remote order), specifically so a team this device added but
+   * hasn't round-tripped back as a `records` entry yet keeps its local
+   * position instead of landing at the end. This was TODO.md's
+   * "applySyncedState Reconciliation Loses Local-Only Team's List
+   * Position", confirmed live as the real cause of the Paste Team
+   * card-jump bug: a freshly pasted/imported team has no `sortOrder` yet
+   * (see teamPaste.ts::buildPastedTeam), so `teamSort.ts`'s tiebreaker
+   * falls straight through to this array's own element order to decide
+   * where it sits - and the very next auto-sync round-trip was rewriting
+   * that order out from under it, shoving it to the bottom the moment this
+   * ran. Only records this device has no local copy of at all (added on
+   * another device) fall back to being appended at the end, since there's
+   * no local position to preserve for those.
    */
   const applySyncedState = useCallback(
     (records: Team[], pushedTombstones: SyncTombstone[]): Promise<boolean> =>
       enqueueMutation(async () => {
-        const localById = new Map(teamsRef.current.map((t) => [t.id, t]));
-        const remoteIds = new Set(records.map((t) => t.id));
+        const remoteById = new Map(records.map((t) => [t.id, t]));
+        const localIds = new Set(teamsRef.current.map((t) => t.id));
         const tombstonedIds = new Set(tombstonesRef.current.map((t) => t.id));
         const reconciled = [
-          ...records
-            .filter((remote) => !tombstonedIds.has(remote.id))
-            .map((remote) => {
-              const local = localById.get(remote.id);
-              return local && local.updatedAt > remote.updatedAt ? local : remote;
-            }),
-          ...teamsRef.current.filter((t) => !remoteIds.has(t.id)),
+          ...teamsRef.current.map((local) => {
+            const remote = remoteById.get(local.id);
+            return remote && remote.updatedAt > local.updatedAt ? remote : local;
+          }),
+          ...records.filter((remote) => !localIds.has(remote.id) && !tombstonedIds.has(remote.id)),
         ];
         const pushedIds = new Set(pushedTombstones.map((t) => t.id));
         const remainingTombstones = tombstonesRef.current.filter((t) => !pushedIds.has(t.id));

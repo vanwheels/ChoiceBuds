@@ -365,6 +365,32 @@ describe('useTeams', () => {
     expect(result.current.teams.map((t) => t.id)).toEqual(['local-only']);
   });
 
+  it('applySyncedState keeps a locally-added team at its own front-of-list position instead of shoving it to the end (TODO.md Paste Team card-jump bug)', async () => {
+    vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({
+      schemaVersion: 1,
+      teams: [makeTeam({ id: 'existing-1', updatedAt: 1 })],
+      tombstones: [],
+      lastModified: 0,
+    });
+    const { result } = renderHook(() => useTeams());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    // addTeam (and a pasted/imported team via buildPastedTeam) inserts at
+    // the front - a sync response landing afterward that only knows about
+    // the already-synced 'existing-1' team must not reorder 'new-local'
+    // behind it just because 'existing-1' is all `records` contains here.
+    await act(async () => {
+      await result.current.addTeam(makeTeam({ id: 'new-local', updatedAt: 5 }));
+    });
+    expect(result.current.teams.map((t) => t.id)).toEqual(['new-local', 'existing-1']);
+
+    await act(async () => {
+      await result.current.applySyncedState([makeTeam({ id: 'existing-1', updatedAt: 1 })], []);
+    });
+
+    expect(result.current.teams.map((t) => t.id)).toEqual(['new-local', 'existing-1']);
+  });
+
   it('applySyncedState does not resurrect a team deleted locally after the push snapshot was taken, and keeps its tombstone for the next push', async () => {
     vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({
       schemaVersion: 1,
