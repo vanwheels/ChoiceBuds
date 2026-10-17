@@ -37,6 +37,19 @@ Entries prior to this file's oldest are in:
   (the TeamCard Bug Fixes & Dev Tooling milestone's four legs, split out at
   the 2026-10-17 TeamCard Bug Fixes & Dev Tooling boundary)
 
+## Item Usage Percentage Ordering — 2026-10-17
+
+`ItemPickerPanel.tsx` was the one picker not using the ranked-ladder usage
+data `championsBattleData.ts` already fetches (`items: rowsFor('held_item')`)
+- `AbilityPickerPanel.tsx`/`MovePickerPanel.tsx` already sorted most-used-
+first and showed a percentage badge. Wired `EditOverlays.tsx`'s existing
+usage fetch/memo pattern through to items (new `itemUsage` state,
+`itemPercentByName` memo, `sortedItems` sort over the full item list rather
+than a per-species legal subset, since any item can be held) and mirrored
+the same sort + badge in `ItemPickerPanel.tsx`. Last of the Bug Fix & Small
+Features Sweep milestone's 5 legs. Verified live by Vanny. See commit
+`f1e0097`.
+
 ## Teams Tab Search Bar — 2026-10-17
 
 Added a search input to `TeamsPage.tsx` (desktop header + mobile search

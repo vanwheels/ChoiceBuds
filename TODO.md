@@ -19,20 +19,15 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 ## Current Milestone: Bug Fix & Small Features Sweep
 
 Done when:
-1. All 5 legs below are implemented and pass their individual done checks.
+1. All 5 legs below are implemented and pass their individual done checks -
+   all five done (see `COMPLETED.md`).
 2. Full test suite passes, including new regression coverage for the
-   sync-race fix.
+   sync-race fix - confirmed passing (809 tests) as of Leg 5.
 3. Both web-facing legs (landing page, padding fix) are verified live on
-   choicebuds.vannyproductions.com, not just on `dev:web`.
+   choicebuds.vannyproductions.com, not just on `dev:web` - both verified
+   live (see their `COMPLETED.md` entries).
 
-- **[Item Usage Percentage Ordering] — Leg 5** *(Last touched: 2026-10-17 ·
-  Re-checks: 0)*
-  Scoped 2026-10-17. `championsBattleData.ts` already fetches `held_item`
-  usage rows (`items: rowsFor('held_item')`) from the same
-  championsbattledata.com source the existing move/ability usage-percentage
-  ordering already uses — this wires that existing data into
-  `ItemPickerPanel.tsx`'s ordering, mirroring the move/ability pattern.
-  Manual verification: yes. Review: no.
+All three done-when criteria satisfied; milestone ready for `/close-milestone`.
 
 ## Blocked
 
