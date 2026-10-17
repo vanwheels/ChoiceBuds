@@ -102,7 +102,6 @@
  */
 
 import { useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import type {
   BoxSortMode,
@@ -131,12 +130,9 @@ import { parseShowdownText } from '../services/parser';
 import { enrichPokemonWithAPI } from '../services/pokeapi';
 import { sortSavedPokemonByFavorite } from '../utils/savedPokemonSort';
 import { useMobileHeaderActions } from '../hooks/useMobileHeaderActions';
-import BoxCard from './BoxCard';
-import MobileBoxGrid from './MobileBoxGrid';
-import AddPokemonStatTable from './AddPokemonStatTable';
-import SaveToLibraryDialog from './SaveToLibraryDialog';
-import AddToTeamDialog from './AddToTeamDialog';
-import ContextMenu from './ContextMenu';
+import BoxPageToolbar from './BoxPageToolbar';
+import BoxPageGrid from './BoxPageGrid';
+import BoxPageOverlays from './BoxPageOverlays';
 import MobileFilterPopover from './MobileFilterPopover';
 import { SearchIcon, FilterIcon } from './icons/SidebarIcons';
 
@@ -434,218 +430,54 @@ export default function BoxPage({
 
   return (
     <div className="h-full flex flex-col">
-      <header className="hidden md:block bg-zinc-800 border-b border-zinc-700 px-8 py-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-2xl font-bold text-zinc-100">Box</h2>
-            <p className="text-sm text-zinc-400 mt-1">
-              {displayedEntries.length} saved {displayedEntries.length === 1 ? 'build' : 'builds'}
-            </p>
-          </div>
+      <BoxPageToolbar
+        displayedCount={displayedEntries.length}
+        search={search}
+        onSearchChange={setSearch}
+        sortMode={sortMode}
+        onSetSortMode={handleSetSortMode}
+      />
 
-          <div className="flex gap-2 items-center flex-wrap">
-            {/* Search (Box Tab: Search Leg 8, see TODO.md) - same '#tag'
-                chain SpeciesPickerCard.tsx's own search bar supports. */}
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search builds... (#fire, #dragon dance, ...)"
-              className="w-full md:w-64 px-3 py-2 text-sm text-white bg-zinc-700 border border-zinc-600 rounded-lg outline-none focus:border-accent-gold placeholder:text-zinc-500"
-            />
+      <BoxPageGrid
+        isLoading={savedPokemonState.isLoading}
+        error={savedPokemonState.error}
+        displayedEntries={displayedEntries}
+        savedPokemonState={savedPokemonState}
+        gameDataState={gameDataState}
+        spriteCacheState={spriteCacheState}
+        settingsState={settingsState}
+        rulesetId={rulesetId}
+        emptyStateContent={emptyStateContent}
+        onAddToTeam={(entryId) => setAddToTeamEntryId(entryId)}
+        onNewBuild={() => setIsPickerOpen(true)}
+        isBuildingSpecies={isBuildingSpecies}
+        boxGridRef={boxGridRef}
+        getBoxHandlers={getBoxHandlers}
+        orderedEntryIds={orderedEntryIds}
+        canReorder={canReorderBox}
+        onGridContextMenu={handleGridContextMenu}
+      />
 
-            {/* Sort-mode toggle (Box Tab: Reorder Leg 7, see TODO.md) - same
-                pill-button filter style TeamsPage.tsx uses for its format
-                filters. */}
-            {(['alphabetical', 'custom'] as const).map((mode) => (
-              <button
-                key={mode}
-                onClick={() => handleSetSortMode(mode)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  sortMode === mode
-                    ? 'bg-accent-gold text-zinc-900'
-                    : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
-                }`}
-              >
-                {mode === 'alphabetical' ? 'Alphabetical' : 'Custom order'}
-              </button>
-            ))}
-          </div>
-        </div>
-      </header>
-
-      <div
-        className="flex-1 overflow-y-auto px-4 md:px-8 py-6"
-        style={{ scrollbarGutter: 'stable' }}
-      >
-        {/* min-h-[calc(100%+1px)] - same iOS Safari stuck-scroll fix as
-            TeamsPage.tsx's content container (see its own comment) - a box
-            with very few saved builds could hit the same exact-height
-            coincidence. */}
-        <div className="min-h-[calc(100%+1px)]">
-          {savedPokemonState.isLoading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="text-zinc-400">Loading box...</div>
-            </div>
-          ) : savedPokemonState.error ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="text-red-400">Error: {savedPokemonState.error}</div>
-            </div>
-          ) : (
-            <>
-              {/* Compact sprite/favorite/name grid - mobile only (Box Mobile:
-              Compact Grid + Swipe Deck leg, see TODO.md). Renders instead of
-              the desktop Reorder.Group grid below, not a responsive variant
-              of it - no drag-reorder here (out of scope, see
-              MobileBoxGrid.tsx's header), tapping a tile opens
-              MobileBoxSwipeOverlay.tsx at that tile's index. */}
-              <div className="md:hidden">
-                <MobileBoxGrid
-                  entries={displayedEntries}
-                  savedPokemonState={savedPokemonState}
-                  gameDataState={gameDataState}
-                  rulesetId={rulesetId}
-                  resolveSprite={spriteCacheState.resolveSprite}
-                  showAnimatedSprites={settingsState.settings.showAnimatedSprites}
-                  onAddToTeam={(entryId) => setAddToTeamEntryId(entryId)}
-                  onNewBuild={() => setIsPickerOpen(true)}
-                  isBuildingSpecies={isBuildingSpecies}
-                  emptyStateContent={emptyStateContent}
-                />
-              </div>
-
-              {/* 2D hit-test reorder (useGridReorder.ts, Web Reorder Jank Leg 2). */}
-              <div
-                ref={boxGridRef}
-                className="hidden md:flex flex-wrap gap-4 items-start"
-                onContextMenu={handleGridContextMenu}
-              >
-                <button
-                  onClick={() => setIsPickerOpen(true)}
-                  disabled={isBuildingSpecies}
-                  className="w-28 min-h-28 shrink-0 flex items-center justify-center text-center rounded-lg border-2 border-dashed border-zinc-700 text-zinc-500 hover:text-accent-gold hover:border-accent-gold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-wait"
-                >
-                  <span className="text-xs font-semibold px-1">
-                    {isBuildingSpecies ? 'Building…' : '+ New Build'}
-                  </span>
-                </button>
-
-                {emptyStateContent && (
-                  <div className="flex flex-col justify-center text-zinc-400 px-2 min-h-28">
-                    {emptyStateContent}
-                  </div>
-                )}
-
-                {orderedEntryIds.map((id) => {
-                  const entry = displayedEntries.find((e) => e.id === id);
-                  if (!entry) return null;
-                  return (
-                    <BoxCard
-                      key={id}
-                      entry={entry}
-                      isExpanded={savedPokemonState.expandedCardIds.has(entry.id)}
-                      onToggleExpand={() => savedPokemonState.toggleCardExpansion(entry.id)}
-                      onUpdatePokemon={(updates) =>
-                        savedPokemonState.updateSavedPokemon(entry.id, updates)
-                      }
-                      onAddToTeam={() => setAddToTeamEntryId(entry.id)}
-                      onRename={(label) => savedPokemonState.renameSavedPokemon(entry.id, label)}
-                      onDuplicate={() => savedPokemonState.duplicateSavedPokemon(entry.id)}
-                      onToggleFavorite={() =>
-                        savedPokemonState.toggleSavedPokemonFavorite(entry.id)
-                      }
-                      onDelete={() => savedPokemonState.deleteSavedPokemon(entry.id)}
-                      canReorder={canReorderBox}
-                      reorderHandlers={getBoxHandlers(id)}
-                      gameDataState={gameDataState}
-                      rulesetId={rulesetId}
-                      resolveSprite={spriteCacheState.resolveSprite}
-                      showAnimatedSprites={settingsState.settings.showAnimatedSprites}
-                    />
-                  );
-                })}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      <AnimatePresence>
-        {isPickerOpen && (
-          <AddPokemonStatTable
-            roster={speciesRosterState.roster}
-            rulesetId={rulesetId}
-            resolveSprite={spriteCacheState.resolveSprite}
-            getCachedEntry={databaseState.getCachedEntry}
-            onSelect={handleSelectNewSpecies}
-            onClose={() => setIsPickerOpen(false)}
-          />
-        )}
-        {pendingNewBuild && (
-          <SaveToLibraryDialog
-            pokemon={pendingNewBuild.pokemon}
-            resolveSprite={spriteCacheState.resolveSprite}
-            onSave={handleSaveNewBuild}
-            onClose={() => setPendingNewBuild(null)}
-          />
-        )}
-        {addToTeamEntry && (
-          <AddToTeamDialog
-            pokemon={addToTeamEntry.pokemon}
-            teams={teamsState.teams}
-            onAddToTeam={handleAddToTeam}
-            onClose={() => setAddToTeamEntryId(null)}
-          />
-        )}
-      </AnimatePresence>
-
-      {pasteContextMenuPos && (
-        <ContextMenu
-          x={pasteContextMenuPos.x}
-          y={pasteContextMenuPos.y}
-          onClose={() => setPasteContextMenuPos(null)}
-          items={[
-            {
-              label: 'Paste Pokémon',
-              onClick: handlePastePokemon,
-              icon: (
-                <svg
-                  viewBox="0 0 24 24"
-                  width="16"
-                  height="16"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.75"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M9 4.5h1.5a1.5 1.5 0 0 1 3 0H15a1 1 0 0 1 1 1V7H8V5.5a1 1 0 0 1 1-1Z" />
-                  <path d="M8 6H6a1.5 1.5 0 0 0-1.5 1.5v12A1.5 1.5 0 0 0 6 21h12a1.5 1.5 0 0 0 1.5-1.5v-12A1.5 1.5 0 0 0 18 6h-2" />
-                </svg>
-              ),
-            },
-            {
-              label: 'Paste Showdown Text',
-              onClick: handlePasteShowdownText,
-              icon: (
-                <svg
-                  viewBox="0 0 24 24"
-                  width="16"
-                  height="16"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.75"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M6 3.5h9l4.5 4.5v12.5a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 4.5 20.5v-15A1.5 1.5 0 0 1 6 3.5Z" />
-                  <path d="M9 12h6M9 15.5h6M9 8.5h2" />
-                </svg>
-              ),
-            },
-          ]}
-        />
-      )}
+      <BoxPageOverlays
+        isPickerOpen={isPickerOpen}
+        onClosePicker={() => setIsPickerOpen(false)}
+        roster={speciesRosterState.roster}
+        rulesetId={rulesetId}
+        resolveSprite={spriteCacheState.resolveSprite}
+        getCachedEntry={databaseState.getCachedEntry}
+        onSelectSpecies={handleSelectNewSpecies}
+        pendingNewBuild={pendingNewBuild}
+        onSaveNewBuild={handleSaveNewBuild}
+        onClosePendingBuild={() => setPendingNewBuild(null)}
+        addToTeamEntry={addToTeamEntry}
+        teams={teamsState.teams}
+        onAddToTeam={handleAddToTeam}
+        onCloseAddToTeam={() => setAddToTeamEntryId(null)}
+        pasteContextMenuPos={pasteContextMenuPos}
+        onClosePasteMenu={() => setPasteContextMenuPos(null)}
+        onPastePokemon={handlePastePokemon}
+        onPasteShowdownText={handlePasteShowdownText}
+      />
     </div>
   );
 }
