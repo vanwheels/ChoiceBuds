@@ -25,26 +25,6 @@ Done when:
 3. Both web-facing legs (landing page, padding fix) are verified live on
    choicebuds.vannyproductions.com, not just on `dev:web`.
 
-- **[Web Content-Area Padding Fix] — Leg 3** *(Last touched: 2026-10-17 ·
-  Re-checks: 0)*
-  Scoped 2026-10-17, originally flagged 2026-09-30 during live verification
-  of Battle Log & Statistics Parity. `AppWeb.tsx`'s `<main>` had no padding
-  at all, unlike `App.tsx`'s desktop `<main>` (2rem/1.5rem inline styles),
-  so ported pages rendered edge-to-edge in the browser — visible on the
-  Battle Log page's card grid butting against the viewport edges. Fix
-  applied: `md:px-8 md:py-6` on `AppWeb.tsx`'s `<main>` (same 2rem/1.5rem
-  as `App.tsx`, from `md` up only). Confirming first turned up two pages
-  that already supply their own horizontal padding and would double up if
-  `<main>` padded unconditionally: `TeamsPage.tsx`'s content div
-  (`px-4 md:px-0`) and `BoxPageGrid.tsx` (`px-4 md:px-8`) — both already
-  assume `<main>` stays at 0 below `md`, so the fix is gated the same way
-  rather than matching `App.tsx` verbatim. Battle Log/Statistics/Type
-  Matchup/Speed Tiers/Settings have no padding of their own and are still
-  edge-to-edge below `md` (mobile web) — tracked separately below rather
-  than folded into this leg, since fixing it means touching 5 files' own
-  layout, not just `<main>`.
-  Manual verification: yes. Review: no.
-
 - **[Teams Tab Search Bar] — Leg 4** *(Last touched: 2026-10-17 ·
   Re-checks: 0)*
   Scoped 2026-10-17, proposed 2026-09-29. Search for a specific Pokémon by

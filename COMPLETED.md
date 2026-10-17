@@ -37,6 +37,23 @@ Entries prior to this file's oldest are in:
   (the TeamCard Bug Fixes & Dev Tooling milestone's four legs, split out at
   the 2026-10-17 TeamCard Bug Fixes & Dev Tooling boundary)
 
+## Web Content-Area Padding Fix — 2026-10-17
+
+`AppWeb.tsx`'s `<main>` had no padding at all, unlike `App.tsx`'s desktop
+`<main>` (2rem/1.5rem inline styles), so ported pages rendered edge-to-edge
+in the browser - most visible on the Battle Log page's card grid butting
+against the viewport edges. Added `md:px-8 md:py-6` to `AppWeb.tsx`'s
+`<main>`, matching `App.tsx`'s 2rem/1.5rem but gated to `md` and up rather
+than unconditional: `TeamsPage.tsx`'s content div (`px-4 md:px-0`) and
+`BoxPageGrid.tsx` (`px-4 md:px-8`) already supply their own mobile padding
+and assume `<main>` stays at 0 below `md`, so matching `App.tsx` verbatim
+would have double-padded them on mobile web. Battle Log/Statistics/Type
+Matchup/Speed Tiers/Settings have no padding of their own and are still
+edge-to-edge below `md` - filed as a separate Unscheduled TODO item rather
+than folded into this leg, since fixing it means touching 5 files' own
+layout, not just `<main>`. Verified live on choicebuds.vannyproductions.com.
+See commit `e836d52`.
+
 ## Sibling Hooks' applySyncedState Stale-Overwrite Race — 2026-10-17
 
 Flagged while fixing TeamCard Notes: Data Loss on First Blur After Expand
