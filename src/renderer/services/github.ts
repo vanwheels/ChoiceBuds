@@ -11,15 +11,26 @@
  * GitHubRelease shape for the full published-release list, not just the
  * single latest one - both hooks/useUpdateCheck.ts and hooks/useReleaseNotes.ts
  * consume it.
+ *
+ * `assets` (added for the web Download page, components/DownloadPage.tsx)
+ * carries each release's installer files - that page picks the
+ * OS-appropriate one via utils/releaseAssets.ts rather than this module,
+ * which stays a plain fetch+shape wrapper.
  */
 
 const REPO = 'vanwheels/ChoiceBuds';
+
+export interface GitHubReleaseAsset {
+  name: string;
+  downloadUrl: string;
+}
 
 export interface GitHubRelease {
   version: string;
   releaseUrl: string;
   body: string;
   publishedAt: string;
+  assets: GitHubReleaseAsset[];
 }
 
 /** Raw shape of one entry from GitHub's /releases and /releases/latest endpoints - only the fields this app reads. */
@@ -28,6 +39,7 @@ interface RawGitHubRelease {
   html_url: string;
   body: string | null;
   published_at: string;
+  assets: { name: string; browser_download_url: string }[];
 }
 
 function toGitHubRelease(data: RawGitHubRelease): GitHubRelease {
@@ -36,6 +48,10 @@ function toGitHubRelease(data: RawGitHubRelease): GitHubRelease {
     releaseUrl: data.html_url,
     body: data.body ?? '',
     publishedAt: data.published_at,
+    assets: data.assets.map((asset) => ({
+      name: asset.name,
+      downloadUrl: asset.browser_download_url,
+    })),
   };
 }
 

@@ -38,6 +38,7 @@ describe('useUpdateCheck', () => {
       releaseUrl: 'https://example.com/r',
       body: '',
       publishedAt: '2026-01-01T00:00:00Z',
+      assets: [],
     });
     const { result } = renderHook(() => useUpdateCheck());
     await waitFor(() => expect(result.current.status).toBe('up-to-date'));
@@ -51,6 +52,7 @@ describe('useUpdateCheck', () => {
       releaseUrl: 'https://example.com/r2',
       body: '',
       publishedAt: '2026-01-01T00:00:00Z',
+      assets: [],
     });
     const { result } = renderHook(() => useUpdateCheck());
     await waitFor(() => expect(result.current.status).toBe('update-available'));
@@ -114,6 +116,7 @@ describe('useUpdateCheck', () => {
       releaseUrl: 'https://example.com/r2',
       body: '',
       publishedAt: '2026-01-01T00:00:00Z',
+      assets: [],
     });
     let statusCallback:
       ((s: { state: string; version?: string; percent?: number }) => void) | undefined;
@@ -176,6 +179,7 @@ describe('useUpdateCheck', () => {
       releaseUrl: 'https://example.com/r2',
       body: '',
       publishedAt: '2026-01-01T00:00:00Z',
+      assets: [],
     });
     vi.mocked(window.electron.onUpdateStatus).mockReturnValue(() => {});
     vi.mocked(window.electron.getUpdateStatus).mockResolvedValueOnce({ state: 'checking-native' });

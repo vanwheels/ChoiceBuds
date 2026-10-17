@@ -52,6 +52,13 @@ the sites involved.
    fetch here is either on-demand/cached (PokeAPI) or explicitly
    user-initiated (Pokepaste).
 
+   Same endpoint, same `fetchLatestRelease()` call, second consumer
+   (decided 2026-10-17): the web Download page
+   (`components/DownloadPage.tsx`, mounted at
+   `choicebuds.vannyproductions.com/download/`) also calls it, to pick an
+   OS-appropriate installer asset off the latest release rather than to
+   compare versions.
+
 5. **Champions ladder usage data (decided 2026-07-16).**
    `championsbattledata.com`'s public `/api/*` JSON endpoints (e.g.
    `/api/index`, `/api/battle/:format/:name`, `/api/pokemon/:name`,

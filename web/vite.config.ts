@@ -7,6 +7,12 @@
  * standalone package.json like worker/ has - worker/ is a genuinely
  * separate Cloudflare runtime, this is just an alternate front door onto
  * the same renderer code.
+ *
+ * Two build inputs (Web Download/Landing Page leg, see TODO.md): the main
+ * app at `/` and the download/landing page at `/download/`, each its own
+ * independent HTML entry/bundle rather than a route inside AppWeb - a new
+ * visitor hitting /download/ shouldn't have to download the whole app's JS
+ * just to see installer links.
  */
 
 import { defineConfig } from 'vite';
@@ -22,6 +28,12 @@ export default defineConfig({
   build: {
     outDir: path.resolve(__dirname, '../dist/web'),
     emptyOutDir: true,
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        download: path.resolve(__dirname, 'download/index.html'),
+      },
+    },
   },
   server: {
     port: 5174,

@@ -154,6 +154,12 @@ export default function AppWeb() {
           renderFooter={(collapsed) =>
             collapsed ? null : (
               <div className="flex flex-col gap-1 px-1.5">
+                <a
+                  href="/download/"
+                  className="mb-1 self-start text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors"
+                >
+                  Get the desktop app
+                </a>
                 {syncState.syncUsername ? (
                   <>
                     <span

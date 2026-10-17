@@ -43,6 +43,7 @@ const CURRENT_RELEASE: GitHubRelease = {
   releaseUrl: 'https://example.com/current',
   body: '## Notes',
   publishedAt: '2026-09-01T00:00:00Z',
+  assets: [],
 };
 
 describe('useReleaseNotes', () => {

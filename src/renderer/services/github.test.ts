@@ -18,6 +18,9 @@ const RAW_RELEASE = {
   html_url: 'https://github.com/vanwheels/ChoiceBuds/releases/tag/v1.2.3',
   body: '## Added\n- Thing',
   published_at: '2026-07-01T00:00:00Z',
+  assets: [
+    { name: 'ChoiceBuds-Setup-1.2.3.exe', browser_download_url: 'https://example.com/setup.exe' },
+  ],
 };
 
 describe('fetchLatestRelease', () => {
@@ -35,6 +38,9 @@ describe('fetchLatestRelease', () => {
       releaseUrl: RAW_RELEASE.html_url,
       body: RAW_RELEASE.body,
       publishedAt: RAW_RELEASE.published_at,
+      assets: [
+        { name: 'ChoiceBuds-Setup-1.2.3.exe', downloadUrl: 'https://example.com/setup.exe' },
+      ],
     });
   });
 
@@ -59,6 +65,30 @@ describe('fetchLatestRelease', () => {
 
     expect(release?.body).toBe('');
   });
+
+  it('maps every asset to its name and download URL', async () => {
+    mockFetchOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        ...RAW_RELEASE,
+        assets: [
+          { name: 'ChoiceBuds-Setup-1.2.3.exe', browser_download_url: 'https://example.com/a.exe' },
+          {
+            name: 'ChoiceBuds-1.2.3-universal.dmg',
+            browser_download_url: 'https://example.com/a.dmg',
+          },
+        ],
+      }),
+    });
+
+    const release = await fetchLatestRelease();
+
+    expect(release?.assets).toEqual([
+      { name: 'ChoiceBuds-Setup-1.2.3.exe', downloadUrl: 'https://example.com/a.exe' },
+      { name: 'ChoiceBuds-1.2.3-universal.dmg', downloadUrl: 'https://example.com/a.dmg' },
+    ]);
+  });
 });
 
 describe('fetchReleaseHistory', () => {
@@ -78,12 +108,18 @@ describe('fetchReleaseHistory', () => {
         releaseUrl: RAW_RELEASE.html_url,
         body: RAW_RELEASE.body,
         publishedAt: RAW_RELEASE.published_at,
+        assets: [
+          { name: 'ChoiceBuds-Setup-1.2.3.exe', downloadUrl: 'https://example.com/setup.exe' },
+        ],
       },
       {
         version: '1.2.2',
         releaseUrl: second.html_url,
         body: second.body,
         publishedAt: second.published_at,
+        assets: [
+          { name: 'ChoiceBuds-Setup-1.2.3.exe', downloadUrl: 'https://example.com/setup.exe' },
+        ],
       },
     ]);
   });
