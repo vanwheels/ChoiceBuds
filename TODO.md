@@ -16,19 +16,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Maintenance & Code Health Sweep
-
-Done when:
-- `useActiveEditor` hook, its test file, and the unused prop plumbing are
-  fully removed.
-- All four sibling hooks (`useSavedPokemon`, `useBattles`, `useSettings`,
-  `useDatabase`) have a documented race-pattern finding, and any hook found
-  to have the same lost-update race as `useTeams` has the same ref+queue
-  fix applied.
-- `TeamCard.tsx`, `BoxPage.tsx`, `useSync.test.ts`, and
-  `CalcPokemonPanel.tsx` are each split below the 500-line hard cap with no
-  behavior change - all four done (see `COMPLETED.md`).
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something

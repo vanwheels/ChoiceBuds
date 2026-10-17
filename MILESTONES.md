@@ -61,3 +61,5 @@ milestone.
   [post-mortem](docs/postmortems/project-revision-v2.md)
 - **Prettier Adoption** — 2026-10-16 — Shipped —
   [post-mortem](docs/postmortems/prettier-adoption.md)
+- **Maintenance & Code Health Sweep** — 2026-10-16 — Shipped —
+  [post-mortem](docs/postmortems/maintenance-code-health-sweep.md)

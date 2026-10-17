@@ -68,6 +68,14 @@ the matching hook.
   refresh are the only things that need network after first launch). Editing
   a Pokémon goes straight through `useTeams().updateTeam()` calls from
   `TeamCard.tsx` — there is no separate draft/commit scratchpad hook.
+- `useTeams`, `useSavedPokemon`, `useBattles`, and `useSettings` each mirror
+  their state into a ref and queue mutations through it rather than closing
+  over state captured at render time, so two concurrent `update*` calls in
+  the same tick can't silently lose one's write (the second overwriting the
+  first's un-rerendered result). `useDatabase` doesn't need this — its one
+  write path already uses a functional `setState` update. See
+  `docs/investigations/sibling-hooks-lost-update-audit.md` for the audit
+  that found/fixed this.
 - `src/renderer/services/parser.ts` — pure, offline, regex-based
   Showdown/Pokepaste text parser: `parseShowdownText()` → `ParseResult`
   (`ShowdownPokemon[]` plus parse errors). No API calls, no side effects.
