@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 // "Mobile Web" preview - the third UI mode alongside `npm run dev` (desktop
 // Electron app, :5173) and `npm run dev:web` (desktop-width browser, :5174).
-// Opens a real Chrome window emulating a phone viewport against the web dev
-// server, using playwright-core's system-Chrome driver (channel: 'chrome')
-// instead of a separately downloaded Chromium build - same dependency
-// .claude/skills/run-desktop/driver.mjs already relies on to drive the
-// Electron app, just pointed at a plain browser context here.
+// Opens a real Chromium-based browser emulating a phone viewport against the
+// web dev server, using playwright-core (no separately downloaded Chromium
+// build - same package `.claude/skills/run-desktop/driver.mjs` already
+// depends on, there to drive the Electron app directly instead). Prefers
+// system Chrome via playwright's `channel: 'chrome'`; falls back to a
+// locally installed Opera GX (also Chromium-based) via `executablePath` when
+// Chrome isn't present - confirmed live 2026-10-17 as the actual browser on
+// Vanny's dev machine.
 //
 // Self-starts `vite --config web/vite.config.ts` if nothing's already
 // answering on :5174 (one command, no second terminal needed) and tears
@@ -15,6 +18,7 @@
 
 import { chromium } from 'playwright-core';
 import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -52,14 +56,16 @@ async function waitForServer(timeoutMs = 20_000) {
 // is never touched.
 async function startOwnWebServer() {
   console.log('No dev:web server running - starting one (vite --config web/vite.config.ts)...');
-  const child = spawn(
-    process.platform === 'win32' ? 'npx.cmd' : 'npx',
-    ['vite', '--config', 'web/vite.config.ts'],
-    {
-      cwd: APP_DIR,
-      stdio: 'inherit',
-    },
-  );
+  // Spawns Vite's own bin script via `node` directly rather than through the
+  // `npx`/`npx.cmd` shim - Node 24 on Windows throws `spawn EINVAL` for a
+  // bare `.cmd` target without `shell: true`, and `shell: true` would wrap
+  // the real Vite process inside a `cmd.exe` that this script's own
+  // `child.kill()` below can't reach, orphaning it on exit instead.
+  const viteBin = path.resolve(APP_DIR, 'node_modules/vite/bin/vite.js');
+  const child = spawn(process.execPath, [viteBin, '--config', 'web/vite.config.ts'], {
+    cwd: APP_DIR,
+    stdio: 'inherit',
+  });
   const up = await waitForServer();
   if (!up) {
     console.error(`Timed out waiting for ${WEB_DEV_URL} to come up.`);
@@ -69,40 +75,67 @@ async function startOwnWebServer() {
   return child;
 }
 
+// Opera GX's install path isn't on any playwright-recognized `channel` (that
+// list only covers Chrome/Edge), so it's launched via `executablePath`
+// instead - resolved through %LOCALAPPDATA% rather than hardcoding a
+// username.
+function findOperaGxPath() {
+  if (process.platform !== 'win32' || !process.env.LOCALAPPDATA) return null;
+  const operaPath = path.join(process.env.LOCALAPPDATA, 'Programs', 'Opera GX', 'opera.exe');
+  return existsSync(operaPath) ? operaPath : null;
+}
+
+async function launchBrowser() {
+  try {
+    return await chromium.launch({ channel: 'chrome', headless: false });
+  } catch (err) {
+    const operaPath = findOperaGxPath();
+    if (!operaPath) throw err;
+    console.log("System Chrome not found - falling back to this machine's Opera GX...");
+    return chromium.launch({ executablePath: operaPath, headless: false });
+  }
+}
+
 async function main() {
   const reusingExisting = await isServerUp();
   const ownWebServer = reusingExisting ? null : await startOwnWebServer();
   if (reusingExisting) console.log(`Reusing already-running dev:web server at ${WEB_DEV_URL}`);
 
-  const browser = await chromium.launch({ channel: 'chrome', headless: false });
-  const context = await browser.newContext({
-    viewport: VIEWPORT,
-    deviceScaleFactor: 2,
-    isMobile: true,
-    hasTouch: true,
-    userAgent: USER_AGENT,
-  });
-  const page = await context.newPage();
-  await page.goto(WEB_DEV_URL);
-
-  console.log(`Mobile Web preview open at ${VIEWPORT.width}x${VIEWPORT.height} -> ${WEB_DEV_URL}`);
-  console.log('Close the browser window to exit.');
-
+  // Registered before the browser launch (which can throw, e.g. no Chrome
+  // and no Opera GX fallback found) so a self-started vite child never gets
+  // orphaned holding :5174, even on a failed launch - not just on the two
+  // success-path exits below.
   const cleanup = () => {
     if (ownWebServer) ownWebServer.kill();
   };
-  // Ctrl+C in the terminal is the other exit path besides closing the
-  // browser window below - without this, a self-started vite child is
-  // left orphaned holding :5174.
   process.on('SIGINT', () => {
     cleanup();
     process.exit(0);
   });
 
-  // Fires when the user closes the window (last page closes the browser
-  // process) - not just on an explicit browser.close() call.
-  await new Promise((resolve) => browser.on('disconnected', resolve));
-  cleanup();
+  try {
+    const browser = await launchBrowser();
+    const context = await browser.newContext({
+      viewport: VIEWPORT,
+      deviceScaleFactor: 2,
+      isMobile: true,
+      hasTouch: true,
+      userAgent: USER_AGENT,
+    });
+    const page = await context.newPage();
+    await page.goto(WEB_DEV_URL);
+
+    console.log(
+      `Mobile Web preview open at ${VIEWPORT.width}x${VIEWPORT.height} -> ${WEB_DEV_URL}`,
+    );
+    console.log('Close the browser window to exit.');
+
+    // Fires when the user closes the window (last page closes the browser
+    // process) - not just on an explicit browser.close() call.
+    await new Promise((resolve) => browser.on('disconnected', resolve));
+  } finally {
+    cleanup();
+  }
   process.exit(0);
 }
 

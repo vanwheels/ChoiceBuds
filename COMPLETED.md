@@ -34,3 +34,25 @@ Entries prior to this file's oldest are in:
   milestone slug since it shares its date range with the Prettier Adoption
   archive above)
 
+## Dev Environment: Electron Zoom-Persistence Fix + Mobile Web Preview Script — 2026-10-17
+
+Electron zoom fix and the new `npm run dev:mobile` script both landed
+2026-10-16 (see `docs/archive/completed-2026-10-16-to-2026-10-16.md`'s
+boundary and commits `46513fe`/`b01327a`), but `dev:mobile` itself hadn't
+been live-verified yet. Doing so today caught two real bugs: Node 24 on
+Windows throws `spawn EINVAL` self-starting Vite through the bare `npx.cmd`
+shim without `shell: true` (fixed by spawning `node` directly against
+Vite's `bin/vite.js` instead, which also avoids `shell: true`'s own problem
+of wrapping the real process in a `cmd.exe` that the script's `child.kill()`
+cleanup can't reach); and this machine has no system Chrome installed at
+all, so `channel: 'chrome'` always failed (fixed with a fallback to a
+locally installed Opera GX, Vanny's actual daily browser, via
+`executablePath` resolved through `%LOCALAPPDATA%`). Fixing the Chrome
+fallback also exposed a cleanup-ordering bug: a failed browser launch left
+the self-started Vite server orphaned on :5174 because `cleanup()` was
+defined after the throwable launch call; moved its registration earlier and
+wrapped the browser/page logic in `try`/`finally`. Confirmed live end to
+end afterward: self-starts `dev:web`, opens a correctly phone-proportioned
+Opera GX window, and cleanly tears down the self-started Vite server on
+exit. See commit TBD.
+
