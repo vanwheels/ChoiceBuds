@@ -72,7 +72,7 @@ export default function StatisticsPage({ battlesState, spriteCacheState }: Stati
 
   if (battles.length === 0) {
     return (
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 px-4 md:px-0">
         <h1 className="text-xl font-bold text-zinc-100">Statistics</h1>
         <p className="text-sm text-zinc-400">Log some battles to see stats here.</p>
       </div>
@@ -80,7 +80,7 @@ export default function StatisticsPage({ battlesState, spriteCacheState }: Stati
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 px-4 md:px-0">
       <h1 className="text-xl font-bold text-zinc-100">Statistics</h1>
 
       {availableSeasons.length > 1 && (

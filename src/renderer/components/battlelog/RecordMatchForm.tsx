@@ -335,7 +335,7 @@ export default function RecordMatchForm({
   };
 
   return (
-    <div className="flex flex-col gap-4 max-w-2xl">
+    <div className="flex flex-col gap-4 max-w-2xl px-4 md:px-0">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-zinc-100">
           {editingBattle ? 'Edit Match' : 'Record a Match'}

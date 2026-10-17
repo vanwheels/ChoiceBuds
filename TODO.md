@@ -29,19 +29,6 @@ Done when:
   `TypeMatchupPage.tsx`, `RecordMatchForm.tsx`) use a shared sprite-aware
   dropdown component instead of a plain native `<select>`.
 
-- **[Mobile Web Content-Area Padding Fix] — Leg 1** *(Last touched:
-  2026-10-17 · Re-checks: 0)*
-  Battle Log, Statistics, Type Matchup, Speed Tiers, and Settings render
-  edge-to-edge below the `md` breakpoint since `AppWeb.tsx`'s `<main>` is
-  deliberately unpadded (to avoid doubling up with TeamsPage/BoxPageGrid's
-  own mobile padding). Give each of these 5 pages its own mobile `px-4`-
-  style padding, matching the TeamsPage/BoxPageGrid pattern, rather than
-  another `<main>`-level fix.
-  Done check: all 5 tabs show proper side padding on `dev:mobile`
-  (375x812 phone viewport), with no double-padding regression on
-  Teams/Box.
-  Manual verification: yes. Review: no.
-
 - **[Download App Sidebar Link Visibility] — Leg 2** *(Last touched:
   2026-10-17 · Re-checks: 0)*
   The `/download/` link added to `AppWeb.tsx`'s sidebar footer is small and
@@ -102,7 +89,16 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-(none currently)
+- **[Mobile Empty-Team Add Pokémon Bug] — Leg 1** *(Last touched:
+  2026-10-17 · Re-checks: 0)*
+  Reported live 2026-10-17: on mobile web, tapping into an empty team (no
+  Pokémon yet) doesn't let you add one. Unknown how long this has existed
+  or whether it's mobile-only vs. also broken on desktop/App.tsx - not yet
+  reproduced or root-caused, just the live report. Needs its own repro
+  pass on `dev:mobile` before it's scoped into concrete legs.
+  Done check: repro confirmed (or ruled out) and root cause identified;
+  fix scoped as a follow-up leg once the cause is known.
+  Manual verification: yes. Review: no.
 
 ## Future Milestones (unscheduled)
 

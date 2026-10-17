@@ -143,7 +143,7 @@ export default function TypeMatchupPage({
   );
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 px-4 md:px-0">
       <div>
         <h1 className="text-xl font-bold text-zinc-100">Type Matchup</h1>
         <p className="text-sm text-zinc-400 mt-1">

@@ -46,7 +46,7 @@ export default function SettingsPage({
   const currentId = toRegulationId(settings.defaultRegulation);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 px-4 md:px-0">
       <h1 className="text-xl font-bold text-zinc-100">Settings</h1>
 
       <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-4">
