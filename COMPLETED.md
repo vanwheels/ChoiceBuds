@@ -54,5 +54,5 @@ defined after the throwable launch call; moved its registration earlier and
 wrapped the browser/page logic in `try`/`finally`. Confirmed live end to
 end afterward: self-starts `dev:web`, opens a correctly phone-proportioned
 Opera GX window, and cleanly tears down the self-started Vite server on
-exit. See commit TBD.
+exit. See commit `79992b0`.
 
