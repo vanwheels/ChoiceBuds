@@ -63,7 +63,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import type { DragEvent } from 'react';
 import type { CalcPokemonState, NatureStatEffect } from '../../hooks/useDamageCalc';
-import { STATUS_OPTIONS, STATUS_LABELS } from '../../hooks/useDamageCalc';
 import type { FormeFamily } from '../../utils/calcFormes';
 import type { NatureName, StatsTable } from '@smogon/calc/dist/data/interface';
 import type {
@@ -85,25 +84,16 @@ import {
   type CalcTeamPokemonDragPayload,
 } from '../../utils/calcDragTypes';
 import { getMegaAbility } from '../../config/megaAbilities';
-import {
-  teamPokemonToCalcUpdates,
-  opponentEntryToCalcUpdates,
-  realSetBundleToCalcUpdates,
-} from '../../utils/calcTeamImport';
+import { teamPokemonToCalcUpdates, opponentEntryToCalcUpdates } from '../../utils/calcTeamImport';
 import { calcStateToShowdownPokemon } from '../../utils/calcExport';
 import { enrichPokemonWithAPI } from '../../services/pokeapi';
 import { formatShowdownText } from '../../services/parser';
 import { applyUsageWeighting, type UsageRankedCandidate } from '../../utils/liveCalcUsageWeighting';
 import { normalizeSlug } from '../../utils/pokemonRules';
-import CalcAutocomplete from './CalcAutocomplete';
-import SavedSetPicker from '../SavedSetPicker';
 import SaveToLibraryDialog from '../SaveToLibraryDialog';
-import CalcStatRows from './CalcStatRows';
-import CalcStatSpreadChips from './CalcStatSpreadChips';
-import CalcRealSetsSection from './CalcRealSetsSection';
 import CalcTeamTray from './CalcTeamTray';
 import CalcOpponentTray from './CalcOpponentTray';
-import FormeToggle from './FormeToggle';
+import CalcPokemonPanelFields from './CalcPokemonPanelFields';
 
 interface CalcPokemonPanelProps {
   title: string;
@@ -325,6 +315,32 @@ export default function CalcPokemonPanel({
     setSavedSetPickerSpecies(null);
   };
 
+  const closeSavedSetPicker = () => setSavedSetPickerSpecies(null);
+
+  // Mega toggle's onSelect (FormeToggle over the megaGroup below) - remembers
+  // the ability active right before Mega-ing (preMegaAbilityRef, see this
+  // file's header comment) so toggling back off restores it.
+  const handleMegaToggle = (species: string) => {
+    const megaAbility = getMegaAbility(species.toLowerCase());
+    if (megaAbility) {
+      if (preMegaAbilityRef.current?.root !== formes.root) {
+        preMegaAbilityRef.current = { root: formes.root, ability: state.ability };
+      }
+      onChange({ species, ability: megaAbility });
+    } else {
+      const revert =
+        preMegaAbilityRef.current?.root === formes.root ? preMegaAbilityRef.current.ability : null;
+      preMegaAbilityRef.current = null;
+      onChange(revert !== null ? { species, ability: revert } : { species });
+    }
+    // Unlike handleSpeciesSelect/handleLoadOpponent (the only other two
+    // realSets.lookup call sites), toggling Mega on/off changes state.species
+    // directly without going through either of those - re-trigger here too,
+    // or the panel keeps showing whichever forme's real sets were last
+    // looked up.
+    realSets.lookup(species);
+  };
+
   const handleCopyText = async () => {
     if (!state.species) return;
     await navigator.clipboard.writeText(formatShowdownText([calcStateToShowdownPokemon(state)]));
@@ -437,160 +453,34 @@ export default function CalcPokemonPanel({
         />
       )}
 
-      <div className="flex gap-2 items-end">
-        <div className="flex-1 relative min-w-0">
-          <CalcAutocomplete
-            label="Species (Forme)"
-            value={state.species}
-            options={speciesOptions}
-            placeholder="Search species..."
-            onChange={(species) => onChange({ species })}
-            onSelect={handleSpeciesSelect}
-          />
-          {savedSetPickerSpecies && (
-            <SavedSetPicker
-              species={savedSetPickerSpecies}
-              sets={savedPokemonState.getSavedSetsForSpecies(savedSetPickerSpecies)}
-              resolveSprite={resolveSprite}
-              onPick={handlePickSavedSet}
-              onBlank={() => setSavedSetPickerSpecies(null)}
-              onClose={() => setSavedSetPickerSpecies(null)}
-            />
-          )}
-        </div>
-        {megaGroup.length > 0 && (
-          <FormeToggle
-            group={megaGroup}
-            current={state.species}
-            onSelect={(species) => {
-              const megaAbility = getMegaAbility(species.toLowerCase());
-              if (megaAbility) {
-                if (preMegaAbilityRef.current?.root !== formes.root) {
-                  preMegaAbilityRef.current = { root: formes.root, ability: state.ability };
-                }
-                onChange({ species, ability: megaAbility });
-              } else {
-                const revert =
-                  preMegaAbilityRef.current?.root === formes.root
-                    ? preMegaAbilityRef.current.ability
-                    : null;
-                preMegaAbilityRef.current = null;
-                onChange(revert !== null ? { species, ability: revert } : { species });
-              }
-              // Unlike handleSpeciesSelect/handleLoadOpponent (the only other
-              // two realSets.lookup call sites), toggling Mega on/off changes
-              // state.species directly without going through either of those
-              // - re-trigger here too, or the panel keeps showing whichever
-              // forme's real sets were last looked up.
-              realSets.lookup(species);
-            }}
-          />
-        )}
-        <div
-          className="w-9 h-9 shrink-0 bg-zinc-800 rounded-lg border border-zinc-600 flex items-center justify-center overflow-hidden cursor-pointer hover:border-accent-gold transition-colors"
-          onClick={cycleGender}
-          title="Click to toggle gender"
-        >
-          {state.gender === 'M' && <span className="text-lg font-bold text-blue-400">♂</span>}
-          {state.gender === 'F' && <span className="text-lg font-bold text-pink-400">♀</span>}
-          {state.gender === '' && <span className="text-lg font-bold text-zinc-400">⌀</span>}
-        </div>
-      </div>
-
-      {formes.statFormes.length > 1 && (
-        <FormeToggle
-          group={formes.statFormes}
-          current={state.species}
-          onSelect={(species) => onChange({ species })}
-        />
-      )}
-
-      <div className="grid grid-cols-2 gap-2">
-        <CalcAutocomplete
-          label="Item"
-          value={state.item}
-          options={itemOptions}
-          placeholder="None"
-          onChange={(item) => onChange({ item })}
-          usagePercentByName={itemPercentByName}
-        />
-        <CalcAutocomplete
-          label="Ability"
-          value={state.ability}
-          options={abilityOptions}
-          placeholder="None"
-          onChange={(ability) => onChange({ ability })}
-          usagePercentByName={abilityPercentByName}
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-2">
-        <div className="flex flex-col gap-1">
-          <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Nature</label>
-          <select
-            value={state.nature}
-            onChange={(e) => onChange({ nature: e.target.value as NatureName })}
-            className="px-2 py-0.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
-          >
-            {sortedNatureOptions.map((n) => {
-              const percent = naturePercentByName[normalizeSlug(n)];
-              return (
-                <option key={n} value={n}>
-                  {percent != null ? `${n} (${percent.toFixed(1)}%)` : n}
-                </option>
-              );
-            })}
-          </select>
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Status</label>
-          <select
-            value={state.status}
-            onChange={(e) => onChange({ status: e.target.value as CalcPokemonState['status'] })}
-            className="px-2 py-0.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
-          >
-            <option value="">Healthy</option>
-            {STATUS_OPTIONS.map((s) => (
-              <option key={s} value={s}>
-                {STATUS_LABELS[s]}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <CalcStatRows
+      <CalcPokemonPanelFields
+        state={state}
+        speciesOptions={speciesOptions}
+        itemOptions={itemOptions}
+        abilityOptions={abilityOptions}
+        sortedNatureOptions={sortedNatureOptions}
+        formes={formes}
+        megaGroup={megaGroup}
         baseStats={baseStats}
         boostedStats={boostedStats}
-        sps={state.sps}
-        boosts={state.boosts}
         natureEffect={natureEffect}
-        onChangeSp={(key, value) => onChange({ sps: { ...state.sps, [key]: value } })}
-        onChangeBoost={(key, value) => onChange({ boosts: { ...state.boosts, [key]: value } })}
+        usage={usage}
+        itemPercentByName={itemPercentByName}
+        abilityPercentByName={abilityPercentByName}
+        naturePercentByName={naturePercentByName}
+        savedSetPickerSpecies={savedSetPickerSpecies}
+        savedPokemonState={savedPokemonState}
+        resolveSprite={resolveSprite}
+        regulation={regulation}
+        vgcPastesState={vgcPastesState}
+        realSets={realSets}
+        onChange={onChange}
+        onSpeciesSelect={handleSpeciesSelect}
+        onPickSavedSet={handlePickSavedSet}
+        onCloseSavedSetPicker={closeSavedSetPicker}
+        onMegaToggle={handleMegaToggle}
+        onCycleGender={cycleGender}
       />
-
-      {usage && (
-        <CalcStatSpreadChips
-          statSpreads={usage.statSpreads}
-          currentSps={state.sps}
-          onSelect={(sps) => onChange({ sps })}
-        />
-      )}
-
-      {state.species && (
-        <CalcRealSetsSection
-          species={state.species}
-          regulation={regulation}
-          hasCatalogRows={vgcPastesState.getRows(regulation).length > 0}
-          isCatalogRefreshing={vgcPastesState.isRefreshing}
-          onRefreshCatalog={() => realSets.refreshCatalogAndRetry(state.species)}
-          entry={realSets.entry}
-          isLoading={realSets.isLoading}
-          progress={realSets.progress}
-          error={realSets.error}
-          onPickBundle={(bundle) => onChange(realSetBundleToCalcUpdates(bundle))}
-        />
-      )}
 
       <AnimatePresence>
         {pendingSave && (
