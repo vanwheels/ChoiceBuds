@@ -35,29 +35,6 @@ app.commandLine.appendSwitch('disable-direct-composition');
 // be called before app.whenReady() / any BrowserWindow is created.
 app.disableHardwareAcceleration();
 
-// Forces Chromium to map CSS pixels 1:1 to physical pixels instead of
-// letting Windows' DPI virtualization bitmap-scale the rendered surface
-// after the fact. Without this (confirmed live 2026-10-16, see TODO.md's
-// Mobile/App/Web dev-environment entry), on a scaled Windows display the
-// window's actual *physical* size - what width/minWidth below set to
-// 1280x720 - was ending up mapped to a much smaller *logical* CSS viewport,
-// small enough to fall under Tailwind's 768px `md:` breakpoint despite the
-// enforced minimum width: the app rendered its phone/mobile layout inside a
-// window that looked plenty wide. Resizing past that point crossed back
-// into the desktop breakpoint, but Windows then had to upscale the
-// already-smaller rendered surface to fill the larger window, producing the
-// blurry/"zoomed" look reported alongside it. Very likely an interaction
-// with disableHardwareAcceleration() above forcing a software render path
-// that doesn't correctly report the monitor's scale factor. Windows-only -
-// macOS already resolves Retina scaling correctly without this, and forcing
-// scale factor 1 there would make a real Retina display render blurry
-// instead of fixing anything. Must be called before app.whenReady() / any
-// BrowserWindow is created.
-if (process.platform === 'win32') {
-  app.commandLine.appendSwitch('high-dpi-support', '1');
-  app.commandLine.appendSwitch('force-device-scale-factor', '1');
-}
-
 let mainWindow: BrowserWindow | null = null;
 
 /**
@@ -90,6 +67,22 @@ async function createWindow(): Promise<void> {
   mainWindow.on('resize', () => scheduleWindowStateSave(mainWindow));
   mainWindow.on('move', () => scheduleWindowStateSave(mainWindow));
   mainWindow.on('close', () => saveWindowStateSync(mainWindow));
+
+  // Chromium persists page zoom per-origin indefinitely (its HostZoomMap,
+  // stored in userData, survives app restarts) - an accidental Ctrl+scroll
+  // or View -> Zoom In on localhost:5173/the packaged app's own origin
+  // silently stays applied on every future launch with no in-app UI
+  // pointing at it, since there's no custom Menu here overriding the stock
+  // Electron "View" menu's zoom items. That's what a real Electron window,
+  // sized well past the 1280 minimum, was rendering the app's phone/mobile
+  // breakpoint and looking "zoomed" (confirmed live 2026-10-16 - View ->
+  // Actual Size fixed it instantly, no code change needed to reproduce).
+  // Resetting to 0 (= 100%, Chromium's zoom levels are logarithmic) on every
+  // load overrides whatever HostZoomMap would otherwise re-apply, so a
+  // stray zoom never outlives the session it was set in.
+  mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow?.webContents.setZoomLevel(0);
+  });
 
   // Show window when ready to prevent visual flash
   mainWindow.once('ready-to-show', () => {

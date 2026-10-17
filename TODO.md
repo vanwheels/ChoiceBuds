@@ -95,32 +95,39 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-- **[Dev Environment: Electron DPI Fix + Mobile Web Preview Script] — Leg 1**
-  *(Last touched: 2026-10-16 · Re-checks: 0)*
+- **[Dev Environment: Electron Zoom-Persistence Fix + Mobile Web Preview
+  Script] — Leg 1** *(Last touched: 2026-10-16 · Re-checks: 0)*
   Flagged live 2026-10-16: `npm run dev`'s Electron window was rendering the
-  mobile/phone layout despite `main.ts`'s enforced 1280x720 minimum size,
-  and looked blurry/"zoomed" once resized past the breakpoint - a Windows
-  display-scaling bug, not a real layout regression (see screenshots in
-  this session's transcript). Root cause: Chromium wasn't reporting its CSS
-  viewport 1:1 against the window's physical size, likely interacting with
-  the pre-existing `app.disableHardwareAcceleration()` GPU workaround -
-  Windows was then bitmap-stretching the rendered surface. Fix: `main.ts`
-  now appends `high-dpi-support`/`force-device-scale-factor=1` switches,
-  gated `process.platform === 'win32'` (macOS Retina scaling already works
-  correctly and doesn't need this). Also added a third, genuinely separate
-  dev mode for Mobile Web testing (the app only had Electron `npm run dev`
-  and desktop-width `npm run dev:web` before): `npm run dev:mobile`
-  (`scripts/devMobile.mjs`) opens a real Chrome window via
-  `playwright-core`'s `channel: 'chrome'` (no separate browser download,
-  same approach `.claude/skills/run-desktop/driver.mjs` already uses for
-  Electron) sized to a 375x812 phone viewport against the existing
-  `npm run dev:web` server on :5174 - requires that server already running,
-  same prerequisite convention as the Electron driver script.
+  mobile/phone layout despite `main.ts`'s enforced 1280x720 minimum size.
+  First hypothesis (Windows DPI virtualization bitmap-stretching the
+  rendered surface, worked around via `high-dpi-support`/
+  `force-device-scale-factor=1` switches) was live-tested and ruled out - a
+  confirmed-clean process restart (no orphaned `electron.exe`) was still
+  zoomed, so those switches were reverted. Real cause, found live by Vanny:
+  Chromium persists page zoom per-origin indefinitely (its HostZoomMap,
+  stored in userData, survives app restarts) - an accidental Ctrl+scroll/
+  View -> Zoom In on `localhost:5173` had stuck and kept re-applying on
+  every future launch, shrinking the effective CSS viewport below
+  Tailwind's 768px `md:` breakpoint with no in-app UI pointing at why
+  (there's no custom `Menu` here overriding Electron's stock "View" menu
+  zoom items). `View -> Actual Size` fixed it instantly for that session,
+  confirming the diagnosis. Fix: `main.ts` now resets zoom to level 0 (100%)
+  on every `did-finish-load`, overriding whatever HostZoomMap would
+  otherwise re-apply, so a stray zoom can't outlive the session it was set
+  in. Also added a third, genuinely separate dev mode for Mobile Web
+  testing (the app only had Electron `npm run dev` and desktop-width
+  `npm run dev:web` before): `npm run dev:mobile` (`scripts/devMobile.mjs`)
+  opens a real Chrome window via `playwright-core`'s `channel: 'chrome'`
+  (no separate browser download, same approach
+  `.claude/skills/run-desktop/driver.mjs` already uses for Electron) sized
+  to a 375x812 phone viewport against the web dev server on :5174 -
+  self-starts `vite --config web/vite.config.ts` if nothing's already
+  listening there (reuses it untouched if `dev:web` is already running
+  elsewhere), so it's one command rather than two terminals.
   Done check: `npm run build`/`lint`/`type-check` pass (confirmed). Needs
-  your live Windows verification: does `npm run dev` now show the desktop
-  layout at its default/minimum size without needing to resize, and does
-  `npm run dev:mobile` open a genuinely phone-proportioned (not
-  blurry/zoomed) preview?
+  your live Windows verification: does `npm run dev` now come up at 100%
+  zoom by default, and does `npm run dev:mobile` cleanly open a
+  phone-proportioned preview on its own?
   Manual verification: yes. Review: no.
 
 - **[UI Shift Assessment Sweep — Post Card UI Polish] — Leg 1** *(Last
