@@ -6,7 +6,7 @@ Battle Log, Statistics, Type Matchup, Speed Tiers, and Settings (plus
 tab) each gained their own `px-4 md:px-0` on their root container, matching
 `TeamsPage.tsx`'s existing pattern so `AppWeb.tsx`'s unpadded mobile `<main>`
 no longer leaves them edge-to-edge below `md`. Verified live on
-`dev:mobile`. See commit <hash>.
+`dev:mobile`. See commit 0ef6aaa.
 
 Archive of finished work, split out of `TODO.md` (2026-07-08) to keep the
 active task list quick to scan. Newest entries first. Cross-references to
