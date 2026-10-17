@@ -58,7 +58,7 @@ tests in each of `useBattles.test.ts`/`useSavedPokemon.test.ts`, mirroring
 tombstones, local-edit-wins-the-race, local-only-record-keeps-position,
 delete-not-resurrected). Not manually verified live - same reasoning as the
 Teams fix, this is a queue-ordering race unit tests cover more reliably
-than a live repro. See commit TBD.
+than a live repro. See commit `24c9c13`.
 
 No other entries yet since the last milestone boundary.
 
