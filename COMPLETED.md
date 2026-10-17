@@ -60,5 +60,30 @@ delete-not-resurrected). Not manually verified live - same reasoning as the
 Teams fix, this is a queue-ordering race unit tests cover more reliably
 than a live repro. See commit `24c9c13`.
 
+## Web Download/Landing Page — 2026-10-17
+
+Added a new Vite build input (`web/download/`) mounting `DownloadPage.tsx`
+at `choicebuds.vannyproductions.com/download/`, independent of the main web
+app bundle at the domain root (placement decided 2026-10-17: the Teams/Box
+web app stays at root, the landing page doesn't replace it, since the
+original "default download entry point" framing from Web Hosting &
+Domain's scoping note predated the web app actually shipping there). Calls
+`fetchLatestRelease()` (`services/github.ts`, extended to also return each
+release's `assets` - `name`/`downloadUrl` pairs) and picks the
+OS-appropriate installer via two new pure, tested modules:
+`utils/detectPlatform.ts` (binary Windows/macOS user-agent sniff - no third
+build target exists) and `utils/releaseAssets.ts` (matches
+electron-builder's real artifact names from `package.json`'s `build`
+config - `ChoiceBuds-Setup-*.exe` NSIS installer vs. the plain
+`ChoiceBuds-*.exe` portable build, `*-universal.dmg` vs. `*-universal-mac.zip`).
+Falls back to a GitHub Releases link if the fetch fails or a platform's
+assets are missing. `AppWeb.tsx`'s sidebar footer gets a small "Get the
+desktop app" link to `/download/` for discoverability - flagged by Vanny
+post-verification as worth making more visible later, not urgent now (see
+`TODO.md`'s Unscheduled section). Verified the asset-picking logic against
+the real latest release's live asset list, not just fixtures, and
+confirmed live on choicebuds.vannyproductions.com after deploy. See commit
+`bc0a41e`.
+
 No other entries yet since the last milestone boundary.
 

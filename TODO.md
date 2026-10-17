@@ -25,26 +25,6 @@ Done when:
 3. Both web-facing legs (landing page, padding fix) are verified live on
    choicebuds.vannyproductions.com, not just on `dev:web`.
 
-- **[Web Download/Landing Page] — Leg 2** *(Last touched: 2026-10-17 ·
-  Re-checks: 0)*
-  Implemented: a new Vite build input (`web/download/`) mounts
-  `DownloadPage.tsx` at `/download/`, independent of the main app bundle at
-  root (the Teams/Box web app stays at the domain root — placement decided
-  2026-10-17, landing page does not replace it). Calls
-  `fetchLatestRelease()` (`services/github.ts`, now also returning each
-  release's `assets`), picks the OS-appropriate installer via
-  `utils/detectPlatform.ts` + `utils/releaseAssets.ts` (binary Windows/macOS
-  sniff — matches electron-builder's real artifact names: `*-Setup-*.exe`
-  NSIS installer vs. plain `*.exe` portable, `*.dmg` vs. `*-mac.zip`), with
-  a fallback link to GitHub Releases on fetch failure. `AppWeb.tsx`'s
-  sidebar footer gets a small "Get the desktop app" link to `/download/`
-  for discoverability. Verified the asset-picking logic against the real
-  latest release's actual asset list, not just fixtures.
-  Done check: OS detection correct on both Windows and macOS, links resolve
-  to the right asset, page deployed live and reachable.
-  Manual verification: yes (pending — needs a live check on
-  choicebuds.vannyproductions.com after this deploys). Review: no.
-
 - **[Web Content-Area Padding Fix] — Leg 3** *(Last touched: 2026-10-17 ·
   Re-checks: 0)*
   Scoped 2026-10-17, originally flagged 2026-09-30 during live verification
@@ -102,6 +82,11 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+"Get the desktop app" sidebar link visibility (flagged 2026-10-17 by Vanny
+after live-verifying Web Download/Landing Page - see `COMPLETED.md`): the
+link to `/download/` added to `AppWeb.tsx`'s sidebar footer is small/easy
+to miss. Not important right now - revisit styling/placement later.
 
 ## Future Milestones (unscheduled)
 
