@@ -1,5 +1,15 @@
 # ChoiceBuds - Completed Work Log
 
+**[Download App Sidebar Link Visibility] — Leg 2** (2026-10-17)
+`AppWeb.tsx`'s sidebar footer "Get the desktop app" link became a solid
+accent-gold button with a new `DownloadIcon` (`SidebarIcons.tsx`), moved
+above the Settings nav item per live feedback, and shortened to "Desktop
+App" to stop it wrapping onto a second line. The reorder in `Sidebar.tsx`
+(`renderFooter` now renders before `BOTTOM_NAV_ITEMS`, whichever block
+comes first gets `mt-auto`) applies to both the desktop rail and mobile
+drawer, and falls back correctly when no `renderFooter` is passed (App.tsx's
+desktop sidebar). Verified live. See commit 66650cd.
+
 **[Mobile Web Content-Area Padding Fix] — Leg 1** (2026-10-17)
 Battle Log, Statistics, Type Matchup, Speed Tiers, and Settings (plus
 `RecordMatchForm`'s in-place record/edit view, part of the same Battle Log

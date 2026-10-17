@@ -29,15 +29,6 @@ Done when:
   `TypeMatchupPage.tsx`, `RecordMatchForm.tsx`) use a shared sprite-aware
   dropdown component instead of a plain native `<select>`.
 
-- **[Download App Sidebar Link Visibility] — Leg 2** *(Last touched:
-  2026-10-17 · Re-checks: 0)*
-  The `/download/` link added to `AppWeb.tsx`'s sidebar footer is small and
-  easy to miss. Improve its styling/placement so it reads as a real call to
-  action without overpowering the rest of the sidebar footer.
-  Done check: link is visually distinct and easy to notice in the sidebar
-  footer on both desktop and mobile web widths.
-  Manual verification: yes. Review: no.
-
 - **[Team Picker Sprites: Shared Component] — Leg 3** *(Last touched:
   2026-10-17 · Re-checks: 0)*
   `CalcTeamTray.tsx`, `SpeedTierFieldPanel.tsx`, `TypeMatchupPage.tsx`, and
