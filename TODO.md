@@ -16,33 +16,15 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Blocked
+## Current Milestone: TeamCard Bug Fixes & Dev Tooling
 
-Items where the whole item (not just a sub-part) is stalled on something
-outside this project — a person, a dependency, or an external decision.
-Exempt from the re-check counter; they move back to "In progress" once
-unblocked.
-
-- **[In-App Auto-Update: macOS] — Leg 1** *(Last touched: not recorded ·
-  Re-checks: 0)*
-  Blocked: user needs a paid Apple Developer account ($99/yr) + notarization.
-  Windows shipped in v0.2.1 (see COMPLETED.md). macOS is blocked: Squirrel.Mac
-  (what `electron-updater` uses there) requires code signing to auto-update
-  at all, and Gatekeeper heavily restricts unsigned builds regardless. Once
-  unblocked, `registerAutoUpdater()`'s `process.platform !== 'win32'` guard
-  in `main.ts` is the one line to revisit.
-  - Separately, a paid Windows code-signing cert (~$100-400+/yr) isn't
-    required for Windows auto-update to function, but would remove the
-    SmartScreen warning — not yet decided.
-
-- **[TypeScript 7 Upgrade] — Leg 1** *(Last touched: not recorded ·
-  Re-checks: 0)*
-  Blocked: waiting on real `typescript-eslint` 7.x support.
-  `typescript-eslint` doesn't support TypeScript 7.0.2 yet (confirmed
-  peer-range rejection + real runtime crash reports). Currently on
-  TypeScript ^6.0.3.
-
-## Unscheduled (not yet scoped, highest-to-lowest priority)
+Done when:
+- Dev-env mobile-preview script confirmed working live.
+- TeamCard Notes blur bug has a reliable repro, root cause, and verified
+  fix.
+- Overflow Menu's "Validate Team" popup no longer blocks the dropdown's
+  other items.
+- Paste Team jump is either fixed or explicitly deferred with reasoning.
 
 - **[Dev Environment: Electron Zoom-Persistence Fix + Mobile Web Preview
   Script] — Leg 1** *(Last touched: 2026-10-16 · Re-checks: 0)*
@@ -122,13 +104,76 @@ unblocked.
   for one render/settle cycle.
   Manual verification: yes. Review: no.
 
-- **[UI Shift Assessment Sweep — Post Card UI Polish] — Leg 1** *(Last
-  touched: 2026-09-08 · Re-checks: 0)*
-  Continue scoping/assessing UI shifts and changes to the rest of the app,
-  following on from the UI/UX Overhaul and Card UI Polish milestones (see
-  `MILESTONES.md`). Open-ended — needs a pass identifying which
-  screens/components haven't had a UI-focused pass yet before it turns
-  into concrete legs.
+## Blocked
+
+Items where the whole item (not just a sub-part) is stalled on something
+outside this project — a person, a dependency, or an external decision.
+Exempt from the re-check counter; they move back to "In progress" once
+unblocked.
+
+- **[In-App Auto-Update: macOS] — Leg 1** *(Last touched: not recorded ·
+  Re-checks: 0)*
+  Blocked: user needs a paid Apple Developer account ($99/yr) + notarization.
+  Windows shipped in v0.2.1 (see COMPLETED.md). macOS is blocked: Squirrel.Mac
+  (what `electron-updater` uses there) requires code signing to auto-update
+  at all, and Gatekeeper heavily restricts unsigned builds regardless. Once
+  unblocked, `registerAutoUpdater()`'s `process.platform !== 'win32'` guard
+  in `main.ts` is the one line to revisit.
+  - Separately, a paid Windows code-signing cert (~$100-400+/yr) isn't
+    required for Windows auto-update to function, but would remove the
+    SmartScreen warning — not yet decided.
+
+- **[TypeScript 7 Upgrade] — Leg 1** *(Last touched: not recorded ·
+  Re-checks: 0)*
+  Blocked: waiting on real `typescript-eslint` 7.x support.
+  `typescript-eslint` doesn't support TypeScript 7.0.2 yet (confirmed
+  peer-range rejection + real runtime crash reports). Currently on
+  TypeScript ^6.0.3.
+
+## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+- **[Web Download/Landing Page] — Leg 1** *(Last touched: 2026-10-17 ·
+  Re-checks: 0)*
+  Scoped 2026-10-17 out of the Web Hosting & Domain fast-follow note below.
+  A landing/download page on choicebuds.vannyproductions.com that calls
+  `api.github.com/repos/vanwheels/ChoiceBuds/releases/latest` (same call
+  `services/github.ts`'s in-app update checker already makes), detects the
+  visitor's OS, and links to that release's OS-appropriate installer asset.
+  GitHub Releases stays the actual file host — no universal/self-fetching
+  installer needed.
+  Done check: OS detection correct on both Windows and macOS, links resolve
+  to the right asset, page deployed live and reachable.
+  Manual verification: yes. Review: no.
+
+- **[Web Content-Area Padding Fix] — Leg 1** *(Last touched: 2026-10-17 ·
+  Re-checks: 0)*
+  Scoped 2026-10-17, originally flagged 2026-09-30 during live verification
+  of Battle Log & Statistics Parity. `AppWeb.tsx`'s `<main>` has no padding
+  at all, unlike `App.tsx`'s desktop `<main>` (2rem/1.5rem inline styles),
+  so ported pages render edge-to-edge in the browser — visible on the
+  Battle Log page's card grid butting against the viewport edges. Fix:
+  mirror `App.tsx`'s `<main>` padding onto `AppWeb.tsx`. Confirm first that
+  no existing web page relies on `<main>` having zero padding before
+  applying it everywhere.
+  Manual verification: yes. Review: no.
+
+- **[Teams Tab Search Bar] — Leg 1** *(Last touched: 2026-10-17 ·
+  Re-checks: 0)*
+  Scoped 2026-10-17, proposed 2026-09-29. Search for a specific Pokémon by
+  name and surface which of the user's saved Teams include it. Partial
+  (substring) match on species or nickname; Teams-only, not the Box.
+  Done check: typing a partial species/nickname name filters the Teams list
+  to matching teams live.
+  Manual verification: yes. Review: no.
+
+- **[Item Usage Percentage Ordering] — Leg 1** *(Last touched: 2026-10-17 ·
+  Re-checks: 0)*
+  Scoped 2026-10-17. `championsBattleData.ts` already fetches `held_item`
+  usage rows (`items: rowsFor('held_item')`) from the same
+  championsbattledata.com source the existing move/ability usage-percentage
+  ordering already uses — this wires that existing data into
+  `ItemPickerPanel.tsx`'s ordering, mirroring the move/ability pattern.
+  Manual verification: yes. Review: no.
 
 ## Future Milestones (unscheduled)
 
@@ -147,58 +192,74 @@ favor of Regular Calc Popup (see `MILESTONES.md`). VGCPastes real-set
 sourcing, deferred out of Regular Calc Popup, was itself promoted to
 current 2026-09-14 and shipped 2026-09-15 (see `MILESTONES.md`).
 
-Two fast-follows deferred out of Web Version: Teams & Box MVP's scoping
+UI Shift Assessment Sweep — Post Card UI Polish, dropped as stale
+2026-10-17 (last touched 2026-09-08, never scoped past its open-ended
+framing). Any future UI-focused requests get scoped fresh as needed rather
+than carrying this placeholder forward.
+
+Password reset flow, deferred out of Web Version: Teams & Box MVP's scoping
 (2026-09-29, see `docs/investigations/web-version-scope.md`) - not yet
-worth their own legs until the MVP milestone ships:
-- Password reset flow (needs a transactional email API + SPF/DKIM
-  deliverability setup on a dedicated vannyproductions.com subdomain).
-- Public profile / team-sharing pages (the account model's username design
-  already accommodates this, but the public routes/per-team visibility
-  toggle need their own scoping pass). Scope widened 2026-09-29 (Vanny) to
-  cover profile search and a shared team database where users can upload
-  teams for others to browse in-app, not just per-team visibility toggles -
-  needs a privacy-model decision (what's public by default) and abuse/
-  moderation considerations for a public upload database before it's ready
-  to scope into legs.
+worth its own leg: needs a transactional email API + SPF/DKIM
+deliverability setup on a dedicated vannyproductions.com subdomain.
 
-Download/landing page for choicebuds.vannyproductions.com (proposed
-2026-09-29, out of Web Hosting & Domain's Leg 1): make the new site the
-default download entry point instead of sending people straight to the
-GitHub Releases page. No universal/self-fetching installer needed - a page
-calling `api.github.com/repos/vanwheels/ChoiceBuds/releases/latest` (the
-same call `services/github.ts`'s in-app update checker already makes) and
-linking to that release's OS-appropriate asset is enough; GitHub Releases
-stays the actual file host. Needs its own scoping pass (OS detection UI,
-where the page lives relative to the app shell, page design) - not yet
-worth a leg on its own.
+**Public Profiles & Team Sharing** (rescoped 2026-10-17, originally
+deferred 2026-09-29 out of Web Version: Teams & Box MVP - account system
+and username design now shipped, see `docs/investigations/web-version-scope.md`).
+Display name = the existing login username (decided 2026-10-17, no
+separate field). Candidate legs:
+1. Public profile route showing a preset icon (not user-uploadable) +
+   username, nothing else, public by default.
+2. Per-item opt-in toggles for everything beyond the base profile - teams
+   visibility, a new favorite-Pokémon field, whatever else gets decided at
+   scoping time.
+3. Profanity/safety filter for usernames, public team names, and public
+   Pokémon nicknames - needs its own research pass on approach (word-list
+   library vs. a filtering API) before it's a concrete leg.
+4. Shared public team browse/upload database (scope widened 2026-09-29 by
+   Vanny beyond per-team visibility toggles) - the biggest open question:
+   abuse/moderation model for a public upload database. Flagged as needing
+   its own dedicated scoping pass before any legs get written here; not
+   leg-ready yet.
 
-General web content-area padding gap (flagged 2026-09-30 by Vanny during
-live verification of Battle Log & Statistics Parity): `AppWeb.tsx`'s
-`<main>` has no padding at all, unlike `App.tsx`'s desktop `<main>`
-(2rem/1.5rem inline styles), so ported pages render edge-to-edge in the
-browser - visible on the Battle Log page's card grid butting against the
-viewport edges. Distinct from the mobile-friendliness pass above (that one's
-about touch/breakpoints for phone-sized viewports; this is a plain desktop-
-browser layout gap). Not fixed now per Vanny's call to worry about it later
-- likely a quick fix (mirror `App.tsx`'s `<main>` padding) whenever a web UI
-polish pass happens, but worth confirming it doesn't collide with any
-page's own assumption that `<main>` has zero padding first.
+**Team Picker Sprites** (proposed 2026-10-17): the "Load From Team"
+dropdown (`CalcTeamTray.tsx`), Speed Tiers (`SpeedTierFieldPanel.tsx`),
+Type Matchup (`TypeMatchupPage.tsx`), and Battle Log's `RecordMatchForm.tsx`
+all currently pick a team via a plain native `<select>` with text-only
+options - team names aren't always a reliable indicator of what's on the
+team, and a native `<select>` can't render sprites inside its own option
+list (you only see sprites after picking, e.g. `CalcTeamTray`'s sprite row
+below the dropdown). `AbilityPickerPanel.tsx`/`ItemPickerPanel.tsx` already
+implement a custom icon-row dropdown pattern elsewhere in the app, so this
+is building one shared sprite-aware team-picker component against that
+existing pattern and adopting it in the 4 call sites above, not 4 one-off
+fixes. Likely 2 legs: the shared component, then adoption across the 4
+sites.
 
-Teams tab search bar (proposed 2026-09-29): search for a specific Pokémon
-by name and surface which of the user's saved teams include it. Needs its
-own scoping pass (exact vs. partial name match, whether it also searches
-the Box or is Teams-only, UI placement) - not yet worth a leg.
+**Pokepaste Format Research** (proposed 2026-10-17): Vanny recalled
+Showdown moving away from Pokepaste integration toward its own newer
+format. A web search during scoping found no corroborating evidence -
+general documentation and a 2026 third-party guide both still describe
+`pokepast.es` as the standard, in-use export format. First leg is a direct
+check (Smogon forums / Showdown's own GitHub changelog, not just a general
+web search) to confirm or close this before any follow-up work gets
+scoped - this project's existing Pokepaste integration
+(`services/pokepaste.ts`, `.claude/rules/external-data-sources.md`
+exceptions #3/#8) is active and working either way.
 
-Battle Logging: special events / Global Challenge (proposed 2026-09-29):
-let a logged battle be tagged to a specific event so a user can filter/
-view matches for that event specifically. Global Challenge is online,
-dated, and officially endorsed by The Pokémon Company, so it's a plausible
-source of truth to track. In-person Regionals are also official but (a)
-there's no clear source for a complete/reliable schedule to pull from and
-(b) players are unlikely to log in-person tournament games in the app
-anyway (no external devices allowed at the event), so Regionals may not be
-worth pursuing even once scoped. Open question from Vanny that needs a
-decision before this can be scoped further: let users freeform-create
-their own named events, vs. only tracking a curated list of official ones
-(e.g. just GC).
+**Competitive Events: Tourney Tab** (rescoped 2026-10-17, originally
+proposed 2026-09-29 as "Battle Logging: special events / Global
+Challenge"). Decided: a curated list, not freeform user-created events -
+GC (Global Challenge), Regionals, International Championships, and Worlds,
+i.e. The Pokémon Company International's own sanctioned/sponsored events
+only. No existing approved external data source covers tournament
+schedules (`.claude/rules/external-data-sources.md` has 9 numbered
+exceptions, none of them this). Candidate legs:
+1. Research pass for a live/structured schedule source (e.g. Play!
+   Pokemon's event locator) for the events above; falls back to a
+   hand-maintained config file (same pattern as
+   `config/championsMoveOverrides.ts`) if nothing reliable turns up. A live
+   source would need its own new numbered exception added to
+   `external-data-sources.md`.
+2. Tourney tab UI (depends on Leg 1's outcome) showing upcoming events with
+   dates, location, and signup deadlines where available.
 
