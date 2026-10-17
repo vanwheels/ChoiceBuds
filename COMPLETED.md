@@ -40,6 +40,7 @@ unserialized. Added a concurrent-write regression test to each of the
 three hooks' test files (modeled on `useTeams.test.ts`'s) and corrected the
 stale comment. `type-check`/`lint`/`test` all pass (783 tests). Manual
 verification: no. Review: re-reviewed, no further findings.
+See commit e2faada.
 
 **Audit Sibling Hooks for useTeams' Lost-Update Race — Leg 1** (2026-10-16)
 Audited `useSavedPokemon.ts`, `useBattles.ts`, `useSettings.ts`, and
