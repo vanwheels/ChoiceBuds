@@ -13,8 +13,9 @@ in the OS userData directory (no database).
 
 ## Commands
 
-- `npm run dev` — start Vite + Electron in development (renderer at `http://localhost:5173`, hot reload)
-- `npm run dev:web` — start the web build's own Vite dev server (`http://localhost:5174`) — see `ARCHITECTURE.md`'s Web build section
+- `npm run dev` — start Vite + Electron in development (renderer at `http://localhost:5173`, hot reload). This is the **App** target: `App.tsx`'s desktop shell, enforced 1280x720 minimum window size.
+- `npm run dev:web` — start the web build's own Vite dev server (`http://localhost:5174`) — see `ARCHITECTURE.md`'s Web build section. This is the **Web** target: `AppWeb.tsx` at ordinary desktop browser width.
+- `npm run dev:mobile` — opens a real Chrome window (`scripts/devMobile.mjs`, via `playwright-core`'s `channel: 'chrome'`, no separate browser download) at a 375x812 phone viewport against the same web dev server, self-starting it if `dev:web` isn't already running. This is the **Mobile Web** target: `AppWeb.tsx` below the 768px `md:` breakpoint. Don't try to simulate this by resizing the `dev`/`dev:web` window/tab by hand — Electron's window has an enforced 1280 minimum width that `resize` can't get under (see `.claude/skills/run-desktop/driver.mjs`'s own `zoom` workaround for why that skill needs a page-zoom trick instead), and a manually narrowed browser tab won't carry the right touch/mobile user agent either.
 - `npm run build` — type-check (`tsc`) then production build via `vite build`
 - `npm run build:web` — type-check then production build of the web entry, output to `dist/web/`
 - `npm run type-check` — `tsc --noEmit` only
