@@ -67,3 +67,5 @@ milestone.
   [post-mortem](docs/postmortems/teamcard-bug-fixes-dev-tooling.md)
 - **Bug Fix & Small Features Sweep** — 2026-10-17 — Shipped —
   [post-mortem](docs/postmortems/bug-fix-small-features-sweep.md)
+- **Mobile Web & UI Polish** — 2026-10-17 — Shipped —
+  [post-mortem](docs/postmortems/mobile-web-ui-polish.md)

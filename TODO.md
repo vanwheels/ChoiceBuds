@@ -16,24 +16,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Mobile Web & UI Polish
-
-Done when:
-- The 5 unpadded mobile-web tabs (Battle Log, Statistics, Type Matchup,
-  Speed Tiers, Settings) each supply their own mobile content-area padding,
-  matching TeamsPage/BoxPageGrid's existing pattern. ✅ (Leg 1, see
-  COMPLETED.md)
-- The "Get the desktop app" sidebar link in the web app is more
-  discoverable (styling/placement improved from its current small/easy-to-
-  miss state). ✅ (Leg 2, see COMPLETED.md)
-- All 4 team-picker call sites (`CalcTeamTray.tsx`, `SpeedTiersPage.tsx`,
-  `TypeMatchupPage.tsx`, `RecordMatchForm.tsx`) use a shared sprite-aware
-  dropdown component instead of a plain native `<select>`. ✅ (Legs 3-4,
-  see COMPLETED.md)
-
-All 3 done-when items are now met - this milestone is ready to close via
-`/close-milestone` whenever convenient.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
