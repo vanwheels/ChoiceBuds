@@ -29,21 +29,6 @@ Done when:
   `CalcPokemonPanel.tsx` are each split below the 500-line hard cap with no
   behavior change.
 
-- **[File Cap Splits: TeamCard.tsx] — Leg 1** *(Last touched: 2026-10-16 ·
-  Re-checks: 0)*
-  Split `src/renderer/components/TeamCard.tsx` (761 lines) into smaller
-  single-purpose sub-components per the Style rules' cohesive-file smell
-  test, with no behavior change. Done: extracted `TeamCardHeader.tsx`
-  (identity/sprite-strip/controls header row), `TeamCardRosterGrid.tsx`
-  (expanded roster grid + Add Pokémon + notes), and `TeamCardOverlays.tsx`
-  (context menus + Export/Export Image/Export PDF/Add-Pokémon-picker
-  modals); `TeamCard.tsx` is now the 398-line state/handler orchestrator.
-  `npm run build`/`lint`/`test` all pass (783 tests). Needs: your manual
-  verification in the running app (expand/collapse, drag-reorder, edit
-  name/author/notes, add/remove Pokémon, right-click copy/paste, all three
-  export modals) before this is fully done.
-  Manual verification: yes. Review: no.
-
 - **[File Cap Splits: BoxPage.tsx] — Leg 1** *(Last touched: 2026-10-16 ·
   Re-checks: 0)*
   Split `src/renderer/components/BoxPage.tsx` (583 lines) the same way.
@@ -124,10 +109,53 @@ unblocked.
   self-starts `vite --config web/vite.config.ts` if nothing's already
   listening there (reuses it untouched if `dev:web` is already running
   elsewhere), so it's one command rather than two terminals.
-  Done check: `npm run build`/`lint`/`type-check` pass (confirmed). Needs
-  your live Windows verification: does `npm run dev` now come up at 100%
-  zoom by default, and does `npm run dev:mobile` cleanly open a
-  phone-proportioned preview on its own?
+  Done check: `npm run build`/`lint`/`type-check` pass (confirmed).
+  `npm run dev` confirmed live 2026-10-16 - comes up at 100% zoom by
+  default now. Still needs: a live try of `npm run dev:mobile` to confirm
+  it cleanly self-starts `dev:web` and opens a phone-proportioned preview.
+  Manual verification: yes. Review: no.
+
+- **[TeamCard Notes: Data Loss on First Blur After Expand] — Leg 1** *(Last
+  touched: 2026-10-16 · Re-checks: 0)*
+  Found live during the TeamCard.tsx split's manual verification (see
+  COMPLETED.md) - pre-existing, not a regression from that split (the
+  notes `onBlur` handler is byte-for-byte unchanged, just relocated into
+  `TeamCardRosterGrid.tsx`). Typing into a team's Strategy Notes textarea
+  and clicking out cleared what was typed the *first* time after expanding
+  a card; typing again and blurring a second time saved correctly. Smells
+  like the "adjust state during render" `prevPropNotes`/`localNotes` resync
+  pattern (same shape as `StatsColumn.tsx`'s own fix, see TODO.md's Web Bug
+  Sweep Leg 1) racing against the async `updateTeam` call on first blur,
+  but needs an actual repro/investigation pass before guessing at a fix -
+  intermittent (didn't reproduce on the second attempt), and name/author
+  fields in the same card (same pattern, in `TeamCardHeader.tsx`) didn't
+  show the issue.
+  Done check: reliable repro steps found, root cause identified, fix
+  verified live across several expand/type/blur cycles.
+  Manual verification: yes. Review: no.
+
+- **[TeamCard Overflow Menu: Validate Popup Covers Own Dropdown] — Leg 1**
+  *(Last touched: 2026-10-16 · Re-checks: 0)*
+  Flagged live during the TeamCard.tsx split's manual verification (see
+  COMPLETED.md), explicitly deferred by Vanny. `TeamOverflowMenu.tsx`'s
+  "Validate Team" result popup renders on top of the "⋮" dropdown's other
+  items (Export/Export Image/Export PDF/Delete), so they're unreachable
+  until you click away to dismiss the popup first - annoying but not
+  broken (the popup does eventually dismiss and the menu works normally
+  after). Likely a z-index/stacking-order or positioning fix scoped to
+  that one component.
+  Manual verification: yes. Review: no.
+
+- **[TeamCard Paste Team: Pasted Card Jumps Before Re-sort] — Leg 1** *(Last
+  touched: 2026-10-16 · Re-checks: 0)*
+  Flagged live during the TeamCard.tsx split's manual verification (see
+  COMPLETED.md) - "for what it's worth," not urgent. Pasting a team via the
+  right-click "Paste as New Team" menu always inserts the new card directly
+  above the team it was copied from, then a couple seconds later it visibly
+  jumps down to its real alphabetical-sort position. End state is correct;
+  only the transient placement is off. Likely `addTeam`'s insertion point
+  vs. whatever drives the list's sort-order animation being out of sync
+  for one render/settle cycle.
   Manual verification: yes. Review: no.
 
 - **[UI Shift Assessment Sweep — Post Card UI Polish] — Leg 1** *(Last

@@ -29,6 +29,23 @@ Entries prior to this file's oldest are in:
   (the Prettier Adoption milestone's three legs, split out at the
   2026-10-16 Prettier Adoption boundary)
 
+**File Cap Splits: TeamCard.tsx — Leg 1** (2026-10-16)
+Split `src/renderer/components/TeamCard.tsx` (761 lines) into
+`TeamCardHeader.tsx` (identity/sprite-strip/controls header row),
+`TeamCardRosterGrid.tsx` (expanded roster grid + Add Pokémon + notes), and
+`TeamCardOverlays.tsx` (context menus + Export/Export Image/Export
+PDF/Add-Pokémon-picker modals); `TeamCard.tsx` itself is now a 398-line
+state/handler orchestrator. Live-verified against the full behavioral
+surface (expand/collapse, header fields, favorite, regulation badge,
+both drag-reorders, Add Pokémon, both right-click menus, overflow menu,
+responsive stacking) - no regression from the split. Three pre-existing,
+unrelated issues surfaced during verification and were logged as their own
+TODO.md items rather than fixed in this pass: a notes-textarea data-loss
+bug on first blur after expand, Paste Team's card briefly appearing above
+its pasted slot before alphabetical re-sort settles, and the overflow
+menu's Validate Team popup covering its own dropdown until dismissed. See
+commit 7b1352e.
+
 **Audit Sibling Hooks for useTeams' Lost-Update Race — Leg 2** (2026-10-16)
 Applied the same ref+queue fix `useTeams.ts` got to `useSavedPokemon.ts`,
 `useBattles.ts`, and `useSettings.ts` per Leg 1's audit findings below.
