@@ -34,6 +34,30 @@ Entries prior to this file's oldest are in:
   milestone slug since it shares its date range with the Prettier Adoption
   archive above)
 
+## TeamCard Paste Team: Pasted Card Jumps Before Re-sort — Leg 1 — 2026-10-17
+
+Two compounding causes. (1) `utils/teamPaste.ts::buildPastedTeam`'s
+`...pasted` spread carried over the source team's `sortOrder` verbatim, so
+`teamSort.ts`'s tiebreaker treated the pasted card as tied specifically with
+the team it was copied from instead of untied like a fresh import - fixed
+by explicitly clearing `sortOrder` there. That surfaced a second,
+pre-existing bug live: once untied, the card correctly rendered at the
+front of its group but ~3s later jumped to the bottom of the whole list -
+`useTeams.ts::applySyncedState`'s `reconciled` array built its base order
+from the sync response (`records`) rather than local order, so any
+locally-added team the response didn't know about yet (a paste, a fresh
+import, any `addTeam`) got appended after everything else on the very next
+auto-sync round-trip. Fixed by rebuilding `reconciled` from
+`teamsRef.current` (local order) instead, merging in the synced version per
+id only where it's newer, and appending only genuinely remote-only records
+(synced from another device) at the end. This closes the same bug
+separately tracked as TODO.md's "applySyncedState Reconciliation Loses
+Local-Only Team's List Position" (removed from TODO.md, not actually
+cosmetic/self-correcting as first thought). Regression tests added to
+`teamPaste.test.ts` and `useTeams.test.ts`. Verified live by the user across
+multiple paste attempts after both fixes landed. See commits `679abed`
+(sortOrder) and `a506542` (applySyncedState base order).
+
 ## TeamCard Overflow Menu: Validate Popup Covers Own Dropdown — Leg 1 — 2026-10-17
 
 `TeamValidationButton.tsx`'s result popup was `absolute`-positioned over

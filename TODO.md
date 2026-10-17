@@ -26,35 +26,8 @@ Done when:
   other items.
 - Paste Team jump is either fixed or explicitly deferred with reasoning.
 
-- **[TeamCard Paste Team: Pasted Card Jumps Before Re-sort] — Leg 1** *(Last
-  touched: 2026-10-17 · Re-checks: 0)*
-  Two compounding root causes, found across two passes. (1)
-  `utils/teamPaste.ts::buildPastedTeam`'s `...pasted` spread carried over
-  the source team's `sortOrder` verbatim, so `teamSort.ts`'s tiebreaker
-  treated the new card as tied specifically with the team it was copied
-  from instead of untied like a fresh import - fixed by explicitly clearing
-  `sortOrder` there, matching "pasted team behaves like a fresh import"
-  (`TeamCard.tsx`'s own `handlePasteTeam` comment). That alone surfaced the
-  second, pre-existing bug live: once untied, the pasted card correctly
-  rendered at the front of its group, but ~3s later jumped to the *bottom*
-  of the whole list - `useTeams.ts::applySyncedState`'s `reconciled` array
-  built its base order from `records` (the sync response), appending any
-  team the response didn't know about yet yet (e.g. the just-pasted one,
-  mid-flight) after everything else, regardless of its real local position.
-  This is the same mechanism already tracked as this file's now-removed
-  "applySyncedState Reconciliation Loses Local-Only Team's List Position"
-  entry - fixed together here, not separately, since the paste bug's live
-  repro is what proved it out: it isn't cosmetic/self-correcting, it's the
-  actual mechanism behind this entire bug. Fix: `reconciled` now walks
-  `teamsRef.current` (local order) as its base, merging in the synced
-  version per id only where the remote side is newer, and appends only
-  truly remote-only records (teams synced from another device, no local
-  position to preserve) at the end. Regression tests added to
-  `teamPaste.test.ts` and `useTeams.test.ts`.
-  Manual verification: pending re-test (user's first live check after pass
-  1 caught the second bug above; pass 2 not yet re-verified live).
-  Review: recommended - touches sync/persisted-data merge logic
-  (`applySyncedState`).
+All four done-when criteria are now satisfied (see COMPLETED.md) - no open
+items remain in this milestone. Ready for `/close-milestone`.
 
 ## Blocked
 
