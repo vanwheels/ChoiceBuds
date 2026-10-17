@@ -77,6 +77,27 @@ changed, so the debounce reschedules) pushes it for real.
 See the two new tests in `useTeams.test.ts` right above
 `setTeamOrder reorders...`.
 
+## Leg 2: the same race, for deletes
+
+`/leg-review` on Leg 1's fix found it left one shape of the same flaw open:
+`reconciled`'s `records.map` fell back to `remote` for any id missing from
+`localById`, which also matches a team deleted locally (via `deleteTeam`,
+which removes it from `teamsRef.current` and records a tombstone) after the
+push snapshot was taken but before the response landed - so the delete lost
+the race and the team came back. The unconditional `tombstonesRef.current =
+[]` on the same success path compounded it: it discarded that fresh
+tombstone too, so the next sync wouldn't even know to tell the server about
+the deletion.
+
+Fix: `applySyncedState` now takes a second argument, `pushedTombstones` (the
+tombstone list `useSync.ts`'s push actually sent, captured before the
+`pushSyncData` call - see its `payload.teamTombstones`). Any `records` entry
+whose id still has a pending tombstone in `tombstonesRef.current` is dropped
+rather than falling back to `remote`, and only tombstones named in
+`pushedTombstones` are cleared - a tombstone added after the push snapshot
+stays pending for the next cycle. New regression test in `useTeams.test.ts`
+right after the two Leg 1 tests.
+
 ## Known follow-up (not fixed here, out of this leg's scope)
 
 `useBattles.ts::applySyncedState` and `useSavedPokemon.ts::applySyncedState`

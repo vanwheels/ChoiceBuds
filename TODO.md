@@ -26,27 +26,6 @@ Done when:
   other items.
 - Paste Team jump is either fixed or explicitly deferred with reasoning.
 
-- **[TeamCard Notes: Data Loss on First Blur After Expand] — Leg 2** *(Last
-  touched: 2026-10-17 · Re-checks: 0)*
-  `/leg-review` on Leg 1's fix found it left the same blind-overwrite flaw
-  open for a different race: `applySyncedState`'s `reconciled` list falls
-  back to `remote` for any id missing from `localById`, which also matches
-  a team deleted locally after the push snapshot was taken but before the
-  response landed - so the deleted team gets put back, and the unconditional
-  `tombstonesRef.current = []` on the same success path throws away the
-  tombstone that would've told the server about the deletion on the next
-  sync. Fix: check `tombstonesRef.current` for ids being dropped before
-  falling back to `remote`, and only clear the tombstones that were actually
-  included in this sync's push, not all of them. Also fix `applySyncedState`'s
-  public doc comment on `UseTeamsReturn` (still says records are "stored
-  exactly as given" - no longer true post-Leg-1).
-  Done check: new regression test covering "local delete wins" (mirroring
-  the existing "local edit wins" / "local-only new team survives" tests),
-  doc comment matches actual behavior, full suite/lint/type-check pass.
-  Manual verification: no - unit-test coverage of the queue-ordering race is
-  sufficient, same reasoning as Leg 1. Review: recommended - same
-  sync/persisted-data merge logic as Leg 1.
-
 - **[TeamCard Overflow Menu: Validate Popup Covers Own Dropdown] — Leg 1**
   *(Last touched: 2026-10-16 · Re-checks: 0)*
   Flagged live during the TeamCard.tsx split's manual verification (see

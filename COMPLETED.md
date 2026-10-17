@@ -34,6 +34,27 @@ Entries prior to this file's oldest are in:
   milestone slug since it shares its date range with the Prettier Adoption
   archive above)
 
+## TeamCard Notes: Data Loss on First Blur After Expand — Leg 2 — 2026-10-17
+
+`/leg-review` on Leg 1's fix below found it left the same blind-overwrite
+shape open for a different race: `applySyncedState`'s `reconciled` list
+fell back to `remote` for any id missing from `localById`, which also
+matches a team deleted locally (via `deleteTeam`) after the push snapshot
+was taken but before the response landed - so the deleted team got put
+back, and the unconditional `tombstonesRef.current = []` on the same
+success path threw away the tombstone that would've told the server about
+the deletion on the next sync. Fixed by giving `applySyncedState` a second
+argument, `pushedTombstones` (the tombstone list `useSync.ts`'s push
+actually sent, snapshotted before `pushSyncData`): any `records` entry
+still carrying a pending local tombstone is dropped instead of falling back
+to `remote`, and only tombstones named in `pushedTombstones` get cleared.
+Also updated `UseTeamsReturn.applySyncedState`'s doc comment, stale since
+Leg 1 (still described a blind overwrite). New regression test in
+`useTeams.test.ts`; full trail in
+`docs/investigations/teamcard-notes-sync-race.md`. Not manually verified
+live - same reasoning as Leg 1, this is a queue-ordering race unit tests
+cover more reliably than a live repro. See commit TBD.
+
 ## TeamCard Notes: Data Loss on First Blur After Expand — Leg 1 — 2026-10-17
 
 Root cause wasn't the card-expand animation or the `prevPropNotes`/
@@ -50,11 +71,11 @@ having `applySyncedState` keep whichever side (local vs. synced) has the
 newer `updatedAt` per team, plus keep any local-only team the sync response
 doesn't know about yet - same flaw, would otherwise drop a brand-new team
 instead of just a field. Two new regression tests in `useTeams.test.ts`;
-`/leg-review` on this fix separately found a related delete-race flaw, now
-tracked as its own TODO.md leg. Verified live across several expand/type/
-blur cycles plus a deliberate race-window repro (mutate to reset the 5s
-debounce, then type+blur Notes before it fires) against disposable test
-teams. See commit `d0fa35a`.
+`/leg-review` on this fix separately found a related delete-race flaw,
+fixed as Leg 2 above. Verified live across several expand/type/blur cycles
+plus a deliberate race-window repro (mutate to reset the 5s debounce, then
+type+blur Notes before it fires) against disposable test teams. See commit
+`d0fa35a`.
 
 ## Dev Environment: Electron Zoom-Persistence Fix + Mobile Web Preview Script — 2026-10-17
 

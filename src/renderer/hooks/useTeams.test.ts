@@ -310,8 +310,9 @@ describe('useTeams', () => {
     expect(result.current.tombstones).not.toEqual([]);
 
     const mergedTeam = makeTeam({ id: 'from-server' });
+    const pushedTombstones = result.current.tombstones; // simulates this push having included it
     await act(async () => {
-      await result.current.applySyncedState([mergedTeam]);
+      await result.current.applySyncedState([mergedTeam], pushedTombstones);
     });
 
     expect(result.current.teams).toEqual([mergedTeam]);
@@ -339,7 +340,10 @@ describe('useTeams', () => {
     let syncCall: Promise<boolean>;
     await act(async () => {
       updateCall = result.current.updateTeam('team-1', { notes: 'typed notes' });
-      syncCall = result.current.applySyncedState([makeTeam({ notes: undefined, updatedAt: 1 })]);
+      syncCall = result.current.applySyncedState(
+        [makeTeam({ notes: undefined, updatedAt: 1 })],
+        [],
+      );
       await Promise.all([updateCall, syncCall]);
     });
 
@@ -355,10 +359,38 @@ describe('useTeams', () => {
     });
 
     await act(async () => {
-      await result.current.applySyncedState([]);
+      await result.current.applySyncedState([], []);
     });
 
     expect(result.current.teams.map((t) => t.id)).toEqual(['local-only']);
+  });
+
+  it('applySyncedState does not resurrect a team deleted locally after the push snapshot was taken, and keeps its tombstone for the next push', async () => {
+    vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({
+      schemaVersion: 1,
+      teams: [makeTeam({ id: 'team-1' })],
+      tombstones: [],
+      lastModified: 0,
+    });
+    const { result } = renderHook(() => useTeams());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    // Same issue order as the real race: the debounced sync's push snapshot
+    // was taken (and sent with no tombstones, since the delete hadn't
+    // happened yet) before the user deleted the team, so by the time its
+    // response comes back as `records` here, a `deleteTeam` call has
+    // already been issued (and queued ahead of it) with a fresh tombstone
+    // this push never saw.
+    let deleteCall: Promise<boolean>;
+    let syncCall: Promise<boolean>;
+    await act(async () => {
+      deleteCall = result.current.deleteTeam('team-1');
+      syncCall = result.current.applySyncedState([makeTeam({ id: 'team-1' })], []);
+      await Promise.all([deleteCall, syncCall]);
+    });
+
+    expect(result.current.teams).toEqual([]);
+    expect(result.current.tombstones).toEqual([{ id: 'team-1', deletedAt: expect.any(Number) }]);
   });
 
   it('setTeamOrder reorders to match the given ids, appending any leftover teams untouched', async () => {

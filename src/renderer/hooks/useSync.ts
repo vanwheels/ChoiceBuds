@@ -261,7 +261,7 @@ export function useSync(
           savedPokemon: merged.savedPokemon,
         };
         await Promise.all([
-          teamsState.applySyncedState(merged.teams),
+          teamsState.applySyncedState(merged.teams, payload.teamTombstones),
           battlesState.applySyncedState(merged.battles),
           savedPokemonState.applySyncedState(merged.savedPokemon),
         ]);

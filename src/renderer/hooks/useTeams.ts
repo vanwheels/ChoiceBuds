@@ -121,13 +121,18 @@ export interface UseTeamsReturn {
   refreshTeams: () => Promise<void>;
   getTeamById: (teamId: string) => Team | undefined;
   /**
-   * Overwrites the full local team list with the server-merged result from a
-   * sync (useSync.ts::syncNow) - the given records are stored exactly as
-   * given (no updatedAt/createdAt rewriting, since they're already the
-   * authoritative merged values) and tombstones is cleared, since the Worker
-   * has now durably recorded whatever was pending.
+   * Reconciles local state with the server-merged result from a sync
+   * (useSync.ts::syncNow). Per team, keeps whichever side has the newer
+   * `updatedAt`, keeps any local-only team `records` doesn't know about yet,
+   * and drops any `records` entry whose id has a pending local tombstone
+   * (deleted locally after the push this response answers was already in
+   * flight) rather than letting it resurrect. `pushedTombstones` is the
+   * tombstone list that was actually included in that push - only those are
+   * cleared from `tombstones`, since a tombstone added after the snapshot
+   * was taken hasn't been confirmed synced yet and still needs to go out on
+   * the next push.
    */
-  applySyncedState: (records: Team[]) => Promise<boolean>;
+  applySyncedState: (records: Team[], pushedTombstones: SyncTombstone[]) => Promise<boolean>;
 }
 
 /**
@@ -481,8 +486,8 @@ export function useTeams(): UseTeamsReturn {
   );
 
   /**
-   * Overwrites teams with a sync merge's authoritative result and clears
-   * pending tombstones (see UseTeamsReturn's doc comment).
+   * Reconciles teams with a sync merge's result (see UseTeamsReturn's doc
+   * comment for the per-team/per-tombstone rules).
    *
    * `records` is a snapshot from whenever useSync.ts's debounced push
    * captured `teamsState.teams` - by the time this resolves (a full
@@ -505,26 +510,43 @@ export function useTeams(): UseTeamsReturn {
    * team `records` doesn't know about yet (e.g. `addTeam` mid-flight) -
    * same overwrite flaw, one `records.map` away from silently dropping a
    * brand-new team instead of just a field.
+   *
+   * `/leg-review` on that fix found the same race applies to deletes: a
+   * `records` entry whose id is missing from `localById` also matches a
+   * team that was deleted locally (via `deleteTeam`) after the push
+   * snapshot was taken but before this response landed - the old
+   * `local ?? remote` fallback would resurrect it. Those ids are now
+   * dropped instead of falling back to `remote` whenever they still have a
+   * pending tombstone. And since that fresh tombstone was never part of
+   * the push this response answers, only the tombstones named in
+   * `pushedTombstones` get cleared here - an unconditional clear would
+   * discard the very tombstone that needs to tell the server about the
+   * deletion on the next sync.
    */
   const applySyncedState = useCallback(
-    (records: Team[]): Promise<boolean> =>
+    (records: Team[], pushedTombstones: SyncTombstone[]): Promise<boolean> =>
       enqueueMutation(async () => {
         const localById = new Map(teamsRef.current.map((t) => [t.id, t]));
         const remoteIds = new Set(records.map((t) => t.id));
+        const tombstonedIds = new Set(tombstonesRef.current.map((t) => t.id));
         const reconciled = [
-          ...records.map((remote) => {
-            const local = localById.get(remote.id);
-            return local && local.updatedAt > remote.updatedAt ? local : remote;
-          }),
+          ...records
+            .filter((remote) => !tombstonedIds.has(remote.id))
+            .map((remote) => {
+              const local = localById.get(remote.id);
+              return local && local.updatedAt > remote.updatedAt ? local : remote;
+            }),
           ...teamsRef.current.filter((t) => !remoteIds.has(t.id)),
         ];
+        const pushedIds = new Set(pushedTombstones.map((t) => t.id));
+        const remainingTombstones = tombstonesRef.current.filter((t) => !pushedIds.has(t.id));
 
-        const success = await persistTeamsToDisk(reconciled, []);
+        const success = await persistTeamsToDisk(reconciled, remainingTombstones);
         if (success) {
           teamsRef.current = reconciled;
-          tombstonesRef.current = [];
+          tombstonesRef.current = remainingTombstones;
           setTeams(reconciled);
-          setTombstones([]);
+          setTombstones(remainingTombstones);
           setError(null);
         }
         return success;

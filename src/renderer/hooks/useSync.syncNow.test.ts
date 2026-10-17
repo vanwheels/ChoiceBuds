@@ -73,7 +73,7 @@ describe('useSync', () => {
         playerProfile: PLAYER_PROFILE,
         savedAt: expect.any(Number),
       });
-      expect(teamsState.applySyncedState).toHaveBeenLastCalledWith([remoteTeam]);
+      expect(teamsState.applySyncedState).toHaveBeenLastCalledWith([remoteTeam], []);
       expect(battlesState.applySyncedState).toHaveBeenLastCalledWith([]);
       expect(savedPokemonState.applySyncedState).toHaveBeenLastCalledWith([]);
       expect(updateSettings).toHaveBeenLastCalledWith({ lastSyncedAt: 42_000 });
