@@ -21,36 +21,18 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 Done when:
 - The 5 unpadded mobile-web tabs (Battle Log, Statistics, Type Matchup,
   Speed Tiers, Settings) each supply their own mobile content-area padding,
-  matching TeamsPage/BoxPageGrid's existing pattern.
+  matching TeamsPage/BoxPageGrid's existing pattern. ✅ (Leg 1, see
+  COMPLETED.md)
 - The "Get the desktop app" sidebar link in the web app is more
   discoverable (styling/placement improved from its current small/easy-to-
-  miss state).
-- All 4 team-picker call sites (`CalcTeamTray.tsx`, `SpeedTierFieldPanel.tsx`,
+  miss state). ✅ (Leg 2, see COMPLETED.md)
+- All 4 team-picker call sites (`CalcTeamTray.tsx`, `SpeedTiersPage.tsx`,
   `TypeMatchupPage.tsx`, `RecordMatchForm.tsx`) use a shared sprite-aware
-  dropdown component instead of a plain native `<select>`.
+  dropdown component instead of a plain native `<select>`. ✅ (Legs 3-4,
+  see COMPLETED.md)
 
-- **[Team Picker Sprites: Shared Component] — Leg 3** *(Last touched:
-  2026-10-17 · Re-checks: 0)*
-  `CalcTeamTray.tsx`, `SpeedTierFieldPanel.tsx`, `TypeMatchupPage.tsx`, and
-  `RecordMatchForm.tsx` all pick a team via a plain native `<select>` with
-  text-only options, which can't show sprites inline. Build one shared
-  sprite-aware team-picker dropdown component, following the existing
-  icon-row dropdown pattern already implemented in
-  `AbilityPickerPanel.tsx`/`ItemPickerPanel.tsx`.
-  Done check: new component renders a team list with sprites per option,
-  matching the look/interaction of the existing ability/item picker
-  pattern; not yet wired into any of the 4 call sites.
-  Manual verification: yes. Review: no.
-
-- **[Team Picker Sprites: Adoption] — Leg 4** *(Last touched: 2026-10-17 ·
-  Re-checks: 0)*
-  Depends on Leg 3. Replace the native `<select>` in `CalcTeamTray.tsx`,
-  `SpeedTierFieldPanel.tsx`, `TypeMatchupPage.tsx`, and `RecordMatchForm.tsx`
-  with the shared sprite-aware component from Leg 3.
-  Done check: all 4 call sites use the shared component; team selection
-  still works correctly at each site (including any site-specific
-  behavior, e.g. `CalcTeamTray`'s existing sprite row below the dropdown).
-  Manual verification: yes. Review: no.
+All 3 done-when items are now met - this milestone is ready to close via
+`/close-milestone` whenever convenient.
 
 ## Blocked
 

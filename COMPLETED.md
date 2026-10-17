@@ -1,5 +1,16 @@
 # ChoiceBuds - Completed Work Log
 
+**[Team Picker Sprites: Shared Component + Adoption] — Legs 3-4** (2026-10-17)
+New `TeamPickerDropdown.tsx` (searchable, sprite-per-row, same pattern as
+`AbilityPickerPanel.tsx`/`ItemPickerPanel.tsx`) replaces the plain native
+`<select>` previously duplicated across `CalcTeamTray.tsx`,
+`SpeedTiersPage.tsx`, `TypeMatchupPage.tsx`, and `RecordMatchForm.tsx` -
+those couldn't show sprites inline, so species recognition required opening
+the team first. Verified live on all 4 sites via `run-desktop`, including
+`CalcTeamTray`'s own separate click/drag-to-load sprite row underneath the
+dropdown and its live sync with `RecordMatchForm`'s picker through the
+existing Battle Log session integration. See commit 661e7e9.
+
 **[Download App Sidebar Link Visibility] — Leg 2** (2026-10-17)
 `AppWeb.tsx`'s sidebar footer "Get the desktop app" link became a solid
 accent-gold button with a new `DownloadIcon` (`SidebarIcons.tsx`), moved
