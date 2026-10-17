@@ -54,7 +54,7 @@ instead of just a field. Two new regression tests in `useTeams.test.ts`;
 tracked as its own TODO.md leg. Verified live across several expand/type/
 blur cycles plus a deliberate race-window repro (mutate to reset the 5s
 debounce, then type+blur Notes before it fires) against disposable test
-teams. See commit TBD.
+teams. See commit `d0fa35a`.
 
 ## Dev Environment: Electron Zoom-Persistence Fix + Mobile Web Preview Script — 2026-10-17
 
