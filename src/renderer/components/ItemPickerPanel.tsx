@@ -16,6 +16,8 @@ import { getItemSpriteUrl } from '../utils/itemSprite';
 
 interface ItemPickerPanelProps {
   items: ItemData[];
+  /** Champions ranked-ladder usage %, keyed by the same slug as ItemData.name - see EditOverlays.tsx. Absent entries just render with no badge. */
+  usagePercentByName?: Record<string, number>;
   maxHeight: number;
   resolveSprite: (remoteUrl: string) => string;
   onSelect: (item: ItemData) => void;
@@ -24,6 +26,7 @@ interface ItemPickerPanelProps {
 
 export default function ItemPickerPanel({
   items,
+  usagePercentByName,
   maxHeight,
   resolveSprite,
   onSelect,
@@ -57,36 +60,46 @@ export default function ItemPickerPanel({
         {filtered.length === 0 ? (
           <p className="text-xs text-zinc-400 text-center mt-2">No items found</p>
         ) : (
-          filtered.map((item, idx) => (
-            <div
-              key={idx}
-              onClick={() => onSelect(item)}
-              className="flex items-center gap-2 px-2 py-1 rounded hover:bg-zinc-700 cursor-pointer transition-colors"
-            >
-              {getItemSpriteUrl(item.name, item.spriteUrl) ? (
-                <img
-                  src={resolveSprite(getItemSpriteUrl(item.name, item.spriteUrl))}
-                  alt={item.name}
-                  loading="lazy"
-                  className="w-8 h-8 object-contain shrink-0"
-                />
-              ) : (
-                <span
-                  className="w-8 h-8 flex items-center justify-center text-base shrink-0"
-                  role="img"
-                  aria-label="Unknown item"
-                >
-                  🎒
-                </span>
-              )}
-              <div className="min-w-0">
-                <div className="text-white text-sm font-medium truncate">
-                  {toReadableName(item.name)}
+          filtered.map((item, idx) => {
+            const percent = usagePercentByName?.[item.name];
+            return (
+              <div
+                key={idx}
+                onClick={() => onSelect(item)}
+                className="flex items-center gap-2 px-2 py-1 rounded hover:bg-zinc-700 cursor-pointer transition-colors"
+              >
+                {getItemSpriteUrl(item.name, item.spriteUrl) ? (
+                  <img
+                    src={resolveSprite(getItemSpriteUrl(item.name, item.spriteUrl))}
+                    alt={item.name}
+                    loading="lazy"
+                    className="w-8 h-8 object-contain shrink-0"
+                  />
+                ) : (
+                  <span
+                    className="w-8 h-8 flex items-center justify-center text-base shrink-0"
+                    role="img"
+                    aria-label="Unknown item"
+                  >
+                    🎒
+                  </span>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-white text-sm font-medium truncate">
+                      {toReadableName(item.name)}
+                    </span>
+                    {percent != null && (
+                      <span className="text-accent-gold text-xs font-bold shrink-0">
+                        {percent.toFixed(1)}%
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-zinc-400 text-xs truncate">{item.description}</div>
                 </div>
-                <div className="text-zinc-400 text-xs truncate">{item.description}</div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

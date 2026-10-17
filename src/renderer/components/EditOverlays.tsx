@@ -119,6 +119,7 @@ export default function EditOverlays({
   const [legalAbilities, setLegalAbilities] = useState<AbilityData[]>([]);
   const [moveUsage, setMoveUsage] = useState<ChampionsUsageRankedEntry[]>([]);
   const [abilityUsage, setAbilityUsage] = useState<ChampionsUsageRankedEntry[]>([]);
+  const [itemUsage, setItemUsage] = useState<ChampionsUsageRankedEntry[]>([]);
   const [itemData, setItemData] = useState<ItemData | null>(null);
   const [itemSpriteFailed, setItemSpriteFailed] = useState(false);
   const [itemFallbackSpriteFailed, setItemFallbackSpriteFailed] = useState(false);
@@ -226,11 +227,11 @@ export default function EditOverlays({
 
   // Champions ranked-ladder usage (same source/cache as the Calc page's
   // auto-fill and the Battle Logger's "Likely Set" popover) - drives the
-  // Ability/Move picker panels' most-used-first ordering and percentage
+  // Item/Ability/Move picker panels' most-used-first ordering and percentage
   // display below. A species with no usage data yet (never fetched, or the
-  // API has nothing for it) just leaves both pickers in their existing
+  // API has nothing for it) just leaves all three pickers in their existing
   // legality-derived order with no percentages shown - never blocks the
-  // move/ability lists themselves.
+  // item/move/ability lists themselves.
   useEffect(() => {
     let cancelled = false;
     getChampionsUsage(pokemon.showdownData.species)
@@ -238,11 +239,13 @@ export default function EditOverlays({
         if (cancelled) return;
         setMoveUsage(usage?.moves ?? []);
         setAbilityUsage(usage?.abilities ?? []);
+        setItemUsage(usage?.items ?? []);
       })
       .catch(() => {
         if (!cancelled) {
           setMoveUsage([]);
           setAbilityUsage([]);
+          setItemUsage([]);
         }
       });
     return () => {
@@ -262,6 +265,10 @@ export default function EditOverlays({
     () => Object.fromEntries(abilityUsage.map((a) => [normalizeSlug(a.name), a.percentage])),
     [abilityUsage],
   );
+  const itemPercentByName = useMemo(
+    () => Object.fromEntries(itemUsage.map((i) => [normalizeSlug(i.name), i.percentage])),
+    [itemUsage],
+  );
 
   // Most-used-first; anything with no usage entry (percentage undefined)
   // sorts after every ranked entry, keeping its original relative order
@@ -279,6 +286,16 @@ export default function EditOverlays({
         (a, b) => (abilityPercentByName[b.name] ?? -1) - (abilityPercentByName[a.name] ?? -1),
       ),
     [legalAbilities, abilityPercentByName],
+  );
+  // Items aren't species-legality-filtered like moves/abilities (any item can
+  // be held), so this sorts the full `items` list from gameDataState rather
+  // than a per-species legal subset.
+  const sortedItems = useMemo(
+    () =>
+      [...items].sort(
+        (a, b) => (itemPercentByName[b.name] ?? -1) - (itemPercentByName[a.name] ?? -1),
+      ),
+    [items, itemPercentByName],
   );
 
   // Resets sprite-failed flags and clears stale item data the moment
@@ -378,7 +395,8 @@ export default function EditOverlays({
       {activeMenu === 'item' && activeMenuAnchorRect && (
         <FloatingCardPanel anchorRect={activeMenuAnchorRect} cardRect={activeMenuCardRect}>
           <ItemPickerPanel
-            items={items}
+            items={sortedItems}
+            usagePercentByName={itemPercentByName}
             maxHeight={activeMenuMaxHeight}
             resolveSprite={resolveSprite}
             onSelect={handleItemClick}
