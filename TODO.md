@@ -27,15 +27,7 @@ Done when:
   fix applied.
 - `TeamCard.tsx`, `BoxPage.tsx`, `useSync.test.ts`, and
   `CalcPokemonPanel.tsx` are each split below the 500-line hard cap with no
-  behavior change.
-
-- **[File Cap Splits: CalcPokemonPanel.tsx] — Leg 1** *(Last touched:
-  2026-10-16 · Re-checks: 0)*
-  Split `src/renderer/components/calc/CalcPokemonPanel.tsx` (511 lines) the
-  same way.
-  Done check: resulting file(s) under ~500 lines each, `npm run build`/
-  `lint`/`test` pass, no visual/behavior regression.
-  Manual verification: yes. Review: no.
+  behavior change - all four done (see `COMPLETED.md`).
 
 ## Blocked
 

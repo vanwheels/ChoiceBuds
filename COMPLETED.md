@@ -29,6 +29,26 @@ Entries prior to this file's oldest are in:
   (the Prettier Adoption milestone's three legs, split out at the
   2026-10-16 Prettier Adoption boundary)
 
+**File Cap Splits: CalcPokemonPanel.tsx — Leg 1** (2026-10-16)
+Split `src/renderer/components/calc/CalcPokemonPanel.tsx` (511 lines,
+commit c4b037c) into `CalcPokemonPanelFields.tsx` (species/mega/gender row,
+stat-forme toggle, item/ability, nature/status, stat rows, usage
+stat-spread chips, real-sets section) - same pure-JSX-extraction shape as
+`TeamCard.tsx`/`BoxPage.tsx`'s earlier splits. `CalcPokemonPanel.tsx` itself
+is now a 497-line state/handler orchestrator; the new file is 217 lines.
+`npm run build`/`lint`/`test` all pass (783 tests, no regressions), and the
+split was live-verified via `run-desktop` after a stale dev-server restart
+(Vite's optimize-dep cache needed a fresh process to pick up the new
+module) - species autocomplete select, usage auto-fill (item/ability/
+nature/moves/SPs), gender cycle, Mega toggle (ability swap and restore on
+toggle-back), Aegislash Blade/Shield stat-forme toggle, usage stat-spread
+chip click, Real Sets section, and Copy Text/Save Set all confirmed working
+with no new console errors. This was the last of the milestone's four
+file-cap splits (`TeamCard.tsx`, `BoxPage.tsx`, `useSync.test.ts`, this
+one) - the other two done-when criteria for Maintenance & Code Health Sweep
+were already satisfied earlier in the milestone, so it's ready to close via
+`/close-milestone`.
+
 **File Cap Splits: useSync.test.ts — Leg 1** (2026-10-16)
 Split `src/renderer/hooks/useSync.test.ts` (514 lines) into
 `useSync.test.ts` (status/signUp/logIn/logOut), `useSync.syncNow.test.ts`
