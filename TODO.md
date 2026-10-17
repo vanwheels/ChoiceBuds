@@ -33,9 +33,15 @@ Done when:
   Re-checks: 0)*
   Split `src/renderer/components/TeamCard.tsx` (761 lines) into smaller
   single-purpose sub-components per the Style rules' cohesive-file smell
-  test, with no behavior change.
-  Done check: resulting file(s) under ~500 lines each, `npm run build`/
-  `lint`/`test` pass, no visual/behavior regression.
+  test, with no behavior change. Done: extracted `TeamCardHeader.tsx`
+  (identity/sprite-strip/controls header row), `TeamCardRosterGrid.tsx`
+  (expanded roster grid + Add Pokémon + notes), and `TeamCardOverlays.tsx`
+  (context menus + Export/Export Image/Export PDF/Add-Pokémon-picker
+  modals); `TeamCard.tsx` is now the 398-line state/handler orchestrator.
+  `npm run build`/`lint`/`test` all pass (783 tests). Needs: your manual
+  verification in the running app (expand/collapse, drag-reorder, edit
+  name/author/notes, add/remove Pokémon, right-click copy/paste, all three
+  export modals) before this is fully done.
   Manual verification: yes. Review: no.
 
 - **[File Cap Splits: BoxPage.tsx] — Leg 1** *(Last touched: 2026-10-16 ·
