@@ -16,19 +16,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: TeamCard Bug Fixes & Dev Tooling
-
-Done when:
-- Dev-env mobile-preview script confirmed working live.
-- TeamCard Notes blur bug has a reliable repro, root cause, and verified
-  fix.
-- Overflow Menu's "Validate Team" popup no longer blocks the dropdown's
-  other items.
-- Paste Team jump is either fixed or explicitly deferred with reasoning.
-
-All four done-when criteria are now satisfied (see COMPLETED.md) - no open
-items remain in this milestone. Ready for `/close-milestone`.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something

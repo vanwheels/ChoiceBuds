@@ -123,6 +123,16 @@ the matching hook.
 - Unrelated despite the similar name: `useUsageSync.ts` keeps
   `ChampionsUsageEntry` ladder-usage data fresh from championsbattledata.com
   — nothing to do with this cross-device Worker sync.
+- `useTeams.ts::applySyncedState` reconciles rather than blindly overwriting
+  local state with a pull/push response: per record, it keeps whichever
+  side (local vs. the response) has the newer `updatedAt`, rebuilds its base
+  order from local order (not the response's) so a locally-added record the
+  response doesn't know about yet keeps its position instead of landing at
+  the end, and drops any response record that still has a pending local
+  tombstone rather than letting a late response resurrect a local delete —
+  see `docs/investigations/teamcard-notes-sync-race.md` for the race this
+  closes. `useBattles.ts`/`useSavedPokemon.ts`'s own `applySyncedState`
+  still use the older blind-overwrite shape (tracked in TODO.md).
 
 ## Web build
 
