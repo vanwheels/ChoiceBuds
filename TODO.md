@@ -29,14 +29,6 @@ Done when:
   `CalcPokemonPanel.tsx` are each split below the 500-line hard cap with no
   behavior change.
 
-- **[File Cap Splits: useSync.test.ts] — Leg 1** *(Last touched: 2026-10-16
-  · Re-checks: 0)*
-  Split `src/renderer/hooks/useSync.test.ts` (514 lines) into smaller test
-  files by concern, with no behavior change.
-  Done check: resulting file(s) under ~500 lines each, all tests still
-  pass.
-  Manual verification: no. Review: no.
-
 - **[File Cap Splits: CalcPokemonPanel.tsx] — Leg 1** *(Last touched:
   2026-10-16 · Re-checks: 0)*
   Split `src/renderer/components/calc/CalcPokemonPanel.tsx` (511 lines) the

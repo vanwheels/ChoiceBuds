@@ -29,6 +29,19 @@ Entries prior to this file's oldest are in:
   (the Prettier Adoption milestone's three legs, split out at the
   2026-10-16 Prettier Adoption boundary)
 
+**File Cap Splits: useSync.test.ts — Leg 1** (2026-10-16)
+Split `src/renderer/hooks/useSync.test.ts` (514 lines) into
+`useSync.test.ts` (status/signUp/logIn/logOut), `useSync.syncNow.test.ts`
+(the `syncNow` describe block), and `useSync.autoSync.test.ts` (the
+debounced/interval/online auto-sync-trigger describe block), with shared
+fixtures (`makeSettings`/`makeTeam`/`makePokemon`/`emptyMergedPayload`/
+`PLAYER_PROFILE`/`setup`) pulled into a new non-test helper module,
+`useSyncTestHelpers.ts` (named without `.test.` so Vitest's
+`src/**/*.test.ts` glob doesn't pick it up as its own suite). All three
+test files stay well under the 500-line cap. All 22 original test cases
+preserved 1:1, just redistributed - `npm run type-check`/`lint`/`test` all
+pass (783 tests across 75 files, no regressions). See commit <hash>.
+
 **File Cap Splits: BoxPage.tsx — Leg 1** (2026-10-16)
 Split `src/renderer/components/BoxPage.tsx` (583 lines) into
 `BoxPageToolbar.tsx` (search + sort-mode header), `BoxPageGrid.tsx`
