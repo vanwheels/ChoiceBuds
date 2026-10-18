@@ -63,6 +63,40 @@ Entries prior to this file's oldest are in:
   (the Scoping Sweep milestone's three legs, split out at the 2026-10-18
   Scoping Sweep boundary)
 
+## Teamsheet Open/Closed Visibility Tiers — Leg 3 (2026-10-18)
+
+Replaced the binary `Team.isPublic` with a 3-state `Team.visibility`
+(`'private'`/`'closed'`/`'open'`) — `closed` keeps the original
+species+sprite-only exposure, `open` additionally exposes the full
+competitive set (item/ability/moves/EVs/nature; no IVs field exists to
+expose - this app deliberately doesn't model IVs at all, see
+`services/parser.ts`'s header). `TeamsDatabase.schemaVersion` bumped to 2;
+an existing `isPublic: true` team migrates to `closed`, never `open`
+(widening exposure needs an explicit choice), persisted for real through
+`updateTeam` - same pattern `useTeams.ts`'s gender-split-species fix
+already used. `worker/src/publicProfile.ts`'s `extractPublicTeam`/
+`extractPublicPokemon` expose the full set only for `open` teams.
+`PublicProfileSection.tsx` swapped its per-team checkbox for a
+Private/Closed/Open select; `ProfileCard.tsx` (shared by the in-app
+profile page and the standalone `/u/<username>` web route) renders the
+full set per Pokémon for an `open` team. Live-verified on desktop + web
+after a manual `wrangler deploy` (Worker changes don't ship with the
+regular web push).
+
+`/leg-review` on the shipped commit found that `applySyncedState` never
+ran incoming sync records through the same migration the load path used,
+so a legacy-shaped record pulled from a not-yet-updated device could win
+the merge and read back as `visibility: undefined` until this device's
+next reload - fixed same-day by routing every sync-merge-sourced team
+through `normalizeTeam` too (`normalizeIncomingSyncTeam`), bumping
+`updatedAt` only when normalization changed something sync-relevant so
+the fix can out-rank the still-stale sender on the next push. The
+review's other two findings: a Worker-deploy-ordering caveat (already
+covered by the project's own "Worker changes need their own manual
+deploy" rule, no code to fix) and `useTeams.ts` now being further over
+the 500-line hard cap, split out as its own leg (see TODO.md). See
+commits faeba49, b98a4cc, e9e8a96.
+
 ## Sidebar Footer Profile Entry — Leg 2 (2026-10-18)
 
 Pinned a profile icon+username entry above the Settings entry in both the
