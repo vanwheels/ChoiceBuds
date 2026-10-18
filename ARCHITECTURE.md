@@ -168,8 +168,8 @@ the matching hook.
   not a route inside `AppWeb.tsx`.
 - `src/renderer/AppWeb.tsx` — the web shell, sibling to `App.tsx`. Every
   `Sidebar` tab now renders its real page on web (Teams, Box, Battle Log,
-  Statistics, Type Matchup, Speed Tiers, Settings, Calc) — full UI parity
-  with desktop, not a reduced nav. `useSync`/`useBattles` wire up optional
+  Statistics, Type Matchup, Speed Tiers, Tourney, Settings, Calc) — full UI
+  parity with desktop, not a reduced nav. `useSync`/`useBattles` wire up optional
   sign-in-to-sync (Showdown-style: Teams/Box/the calc all work fully
   signed-out, stored in this browser's IndexedDB). Not wired on web:
   `useInitialSync`/`useUsageSync`'s bulk first-launch dex sync, since it's a
@@ -185,6 +185,43 @@ the matching hook.
   needs the same `px-4 md:px-0` or it renders edge-to-edge below `md`; don't
   add padding to `AppWeb.tsx`'s `<main>` itself, since that would double up
   on pages that already have their own.
+
+## Tourney tab
+
+- `src/renderer/config/tourneyEvents.ts` — a hand-authored, config-only table
+  of TPCi's sanctioned VGC circuit events (Regionals, Special Events,
+  Internationals, Worlds) for the current season, same pattern as the
+  Champions balance-override files: sourced from Serebii's `playpokemon`
+  pages per `external-data-sources.md` exception #2 (manual research only,
+  no live fetch — no official structured schedule API exists, see
+  `docs/investigations/tourney-tab-schedule-source-research.md`), and
+  refreshed by hand as TPCi announces new season dates rather than on a
+  fixed interval. No Global Challenge events or signup deadlines are
+  listed — deliberately excluded (not shown on either source page), per the
+  file's own header.
+- `src/renderer/utils/tourneyEvents.ts::getUpcomingEvents` — pure filter/sort
+  over the config, keeping only events that haven't ended yet and ordering
+  soonest-first. `components/tourney/TourneyPage.tsx` renders the result via
+  `TourneyEventCard.tsx`; tier badge colors live in their own
+  `config/tourneyEventTheme.ts` table, mirroring `pokemonTheme.ts`'s
+  `REGULATION_THEMES`. Dates parse through `parseISODate` (UTC-anchored) to
+  avoid a local-timezone shift misreading an ISO `YYYY-MM-DD` calendar day —
+  same treatment `config/seasons.ts` gives its own ISO date strings.
+
+## Mobile Teams swipe deck
+
+- `src/renderer/components/MobileTeamSwipeOverlay.tsx` — the full-screen,
+  swipeable card-per-Pokémon view for a team on mobile widths (below the
+  `md` breakpoint). Whenever the roster has fewer than 6 Pokémon, an extra
+  page past the last card opens `MobileAddPokemonPage.tsx` (wrapping the
+  same `AddPokemonStatTable` desktop uses) to append a new slot; at 0
+  Pokémon this becomes the overlay's only page — a dedicated empty-state
+  screen with the same add affordance, replacing an earlier bail-out-and-
+  auto-close effect.
+- `components/Modal.tsx` sits above these swipe overlays in z-index, so a
+  dialog opened from within one (e.g. Roster Swap's species picker) renders
+  on top instead of being hidden behind the overlay — a prerequisite for any
+  modal-opening affordance added inside the swipe deck.
 
 ## Gender/form handling
 

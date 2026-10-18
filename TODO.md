@@ -42,20 +42,26 @@ unblocked.
   peer-range rejection + real runtime crash reports). Currently on
   TypeScript ^6.0.3.
 
-## Current Milestone: Mobile Teams & Tourney Tab
-
-Done when:
-- Mobile swipe deck supports adding a Pokémon at any roster size (0-5) via
-  an extra page past the last card, with the empty-team auto-close bug
-  fixed as part of the same change. ✅ (Mobile Add Pokémon Entry Point Leg 1)
-- Tourney Tab shows curated GC/Regionals/Internationals/Worlds events from a
-  hand-maintained config, with dates/location/signup deadlines where known.
-  ✅ (Tourney Tab: Event Config Leg 2 + Tourney Tab: UI Leg 3)
-
-Both done-when items are now shipped (see COMPLETED.md) - this milestone is
-ready to close via `/close-milestone`.
-
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+- **[Tourney Tab: Schedule Change Detection] — Leg 1** *(Last touched:
+  2026-10-17 · Re-checks: 0)*
+  Raised while closing the Mobile Teams & Tourney Tab milestone: TPCi's
+  announcement cadence for Regionals/Internationals is irregular enough
+  that even a fixed re-check interval could miss changes - this past week
+  alone added 2 unannounced Regionals mid-season. No live/structured
+  schedule source exists (confirmed in
+  `docs/investigations/tourney-tab-schedule-source-research.md`), so
+  `config/tourneyEvents.ts` stays hand-authored per
+  `external-data-sources.md` exception #2 regardless. Needs scoping: is a
+  periodic (e.g. monthly) automated diff-check against Serebii's
+  `playpokemon` pages - flagging a change for manual review/update rather
+  than auto-writing the config - worth building, or does manual re-check
+  stay fully user-driven?
+  Done check: scoping pass decides whether to build a change-detection poll
+  (and on what cadence) or leave this as a fully manual, no-automation
+  process.
+  Manual verification: no. Review: no.
 
 - **[Pokepaste Import: New Showdown Client Team Links] — Leg 1** *(Last
   touched: 2026-10-17 · Re-checks: 0)*

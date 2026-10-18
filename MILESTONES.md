@@ -71,3 +71,5 @@ milestone.
   [post-mortem](docs/postmortems/mobile-web-ui-polish.md)
 - **Bug Fix & Research Sweep** — 2026-10-17 — Shipped —
   [post-mortem](docs/postmortems/bug-fix-research-sweep.md)
+- **Mobile Teams & Tourney Tab** — 2026-10-17 — Shipped —
+  [post-mortem](docs/postmortems/mobile-teams-and-tourney-tab.md)
