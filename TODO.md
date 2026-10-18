@@ -92,6 +92,26 @@ Done when:
   same change.
   Manual verification: yes. Review: yes (touches persisted team data).
 
+- **[Pokepaste Import: New Showdown Client Team Links] — Leg 1** *(Last
+  touched: 2026-10-17 · Re-checks: 0)*
+  Showdown's new client (in public beta/transition, not yet default - see
+  `docs/investigations/pokepaste-format-research.md`) generates
+  `psim.us/t/<teamid>` / `teams.pokemonshowdown.com/view/<teamid>` share
+  links from its own first-party team database instead of Pokepaste.
+  Today's current-default client and `services/pokepaste.ts` still work
+  unaffected, but once the new client goes default, users will increasingly
+  share the new link format instead. Needs scoping: a JSON API exists at
+  `teams.pokemonshowdown.com/api/<action>` (same `/api/` pattern Showdown
+  uses site-wide) that a new import path could call, parallel to
+  `services/pokepaste.ts`'s existing `pokepast.es/<id>/json` fetch - but
+  unlike pokepast.es, saving a team there requires an autoconfirmed
+  Showdown account, which may or may not affect read-only fetches by ID.
+  Not urgent while the old client remains default; re-check when Smogon
+  signals the new client is becoming default.
+  Done check: scoping pass decides whether/how to add this as a second
+  import source, or to wait and re-check later.
+  Manual verification: no. Review: no.
+
 ## Future Milestones (unscheduled)
 
 `src/renderer/_archived/battle-logger/hooks/useBattleLogActions.ts` (1,001
