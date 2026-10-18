@@ -154,6 +154,36 @@ export function useSettings(): UseSettingsReturn {
           void persistSettingsToDisk(merged);
         }
 
+        // One-time migration: playerProfile/favoritePokemon are themselves
+        // objects, so the shallow spread above only replaces them wholesale
+        // when the saved file already has that key - a settings.json
+        // written before a nested field existed on one of them (e.g.
+        // `updatedAt`, added after PlayerProfile/FavoritePokemon already
+        // shipped) keeps the saved object's old shape, silently missing the
+        // new field, rather than falling back to DEFAULT_SETTINGS. A missing
+        // `updatedAt` serializes as absent (JSON.stringify drops undefined
+        // keys) and trips the sync Worker's isOptionalSingleton check, which
+        // 400s the *entire* push - reported live 2026-10-17 as "Body must
+        // include teams/battles/savedPokemon arrays..." on a payload whose
+        // teams/battles/savedPokemon were actually fine. Date.now() (a real
+        // bump), not DEFAULT_PLAYER_PROFILE/DEFAULT_FAVORITE_POKEMON's own
+        // `updatedAt: 0` "never touched" placeholder - this data is real and
+        // currently in use, just missing its edit-timestamp metadata.
+        if (database?.playerProfile && typeof database.playerProfile.updatedAt !== 'number') {
+          merged = {
+            ...merged,
+            playerProfile: { ...database.playerProfile, updatedAt: Date.now() },
+          };
+          void persistSettingsToDisk(merged);
+        }
+        if (database?.favoritePokemon && typeof database.favoritePokemon.updatedAt !== 'number') {
+          merged = {
+            ...merged,
+            favoritePokemon: { ...database.favoritePokemon, updatedAt: Date.now() },
+          };
+          void persistSettingsToDisk(merged);
+        }
+
         settingsRef.current = merged;
         setSettings(merged);
       } catch (err) {

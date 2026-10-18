@@ -61,6 +61,68 @@ describe('useSettings', () => {
     );
   });
 
+  it('backfills a missing playerProfile.updatedAt for a file persisted before that field existed, and persists the correction', async () => {
+    vi.mocked(window.electron.readSettings).mockResolvedValueOnce({
+      schemaVersion: 1,
+      defaultRegulation: 'Reg M-B',
+      lastModified: 12345,
+      playerProfile: {
+        playerName: 'Ethan Harris',
+        ageDivision: 'Masters',
+        trainerNameInGame: 'vanny',
+        playerId: '679296539001',
+        dateOfBirth: '1999-03-10',
+        supportId: 'ALS79BWXKHFDR468',
+        switchProfileName: 'vanny',
+        // updatedAt deliberately omitted, matching a pre-field settings.json
+      },
+    } as unknown as AppSettings);
+
+    const { result } = renderHook(() => useSettings());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.settings.playerProfile.playerName).toBe('Ethan Harris');
+    expect(typeof result.current.settings.playerProfile.updatedAt).toBe('number');
+    expect(result.current.settings.playerProfile.updatedAt).toBeGreaterThan(0);
+    await waitFor(() =>
+      expect(window.electron.writeSettings).toHaveBeenCalledWith(
+        expect.objectContaining({
+          playerProfile: expect.objectContaining({ playerName: 'Ethan Harris' }),
+        }),
+      ),
+    );
+  });
+
+  it('backfills a missing favoritePokemon.updatedAt for a file persisted before that field existed, and persists the correction', async () => {
+    vi.mocked(window.electron.readSettings).mockResolvedValueOnce({
+      schemaVersion: 1,
+      defaultRegulation: 'Reg M-B',
+      lastModified: 12345,
+      favoritePokemon: {
+        species: 'Mew',
+        spriteUrl: 'https://example.com/mew.png',
+        shinySpriteUrl: 'https://example.com/mew-shiny.png',
+        shiny: true,
+        isPublic: true,
+        // updatedAt deliberately omitted
+      },
+    } as unknown as AppSettings);
+
+    const { result } = renderHook(() => useSettings());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.settings.favoritePokemon.species).toBe('Mew');
+    expect(typeof result.current.settings.favoritePokemon.updatedAt).toBe('number');
+    expect(result.current.settings.favoritePokemon.updatedAt).toBeGreaterThan(0);
+    await waitFor(() =>
+      expect(window.electron.writeSettings).toHaveBeenCalledWith(
+        expect.objectContaining({
+          favoritePokemon: expect.objectContaining({ species: 'Mew' }),
+        }),
+      ),
+    );
+  });
+
   it('reports an error and stops loading when reading settings throws', async () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.mocked(window.electron.readSettings).mockRejectedValueOnce(new Error('disk error'));
