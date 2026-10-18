@@ -42,18 +42,63 @@ unblocked.
   peer-range rejection + real runtime crash reports). Currently on
   TypeScript ^6.0.3.
 
-## Unscheduled (not yet scoped, highest-to-lowest priority)
+## Current Milestone: Bug Fix & Research Sweep
+
+Done when:
+- Mobile empty-team "Add Pokémon" bug is reproduced (or ruled out) and
+  either fixed in this milestone or has a concretely scoped follow-up leg.
+- Pokepaste format-deprecation rumor is confirmed or closed, with a
+  citation recorded.
+- Tourney Tab schedule-source question is resolved - either a live source
+  identified (with a drafted new exception for
+  `external-data-sources.md`) or a decision to fall back to a
+  hand-maintained config - enough to scope the actual Tourney Tab UI leg
+  later.
 
 - **[Mobile Empty-Team Add Pokémon Bug] — Leg 1** *(Last touched:
   2026-10-17 · Re-checks: 0)*
   Reported live 2026-10-17: on mobile web, tapping into an empty team (no
   Pokémon yet) doesn't let you add one. Unknown how long this has existed
-  or whether it's mobile-only vs. also broken on desktop/App.tsx - not yet
-  reproduced or root-caused, just the live report. Needs its own repro
-  pass on `dev:mobile` before it's scoped into concrete legs.
-  Done check: repro confirmed (or ruled out) and root cause identified;
-  fix scoped as a follow-up leg once the cause is known.
-  Manual verification: yes. Review: no.
+  or whether it's mobile-only vs. also broken on desktop/App.tsx. Repro on
+  `dev:mobile`, identify root cause; if the fix is small, finish it in this
+  same leg, otherwise stop at root-cause and write a new scoped follow-up
+  item rather than absorbing a bigger fix mid-leg.
+  Done check: repro confirmed/ruled out, root cause identified, and either
+  fixed or a follow-up item is written.
+  Manual verification: yes. Review: no (escalate to yes if the fix touches
+  persisted team data).
+
+- **[Pokepaste Format Research] — Leg 1** *(Last touched: 2026-10-17 ·
+  Re-checks: 0)*
+  Vanny recalled Showdown moving away from Pokepaste integration toward its
+  own newer format; a general web search during scoping found no
+  corroborating evidence. This leg is a direct check via Smogon forums /
+  Showdown's own GitHub changelog (not just a general web search) to
+  confirm or close the rumor. Research only - no code changes regardless
+  of outcome, since the existing Pokepaste integration
+  (`services/pokepaste.ts`, `.claude/rules/external-data-sources.md`
+  exceptions #3/#8) is active and working either way.
+  Done check: a definitive yes/no answer recorded with a citation.
+  Manual verification: no. Review: no.
+
+- **[Competitive Events: Tourney Tab Research] — Leg 1** *(Last touched:
+  2026-10-17 · Re-checks: 0)*
+  Curated list (GC, Regionals, Internationals, Worlds - The Pokémon
+  Company International's own sanctioned/sponsored events only, not
+  freeform user-created events). Research pass for a live/structured
+  schedule source (e.g. Play! Pokémon's event locator); falls back to a
+  hand-maintained config file (same pattern as
+  `config/championsMoveOverrides.ts`) if nothing reliable turns up. A live
+  source would need its own new numbered exception added to
+  `external-data-sources.md`.
+  Done check: decision recorded - live source (with a drafted new
+  numbered exception) or hand-maintained fallback - sufficient to scope
+  the Tourney Tab UI leg later.
+  Manual verification: no. Review: no.
+
+## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+_(empty)_
 
 ## Future Milestones (unscheduled)
 
@@ -101,31 +146,15 @@ separate field). Candidate legs:
    its own dedicated scoping pass before any legs get written here; not
    leg-ready yet.
 
-**Pokepaste Format Research** (proposed 2026-10-17): Vanny recalled
-Showdown moving away from Pokepaste integration toward its own newer
-format. A web search during scoping found no corroborating evidence -
-general documentation and a 2026 third-party guide both still describe
-`pokepast.es` as the standard, in-use export format. First leg is a direct
-check (Smogon forums / Showdown's own GitHub changelog, not just a general
-web search) to confirm or close this before any follow-up work gets
-scoped - this project's existing Pokepaste integration
-(`services/pokepaste.ts`, `.claude/rules/external-data-sources.md`
-exceptions #3/#8) is active and working either way.
-
-**Competitive Events: Tourney Tab** (rescoped 2026-10-17, originally
+**Competitive Events: Tourney Tab UI** (rescoped 2026-10-17, originally
 proposed 2026-09-29 as "Battle Logging: special events / Global
-Challenge"). Decided: a curated list, not freeform user-created events -
-GC (Global Challenge), Regionals, International Championships, and Worlds,
-i.e. The Pokémon Company International's own sanctioned/sponsored events
-only. No existing approved external data source covers tournament
-schedules (`.claude/rules/external-data-sources.md` has 9 numbered
-exceptions, none of them this). Candidate legs:
-1. Research pass for a live/structured schedule source (e.g. Play!
-   Pokemon's event locator) for the events above; falls back to a
-   hand-maintained config file (same pattern as
-   `config/championsMoveOverrides.ts`) if nothing reliable turns up. A live
-   source would need its own new numbered exception added to
-   `external-data-sources.md`.
-2. Tourney tab UI (depends on Leg 1's outcome) showing upcoming events with
-   dates, location, and signup deadlines where available.
+Challenge"; Leg 1's schedule-source research moved into the current Bug
+Fix & Research Sweep milestone 2026-10-17). Decided: a curated list, not
+freeform user-created events - GC (Global Challenge), Regionals,
+International Championships, and Worlds, i.e. The Pokémon Company
+International's own sanctioned/sponsored events only. Depends on the
+research leg's outcome (live source vs. hand-maintained config fallback) -
+not yet scoped into a concrete leg. Once that resolves: UI showing
+upcoming events with dates, location, and signup deadlines where
+available.
 
