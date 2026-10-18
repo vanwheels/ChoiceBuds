@@ -207,6 +207,26 @@ export function SettingsIcon({ className }: IconProps) {
   );
 }
 
+/** Pinned profile entry icon (Sidebar Footer Profile Entry, see TODO.md) - a generic person glyph, not a per-account avatar (the profile page itself has no per-account image yet, see ProfileCard.tsx). */
+export function UserIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M4.5 20c1.4-4 4-6 7.5-6s6.1 2 7.5 6" />
+    </svg>
+  );
+}
+
 /** Hamburger trigger for the mobile nav drawer (Mobile Nav Shell: Drawer leg). */
 export function MenuIcon({ className }: IconProps) {
   return (

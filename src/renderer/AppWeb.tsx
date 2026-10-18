@@ -162,6 +162,13 @@ export default function AppWeb() {
             profileNav.closeProfile();
             goToTab(tab);
           }}
+          profileUsername={syncState.syncUsername}
+          isOwnProfileActive={
+            !!profileNav.viewingUsername && profileNav.viewingUsername === syncState.syncUsername
+          }
+          onOpenOwnProfile={() => {
+            if (syncState.syncUsername) profileNav.openProfile(syncState.syncUsername);
+          }}
           renderFooter={(collapsed) =>
             collapsed ? null : (
               <div className="flex flex-col gap-1 px-1.5">

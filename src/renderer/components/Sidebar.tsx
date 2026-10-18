@@ -64,6 +64,7 @@ import {
   SpeedTiersIcon,
   TourneyIcon,
   SettingsIcon,
+  UserIcon,
   SidebarToggleIcon,
   MenuIcon,
   CloseIcon,
@@ -95,6 +96,19 @@ interface SidebarProps {
    * of which page is active.
    */
   mobileTopBarEnd?: ReactNode;
+  /**
+   * Pinned profile entry (Sidebar Footer Profile Entry, see TODO.md) - an
+   * icon+username row above the Settings entry that opens Leg 1's in-app
+   * profile page for the signed-in account. `null`/undefined (signed out)
+   * renders nothing here, same as before this leg - on web that leaves
+   * `renderFooter`'s own sign-in prompt as the only footer content, there's
+   * no profile to view without a synced username.
+   */
+  profileUsername?: string | null;
+  /** True while the in-app profile view currently open is this account's own - keeps the entry's active-state highlight in sync with the other nav items below it. */
+  isOwnProfileActive?: boolean;
+  /** Opens the signed-in account's own profile. Only ever called while `profileUsername` is set, since the entry doesn't render without one. */
+  onOpenOwnProfile?: () => void;
 }
 
 const MAIN_NAV_ITEMS: { tab: ActiveTab; label: string; Icon: typeof TeamsIcon }[] = [
@@ -130,6 +144,9 @@ export default function Sidebar({
   onTabChange,
   renderFooter,
   mobileTopBarEnd,
+  profileUsername,
+  isOwnProfileActive,
+  onOpenOwnProfile,
 }: SidebarProps) {
   const { collapsed, toggleCollapsed } = useSidebarCollapsed();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -140,17 +157,18 @@ export default function Sidebar({
   const mobileHeaderEntry = useActiveMobileHeaderEntry(activeTab);
 
   const renderNavItem = (
-    { tab, label, Icon }: { tab: ActiveTab; label: string; Icon: typeof TeamsIcon },
+    key: string,
+    { label, Icon }: { label: string; Icon: typeof TeamsIcon },
+    isActive: boolean,
     isCollapsed: boolean,
     onClick: () => void,
   ) => {
-    const isActive = activeTab === tab;
     return (
       <button
-        key={tab}
+        key={key}
         onClick={onClick}
         aria-label={isCollapsed ? label : undefined}
-        className={`group relative flex items-center rounded-lg font-semibold transition-colors cursor-pointer ${
+        className={`group relative flex min-w-0 items-center rounded-lg font-semibold transition-colors cursor-pointer ${
           isCollapsed ? 'justify-center p-2.5' : 'gap-2.5 px-2.5 py-[9px] text-[13.5px]'
         } ${
           isActive
@@ -168,7 +186,7 @@ export default function Sidebar({
         <span className="flex shrink-0 text-inherit transition-transform duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.18]">
           <Icon />
         </span>
-        {!isCollapsed && <span>{label}</span>}
+        {!isCollapsed && <span className="truncate">{label}</span>}
         {isCollapsed && (
           <span className="pointer-events-none absolute left-full top-1/2 z-10 ml-2.5 -translate-y-1/2 whitespace-nowrap rounded-md border border-zinc-700 bg-zinc-800 px-2.5 py-1.5 text-xs font-semibold text-zinc-100 opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
             {label}
@@ -180,6 +198,11 @@ export default function Sidebar({
 
   const goToTabFromDrawer = (tab: ActiveTab) => {
     onTabChange(tab);
+    setDrawerOpen(false);
+  };
+
+  const openOwnProfileFromDrawer = () => {
+    onOpenOwnProfile?.();
     setDrawerOpen(false);
   };
 
@@ -224,7 +247,9 @@ export default function Sidebar({
         {/* Navigation Menu */}
         <nav className="mt-2 flex w-full flex-col gap-[3px]">
           {MAIN_NAV_ITEMS.map((item) =>
-            renderNavItem(item, collapsed, () => onTabChange(item.tab)),
+            renderNavItem(item.tab, item, activeTab === item.tab, collapsed, () =>
+              onTabChange(item.tab),
+            ),
           )}
         </nav>
 
@@ -237,8 +262,18 @@ export default function Sidebar({
         <div
           className={`w-full border-t border-zinc-700 pt-2 ${renderFooter ? 'mt-2' : 'mt-auto'}`}
         >
+          {profileUsername &&
+            renderNavItem(
+              'profile',
+              { label: profileUsername, Icon: UserIcon },
+              !!isOwnProfileActive,
+              collapsed,
+              () => onOpenOwnProfile?.(),
+            )}
           {BOTTOM_NAV_ITEMS.map((item) =>
-            renderNavItem(item, collapsed, () => onTabChange(item.tab)),
+            renderNavItem(item.tab, item, activeTab === item.tab, collapsed, () =>
+              onTabChange(item.tab),
+            ),
           )}
         </div>
       </motion.aside>
@@ -330,7 +365,9 @@ export default function Sidebar({
 
                 <nav className="mt-2 flex w-full flex-col gap-[3px]">
                   {MAIN_NAV_ITEMS.map((item) =>
-                    renderNavItem(item, false, () => goToTabFromDrawer(item.tab)),
+                    renderNavItem(item.tab, item, activeTab === item.tab, false, () =>
+                      goToTabFromDrawer(item.tab),
+                    ),
                   )}
                 </nav>
 
@@ -343,8 +380,18 @@ export default function Sidebar({
                 <div
                   className={`w-full border-t border-zinc-700 pt-2 ${renderFooter ? 'mt-2' : 'mt-auto'}`}
                 >
+                  {profileUsername &&
+                    renderNavItem(
+                      'profile',
+                      { label: profileUsername, Icon: UserIcon },
+                      !!isOwnProfileActive,
+                      false,
+                      openOwnProfileFromDrawer,
+                    )}
                   {BOTTOM_NAV_ITEMS.map((item) =>
-                    renderNavItem(item, false, () => goToTabFromDrawer(item.tab)),
+                    renderNavItem(item.tab, item, activeTab === item.tab, false, () =>
+                      goToTabFromDrawer(item.tab),
+                    ),
                   )}
                 </div>
               </motion.div>

@@ -190,6 +190,13 @@ export default function App() {
               profileNav.closeProfile();
               goToTab(tab);
             }}
+            profileUsername={syncState.syncUsername}
+            isOwnProfileActive={
+              !!profileNav.viewingUsername && profileNav.viewingUsername === syncState.syncUsername
+            }
+            onOpenOwnProfile={() => {
+              if (syncState.syncUsername) profileNav.openProfile(syncState.syncUsername);
+            }}
             mobileTopBarEnd={
               <button
                 onClick={openCalcPopup}
