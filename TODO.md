@@ -16,23 +16,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Scoping Sweep
-
-Done when:
-- Tourney Tab: Schedule Change Detection has a recorded decision — build a
-  periodic Serebii diff-check poll (and on what cadence), or stay fully
-  manual. **Decided 2026-10-18: stay fully manual, no poll built** — see
-  `docs/investigations/tourney-tab-schedule-source-research.md`.
-- Pokepaste Import: New Showdown Client Team Links has a recorded decision —
-  add `teams.pokemonshowdown.com/api` as a second import source now, or wait
-  and re-check later. **Decided 2026-10-18: wait** — see
-  `docs/investigations/pokepaste-format-research.md`'s "Second import
-  source: add now or wait?" section.
-- Public Team Browse & Upload Database has a recorded decision — a
-  moderation model for public uploads, or not building it. **Decided
-  2026-10-18: not building it** — see
-  `docs/investigations/public-team-browse-upload-scope.md`.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
