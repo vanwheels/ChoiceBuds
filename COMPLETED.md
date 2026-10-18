@@ -63,6 +63,16 @@ Entries prior to this file's oldest are in:
   (the Scoping Sweep milestone's three legs, split out at the 2026-10-18
   Scoping Sweep boundary)
 
+## Move Profile Editing Onto the Profile Page — Leg 4 (2026-10-18)
+
+Moved team/teamsheet-tier visibility toggles and the favorite-Pokémon
+picker from Settings' `PublicProfileSection` into a new
+`ProfileEditControls`, rendered by `ProfilePage` only when the viewed
+username matches the signed-in account (case-insensitive). Settings now
+just links to the profile page instead of duplicating the controls. Closes
+out the Profile System Revamp: Foundation milestone's last done-when
+criterion. See commit aaabec9.
+
 ## Teamsheet Open/Closed Visibility Tiers — Leg 3 (2026-10-18)
 
 Replaced the binary `Team.isPublic` with a 3-state `Team.visibility`

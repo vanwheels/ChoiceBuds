@@ -27,16 +27,8 @@ Done when:
   (private/closed/open) happens directly on the profile page, not in
   Settings.
 
-- **[Move Profile Editing Onto the Profile Page] — Leg 4** *(Last touched:
-  2026-10-18 · Re-checks: 0)*
-  Move team/favorite-Pokémon visibility toggles and the new teamsheet-tier
-  picker (Leg 3) from Settings' `PublicProfileSection` onto the profile page
-  itself, shown only when viewing your own profile. Settings keeps just a
-  pointer/link into the profile page rather than duplicating the controls.
-  Done check: editing a team's public/private state, teamsheet tier, or
-  favorite Pokémon all happens from the profile page with no equivalent
-  controls left in Settings.
-  Manual verification: yes
+All three criteria above are met as of Leg 4 (2026-10-18, see
+`COMPLETED.md`) - no legs left in this milestone. Ready for `/close-milestone`.
 
 ## Blocked
 
