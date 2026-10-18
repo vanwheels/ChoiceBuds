@@ -45,5 +45,19 @@ Entries prior to this file's oldest are in:
   since it shares its date range with the Bug Fix & Small Features Sweep
   archive above)
 
+## Bug Fix & Research Sweep
+
+- **Mobile Empty-Team Add Pokémon Bug — Leg 1** (2026-10-17). Reproduced:
+  `MobileTeamSwipeOverlay.tsx` bails out and auto-closes the instant a
+  tapped team's roster is empty, instead of showing anything. Root cause
+  traced further than the empty-team case alone - mobile's whole swipe-card
+  flow has no "add a new Pokémon" affordance at all, only species-swap for
+  an existing slot - a scope gap from the original
+  Full-Screen Swipeable Pokémon Card feature, not a regression. No code
+  changed (research/root-cause leg); see
+  `docs/investigations/mobile-add-pokemon-entry-point.md` and the new
+  Mobile Teams: Add Pokémon Entry Point follow-up item in `TODO.md`'s
+  Unscheduled section. See commit `f6afb69`.
+
 No other entries yet since the last milestone boundary.
 

@@ -55,19 +55,6 @@ Done when:
   hand-maintained config - enough to scope the actual Tourney Tab UI leg
   later.
 
-- **[Mobile Empty-Team Add Pokémon Bug] — Leg 1** *(Last touched:
-  2026-10-17 · Re-checks: 0)*
-  Reported live 2026-10-17: on mobile web, tapping into an empty team (no
-  Pokémon yet) doesn't let you add one. Unknown how long this has existed
-  or whether it's mobile-only vs. also broken on desktop/App.tsx. Repro on
-  `dev:mobile`, identify root cause; if the fix is small, finish it in this
-  same leg, otherwise stop at root-cause and write a new scoped follow-up
-  item rather than absorbing a bigger fix mid-leg.
-  Done check: repro confirmed/ruled out, root cause identified, and either
-  fixed or a follow-up item is written.
-  Manual verification: yes. Review: no (escalate to yes if the fix touches
-  persisted team data).
-
 - **[Pokepaste Format Research] — Leg 1** *(Last touched: 2026-10-17 ·
   Re-checks: 0)*
   Vanny recalled Showdown moving away from Pokepaste integration toward its
@@ -98,7 +85,25 @@ Done when:
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-_(empty)_
+- **[Mobile Teams: Add Pokémon Entry Point] — Leg 1** *(Last touched:
+  2026-10-17 · Re-checks: 0)*
+  Mobile's Teams swipe-card flow (`MobileTeamSwipeOverlay.tsx`/
+  `MobilePokemonCard.tsx`) has no way to add a new Pokémon to a team at all -
+  only to swap an existing slot's species. Discovered via the empty-team
+  repro in Bug Fix & Research Sweep's Mobile Empty-Team Add Pokémon Bug Leg 1
+  (see `docs/investigations/mobile-add-pokemon-entry-point.md`); the
+  empty-team case was just the most visible symptom, since
+  `MobileTeamSwipeOverlay.tsx` currently bails out and auto-closes the
+  instant a team's roster is empty instead of showing anything. Needs a
+  design decision on where an "Add Pokémon" entry point lives in a
+  single-card swipe-paging deck (an extra page past the last one, a
+  persistent header button, or an empty-state screen for the 0-roster case)
+  before it's buildable.
+  Done check: entry-point placement decided and `AddPokemonStatTable` wired
+  up for both the empty-team case and adding beyond an existing roster;
+  the current close-on-empty auto-close behavior resolved as part of the
+  same change.
+  Manual verification: yes. Review: yes (touches persisted team data).
 
 ## Future Milestones (unscheduled)
 
