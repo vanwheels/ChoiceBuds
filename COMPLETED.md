@@ -74,4 +74,4 @@ reappears untouched. The fetch/render logic (`usePublicProfile`/
 stays as-is for signed-out visitors. Settings' existing `/u/<username>`
 link now opens the profile in-app instead of a new tab; its own username
 lookup box (on the profile page itself) opens any other account's profile
-the same way, pushing a second stack entry. See commit <pending>.
+the same way, pushing a second stack entry. See commit 80ded0e.
