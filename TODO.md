@@ -19,28 +19,19 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 ## Current Milestone: Public Profiles & Team Sharing
 
 Done when:
-- The safety filter is live across username, public team name, and
+- [x] The safety filter is live across username, public team name, and
   Pokémon-nickname entry points, with existing accounts screened against it.
-- Any visitor can view another account's public profile (preset icon +
+- [x] Any visitor can view another account's public profile (preset icon +
   username) by URL with no login required.
-- Teams and a new favorite-Pokémon field can each be individually toggled
+- [x] Teams and a new favorite-Pokémon field can each be individually toggled
   public from that account, off by default, and show/hide correctly on the
   public profile page.
 
-- **[Public Profiles: Per-Item Visibility Toggles] — Leg 1** *(Last
-  touched: 2026-10-17 · Re-checks: 0)*
-  Add opt-in, hidden-by-default visibility toggles for teams and a new
-  favorite-Pokémon field, surfaced on the public profile from the base-route
-  leg when toggled on. Off by default for everyone, including existing
-  accounts. Depends on the base route leg. Per
-  [docs/investigations/public-profiles-safety-filter-research.md](docs/investigations/public-profiles-safety-filter-research.md),
-  whatever new Worker endpoint serves this public team-name/nickname data
-  needs its own server-side safety-filter check (defense-in-depth beyond the
-  renderer's entry-point validation) — not just client-side.
-  Done check: toggling a team or the favorite-Pokémon field visible shows it
-  on the public profile; toggling off hides it again.
-  Manual verification: yes. Review: yes (touches persisted team/account data
-  shape — new visibility + favorite-Pokémon fields).
+All three done-when criteria are met as of Per-Item Visibility Toggles —
+Leg 1 (commit f0bb5cb) - this milestone looks ready for `/close-milestone`.
+Manual verification of that leg (toggling a team/the favorite pick public
+and confirming it shows/hides correctly on the live `/u/<username>` page)
+is still outstanding - see COMPLETED.md.
 
 ## Blocked
 

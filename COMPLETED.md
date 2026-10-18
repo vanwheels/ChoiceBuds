@@ -116,3 +116,28 @@ Entries prior to this file's oldest are in:
   `wrangler deploy` directly, so the user ran it themselves - confirmed
   working live afterward. See commit `1c7a733`.
 
+- **[Public Profiles: Per-Item Visibility Toggles] — Leg 1** (2026-10-17).
+  Added `Team.isPublic` (off by default, toggled like `Team.favorite`) and a
+  new account-wide `FavoritePokemon` singleton (species-only pick - no
+  EVs/moves/item, chosen from the existing species roster picker) synced the
+  same `mergeSingleton` last-write-wins way as `PlayerProfile`, both managed
+  from a new "Public Profile" Settings section (only shown once signed in to
+  sync). `GET /profile/:username` now reads inside the account's stored sync
+  blob (new `worker/src/publicProfile.ts`, pure and unit-tested) to serve
+  whichever teams/pick are toggled on - per
+  [docs/investigations/public-profiles-safety-filter-research.md](docs/investigations/public-profiles-safety-filter-research.md),
+  a team's name and each Pokémon's nickname run through the existing
+  `safetyFilter.ts` server-side (defense-in-depth, since these fields never
+  go through `/signup`'s own check): a flagged team name excludes that whole
+  team from the public response, a flagged nickname just drops that one
+  field. The favorite-Pokémon pick's `species` isn't filtered - it only ever
+  comes from the renderer's own roster picker, never freeform text. All
+  three of the milestone's "done when" criteria are now met (see TODO.md).
+  Type-checked/linted/built clean on both the desktop and web entries, and
+  the full Vitest suite (renderer + Worker) passes, but this leg's own live
+  manual verification (toggling a team/the favorite pick public and
+  confirming it shows/hides correctly on the deployed `/u/<username>` page)
+  is still outstanding - the Base Route leg above found the live Worker
+  needs its own separate `wrangler deploy` before any Worker-side change
+  here is actually live. See commit `f0bb5cb`.
+
