@@ -16,6 +16,60 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
+## Current Milestone: Public Profiles & Team Sharing
+
+Done when:
+- The safety filter is live across username, public team name, and
+  Pokémon-nickname entry points, with existing accounts screened against it.
+- Any visitor can view another account's public profile (preset icon +
+  username) by URL with no login required.
+- Teams and a new favorite-Pokémon field can each be individually toggled
+  public from that account, off by default, and show/hide correctly on the
+  public profile page.
+
+- **[Public Profiles: Safety Filter Research] — Leg 1** *(Last touched:
+  2026-10-17 · Re-checks: 0)*
+  Decide the profanity/safety-filter approach (word-list library vs. a
+  filtering API) for the three surfaces this milestone makes public:
+  usernames, public team names, and public Pokémon nicknames, and where
+  enforcement runs (client-side validation vs. Worker-side). No
+  implementation in this leg — scoping only.
+  Done check: a written decision covering approach + enforcement point for
+  all three surfaces.
+  Manual verification: no. Review: no.
+
+- **[Public Profiles: Safety Filter Implementation] — Leg 1** *(Last
+  touched: 2026-10-17 · Re-checks: 0)*
+  Build the filter per the prior leg's decision. Apply it at signup/
+  username change, team naming, and nickname entry, and run it once
+  retroactively against the ~4-6 existing accounts' usernames before the
+  base profile route (next leg) ships, flagging any hits for manual
+  follow-up rather than auto-editing them.
+  Done check: filter rejects/flags disallowed content at all three entry
+  points; existing usernames have been checked.
+  Manual verification: yes (exercise with known test strings). Review: no.
+
+- **[Public Profiles: Base Route] — Leg 1** *(Last touched: 2026-10-17 ·
+  Re-checks: 0)*
+  New public, unauthenticated route showing a preset icon (from the existing
+  icon set, not user-uploadable) + username, nothing else. Public by default
+  for every account — no opt-in needed for this base view. Depends on the
+  safety filter leg above being live first.
+  Done check: visiting another account's public profile URL by username
+  shows icon + username with no login, for any existing account.
+  Manual verification: yes. Review: no.
+
+- **[Public Profiles: Per-Item Visibility Toggles] — Leg 1** *(Last
+  touched: 2026-10-17 · Re-checks: 0)*
+  Add opt-in, hidden-by-default visibility toggles for teams and a new
+  favorite-Pokémon field, surfaced on the public profile from the base-route
+  leg when toggled on. Off by default for everyone, including existing
+  accounts. Depends on the base route leg.
+  Done check: toggling a team or the favorite-Pokémon field visible shows it
+  on the public profile; toggling off hides it again.
+  Manual verification: yes. Review: yes (touches persisted team/account data
+  shape — new visibility + favorite-Pokémon fields).
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -83,6 +137,17 @@ unblocked.
   import source, or to wait and re-check later.
   Manual verification: no. Review: no.
 
+- **[Public Team Browse & Upload Database] — Leg 1** *(Last touched:
+  2026-10-17 · Re-checks: 0)*
+  Split out of Public Profiles & Team Sharing's scoping (2026-10-17): a
+  shared public team browse/upload database, beyond the per-team visibility
+  toggles that milestone covers. The open question is the abuse/moderation
+  model for public uploads - needs its own dedicated scoping pass before
+  any legs get written here; not leg-ready yet.
+  Done check: scoping pass picks a moderation model (or decides not to
+  build this) before any legs get written.
+  Manual verification: no. Review: no.
+
 ## Future Milestones (unscheduled)
 
 `src/renderer/_archived/battle-logger/hooks/useBattleLogActions.ts` (1,001
@@ -110,22 +175,8 @@ Password reset flow, deferred out of Web Version: Teams & Box MVP's scoping
 worth its own leg: needs a transactional email API + SPF/DKIM
 deliverability setup on a dedicated vannyproductions.com subdomain.
 
-**Public Profiles & Team Sharing** (rescoped 2026-10-17, originally
-deferred 2026-09-29 out of Web Version: Teams & Box MVP - account system
-and username design now shipped, see `docs/investigations/web-version-scope.md`).
-Display name = the existing login username (decided 2026-10-17, no
-separate field). Candidate legs:
-1. Public profile route showing a preset icon (not user-uploadable) +
-   username, nothing else, public by default.
-2. Per-item opt-in toggles for everything beyond the base profile - teams
-   visibility, a new favorite-Pokémon field, whatever else gets decided at
-   scoping time.
-3. Profanity/safety filter for usernames, public team names, and public
-   Pokémon nicknames - needs its own research pass on approach (word-list
-   library vs. a filtering API) before it's a concrete leg.
-4. Shared public team browse/upload database (scope widened 2026-09-29 by
-   Vanny beyond per-team visibility toggles) - the biggest open question:
-   abuse/moderation model for a public upload database. Flagged as needing
-   its own dedicated scoping pass before any legs get written here; not
-   leg-ready yet.
+Public Profiles & Team Sharing was promoted to current 2026-10-17 (see
+`TODO.md`'s Current Milestone section) - its original leg 4 (shared public
+team browse/upload database) split back out to Unscheduled above since its
+moderation model still needs its own scoping pass.
 
