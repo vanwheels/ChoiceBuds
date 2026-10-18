@@ -65,7 +65,7 @@ misreading an ISO 'YYYY-MM-DD' calendar day, same treatment
 `Sidebar.tsx`'s nav list (new `TourneyIcon`, trophy metaphor). This closes
 the Mobile Teams & Tourney Tab milestone's second done-when item alongside
 Leg 2, and the milestone itself (both items now shipped - see MILESTONES.md
-for closure).
+for closure). See commit 4c8c986.
 
 **[Tourney Tab: Event Config] — Leg 2** (2026-10-17)
 Added `config/tourneyEvents.ts`, a hand-authored table of TPCi's sanctioned
