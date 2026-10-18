@@ -73,3 +73,19 @@ Entries prior to this file's oldest are in:
   updated Safety Filter Implementation / Per-Item Visibility Toggles items
   in `TODO.md`. See commit `21c811e`.
 
+- **Public Profiles: Safety Filter Implementation — Leg 1** (2026-10-17).
+  Picked `obscenity` (zero runtime deps, no Node-only APIs, whole-word/
+  leetspeak/confusable-aware) and vetted it live against every real
+  species/move/ability/item name from PokeAPI (~4,500 names) plus VGC
+  jargon — found 3 false positives from two-word ability/item names run
+  together ("Neutralizing Gas", "Koffing Gas", "Klefki"+"Key") colliding
+  with the library's slur-evasion patterns, fixed with 3 targeted allowlist
+  entries that leave real slurs still flagged. Implemented as
+  `worker/src/safetyFilter.ts`/`src/renderer/utils/safetyFilter.ts`
+  (hand-duplicated, each with its own test suite), wired into `/signup`
+  server-side and `useSync.ts::signUp` client-side. Ran it retroactively
+  against all 4 existing accounts (read via `wrangler kv key list` against
+  the real KV namespace) — none flagged. Manual verification (signing up
+  with a disallowed username in the running app) confirmed live. See commit
+  `2553a35`.
+

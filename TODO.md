@@ -27,38 +27,12 @@ Done when:
   public from that account, off by default, and show/hide correctly on the
   public profile page.
 
-- **[Public Profiles: Safety Filter Implementation] — Leg 1** *(Last
-  touched: 2026-10-17 · Re-checks: 0)*
-  Picked `obscenity` (zero runtime deps, no Node-only APIs, English preset
-  with whole-word/leetspeak/confusable-aware matching, last published
-  2026-01) and vetted it live against every real species/move/ability/item
-  name from PokeAPI (~4,500 names) plus common VGC jargon — found 3 false
-  positives (two-word ability/item names run together: "Neutralizing Gas",
-  "Koffing Gas", "Klefki"+"Key" colliding with the library's slur-evasion
-  patterns), fixed with 3 targeted `addWhitelistedTerm` entries that still
-  leave real slurs flagged. Implemented as
-  `worker/src/safetyFilter.ts`/`src/renderer/utils/safetyFilter.ts` (hand-
-  duplicated, each with its own `*.test.ts`), wired into `/signup` server-
-  side (`worker/src/index.ts`) and `useSync.ts::signUp` client-side. Ran it
-  retroactively against all 4 existing accounts (`erip`, `meeko`, `orikata`,
-  `vanny`, read via `wrangler kv key list` against the real KV namespace) —
-  none flagged.
-  Done check: filter rejects/flags disallowed content at username entry
-  (client + server) — done, confirmed live server-side via local
-  `wrangler dev` + curl; existing usernames have been checked — done, none
-  flagged.
-  Manual verification: server-side confirmed live (see above). Client-side
-  is the pure filter function under unit test, wired into `signUp`, but not
-  yet clicked through in the actual sign-up UI — worth a quick manual pass
-  (try signing up with a disallowed username in the running app) before
-  calling this leg fully closed. Review: no.
-
 - **[Public Profiles: Base Route] — Leg 1** *(Last touched: 2026-10-17 ·
   Re-checks: 0)*
   New public, unauthenticated route showing a preset icon (from the existing
   icon set, not user-uploadable) + username, nothing else. Public by default
   for every account — no opt-in needed for this base view. Depends on the
-  safety filter leg above being live first.
+  safety filter leg above being live first — done (see COMPLETED.md).
   Done check: visiting another account's public profile URL by username
   shows icon + username with no login, for any existing account.
   Manual verification: yes. Review: no.
