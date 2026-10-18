@@ -1,0 +1,116 @@
+# ChoiceBuds - Completed Work Archive (2026-10-17 to 2026-10-17, Public Profiles & Team Sharing)
+
+Archived from `COMPLETED.md` at the 2026-10-17 Public Profiles & Team
+Sharing milestone boundary. Newest entries first.
+
+**Public Profiles: Safety Filter Research — Leg 1** (2026-10-17). Decided
+a word-list/pattern-based filter (pure function, no external filtering
+API) over a hosted moderation API — the sync Worker is infrastructure
+each user deploys and owns themselves (`worker/README.md`), so an
+API-key dependency would add real friction, and an offline pure function matches
+`crypto.ts`'s existing pattern for this class of concern. Enforcement:
+client + Worker-side at username entry (mirroring the existing
+client/Worker `USERNAME_PATTERN` duplication); client-side plus a new
+server-side check at whichever endpoint ends up serving public team
+names/nicknames for team name and nickname, since the generic sync
+endpoint stays opaque to those fields by design. No code changed
+(scoping-only leg); see
+`docs/investigations/public-profiles-safety-filter-research.md` and the
+updated Safety Filter Implementation / Per-Item Visibility Toggles items
+in `TODO.md`. See commit `21c811e`.
+
+**Public Profiles: Safety Filter Implementation — Leg 1** (2026-10-17).
+Picked `obscenity` (zero runtime deps, no Node-only APIs, whole-word/
+leetspeak/confusable-aware) and vetted it live against every real
+species/move/ability/item name from PokeAPI (~4,500 names) plus VGC
+jargon — found 3 false positives from two-word ability/item names run
+together ("Neutralizing Gas", "Koffing Gas", "Klefki"+"Key") colliding
+with the library's slur-evasion patterns, fixed with 3 targeted allowlist
+entries that leave real slurs still flagged. Implemented as
+`worker/src/safetyFilter.ts`/`src/renderer/utils/safetyFilter.ts`
+(hand-duplicated, each with its own test suite), wired into `/signup`
+server-side and `useSync.ts::signUp` client-side. Ran it retroactively
+against all 4 existing accounts (read via `wrangler kv key list` against
+the real KV namespace) — none flagged. Manual verification (signing up
+with a disallowed username in the running app) confirmed live. See commit
+`2553a35`.
+
+**[Public Profiles: Base Route] — Leg 1** (2026-10-17). Scoping surfaced
+that no preset-icon-set actually exists yet (no asset folder, config
+table, or UI anywhere in the codebase) despite the milestone's "done
+when" wording assuming one — decided (with the user) to ship this leg
+with one fixed placeholder icon for every profile and defer the real
+preset-icon-set/picker to its own later leg rather than design one here.
+Added a new public, unauthenticated Worker endpoint
+(`GET /profile/:username`, returns only the display-case username or
+404) and a `/u/<username>` web route (`web/main.tsx`) that mounts a
+standalone `PublicProfilePage.tsx` instead of the full `AppWeb` shell, so
+an unauthenticated visitor never pulls in Teams/Box/sync state. Added a
+GitHub Pages `404.html` SPA-fallback (the classic
+stash-URL-then-`history.replaceState` trick) so a direct link to the
+route works on the static-hosted build, not just the dev server's
+built-in history fallback. Manually verified the Worker endpoint
+(lowercase/original-case lookup, 404 on unknown username, 400 on
+malformed username) via local `wrangler dev` + curl, and the web route's
+client-side path match via the local `dev:web` server. First live check
+on the deployed site falsely showed "not found" for the user's own
+real account - traced to the live Worker still running the
+pre-this-leg build (pushing to `main` only redeploys the web app via
+`deploy-web.yml`; the Worker itself needs its own `wrangler deploy`,
+per `worker/README.md`'s "infrastructure you own and run"). The
+sandbox's auto-mode classifier also blocked Claude from running
+`wrangler deploy` directly, so the user ran it themselves - confirmed
+working live afterward. See commit `1c7a733`.
+
+**[Public Profiles: Per-Item Visibility Toggles] — Leg 1** (2026-10-17).
+Added `Team.isPublic` (off by default, toggled like `Team.favorite`) and a
+new account-wide `FavoritePokemon` singleton (species-only pick - no
+EVs/moves/item, chosen from the existing species roster picker) synced the
+same `mergeSingleton` last-write-wins way as `PlayerProfile`, both managed
+from a new "Public Profile" Settings section (only shown once signed in to
+sync). `GET /profile/:username` now reads inside the account's stored sync
+blob (new `worker/src/publicProfile.ts`, pure and unit-tested) to serve
+whichever teams/pick are toggled on - per
+[docs/investigations/public-profiles-safety-filter-research.md](../investigations/public-profiles-safety-filter-research.md),
+a team's name and each Pokémon's nickname run through the existing
+`safetyFilter.ts` server-side (defense-in-depth, since these fields never
+go through `/signup`'s own check): a flagged team name excludes that whole
+team from the public response, a flagged nickname just drops that one
+field. The favorite-Pokémon pick's `species` isn't filtered - it only ever
+comes from the renderer's own roster picker, never freeform text. All
+three of the milestone's "done when" criteria are now met (see TODO.md).
+Type-checked/linted/built clean on both the desktop and web entries, and
+the full Vitest suite (renderer + Worker) passes, but this leg's own live
+manual verification (toggling a team/the favorite pick public and
+confirming it shows/hides correctly on the deployed `/u/<username>` page)
+is still outstanding - the Base Route leg above found the live Worker
+needs its own separate `wrangler deploy` before any Worker-side change
+here is actually live. See commit `f0bb5cb`.
+
+**[Public Profiles: Per-Item Visibility Toggles] — Leg 2** (2026-10-17).
+Live verification of Leg 1 surfaced a real sync bug, not just the known
+Worker-redeploy gotcha: toggling a team/the favorite pick public 400'd
+with "Body must include teams/battles/savedPokemon arrays..." on every
+sync attempt. Root cause: `useSettings.ts`'s load-time migration
+(`{ ...DEFAULT_SETTINGS, ...database }`) only backfills top-level keys
+missing from the saved file entirely - the user's `playerProfile` object
+predated that interface's `updatedAt` field (added in an earlier leg) and
+kept its old shape through the shallow spread, so `updatedAt` loaded as
+`undefined`, which `JSON.stringify` drops on the wire and the Worker's
+`isOptionalSingleton` check rejects outright, failing the *entire* push
+including unrelated teams/battles/savedPokemon. Fixed by deep-backfilling
+`playerProfile`/`favoritePokemon` to a real `Date.now()` `updatedAt` (not
+the `DEFAULT_*`'s `0` "never touched" placeholder, since this was real,
+in-use data) and persisting the correction, same one-time-migration
+pattern the file's existing `defaultRegulation` fix already uses. Shared
+by both the desktop and web builds (`useSettings.ts` is common code), so
+it needed both a renderer fix (pushed to `main`, live via `deploy-web.yml`)
+and confirmation it also corrected the desktop app's own `settings.json`
+on next launch. Separately, the live public profile page still showed
+nothing after that fix landed - `GET /profile/vanny` returned only
+`{"ok":true,"username":"vanny"}`, confirming the live Worker was still
+running a build from before Leg 1's `teams`/`favoritePokemon` fields were
+added to `handleProfileGet` (same manual-`wrangler deploy` gotcha as the
+Base Route leg, hit again). User ran `wrangler deploy`; live
+`/u/vanny` then correctly showed the two public teams and the favorite
+Pokémon pick, confirmed by screenshot. See commit `14cbca3`.

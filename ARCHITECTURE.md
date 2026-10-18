@@ -46,6 +46,18 @@ existing spread-over-defaults merge. Each hook backfills a missing
 future format change bumps the number and adds the real migration logic to
 the matching hook.
 
+`useSettings.ts`'s `{ ...DEFAULT_SETTINGS, ...database }` merge only
+backfills a top-level key that's missing from the saved file entirely — a
+nested singleton (`playerProfile`, `favoritePokemon`) that already existed
+before a new field was added to its interface keeps that field
+`undefined` through the shallow spread. `undefined` then drops out of
+`JSON.stringify` on sync push, which the Worker's `isOptionalSingleton`
+check rejects, failing the *entire* push. Any field added to an
+already-live nested singleton needs its own explicit backfill check (see
+the `playerProfile`/`favoritePokemon` `updatedAt` fix,
+`docs/postmortems/public-profiles-and-team-sharing.md`), not just a type
+change.
+
 ## Renderer layers
 
 - `src/renderer/types/` — single source of truth for all data contracts,
@@ -176,6 +188,23 @@ the matching hook.
   link if the fetch fails or a platform's assets are missing. The signed-out
   Teams/Box web app keeps the domain root; this is a separate landing page,
   not a route inside `AppWeb.tsx`.
+- `/u/<username>` (`web/main.tsx`) mounts a standalone
+  `components/PublicProfilePage.tsx` instead of the full `AppWeb` shell, so
+  an unauthenticated visitor never pulls in Teams/Box/sync state — it only
+  calls the Worker's public `GET /profile/:username`. A GitHub Pages
+  `404.html` (stash-URL-then-`history.replaceState`) makes a direct link to
+  this route work on the static-hosted build, which has no server-side
+  history fallback the way the dev server does.
+- `src/renderer/utils/safetyFilter.ts` and `worker/src/safetyFilter.ts` are
+  hand-duplicated (own test suite each) rather than shared, since the
+  renderer and Worker are separate build targets with no shared package —
+  same duplication pattern as each side's own `USERNAME_PATTERN`. Built on
+  `obscenity`, with a handful of allowlist entries for real VGC
+  species/ability/item names it otherwise false-flags (e.g. "Neutralizing
+  Gas"). Enforced at username entry (client + Worker, on `/signup`) and
+  again server-side on public team names/Pokémon nicknames inside
+  `worker/src/publicProfile.ts`, since the generic sync endpoint stays
+  opaque to those fields by design.
 - `src/renderer/AppWeb.tsx` — the web shell, sibling to `App.tsx`. Every
   `Sidebar` tab now renders its real page on web (Teams, Box, Battle Log,
   Statistics, Type Matchup, Speed Tiers, Tourney, Settings, Calc) — full UI

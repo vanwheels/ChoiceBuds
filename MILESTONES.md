@@ -73,3 +73,5 @@ milestone.
   [post-mortem](docs/postmortems/bug-fix-research-sweep.md)
 - **Mobile Teams & Tourney Tab** — 2026-10-17 — Shipped —
   [post-mortem](docs/postmortems/mobile-teams-and-tourney-tab.md)
+- **Public Profiles & Team Sharing** — 2026-10-17 — Shipped —
+  [post-mortem](docs/postmortems/public-profiles-and-team-sharing.md)

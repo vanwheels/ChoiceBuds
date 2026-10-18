@@ -152,7 +152,13 @@ running on.
   auto-mode classifier blocks Claude from running `wrangler deploy`
   itself (denied outright, no retry worth attempting), so hand the user
   the exact command to run themselves rather than trying to work around
-  the block — then verify live once they confirm it ran.
+  the block — then verify live once they confirm it ran. This recurred
+  twice within one milestone (Public Profiles & Team Sharing) even with
+  this bullet already written, because each time it was only caught
+  reactively, after a live check had already come back 404/stale. Before
+  attempting *any* live verification of a change touching `worker/src/`,
+  proactively ask whether `wrangler deploy` has been run for it yet —
+  don't wait for the live check to fail first.
 - **Curated effect tables** (`config/moveStatEffects.ts`,
   `config/onSwitchInAbilities.ts`, `config/reactiveAbilities.ts`,
   `config/hitReactiveAbilities.ts`) should hold comprehensive,

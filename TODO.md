@@ -16,23 +16,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Public Profiles & Team Sharing
-
-Done when:
-- [x] The safety filter is live across username, public team name, and
-  Pokémon-nickname entry points, with existing accounts screened against it.
-- [x] Any visitor can view another account's public profile (preset icon +
-  username) by URL with no login required.
-- [x] Teams and a new favorite-Pokémon field can each be individually toggled
-  public from that account, off by default, and show/hide correctly on the
-  public profile page.
-
-All three done-when criteria are met as of Per-Item Visibility Toggles —
-Leg 1 (commit f0bb5cb), and live verification (toggling a team/the favorite
-pick public and confirming it shows/hides correctly on the live
-`/u/<username>` page) is now also done as of Leg 2 (see COMPLETED.md) - this
-milestone looks ready for `/close-milestone`.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -138,8 +121,8 @@ Password reset flow, deferred out of Web Version: Teams & Box MVP's scoping
 worth its own leg: needs a transactional email API + SPF/DKIM
 deliverability setup on a dedicated vannyproductions.com subdomain.
 
-Public Profiles & Team Sharing was promoted to current 2026-10-17 (see
-`TODO.md`'s Current Milestone section) - its original leg 4 (shared public
-team browse/upload database) split back out to Unscheduled above since its
-moderation model still needs its own scoping pass.
+Public Profiles & Team Sharing was promoted to current 2026-10-17 and
+shipped the same day (see `MILESTONES.md`) - its original leg 4 (shared
+public team browse/upload database) split back out to Unscheduled above
+since its moderation model still needs its own scoping pass.
 
