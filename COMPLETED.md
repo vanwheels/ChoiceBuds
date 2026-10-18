@@ -71,5 +71,5 @@ Entries prior to this file's oldest are in:
   (scoping-only leg); see
   `docs/investigations/public-profiles-safety-filter-research.md` and the
   updated Safety Filter Implementation / Per-Item Visibility Toggles items
-  in `TODO.md`. See commit `<pending>`.
+  in `TODO.md`. See commit `21c811e`.
 
