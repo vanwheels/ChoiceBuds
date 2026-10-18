@@ -42,6 +42,7 @@ import {
   type PasswordHash,
 } from './crypto';
 import { mergeCollection, mergeSingleton, type SyncTombstone } from './merge';
+import { containsDisallowedContent } from './safetyFilter';
 
 export interface Env {
   SYNC_KV: KVNamespace;
@@ -211,6 +212,9 @@ async function handleSignup(request: Request, env: Env): Promise<Response> {
 
   if (!isValidUsername(body.username)) {
     return errorResponse('Username must be 2-32 letters, numbers, or underscores', 400);
+  }
+  if (containsDisallowedContent(body.username)) {
+    return errorResponse('Username contains disallowed content', 400);
   }
   if (!isValidPassword(body.password)) {
     return errorResponse('Password must be at least 8 characters', 400);

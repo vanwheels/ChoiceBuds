@@ -25,6 +25,7 @@ import type { UseSavedPokemonReturn } from './useSavedPokemon';
 import { signup, login, pushSyncData } from '../services/syncApi';
 import type { SyncPayload } from '../types/pokemon';
 import { fixGenderSplitResourceSpeciesText } from '../config/pokemonRules';
+import { containsDisallowedContent } from '../utils/safetyFilter';
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_]{2,32}$/;
 const MIN_PASSWORD_LENGTH = 8;
@@ -162,6 +163,12 @@ export function useSync(
         return {
           ok: false as const,
           message: 'Username must be 2-32 letters, numbers, or underscores',
+        };
+      }
+      if (containsDisallowedContent(trimmedUsername)) {
+        return {
+          ok: false as const,
+          message: 'Username contains disallowed content',
         };
       }
       if (password.length < MIN_PASSWORD_LENGTH) {

@@ -29,23 +29,29 @@ Done when:
 
 - **[Public Profiles: Safety Filter Implementation] — Leg 1** *(Last
   touched: 2026-10-17 · Re-checks: 0)*
-  Decided in
-  [docs/investigations/public-profiles-safety-filter-research.md](docs/investigations/public-profiles-safety-filter-research.md):
-  a word-list/pattern-based filter (pure function, no filtering API),
-  duplicated by hand into both `worker/src/` and `src/renderer/` per the
-  codebase's existing client/Worker duplication pattern. Pick and vet a
-  specific library against the Workers runtime and false-positive risk on
-  real Pokémon/VGC nicknames, wire it into username entry (client +
-  `/signup` server-side) now, and run it once retroactively against the
-  ~4-6 existing accounts' usernames before the base profile route (next leg)
-  ships, flagging any hits for manual follow-up rather than auto-editing
-  them. The public-team-name/nickname server-side check is out of scope
-  here — it slots into whichever endpoint the Base Route/Per-Item Visibility
-  Toggles legs add, since that's the first point the Worker reads inside
-  those fields at all.
+  Picked `obscenity` (zero runtime deps, no Node-only APIs, English preset
+  with whole-word/leetspeak/confusable-aware matching, last published
+  2026-01) and vetted it live against every real species/move/ability/item
+  name from PokeAPI (~4,500 names) plus common VGC jargon — found 3 false
+  positives (two-word ability/item names run together: "Neutralizing Gas",
+  "Koffing Gas", "Klefki"+"Key" colliding with the library's slur-evasion
+  patterns), fixed with 3 targeted `addWhitelistedTerm` entries that still
+  leave real slurs flagged. Implemented as
+  `worker/src/safetyFilter.ts`/`src/renderer/utils/safetyFilter.ts` (hand-
+  duplicated, each with its own `*.test.ts`), wired into `/signup` server-
+  side (`worker/src/index.ts`) and `useSync.ts::signUp` client-side. Ran it
+  retroactively against all 4 existing accounts (`erip`, `meeko`, `orikata`,
+  `vanny`, read via `wrangler kv key list` against the real KV namespace) —
+  none flagged.
   Done check: filter rejects/flags disallowed content at username entry
-  (client + server); existing usernames have been checked.
-  Manual verification: yes (exercise with known test strings). Review: no.
+  (client + server) — done, confirmed live server-side via local
+  `wrangler dev` + curl; existing usernames have been checked — done, none
+  flagged.
+  Manual verification: server-side confirmed live (see above). Client-side
+  is the pure filter function under unit test, wired into `signUp`, but not
+  yet clicked through in the actual sign-up UI — worth a quick manual pass
+  (try signing up with a disallowed username in the running app) before
+  calling this leg fully closed. Review: no.
 
 - **[Public Profiles: Base Route] — Leg 1** *(Last touched: 2026-10-17 ·
   Re-checks: 0)*
