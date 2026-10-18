@@ -50,6 +50,18 @@ Entries prior to this file's oldest are in:
   slug since it shares its date range with the Mobile Web & UI Polish
   archive above)
 
+**[Tourney Tab: Event Config] — Leg 2** (2026-10-17)
+Added `config/tourneyEvents.ts`, a hand-authored table of TPCi's sanctioned
+VGC circuit events (Regionals, Special Events, Internationals, World
+Championships) for the current season, sourced from Serebii's
+`playpokemon/2027.shtml`/`vgc.shtml` pages
+(`external-data-sources.md` exception #2) per
+`docs/investigations/tourney-tab-schedule-source-research.md`'s resolution
+that no live schedule source exists. No Global Challenge events or signup
+deadlines are listed - neither source page shows them; both are called out
+as deliberately excluded in the file header, same convention as the curated
+effect tables. See commit (pending).
+
 **[Mobile Add Pokémon Entry Point] — Leg 1** (2026-10-17)
 Added an extra page past the last card in the mobile Teams swipe deck
 whenever roster < 6 (opens `AddPokemonStatTable` and appends a new slot),

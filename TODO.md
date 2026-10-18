@@ -51,20 +51,6 @@ Done when:
 - Tourney Tab shows curated GC/Regionals/Internationals/Worlds events from a
   hand-maintained config, with dates/location/signup deadlines where known.
 
-- **[Tourney Tab: Event Config] — Leg 2** *(Last touched: 2026-10-17 ·
-  Re-checks: 0)*
-  Hand-authored `config/tourneyEvents.ts` covering TPCi's own sanctioned/
-  sponsored VGC events only (GC, Regionals, Internationals, Worlds) - same
-  pattern as `config/championsMoveOverrides.ts`, sourced from Serebii's
-  `playpokemon` pages (`external-data-sources.md` exception #2) per
-  `docs/investigations/tourney-tab-schedule-source-research.md`'s resolution
-  that no live schedule source exists. Typed entries: event name, tier,
-  city/country, dates, signup deadline where known.
-  Done check: config file covers the current season's known events, with
-  documented exclusions in the file header (same convention as the curated
-  effect tables).
-  Manual verification: no. Review: no.
-
 - **[Tourney Tab: UI] — Leg 3** *(Last touched: 2026-10-17 · Re-checks: 0)*
   New tab/view consuming Leg 2's config: upcoming events sorted by date,
   showing location and signup deadline where available. Depends on Leg 2
