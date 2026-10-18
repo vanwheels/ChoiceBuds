@@ -50,5 +50,12 @@ Entries prior to this file's oldest are in:
   slug since it shares its date range with the Mobile Web & UI Polish
   archive above)
 
-No entries yet since the last milestone boundary.
+**[Mobile Add Pokémon Entry Point] — Leg 1** (2026-10-17)
+Added an extra page past the last card in the mobile Teams swipe deck
+whenever roster < 6 (opens `AddPokemonStatTable` and appends a new slot),
+and replaced the empty-team bail-out-and-auto-close effect with a dedicated
+empty-state screen using the same add affordance. Also fixed a latent
+z-index bug (`Modal.tsx` was below the mobile swipe overlays, hiding any
+dialog opened from within one, including the pre-existing Roster Swap
+picker) uncovered while building this. See commit e35e438.
 

@@ -51,22 +51,6 @@ Done when:
 - Tourney Tab shows curated GC/Regionals/Internationals/Worlds events from a
   hand-maintained config, with dates/location/signup deadlines where known.
 
-- **[Mobile Add Pokémon Entry Point] — Leg 1** *(Last touched: 2026-10-17 ·
-  Re-checks: 0)*
-  Mobile's Teams swipe-card flow (`MobileTeamSwipeOverlay.tsx`/
-  `MobilePokemonCard.tsx`) has no way to add a new Pokémon to a team at all -
-  only to swap an existing slot's species. Discovered via the empty-team
-  repro in Bug Fix & Research Sweep's Mobile Empty-Team Add Pokémon Bug Leg 1
-  (see `docs/investigations/mobile-add-pokemon-entry-point.md`). Design
-  decision made at planning time (2026-10-17): the entry point is an extra
-  page past the last card in the swipe deck, shown whenever roster < 6; the
-  roster = 0 case gets its own empty-state screen (no cards exist to swipe
-  between), replacing the current bail-out-and-auto-close effect.
-  Done check: swiping past the last card (when roster < 6) opens
-  `AddPokemonStatTable` and appends a new slot; the empty-team case shows the
-  empty-state screen with the same add affordance instead of auto-closing.
-  Manual verification: yes. Review: yes (touches persisted team data).
-
 - **[Tourney Tab: Event Config] — Leg 2** *(Last touched: 2026-10-17 ·
   Re-checks: 0)*
   Hand-authored `config/tourneyEvents.ts` covering TPCi's own sanctioned/
