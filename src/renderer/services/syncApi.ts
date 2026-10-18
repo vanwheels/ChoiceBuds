@@ -104,6 +104,28 @@ export async function pushSyncData(
   return response.json();
 }
 
+/**
+ * Public, unauthenticated profile lookup (Public Profiles: Base Route, see
+ * TODO.md) - returns the account's display-case username if it exists, or
+ * null if no account has that username. Never requires/sends a token.
+ */
+export async function fetchPublicProfile(username: string): Promise<{ username: string } | null> {
+  const response = await fetchWithTimeout(
+    `${SYNC_WORKER_URL}/profile/${encodeURIComponent(username)}`,
+  );
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error(await readErrorMessage(response, `Profile lookup failed (${response.status})`));
+  }
+
+  const body = await response.json();
+  return { username: body.username };
+}
+
 /** Returns null if no data has ever been pushed under this account */
 export async function pullSyncData(username: string, token: string): Promise<SyncPayload | null> {
   const response = await fetchWithTimeout(

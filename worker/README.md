@@ -45,6 +45,11 @@ Cloudflare account, so these steps are for you to run yourself.
 - `GET /sync/:username` / `PUT /sync/:username` - require
   `Authorization: Bearer <token>`. `GET` 404s if the account exists but
   nothing's been pushed yet.
+- `GET /profile/:username` - no auth required. `{"ok":true,"username"}`
+  (display case) if the account exists, 404 otherwise. Backs the public
+  profile page (Public Profiles & Team Sharing, see root `TODO.md`) -
+  intentionally the only unauthenticated endpoint here, and intentionally
+  returns nothing beyond the username itself.
 
 Data keys, split across two bindings:
 - KV (`SYNC_KV`, prefixed): `account:<username>`, `tokens:<username>` (up to

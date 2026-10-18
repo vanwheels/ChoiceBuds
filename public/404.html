@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!--
+      GitHub Pages SPA fallback (rafgraph/spa-github-pages pattern). GitHub
+      Pages serves this file for any unmatched path - that's what makes a
+      direct link to /u/<username> (Public Profiles: Base Route, see
+      TODO.md) work at all, since no static file exists at that path. It
+      stashes the real URL, bounces to the site root so the real index.html
+      (and its JS bundle) loads, and web/main.tsx restores the original
+      path via history.replaceState before deciding what to render.
+    -->
+    <script>
+      sessionStorage.redirect = location.href;
+    </script>
+    <meta http-equiv="refresh" content="0; URL='/'" />
+  </head>
+  <body></body>
+</html>

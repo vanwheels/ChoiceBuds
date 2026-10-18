@@ -29,6 +29,12 @@
  *                              reconciles in one round trip.
  *   GET  /sync/:username     - Bearer token -> stored (already-merged)
  *                              SyncPayload, 404 if none
+ *   GET  /profile/:username  - no auth - {ok, username} (display case) if
+ *                              the account exists, 404 otherwise. Public by
+ *                              design (Public Profiles: Base Route, see
+ *                              TODO.md): existence/display-case username is
+ *                              the entire point of a public profile page.
+ *                              Never returns passwordHash/email/createdAt.
  */
 
 import {
@@ -276,6 +282,14 @@ async function handleLogin(request: Request, env: Env): Promise<Response> {
   return jsonResponse({ ok: true, token });
 }
 
+async function handleProfileGet(env: Env, lowerUsername: string): Promise<Response> {
+  const account = await getAccount(env, lowerUsername);
+  if (!account) {
+    return errorResponse('Account not found', 404);
+  }
+  return jsonResponse({ ok: true, username: account.username });
+}
+
 async function handleSyncGet(env: Env, lowerUsername: string, request: Request): Promise<Response> {
   if (!(await verifyBearerToken(env, lowerUsername, request))) {
     return errorResponse('Invalid or missing token', 401);
@@ -454,6 +468,15 @@ export default {
     }
     if (url.pathname === '/login' && request.method === 'POST') {
       return handleLogin(request, env);
+    }
+
+    const profileMatch = url.pathname.match(/^\/profile\/([^/]+)$/);
+    if (profileMatch && request.method === 'GET') {
+      const profileUsername = decodeURIComponent(profileMatch[1]);
+      if (!isValidUsername(profileUsername)) {
+        return errorResponse('Malformed username', 400);
+      }
+      return handleProfileGet(env, profileUsername.toLowerCase());
     }
 
     const match = url.pathname.match(/^\/sync\/([^/]+)$/);
