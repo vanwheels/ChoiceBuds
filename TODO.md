@@ -16,6 +16,64 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
+## Current Milestone: Scoping Sweep
+
+Done when:
+- Tourney Tab: Schedule Change Detection has a recorded decision — build a
+  periodic Serebii diff-check poll (and on what cadence), or stay fully
+  manual.
+- Pokepaste Import: New Showdown Client Team Links has a recorded decision —
+  add `teams.pokemonshowdown.com/api` as a second import source now, or wait
+  and re-check later.
+- Public Team Browse & Upload Database has a recorded decision — a
+  moderation model for public uploads, or not building it.
+
+- **[Scoping Sweep] — Leg 1** *(Last touched: 2026-10-18 · Re-checks: 0)*
+  Scoping pass for Tourney Tab: Schedule Change Detection. TPCi's
+  announcement cadence for Regionals/Internationals is irregular enough that
+  even a fixed re-check interval could miss changes - this past week alone
+  added 2 unannounced Regionals mid-season. No live/structured schedule
+  source exists (confirmed in
+  `docs/investigations/tourney-tab-schedule-source-research.md`), so
+  `config/tourneyEvents.ts` stays hand-authored per
+  `external-data-sources.md` exception #2 regardless. Decide whether a
+  periodic (e.g. monthly) automated diff-check against Serebii's
+  `playpokemon` pages - flagging a change for manual review/update rather
+  than auto-writing the config - is worth building, or whether manual
+  re-check stays fully user-driven. Research/decision only - no
+  implementation this leg.
+  Done check: decision recorded (build the poll + cadence, or stay manual).
+  Manual verification: no. Review: no.
+
+- **[Scoping Sweep] — Leg 2** *(Last touched: 2026-10-18 · Re-checks: 0)*
+  Scoping pass for Pokepaste Import: New Showdown Client Team Links.
+  Showdown's new client (in public beta/transition, not yet default - see
+  `docs/investigations/pokepaste-format-research.md`) generates
+  `psim.us/t/<teamid>` / `teams.pokemonshowdown.com/view/<teamid>` share
+  links from its own first-party team database instead of Pokepaste. Today's
+  current-default client and `services/pokepaste.ts` still work unaffected.
+  A JSON API exists at `teams.pokemonshowdown.com/api/<action>` (same
+  `/api/` pattern Showdown uses site-wide) that a new import path could call,
+  parallel to `services/pokepaste.ts`'s existing `pokepast.es/<id>/json`
+  fetch - but unlike pokepast.es, saving a team there requires an
+  autoconfirmed Showdown account, which may or may not affect read-only
+  fetches by ID. Decide whether/how to add this as a second import source
+  now, or wait and re-check once Smogon signals the new client is becoming
+  default. Research/decision only - no implementation this leg.
+  Done check: decision recorded (add the second import source now, or wait).
+  Manual verification: no. Review: no.
+
+- **[Scoping Sweep] — Leg 3** *(Last touched: 2026-10-18 · Re-checks: 0)*
+  Scoping pass for Public Team Browse & Upload Database. Split out of Public
+  Profiles & Team Sharing's scoping (2026-10-17): a shared public team
+  browse/upload database, beyond the per-team visibility toggles that
+  milestone covers. Decide the abuse/moderation model for public uploads (or
+  decide not to build this) before any implementation legs get written.
+  Research/decision only - no implementation this leg.
+  Done check: moderation model picked, or decision recorded not to build
+  this.
+  Manual verification: no. Review: no.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -44,55 +102,7 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-- **[Tourney Tab: Schedule Change Detection] — Leg 1** *(Last touched:
-  2026-10-17 · Re-checks: 0)*
-  Raised while closing the Mobile Teams & Tourney Tab milestone: TPCi's
-  announcement cadence for Regionals/Internationals is irregular enough
-  that even a fixed re-check interval could miss changes - this past week
-  alone added 2 unannounced Regionals mid-season. No live/structured
-  schedule source exists (confirmed in
-  `docs/investigations/tourney-tab-schedule-source-research.md`), so
-  `config/tourneyEvents.ts` stays hand-authored per
-  `external-data-sources.md` exception #2 regardless. Needs scoping: is a
-  periodic (e.g. monthly) automated diff-check against Serebii's
-  `playpokemon` pages - flagging a change for manual review/update rather
-  than auto-writing the config - worth building, or does manual re-check
-  stay fully user-driven?
-  Done check: scoping pass decides whether to build a change-detection poll
-  (and on what cadence) or leave this as a fully manual, no-automation
-  process.
-  Manual verification: no. Review: no.
-
-- **[Pokepaste Import: New Showdown Client Team Links] — Leg 1** *(Last
-  touched: 2026-10-17 · Re-checks: 0)*
-  Showdown's new client (in public beta/transition, not yet default - see
-  `docs/investigations/pokepaste-format-research.md`) generates
-  `psim.us/t/<teamid>` / `teams.pokemonshowdown.com/view/<teamid>` share
-  links from its own first-party team database instead of Pokepaste.
-  Today's current-default client and `services/pokepaste.ts` still work
-  unaffected, but once the new client goes default, users will increasingly
-  share the new link format instead. Needs scoping: a JSON API exists at
-  `teams.pokemonshowdown.com/api/<action>` (same `/api/` pattern Showdown
-  uses site-wide) that a new import path could call, parallel to
-  `services/pokepaste.ts`'s existing `pokepast.es/<id>/json` fetch - but
-  unlike pokepast.es, saving a team there requires an autoconfirmed
-  Showdown account, which may or may not affect read-only fetches by ID.
-  Not urgent while the old client remains default; re-check when Smogon
-  signals the new client is becoming default.
-  Done check: scoping pass decides whether/how to add this as a second
-  import source, or to wait and re-check later.
-  Manual verification: no. Review: no.
-
-- **[Public Team Browse & Upload Database] — Leg 1** *(Last touched:
-  2026-10-17 · Re-checks: 0)*
-  Split out of Public Profiles & Team Sharing's scoping (2026-10-17): a
-  shared public team browse/upload database, beyond the per-team visibility
-  toggles that milestone covers. The open question is the abuse/moderation
-  model for public uploads - needs its own dedicated scoping pass before
-  any legs get written here; not leg-ready yet.
-  Done check: scoping pass picks a moderation model (or decides not to
-  build this) before any legs get written.
-  Manual verification: no. Review: no.
+(none)
 
 ## Future Milestones (unscheduled)
 
