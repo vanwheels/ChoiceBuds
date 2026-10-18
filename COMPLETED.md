@@ -57,7 +57,7 @@ Entries prior to this file's oldest are in:
   changed (research/root-cause leg); see
   `docs/investigations/mobile-add-pokemon-entry-point.md` and the new
   Mobile Teams: Add Pokémon Entry Point follow-up item in `TODO.md`'s
-  Unscheduled section. See commit `f6afb69`.
+  Unscheduled section. See commit `1300426`.
 
 No other entries yet since the last milestone boundary.
 
