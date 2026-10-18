@@ -10,6 +10,13 @@
  * Only shows real controls once signed in to sync - there's no public
  * profile URL to manage without an account/username yet (Public Profiles:
  * Base Route, see TODO.md).
+ *
+ * The /u/<username> link below now opens the in-app profile page (In-App
+ * Profile Page & Navigation Shell, see TODO.md) instead of a new browser
+ * tab - `href` is kept so right-click "copy link"/middle-click still work,
+ * but a plain click calls `onOpenProfile` and prevents the default
+ * navigation. Move Profile Editing Onto the Profile Page (Leg 4) will move
+ * the controls below onto that page itself, leaving just this link here.
  */
 
 import { useState } from 'react';
@@ -25,6 +32,7 @@ interface PublicProfileSectionProps {
   teamsState: UseTeamsReturn;
   syncState: UseSyncReturn;
   speciesRosterState: UseSpeciesRosterReturn;
+  onOpenProfile: (username: string) => void;
 }
 
 const MAX_SEARCH_RESULTS = 8;
@@ -34,6 +42,7 @@ export default function PublicProfileSection({
   teamsState,
   syncState,
   speciesRosterState,
+  onOpenProfile,
 }: PublicProfileSectionProps) {
   const { settings, updateSettings } = settingsState;
   const { teams, updateTeam } = teamsState;
@@ -122,8 +131,10 @@ export default function PublicProfileSection({
         Off by default. Toggle a team or your favorite Pokémon on to show it at{' '}
         <a
           href={`/u/${syncUsername}`}
-          target="_blank"
-          rel="noreferrer"
+          onClick={(e) => {
+            e.preventDefault();
+            onOpenProfile(syncUsername);
+          }}
           className="text-accent-gold hover:underline"
         >
           /u/{syncUsername}

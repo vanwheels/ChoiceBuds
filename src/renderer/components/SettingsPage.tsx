@@ -34,6 +34,8 @@ interface SettingsPageProps {
   databaseState: UseDatabaseReturn;
   gameDataState: UseGameDataReturn;
   speciesRosterState: UseSpeciesRosterReturn;
+  /** Opens the in-app profile page (In-App Profile Page & Navigation Shell, see TODO.md). */
+  onOpenProfile: (username: string) => void;
 }
 
 export default function SettingsPage({
@@ -45,6 +47,7 @@ export default function SettingsPage({
   databaseState,
   gameDataState,
   speciesRosterState,
+  onOpenProfile,
 }: SettingsPageProps) {
   const { settings, setDefaultRegulation, updateSettings } = settingsState;
   const currentId = toRegulationId(settings.defaultRegulation);
@@ -102,6 +105,7 @@ export default function SettingsPage({
         teamsState={teamsState}
         syncState={syncState}
         speciesRosterState={speciesRosterState}
+        onOpenProfile={onOpenProfile}
       />
 
       <GameDataResetSection databaseState={databaseState} gameDataState={gameDataState} />

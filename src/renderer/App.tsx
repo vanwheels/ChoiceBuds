@@ -27,9 +27,11 @@ import { useSettings } from './hooks/useSettings';
 import { useSync } from './hooks/useSync';
 import { useUpdateCheck } from './hooks/useUpdateCheck';
 import { useReleaseNotes } from './hooks/useReleaseNotes';
+import { useProfileNav } from './hooks/useProfileNav';
 import TeamsPage from './components/TeamsPage';
 import LoadingScreen from './components/LoadingScreen';
 import Sidebar from './components/Sidebar';
+import ProfilePage from './components/profile/ProfilePage';
 import ReleaseNotesModal from './components/ReleaseNotesModal';
 import { CalcLauncherButton } from './components/CalcLauncherButton';
 import { CalcIcon } from './components/icons/SidebarIcons';
@@ -130,6 +132,11 @@ export default function App() {
   // own it. See useSync.ts's own header comment.
   const syncState = useSync(settingsState, teamsState, battlesState, savedPokemonState);
   const updateCheckState = useUpdateCheck();
+  // Back-stack layered on top of activeTab (In-App Profile Page &
+  // Navigation Shell, see TODO.md) - opening a profile never changes
+  // activeTab, so whichever tab was active stays exactly as it was
+  // underneath and "Back" just pops this stack. See useProfileNav.ts.
+  const profileNav = useProfileNav();
   const releaseNotesState = useReleaseNotes(
     settingsState.settings,
     settingsState.isLoading,
@@ -175,7 +182,14 @@ export default function App() {
 
           <Sidebar
             activeTab={activeTab}
-            onTabChange={goToTab}
+            onTabChange={(tab) => {
+              // Switching tabs always exits any open profile view, however
+              // deep the back-stack is - otherwise the (now-hidden) profile
+              // page stays stuck on screen under the newly-selected tab
+              // (confirmed live, leg review).
+              profileNav.closeProfile();
+              goToTab(tab);
+            }}
             mobileTopBarEnd={
               <button
                 onClick={openCalcPopup}
@@ -211,111 +225,129 @@ export default function App() {
               scrollbarGutter: 'stable',
             }}
           >
-            <div style={{ display: activeTab === 'teams' ? 'block' : 'none' }}>
-              <TeamsPage
-                teamsState={teamsState}
-                databaseState={databaseState}
-                gameDataState={gameDataState}
-                speciesRosterState={speciesRosterState}
-                spriteCacheState={spriteCacheState}
-                settingsState={settingsState}
-                savedPokemonState={savedPokemonState}
-              />
+            {/* Hidden entirely (not unmounted) while a profile is open, so
+              every tab's state stays intact underneath - same display:none
+              pattern each tab below already uses against activeTab. */}
+            <div style={{ display: profileNav.viewingUsername ? 'none' : undefined }}>
+              <div style={{ display: activeTab === 'teams' ? 'block' : 'none' }}>
+                <TeamsPage
+                  teamsState={teamsState}
+                  databaseState={databaseState}
+                  gameDataState={gameDataState}
+                  speciesRosterState={speciesRosterState}
+                  spriteCacheState={spriteCacheState}
+                  settingsState={settingsState}
+                  savedPokemonState={savedPokemonState}
+                />
+              </div>
+              {visitedTabs.has('box') && (
+                <div style={{ display: activeTab === 'box' ? 'block' : 'none' }}>
+                  <Suspense fallback={<div className="text-zinc-400 text-sm">Loading box...</div>}>
+                    <BoxPage
+                      savedPokemonState={savedPokemonState}
+                      gameDataState={gameDataState}
+                      databaseState={databaseState}
+                      speciesRosterState={speciesRosterState}
+                      spriteCacheState={spriteCacheState}
+                      settingsState={settingsState}
+                      teamsState={teamsState}
+                    />
+                  </Suspense>
+                </div>
+              )}
+              {visitedTabs.has('battles') && (
+                <div style={{ display: activeTab === 'battles' ? 'block' : 'none' }}>
+                  <Suspense
+                    fallback={<div className="text-zinc-400 text-sm">Loading battle log...</div>}
+                  >
+                    <BattleLogPage
+                      battlesState={battlesState}
+                      teamsState={teamsState}
+                      speciesRosterState={speciesRosterState}
+                      spriteCacheState={spriteCacheState}
+                      registerBattleLogSession={setBattleLogSession}
+                    />
+                  </Suspense>
+                </div>
+              )}
+              {visitedTabs.has('statistics') && (
+                <div style={{ display: activeTab === 'statistics' ? 'block' : 'none' }}>
+                  <Suspense
+                    fallback={<div className="text-zinc-400 text-sm">Loading statistics...</div>}
+                  >
+                    <StatisticsPage
+                      battlesState={battlesState}
+                      spriteCacheState={spriteCacheState}
+                    />
+                  </Suspense>
+                </div>
+              )}
+              {visitedTabs.has('typeMatchup') && (
+                <div style={{ display: activeTab === 'typeMatchup' ? 'block' : 'none' }}>
+                  <Suspense
+                    fallback={<div className="text-zinc-400 text-sm">Loading type matchup...</div>}
+                  >
+                    <TypeMatchupPage
+                      teamsState={teamsState}
+                      gameDataState={gameDataState}
+                      databaseState={databaseState}
+                      spriteCacheState={spriteCacheState}
+                    />
+                  </Suspense>
+                </div>
+              )}
+              {visitedTabs.has('speedTiers') && (
+                <div style={{ display: activeTab === 'speedTiers' ? 'block' : 'none' }}>
+                  <Suspense
+                    fallback={<div className="text-zinc-400 text-sm">Loading speed tiers...</div>}
+                  >
+                    <SpeedTiersPage
+                      teamsState={teamsState}
+                      gameDataState={gameDataState}
+                      databaseState={databaseState}
+                      spriteCacheState={spriteCacheState}
+                      speciesRosterState={speciesRosterState}
+                    />
+                  </Suspense>
+                </div>
+              )}
+              {visitedTabs.has('tourney') && (
+                <div style={{ display: activeTab === 'tourney' ? 'block' : 'none' }}>
+                  <Suspense
+                    fallback={<div className="text-zinc-400 text-sm">Loading tourney...</div>}
+                  >
+                    <TourneyPage />
+                  </Suspense>
+                </div>
+              )}
+              {visitedTabs.has('settings') && (
+                <div style={{ display: activeTab === 'settings' ? 'block' : 'none' }}>
+                  <Suspense
+                    fallback={<div className="text-zinc-400 text-sm">Loading settings...</div>}
+                  >
+                    <SettingsPage
+                      settingsState={settingsState}
+                      syncState={syncState}
+                      teamsState={teamsState}
+                      updateCheckState={updateCheckState}
+                      releaseNotesState={releaseNotesState}
+                      databaseState={databaseState}
+                      gameDataState={gameDataState}
+                      speciesRosterState={speciesRosterState}
+                      onOpenProfile={profileNav.openProfile}
+                    />
+                  </Suspense>
+                </div>
+              )}
             </div>
-            {visitedTabs.has('box') && (
-              <div style={{ display: activeTab === 'box' ? 'block' : 'none' }}>
-                <Suspense fallback={<div className="text-zinc-400 text-sm">Loading box...</div>}>
-                  <BoxPage
-                    savedPokemonState={savedPokemonState}
-                    gameDataState={gameDataState}
-                    databaseState={databaseState}
-                    speciesRosterState={speciesRosterState}
-                    spriteCacheState={spriteCacheState}
-                    settingsState={settingsState}
-                    teamsState={teamsState}
-                  />
-                </Suspense>
-              </div>
-            )}
-            {visitedTabs.has('battles') && (
-              <div style={{ display: activeTab === 'battles' ? 'block' : 'none' }}>
-                <Suspense
-                  fallback={<div className="text-zinc-400 text-sm">Loading battle log...</div>}
-                >
-                  <BattleLogPage
-                    battlesState={battlesState}
-                    teamsState={teamsState}
-                    speciesRosterState={speciesRosterState}
-                    spriteCacheState={spriteCacheState}
-                    registerBattleLogSession={setBattleLogSession}
-                  />
-                </Suspense>
-              </div>
-            )}
-            {visitedTabs.has('statistics') && (
-              <div style={{ display: activeTab === 'statistics' ? 'block' : 'none' }}>
-                <Suspense
-                  fallback={<div className="text-zinc-400 text-sm">Loading statistics...</div>}
-                >
-                  <StatisticsPage battlesState={battlesState} spriteCacheState={spriteCacheState} />
-                </Suspense>
-              </div>
-            )}
-            {visitedTabs.has('typeMatchup') && (
-              <div style={{ display: activeTab === 'typeMatchup' ? 'block' : 'none' }}>
-                <Suspense
-                  fallback={<div className="text-zinc-400 text-sm">Loading type matchup...</div>}
-                >
-                  <TypeMatchupPage
-                    teamsState={teamsState}
-                    gameDataState={gameDataState}
-                    databaseState={databaseState}
-                    spriteCacheState={spriteCacheState}
-                  />
-                </Suspense>
-              </div>
-            )}
-            {visitedTabs.has('speedTiers') && (
-              <div style={{ display: activeTab === 'speedTiers' ? 'block' : 'none' }}>
-                <Suspense
-                  fallback={<div className="text-zinc-400 text-sm">Loading speed tiers...</div>}
-                >
-                  <SpeedTiersPage
-                    teamsState={teamsState}
-                    gameDataState={gameDataState}
-                    databaseState={databaseState}
-                    spriteCacheState={spriteCacheState}
-                    speciesRosterState={speciesRosterState}
-                  />
-                </Suspense>
-              </div>
-            )}
-            {visitedTabs.has('tourney') && (
-              <div style={{ display: activeTab === 'tourney' ? 'block' : 'none' }}>
-                <Suspense
-                  fallback={<div className="text-zinc-400 text-sm">Loading tourney...</div>}
-                >
-                  <TourneyPage />
-                </Suspense>
-              </div>
-            )}
-            {visitedTabs.has('settings') && (
-              <div style={{ display: activeTab === 'settings' ? 'block' : 'none' }}>
-                <Suspense
-                  fallback={<div className="text-zinc-400 text-sm">Loading settings...</div>}
-                >
-                  <SettingsPage
-                    settingsState={settingsState}
-                    syncState={syncState}
-                    teamsState={teamsState}
-                    updateCheckState={updateCheckState}
-                    releaseNotesState={releaseNotesState}
-                    databaseState={databaseState}
-                    gameDataState={gameDataState}
-                    speciesRosterState={speciesRosterState}
-                  />
-                </Suspense>
-              </div>
+
+            {profileNav.viewingUsername && (
+              <ProfilePage
+                key={profileNav.viewingUsername}
+                username={profileNav.viewingUsername}
+                onBack={profileNav.goBack}
+                onOpenProfile={profileNav.openProfile}
+              />
             )}
           </main>
 

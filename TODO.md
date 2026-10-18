@@ -27,23 +27,6 @@ Done when:
   (private/closed/open) happens directly on the profile page, not in
   Settings.
 
-- **[In-App Profile Page & Navigation Shell] — Leg 1** *(Last touched:
-  2026-10-18 · Re-checks: 0)*
-  Add an in-app profile page (desktop `App.tsx` and web `AppWeb.tsx`) that
-  renders the same data as the standalone `/u/<username>` route, reached via
-  a back-stack layered on the existing `ActiveTab` navigation rather than a
-  full router rewrite. Wire an exact-username lookup box to open another
-  account's profile in-app the same way. The standalone `/u/<username>` web
-  route stays as-is for signed-out visitors clicking a shared link from
-  outside the app.
-  Done check: from any tab, opening a profile (your own or another
-  account's by exact username) renders in-app and "back" returns to the
-  exact tab you were on; the standalone `/u/<username>` route still works
-  cold for a signed-out visitor.
-  Manual verification: yes
-  Review: yes (cross-cutting nav architecture change spanning
-  `App.tsx`/`AppWeb.tsx`)
-
 - **[Sidebar Footer Profile Entry] — Leg 2** *(Last touched: 2026-10-18 ·
   Re-checks: 0)*
   Pin a profile icon+username entry to the bottom of the sidebar (desktop

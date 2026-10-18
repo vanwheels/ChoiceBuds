@@ -62,3 +62,16 @@ Entries prior to this file's oldest are in:
 - [docs/archive/completed-2026-10-18-to-2026-10-18-scoping-sweep.md](docs/archive/completed-2026-10-18-to-2026-10-18-scoping-sweep.md)
   (the Scoping Sweep milestone's three legs, split out at the 2026-10-18
   Scoping Sweep boundary)
+
+## In-App Profile Page & Navigation Shell — Leg 1 (2026-10-18)
+
+Added an in-app profile page reachable from any tab in both `App.tsx` and
+`AppWeb.tsx`, via a `useProfileNav` back-stack layered on top of
+`ActiveTab` rather than a router rewrite - opening a profile never changes
+`activeTab`, so "Back" just pops the stack and the underlying tab
+reappears untouched. The fetch/render logic (`usePublicProfile`/
+`ProfileCard`) is shared with the standalone `/u/<username>` route, which
+stays as-is for signed-out visitors. Settings' existing `/u/<username>`
+link now opens the profile in-app instead of a new tab; its own username
+lookup box (on the profile page itself) opens any other account's profile
+the same way, pushing a second stack entry. See commit <pending>.
