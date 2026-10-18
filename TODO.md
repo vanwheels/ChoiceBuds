@@ -27,26 +27,24 @@ Done when:
   public from that account, off by default, and show/hide correctly on the
   public profile page.
 
-- **[Public Profiles: Safety Filter Research] — Leg 1** *(Last touched:
-  2026-10-17 · Re-checks: 0)*
-  Decide the profanity/safety-filter approach (word-list library vs. a
-  filtering API) for the three surfaces this milestone makes public:
-  usernames, public team names, and public Pokémon nicknames, and where
-  enforcement runs (client-side validation vs. Worker-side). No
-  implementation in this leg — scoping only.
-  Done check: a written decision covering approach + enforcement point for
-  all three surfaces.
-  Manual verification: no. Review: no.
-
 - **[Public Profiles: Safety Filter Implementation] — Leg 1** *(Last
   touched: 2026-10-17 · Re-checks: 0)*
-  Build the filter per the prior leg's decision. Apply it at signup/
-  username change, team naming, and nickname entry, and run it once
-  retroactively against the ~4-6 existing accounts' usernames before the
-  base profile route (next leg) ships, flagging any hits for manual
-  follow-up rather than auto-editing them.
-  Done check: filter rejects/flags disallowed content at all three entry
-  points; existing usernames have been checked.
+  Decided in
+  [docs/investigations/public-profiles-safety-filter-research.md](docs/investigations/public-profiles-safety-filter-research.md):
+  a word-list/pattern-based filter (pure function, no filtering API),
+  duplicated by hand into both `worker/src/` and `src/renderer/` per the
+  codebase's existing client/Worker duplication pattern. Pick and vet a
+  specific library against the Workers runtime and false-positive risk on
+  real Pokémon/VGC nicknames, wire it into username entry (client +
+  `/signup` server-side) now, and run it once retroactively against the
+  ~4-6 existing accounts' usernames before the base profile route (next leg)
+  ships, flagging any hits for manual follow-up rather than auto-editing
+  them. The public-team-name/nickname server-side check is out of scope
+  here — it slots into whichever endpoint the Base Route/Per-Item Visibility
+  Toggles legs add, since that's the first point the Worker reads inside
+  those fields at all.
+  Done check: filter rejects/flags disallowed content at username entry
+  (client + server); existing usernames have been checked.
   Manual verification: yes (exercise with known test strings). Review: no.
 
 - **[Public Profiles: Base Route] — Leg 1** *(Last touched: 2026-10-17 ·
@@ -64,7 +62,11 @@ Done when:
   Add opt-in, hidden-by-default visibility toggles for teams and a new
   favorite-Pokémon field, surfaced on the public profile from the base-route
   leg when toggled on. Off by default for everyone, including existing
-  accounts. Depends on the base route leg.
+  accounts. Depends on the base route leg. Per
+  [docs/investigations/public-profiles-safety-filter-research.md](docs/investigations/public-profiles-safety-filter-research.md),
+  whatever new Worker endpoint serves this public team-name/nickname data
+  needs its own server-side safety-filter check (defense-in-depth beyond the
+  renderer's entry-point validation) — not just client-side.
   Done check: toggling a team or the favorite-Pokémon field visible shows it
   on the public profile; toggling off hides it again.
   Manual verification: yes. Review: yes (touches persisted team/account data

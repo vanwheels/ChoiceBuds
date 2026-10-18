@@ -55,3 +55,21 @@ Entries prior to this file's oldest are in:
   slug since it shares its date range with the Bug Fix & Research Sweep
   archive above)
 
+## Public Profiles & Team Sharing
+
+- **Public Profiles: Safety Filter Research — Leg 1** (2026-10-17). Decided
+  a word-list/pattern-based filter (pure function, no external filtering
+  API) over a hosted moderation API — the sync Worker is infrastructure
+  each user deploys and owns themselves (`worker/README.md`), so an API-key
+  dependency would add real friction, and an offline pure function matches
+  `crypto.ts`'s existing pattern for this class of concern. Enforcement:
+  client + Worker-side at username entry (mirroring the existing
+  client/Worker `USERNAME_PATTERN` duplication); client-side plus a new
+  server-side check at whichever endpoint ends up serving public team
+  names/nicknames for team name and nickname, since the generic sync
+  endpoint stays opaque to those fields by design. No code changed
+  (scoping-only leg); see
+  `docs/investigations/public-profiles-safety-filter-research.md` and the
+  updated Safety Filter Implementation / Per-Item Visibility Toggles items
+  in `TODO.md`. See commit `<pending>`.
+
