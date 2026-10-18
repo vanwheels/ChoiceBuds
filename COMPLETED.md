@@ -60,7 +60,7 @@ Championships) for the current season, sourced from Serebii's
 that no live schedule source exists. No Global Challenge events or signup
 deadlines are listed - neither source page shows them; both are called out
 as deliberately excluded in the file header, same convention as the curated
-effect tables. See commit (pending).
+effect tables. See commit 6a3369a.
 
 **[Mobile Add Pokémon Entry Point] — Leg 1** (2026-10-17)
 Added an extra page past the last card in the mobile Teams swipe deck
