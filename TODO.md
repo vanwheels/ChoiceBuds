@@ -55,19 +55,6 @@ Done when:
   hand-maintained config - enough to scope the actual Tourney Tab UI leg
   later.
 
-- **[Pokepaste Format Research] — Leg 1** *(Last touched: 2026-10-17 ·
-  Re-checks: 0)*
-  Vanny recalled Showdown moving away from Pokepaste integration toward its
-  own newer format; a general web search during scoping found no
-  corroborating evidence. This leg is a direct check via Smogon forums /
-  Showdown's own GitHub changelog (not just a general web search) to
-  confirm or close the rumor. Research only - no code changes regardless
-  of outcome, since the existing Pokepaste integration
-  (`services/pokepaste.ts`, `.claude/rules/external-data-sources.md`
-  exceptions #3/#8) is active and working either way.
-  Done check: a definitive yes/no answer recorded with a citation.
-  Manual verification: no. Review: no.
-
 - **[Competitive Events: Tourney Tab Research] — Leg 1** *(Last touched:
   2026-10-17 · Re-checks: 0)*
   Curated list (GC, Regionals, Internationals, Worlds - The Pokémon

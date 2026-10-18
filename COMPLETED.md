@@ -59,5 +59,15 @@ Entries prior to this file's oldest are in:
   Mobile Teams: Add Pokémon Entry Point follow-up item in `TODO.md`'s
   Unscheduled section. See commit `1300426`.
 
+- **Pokepaste Format Research — Leg 1** (2026-10-17). Rumor closed as
+  false: Showdown's own client repo has an actively-maintained "Pokepaste
+  Button" (VGC OTS natures fix, `pokemon-showdown-client` PR #2741, merged
+  2026-10-02 - two weeks before this check), and no deprecation discussion
+  turned up in Smogon forums or either `pokemon-showdown`/
+  `pokemon-showdown-client` repo. No code changed (research-only leg); see
+  `docs/investigations/pokepaste-format-research.md` for the full citation
+  trail. `services/pokepaste.ts` and the `external-data-sources.md`
+  exceptions covering it stay as-is.
+
 No other entries yet since the last milestone boundary.
 
