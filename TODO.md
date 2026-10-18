@@ -42,27 +42,54 @@ unblocked.
   peer-range rejection + real runtime crash reports). Currently on
   TypeScript ^6.0.3.
 
-## Unscheduled (not yet scoped, highest-to-lowest priority)
+## Current Milestone: Mobile Teams & Tourney Tab
 
-- **[Mobile Teams: Add Pokémon Entry Point] — Leg 1** *(Last touched:
-  2026-10-17 · Re-checks: 0)*
+Done when:
+- Mobile swipe deck supports adding a Pokémon at any roster size (0-5) via
+  an extra page past the last card, with the empty-team auto-close bug
+  fixed as part of the same change.
+- Tourney Tab shows curated GC/Regionals/Internationals/Worlds events from a
+  hand-maintained config, with dates/location/signup deadlines where known.
+
+- **[Mobile Add Pokémon Entry Point] — Leg 1** *(Last touched: 2026-10-17 ·
+  Re-checks: 0)*
   Mobile's Teams swipe-card flow (`MobileTeamSwipeOverlay.tsx`/
   `MobilePokemonCard.tsx`) has no way to add a new Pokémon to a team at all -
   only to swap an existing slot's species. Discovered via the empty-team
   repro in Bug Fix & Research Sweep's Mobile Empty-Team Add Pokémon Bug Leg 1
-  (see `docs/investigations/mobile-add-pokemon-entry-point.md`); the
-  empty-team case was just the most visible symptom, since
-  `MobileTeamSwipeOverlay.tsx` currently bails out and auto-closes the
-  instant a team's roster is empty instead of showing anything. Needs a
-  design decision on where an "Add Pokémon" entry point lives in a
-  single-card swipe-paging deck (an extra page past the last one, a
-  persistent header button, or an empty-state screen for the 0-roster case)
-  before it's buildable.
-  Done check: entry-point placement decided and `AddPokemonStatTable` wired
-  up for both the empty-team case and adding beyond an existing roster;
-  the current close-on-empty auto-close behavior resolved as part of the
-  same change.
+  (see `docs/investigations/mobile-add-pokemon-entry-point.md`). Design
+  decision made at planning time (2026-10-17): the entry point is an extra
+  page past the last card in the swipe deck, shown whenever roster < 6; the
+  roster = 0 case gets its own empty-state screen (no cards exist to swipe
+  between), replacing the current bail-out-and-auto-close effect.
+  Done check: swiping past the last card (when roster < 6) opens
+  `AddPokemonStatTable` and appends a new slot; the empty-team case shows the
+  empty-state screen with the same add affordance instead of auto-closing.
   Manual verification: yes. Review: yes (touches persisted team data).
+
+- **[Tourney Tab: Event Config] — Leg 2** *(Last touched: 2026-10-17 ·
+  Re-checks: 0)*
+  Hand-authored `config/tourneyEvents.ts` covering TPCi's own sanctioned/
+  sponsored VGC events only (GC, Regionals, Internationals, Worlds) - same
+  pattern as `config/championsMoveOverrides.ts`, sourced from Serebii's
+  `playpokemon` pages (`external-data-sources.md` exception #2) per
+  `docs/investigations/tourney-tab-schedule-source-research.md`'s resolution
+  that no live schedule source exists. Typed entries: event name, tier,
+  city/country, dates, signup deadline where known.
+  Done check: config file covers the current season's known events, with
+  documented exclusions in the file header (same convention as the curated
+  effect tables).
+  Manual verification: no. Review: no.
+
+- **[Tourney Tab: UI] — Leg 3** *(Last touched: 2026-10-17 · Re-checks: 0)*
+  New tab/view consuming Leg 2's config: upcoming events sorted by date,
+  showing location and signup deadline where available. Depends on Leg 2
+  existing first.
+  Done check: tab renders events from the config, matching the app's
+  existing UI conventions.
+  Manual verification: yes. Review: no.
+
+## Unscheduled (not yet scoped, highest-to-lowest priority)
 
 - **[Pokepaste Import: New Showdown Client Team Links] — Leg 1** *(Last
   touched: 2026-10-17 · Re-checks: 0)*
@@ -129,19 +156,4 @@ separate field). Candidate legs:
    abuse/moderation model for a public upload database. Flagged as needing
    its own dedicated scoping pass before any legs get written here; not
    leg-ready yet.
-
-**Competitive Events: Tourney Tab UI** (rescoped 2026-10-17, originally
-proposed 2026-09-29 as "Battle Logging: special events / Global
-Challenge"; Leg 1's schedule-source research moved into the current Bug
-Fix & Research Sweep milestone 2026-10-17). Decided: a curated list, not
-freeform user-created events - GC (Global Challenge), Regionals,
-International Championships, and Worlds, i.e. The Pokémon Company
-International's own sanctioned/sponsored events only. Schedule-source
-research resolved 2026-10-17: no live source exists, so this builds on a
-hand-maintained config (same pattern as `config/championsMoveOverrides.ts`,
-hand-authored from Serebii's `playpokemon` pages) - see
-`docs/investigations/tourney-tab-schedule-source-research.md`. Not yet
-scoped into a concrete leg: UI showing upcoming events with dates,
-location, and signup deadlines where available, plus the config file
-itself.
 
