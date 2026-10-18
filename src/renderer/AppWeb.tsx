@@ -363,7 +363,6 @@ export default function AppWeb() {
                     releaseNotesState={releaseNotesState}
                     databaseState={databaseState}
                     gameDataState={gameDataState}
-                    speciesRosterState={speciesRosterState}
                     onOpenProfile={profileNav.openProfile}
                   />
                 </Suspense>
@@ -377,6 +376,10 @@ export default function AppWeb() {
               username={profileNav.viewingUsername}
               onBack={profileNav.goBack}
               onOpenProfile={profileNav.openProfile}
+              syncState={syncState}
+              teamsState={teamsState}
+              settingsState={settingsState}
+              speciesRosterState={speciesRosterState}
             />
           )}
         </main>

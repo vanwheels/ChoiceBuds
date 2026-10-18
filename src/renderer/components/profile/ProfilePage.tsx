@@ -6,31 +6,56 @@
  * and whichever tab was already active underneath reappears untouched (In-
  * App Profile Page & Navigation Shell, see TODO.md). Renders the same data
  * as the standalone `/u/<username>` route via the shared usePublicProfile/
- * ProfileCard (see PublicProfilePage.tsx), with no distinction yet between
- * viewing your own profile and someone else's - that split only matters once
- * editing controls move here (Move Profile Editing Onto the Profile Page,
- * see TODO.md).
+ * ProfileCard (see PublicProfilePage.tsx).
+ *
+ * Own-profile detection (Move Profile Editing Onto the Profile Page, see
+ * TODO.md) compares lowercased, since usernames are case-insensitive
+ * server-side (worker/src/index.ts lowercases every lookup) - `username`
+ * here can come from the lookup form below in whatever case was typed, not
+ * just the exact-cased `syncUsername` the sidebar's own-profile link
+ * passes. When it matches, ProfileEditControls renders the
+ * team-visibility/teamsheet-tier/favorite-Pokémon editing controls that
+ * used to live in Settings' PublicProfileSection - that section now just
+ * links here instead of duplicating them.
  *
  * The username lookup box lives here rather than on every tab/the sidebar,
  * since opening a second profile from an already-open one is exactly what
- * the back-stack is for - typing your own username from any entry point
- * exercises the same "own profile" render path as anyone else's, so no
- * separate code path is needed until Leg 4's editing controls land.
+ * the back-stack is for.
  */
 
 import { useState, type FormEvent } from 'react';
 import { usePublicProfile } from '../../hooks/usePublicProfile';
+import type { UseSyncReturn } from '../../hooks/useSync';
+import type { UseTeamsReturn } from '../../hooks/useTeams';
+import type { UseSettingsReturn } from '../../hooks/useSettings';
+import type { UseSpeciesRosterReturn } from '../../hooks/useSpeciesRoster';
 import ProfileCard from './ProfileCard';
+import ProfileEditControls from './ProfileEditControls';
 
 interface ProfilePageProps {
   username: string;
   onBack: () => void;
   onOpenProfile: (username: string) => void;
+  syncState: UseSyncReturn;
+  teamsState: UseTeamsReturn;
+  settingsState: UseSettingsReturn;
+  speciesRosterState: UseSpeciesRosterReturn;
 }
 
-export default function ProfilePage({ username, onBack, onOpenProfile }: ProfilePageProps) {
+export default function ProfilePage({
+  username,
+  onBack,
+  onOpenProfile,
+  syncState,
+  teamsState,
+  settingsState,
+  speciesRosterState,
+}: ProfilePageProps) {
   const state = usePublicProfile(username);
   const [lookup, setLookup] = useState('');
+
+  const isOwnProfile =
+    !!syncState.syncUsername && syncState.syncUsername.toLowerCase() === username.toLowerCase();
 
   const handleLookup = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -65,6 +90,14 @@ export default function ProfilePage({ username, onBack, onOpenProfile }: Profile
           </button>
         </form>
       </div>
+
+      {isOwnProfile && (
+        <ProfileEditControls
+          settingsState={settingsState}
+          teamsState={teamsState}
+          speciesRosterState={speciesRosterState}
+        />
+      )}
 
       {state.status === 'loading' && (
         <p className="mt-10 text-sm text-zinc-500">Loading profile…</p>

@@ -11,7 +11,6 @@ import type { UseReleaseNotesReturn } from '../hooks/useReleaseNotes';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSyncReturn } from '../hooks/useSync';
-import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
 import { ALL_REGULATION_IDS, getRegulationLabel, toRegulationId } from '../utils/pokemonRules';
 import SyncSection from './SyncSection';
 import UpdateCheckSection from './UpdateCheckSection';
@@ -33,7 +32,6 @@ interface SettingsPageProps {
   releaseNotesState: UseReleaseNotesReturn;
   databaseState: UseDatabaseReturn;
   gameDataState: UseGameDataReturn;
-  speciesRosterState: UseSpeciesRosterReturn;
   /** Opens the in-app profile page (In-App Profile Page & Navigation Shell, see TODO.md). */
   onOpenProfile: (username: string) => void;
 }
@@ -46,7 +44,6 @@ export default function SettingsPage({
   releaseNotesState,
   databaseState,
   gameDataState,
-  speciesRosterState,
   onOpenProfile,
 }: SettingsPageProps) {
   const { settings, setDefaultRegulation, updateSettings } = settingsState;
@@ -100,13 +97,7 @@ export default function SettingsPage({
 
       <SyncSection syncState={syncState} />
 
-      <PublicProfileSection
-        settingsState={settingsState}
-        teamsState={teamsState}
-        syncState={syncState}
-        speciesRosterState={speciesRosterState}
-        onOpenProfile={onOpenProfile}
-      />
+      <PublicProfileSection syncState={syncState} onOpenProfile={onOpenProfile} />
 
       <GameDataResetSection databaseState={databaseState} gameDataState={gameDataState} />
 
