@@ -47,17 +47,13 @@ unblocked.
 Done when:
 - Mobile swipe deck supports adding a Pokémon at any roster size (0-5) via
   an extra page past the last card, with the empty-team auto-close bug
-  fixed as part of the same change.
+  fixed as part of the same change. ✅ (Mobile Add Pokémon Entry Point Leg 1)
 - Tourney Tab shows curated GC/Regionals/Internationals/Worlds events from a
   hand-maintained config, with dates/location/signup deadlines where known.
+  ✅ (Tourney Tab: Event Config Leg 2 + Tourney Tab: UI Leg 3)
 
-- **[Tourney Tab: UI] — Leg 3** *(Last touched: 2026-10-17 · Re-checks: 0)*
-  New tab/view consuming Leg 2's config: upcoming events sorted by date,
-  showing location and signup deadline where available. Depends on Leg 2
-  existing first.
-  Done check: tab renders events from the config, matching the app's
-  existing UI conventions.
-  Manual verification: yes. Review: no.
+Both done-when items are now shipped (see COMPLETED.md) - this milestone is
+ready to close via `/close-milestone`.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 

@@ -164,6 +164,30 @@ export function SpeedTiersIcon({ className }: IconProps) {
   );
 }
 
+/** Tourney tab nav icon (Tourney Tab: UI leg, see TODO.md) - a trophy, matching the grid/calculator/crossed-swords metaphor set this file's header notes aren't permanently locked in. */
+export function TourneyIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M7 4h10v4a5 5 0 0 1-10 0V4Z" />
+      <path d="M7 5H4.5A1.5 1.5 0 0 0 3 6.5v1A3.5 3.5 0 0 0 6.5 11H7" />
+      <path d="M17 5h2.5A1.5 1.5 0 0 1 21 6.5v1A3.5 3.5 0 0 1 17.5 11H17" />
+      <path d="M12 13v4" />
+      <path d="M8.5 20.5h7" />
+      <path d="M9.5 17.5h5l1 3h-7l1-3Z" />
+    </svg>
+  );
+}
+
 export function SettingsIcon({ className }: IconProps) {
   return (
     <svg

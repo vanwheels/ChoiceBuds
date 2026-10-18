@@ -50,6 +50,23 @@ Entries prior to this file's oldest are in:
   slug since it shares its date range with the Mobile Web & UI Polish
   archive above)
 
+**[Tourney Tab: UI] — Leg 3** (2026-10-17)
+Added the Tourney tab (`components/tourney/TourneyPage.tsx` +
+`TourneyEventCard.tsx`), rendering Leg 2's `config/tourneyEvents.ts`
+schedule filtered to upcoming events and sorted soonest-first
+(`utils/tourneyEvents.ts::getUpcomingEvents`, unit-tested). Tier badges
+(Regional/Special Event/International/Worlds) get their own color table in
+`config/tourneyEventTheme.ts`, matching `pokemonTheme.ts`'s
+`REGULATION_THEMES` pattern. Date ranges/signup deadlines are formatted via
+UTC-anchored parsing (`parseISODate`) to avoid a local-timezone shift
+misreading an ISO 'YYYY-MM-DD' calendar day, same treatment
+`config/seasons.ts` already gives its own ISO date strings. Wired into both
+`App.tsx` and `AppWeb.tsx`'s `ActiveTab`/lazy-tab wiring and
+`Sidebar.tsx`'s nav list (new `TourneyIcon`, trophy metaphor). This closes
+the Mobile Teams & Tourney Tab milestone's second done-when item alongside
+Leg 2, and the milestone itself (both items now shipped - see MILESTONES.md
+for closure).
+
 **[Tourney Tab: Event Config] — Leg 2** (2026-10-17)
 Added `config/tourneyEvents.ts`, a hand-authored table of TPCi's sanctioned
 VGC circuit events (Regionals, Special Events, Internationals, World

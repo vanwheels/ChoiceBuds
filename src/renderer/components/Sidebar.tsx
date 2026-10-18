@@ -62,6 +62,7 @@ import {
   StatisticsIcon,
   TypeMatchupIcon,
   SpeedTiersIcon,
+  TourneyIcon,
   SettingsIcon,
   SidebarToggleIcon,
   MenuIcon,
@@ -103,6 +104,7 @@ const MAIN_NAV_ITEMS: { tab: ActiveTab; label: string; Icon: typeof TeamsIcon }[
   { tab: 'statistics', label: 'Statistics', Icon: StatisticsIcon },
   { tab: 'typeMatchup', label: 'Type Matchup', Icon: TypeMatchupIcon },
   { tab: 'speedTiers', label: 'Speed Tiers', Icon: SpeedTiersIcon },
+  { tab: 'tourney', label: 'Tourney', Icon: TourneyIcon },
 ];
 
 const BOTTOM_NAV_ITEMS: { tab: ActiveTab; label: string; Icon: typeof TeamsIcon }[] = [

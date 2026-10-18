@@ -95,6 +95,7 @@ const BattleLogPage = lazy(() => import('./components/battlelog/BattleLogPage'))
 const StatisticsPage = lazy(() => import('./components/statistics/StatisticsPage'));
 const TypeMatchupPage = lazy(() => import('./components/typematchup/TypeMatchupPage'));
 const SpeedTiersPage = lazy(() => import('./components/speedtiers/SpeedTiersPage'));
+const TourneyPage = lazy(() => import('./components/tourney/TourneyPage'));
 const SettingsPage = lazy(() => import('./components/SettingsPage'));
 
 export default function AppWeb() {
@@ -304,6 +305,15 @@ export default function AppWeb() {
                 fallback={<div className="p-8 text-sm text-zinc-400">Loading statistics...</div>}
               >
                 <StatisticsPage battlesState={battlesState} spriteCacheState={spriteCacheState} />
+              </Suspense>
+            </div>
+          )}
+          {visitedTabs.has('tourney') && (
+            <div style={{ display: activeTab === 'tourney' ? 'block' : 'none' }} className="h-full">
+              <Suspense
+                fallback={<div className="p-8 text-sm text-zinc-400">Loading tourney...</div>}
+              >
+                <TourneyPage />
               </Suspense>
             </div>
           )}

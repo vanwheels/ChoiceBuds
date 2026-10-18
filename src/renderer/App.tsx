@@ -44,10 +44,18 @@ const BattleLogPage = lazy(() => import('./components/battlelog/BattleLogPage'))
 const StatisticsPage = lazy(() => import('./components/statistics/StatisticsPage'));
 const TypeMatchupPage = lazy(() => import('./components/typematchup/TypeMatchupPage'));
 const SpeedTiersPage = lazy(() => import('./components/speedtiers/SpeedTiersPage'));
+const TourneyPage = lazy(() => import('./components/tourney/TourneyPage'));
 const SettingsPage = lazy(() => import('./components/SettingsPage'));
 
 export type ActiveTab =
-  'teams' | 'box' | 'battles' | 'statistics' | 'typeMatchup' | 'speedTiers' | 'settings';
+  | 'teams'
+  | 'box'
+  | 'battles'
+  | 'statistics'
+  | 'typeMatchup'
+  | 'speedTiers'
+  | 'tourney'
+  | 'settings';
 
 /**
  * Main application shell component
@@ -279,6 +287,15 @@ export default function App() {
                     spriteCacheState={spriteCacheState}
                     speciesRosterState={speciesRosterState}
                   />
+                </Suspense>
+              </div>
+            )}
+            {visitedTabs.has('tourney') && (
+              <div style={{ display: activeTab === 'tourney' ? 'block' : 'none' }}>
+                <Suspense
+                  fallback={<div className="text-zinc-400 text-sm">Loading tourney...</div>}
+                >
+                  <TourneyPage />
                 </Suspense>
               </div>
             )}
