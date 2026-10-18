@@ -85,3 +85,17 @@ Entries prior to this file's oldest are in:
   default. No code changed (scoping-only leg); see
   `docs/investigations/pokepaste-format-research.md`'s "Second import
   source: add now or wait?" section. See commit `<pending>`.
+- **[Scoping Sweep] — Leg 3** (2026-10-18). Decided not to build a shared
+  public team browse/upload database. The real blocker isn't moderation
+  model choice so much as what hosting it would require: every Worker
+  feature shipped so far is self-hosted per account (each user runs their
+  own Cloudflare Worker/KV/R2), and a shared browse/upload surface would be
+  this project's first centrally-hosted, publicly-writable service —
+  pushing hosting cost and an unbounded moderation obligation (reports/
+  takedowns, with no admin tooling or staff) onto the solo maintainer, for a
+  hobby-scale project with no demand signal beyond the original idea.
+  `/u/<username>` (shipped the same day as the original scoping) already
+  covers "share my team publicly" without any of that risk. No code changed
+  (scoping-only leg); see
+  `docs/investigations/public-team-browse-upload-scope.md`. See commit
+  `<pending>`.

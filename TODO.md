@@ -29,18 +29,9 @@ Done when:
   `docs/investigations/pokepaste-format-research.md`'s "Second import
   source: add now or wait?" section.
 - Public Team Browse & Upload Database has a recorded decision — a
-  moderation model for public uploads, or not building it.
-
-- **[Scoping Sweep] — Leg 3** *(Last touched: 2026-10-18 · Re-checks: 0)*
-  Scoping pass for Public Team Browse & Upload Database. Split out of Public
-  Profiles & Team Sharing's scoping (2026-10-17): a shared public team
-  browse/upload database, beyond the per-team visibility toggles that
-  milestone covers. Decide the abuse/moderation model for public uploads (or
-  decide not to build this) before any implementation legs get written.
-  Research/decision only - no implementation this leg.
-  Done check: moderation model picked, or decision recorded not to build
-  this.
-  Manual verification: no. Review: no.
+  moderation model for public uploads, or not building it. **Decided
+  2026-10-18: not building it** — see
+  `docs/investigations/public-team-browse-upload-scope.md`.
 
 ## Blocked
 
