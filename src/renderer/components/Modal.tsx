@@ -56,7 +56,12 @@ const panelVariants = {
 export default function Modal({ children, panelClassName = 'max-w-3xl max-h-[90vh]' }: ModalProps) {
   return createPortal(
     <motion.div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      // z-[70]: above MobileTeamSwipeOverlay.tsx/MobileBoxSwipeOverlay.tsx's
+      // z-[60] full-viewport overlays, since both can open a Modal-based
+      // dialog (e.g. AddPokemonStatTable) from within themselves and that
+      // dialog must still render on top, not behind the opaque overlay it
+      // was opened from.
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70]"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}

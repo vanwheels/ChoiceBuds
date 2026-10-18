@@ -11,22 +11,35 @@
  * as a fallback" shape as nothing else in this app needed a precedent for -
  * this is the first swipe-gesture surface).
  *
- * Portaled to document.body and z-[60] - one tier above Modal.tsx/the mobile
- * drawer's z-50, since this overlay can be opened from within the Teams tab
- * while the drawer's own trigger is still visible in Sidebar.tsx's top bar.
+ * Portaled to document.body and z-[60] - one tier above the mobile drawer's
+ * z-50, since this overlay can be opened from within the Teams tab while
+ * the drawer's own trigger is still visible in Sidebar.tsx's top bar.
+ * Modal.tsx itself sits at z-[70], above this overlay, so a dialog opened
+ * from within it (e.g. AddPokemonStatTable below) still renders on top -
+ * see Modal.tsx's own comment.
  *
  * currentIndex clamps down whenever the roster shrinks (Remove from team,
  * fired from inside MobilePokemonCard) rather than only reading it once at
  * open time - `team` here is the live object from useTeams, not a snapshot,
- * so a removal is visible on the very next render. Closes itself once the
- * roster is fully empty, since there'd be nothing left to page through.
+ * so a removal is visible on the very next render.
+ *
+ * Mobile Add Pokémon Entry Point Leg 1 (see TODO.md and
+ * docs/investigations/mobile-add-pokemon-entry-point.md) added two "add a
+ * Pokémon" affordances, both rendering MobileAddPokemonPage: an extra page
+ * past the last roster card whenever roster < 6 (paginate() treats it as
+ * just another page - picking a species there appends to `team.pokemon`,
+ * which naturally lands in that same page index on the next render since
+ * addSlot appends to the end), and a dedicated empty-state screen when the
+ * roster is fully empty (replacing the old bail-out-and-auto-close effect -
+ * there's no card to swipe to/from at roster = 0, so it's a separate render
+ * path rather than another page in the deck).
  */
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { PanInfo } from 'framer-motion';
-import type { Team } from '../types/pokemon';
+import type { SavedPokemonEntry, SpeciesRosterEntry, Team } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
@@ -38,8 +51,11 @@ import type { UseDatabaseReturn } from '../hooks/useDatabase';
 import { getRegulationTheme } from '../config/pokemonTheme';
 import { toRegulationId } from '../utils/pokemonRules';
 import { STANDARD_ENTER_DURATION } from '../config/motion';
+import { cloneSavedPokemon } from '../utils/clonePokemon';
 import { CloseIcon } from './icons/SidebarIcons';
 import MobilePokemonCard from './MobilePokemonCard';
+import MobileAddPokemonPage from './MobileAddPokemonPage';
+import AddPokemonStatTable from './AddPokemonStatTable';
 
 interface MobileTeamSwipeOverlayProps {
   team: Team;
@@ -81,6 +97,7 @@ export default function MobileTeamSwipeOverlay({
 }: MobileTeamSwipeOverlayProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [direction, setDirection] = useState(0);
+  const [isAddPickerOpen, setIsAddPickerOpen] = useState(false);
   // One instance per open overlay - same shape as TeamCard.tsx's own
   // per-card instantiation (useRosterActions holds no internal state of its
   // own, just useCallback-wrapped async functions, so there's no shared-cache
@@ -94,6 +111,33 @@ export default function MobileTeamSwipeOverlay({
   );
 
   const rosterLength = team.pokemon.length;
+  // Species Clause, same dedupe TeamCard.tsx's own "+ Add Pokémon" picker
+  // applies - a species already on this team drops out of both the plain-
+  // roster and "From Box" results entirely rather than staying pickable.
+  const teamSpeciesSeen = new Set(team.pokemon.map((p) => p.showdownData.species.toLowerCase()));
+  const addPickerRoster = speciesRosterState.roster.filter(
+    (s) => !teamSpeciesSeen.has(s.name.toLowerCase()),
+  );
+  const addPickerSavedPokemon = savedPokemonState.savedPokemon.filter(
+    (e) => !teamSpeciesSeen.has(e.pokemon.showdownData.species.toLowerCase()),
+  );
+
+  const handleAddSpecies = async (species: SpeciesRosterEntry, itemOverride?: string) => {
+    setIsAddPickerOpen(false);
+    await rosterActions.addSlot(team, species.name, itemOverride);
+  };
+
+  const handleAddSavedEntry = async (entry: SavedPokemonEntry) => {
+    setIsAddPickerOpen(false);
+    await updateTeam(team.id, { pokemon: [...team.pokemon, cloneSavedPokemon(entry.pokemon)] });
+  };
+
+  // Whenever roster < 6, there's one extra page past the last real roster
+  // card - picking a species from it appends to team.pokemon, so the same
+  // page index then renders the new slot on the next render (see file
+  // header). canAddMore also gates whether that page exists for the
+  // clamp/pagination math below.
+  const canAddMore = rosterLength < 6;
 
   // Clamp down during render (the "adjust state when a prop changes"
   // pattern - see TeamCard.tsx's own rosterIdsKey/prevRosterIdsKey use of the
@@ -113,19 +157,14 @@ export default function MobileTeamSwipeOverlay({
   let safeIndex = currentIndex;
   if (rosterLength !== prevRosterLength) {
     setPrevRosterLength(rosterLength);
-    if (rosterLength > 0 && currentIndex >= rosterLength) {
-      safeIndex = rosterLength - 1;
+    // Highest valid page index: the add page itself when roster < 6,
+    // otherwise the last real roster card.
+    const maxIndex = canAddMore ? rosterLength : rosterLength - 1;
+    if (rosterLength > 0 && currentIndex > maxIndex) {
+      safeIndex = maxIndex;
       setCurrentIndex(safeIndex);
     }
   }
-
-  // Closing is an external callback (mutates the parent's openTeamId, not
-  // this component's own state), so it stays in an effect rather than the
-  // render-time clamp above - nothing left here to page through once the
-  // last Pokémon is removed.
-  useEffect(() => {
-    if (rosterLength === 0) onClose();
-  }, [rosterLength, onClose]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -135,11 +174,56 @@ export default function MobileTeamSwipeOverlay({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
-  if (rosterLength === 0) return null;
+  // Roster = 0 has no card to swipe between, so it's a dedicated empty-state
+  // screen rather than another page in the deck (see file header) - this
+  // replaces the old bail-out-and-auto-close effect.
+  if (rosterLength === 0) {
+    const regulationTheme = getRegulationTheme(toRegulationId(team.format));
+    return createPortal(
+      <div className="fixed inset-0 z-[60] bg-zinc-950 flex flex-col">
+        <div
+          className={`flex items-center gap-3 px-4 py-3 border-b border-zinc-800 border-l-4 ${regulationTheme.accentBorder}`}
+        >
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="flex items-center justify-center w-10 h-10 rounded-full text-zinc-300 hover:bg-zinc-800 transition-colors cursor-pointer shrink-0"
+          >
+            <CloseIcon />
+          </button>
+          <span className="flex-1 min-w-0 truncate font-bold text-zinc-100">
+            {team.name || 'Untitled Team'}
+          </span>
+        </div>
+        <div className="relative flex-1 overflow-hidden">
+          <MobileAddPokemonPage emptyTeam onAddClick={() => setIsAddPickerOpen(true)} />
+        </div>
+        <AnimatePresence>
+          {isAddPickerOpen && (
+            <AddPokemonStatTable
+              roster={addPickerRoster}
+              rulesetId={toRegulationId(team.format)}
+              resolveSprite={spriteCacheState.resolveSprite}
+              getCachedEntry={databaseState.getCachedEntry}
+              onSelect={handleAddSpecies}
+              onClose={() => setIsAddPickerOpen(false)}
+              savedPokemon={addPickerSavedPokemon}
+              onSelectSaved={handleAddSavedEntry}
+            />
+          )}
+        </AnimatePresence>
+      </div>,
+      document.body,
+    );
+  }
+
+  // Total pages: every real roster card, plus the add page when roster < 6.
+  const totalPages = rosterLength + (canAddMore ? 1 : 0);
+  const isAddPage = canAddMore && safeIndex === rosterLength;
 
   const paginate = (delta: number) => {
     const next = safeIndex + delta;
-    if (next < 0 || next >= rosterLength) return;
+    if (next < 0 || next >= totalPages) return;
     setDirection(delta);
     setCurrentIndex(next);
   };
@@ -155,8 +239,9 @@ export default function MobileTeamSwipeOverlay({
     }
   };
 
-  const regulationTheme = getRegulationTheme(toRegulationId(team.format));
-  const currentPokemon = team.pokemon[safeIndex];
+  const rulesetId = toRegulationId(team.format);
+  const regulationTheme = getRegulationTheme(rulesetId);
+  const currentPokemon = isAddPage ? null : team.pokemon[safeIndex];
 
   return createPortal(
     <div className="fixed inset-0 z-[60] bg-zinc-950 flex flex-col">
@@ -175,7 +260,7 @@ export default function MobileTeamSwipeOverlay({
           {team.name || 'Untitled Team'}
         </span>
         <span className="shrink-0 text-xs font-semibold text-zinc-400 bg-zinc-800 border border-zinc-700 rounded-full px-2.5 py-1">
-          {safeIndex + 1} / {rosterLength}
+          {safeIndex + 1} / {totalPages}
         </span>
       </div>
 
@@ -185,7 +270,7 @@ export default function MobileTeamSwipeOverlay({
       <div className="relative flex-1 overflow-hidden">
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.div
-            key={currentPokemon.id}
+            key={isAddPage ? 'add-page' : currentPokemon!.id}
             custom={direction}
             variants={slideVariants}
             initial="enter"
@@ -198,21 +283,25 @@ export default function MobileTeamSwipeOverlay({
             onDragEnd={handleDragEnd}
             className="absolute inset-0 overflow-y-auto px-4 py-4 cursor-grab active:cursor-grabbing"
           >
-            <MobilePokemonCard
-              pokemon={currentPokemon}
-              team={team}
-              pokemonIndex={safeIndex}
-              updateTeam={updateTeam}
-              gameDataState={gameDataState}
-              speciesRosterState={speciesRosterState}
-              spriteCacheState={spriteCacheState}
-              rosterActions={rosterActions}
-              getCachedEntry={databaseState.getCachedEntry}
-              savedPokemonState={savedPokemonState}
-              vgcPastesState={vgcPastesState}
-              vgcRealSetsState={vgcRealSetsState}
-              showAnimatedSprites={showAnimatedSprites}
-            />
+            {isAddPage ? (
+              <MobileAddPokemonPage onAddClick={() => setIsAddPickerOpen(true)} emptyTeam={false} />
+            ) : (
+              <MobilePokemonCard
+                pokemon={currentPokemon!}
+                team={team}
+                pokemonIndex={safeIndex}
+                updateTeam={updateTeam}
+                gameDataState={gameDataState}
+                speciesRosterState={speciesRosterState}
+                spriteCacheState={spriteCacheState}
+                rosterActions={rosterActions}
+                getCachedEntry={databaseState.getCachedEntry}
+                savedPokemonState={savedPokemonState}
+                vgcPastesState={vgcPastesState}
+                vgcRealSetsState={vgcRealSetsState}
+                showAnimatedSprites={showAnimatedSprites}
+              />
+            )}
           </motion.div>
         </AnimatePresence>
 
@@ -239,7 +328,7 @@ export default function MobileTeamSwipeOverlay({
             </svg>
           </button>
         )}
-        {safeIndex < rosterLength - 1 && (
+        {safeIndex < totalPages - 1 && (
           <button
             onClick={() => paginate(1)}
             aria-label="Next Pokémon"
@@ -260,6 +349,21 @@ export default function MobileTeamSwipeOverlay({
           </button>
         )}
       </div>
+
+      <AnimatePresence>
+        {isAddPickerOpen && (
+          <AddPokemonStatTable
+            roster={addPickerRoster}
+            rulesetId={rulesetId}
+            resolveSprite={spriteCacheState.resolveSprite}
+            getCachedEntry={databaseState.getCachedEntry}
+            onSelect={handleAddSpecies}
+            onClose={() => setIsAddPickerOpen(false)}
+            savedPokemon={addPickerSavedPokemon}
+            onSelectSaved={handleAddSavedEntry}
+          />
+        )}
+      </AnimatePresence>
     </div>,
     document.body,
   );
