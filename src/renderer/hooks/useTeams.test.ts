@@ -368,6 +368,37 @@ describe('useTeams', () => {
     );
   });
 
+  it('applySyncedState migrates a legacy isPublic-shaped remote record that wins the merge (e.g. pulled from a device not yet updated to visibility), bumping updatedAt so the fix can win a future push too', async () => {
+    vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({
+      schemaVersion: 1,
+      teams: [makeTeam({ id: 'team-1', updatedAt: 1 })],
+      tombstones: [],
+      lastModified: 0,
+    });
+    const { result } = renderHook(() => useTeams());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    const legacyRemote = { ...makeTeam({ id: 'team-1', updatedAt: 5 }), isPublic: true } as Team;
+    await act(async () => {
+      await result.current.applySyncedState([legacyRemote], []);
+    });
+
+    expect(result.current.teams[0].visibility).toBe('closed');
+    expect(result.current.teams[0].updatedAt).toBeGreaterThan(5);
+  });
+
+  it('applySyncedState migrates a legacy isPublic-shaped remote record this device has no local copy of yet', async () => {
+    const { result } = renderHook(() => useTeams());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    const legacyRemote = { ...makeTeam({ id: 'from-server' }), isPublic: true } as Team;
+    await act(async () => {
+      await result.current.applySyncedState([legacyRemote], []);
+    });
+
+    expect(result.current.teams[0].visibility).toBe('closed');
+  });
+
   it('applySyncedState keeps a local edit that lands first in the queue over a stale sync snapshot (TODO.md TeamCard Notes blur bug)', async () => {
     vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({
       schemaVersion: 1,

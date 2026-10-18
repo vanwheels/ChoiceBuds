@@ -98,6 +98,22 @@ function normalizeTeam(
 }
 
 /**
+ * Whether normalizeTeam actually changed something that matters for sync
+ * (species text, visibility) between a raw team and its normalized result -
+ * shared by computeNormalizationFixes (the load path) and applySyncedState
+ * below (the sync-merge path), since both need to tell a sync-relevant fix
+ * apart from a purely cosmetic one (e.g. the REG-prefix name strip, which
+ * normalizeTeam also does but which never needs to survive a sync
+ * round-trip).
+ */
+function normalizationChangedSyncRelevantFields(raw: Team, fixed: Team): boolean {
+  const speciesChanged = raw.pokemon.some(
+    (p, j) => p.showdownData.species !== fixed.pokemon[j]?.showdownData.species,
+  );
+  return speciesChanged || raw.visibility !== fixed.visibility;
+}
+
+/**
  * Diffs raw-vs-normalizeTeam'd teams to find which ones actually need a
  * normalization result persisted for real rather than left as a
  * read-boundary-only fix (see the ref/effect using this below) - both the
@@ -114,6 +130,7 @@ function computeNormalizationFixes(
   for (let i = 0; i < rawTeams.length; i++) {
     const raw = rawTeams[i];
     const fixed = correctedTeams[i];
+    if (!normalizationChangedSyncRelevantFields(raw, fixed)) continue;
     const updates: Partial<Team> = {};
     const speciesChanged = raw.pokemon.some(
       (p, j) => p.showdownData.species !== fixed.pokemon[j]?.showdownData.species,
@@ -123,6 +140,28 @@ function computeNormalizationFixes(
     if (Object.keys(updates).length > 0) fixes.push({ id: fixed.id, updates });
   }
   return fixes;
+}
+
+/**
+ * Runs a sync-merge-sourced team (applySyncedState's `records`, which can
+ * originate from a device still running pre-migration code - see
+ * `/leg-review`'s Teamsheet Open/Closed Visibility Tiers Leg 3 finding)
+ * through the same normalizeTeam path the load path uses, so a legacy
+ * `isPublic`-shaped record pulled down mid-sync reads correctly immediately
+ * rather than only after this device's next full reload. Bumps `updatedAt`
+ * to now only when normalization changed something sync-relevant (species/
+ * visibility - normalizationChangedSyncRelevantFields), so the corrected
+ * copy can out-rank the still-stale sender on this device's next push; a
+ * purely cosmetic fix (e.g. the REG-prefix strip) keeps the incoming
+ * `updatedAt` as-is.
+ */
+function normalizeIncomingSyncTeam(raw: Team): Team {
+  const normalized = normalizeTeam(
+    raw as Team & { pokemon: (ImportedPokemonInfo & { id?: string })[]; isPublic?: boolean },
+  );
+  return normalizationChangedSyncRelevantFields(raw, normalized)
+    ? { ...normalized, updatedAt: Date.now() }
+    : normalized;
 }
 
 export interface UseTeamsReturn {
@@ -583,19 +622,31 @@ export function useTeams(): UseTeamsReturn {
    * ran. Only records this device has no local copy of at all (added on
    * another device) fall back to being appended at the end, since there's
    * no local position to preserve for those.
+   *
+   * Whichever side the merge picks runs through normalizeIncomingSyncTeam
+   * before landing in `reconciled` whenever it's a `records` entry (never a
+   * `local` one, already normalized on its own last load) -
+   * `remote.updatedAt > local.updatedAt`/the unmatched-remote filter below
+   * both still compare the *raw* incoming `updatedAt`, since normalizing
+   * first would let a stale remote record win just by being newly
+   * reshaped.
    */
   const applySyncedState = useCallback(
     (records: Team[], pushedTombstones: SyncTombstone[]): Promise<boolean> =>
       enqueueMutation(async () => {
-        const remoteById = new Map(records.map((t) => [t.id, t]));
+        const rawRemoteById = new Map(records.map((t) => [t.id, t]));
         const localIds = new Set(teamsRef.current.map((t) => t.id));
         const tombstonedIds = new Set(tombstonesRef.current.map((t) => t.id));
         const reconciled = [
           ...teamsRef.current.map((local) => {
-            const remote = remoteById.get(local.id);
-            return remote && remote.updatedAt > local.updatedAt ? remote : local;
+            const rawRemote = rawRemoteById.get(local.id);
+            return rawRemote && rawRemote.updatedAt > local.updatedAt
+              ? normalizeIncomingSyncTeam(rawRemote)
+              : local;
           }),
-          ...records.filter((remote) => !localIds.has(remote.id) && !tombstonedIds.has(remote.id)),
+          ...records
+            .filter((remote) => !localIds.has(remote.id) && !tombstonedIds.has(remote.id))
+            .map(normalizeIncomingSyncTeam),
         ];
         const pushedIds = new Set(pushedTombstones.map((t) => t.id));
         const remainingTombstones = tombstonesRef.current.filter((t) => !pushedIds.has(t.id));
