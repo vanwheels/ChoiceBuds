@@ -31,7 +31,13 @@ describe('fetchPublicProfile', () => {
   });
 
   it('passes through public teams and the favorite-Pokemon pick when present', async () => {
-    const team = { id: 't1', name: 'Rain Team', format: 'Reg M-A', pokemon: [] };
+    const team = {
+      id: 't1',
+      name: 'Rain Team',
+      format: 'Reg M-A',
+      visibility: 'closed',
+      pokemon: [],
+    };
     const favoritePokemon = {
       species: 'Flutter Mane',
       spriteUrl: 'https://example.com/sprite.png',

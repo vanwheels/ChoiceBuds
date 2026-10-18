@@ -5,7 +5,13 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import type { ImportedPokemonInfo, SyncTombstone, Team, TeamsDatabase } from '../types/pokemon';
+import type {
+  ImportedPokemonInfo,
+  SyncTombstone,
+  Team,
+  TeamsDatabase,
+  TeamVisibility,
+} from '../types/pokemon';
 import { getStorageAdapter } from '../services/storage';
 import { fixGenderSplitResourceSpeciesText } from '../config/pokemonRules';
 
@@ -19,18 +25,36 @@ import { fixGenderSplitResourceSpeciesText } from '../config/pokemonRules';
 const REG_PREFIX_PATTERN = /^Reg M-[ABC] /;
 
 /** Current on-disk shape version for TeamsDatabase - see TeamsDatabase.schemaVersion. */
-const TEAMS_SCHEMA_VERSION = 1;
+const TEAMS_SCHEMA_VERSION = 2;
 
 /**
  * Migration hook point for TeamsDatabase - runs once per load, before
- * normalizeTeam's per-team backfills below. No migrations exist yet
- * (schemaVersion 1 is the first version); a future on-disk shape change
- * bumps TEAMS_SCHEMA_VERSION and adds its upgrade step here, keyed off
- * database.schemaVersion. A database persisted before schemaVersion
- * existed is treated as version 1.
+ * normalizeTeam's per-team backfills below. Only backfills the version
+ * number itself; the actual schemaVersion-1-to-2 shape change (the old
+ * binary `Team.isPublic` to the 3-tier `Team.visibility` - see
+ * TeamVisibility's doc comment) happens per-team in normalizeTeam below,
+ * same split as the gender-split-species fix already uses. A database
+ * persisted before schemaVersion existed is treated as version 1.
  */
 function migrateTeamsDatabase(database: TeamsDatabase): TeamsDatabase {
   return { ...database, schemaVersion: database.schemaVersion ?? TEAMS_SCHEMA_VERSION };
+}
+
+/**
+ * Derives this team's TeamVisibility from a legacy on-disk `isPublic`
+ * boolean (schemaVersion 1 and earlier never had `visibility` at all).
+ * `isPublic: true` becomes `closed`, not `open` - today's pre-existing
+ * exposure was always species+sprite-only, and silently widening an
+ * already-public team to the new full-set tier on migration would expose
+ * moves/items/EVs/nature the team's owner never agreed to show. A team that
+ * was never public (`isPublic` false/missing) stays `undefined` rather than
+ * being stamped `'private'` explicitly - same undefined-means-"off"
+ * convention `visibility` otherwise follows, so a team nobody ever touched
+ * isn't forced through a needless updatedAt bump/resync on its first load
+ * after this migration ships.
+ */
+function migrateTeamVisibility(legacyIsPublic: unknown): TeamVisibility | undefined {
+  return legacyIsPublic === true ? 'closed' : undefined;
 }
 
 /**
@@ -46,11 +70,22 @@ function migrateTeamsDatabase(database: TeamsDatabase): TeamsDatabase {
  * "-Male"/"-Female" resource text (fixGenderSplitResourceSpeciesText, see
  * its own doc comment and TODO.md's Roster Picker leg) - same
  * read-boundary/never-eagerly-persisted treatment as the id backfill above.
+ *
+ * Also migrates a legacy on-disk `isPublic` into `visibility`
+ * (migrateTeamVisibility) when `visibility` itself is missing, dropping the
+ * old key from the object it returns - unlike the two backfills above, this
+ * one DOES need a real, timestamp-bumping persist to survive a sync
+ * round-trip (see computeNormalizationFixes/the flush effect below), since
+ * the Worker's extractPublicTeam now reads `visibility`, not `isPublic`.
  */
-function normalizeTeam(team: Team & { pokemon: (ImportedPokemonInfo & { id?: string })[] }): Team {
+function normalizeTeam(
+  team: Team & { pokemon: (ImportedPokemonInfo & { id?: string })[]; isPublic?: boolean },
+): Team {
+  const { isPublic, ...rest } = team;
   return {
-    ...team,
+    ...rest,
     name: team.name.replace(REG_PREFIX_PATTERN, ''),
+    visibility: team.visibility ?? migrateTeamVisibility(isPublic),
     pokemon: team.pokemon.map((p) => ({
       ...p,
       id: p.id ?? crypto.randomUUID(),
@@ -63,23 +98,29 @@ function normalizeTeam(team: Team & { pokemon: (ImportedPokemonInfo & { id?: str
 }
 
 /**
- * Diffs raw-vs-normalizeTeam'd teams to find which ones actually need their
- * gender-split species fix persisted for real (see the ref/effect using
- * this below for why a real, timestamp-bumping persist is required and
- * normalizeTeam's own read-boundary fix isn't enough on its own).
+ * Diffs raw-vs-normalizeTeam'd teams to find which ones actually need a
+ * normalization result persisted for real rather than left as a
+ * read-boundary-only fix (see the ref/effect using this below) - both the
+ * gender-split species fix and the legacy isPublic-to-visibility migration
+ * need this, since a display-only fix never actually propagates through
+ * sync (TODO.md's Roster Picker leg; this leg's own Worker-side
+ * visibility read).
  */
-function computeGenderSplitFixes(
+function computeNormalizationFixes(
   rawTeams: Team[],
   correctedTeams: Team[],
-): { id: string; pokemon: Team['pokemon'] }[] {
-  const fixes: { id: string; pokemon: Team['pokemon'] }[] = [];
+): { id: string; updates: Partial<Team> }[] {
+  const fixes: { id: string; updates: Partial<Team> }[] = [];
   for (let i = 0; i < rawTeams.length; i++) {
     const raw = rawTeams[i];
     const fixed = correctedTeams[i];
+    const updates: Partial<Team> = {};
     const speciesChanged = raw.pokemon.some(
       (p, j) => p.showdownData.species !== fixed.pokemon[j]?.showdownData.species,
     );
-    if (speciesChanged) fixes.push({ id: fixed.id, pokemon: fixed.pokemon });
+    if (speciesChanged) updates.pokemon = fixed.pokemon;
+    if (raw.visibility !== fixed.visibility) updates.visibility = fixed.visibility;
+    if (Object.keys(updates).length > 0) fixes.push({ id: fixed.id, updates });
   }
   return fixes;
 }
@@ -146,14 +187,14 @@ export function useTeams(): UseTeamsReturn {
   const [error, setError] = useState<string | null>(null);
   const [expandedCardIds, setExpandedCardIds] = useState<Set<string>>(new Set());
 
-  // Holds whatever computeGenderSplitFixes found on the most recent load,
+  // Holds whatever computeNormalizationFixes found on the most recent load,
   // for the effect below (declared after updateTeam, which it calls) to
   // flush once loading settles - see that effect's own comment for why this
   // two-step ref handoff exists instead of calling updateTeam directly from
   // the load functions above (updateTeam isn't declared yet at that point
   // in the file, and this project's lint config forbids referencing a
   // same-scope const before its declaration even from a deferred closure).
-  const pendingSpeciesFixRef = useRef<{ id: string; pokemon: Team['pokemon'] }[]>([]);
+  const pendingNormalizationFixRef = useRef<{ id: string; updates: Partial<Team> }[]>([]);
 
   // Mirrors of `teams`/`tombstones` that every mutator below reads as its
   // base instead of the `teams`/`tombstones` closure variables, and a queue
@@ -204,7 +245,7 @@ export function useTeams(): UseTeamsReturn {
       setTeams(loadedTeams);
       setTombstones(loadedTombstones);
       if (database)
-        pendingSpeciesFixRef.current = computeGenderSplitFixes(database.teams, loadedTeams);
+        pendingNormalizationFixRef.current = computeNormalizationFixes(database.teams, loadedTeams);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load teams';
       setError(errorMessage);
@@ -241,7 +282,10 @@ export function useTeams(): UseTeamsReturn {
         setTeams(loadedTeams);
         setTombstones(loadedTombstones);
         if (database)
-          pendingSpeciesFixRef.current = computeGenderSplitFixes(database.teams, loadedTeams);
+          pendingNormalizationFixRef.current = computeNormalizationFixes(
+            database.teams,
+            loadedTeams,
+          );
       } catch (err) {
         if (ignore) return;
         const errorMessage = err instanceof Error ? err.message : 'Failed to load teams';
@@ -341,20 +385,22 @@ export function useTeams(): UseTeamsReturn {
     [enqueueMutation],
   );
 
-  // Flushes computeGenderSplitFixes' findings (stashed in pendingSpeciesFixRef
-  // by whichever load path just ran) once loading settles, routing each fix
-  // through the real updateTeam mutator so it bumps updatedAt and persists
-  // to disk for real - see pendingSpeciesFixRef's own comment and
-  // normalizeTeam's doc comment for why a read-boundary-only fix isn't
-  // enough on its own (TODO.md's Roster Picker leg has the full trail).
-  // Each affected team is independently queued through updateTeam's own
+  // Flushes computeNormalizationFixes' findings (stashed in
+  // pendingNormalizationFixRef by whichever load path just ran) once
+  // loading settles, routing each fix through the real updateTeam mutator
+  // so it bumps updatedAt and persists to disk for real - see
+  // pendingNormalizationFixRef's own comment and normalizeTeam's doc
+  // comment for why a read-boundary-only fix isn't enough on its own
+  // (TODO.md's Roster Picker leg has the full trail; this leg's own
+  // isPublic-to-visibility migration needs the same treatment). Each
+  // affected team is independently queued through updateTeam's own
   // enqueueMutation, so multiple fixes in one load don't race each other.
   useEffect(() => {
     if (isLoading) return;
-    const pending = pendingSpeciesFixRef.current;
+    const pending = pendingNormalizationFixRef.current;
     if (pending.length === 0) return;
-    pendingSpeciesFixRef.current = [];
-    for (const fix of pending) void updateTeam(fix.id, { pokemon: fix.pokemon });
+    pendingNormalizationFixRef.current = [];
+    for (const fix of pending) void updateTeam(fix.id, fix.updates);
   }, [isLoading, updateTeam]);
 
   /**

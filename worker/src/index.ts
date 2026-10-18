@@ -32,23 +32,26 @@
  *   GET  /profile/:username  - no auth - {ok, username, teams,
  *                              favoritePokemon?} if the account exists, 404
  *                              otherwise. Public by design (Public Profiles:
- *                              Base Route/Per-Item Visibility Toggles, see
+ *                              Base Route/Per-Item Visibility Toggles, then
+ *                              Teamsheet Open/Closed Visibility Tiers, see
  *                              TODO.md): existence/display-case username,
  *                              plus whichever teams/favorite-Pokemon pick
  *                              this account has individually toggled public
- *                              (off by default - see each field's own
- *                              `isPublic`), is the entire point of a public
- *                              profile page. Never returns
- *                              passwordHash/email/createdAt, and never a
- *                              team's own moves/items/EVs - see
+ *                              (private by default - see FavoritePokemon's
+ *                              own `isPublic` and Team's 3-tier `visibility`
+ *                              - 'private'/'closed'/'open'), is the entire
+ *                              point of a public profile page. Never
+ *                              returns passwordHash/email/createdAt, and a
+ *                              `closed` team never exposes its own moves/
+ *                              items/EVs (only an `open` one does) - see
  *                              extractPublicTeam below for exactly what's
- *                              exposed per team. Team names and Pokemon
- *                              nicknames are user-authored text that reach
- *                              this endpoint without ever going through
- *                              /signup's safety-filter check, so this is the
- *                              one place the Worker checks them too
- *                              (defense-in-depth beyond the renderer's own
- *                              entry-point validation) - see
+ *                              exposed per team/tier. Team names and
+ *                              Pokemon nicknames are user-authored text
+ *                              that reach this endpoint without ever going
+ *                              through /signup's safety-filter check, so
+ *                              this is the one place the Worker checks them
+ *                              too (defense-in-depth beyond the renderer's
+ *                              own entry-point validation) - see
  *                              docs/investigations/public-profiles-safety-filter-research.md.
  */
 

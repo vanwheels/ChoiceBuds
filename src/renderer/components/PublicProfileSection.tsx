@@ -24,7 +24,7 @@ import type { UseSettingsReturn } from '../hooks/useSettings';
 import type { UseTeamsReturn } from '../hooks/useTeams';
 import type { UseSyncReturn } from '../hooks/useSync';
 import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
-import type { SpeciesRosterEntry } from '../types/pokemon';
+import type { SpeciesRosterEntry, TeamVisibility } from '../types/pokemon';
 import { useDismissable } from '../hooks/useDismissable';
 
 interface PublicProfileSectionProps {
@@ -144,23 +144,29 @@ export default function PublicProfileSection({
 
       <div className="mt-3">
         <h3 className="text-xs font-semibold text-zinc-300">Teams</h3>
+        <p className="mt-1 text-xs text-zinc-500">
+          Closed shows species/sprites only; Open also shows the full set
+          (item/ability/moves/EVs/nature).
+        </p>
         {teams.length === 0 ? (
           <p className="mt-1 text-xs text-zinc-500">No teams yet.</p>
         ) : (
           <div className="mt-2 flex flex-col gap-1.5">
             {teams.map((team) => (
-              <label
-                key={team.id}
-                className="flex items-center gap-2 text-xs text-zinc-300 cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  checked={team.isPublic ?? false}
-                  onChange={() => updateTeam(team.id, { isPublic: !team.isPublic })}
-                  className="cursor-pointer accent-accent-gold"
-                />
+              <div key={team.id} className="flex items-center gap-2 text-xs text-zinc-300">
+                <select
+                  value={team.visibility ?? 'private'}
+                  onChange={(e) =>
+                    updateTeam(team.id, { visibility: e.target.value as TeamVisibility })
+                  }
+                  className="cursor-pointer rounded border border-zinc-600 bg-zinc-900 px-1.5 py-0.5 text-xs text-zinc-100 focus:outline-none focus:ring-2 focus:ring-accent-gold"
+                >
+                  <option value="private">Private</option>
+                  <option value="closed">Closed</option>
+                  <option value="open">Open</option>
+                </select>
                 <span className="truncate">{team.name || 'Untitled Team'}</span>
-              </label>
+              </div>
             ))}
           </div>
         )}

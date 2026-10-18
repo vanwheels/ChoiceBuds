@@ -26,7 +26,7 @@ function team(overrides: Record<string, unknown> = {}): Record<string, unknown> 
   return {
     id: 't1',
     updatedAt: 1,
-    isPublic: true,
+    visibility: 'closed',
     name: 'Rain Team',
     format: 'Reg M-A',
     pokemon: [pokemon()],
@@ -35,8 +35,8 @@ function team(overrides: Record<string, unknown> = {}): Record<string, unknown> 
 }
 
 describe('extractPublicPokemon', () => {
-  it('extracts species/nickname/spriteUrl from a real roster entry', () => {
-    expect(extractPublicPokemon(pokemon())).toEqual({
+  it('extracts species/nickname/spriteUrl from a real roster entry (closed tier)', () => {
+    expect(extractPublicPokemon(pokemon(), false)).toEqual({
       species: 'Flutter Mane',
       nickname: 'Scream',
       spriteUrl: 'https://example.com/flutter-mane.png',
@@ -45,7 +45,10 @@ describe('extractPublicPokemon', () => {
 
   it('omits the nickname when absent, falling back to undefined (not an empty string)', () => {
     expect(
-      extractPublicPokemon(pokemon({ showdownData: { species: 'Flutter Mane', nickname: '' } })),
+      extractPublicPokemon(
+        pokemon({ showdownData: { species: 'Flutter Mane', nickname: '' } }),
+        false,
+      ),
     ).toEqual({
       species: 'Flutter Mane',
       nickname: undefined,
@@ -56,6 +59,7 @@ describe('extractPublicPokemon', () => {
   it('drops a flagged nickname but keeps the Pokemon (species/sprite)', () => {
     const result = extractPublicPokemon(
       pokemon({ showdownData: { species: 'Flutter Mane', nickname: 'fuck' } }),
+      false,
     );
     expect(result).toEqual({
       species: 'Flutter Mane',
@@ -65,20 +69,83 @@ describe('extractPublicPokemon', () => {
   });
 
   it('returns null for malformed/missing data', () => {
-    expect(extractPublicPokemon(null)).toBeNull();
-    expect(extractPublicPokemon('not an object')).toBeNull();
-    expect(extractPublicPokemon({})).toBeNull();
-    expect(extractPublicPokemon({ showdownData: {}, spriteUrl: 'x' })).toBeNull(); // no species
-    expect(extractPublicPokemon(pokemon({ spriteUrl: undefined }))).toBeNull(); // no spriteUrl
+    expect(extractPublicPokemon(null, false)).toBeNull();
+    expect(extractPublicPokemon('not an object', false)).toBeNull();
+    expect(extractPublicPokemon({}, false)).toBeNull();
+    expect(extractPublicPokemon({ showdownData: {}, spriteUrl: 'x' }, false)).toBeNull(); // no species
+    expect(extractPublicPokemon(pokemon({ spriteUrl: undefined }), false)).toBeNull(); // no spriteUrl
+  });
+
+  it('includes the full set when includeSetData is true (open tier)', () => {
+    const result = extractPublicPokemon(
+      pokemon({
+        showdownData: {
+          species: 'Flutter Mane',
+          nickname: 'Scream',
+          item: 'Choice Specs',
+          ability: 'Protosynthesis',
+          level: 50,
+          shiny: true,
+          gigantamax: false,
+          happiness: 255,
+          teraType: 'Fairy',
+          nature: 'Timid',
+          gender: 'N',
+          evs: { hp: 4, attack: 0, defense: 0, specialAttack: 252, specialDefense: 0, speed: 252 },
+          moves: ['Shadow Ball', 'Moonblast', 'Mystical Fire', 'Protect'],
+        },
+      }),
+      true,
+    );
+    expect(result).toEqual({
+      species: 'Flutter Mane',
+      nickname: 'Scream',
+      spriteUrl: 'https://example.com/flutter-mane.png',
+      item: 'Choice Specs',
+      ability: 'Protosynthesis',
+      level: 50,
+      shiny: true,
+      gigantamax: false,
+      happiness: 255,
+      teraType: 'Fairy',
+      nature: 'Timid',
+      gender: 'N',
+      evs: { hp: 4, attack: 0, defense: 0, specialAttack: 252, specialDefense: 0, speed: 252 },
+      moves: ['Shadow Ball', 'Moonblast', 'Mystical Fire', 'Protect'],
+    });
+  });
+
+  it('omits open-tier fields that are missing or malformed rather than guessing a value', () => {
+    const result = extractPublicPokemon(
+      pokemon({ showdownData: { species: 'Flutter Mane', evs: 'not an object', moves: 'nope' } }),
+      true,
+    );
+    expect(result).toEqual({
+      species: 'Flutter Mane',
+      nickname: 'Scream',
+      spriteUrl: 'https://example.com/flutter-mane.png',
+      item: undefined,
+      ability: undefined,
+      level: undefined,
+      shiny: undefined,
+      gigantamax: undefined,
+      happiness: undefined,
+      teraType: undefined,
+      nature: undefined,
+      evs: undefined,
+      moves: undefined,
+      gender: undefined,
+    });
   });
 });
 
 describe('extractPublicTeam', () => {
-  it('extracts a public team down to id/name/format/pokemon', () => {
+  it('extracts a closed team down to id/name/format/visibility/pokemon, without set data', () => {
     expect(extractPublicTeam(team())).toEqual({
       id: 't1',
       name: 'Rain Team',
       format: 'Reg M-A',
+      visibility: 'closed',
       pokemon: [
         {
           species: 'Flutter Mane',
@@ -89,9 +156,24 @@ describe('extractPublicTeam', () => {
     });
   });
 
-  it('returns null for a team not toggled public', () => {
-    expect(extractPublicTeam(team({ isPublic: false }))).toBeNull();
-    expect(extractPublicTeam(team({ isPublic: undefined }))).toBeNull();
+  it('extracts an open team with the full set included per Pokemon', () => {
+    const result = extractPublicTeam(
+      team({
+        visibility: 'open',
+        pokemon: [
+          pokemon({
+            showdownData: { species: 'Flutter Mane', nickname: 'Scream', item: 'Choice Specs' },
+          }),
+        ],
+      }),
+    );
+    expect(result?.visibility).toBe('open');
+    expect(result?.pokemon[0].item).toBe('Choice Specs');
+  });
+
+  it('returns null for a private or unrecognized-visibility team', () => {
+    expect(extractPublicTeam(team({ visibility: 'private' }))).toBeNull();
+    expect(extractPublicTeam(team({ visibility: undefined }))).toBeNull();
   });
 
   it('excludes the whole team when its name fails the safety filter', () => {

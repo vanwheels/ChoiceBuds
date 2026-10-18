@@ -11,7 +11,7 @@
  * Settings UI with no feedback.
  */
 
-import type { SyncPayload } from '../types/pokemon';
+import type { EVSpread, SyncPayload } from '../types/pokemon';
 
 const SYNC_WORKER_URL = 'https://choicebuds-sync.vanwheelstheman.workers.dev';
 
@@ -104,12 +104,34 @@ export async function pushSyncData(
   return response.json();
 }
 
-/** A team's public-safe view, as served by GET /profile/:username - see worker/src/index.ts::extractPublicTeam. */
+/**
+ * A team's public-safe view, as served by GET /profile/:username - see
+ * worker/src/publicProfile.ts::extractPublicTeam. `visibility: 'closed'`
+ * entries only carry species/nickname/spriteUrl per Pokemon; `'open'`
+ * entries additionally carry the full competitive set (Teamsheet Open/
+ * Closed Visibility Tiers, see TODO.md/COMPLETED.md).
+ */
 export interface PublicTeam {
   id: string;
   name: string;
   format: string;
-  pokemon: { species: string; nickname?: string; spriteUrl: string }[];
+  visibility: 'closed' | 'open';
+  pokemon: {
+    species: string;
+    nickname?: string;
+    spriteUrl: string;
+    item?: string;
+    ability?: string;
+    level?: number;
+    shiny?: boolean;
+    gigantamax?: boolean;
+    happiness?: number;
+    teraType?: string;
+    nature?: string;
+    evs?: EVSpread;
+    moves?: string[];
+    gender?: string;
+  }[];
 }
 
 /** See worker/src/index.ts::extractPublicFavoritePokemon. */

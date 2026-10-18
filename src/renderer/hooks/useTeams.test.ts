@@ -168,6 +168,52 @@ describe('useTeams', () => {
     ).toEqual(['Indeedee-F', 'Indeedee', 'Pikachu']);
   });
 
+  it("migrates a legacy isPublic:true team to visibility:'closed', persisted for real (Teamsheet Open/Closed Visibility Tiers)", async () => {
+    vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({
+      schemaVersion: 1,
+      teams: [{ ...makeTeam({ id: 'a' }), isPublic: true }],
+      tombstones: [],
+      lastModified: 0,
+    });
+
+    const { result } = renderHook(() => useTeams());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.teams[0].visibility).toBe('closed');
+    // Migrated to the existing species-sprite-only tier, not the new
+    // full-set 'open' tier - widening what an already-public team shows
+    // needs an explicit choice, not a silent migration.
+    expect(result.current.teams[0].visibility).not.toBe('open');
+
+    // Same "isn't enough on its own" reasoning as the gender-split fix
+    // above: the Worker's extractPublicTeam now reads `visibility`, not
+    // the stale `isPublic`, so this has to survive a sync round-trip too.
+    await waitFor(() => expect(window.electron.writeTeamsDatabase).toHaveBeenCalled());
+    const calls = vi.mocked(window.electron.writeTeamsDatabase).mock.calls;
+    const [persisted] = calls[calls.length - 1];
+    expect(persisted.teams[0].updatedAt).toBeGreaterThan(0);
+    expect(persisted.teams[0].visibility).toBe('closed');
+    expect(persisted.teams[0].isPublic).toBeUndefined();
+  });
+
+  it("leaves a never-public team's visibility undefined on load, with no migration persist", async () => {
+    vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({
+      schemaVersion: 1,
+      teams: [makeTeam({ id: 'a' }), { ...makeTeam({ id: 'b' }), isPublic: false }],
+      tombstones: [],
+      lastModified: 0,
+    });
+
+    const { result } = renderHook(() => useTeams());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.teams.map((t) => t.visibility)).toEqual([undefined, undefined]);
+    // A team nobody ever touched shouldn't be forced through a needless
+    // updatedAt bump/resync just from loading the app after this migration
+    // shipped.
+    expect(window.electron.writeTeamsDatabase).not.toHaveBeenCalled();
+  });
+
   it('reports an error when loading throws', async () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.mocked(window.electron.readTeamsDatabase).mockRejectedValueOnce(new Error('disk error'));

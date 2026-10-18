@@ -108,6 +108,21 @@ export interface ImportedPokemonInfo {
 export type RegulationLabel = 'Reg M-A' | 'Reg M-B' | 'Reg M-C';
 
 /**
+ * Teamsheet Open/Closed Visibility Tiers (see TODO.md/COMPLETED.md) - how
+ * much of a public team's roster shows on this account's public profile.
+ * `closed` is today's pre-existing species+nickname+sprite-only exposure;
+ * `open` additionally exposes the full competitive set (item/ability/moves/
+ * EVs/nature - see worker/src/publicProfile.ts's `extractPublicPokemon`).
+ * `private` (or a missing field, same convention as `favorite`/`sortOrder`
+ * above) shows nothing. Replaces the old binary `Team.isPublic` - see
+ * useTeams.ts's migrateTeamsDatabase for how an existing `isPublic: true`
+ * team migrates onto this (to `closed`, not `open` - migrating to the new
+ * full-exposure tier would silently widen what an already-public team
+ * shows).
+ */
+export type TeamVisibility = 'private' | 'closed' | 'open';
+
+/**
  * Represents a complete VGC team with metadata
  */
 export interface Team {
@@ -147,14 +162,13 @@ export interface Team {
   // before this field existed) falls back to the array's existing stable
   // relative order, same as before this field existed.
   sortOrder?: number;
-  // Public Profiles: Per-Item Visibility Toggles (see TODO.md/COMPLETED.md) -
-  // off by default, same undefined-means-false convention as favorite/
-  // sortOrder above. Toggled from the Public Profile Settings section
-  // (PublicProfileSection.tsx), not from the team card itself. Once on,
-  // this team's name and a species/nickname/sprite-only view of its roster
-  // (no moves/items/EVs) become visible on this account's public profile
-  // page via the Worker's public GET /profile/:username.
-  isPublic?: boolean;
+  // Public Profiles: Per-Item Visibility Toggles, then Teamsheet Open/
+  // Closed Visibility Tiers (see TODO.md/COMPLETED.md) - private by
+  // default, same undefined-means-"off" convention as favorite/sortOrder
+  // above. Toggled from the Public Profile Settings section
+  // (PublicProfileSection.tsx), not from the team card itself. See
+  // TeamVisibility's own doc comment for what each tier exposes.
+  visibility?: TeamVisibility;
 }
 
 /**

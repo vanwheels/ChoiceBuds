@@ -31,17 +31,32 @@ Done when:
   2026-10-18 · Re-checks: 0)*
   Replace the binary `Team.isPublic` with a 3-state visibility
   (`private`/`closed`/`open`) — closed keeps today's species+sprite-only
-  exposure, open additionally exposes moves/items/EVs/IVs/nature. Bump
-  `TeamsDatabase.schemaVersion`, migrate existing `isPublic: true` teams to
-  `closed`, and extend `worker/src/publicProfile.ts`'s
-  `extractPublicTeam`/`PublicPokemon` to include the extra fields only for
-  open teams.
+  exposure, open additionally exposes moves/items/EVs/nature. (No IVs field
+  exists to expose — this app deliberately doesn't model IVs at all, see
+  `services/parser.ts`'s own header comment; dropped from the original
+  "EVs/IVs/nature" wording above.) Bumped `TeamsDatabase.schemaVersion` to
+  2, migrated existing `isPublic: true` teams to `closed` (never `open` —
+  widening an already-public team's exposure needs an explicit choice, not
+  a silent migration) via the same real-persist-through-updateTeam pattern
+  `useTeams.ts`'s gender-split-species fix already uses, and extended
+  `worker/src/publicProfile.ts`'s `extractPublicTeam`/`extractPublicPokemon`
+  to include the full set only for `open` teams. `PublicProfileSection.tsx`
+  swapped its per-team checkbox for a Private/Closed/Open select;
+  `ProfileCard.tsx` (shared by the in-app profile page and the standalone
+  `/u/<username>` web route) renders the full set per Pokémon for an `open`
+  team, reusing `vgcPasteRowDisplay.ts`'s existing `formatEvs`/set-preview
+  layout.
   Done check: toggling a team to "open" shows its full set on the public
   profile (desktop + web); "closed" shows species/sprite only as before;
   existing public teams migrate to "closed" with no visibility change. Full
   suite passes including new Worker fixture tests for the open-tier fields.
-  Manual verification: yes
-  Review: yes (persisted data shape + Worker + sync)
+  Code done; full suite (renderer 846 tests + Worker 49 tests), lint, and
+  both `build`/`build:web` all pass. Still needs the two gates below before
+  this closes out.
+  Manual verification: yes — not yet done (toggle each tier on a real team,
+  desktop + web, including a legacy-data migration check against an
+  existing `isPublic: true` team's `teams.json`).
+  Review: yes (persisted data shape + Worker + sync) — not yet run.
 
 - **[Move Profile Editing Onto the Profile Page] — Leg 4** *(Last touched:
   2026-10-18 · Re-checks: 0)*

@@ -4,9 +4,37 @@
  * PublicProfilePage.tsx so the standalone `/u/<username>` route and the
  * in-app profile page (ProfilePage.tsx) render identical content from one
  * place instead of two hand-synced copies.
+ *
+ * A `visibility: 'open'` team's Pokemon additionally carry the full
+ * competitive set (Teamsheet Open/Closed Visibility Tiers, see TODO.md/
+ * COMPLETED.md) - rendered as an expanded per-Pokemon block below the
+ * sprite grid, same compact item/ability-nature/EVs/moves line layout
+ * VgcPasteCatalogRow.tsx's own set preview already uses. A `'closed'` team
+ * just shows the existing sprite-strip-only view.
  */
 
-import type { PublicProfile } from '../../services/syncApi';
+import type { PublicProfile, PublicTeam } from '../../services/syncApi';
+import { formatEvs } from '../../utils/vgcPasteRowDisplay';
+
+function OpenTeamSetPreview({ pokemon }: { pokemon: PublicTeam['pokemon'] }) {
+  return (
+    <div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-2 border-t border-zinc-700 pt-3 sm:grid-cols-2">
+      {pokemon.map((p, idx) => (
+        <div key={idx} className="text-xs">
+          <p className="truncate font-semibold text-zinc-100">
+            {p.nickname || p.species}
+            {p.item ? ` @ ${p.item}` : ''}
+          </p>
+          <p className="truncate text-zinc-400">
+            {[p.ability, p.nature && `${p.nature} Nature`].filter(Boolean).join(' · ') || ' '}
+          </p>
+          {p.evs && <p className="text-zinc-400">{formatEvs(p.evs)}</p>}
+          <p className="truncate text-zinc-500">{p.moves?.join(' / ') || 'No moves'}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function ProfileCard({ profile }: { profile: PublicProfile }) {
   return (
@@ -52,6 +80,7 @@ export default function ProfileCard({ profile }: { profile: PublicProfile }) {
                   </div>
                 ))}
               </div>
+              {team.visibility === 'open' && <OpenTeamSetPreview pokemon={team.pokemon} />}
             </div>
           ))}
         </div>

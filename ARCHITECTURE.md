@@ -149,12 +149,22 @@ change.
   inside an otherwise-opaque `Team`/`SavedPokemonEntry` record on purpose —
   `worker/src/publicProfile.ts`'s pure `extractPublicTeam`/
   `extractPublicFavoritePokemon` filter the stored `SyncPayload` down to
-  whichever teams have `Team.isPublic`/the account's `FavoritePokemon` has
-  `isPublic` set (both off by default), dropping a team whose name fails
-  `safetyFilter.ts`'s check entirely and blanking just a Pokémon's nickname
-  if that fails instead (Public Profiles: Per-Item Visibility Toggles, see
-  TODO.md). `FavoritePokemon` is a second account-wide singleton alongside
-  `PlayerProfile`, merged the same `mergeSingleton` last-write-wins way.
+  whichever teams/the account's `FavoritePokemon` are toggled visible
+  (private by default), dropping a team whose name fails `safetyFilter.ts`'s
+  check entirely and blanking just a Pokémon's nickname if that fails
+  instead (Public Profiles: Per-Item Visibility Toggles, see TODO.md).
+  `FavoritePokemon` keeps the original binary `isPublic` toggle; a `Team`
+  instead carries a 3-state `visibility` (`'private'`/`'closed'`/`'open'` —
+  Teamsheet Open/Closed Visibility Tiers, see TODO.md/COMPLETED.md): a
+  `closed` team exposes species/nickname/sprite only (the original exposure
+  shape), an `open` team additionally exposes its full competitive set
+  (item/ability/moves/EVs/nature) per Pokémon. An existing `isPublic: true`
+  team migrated to `closed`, never `open`, on `TeamsDatabase`'s
+  schemaVersion 1-to-2 bump (`useTeams.ts`'s `normalizeTeam`/
+  `migrateTeamVisibility`) — widening to the new full-set tier needs an
+  explicit choice, not a silent migration. `FavoritePokemon` is a second
+  account-wide singleton alongside `PlayerProfile`, merged the same
+  `mergeSingleton` last-write-wins way.
 
 ## Web build
 
