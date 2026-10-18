@@ -59,3 +59,78 @@ recognize today. pokepast.es itself and the current-default client's
 integration still work, so nothing is broken yet. Follow-up scoping item
 added to `TODO.md`'s Unscheduled section: support importing from the new
 team-link format alongside Pokepaste.
+
+## Second import source: add now or wait? (decided 2026-10-18)
+
+Revisited under Scoping Sweep — Leg 2: add
+`teams.pokemonshowdown.com/api/<action>` as a second import source now,
+parallel to `services/pokepaste.ts`'s pokepast.es fetch, or wait and
+re-check once the new client becomes default?
+
+**Decision: wait.** This leg's research closed the open auth question in
+the "add now" direction but surfaced a bigger implementation cost in the
+"wait" direction — net, demand is still too low to justify it today.
+
+### What this leg confirmed
+
+- **The read endpoint is real, documented only by third-party client
+  source (not Showdown's own repos), and needs no account.** Verified live
+  2026-10-18: `GET https://teams.pokemonshowdown.com/api/getteam?teamid=<id>&full=1`
+  (add `&password=<password>` for a private team, taken from the
+  `-<password>` suffix some share links carry) returns `]` (Showdown's
+  standard anti-JSON-hijacking prefix, same convention as other
+  `*.pokemonshowdown.com` JSON endpoints) followed by plain JSON — no
+  cookies, login, or autoconfirmed status required. This shape doesn't
+  appear anywhere in `smogon/pokemon-showdown`/`pokemon-showdown-client`
+  (searched both repos via GitHub code search - no match); it's confirmed
+  instead by a third-party Showdown chat bot's source
+  (`SlimSeb/Elsa-Mina`'s `ShowdownTeamProvider.cs`) and reproduced directly
+  against the live endpoint here. The *account-gated* path found in
+  `server/chat-plugins/teams.ts` (`TeamsHandler.validateAccess` requiring
+  `user.autoconfirmed`) only gates the in-client chat-page route
+  (`/teams view`, used by logged-in client sessions) and all mutations
+  (save/delete/setprivacy) — it does not gate this separate read endpoint.
+  So the original worry (anonymous reads might be blocked the way saves
+  are) is resolved: they aren't.
+- **But the payload is Showdown's packed team format, not export text.** A
+  live `teamid=100` fetch returned
+  `"team":"Ninetales-Alola||LightClay|SnowWarning|AuroraVeil,...` — pipe-
+  delimited fields per Pokémon, `]`-joined between Pokémon (Showdown's
+  internal `Teams.pack` format). `services/parser.ts::parseShowdownText`
+  (and `splitIntoBlocks`/`parsePokemonBlock` underneath it) only understand
+  plain Showdown export text, the same shape pokepast.es's `paste` field
+  already returns. Nothing in `src/renderer` unpacks the packed format
+  today (checked - no `pack`/`unpack` team logic exists outside
+  `SpeedTiersPage.tsx`'s unrelated usage of the word). A nonexistent team ID
+  returns `{"team":null}` rather than an HTTP error, which also needs its
+  own null check distinct from pokepaste's `response.ok` failure path.
+
+### Why this tips to "wait," not "add now"
+
+- The original Leg 2 scoping treated this as "parallel to
+  `services/pokepaste.ts`'s existing fetch" - a small, same-shaped
+  addition. It isn't: it needs a net-new packed-format unpacker (porting
+  Showdown's own unpack algorithm), its own `detectRegulationFromNotes`-
+  equivalent handling (this API has no `notes` field at all, just
+  `format`), its own link-regex in `ImportTeamModal.tsx` for both
+  `psim.us/t/<id>` and `teams.pokemonshowdown.com/view/<id>`, a new
+  `external-data-sources.md` exception, and real-response fixtures per
+  `typescript.md`'s external-API-parsing testing convention - a genuine
+  implementation leg of its own, not a quick parallel source.
+- Demand is still unconfirmed. The new client remains opt-in beta, not
+  default (per the "What exists" research above); there's no signal yet
+  that ChoiceBuds' own VGC-import users are actually hitting `psim.us/t/`
+  links today. Paying the packed-unpacker cost now would be building ahead
+  of measured demand, the same scope-discipline call this milestone already
+  made for the Tourney Tab poll (see this doc's sibling,
+  `tourney-tab-schedule-source-research.md`'s "Automated diff-check poll"
+  section) and for the password-reset flow (`docs/investigations/web-version-scope.md`).
+
+### What changes the next time this is checked
+
+Re-check once either (a) Smogon/Hecate signals the new client is becoming
+the default, or (b) a ChoiceBuds user actually reports trying to import a
+`psim.us/t/` or `teams.pokemonshowdown.com/view/` link. When that happens,
+this section's findings (endpoint shape, no-auth-for-reads, packed-format
+payload, `{"team":null}` miss case) carry forward directly into that
+implementation leg's scoping - no need to re-derive them.

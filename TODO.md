@@ -25,27 +25,11 @@ Done when:
   `docs/investigations/tourney-tab-schedule-source-research.md`.
 - Pokepaste Import: New Showdown Client Team Links has a recorded decision —
   add `teams.pokemonshowdown.com/api` as a second import source now, or wait
-  and re-check later.
+  and re-check later. **Decided 2026-10-18: wait** — see
+  `docs/investigations/pokepaste-format-research.md`'s "Second import
+  source: add now or wait?" section.
 - Public Team Browse & Upload Database has a recorded decision — a
   moderation model for public uploads, or not building it.
-
-- **[Scoping Sweep] — Leg 2** *(Last touched: 2026-10-18 · Re-checks: 0)*
-  Scoping pass for Pokepaste Import: New Showdown Client Team Links.
-  Showdown's new client (in public beta/transition, not yet default - see
-  `docs/investigations/pokepaste-format-research.md`) generates
-  `psim.us/t/<teamid>` / `teams.pokemonshowdown.com/view/<teamid>` share
-  links from its own first-party team database instead of Pokepaste. Today's
-  current-default client and `services/pokepaste.ts` still work unaffected.
-  A JSON API exists at `teams.pokemonshowdown.com/api/<action>` (same
-  `/api/` pattern Showdown uses site-wide) that a new import path could call,
-  parallel to `services/pokepaste.ts`'s existing `pokepast.es/<id>/json`
-  fetch - but unlike pokepast.es, saving a team there requires an
-  autoconfirmed Showdown account, which may or may not affect read-only
-  fetches by ID. Decide whether/how to add this as a second import source
-  now, or wait and re-check once Smogon signals the new client is becoming
-  default. Research/decision only - no implementation this leg.
-  Done check: decision recorded (add the second import source now, or wait).
-  Manual verification: no. Review: no.
 
 - **[Scoping Sweep] — Leg 3** *(Last touched: 2026-10-18 · Re-checks: 0)*
   Scoping pass for Public Team Browse & Upload Database. Split out of Public

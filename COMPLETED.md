@@ -73,3 +73,15 @@ Entries prior to this file's oldest are in:
   (scoping-only leg); see
   `docs/investigations/tourney-tab-schedule-source-research.md`'s new
   "Automated diff-check poll" section. See commit `<pending>`.
+- **[Scoping Sweep] — Leg 2** (2026-10-18). Decided to wait on adding
+  `teams.pokemonshowdown.com/api`'s `getteam` endpoint as a second
+  Pokepaste-Import source for the new Showdown client's team-share links.
+  Live-verified the endpoint is real and needs no account/auth for reads
+  (resolving the autoconfirmed-account worry from the original scoping),
+  but its payload is Showdown's packed team format, not export text —
+  `services/parser.ts` doesn't understand that shape, so this needs a
+  net-new unpacker, not a quick parallel fetch like `services/pokepaste.ts`.
+  Demand is also unconfirmed: the new client is still opt-in beta, not
+  default. No code changed (scoping-only leg); see
+  `docs/investigations/pokepaste-format-research.md`'s "Second import
+  source: add now or wait?" section. See commit `<pending>`.
