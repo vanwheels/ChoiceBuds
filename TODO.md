@@ -27,16 +27,6 @@ Done when:
   public from that account, off by default, and show/hide correctly on the
   public profile page.
 
-- **[Public Profiles: Base Route] — Leg 1** *(Last touched: 2026-10-17 ·
-  Re-checks: 0)*
-  New public, unauthenticated route showing a preset icon (from the existing
-  icon set, not user-uploadable) + username, nothing else. Public by default
-  for every account — no opt-in needed for this base view. Depends on the
-  safety filter leg above being live first — done (see COMPLETED.md).
-  Done check: visiting another account's public profile URL by username
-  shows icon + username with no login, for any existing account.
-  Manual verification: yes. Review: no.
-
 - **[Public Profiles: Per-Item Visibility Toggles] — Leg 1** *(Last
   touched: 2026-10-17 · Re-checks: 0)*
   Add opt-in, hidden-by-default visibility toggles for teams and a new

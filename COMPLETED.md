@@ -89,3 +89,23 @@ Entries prior to this file's oldest are in:
   with a disallowed username in the running app) confirmed live. See commit
   `2553a35`.
 
+- **[Public Profiles: Base Route] — Leg 1** (2026-10-17). Scoping surfaced
+  that no preset-icon-set actually exists yet (no asset folder, config
+  table, or UI anywhere in the codebase) despite the milestone's "done
+  when" wording assuming one — decided (with the user) to ship this leg
+  with one fixed placeholder icon for every profile and defer the real
+  preset-icon-set/picker to its own later leg rather than design one here.
+  Added a new public, unauthenticated Worker endpoint
+  (`GET /profile/:username`, returns only the display-case username or
+  404) and a `/u/<username>` web route (`web/main.tsx`) that mounts a
+  standalone `PublicProfilePage.tsx` instead of the full `AppWeb` shell, so
+  an unauthenticated visitor never pulls in Teams/Box/sync state. Added a
+  GitHub Pages `404.html` SPA-fallback (the classic
+  stash-URL-then-`history.replaceState` trick) so a direct link to the
+  route works on the static-hosted build, not just the dev server's
+  built-in history fallback. Manually verified the Worker endpoint
+  (lowercase/original-case lookup, 404 on unknown username, 400 on
+  malformed username) via local `wrangler dev` + curl, and the web route's
+  client-side path match via the local `dev:web` server. See commit
+  `1c7a733`.
+
