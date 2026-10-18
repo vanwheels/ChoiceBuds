@@ -29,12 +29,27 @@
  *                              reconciles in one round trip.
  *   GET  /sync/:username     - Bearer token -> stored (already-merged)
  *                              SyncPayload, 404 if none
- *   GET  /profile/:username  - no auth - {ok, username} (display case) if
- *                              the account exists, 404 otherwise. Public by
- *                              design (Public Profiles: Base Route, see
- *                              TODO.md): existence/display-case username is
- *                              the entire point of a public profile page.
- *                              Never returns passwordHash/email/createdAt.
+ *   GET  /profile/:username  - no auth - {ok, username, teams,
+ *                              favoritePokemon?} if the account exists, 404
+ *                              otherwise. Public by design (Public Profiles:
+ *                              Base Route/Per-Item Visibility Toggles, see
+ *                              TODO.md): existence/display-case username,
+ *                              plus whichever teams/favorite-Pokemon pick
+ *                              this account has individually toggled public
+ *                              (off by default - see each field's own
+ *                              `isPublic`), is the entire point of a public
+ *                              profile page. Never returns
+ *                              passwordHash/email/createdAt, and never a
+ *                              team's own moves/items/EVs - see
+ *                              extractPublicTeam below for exactly what's
+ *                              exposed per team. Team names and Pokemon
+ *                              nicknames are user-authored text that reach
+ *                              this endpoint without ever going through
+ *                              /signup's safety-filter check, so this is the
+ *                              one place the Worker checks them too
+ *                              (defense-in-depth beyond the renderer's own
+ *                              entry-point validation) - see
+ *                              docs/investigations/public-profiles-safety-filter-research.md.
  */
 
 import {
@@ -49,6 +64,7 @@ import {
 } from './crypto';
 import { mergeCollection, mergeSingleton, type SyncTombstone } from './merge';
 import { containsDisallowedContent } from './safetyFilter';
+import { extractPublicTeam, extractPublicFavoritePokemon, type PublicTeam } from './publicProfile';
 
 export interface Env {
   SYNC_KV: KVNamespace;
@@ -75,6 +91,7 @@ interface SyncPayload {
   // sync existed (an older client, or a blob stored before this field was
   // introduced) simply won't have one - see mergeSingleton.
   playerProfile?: HasUpdatedAt;
+  favoritePokemon?: HasUpdatedAt;
   savedAt: number;
 }
 
@@ -282,12 +299,41 @@ async function handleLogin(request: Request, env: Env): Promise<Response> {
   return jsonResponse({ ok: true, token });
 }
 
+/**
+ * Reads this account's stored sync blob the same R2-with-legacy-KV-fallback
+ * way handleSyncGet does, but parsed (rather than passed through as raw
+ * text) since the caller needs to look inside it - falls back to
+ * EMPTY_SYNC_PAYLOAD rather than 404ing, since "no sync data pushed yet" is
+ * a normal state for a public profile to show (just no public teams/pick).
+ */
+async function getStoredSyncPayloadForProfile(
+  env: Env,
+  lowerUsername: string,
+): Promise<SyncPayload> {
+  const r2Object = await env.SYNC_R2.get(syncKey(lowerUsername));
+  if (r2Object !== null) {
+    return JSON.parse(await r2Object.text());
+  }
+  const stored = await env.SYNC_KV.get(syncKey(lowerUsername));
+  return stored ? JSON.parse(stored) : EMPTY_SYNC_PAYLOAD;
+}
+
 async function handleProfileGet(env: Env, lowerUsername: string): Promise<Response> {
   const account = await getAccount(env, lowerUsername);
   if (!account) {
     return errorResponse('Account not found', 404);
   }
-  return jsonResponse({ ok: true, username: account.username });
+
+  const payload = await getStoredSyncPayloadForProfile(env, lowerUsername);
+  const teams = payload.teams.map(extractPublicTeam).filter((t): t is PublicTeam => t !== null);
+  const favoritePokemon = extractPublicFavoritePokemon(payload.favoritePokemon);
+
+  return jsonResponse({
+    ok: true,
+    username: account.username,
+    teams,
+    ...(favoritePokemon ? { favoritePokemon } : {}),
+  });
 }
 
 async function handleSyncGet(env: Env, lowerUsername: string, request: Request): Promise<Response> {
@@ -345,7 +391,8 @@ async function handleSyncPut(env: Env, lowerUsername: string, request: Request):
     !isTombstoneArray(parsed.battleTombstones) ||
     !isRecordArray(parsed.savedPokemon) ||
     !isTombstoneArray(parsed.savedPokemonTombstones) ||
-    !isOptionalSingleton(parsed.playerProfile)
+    !isOptionalSingleton(parsed.playerProfile) ||
+    !isOptionalSingleton(parsed.favoritePokemon)
   ) {
     return errorResponse(
       'Body must include teams/battles/savedPokemon arrays and their tombstone arrays',
@@ -397,6 +444,7 @@ async function handleSyncPut(env: Env, lowerUsername: string, request: Request):
     incoming.savedPokemonTombstones,
   );
   const playerProfile = mergeSingleton(existing.playerProfile, incoming.playerProfile);
+  const favoritePokemon = mergeSingleton(existing.favoritePokemon, incoming.favoritePokemon);
 
   const merged: SyncPayload = {
     teams: teamsMerge.records,
@@ -406,6 +454,7 @@ async function handleSyncPut(env: Env, lowerUsername: string, request: Request):
     savedPokemon: savedPokemonMerge.records,
     savedPokemonTombstones: savedPokemonMerge.tombstones,
     ...(playerProfile ? { playerProfile } : {}),
+    ...(favoritePokemon ? { favoritePokemon } : {}),
     savedAt: Date.now(),
   };
 

@@ -22,6 +22,15 @@ export const PLAYER_PROFILE = {
   updatedAt: 0,
 };
 
+export const FAVORITE_POKEMON = {
+  species: '',
+  spriteUrl: '',
+  shinySpriteUrl: '',
+  shiny: false,
+  isPublic: false,
+  updatedAt: 0,
+};
+
 export function makeSettings(overrides: Partial<AppSettings> = {}): AppSettings {
   return {
     schemaVersion: 1,
@@ -35,6 +44,7 @@ export function makeSettings(overrides: Partial<AppSettings> = {}): AppSettings 
     boxCustomOrderSeeded: false,
     lastSeenReleaseNotesVersion: null,
     playerProfile: PLAYER_PROFILE,
+    favoritePokemon: FAVORITE_POKEMON,
     lastModified: Date.now(),
     ...overrides,
   };

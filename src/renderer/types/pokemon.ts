@@ -147,6 +147,14 @@ export interface Team {
   // before this field existed) falls back to the array's existing stable
   // relative order, same as before this field existed.
   sortOrder?: number;
+  // Public Profiles: Per-Item Visibility Toggles (see TODO.md/COMPLETED.md) -
+  // off by default, same undefined-means-false convention as favorite/
+  // sortOrder above. Toggled from the Public Profile Settings section
+  // (PublicProfileSection.tsx), not from the team card itself. Once on,
+  // this team's name and a species/nickname/sprite-only view of its roster
+  // (no moves/items/EVs) become visible on this account's public profile
+  // page via the Worker's public GET /profile/:username.
+  isPublic?: boolean;
 }
 
 /**

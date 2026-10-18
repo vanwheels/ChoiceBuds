@@ -133,6 +133,16 @@ the matching hook.
   than letting a late response resurrect a local delete — see
   `docs/investigations/teamcard-notes-sync-race.md` for the race this
   closes (first fixed in `useTeams.ts`, then mirrored into the other two).
+- `GET /profile/:username` (no auth) is the one place the Worker reads
+  inside an otherwise-opaque `Team`/`SavedPokemonEntry` record on purpose —
+  `worker/src/publicProfile.ts`'s pure `extractPublicTeam`/
+  `extractPublicFavoritePokemon` filter the stored `SyncPayload` down to
+  whichever teams have `Team.isPublic`/the account's `FavoritePokemon` has
+  `isPublic` set (both off by default), dropping a team whose name fails
+  `safetyFilter.ts`'s check entirely and blanking just a Pokémon's nickname
+  if that fails instead (Public Profiles: Per-Item Visibility Toggles, see
+  TODO.md). `FavoritePokemon` is a second account-wide singleton alongside
+  `PlayerProfile`, merged the same `mergeSingleton` last-write-wins way.
 
 ## Web build
 

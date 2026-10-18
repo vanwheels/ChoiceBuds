@@ -116,7 +116,7 @@ export function useSync(
   savedPokemonState: UseSavedPokemonReturn,
 ): UseSyncReturn {
   const { settings, updateSettings } = settingsState;
-  const { syncUsername, syncToken, lastSyncedAt, playerProfile } = settings;
+  const { syncUsername, syncToken, lastSyncedAt, playerProfile, favoritePokemon } = settings;
 
   const [internalStatus, setStatus] = useState<SyncStatus>(() =>
     settings.syncUsername ? 'idle' : 'signed-out',
@@ -257,6 +257,7 @@ export function useSync(
           savedPokemon: fixSavedPokemonForSync(savedPokemonState.savedPokemon),
           savedPokemonTombstones: savedPokemonState.tombstones,
           playerProfile,
+          favoritePokemon,
           savedAt: Date.now(),
         };
 
@@ -273,13 +274,15 @@ export function useSync(
           savedPokemonState.applySyncedState(merged.savedPokemon, payload.savedPokemonTombstones),
         ]);
 
-        // merged.playerProfile is missing when the account's Worker hasn't
-        // been redeployed with profile-sync support yet (see SyncPayload's
-        // comment) - leave the local profile alone rather than treating a
-        // field the old Worker never echoed back as "deleted."
+        // merged.playerProfile/favoritePokemon are missing when the
+        // account's Worker hasn't been redeployed with that field's sync
+        // support yet (see SyncPayload's comment) - leave the local value
+        // alone rather than treating a field the old Worker never echoed
+        // back as "deleted."
         await updateSettings({
           lastSyncedAt: merged.savedAt,
           ...(merged.playerProfile ? { playerProfile: merged.playerProfile } : {}),
+          ...(merged.favoritePokemon ? { favoritePokemon: merged.favoritePokemon } : {}),
         });
         setStatus('idle');
         return { ok: true };
@@ -308,6 +311,7 @@ export function useSync(
     battlesState,
     savedPokemonState,
     playerProfile,
+    favoritePokemon,
   ]);
 
   // Always-current ref so the trigger effects below (keyed only on
@@ -359,11 +363,12 @@ export function useSync(
       syncNowRef.current();
     }, AUTO_SYNC_DEBOUNCE_MS);
     return () => clearTimeout(timeoutId);
-    // Deliberately excludes playerProfile: unlike teams/battles/savedPokemon,
-    // an edit there isn't debounce-triggered - it still reaches the Worker
-    // via the next mount sync, the 5-minute fallback poll, or whichever of
-    // these three collections' own debounced sync fires next. Not worth a
-    // second debounce effect/skip-ref pair for a field that changes rarely.
+    // Deliberately excludes playerProfile/favoritePokemon: unlike
+    // teams/battles/savedPokemon, an edit there isn't debounce-triggered -
+    // it still reaches the Worker via the next mount sync, the 5-minute
+    // fallback poll, or whichever of these three collections' own debounced
+    // sync fires next. Not worth a second debounce effect/skip-ref pair for
+    // fields that change rarely.
   }, [
     syncUsername,
     syncToken,

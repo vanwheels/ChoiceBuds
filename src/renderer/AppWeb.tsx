@@ -332,6 +332,7 @@ export default function AppWeb() {
                   releaseNotesState={releaseNotesState}
                   databaseState={databaseState}
                   gameDataState={gameDataState}
+                  speciesRosterState={speciesRosterState}
                 />
               </Suspense>
             </div>

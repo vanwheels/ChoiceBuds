@@ -10,14 +10,20 @@
  * Icon is a single fixed placeholder (the existing mascot.png DownloadPage.tsx
  * already uses) rather than a real preset-icon-set/picker - that's deferred
  * to its own later leg, this one only needed the route + username to exist.
+ *
+ * Teams/favorite Pokémon (Public Profiles: Per-Item Visibility Toggles, see
+ * TODO.md) are opt-in per account, off by default - `profile.teams`/
+ * `profile.favoritePokemon` are already filtered server-side
+ * (worker/src/index.ts::handleProfileGet) to just what's toggled public, so
+ * this component renders whatever it's handed with no further gating.
  */
 
 import { useEffect, useState } from 'react';
-import { fetchPublicProfile } from '../services/syncApi';
+import { fetchPublicProfile, type PublicProfile } from '../services/syncApi';
 
 type LoadState =
   | { status: 'loading' }
-  | { status: 'found'; username: string }
+  | { status: 'found'; profile: PublicProfile }
   | { status: 'not-found' }
   | { status: 'error'; message: string };
 
@@ -30,9 +36,7 @@ export default function PublicProfilePage({ username }: { username: string }) {
     fetchPublicProfile(username)
       .then((profile) => {
         if (cancelled) return;
-        setState(
-          profile ? { status: 'found', username: profile.username } : { status: 'not-found' },
-        );
+        setState(profile ? { status: 'found', profile } : { status: 'not-found' });
       })
       .catch((err: unknown) => {
         if (cancelled) return;
@@ -56,7 +60,52 @@ export default function PublicProfilePage({ username }: { username: string }) {
       {state.status === 'found' && (
         <>
           <img src="/mascot.png" alt="" className="h-20 w-20" />
-          <h1 className="mt-6 text-2xl font-bold">{state.username}</h1>
+          <h1 className="mt-6 text-2xl font-bold">{state.profile.username}</h1>
+
+          {state.profile.favoritePokemon && (
+            <div className="mt-6 flex flex-col items-center">
+              <span className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
+                Favorite Pokémon
+              </span>
+              <img
+                src={state.profile.favoritePokemon.spriteUrl}
+                alt={state.profile.favoritePokemon.species}
+                className="h-20 w-20 object-contain [image-rendering:pixelated]"
+              />
+              <span className="text-sm text-zinc-300">{state.profile.favoritePokemon.species}</span>
+            </div>
+          )}
+
+          {state.profile.teams.length > 0 && (
+            <div className="mt-10 flex w-full max-w-xl flex-col gap-4">
+              {state.profile.teams.map((team) => (
+                <div key={team.id} className="rounded-lg border border-zinc-700 bg-zinc-800 p-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-sm font-bold text-zinc-100">
+                      {team.name || 'Untitled Team'}
+                    </h2>
+                    <span className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
+                      {team.format}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {team.pokemon.map((p, idx) => (
+                      <div key={idx} className="flex flex-col items-center w-14">
+                        <img
+                          src={p.spriteUrl}
+                          alt={p.species}
+                          className="h-12 w-12 object-contain [image-rendering:pixelated]"
+                        />
+                        <span className="w-full truncate text-center text-[10px] text-zinc-400">
+                          {p.nickname || p.species}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </>
       )}
 

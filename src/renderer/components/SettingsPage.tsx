@@ -11,11 +11,13 @@ import type { UseReleaseNotesReturn } from '../hooks/useReleaseNotes';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSyncReturn } from '../hooks/useSync';
+import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
 import { ALL_REGULATION_IDS, getRegulationLabel, toRegulationId } from '../utils/pokemonRules';
 import SyncSection from './SyncSection';
 import UpdateCheckSection from './UpdateCheckSection';
 import ReleaseNotesSection from './ReleaseNotesSection';
 import PlayerProfileSection from './PlayerProfileSection';
+import PublicProfileSection from './PublicProfileSection';
 import GameDataResetSection from './GameDataResetSection';
 import AppStatusSection from './AppStatusSection';
 
@@ -31,6 +33,7 @@ interface SettingsPageProps {
   releaseNotesState: UseReleaseNotesReturn;
   databaseState: UseDatabaseReturn;
   gameDataState: UseGameDataReturn;
+  speciesRosterState: UseSpeciesRosterReturn;
 }
 
 export default function SettingsPage({
@@ -41,6 +44,7 @@ export default function SettingsPage({
   releaseNotesState,
   databaseState,
   gameDataState,
+  speciesRosterState,
 }: SettingsPageProps) {
   const { settings, setDefaultRegulation, updateSettings } = settingsState;
   const currentId = toRegulationId(settings.defaultRegulation);
@@ -92,6 +96,13 @@ export default function SettingsPage({
       <PlayerProfileSection settingsState={settingsState} />
 
       <SyncSection syncState={syncState} />
+
+      <PublicProfileSection
+        settingsState={settingsState}
+        teamsState={teamsState}
+        syncState={syncState}
+        speciesRosterState={speciesRosterState}
+      />
 
       <GameDataResetSection databaseState={databaseState} gameDataState={gameDataState} />
 

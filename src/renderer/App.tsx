@@ -312,6 +312,7 @@ export default function App() {
                     releaseNotesState={releaseNotesState}
                     databaseState={databaseState}
                     gameDataState={gameDataState}
+                    speciesRosterState={speciesRosterState}
                   />
                 </Suspense>
               </div>

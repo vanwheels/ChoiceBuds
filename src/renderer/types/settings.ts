@@ -44,6 +44,26 @@ export interface PlayerProfile {
 export type BoxSortMode = 'alphabetical' | 'custom';
 
 /**
+ * Account-wide "favorite Pokémon" showcase pick for the public profile page
+ * (Public Profiles: Per-Item Visibility Toggles, see TODO.md) - a
+ * species-only pick (no EVs/moves/item, unlike a real team build), off by
+ * default, with its own `updatedAt` for the sync Worker's last-write-wins
+ * singleton merge - same pattern as PlayerProfile below. `spriteUrl`/
+ * `shinySpriteUrl` are copied straight from the SpeciesRosterEntry the user
+ * picked (useSpeciesRoster.ts) at pick time rather than re-derived from
+ * species+dex-number later, so the public profile page can render the
+ * sprite without ever loading the full species roster itself.
+ */
+export interface FavoritePokemon {
+  species: string; // SpeciesRosterEntry.name; '' = none picked
+  spriteUrl: string;
+  shinySpriteUrl: string;
+  shiny: boolean;
+  isPublic: boolean;
+  updatedAt: number;
+}
+
+/**
  * TeamsPage.tsx's regulation filter - 'All' plus whichever RegulationLabel
  * is picked. Persisted per-device (not synced, same as boxSortMode/
  * showAnimatedSprites below) so it survives a reload instead of resetting
@@ -78,6 +98,7 @@ export interface AppSettings {
   // later toggle back to Custom never clobbers an already-dragged order.
   boxCustomOrderSeeded: boolean;
   playerProfile: PlayerProfile;
+  favoritePokemon: FavoritePokemon;
   // Version last shown in the Release Notes startup popup (hooks/useReleaseNotes.ts).
   // null means "never shown" - on a fresh install this is used to silently mark
   // the current version seen with no popup (nothing reads as "new" to a
@@ -109,5 +130,10 @@ export interface SyncPayload {
   // validates the fields it knows about), so its merge response omits it -
   // useSync.ts must tolerate that and leave the local profile untouched.
   playerProfile?: PlayerProfile;
+  // Same optional-on-the-wire treatment as playerProfile above - a Worker
+  // not yet redeployed with this leg's code simply never echoes it back,
+  // and useSync.ts must leave the local value alone rather than treating
+  // that omission as "deleted."
+  favoritePokemon?: FavoritePokemon;
   savedAt: number; // Unix timestamp the Worker computed this merge - client-supplied values are ignored/overwritten
 }

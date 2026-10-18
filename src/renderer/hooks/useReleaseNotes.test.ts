@@ -33,6 +33,14 @@ function makeSettings(overrides: Partial<AppSettings> = {}): AppSettings {
       switchProfileName: '',
       updatedAt: 0,
     },
+    favoritePokemon: {
+      species: '',
+      spriteUrl: '',
+      shinySpriteUrl: '',
+      shiny: false,
+      isPublic: false,
+      updatedAt: 0,
+    },
     lastModified: Date.now(),
     ...overrides,
   };

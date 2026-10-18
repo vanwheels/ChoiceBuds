@@ -1,7 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { cleanup, waitFor, act } from '@testing-library/react';
 import type { SyncPayload } from '../types/pokemon';
-import { PLAYER_PROFILE, emptyMergedPayload, makeTeam, setup } from './useSyncTestHelpers';
+import {
+  FAVORITE_POKEMON,
+  PLAYER_PROFILE,
+  emptyMergedPayload,
+  makeTeam,
+  setup,
+} from './useSyncTestHelpers';
 
 // syncNow, split out of the former useSync.test.ts. See useSync.test.ts for
 // status/signUp/logIn/logOut and useSync.autoSync.test.ts for the debounced/
@@ -71,6 +77,7 @@ describe('useSync', () => {
         savedPokemon: savedPokemonState.savedPokemon,
         savedPokemonTombstones: savedPokemonState.tombstones,
         playerProfile: PLAYER_PROFILE,
+        favoritePokemon: FAVORITE_POKEMON,
         savedAt: expect.any(Number),
       });
       expect(teamsState.applySyncedState).toHaveBeenLastCalledWith([remoteTeam], []);
@@ -100,6 +107,37 @@ describe('useSync', () => {
 
     it('leaves the local playerProfile untouched when the Worker omits it (un-redeployed account)', async () => {
       mockedPush.mockResolvedValue(emptyMergedPayload({ savedAt: 42_000 })); // no playerProfile key, same as an old Worker's response
+      const { result, updateSettings } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
+      await waitFor(() => expect(mockedPush).toHaveBeenCalledTimes(1)); // mount-triggered auto-sync
+
+      await act(async () => {
+        await result.current.syncNow();
+      });
+
+      expect(updateSettings).toHaveBeenLastCalledWith({ lastSyncedAt: 42_000 });
+    });
+
+    it('applies the merged favoritePokemon back when the Worker returns one', async () => {
+      const remoteFavorite = { ...FAVORITE_POKEMON, species: 'Flutter Mane', updatedAt: 99_000 };
+      mockedPush.mockResolvedValue(
+        emptyMergedPayload({ favoritePokemon: remoteFavorite, savedAt: 42_000 }),
+      );
+
+      const { result, updateSettings } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
+      await waitFor(() => expect(mockedPush).toHaveBeenCalledTimes(1)); // mount-triggered auto-sync
+
+      await act(async () => {
+        await result.current.syncNow();
+      });
+
+      expect(updateSettings).toHaveBeenLastCalledWith({
+        lastSyncedAt: 42_000,
+        favoritePokemon: remoteFavorite,
+      });
+    });
+
+    it('leaves the local favoritePokemon untouched when the Worker omits it (un-redeployed account)', async () => {
+      mockedPush.mockResolvedValue(emptyMergedPayload({ savedAt: 42_000 })); // no favoritePokemon key, same as an old Worker's response
       const { result, updateSettings } = setup({ syncUsername: 'ethan', syncToken: 'tok' });
       await waitFor(() => expect(mockedPush).toHaveBeenCalledTimes(1)); // mount-triggered auto-sync
 

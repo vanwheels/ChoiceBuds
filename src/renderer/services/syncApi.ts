@@ -104,12 +104,34 @@ export async function pushSyncData(
   return response.json();
 }
 
+/** A team's public-safe view, as served by GET /profile/:username - see worker/src/index.ts::extractPublicTeam. */
+export interface PublicTeam {
+  id: string;
+  name: string;
+  format: string;
+  pokemon: { species: string; nickname?: string; spriteUrl: string }[];
+}
+
+/** See worker/src/index.ts::extractPublicFavoritePokemon. */
+export interface PublicFavoritePokemon {
+  species: string;
+  spriteUrl: string;
+}
+
+export interface PublicProfile {
+  username: string;
+  teams: PublicTeam[];
+  favoritePokemon?: PublicFavoritePokemon;
+}
+
 /**
- * Public, unauthenticated profile lookup (Public Profiles: Base Route, see
- * TODO.md) - returns the account's display-case username if it exists, or
- * null if no account has that username. Never requires/sends a token.
+ * Public, unauthenticated profile lookup (Public Profiles: Base Route/
+ * Per-Item Visibility Toggles, see TODO.md) - returns the account's
+ * display-case username plus whichever teams/favorite-Pokemon pick it has
+ * toggled public, or null if no account has that username. Never
+ * requires/sends a token.
  */
-export async function fetchPublicProfile(username: string): Promise<{ username: string } | null> {
+export async function fetchPublicProfile(username: string): Promise<PublicProfile | null> {
   const response = await fetchWithTimeout(
     `${SYNC_WORKER_URL}/profile/${encodeURIComponent(username)}`,
   );
@@ -123,7 +145,11 @@ export async function fetchPublicProfile(username: string): Promise<{ username: 
   }
 
   const body = await response.json();
-  return { username: body.username };
+  return {
+    username: body.username,
+    teams: Array.isArray(body.teams) ? body.teams : [],
+    favoritePokemon: body.favoritePokemon,
+  };
 }
 
 /** Returns null if no data has ever been pushed under this account */

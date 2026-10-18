@@ -4,7 +4,12 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import type { AppSettings, PlayerProfile, RegulationLabel } from '../types/pokemon';
+import type {
+  AppSettings,
+  FavoritePokemon,
+  PlayerProfile,
+  RegulationLabel,
+} from '../types/pokemon';
 import { getStorageAdapter } from '../services/storage';
 import { getLatestSeason } from '../config/seasons';
 
@@ -19,6 +24,15 @@ const DEFAULT_PLAYER_PROFILE: PlayerProfile = {
   updatedAt: 0, // "never touched" - a real edit from any device (a real Date.now()) always wins the sync merge over this
 };
 
+const DEFAULT_FAVORITE_POKEMON: FavoritePokemon = {
+  species: '',
+  spriteUrl: '',
+  shinySpriteUrl: '',
+  shiny: false,
+  isPublic: false,
+  updatedAt: 0, // same "never touched" convention as DEFAULT_PLAYER_PROFILE above
+};
+
 const DEFAULT_SETTINGS: AppSettings = {
   schemaVersion: 1,
   defaultRegulation: getLatestSeason().regulation,
@@ -30,6 +44,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   boxSortMode: 'alphabetical',
   boxCustomOrderSeeded: false,
   playerProfile: DEFAULT_PLAYER_PROFILE,
+  favoritePokemon: DEFAULT_FAVORITE_POKEMON,
   lastSeenReleaseNotesVersion: null,
   lastModified: Date.now(),
 };
