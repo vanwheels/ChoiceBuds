@@ -165,10 +165,17 @@ Done when:
   Group previewed teams on the profile page into separate open-teamsheet /
   closed-teamsheet sections, and add a layout control for how they're
   displayed (e.g. grid vs. list). Applies to both your own editable profile
-  view and visiting another account's.
+  view and visiting another account's. Also carries a visual-style redo
+  flagged live during Teamsheet Open/Closed Visibility Tiers Leg 3
+  (2026-10-18): `ProfileCard.tsx`'s current per-team render (plain text
+  rows for item/ability/nature/EVs/moves) should look like real team
+  cards/the export image format instead — applies to both open and closed
+  tiers, not just open's extra fields.
   Done check: a profile with both open and closed teams shows them in two
   distinct sections; switching the layout control changes the display
-  without losing drag order from Leg 2.
+  without losing drag order from Leg 2; both tiers render as styled cards
+  matching TeamCard.tsx/the export image's visual language, not a plain
+  text dump.
   Manual verification: yes
 
 - **[Regulation Filter on Profile Page] — Leg 4**
