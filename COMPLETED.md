@@ -63,6 +63,18 @@ Entries prior to this file's oldest are in:
   (the Scoping Sweep milestone's three legs, split out at the 2026-10-18
   Scoping Sweep boundary)
 
+## Sidebar Footer Profile Entry — Leg 2 (2026-10-18)
+
+Pinned a profile icon+username entry above the Settings entry in both the
+desktop rail and mobile drawer (`Sidebar.tsx`), opening Leg 1's in-app
+`ProfilePage` for the signed-in account via `useProfileNav`. `renderNavItem`
+was generalized to take an explicit `isActive`/key pair instead of deriving
+it from `ActiveTab`, so this entry can reuse the same row styling/active-
+highlight/collapsed-tooltip the tab items already have. Hidden entirely
+when signed out (`syncUsername` is null) - on web that leaves the sidebar's
+existing `renderFooter` sign-in prompt as the only footer content, same as
+before this leg. See commit 258dcf0.
+
 ## In-App Profile Page & Navigation Shell — Leg 1 (2026-10-18)
 
 Added an in-app profile page reachable from any tab in both `App.tsx` and

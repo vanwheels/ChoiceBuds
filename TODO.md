@@ -27,17 +27,6 @@ Done when:
   (private/closed/open) happens directly on the profile page, not in
   Settings.
 
-- **[Sidebar Footer Profile Entry] — Leg 2** *(Last touched: 2026-10-18 ·
-  Re-checks: 0)*
-  Pin a profile icon+username entry to the bottom of the sidebar (desktop
-  rail + mobile drawer), below/alongside the existing Settings entry, that
-  opens Leg 1's profile page when clicked. Signed-out web falls back to
-  whatever the sidebar's footer slot already shows (the sign-in prompt)
-  rather than a profile entry with nothing behind it.
-  Done check: the sidebar shows the current account's icon+name pinned at
-  the bottom on every tab, and clicking it opens the in-app profile page.
-  Manual verification: yes
-
 - **[Teamsheet Open/Closed Visibility Tiers] — Leg 3** *(Last touched:
   2026-10-18 · Re-checks: 0)*
   Replace the binary `Team.isPublic` with a 3-state visibility
