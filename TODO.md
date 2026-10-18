@@ -55,20 +55,9 @@ Done when:
   hand-maintained config - enough to scope the actual Tourney Tab UI leg
   later.
 
-- **[Competitive Events: Tourney Tab Research] — Leg 1** *(Last touched:
-  2026-10-17 · Re-checks: 0)*
-  Curated list (GC, Regionals, Internationals, Worlds - The Pokémon
-  Company International's own sanctioned/sponsored events only, not
-  freeform user-created events). Research pass for a live/structured
-  schedule source (e.g. Play! Pokémon's event locator); falls back to a
-  hand-maintained config file (same pattern as
-  `config/championsMoveOverrides.ts`) if nothing reliable turns up. A live
-  source would need its own new numbered exception added to
-  `external-data-sources.md`.
-  Done check: decision recorded - live source (with a drafted new
-  numbered exception) or hand-maintained fallback - sufficient to scope
-  the Tourney Tab UI leg later.
-  Manual verification: no. Review: no.
+All three done-when items are now satisfied (see `COMPLETED.md`'s Bug Fix
+& Research Sweep section for all three legs) - this milestone is ready for
+`/close-milestone`.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
@@ -164,9 +153,12 @@ Challenge"; Leg 1's schedule-source research moved into the current Bug
 Fix & Research Sweep milestone 2026-10-17). Decided: a curated list, not
 freeform user-created events - GC (Global Challenge), Regionals,
 International Championships, and Worlds, i.e. The Pokémon Company
-International's own sanctioned/sponsored events only. Depends on the
-research leg's outcome (live source vs. hand-maintained config fallback) -
-not yet scoped into a concrete leg. Once that resolves: UI showing
-upcoming events with dates, location, and signup deadlines where
-available.
+International's own sanctioned/sponsored events only. Schedule-source
+research resolved 2026-10-17: no live source exists, so this builds on a
+hand-maintained config (same pattern as `config/championsMoveOverrides.ts`,
+hand-authored from Serebii's `playpokemon` pages) - see
+`docs/investigations/tourney-tab-schedule-source-research.md`. Not yet
+scoped into a concrete leg: UI showing upcoming events with dates,
+location, and signup deadlines where available, plus the config file
+itself.
 

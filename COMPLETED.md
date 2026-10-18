@@ -74,5 +74,20 @@ Entries prior to this file's oldest are in:
   scoping item (support importing the new team-link format) was added to
   `TODO.md`'s Unscheduled section.
 
+- **Competitive Events: Tourney Tab Research — Leg 1** (2026-10-17). No
+  live/structured schedule source exists for TPCi's own sanctioned/
+  sponsored VGC events (GC, Regionals, Internationals, Worlds) - the
+  official Play! Pokémon Event Locator is a store/venue proximity search,
+  not a majors-calendar feed, and the only calendar-shaped data comes from
+  unofficial fan trackers (`pokedata.ovh`, `dittobase.com`) with no
+  documented public API. Falls back to a hand-maintained config file (same
+  pattern as `config/championsMoveOverrides.ts`), hand-authored from
+  Serebii's `playpokemon` pages under the existing exception #2
+  manual-research allowance - no new `external-data-sources.md` exception
+  needed. No code changed (research-only leg); see
+  `docs/investigations/tourney-tab-schedule-source-research.md` and the
+  updated Competitive Events: Tourney Tab UI entry in `TODO.md`'s Future
+  Milestones section.
+
 No other entries yet since the last milestone boundary.
 
