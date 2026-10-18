@@ -141,3 +141,31 @@ Entries prior to this file's oldest are in:
   needs its own separate `wrangler deploy` before any Worker-side change
   here is actually live. See commit `f0bb5cb`.
 
+- **[Public Profiles: Per-Item Visibility Toggles] — Leg 2** (2026-10-17).
+  Live verification of Leg 1 surfaced a real sync bug, not just the known
+  Worker-redeploy gotcha: toggling a team/the favorite pick public 400'd
+  with "Body must include teams/battles/savedPokemon arrays..." on every
+  sync attempt. Root cause: `useSettings.ts`'s load-time migration
+  (`{ ...DEFAULT_SETTINGS, ...database }`) only backfills top-level keys
+  missing from the saved file entirely - the user's `playerProfile` object
+  predated that interface's `updatedAt` field (added in an earlier leg) and
+  kept its old shape through the shallow spread, so `updatedAt` loaded as
+  `undefined`, which `JSON.stringify` drops on the wire and the Worker's
+  `isOptionalSingleton` check rejects outright, failing the *entire* push
+  including unrelated teams/battles/savedPokemon. Fixed by deep-backfilling
+  `playerProfile`/`favoritePokemon` to a real `Date.now()` `updatedAt` (not
+  the `DEFAULT_*`'s `0` "never touched" placeholder, since this was real,
+  in-use data) and persisting the correction, same one-time-migration
+  pattern the file's existing `defaultRegulation` fix already uses. Shared
+  by both the desktop and web builds (`useSettings.ts` is common code), so
+  it needed both a renderer fix (pushed to `main`, live via `deploy-web.yml`)
+  and confirmation it also corrected the desktop app's own `settings.json`
+  on next launch. Separately, the live public profile page still showed
+  nothing after that fix landed - `GET /profile/vanny` returned only
+  `{"ok":true,"username":"vanny"}`, confirming the live Worker was still
+  running a build from before Leg 1's `teams`/`favoritePokemon` fields were
+  added to `handleProfileGet` (same manual-`wrangler deploy` gotcha as the
+  Base Route leg, hit again). User ran `wrangler deploy`; live
+  `/u/vanny` then correctly showed the two public teams and the favorite
+  Pokémon pick, confirmed by screenshot. See commit `14cbca3`.
+

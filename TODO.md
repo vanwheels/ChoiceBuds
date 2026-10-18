@@ -28,10 +28,10 @@ Done when:
   public profile page.
 
 All three done-when criteria are met as of Per-Item Visibility Toggles —
-Leg 1 (commit f0bb5cb) - this milestone looks ready for `/close-milestone`.
-Manual verification of that leg (toggling a team/the favorite pick public
-and confirming it shows/hides correctly on the live `/u/<username>` page)
-is still outstanding - see COMPLETED.md.
+Leg 1 (commit f0bb5cb), and live verification (toggling a team/the favorite
+pick public and confirming it shows/hides correctly on the live
+`/u/<username>` page) is now also done as of Leg 2 (see COMPLETED.md) - this
+milestone looks ready for `/close-milestone`.
 
 ## Blocked
 
