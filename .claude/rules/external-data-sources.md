@@ -148,6 +148,15 @@ percentage before hardcoding it — a shared prose reference page condensed
 into a summary has silently dropped stat/effect count and mislabeled
 chance-based vs. guaranteed effects before.
 
+When confirming or closing a rumor about an external tool/service's
+behavior or format (e.g. "is Pokepaste being deprecated"), check any beta/
+in-transition version of that tool, not just its current default/stable
+behavior, before concluding the question is answered — a 2026-10-17 pass on
+the Pokepaste format-deprecation rumor closed it as false by checking only
+Showdown's default client, then had to self-correct same-day once the
+in-beta new client's actual behavior (replacing Pokepaste outright) came to
+light.
+
 ## Keeping this current
 
 Any new external data or asset source (a new site to hotlink from, a new

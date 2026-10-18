@@ -42,23 +42,6 @@ unblocked.
   peer-range rejection + real runtime crash reports). Currently on
   TypeScript ^6.0.3.
 
-## Current Milestone: Bug Fix & Research Sweep
-
-Done when:
-- Mobile empty-team "Add Pokémon" bug is reproduced (or ruled out) and
-  either fixed in this milestone or has a concretely scoped follow-up leg.
-- Pokepaste format-deprecation rumor is confirmed or closed, with a
-  citation recorded.
-- Tourney Tab schedule-source question is resolved - either a live source
-  identified (with a drafted new exception for
-  `external-data-sources.md`) or a decision to fall back to a
-  hand-maintained config - enough to scope the actual Tourney Tab UI leg
-  later.
-
-All three done-when items are now satisfied (see `COMPLETED.md`'s Bug Fix
-& Research Sweep section for all three legs) - this milestone is ready for
-`/close-milestone`.
-
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
 - **[Mobile Teams: Add Pokémon Entry Point] — Leg 1** *(Last touched:
