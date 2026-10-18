@@ -21,29 +21,13 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 Done when:
 - Tourney Tab: Schedule Change Detection has a recorded decision — build a
   periodic Serebii diff-check poll (and on what cadence), or stay fully
-  manual.
+  manual. **Decided 2026-10-18: stay fully manual, no poll built** — see
+  `docs/investigations/tourney-tab-schedule-source-research.md`.
 - Pokepaste Import: New Showdown Client Team Links has a recorded decision —
   add `teams.pokemonshowdown.com/api` as a second import source now, or wait
   and re-check later.
 - Public Team Browse & Upload Database has a recorded decision — a
   moderation model for public uploads, or not building it.
-
-- **[Scoping Sweep] — Leg 1** *(Last touched: 2026-10-18 · Re-checks: 0)*
-  Scoping pass for Tourney Tab: Schedule Change Detection. TPCi's
-  announcement cadence for Regionals/Internationals is irregular enough that
-  even a fixed re-check interval could miss changes - this past week alone
-  added 2 unannounced Regionals mid-season. No live/structured schedule
-  source exists (confirmed in
-  `docs/investigations/tourney-tab-schedule-source-research.md`), so
-  `config/tourneyEvents.ts` stays hand-authored per
-  `external-data-sources.md` exception #2 regardless. Decide whether a
-  periodic (e.g. monthly) automated diff-check against Serebii's
-  `playpokemon` pages - flagging a change for manual review/update rather
-  than auto-writing the config - is worth building, or whether manual
-  re-check stays fully user-driven. Research/decision only - no
-  implementation this leg.
-  Done check: decision recorded (build the poll + cadence, or stay manual).
-  Manual verification: no. Review: no.
 
 - **[Scoping Sweep] — Leg 2** *(Last touched: 2026-10-18 · Re-checks: 0)*
   Scoping pass for Pokepaste Import: New Showdown Client Team Links.

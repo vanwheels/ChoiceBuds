@@ -59,3 +59,33 @@ balance-override files: a living document, re-checked each time a new
 season's dates are announced (TPCi typically announces a season's Regionals/
 Internationals schedule in batches, with Worlds dates fixed well in
 advance) rather than on any fixed calendar interval.
+
+## Automated diff-check poll (decided 2026-10-18)
+
+Revisited under Scoping Sweep — Leg 1: should a periodic automated
+diff-check against Serebii's `playpokemon` pages (flagging a change for
+manual review, never auto-writing `config/tourneyEvents.ts`) replace the
+fully-manual re-check above?
+
+**Decision: stay fully manual. No poll built.** Two independent reasons,
+either one would be sufficient on its own:
+
+- **A fixed interval doesn't fix the actual problem.** The gap this would
+  close is timeliness, but TPCi's announcement cadence is irregular enough
+  that a periodic check (even monthly) can still miss or lag a change —
+  this past week alone added 2 unannounced Regionals mid-season. A poll
+  that only catches up to the same staleness window the manual process
+  already tolerates isn't worth its own infrastructure.
+- **It would need a scraping exception `external-data-sources.md`
+  deliberately doesn't grant.** Exception #2 scopes Serebii access to
+  manual, one-off research specifically — "never a live/automated scrape."
+  Serebii's pages are HTML, not a documented/stable API (same reason the
+  "What exists" section above ruled out building on `pokedata.ovh`/
+  `dittobase.com`'s scrapers), so a diff-check poll would be exactly the
+  kind of brittle, markup-coupled automated scrape that rule exists to
+  avoid, for a benefit (a flag that still needs the same manual review the
+  current process already does) that doesn't clear the bar for adding a
+  new numbered exception.
+
+Manual re-check (per Refresh cadence above) stays the process. No new
+`external-data-sources.md` exception needed.

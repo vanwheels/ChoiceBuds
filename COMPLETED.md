@@ -59,3 +59,17 @@ Entries prior to this file's oldest are in:
   the 2026-10-17 Public Profiles & Team Sharing boundary - named with the
   milestone slug since it shares its date range with the Mobile Teams &
   Tourney Tab archive above)
+
+## Scoping Sweep
+
+- **[Scoping Sweep] — Leg 1** (2026-10-18). Decided against building an
+  automated periodic Serebii diff-check poll for Tourney Tab: Schedule
+  Change Detection — stays fully manual. Two reasons: TPCi's irregular
+  announcement cadence means even a fixed interval would still lag real
+  changes (this past week added 2 unannounced Regionals mid-season), and a
+  poll would need a scraping exception `external-data-sources.md`'s
+  exception #2 deliberately withholds (manual research only, never a live/
+  automated scrape against Serebii's unstable HTML). No code changed
+  (scoping-only leg); see
+  `docs/investigations/tourney-tab-schedule-source-research.md`'s new
+  "Automated diff-check poll" section. See commit `<pending>`.
