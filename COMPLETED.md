@@ -106,6 +106,13 @@ Entries prior to this file's oldest are in:
   built-in history fallback. Manually verified the Worker endpoint
   (lowercase/original-case lookup, 404 on unknown username, 400 on
   malformed username) via local `wrangler dev` + curl, and the web route's
-  client-side path match via the local `dev:web` server. See commit
-  `1c7a733`.
+  client-side path match via the local `dev:web` server. First live check
+  on the deployed site falsely showed "not found" for the user's own
+  real account - traced to the live Worker still running the
+  pre-this-leg build (pushing to `main` only redeploys the web app via
+  `deploy-web.yml`; the Worker itself needs its own `wrangler deploy`,
+  per `worker/README.md`'s "infrastructure you own and run"). The
+  sandbox's auto-mode classifier also blocked Claude from running
+  `wrangler deploy` directly, so the user ran it themselves - confirmed
+  working live afterward. See commit `1c7a733`.
 

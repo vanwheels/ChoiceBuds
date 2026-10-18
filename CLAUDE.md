@@ -142,6 +142,17 @@ running on.
   choicebuds.vannyproductions.com (via `deploy-web.yml`, takes a couple
   minutes to land) before calling the fix done — base-path/routing and
   GitHub Pages-specific behavior only show up there, not on localhost.
+- **Worker changes need their own manual deploy** (added 2026-10-17,
+  confirmed live the same day when a Public Profiles leg's new endpoint
+  came back 404 on the live site right after merging): pushing to `main`
+  only redeploys the web app (`deploy-web.yml`) — `worker/` has no CI
+  deploy step at all, per its own README's "infrastructure you own and
+  run" framing. Any change under `worker/src/` isn't actually live until
+  someone runs `cd worker && npx wrangler deploy`. Claude's sandbox
+  auto-mode classifier blocks Claude from running `wrangler deploy`
+  itself (denied outright, no retry worth attempting), so hand the user
+  the exact command to run themselves rather than trying to work around
+  the block — then verify live once they confirm it ran.
 - **Curated effect tables** (`config/moveStatEffects.ts`,
   `config/onSwitchInAbilities.ts`, `config/reactiveAbilities.ts`,
   `config/hitReactiveAbilities.ts`) should hold comprehensive,
