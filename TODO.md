@@ -28,27 +28,6 @@ Done when:
   as redundant) are hidden by default behind an explicit Edit toggle.
 - Full test suite passes and all five legs are manually verified live.
 
-- **[Profile Edit Mode: Inline Favorite Pokemon Editing] — Leg 4**
-  *(Last touched: 2026-10-18 · Re-checks: 0)*
-  `ProfileEditControls.tsx`'s always-visible panel (team visibility
-  dropdowns + a permanently-shown species search box for the favorite
-  Pokemon) becomes an explicit "Edit" toggle on the profile page instead,
-  with the favorite Pokemon editable by clicking directly on its own sprite
-  rather than a separate search box below it. Widened mid-leg per live
-  feedback: the per-team visibility `<select>` list was removed outright
-  (redundant now that visibility is settable from the Teams tab's own
-  `TeamVisibilityBadge`, the section "+ Team" picker, and cross-section
-  drag) rather than just hidden behind the toggle, and the duplicate
-  favorite-Pokemon editor box was deleted entirely - `ProfileEditControls.tsx`
-  is gone, replaced by `FavoritePokemonEditor.tsx`, which now renders
-  directly inside `ProfileCard.tsx`'s own favorite-Pokemon display (the
-  same box everyone sees) via a new optional `favoriteEditing` prop, so
-  there's exactly one favorite-Pokemon UI element instead of two.
-  Done check: an Edit button on your own profile page toggles edit
-  affordances on/off; clicking the favorite Pokemon's sprite while editing
-  opens the species picker in place.
-  Manual verification: yes
-
 - **[Profile Section Remove-Team Control] — Leg 5**
   *(Last touched: 2026-10-18 · Re-checks: 0)*
   Flagged live during Leg 4: removing the per-team visibility `<select>`

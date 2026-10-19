@@ -74,6 +74,25 @@ Entries prior to this file's oldest are in:
   with the Profile System Revamp: Foundation and Scoping Sweep archives
   above)
 
+## [Profile Edit Mode: Inline Favorite Pokemon Editing] — Leg 4 (2026-10-18)
+
+`ProfileEditControls.tsx`'s always-visible panel (team visibility dropdowns
++ a permanently-shown species search box for the favorite Pokemon) is now
+an explicit "Edit" toggle on the profile page (own profile only) instead,
+with the favorite Pokemon editable by clicking directly on its own sprite
+rather than a separate search box below it. Widened mid-leg per live
+feedback: the per-team visibility `<select>` list was removed outright
+(redundant now that visibility is settable from the Teams tab's own
+`TeamVisibilityBadge`, the section "+ Team" picker, and cross-section drag)
+rather than just hidden behind the toggle, and the duplicate
+favorite-Pokemon editor box was deleted entirely - `ProfileEditControls.tsx`
+is gone, replaced by `FavoritePokemonEditor.tsx`, which renders directly
+inside `ProfileCard.tsx`'s own favorite-Pokemon display (the same box
+everyone sees) via a new optional `favoriteEditing` prop, so there's
+exactly one favorite-Pokemon UI element instead of two. Full suite (872
+tests), lint, and type-check all pass. Manually verified live. See commit
+bf5e69f.
+
 ## [Teams Page Profile-Visibility Indicator] — Leg 3 (2026-10-18)
 
 The Teams tab now shows and controls each team's public-profile visibility
