@@ -1,20 +1,8 @@
 # ChoiceBuds TODO
 
-## Current Milestone: Profile Social Scoping & Maintenance
-
-Done when:
-- Profile Notes & Moderation, Player Search Directory, and Player
-  Favoriting/Friend System each have a documented build-or-no-build
-  decision recorded in TODO.md/docs.
-- Any decision that calls for implementation gets scoped into a follow-up
-  leg rather than built in this milestone (scoping and building stay
-  separate passes).
-- `useTeams.ts` and whatever it's split into are each under the 500-line
-  hard cap, with the full test suite passing and no behavior change.
-
-All three done-when criteria above are now met — Split useTeams.ts Leg 4
-(the last of them) shipped 2026-10-19, manually verified, see
-`COMPLETED.md`. This milestone is ready for `/close-milestone`.
+No current milestone — Profile Social Scoping & Maintenance shipped
+2026-10-19 (see `MILESTONES.md`). Run `/plan-milestone` to pick the next
+one before starting new scoped work.
 
 Working task list for ongoing/planned work. Every item is titled
 `[Item/Sweep Name] — Leg N` (say "Start [title]" to kick off a session on
@@ -60,8 +48,9 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-(empty — the four items previously here were bundled into the current
-Profile Social Scoping & Maintenance milestone above on 2026-10-19.)
+(empty — the four items previously here were bundled into the Profile
+Social Scoping & Maintenance milestone on 2026-10-19, now shipped; see
+`MILESTONES.md`.)
 
 ## Future Milestones (unscheduled)
 

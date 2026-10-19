@@ -145,6 +145,10 @@ change.
   than letting a late response resurrect a local delete — see
   `docs/investigations/teamcard-notes-sync-race.md` for the race this
   closes (first fixed in `useTeams.ts`, then mirrored into the other two).
+  `useTeams.ts`'s own version of this algorithm is a pure
+  `reconcileSyncedTeams` in `utils/teamSyncReconciliation.ts` (split out of
+  the hook itself, see Split useTeams.ts in COMPLETED.md); `useBattles.ts`/
+  `useSavedPokemon.ts` still keep theirs inline.
 - `GET /profile/:username` (no auth) is the one place the Worker reads
   inside an otherwise-opaque `Team`/`SavedPokemonEntry` record on purpose —
   `worker/src/publicProfile.ts`'s pure `extractPublicTeam`/
@@ -160,11 +164,12 @@ change.
   shape), an `open` team additionally exposes its full competitive set
   (item/ability/moves/EVs/nature) per Pokémon. An existing `isPublic: true`
   team migrated to `closed`, never `open`, on `TeamsDatabase`'s
-  schemaVersion 1-to-2 bump (`useTeams.ts`'s `normalizeTeam`/
-  `migrateTeamVisibility`) — widening to the new full-set tier needs an
-  explicit choice, not a silent migration. `FavoritePokemon` is a second
-  account-wide singleton alongside `PlayerProfile`, merged the same
-  `mergeSingleton` last-write-wins way.
+  schemaVersion 1-to-2 bump (`utils/teamMigrations.ts`'s
+  `migrateTeamsDatabase`/`normalizeTeam`, split out of `useTeams.ts` itself
+  — see Split useTeams.ts in COMPLETED.md) — widening to the new full-set
+  tier needs an explicit choice, not a silent migration. `FavoritePokemon`
+  is a second account-wide singleton alongside `PlayerProfile`, merged the
+  same `mergeSingleton` last-write-wins way.
   A Team Pokemon's own stored `spriteUrl` field is a static value captured
   once at import time and is never shiny-aware (every real on-screen card
   in the renderer recomputes it live instead via `utils/spriteUrl.ts`'s

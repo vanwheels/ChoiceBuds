@@ -76,62 +76,8 @@ Entries prior to this file's oldest are in:
 - [docs/archive/completed-2026-10-18-to-2026-10-19.md](docs/archive/completed-2026-10-18-to-2026-10-19.md)
   (the Profile Editing & Visibility Controls milestone's five legs, split
   out at the 2026-10-19 Profile Editing & Visibility Controls boundary)
+- [docs/archive/completed-2026-10-19-to-2026-10-19.md](docs/archive/completed-2026-10-19-to-2026-10-19.md)
+  (the Profile Social Scoping & Maintenance milestone's four legs, split
+  out at the 2026-10-19 Profile Social Scoping & Maintenance boundary)
 
-## Profile Social Scoping & Maintenance
-
-- **[Profile Notes & Moderation] — Leg 1** (2026-10-19). Decided not to
-  expose `Team.notes` (an existing private, per-account-synced freeform
-  field) on public profiles. Unlike Scoping Sweep Leg 3's public-team-
-  database question, this one would be cheap to build (one more field on
-  the existing public-profile endpoint, filtered the same way nickname
-  already is) — the blocker is a privacy mismatch instead: `notes` is
-  personal strategy text written under a private-by-default expectation
-  that predates Public Profiles & Team Sharing, and publishing it the
-  moment a team's visibility tier flips to `open`/`closed` would be a
-  silent scope change to what that field means, with no demand signal
-  behind it. No code changed (scoping-only leg); see
-  `docs/investigations/profile-notes-and-moderation-scope.md`. See commit
-  `79f98f8`.
-
-- **[Player Search Directory] — Leg 2** (2026-10-19). Decided not to build
-  a browsable/searchable username directory, reaffirming Profile System
-  Revamp: Foundation's exact-username-lookup-only choice rather than
-  scoping a follow-up. Unlike Scoping Sweep Leg 3's public-team-database
-  question, a directory scoped to one Worker's own registered accounts
-  wouldn't need new cross-deployment infrastructure (`worker/README.md`
-  confirms a single Worker already hosts multiple accounts) — the blockers
-  are a privacy-default change instead (signup never discloses that a
-  username becomes browsable, only that it's reachable by someone who's
-  told it) and low real value at the project's actual ~4-6-accounts-per-
-  Worker friend-group scale, plus no demand signal. See
-  `docs/investigations/player-search-directory-scope.md`. See commit
-  `499d072`.
-
-- **[Player Favoriting / Friend System] — Leg 3** (2026-10-19). Decided
-  not to build a friend/favorite system. The real "friend system" reading
-  (request/accept, mutual) needs cross-account notification infrastructure
-  that doesn't exist anywhere in this Worker — sync is manual and
-  one-directional, `GET /profile/:username` is a one-shot unauthenticated
-  read, nothing lets one account learn of another's action. That's a new
-  subsystem, not a cheap addition, for a signal the milestone-planning
-  commit itself called tentative ("maybe"). A cheaper one-directional
-  bookmark alternative was considered and rejected on its own terms (same
-  friend-group scale as Leg 2, marginal value, answers a different
-  question than what was asked). No code changed (scoping-only leg); see
-  `docs/investigations/player-favoriting-friend-system-scope.md`. See
-  commit `f172bb3`.
-
-- **[Split useTeams.ts] — Leg 4** (2026-10-19). Split `useTeams.ts` (634
-  lines, over CLAUDE.md's 500-line hard cap, flagged by `/leg-review` on
-  Teamsheet Open/Closed Visibility Tiers Leg 3 and carried for a third
-  consecutive milestone) along its natural seams: the pure load/migration
-  functions moved to `utils/teamMigrations.ts`, and `applySyncedState`'s
-  reconciliation algorithm moved to a pure `reconcileSyncedTeams` in
-  `utils/teamSyncReconciliation.ts`. CRUD mutators stayed in the hook — no
-  split precedent elsewhere and they're inherently stateful. `useTeams.ts`
-  is now 499 lines; the existing `useTeams.test.ts` was left untouched and
-  still passes unmodified, confirming no behavior change. `/leg-review`
-  passed with one non-blocking note (the two new util files were written
-  to be unit-tested without React but don't yet have their own direct test
-  file — pick up only if either gets touched again). See commit
-  `c1405c0`.
+(no entries yet since the last boundary)

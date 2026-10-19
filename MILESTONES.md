@@ -84,3 +84,5 @@ milestone.
 - **Profile Editing & Visibility Controls** — 2026-10-18 to 2026-10-19 —
   Shipped —
   [post-mortem](docs/postmortems/profile-editing-and-visibility-controls.md)
+- **Profile Social Scoping & Maintenance** — 2026-10-19 — Shipped —
+  [post-mortem](docs/postmortems/profile-social-scoping-and-maintenance.md)
