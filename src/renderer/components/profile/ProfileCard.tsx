@@ -73,6 +73,13 @@
  * reflect instantly) instead of `profile.favoritePokemon`'s lagging synced
  * copy - same reasoning as the other own-profile-only props using
  * `localTeams` instead of `profile.teams`.
+ *
+ * `onRemoveTeam` (Profile Section Remove-Team Control, see TODO.md) is the
+ * same isOwnProfile-and-edit-mode-only shape as `favoriteEditing` - passed
+ * through unchanged to both ProfileTeamSection instances, which thread it
+ * down to each ProfileTeamCard's own "x" button. It's the one way left to
+ * take a team back out of its Open/Closed section from the profile page
+ * itself, now that the old per-team visibility dropdown is gone.
  */
 
 import { useMemo, useState } from 'react';
@@ -111,6 +118,7 @@ export default function ProfileCard({
   localTeams,
   onAddTeamToTier,
   favoriteEditing,
+  onRemoveTeam,
 }: {
   profile: PublicProfile;
   gameDataState?: UseGameDataReturn;
@@ -122,6 +130,7 @@ export default function ProfileCard({
   localTeams?: Team[];
   onAddTeamToTier?: (teamId: string, tier: 'open' | 'closed') => Promise<boolean>;
   favoriteEditing?: FavoritePokemonEditorProps;
+  onRemoveTeam?: (teamId: string) => void;
 }) {
   const { layout, setLayout } = useProfileLayout();
   const [regulationFilter, setRegulationFilter] = useState<RegulationFilter>(ALL_REGULATIONS);
@@ -270,6 +279,7 @@ export default function ProfileCard({
         getHandlers={reorderable ? (id) => getHandlers(id, 'open') : undefined}
         availableTeamsToAdd={availableForOpen}
         onAddTeam={onAddTeamToTier ? (teamId) => onAddTeamToTier(teamId, 'open') : undefined}
+        onRemoveTeam={onRemoveTeam}
       />
 
       <ProfileTeamSection
@@ -287,6 +297,7 @@ export default function ProfileCard({
         getHandlers={reorderable ? (id) => getHandlers(id, 'closed') : undefined}
         availableTeamsToAdd={availableForClosed}
         onAddTeam={onAddTeamToTier ? (teamId) => onAddTeamToTier(teamId, 'closed') : undefined}
+        onRemoveTeam={onRemoveTeam}
       />
     </>
   );

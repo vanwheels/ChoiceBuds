@@ -58,6 +58,7 @@ interface ProfileTeamSectionProps {
   getHandlers?: (id: string) => GridReorderHandlers;
   availableTeamsToAdd?: Team[];
   onAddTeam?: (teamId: string) => Promise<boolean>;
+  onRemoveTeam?: (teamId: string) => void;
 }
 
 export default function ProfileTeamSection({
@@ -75,6 +76,7 @@ export default function ProfileTeamSection({
   getHandlers,
   availableTeamsToAdd,
   onAddTeam,
+  onRemoveTeam,
 }: ProfileTeamSectionProps) {
   const [isAddTeamOpen, setIsAddTeamOpen] = useState(false);
 
@@ -104,6 +106,7 @@ export default function ProfileTeamSection({
               status={importStatus?.[team.id]}
               onImportTeam={onImportTeam}
               reorderHandlers={getHandlers?.(id)}
+              onRemoveTeam={onRemoveTeam}
             />
           );
         })}

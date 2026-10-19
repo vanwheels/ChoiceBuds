@@ -52,6 +52,13 @@
  * local list, not the synced `profile.teams` ProfileCard otherwise
  * renders from) and `onAddTeamToTier` is a thin `updateTeam` wrapper, same
  * shape as `onReorderTeams`'s wrapper above.
+ *
+ * Profile Section Remove-Team Control (see TODO.md): `onRemoveTeam` is
+ * gated by `isOwnProfile && isEditing` (same gate as `favoriteEditing`,
+ * unlike the two props above which only need `isOwnProfile`) since it's an
+ * edit-mode-only action. It's the same shape as `onAddTeamToTier` in
+ * reverse - setting a team's visibility back to `'private'` via the same
+ * `updateTeam` path.
  */
 
 import { useState, type FormEvent } from 'react';
@@ -270,6 +277,11 @@ export default function ProfilePage({
                   onTogglePublic: handleToggleFavoritePublic,
                   onClear: handleClearFavorite,
                 }
+              : undefined
+          }
+          onRemoveTeam={
+            isOwnProfile && isEditing
+              ? (teamId) => void teamsState.updateTeam(teamId, { visibility: 'private' })
               : undefined
           }
         />

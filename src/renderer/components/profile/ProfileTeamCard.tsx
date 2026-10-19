@@ -93,6 +93,7 @@ export default function ProfileTeamCard({
   status,
   onImportTeam,
   reorderHandlers,
+  onRemoveTeam,
 }: {
   team: PublicTeam;
   layout: ProfileLayout;
@@ -102,6 +103,7 @@ export default function ProfileTeamCard({
   status?: ImportTeamStatus;
   onImportTeam?: (team: PublicTeam) => void;
   reorderHandlers?: GridReorderHandlers;
+  onRemoveTeam?: (teamId: string) => void;
 }) {
   const dragControls = useDragControls();
   const reorderable = !!reorderHandlers;
@@ -142,6 +144,15 @@ export default function ProfileTeamCard({
           >
             {team.format}
           </span>
+          {onRemoveTeam && (
+            <button
+              onClick={() => onRemoveTeam(team.id)}
+              title="Remove from this section"
+              className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full border border-zinc-600 bg-zinc-800 text-xs text-zinc-500 transition-colors hover:border-red-500 hover:text-red-400"
+            >
+              ×
+            </button>
+          )}
           {team.visibility === 'open' && onImportTeam && (
             <ImportTeamButton team={team} status={status} onImportTeam={onImportTeam} />
           )}
