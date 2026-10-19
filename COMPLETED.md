@@ -93,4 +93,20 @@ gap - `reconcileSyncedSavedPokemon` doesn't migrate incoming records the way
 `reconcileSyncedTeams` does - now tracked as its own TODO.md item. File is
 497 lines. See commit def5a86.
 
+**Comment Hygiene Sweep (Leg 2)** - 2026-10-19
+Fixed the three change-history comments flagged by the 2026-10-16 Project
+Revision v2 audit (`App.tsx`, `TeamOverflowMenu.tsx`, `pokeapi.test.ts`) -
+each rewritten to state the current behavior/rationale in present tense
+instead of narrating what it used to do. Grepped the renderer for the same
+narration patterns ("used to", "previously", "no longer", etc.) as a
+broader spot-check: most hits turned out to be legitimate - either a real
+WHY (a race-condition/gotcha the comment explains to prevent regressing),
+or part of this codebase's established "Leg N, see TODO.md" architectural-
+provenance convention (BoxPage.tsx, AppWeb.tsx, TeamPickerDropdown.tsx,
+etc.) or dated data-source citations in `config/` files, both out of scope
+for this sweep. Three more genuine no-value instances were rewritten
+anyway (`damageCalcEngine.ts`'s `STATUS_LABELS`, `clonePokemon.ts`,
+`CalcLauncherButton.tsx`). Lint and type-check clean. See commit
+<pending>.
+
 (no other entries yet since the last boundary)

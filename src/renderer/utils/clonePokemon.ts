@@ -1,9 +1,9 @@
 /**
  * clonePokemon.ts - Deep-Clone-With-Fresh-Id Helper
- * Was private to useRosterActions.ts (Saved Builds Database for
- * Team-Building Leg 1, see TODO.md) - moved here shared since Leg 2's
- * ImportTeamModal.tsx needs the exact same clone when a parsed import slot
- * picks a saved build instead of the freshly-parsed Showdown text.
+ * Shared between useRosterActions.ts and ImportTeamModal.tsx, both of which
+ * need the exact same clone-with-fresh-id behavior - the latter when a
+ * parsed import slot picks a saved build instead of the freshly-parsed
+ * Showdown text.
  */
 
 import type { ImportedPokemonInfo } from '../types/pokemon';

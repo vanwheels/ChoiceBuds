@@ -93,14 +93,12 @@ export default function TeamOverflowMenu({
 
   // Computed fresh every time the menu opens, off the trigger's real screen
   // position - runs before paint (useLayoutEffect) so the menu never flashes
-  // at the wrong spot. Flips above the trigger + caps maxHeight to whichever
-  // side has more room (Responsive Layout Audit follow-up, see TODO.md) -
-  // previously always rendered below with no viewport-bottom clamp at all,
-  // so a team near the bottom of a tall mobile list (or one whose
-  // TeamValidationButton result popup made the menu taller) could spill
-  // past the screen edge with no way to reach the rest of it, since the
-  // close-on-scroll handler below closed the menu the instant a read-more
-  // scroll was attempted.
+  // at the wrong spot. Flips above the trigger and caps maxHeight to
+  // whichever side has more room, so a team near the bottom of a tall
+  // mobile list (or one whose TeamValidationButton result popup made the
+  // menu taller) can't spill past the screen edge with no way to reach the
+  // rest of it - the close-on-scroll handler below would otherwise close
+  // the menu the instant a read-more scroll was attempted.
   useLayoutEffect(() => {
     if (!isOpen || !triggerRef.current) return;
     const rect = triggerRef.current.getBoundingClientRect();

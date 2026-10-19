@@ -20,15 +20,6 @@ Done when:
   against current persisted-field read paths, with findings written down
   even if the finding is "no other instances."
 
-- **[Comment Hygiene Sweep] — Leg 2** *(Last touched: 2026-10-19 ·
-  Re-checks: 0)*
-  Fix the three already-identified change-history comments, then
-  spot-check the broader candidate list this milestone's grep turned up
-  (most are legitimate present-tense logic descriptions, not narration —
-  only rewrite genuine "previously X, moved here" cases). Done check: the
-  three known instances fixed, lint/build clean. Review: no. Manual
-  verification: no.
-
 - **[Stored-Snapshot Audit] — Leg 3** *(Last touched: 2026-10-19 ·
   Re-checks: 0)*
   Grep renderer + worker for other persisted fields that are one-time

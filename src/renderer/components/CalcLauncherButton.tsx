@@ -1,7 +1,7 @@
 /**
  * CalcLauncherButton - Floating Calc Launcher (Desktop/Tablet)
- * Shared between App.tsx and AppWeb.tsx (previously identical inlined
- * buttons in both). Corner-snap drag, not freeform placement - on
+ * Shared between App.tsx and AppWeb.tsx. Corner-snap drag, not freeform
+ * placement - on
  * pointer-up the final pointer position is compared against the viewport
  * midpoints to pick the nearest of the 4 corners, and the button's position
  * classes switch to that corner. Storing a corner (not absolute coords)

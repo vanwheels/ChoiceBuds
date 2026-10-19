@@ -79,12 +79,12 @@ export type ActiveTab =
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('teams');
   // Every tab a user has opened at least once this session stays mounted
-  // (hidden via CSS instead of unmounted) once visited - switching tabs
-  // used to fully unmount the outgoing page, discarding any state that
-  // isn't already lifted into a hook here (e.g. the Calc tab's in-progress
-  // matchup, which intentionally lives in CalcPage's own useDamageCalc
-  // call rather than up here - see CalcPage.tsx's header comment for why).
-  // A tab is still only lazy-loaded the first time it's actually opened.
+  // (hidden via CSS instead of unmounted) once visited, so switching tabs
+  // never discards state that isn't already lifted into a hook here (e.g.
+  // the Calc tab's in-progress matchup, which intentionally lives in
+  // CalcPage's own useDamageCalc call rather than up here - see
+  // CalcPage.tsx's header comment for why). A tab is still only
+  // lazy-loaded the first time it's actually opened.
   const [visitedTabs, setVisitedTabs] = useState<Set<ActiveTab>>(() => new Set(['teams']));
   const goToTab = (tab: ActiveTab) => {
     setActiveTab(tab);

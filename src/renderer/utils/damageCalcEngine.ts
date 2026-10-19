@@ -50,8 +50,6 @@ export const WEATHER_OPTIONS: Weather[] = [
 ];
 export const TERRAIN_OPTIONS: Terrain[] = ['Electric', 'Grassy', 'Psychic', 'Misty'];
 export const STATUS_OPTIONS: StatusName[] = ['slp', 'psn', 'brn', 'frz', 'par', 'tox'];
-/** Previously a local const duplicated in `CalcPokemonPanel.tsx`, hoisted
- * here alongside `STATUS_OPTIONS`. */
 export const STATUS_LABELS: Record<StatusName, string> = {
   slp: 'Asleep',
   psn: 'Poisoned',

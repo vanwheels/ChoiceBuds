@@ -52,11 +52,9 @@ describe('fetchPokemonData', () => {
   });
 });
 
-// Previously untested despite backing every enrichment fetch - written while
-// fixing the Toxtricity gap this table was missing (found via VGCPastes
-// catalog sprite-matching diagnosis, see docs/investigations/
-// vgcpastes-catalog-sprite-matching.md), to lock in the existing
-// gender-divergent/no-bare-slug special cases alongside the new one.
+// Backs every enrichment fetch's species-name normalization, including the
+// gender-divergent/no-bare-slug special cases and the Toxtricity case (see
+// docs/investigations/vgcpastes-catalog-sprite-matching.md).
 describe('normalizeSpeciesForAPI', () => {
   it('passes an ordinary species through as lowercase', () => {
     expect(normalizeSpeciesForAPI('Landorus-Therian')).toBe('landorus-therian');
