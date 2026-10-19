@@ -19,13 +19,14 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 ## Current Milestone: Profile Editing & Visibility Controls
 
 Done when:
-- Team visibility (open/closed) can be changed from all three new surfaces
-  — the section add-team picker, cross-section drag, and the Teams tab —
-  each persisting through the existing `updateTeam` path.
-- The profile page's editing controls (visibility dropdowns + favorite-
-  Pokemon search) are hidden by default behind an explicit Edit toggle,
-  with favorite-Pokemon editing moved onto its sprite.
-- Full test suite passes and all four legs are manually verified live.
+- Team visibility (open/closed/private) can be changed from all four
+  surfaces — the section add-team picker, cross-section drag, each team
+  card's own remove control, and the Teams tab — each persisting through
+  the existing `updateTeam` path.
+- The profile page's editing controls (favorite-Pokemon editing moved onto
+  its sprite; the old per-team visibility dropdown list removed outright
+  as redundant) are hidden by default behind an explicit Edit toggle.
+- Full test suite passes and all five legs are manually verified live.
 
 - **[Profile Edit Mode: Inline Favorite Pokemon Editing] — Leg 4**
   *(Last touched: 2026-10-18 · Re-checks: 0)*
@@ -48,7 +49,27 @@ Done when:
   opens the species picker in place.
   Manual verification: yes
 
-- **[Profile Add-Team Picker: Live Section Refresh] — Leg 5 (needs scoping)**
+- **[Profile Section Remove-Team Control] — Leg 5**
+  *(Last touched: 2026-10-18 · Re-checks: 0)*
+  Flagged live during Leg 4: removing the per-team visibility `<select>`
+  dropdown from the profile page (now redundant with the Teams tab's own
+  `TeamVisibilityBadge`, the section "+ Team" picker, and cross-section
+  drag) left no way to take a team back out of its Open/Closed section
+  from the profile page itself - only the Teams tab's `TeamVisibilityBadge`
+  can set a team back to Private. Adds a small "×" remove control to each
+  `ProfileTeamCard.tsx` header (next to the regulation badge, own-profile +
+  edit mode only - same gate as `onReorderTeams`/`onAddTeamToTier`/
+  `favoriteEditing`), threaded down as a new `onRemoveTeam?: (teamId:
+  string) => void` prop through `ProfileCard.tsx` → `ProfileTeamSection.tsx`
+  → `ProfileTeamCard.tsx`, calling `teamsState.updateTeam(teamId, {
+  visibility: 'private' })` from `ProfilePage.tsx`, same path
+  `onAddTeamToTier` already uses in the other direction.
+  Done check: on your own profile with Edit on, clicking a team card's "×"
+  sets that team back to Private and it disappears from its section
+  immediately, without leaving the profile page.
+  Manual verification: yes
+
+- **[Profile Add-Team Picker: Live Section Refresh] — Leg 6 (needs scoping)**
   *(Last touched: 2026-10-18 · Re-checks: 0)*
   Flagged by `/leg-review` on Leg 2 (2026-10-18): picking a team via the "+
   Team" picker (Leg 1) correctly persists `visibility` through `updateTeam`,
@@ -98,24 +119,6 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
-
-- **[Profile Section Remove-Team Control] — Leg 1** *(Last touched:
-  2026-10-18 · Re-checks: 0)*
-  Flagged live during Profile Edit Mode: Inline Favorite Pokemon Editing
-  Leg 4: removing the per-team visibility `<select>` dropdown from the
-  profile page (now redundant with the Teams tab's `TeamVisibilityBadge`,
-  the section "+ Team" picker, and cross-section drag) leaves no way to
-  take a team back out of its Open/Closed section from the profile page
-  itself - you can add a team to a section or drag it between sections,
-  but not remove one without leaving for the Teams tab and setting its
-  `TeamVisibilityBadge` back to Private. Needs a remove/un-pin control on
-  each `ProfileTeamCard.tsx` (own-profile + edit mode only), wired to
-  `updateTeam(teamId, { visibility: 'private' })` through `onAddTeamToTier`'s
-  existing prop shape or a new sibling prop.
-  Done check: on your own profile with Edit on, a control on each team
-  card in Open/Closed sections sets that team back to Private without
-  leaving the profile page.
-  Manual verification: yes
 
 - **[Profile Notes & Moderation] — Leg 1** *(Last touched: 2026-10-18 ·
   Re-checks: 0)*
