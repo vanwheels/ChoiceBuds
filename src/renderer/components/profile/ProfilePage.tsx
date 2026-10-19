@@ -51,8 +51,10 @@ import {
 import type { UseSyncReturn } from '../../hooks/useSync';
 import type { UseTeamsReturn } from '../../hooks/useTeams';
 import type { UseDatabaseReturn } from '../../hooks/useDatabase';
+import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseSettingsReturn } from '../../hooks/useSettings';
 import type { UseSpeciesRosterReturn } from '../../hooks/useSpeciesRoster';
+import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import type { ImportedPokemonInfo, Team } from '../../types/pokemon';
 import ProfileCard, { type ImportTeamStatus } from './ProfileCard';
 import ProfileEditControls from './ProfileEditControls';
@@ -66,6 +68,15 @@ interface ProfilePageProps {
   databaseState: UseDatabaseReturn;
   settingsState: UseSettingsReturn;
   speciesRosterState: UseSpeciesRosterReturn;
+  // Always available in-app (App.tsx/AppWeb.tsx mount both once, app-wide) -
+  // threaded down to ProfileCard's per-Pokemon tiles/rows for real
+  // type-colored move chips and item sprites, same visual language as
+  // TeamCard.tsx/TeamPosterTile.tsx. Optional on ProfileCard itself since
+  // the standalone, unauthenticated `/u/<username>` route
+  // (PublicProfilePage.tsx) has neither - see ProfilePokemonTile.tsx's own
+  // header comment for the fallback behavior that keeps working there.
+  gameDataState: UseGameDataReturn;
+  spriteCacheState: UseSpriteCacheReturn;
 }
 
 export default function ProfilePage({
@@ -77,6 +88,8 @@ export default function ProfilePage({
   databaseState,
   settingsState,
   speciesRosterState,
+  gameDataState,
+  spriteCacheState,
 }: ProfilePageProps) {
   const state = usePublicProfile(username);
   const [lookup, setLookup] = useState('');
@@ -169,6 +182,8 @@ export default function ProfilePage({
       {state.status === 'found' && (
         <ProfileCard
           profile={state.profile}
+          gameDataState={gameDataState}
+          spriteCacheState={spriteCacheState}
           onImportTeam={isOwnProfile ? undefined : handleImportTeam}
           importStatus={importStatus}
           onReorderTeams={

@@ -25,9 +25,19 @@
  * profile - same isOwnProfile gate as onImportTeam, just the opposite
  * direction (you can't drag someone else's preview, and dragging your own
  * import button away makes no sense).
+ *
+ * `gameDataState`/`spriteCacheState` are optional for the same reason -
+ * ProfilePage.tsx (in-app) always has both (App.tsx/AppWeb.tsx mount them
+ * once, app-wide) and passes them through for real type-colored move chips/
+ * item sprites; PublicProfilePage.tsx never does, since that route
+ * deliberately pulls in nothing beyond the one profile fetch (see its own
+ * header comment). See ProfilePokemonTile.tsx for the fallback rendering
+ * that keeps working without them.
  */
 
 import type { PublicProfile, PublicTeam } from '../../services/syncApi';
+import type { UseGameDataReturn } from '../../hooks/useGameData';
+import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import { useProfileLayout } from '../../hooks/useProfileLayout';
 import type { ImportTeamStatus } from './ProfileTeamCard';
 import ProfileTeamSection from './ProfileTeamSection';
@@ -36,11 +46,15 @@ export type { ImportTeamStatus } from './ProfileTeamCard';
 
 export default function ProfileCard({
   profile,
+  gameDataState,
+  spriteCacheState,
   onImportTeam,
   importStatus,
   onReorderTeams,
 }: {
   profile: PublicProfile;
+  gameDataState?: UseGameDataReturn;
+  spriteCacheState?: UseSpriteCacheReturn;
   onImportTeam?: (team: PublicTeam) => void;
   importStatus?: Record<string, ImportTeamStatus>;
   onReorderTeams?: (orderedIds: string[]) => void;
@@ -69,7 +83,7 @@ export default function ProfileCard({
       )}
 
       {profile.teams.length > 0 && (
-        <div className="mt-10 flex w-full max-w-xl items-center justify-end gap-1.5">
+        <div className="mt-10 flex w-full max-w-6xl items-center justify-end gap-1.5">
           <span className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
             Layout:
           </span>
@@ -104,6 +118,8 @@ export default function ProfileCard({
         title="Open Teamsheets"
         teams={openTeams}
         layout={layout}
+        gameDataState={gameDataState}
+        spriteCacheState={spriteCacheState}
         onImportTeam={onImportTeam}
         importStatus={importStatus}
         onReorderTeams={onReorderTeams}
@@ -113,6 +129,8 @@ export default function ProfileCard({
         title="Closed Teamsheets"
         teams={closedTeams}
         layout={layout}
+        gameDataState={gameDataState}
+        spriteCacheState={spriteCacheState}
         onImportTeam={onImportTeam}
         importStatus={importStatus}
         onReorderTeams={onReorderTeams}

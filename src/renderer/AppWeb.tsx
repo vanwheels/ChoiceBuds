@@ -381,6 +381,8 @@ export default function AppWeb() {
               databaseState={databaseState}
               settingsState={settingsState}
               speciesRosterState={speciesRosterState}
+              gameDataState={gameDataState}
+              spriteCacheState={spriteCacheState}
             />
           )}
         </main>

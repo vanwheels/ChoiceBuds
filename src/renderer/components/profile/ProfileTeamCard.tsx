@@ -17,6 +17,8 @@
 import { motion, useDragControls } from 'framer-motion';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { PublicTeam } from '../../services/syncApi';
+import type { UseGameDataReturn } from '../../hooks/useGameData';
+import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import { getRegulationTheme } from '../../config/pokemonTheme';
 import { isRegulationLabel, toRegulationId } from '../../utils/pokemonRules';
 import { toMotionDragProps, type GridReorderHandlers } from '../../hooks/useGridReorder';
@@ -83,12 +85,16 @@ function GripHandle({
 export default function ProfileTeamCard({
   team,
   layout,
+  gameDataState,
+  spriteCacheState,
   status,
   onImportTeam,
   reorderHandlers,
 }: {
   team: PublicTeam;
   layout: ProfileLayout;
+  gameDataState?: UseGameDataReturn;
+  spriteCacheState?: UseSpriteCacheReturn;
   status?: ImportTeamStatus;
   onImportTeam?: (team: PublicTeam) => void;
   reorderHandlers?: GridReorderHandlers;
@@ -139,15 +145,33 @@ export default function ProfileTeamCard({
       </div>
 
       {layout === 'grid' ? (
-        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {team.pokemon.map((p, idx) => (
-            <ProfilePokemonTile key={idx} pokemon={p} detailed={detailed} />
-          ))}
+        // @container (not a viewport media query) - keyed off this card's own
+        // rendered width, same pattern TeamCardRosterGrid.tsx's roster grid
+        // uses, so a wide-but-sidebar-narrowed window still gets the right
+        // column count instead of a viewport breakpoint guessing wrong.
+        <div className="mt-3 @container">
+          <div className="grid grid-cols-2 gap-2 @[600px]:grid-cols-3 @[1024px]:grid-cols-6">
+            {team.pokemon.map((p, idx) => (
+              <ProfilePokemonTile
+                key={idx}
+                pokemon={p}
+                detailed={detailed}
+                gameDataState={gameDataState}
+                spriteCacheState={spriteCacheState}
+              />
+            ))}
+          </div>
         </div>
       ) : (
         <div className="mt-3 flex flex-col gap-1.5">
           {team.pokemon.map((p, idx) => (
-            <ProfilePokemonRow key={idx} pokemon={p} detailed={detailed} />
+            <ProfilePokemonRow
+              key={idx}
+              pokemon={p}
+              detailed={detailed}
+              gameDataState={gameDataState}
+              spriteCacheState={spriteCacheState}
+            />
           ))}
         </div>
       )}

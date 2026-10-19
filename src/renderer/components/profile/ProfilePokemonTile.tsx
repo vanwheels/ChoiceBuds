@@ -7,20 +7,20 @@
  * Teamsheet Open/Closed Visibility Tiers Leg 3: a plain text row per field
  * read as a data dump next to the rest of the app's card-based language.
  *
- * Unlike TeamPosterTile, this has no `gameDataState`/`spriteCacheState` to
- * draw on - PublicTeam's pokemon (services/syncApi.ts) only carries what
- * GET /profile/:username serves, and the standalone, unauthenticated
- * `/u/<username>` route (PublicProfilePage.tsx) deliberately never pulls in
- * the PokeAPI-backed game-data cache (see ARCHITECTURE.md's Web build
- * section). Two consequences: the held item's icon only resolves for the
- * static Serebii-fallback set (utils/itemSprite.ts's
- * getItemFallbackSpriteUrl - Mega Stones, Fairy Feather), text-only
- * otherwise; and moves render as neutral chips rather than type-colored
- * ones, since a move's type isn't known without the game-data cache.
+ * `gameDataState`/`spriteCacheState` are optional, unlike TeamPosterTile's
+ * own required props - ProfilePage.tsx (in-app) always has both and threads
+ * them down for real type-colored move chips/item sprites; the standalone,
+ * unauthenticated `/u/<username>` route (PublicProfilePage.tsx) never does,
+ * since that route deliberately pulls in nothing beyond the one profile
+ * fetch (see ARCHITECTURE.md's Web build section). See
+ * utils/profileGameData.ts for the shared fallback resolution (Serebii-only
+ * item icons, neutral move chips) used without them.
  */
 
 import type { PublicTeam } from '../../services/syncApi';
-import { getItemFallbackSpriteUrl } from '../../utils/itemSprite';
+import type { UseGameDataReturn } from '../../hooks/useGameData';
+import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
+import { resolveProfileItemSpriteUrl, getProfileMoveChipTheme } from '../../utils/profileGameData';
 import { formatStatAlignment } from '../../utils/statAlignment';
 
 type PublicPokemon = PublicTeam['pokemon'][number];
@@ -29,16 +29,28 @@ interface ProfilePokemonTileProps {
   pokemon: PublicPokemon;
   /** Closed-tier teams only ever carry species/nickname/spriteUrl. */
   detailed: boolean;
+  gameDataState?: UseGameDataReturn;
+  spriteCacheState?: UseSpriteCacheReturn;
 }
 
-export default function ProfilePokemonTile({ pokemon, detailed }: ProfilePokemonTileProps) {
-  const itemSpriteUrl = pokemon.item ? getItemFallbackSpriteUrl(pokemon.item) : null;
+export default function ProfilePokemonTile({
+  pokemon,
+  detailed,
+  gameDataState,
+  spriteCacheState,
+}: ProfilePokemonTileProps) {
+  const itemSpriteUrl = pokemon.item
+    ? resolveProfileItemSpriteUrl(pokemon.item, gameDataState, spriteCacheState)
+    : '';
   const statAlignment = pokemon.evs ? formatStatAlignment(pokemon.nature, pokemon.evs) : '';
+  const spriteUrl = spriteCacheState
+    ? spriteCacheState.resolveSprite(pokemon.spriteUrl)
+    : pokemon.spriteUrl;
 
   return (
     <div className="flex flex-col items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800 p-3 w-full min-w-0">
       <img
-        src={pokemon.spriteUrl}
+        src={spriteUrl}
         alt={pokemon.species}
         className="h-16 w-16 object-contain [image-rendering:pixelated]"
       />
@@ -67,14 +79,19 @@ export default function ProfilePokemonTile({ pokemon, detailed }: ProfilePokemon
 
       {detailed && pokemon.moves && pokemon.moves.length > 0 && (
         <div className="flex w-full min-w-0 flex-col gap-1">
-          {pokemon.moves.map((move, idx) => (
-            <div
-              key={idx}
-              className="truncate rounded bg-zinc-700/60 px-1 py-1 text-center text-[10px] font-bold text-zinc-300"
-            >
-              {move}
-            </div>
-          ))}
+          {pokemon.moves.map((move, idx) => {
+            const theme = getProfileMoveChipTheme(move, gameDataState);
+            return (
+              <div
+                key={idx}
+                className={`truncate rounded px-1 py-1 text-center text-[10px] font-bold ${
+                  theme ? `${theme.bg} ${theme.text}` : 'bg-zinc-700/60 text-zinc-300'
+                }`}
+              >
+                {move}
+              </div>
+            );
+          })}
         </div>
       )}
 

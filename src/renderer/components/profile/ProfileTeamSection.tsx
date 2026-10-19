@@ -22,6 +22,8 @@
 
 import { useState } from 'react';
 import type { PublicTeam } from '../../services/syncApi';
+import type { UseGameDataReturn } from '../../hooks/useGameData';
+import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import { useGridReorder } from '../../hooks/useGridReorder';
 import type { ProfileLayout } from '../../hooks/useProfileLayout';
 import ProfileTeamCard, { type ImportTeamStatus } from './ProfileTeamCard';
@@ -30,6 +32,8 @@ interface ProfileTeamSectionProps {
   title: string;
   teams: PublicTeam[];
   layout: ProfileLayout;
+  gameDataState?: UseGameDataReturn;
+  spriteCacheState?: UseSpriteCacheReturn;
   onImportTeam?: (team: PublicTeam) => void;
   importStatus?: Record<string, ImportTeamStatus>;
   onReorderTeams?: (orderedIds: string[]) => void;
@@ -39,6 +43,8 @@ export default function ProfileTeamSection({
   title,
   teams,
   layout,
+  gameDataState,
+  spriteCacheState,
   onImportTeam,
   importStatus,
   onReorderTeams,
@@ -63,7 +69,13 @@ export default function ProfileTeamSection({
   if (teams.length === 0) return null;
 
   return (
-    <div className="mt-6 flex w-full max-w-xl flex-col gap-2">
+    // max-w-6xl (not max-w-xl like the rest of the profile page) - the same
+    // wide-modal convention CalcPopup.tsx/TeamExportImageModal.tsx already
+    // use, so the per-Pokemon grid (ProfileTeamCard.tsx) actually has room to
+    // reach its own @[1024px]:grid-cols-6 breakpoint on a normal desktop
+    // window instead of being squeezed into the page's narrow text-column
+    // width.
+    <div className="mt-6 flex w-full max-w-6xl flex-col gap-2">
       <h2 className="text-sm font-semibold text-zinc-200">{title}</h2>
       <div ref={reorderable ? containerRef : undefined} className="flex flex-col gap-4">
         {orderedTeamIds.map((id) => {
@@ -74,6 +86,8 @@ export default function ProfileTeamSection({
               key={id}
               team={team}
               layout={layout}
+              gameDataState={gameDataState}
+              spriteCacheState={spriteCacheState}
               status={importStatus?.[team.id]}
               onImportTeam={onImportTeam}
               reorderHandlers={reorderable ? getHandlers(id) : undefined}

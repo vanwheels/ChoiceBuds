@@ -358,6 +358,8 @@ export default function App() {
                 databaseState={databaseState}
                 settingsState={settingsState}
                 speciesRosterState={speciesRosterState}
+                gameDataState={gameDataState}
+                spriteCacheState={spriteCacheState}
               />
             )}
           </main>

@@ -211,13 +211,18 @@ change.
   `ProfilePokemonRow`) — a visual-style redo so both tiers read as real team
   cards (sprite/item/ability/moves/stat-alignment, mirroring
   `TeamPosterTile.tsx`'s team-poster-export layout) rather than plain text
-  rows. Neither per-Pokemon component gets type-colored move chips or a
-  PokeAPI-sourced item icon the way `TeamPosterTile` does — `PublicTeam`'s
-  pokemon only carry what `GET /profile/:username` serves, and the
-  standalone `/u/<username>` route deliberately never pulls in the
-  PokeAPI-backed game-data cache (see Web build section below) — so items
-  only get an icon via `getItemFallbackSpriteUrl`'s static Serebii fallback
-  set and moves render as neutral chips. Each section owns its own
+  rows. `gameDataState`/`spriteCacheState` (App.tsx/AppWeb.tsx mount both
+  once, app-wide) are threaded down from `ProfilePage` through to
+  `ProfilePokemonTile`/`ProfilePokemonRow` (`utils/profileGameData.ts`'s
+  cache-only lookups, same as `TeamPosterTile`'s — never a live PokeAPI
+  fetch, so viewing a profile never adds new network calls) for real
+  type-colored move chips and PokeAPI-sourced item icons there. Both props
+  are optional on every component in this chain, since the standalone
+  `/u/<username>` route (`PublicProfilePage.tsx`) deliberately never pulls
+  in the PokeAPI-backed game-data cache (see Web build section below) —
+  without them, items only get an icon via `getItemFallbackSpriteUrl`'s
+  static Serebii fallback set and moves render as neutral chips. Each
+  section owns its own
   drag-in-progress order (`useGridReorder`) and commits only its own team
   ids through `onReorderTeams`; this is safe even though `Team.profileOrder`
   is one flat field across every team because `sortTeamsForProfile` is a
