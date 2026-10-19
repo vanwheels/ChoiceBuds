@@ -16,6 +16,65 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
+## Current Milestone: Profile Editing & Visibility Controls
+
+Done when:
+- Team visibility (open/closed) can be changed from all three new surfaces
+  — the section add-team picker, cross-section drag, and the Teams tab —
+  each persisting through the existing `updateTeam` path.
+- The profile page's editing controls (visibility dropdowns + favorite-
+  Pokemon search) are hidden by default behind an explicit Edit toggle,
+  with favorite-Pokemon editing moved onto its sprite.
+- Full test suite passes and all four legs are manually verified live.
+
+- **[Profile Section Add-Team Picker] — Leg 1** *(Last touched: 2026-10-18 ·
+  Re-checks: 0)*
+  Each Open/Closed teamsheet section (`ProfileTeamSection.tsx`) gets a
+  "+ Team" box at the bottom; clicking it opens a scrollable picker of your
+  own Teams reusing `MobileTeamRow.tsx`'s sprite-strip + team-name row
+  display, and picking one sets that team's `visibility` to the section's
+  tier.
+  Done check: the picker lists every team not already in that tier; picking
+  one adds it to the section and persists through the normal `updateTeam`
+  path.
+  Manual verification: yes
+
+- **[Profile Section Drag-and-Drop Between Open/Closed] — Leg 2**
+  *(Last touched: 2026-10-18 · Re-checks: 0)*
+  `ProfileTeamSection.tsx`'s drag-reorder deliberately never crosses between
+  Open and Closed (see its own header comment) since a cross-section drag
+  used to have no defined meaning. This flips that: dragging a team card
+  from one section into the other changes its `visibility` tier,
+  auto-persisting through `updateTeam` on drop. Needs its own
+  `useGridReorder`-adjacent design since the hook is currently scoped to one
+  section's ids at a time.
+  Done check: dragging a team card across the Open/Closed boundary updates
+  its visibility and the team re-renders in the destination section.
+  Manual verification: yes · Review: yes (new cross-section drag state logic
+  touching persisted visibility)
+
+- **[Teams Page Profile-Visibility Indicator] — Leg 3** *(Last touched:
+  2026-10-18 · Re-checks: 0)*
+  The Teams tab itself (`TeamsPage.tsx`/`TeamCard.tsx`) should show a visual
+  indicator on any team currently visible on your profile (open or closed
+  tier), with the ability to add/remove/change that from the Teams page
+  directly instead of only from the profile page's own editing controls.
+  Done check: a team card on the Teams tab visibly marks its profile
+  visibility state, and that state can be changed from there.
+  Manual verification: yes
+
+- **[Profile Edit Mode: Inline Favorite Pokemon Editing] — Leg 4**
+  *(Last touched: 2026-10-18 · Re-checks: 0)*
+  `ProfileEditControls.tsx`'s always-visible panel (team visibility
+  dropdowns + a permanently-shown species search box for the favorite
+  Pokemon) becomes an explicit "Edit" toggle on the profile page instead,
+  with the favorite Pokemon editable by clicking directly on its own sprite
+  rather than a separate search box below it.
+  Done check: an Edit button on your own profile page toggles edit
+  affordances on/off; clicking the favorite Pokemon's sprite while editing
+  opens the species picker in place.
+  Manual verification: yes
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -43,59 +102,6 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
-
-- **[Profile Section Drag-and-Drop Between Open/Closed] — Leg 1**
-  *(Last touched: 2026-10-18 · Re-checks: 0)*
-  Split out of Profile Previews UI Consistency Pass Leg 5. Right now
-  `ProfileTeamSection.tsx`'s drag-reorder deliberately never crosses
-  between Open and Closed (see its own header comment) since a cross-
-  section drag used to have no defined meaning. This flips that: dragging
-  a team card from one section into the other becomes the primary way to
-  change its `visibility` tier, auto-persisting through `updateTeam` on
-  drop. Needs its own `useGridReorder`-adjacent design since the hook is
-  currently scoped to one section's ids at a time - probably related to
-  [Profile Section Add-Team Picker] below since both end up calling the
-  same visibility mutation. Flagged 2026-10-18 at the Previews & Import
-  milestone close as the priority pick for the next milestone's planning.
-  Done check: dragging a team card across the Open/Closed boundary updates
-  its visibility and the team re-renders in the destination section.
-  Manual verification: yes
-
-- **[Profile Edit Mode: Inline Favorite Pokemon Editing] — Leg 1**
-  *(Last touched: 2026-10-18 · Re-checks: 0)*
-  Split out of Profile Previews UI Consistency Pass Leg 5 (flagged live
-  2026-10-18): `ProfileEditControls.tsx`'s always-visible panel (team
-  visibility dropdowns + a permanently-shown species search box for the
-  favorite Pokemon) should become an explicit "Edit" toggle on the profile
-  page instead, with the favorite Pokemon editable by clicking directly on
-  its own sprite rather than a separate search box below it.
-  Done check: an Edit button on your own profile page toggles edit
-  affordances on/off; clicking the favorite Pokemon's sprite while editing
-  opens the species picker in place.
-  Manual verification: yes
-
-- **[Profile Section Add-Team Picker] — Leg 1** *(Last touched: 2026-10-18 ·
-  Re-checks: 0)*
-  Split out of Profile Previews UI Consistency Pass Leg 5. Each Open/Closed
-  teamsheet section (`ProfileTeamSection.tsx`) gets a "+ Team" box at the
-  bottom; clicking it opens a scrollable picker of your own Teams reusing
-  `MobileTeamRow.tsx`'s sprite-strip + team-name row display, and picking
-  one sets that team's `visibility` to the section's tier.
-  Done check: the picker lists every team not already in that tier; picking
-  one adds it to the section and persists through the normal `updateTeam`
-  path.
-  Manual verification: yes
-
-- **[Teams Page Profile-Visibility Indicator] — Leg 1** *(Last touched:
-  2026-10-18 · Re-checks: 0)*
-  Split out of Profile Previews UI Consistency Pass Leg 5. The Teams tab
-  itself (`TeamsPage.tsx`/`TeamCard.tsx`) should show a visual indicator on
-  any team currently visible on your profile (open or closed tier), with
-  the ability to add/remove/change that from the Teams page directly
-  instead of only from the profile page's own editing controls.
-  Done check: a team card on the Teams tab visibly marks its profile
-  visibility state, and that state can be changed from there.
-  Manual verification: yes
 
 - **[Profile Notes & Moderation] — Leg 1** *(Last touched: 2026-10-18 ·
   Re-checks: 0)*
