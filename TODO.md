@@ -10,30 +10,20 @@ maintenance audit rather than bundled from pre-existing items.
 Done when:
 - No live, non-archived, non-generated/data-table file exceeds the 500-line
   hard cap (closes `useSavedPokemon.ts` at 685 lines — the next file-cap
-  violation in line after `useTeams.ts`).
+  violation in line after `useTeams.ts`). **Met** — see Leg 1.
 - The three known change-history comments (`App.tsx:83`,
   `TeamOverflowMenu.tsx:98`, `pokeapi.test.ts:55` — flagged in the
   2026-10-16 Project Revision v2 audit, never swept) are gone, plus a
-  bounded spot-check of other likely candidates.
+  bounded spot-check of other likely candidates. **Met** — see Leg 2.
 - The stored-snapshot-vs-live-recompute bug class (hit twice now —
   `spriteUrl`, then the profile-section resync bug) has been checked
   against current persisted-field read paths, with findings written down
-  even if the finding is "no other instances."
+  even if the finding is "no other instances." **Met** — see Leg 3.
 
-- **[Stored-Snapshot Audit] — Leg 3** *(Last touched: 2026-10-19 ·
-  Re-checks: 0)*
-  Grep renderer + worker for other persisted fields that are one-time
-  snapshots (like the old `spriteUrl`) rather than canonically recomputed,
-  per `.claude/rules/stored-snapshot-vs-live-recompute.md`. Write findings
-  to a short investigation doc; fix inline only if something small and
-  concrete turns up, otherwise split a follow-up leg. Done check: audit
-  doc written, any trivial fixes landed. Review: no. Manual verification:
-  no.
+All three Done-when criteria are now met; this milestone is ready for
+`/close-milestone`.
 
-  Explicitly out of scope: direct test coverage for `teamMigrations.ts`/
-  `teamSyncReconciliation.ts` — the last postmortem already decided that's
-  not a standing action item unless those files get touched again, and
-  this milestone doesn't touch them.
+(Leg 3 — Stored-Snapshot Audit — shipped 2026-10-19, see COMPLETED.md.)
 
 Working task list for ongoing/planned work. Every item is titled
 `[Item/Sweep Name] — Leg N` (say "Start [title]" to kick off a session on

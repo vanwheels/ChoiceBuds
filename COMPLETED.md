@@ -108,4 +108,28 @@ for this sweep. Three more genuine no-value instances were rewritten
 anyway (`damageCalcEngine.ts`'s `STATUS_LABELS`, `clonePokemon.ts`,
 `CalcLauncherButton.tsx`). Lint and type-check clean. See commit bd9d064.
 
+**Stored-Snapshot Audit (Leg 3)** - 2026-10-19
+Grepped `src/renderer` + `worker/src` for persisted fields that are
+one-time snapshots (like the old `spriteUrl`) read directly instead of
+recomputed from canonical fields, per `.claude/rules/stored-snapshot-vs-
+live-recompute.md`. Found and fixed one real instance: `RecordMatchForm.tsx`'s
+`snapshotRoster` built the Battle Logger's brought-4 picker from the
+stored `ImportedPokemonInfo.spriteUrl` snapshot instead of recomputing via
+`getPixelSpriteUrl` - `handleShinyToggle` never rewrites that stored field
+(only `handleGenderToggle` does, and only for the four `FORM_DIVERGENT`
+species), so a Pokemon toggled shiny after import showed the wrong sprite
+in that one picker. Checked and ruled out: `FavoritePokemon.spriteUrl`/
+`shinySpriteUrl` (explicitly documented intentional snapshot), `types`/
+`baseStats` (always refreshed together through `enrichPokemonWithAPI`),
+`calculatedStats` (declared but never populated), `Battle.playerRoster`
+as a whole (already-documented intentional historical snapshot), and
+several Statistics/Speed Tiers/Type Matchup sprite reads (species-keyed
+cache data, no gender/shiny concept). Full findings in
+`docs/investigations/stored-snapshot-audit.md`. Full suite (875 tests),
+lint, and type-check clean. See commit 7308853.
+
+This closes all three Done-when criteria for Maintenance Sweep:
+useSavedPokemon Split & Housekeeping - milestone ready for
+`/close-milestone`.
+
 (no other entries yet since the last boundary)
