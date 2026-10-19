@@ -92,3 +92,17 @@ Entries prior to this file's oldest are in:
   behind it. No code changed (scoping-only leg); see
   `docs/investigations/profile-notes-and-moderation-scope.md`. See commit
   `79f98f8`.
+
+- **[Player Search Directory] — Leg 2** (2026-10-19). Decided not to build
+  a browsable/searchable username directory, reaffirming Profile System
+  Revamp: Foundation's exact-username-lookup-only choice rather than
+  scoping a follow-up. Unlike Scoping Sweep Leg 3's public-team-database
+  question, a directory scoped to one Worker's own registered accounts
+  wouldn't need new cross-deployment infrastructure (`worker/README.md`
+  confirms a single Worker already hosts multiple accounts) — the blockers
+  are a privacy-default change instead (signup never discloses that a
+  username becomes browsable, only that it's reachable by someone who's
+  told it) and low real value at the project's actual ~4-6-accounts-per-
+  Worker friend-group scale, plus no demand signal. See
+  `docs/investigations/player-search-directory-scope.md`. See commit
+  `499d072`.
