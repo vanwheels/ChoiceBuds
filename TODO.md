@@ -26,19 +26,6 @@ Done when:
   choice.
 - Teams on a profile page can be filtered/broken down by regulation.
 
-- **[Save/Import a Team From a Profile] — Leg 1** *(Last touched:
-  2026-10-18 · Re-checks: 0)*
-  Add an "Import to my Teams" action on any open-teamsheet team shown on
-  someone else's profile (own profile excluded), using the full set data
-  Foundation Leg 3's open tier exposes to build a real `Team` record
-  through the normal `useTeams().addTeam()` path. Closed-teamsheet teams
-  don't get the action since there's no set data to import.
-  Done check: importing an open-teamsheet team from another account's
-  profile adds a working copy to your own Teams list with matching
-  species/moves/items/EVs/nature; no import action appears on
-  closed-teamsheet teams.
-  Manual verification: yes
-
 - **[Drag-to-Rearrange Previewed Teams] — Leg 2** *(Last touched:
   2026-10-18 · Re-checks: 0)*
   Let the profile page's team list be drag-reordered, persisting a

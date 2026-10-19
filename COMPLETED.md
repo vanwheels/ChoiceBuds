@@ -67,3 +67,16 @@ Entries prior to this file's oldest are in:
   at the 2026-10-18 Profile System Revamp: Foundation boundary - named
   with the milestone slug since it shares its date range with the Scoping
   Sweep archive above)
+
+## [Save/Import a Team From a Profile] — Leg 1 (2026-10-18)
+
+Added an "Import to my Teams" action on any open-teamsheet team shown on
+someone else's profile (own profile and closed-teamsheet teams excluded).
+`ProfileCard.tsx` renders the button; `ProfilePage.tsx` converts the
+`PublicTeam`'s Pokemon into `ShowdownPokemon` (new `utils/
+profileTeamImport.ts`, unit-tested) and runs them through the normal
+`enrichPokemonWithAPI` -> `useTeams().addTeam()` pipeline. Manually
+verified live against a real test account (`cbtestimport` - see
+`feedback_champions_sp_not_gen9_evs` memory note for a demo-data mistake
+caught along the way, unrelated to this leg's own code). See commit
+e18f589.
