@@ -30,12 +30,11 @@
  * TODO.md) are the same isOwnProfile-only pair again, feeding each
  * section's "+ Team" box. `localTeams` is ProfilePage.tsx's full local
  * `teamsState.teams` (not `profile.teams`, the synced/lagging copy this
- * component otherwise renders from - same reasoning as
- * ProfileEditControls.tsx's own visibility dropdowns), filtered here per
- * tier to teams not already in it. `onAddTeamToTier` is also what commits
- * a cross-section drag below - both are just "set this team's visibility
- * to this tier", the picker just drives it from a dialog instead of a
- * drop.
+ * component otherwise renders from - same reasoning as `favoriteEditing`
+ * below), filtered here per tier to teams not already in it.
+ * `onAddTeamToTier` is also what commits a cross-section drag below - both
+ * are just "set this team's visibility to this tier", the picker just
+ * drives it from a dialog instead of a drop.
  *
  * Profile Section Drag-and-Drop Between Open/Closed (see TODO.md): the two
  * ProfileTeamSection instances no longer each own their own reorder state -
@@ -65,6 +64,15 @@
  * inactive styling as the layout toggle below - narrows `profile.teams` to
  * one regulation before the open/closed split, so both the in-app and
  * standalone routes get the filter for free from this one shared component.
+ *
+ * `favoriteEditing` (Profile Edit Mode: Inline Favorite Pokemon Editing,
+ * see TODO.md) is the same isOwnProfile-only-and-optional shape as the
+ * props above, passed only by ProfilePage.tsx when its Edit toggle is on.
+ * When present it swaps the plain favorite-Pokemon display for
+ * FavoritePokemonEditor, rendering live local settings state (so edits
+ * reflect instantly) instead of `profile.favoritePokemon`'s lagging synced
+ * copy - same reasoning as the other own-profile-only props using
+ * `localTeams` instead of `profile.teams`.
  */
 
 import { useMemo, useState } from 'react';
@@ -84,6 +92,7 @@ import {
 } from '../../utils/pokemonRules';
 import type { ImportTeamStatus } from './ProfileTeamCard';
 import ProfileTeamSection from './ProfileTeamSection';
+import FavoritePokemonEditor, { type FavoritePokemonEditorProps } from './FavoritePokemonEditor';
 
 export type { ImportTeamStatus } from './ProfileTeamCard';
 
@@ -101,6 +110,7 @@ export default function ProfileCard({
   onReorderTeams,
   localTeams,
   onAddTeamToTier,
+  favoriteEditing,
 }: {
   profile: PublicProfile;
   gameDataState?: UseGameDataReturn;
@@ -111,6 +121,7 @@ export default function ProfileCard({
   onReorderTeams?: (orderedIds: string[]) => void;
   localTeams?: Team[];
   onAddTeamToTier?: (teamId: string, tier: 'open' | 'closed') => Promise<boolean>;
+  favoriteEditing?: FavoritePokemonEditorProps;
 }) {
   const { layout, setLayout } = useProfileLayout();
   const [regulationFilter, setRegulationFilter] = useState<RegulationFilter>(ALL_REGULATIONS);
@@ -167,23 +178,30 @@ export default function ProfileCard({
     },
   });
   const reorderable = !!onReorderTeams;
+  const publicFavorite = profile.favoritePokemon;
 
   return (
     <>
       <img src="/mascot.png" alt="" className="h-20 w-20" />
       <h1 className="mt-6 text-2xl font-bold">{profile.username}</h1>
 
-      {profile.favoritePokemon && (
+      {(favoriteEditing || publicFavorite) && (
         <div className="mt-6 flex flex-col items-center">
           <span className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
             Favorite Pokémon
           </span>
-          <img
-            src={profile.favoritePokemon.spriteUrl}
-            alt={profile.favoritePokemon.species}
-            className="h-20 w-20 object-contain [image-rendering:pixelated]"
-          />
-          <span className="text-sm text-zinc-300">{profile.favoritePokemon.species}</span>
+          {favoriteEditing ? (
+            <FavoritePokemonEditor {...favoriteEditing} />
+          ) : publicFavorite ? (
+            <>
+              <img
+                src={publicFavorite.spriteUrl}
+                alt={publicFavorite.species}
+                className="h-20 w-20 object-contain [image-rendering:pixelated]"
+              />
+              <span className="text-sm text-zinc-300">{publicFavorite.species}</span>
+            </>
+          ) : null}
         </div>
       )}
 

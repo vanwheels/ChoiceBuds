@@ -4,9 +4,9 @@
  * (choicebuds.vannyproductions.com/u/<username>) - editing what's shown
  * there (team visibility/teamsheet tier, favorite Pokémon) now lives on the
  * profile page itself (Move Profile Editing Onto the Profile Page, see
- * TODO.md), shown there via ProfileEditControls only when viewing your own
- * profile. This section just links there instead of duplicating those
- * controls.
+ * TODO.md), behind its own Edit toggle (Profile Edit Mode: Inline Favorite
+ * Pokemon Editing, see TODO.md) only when viewing your own profile. This
+ * section just links there instead of duplicating those controls.
  *
  * Only shows a real link once signed in to sync - there's no public
  * profile URL to open without an account/username yet (Public Profiles:

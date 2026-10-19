@@ -33,7 +33,16 @@ Done when:
   dropdowns + a permanently-shown species search box for the favorite
   Pokemon) becomes an explicit "Edit" toggle on the profile page instead,
   with the favorite Pokemon editable by clicking directly on its own sprite
-  rather than a separate search box below it.
+  rather than a separate search box below it. Widened mid-leg per live
+  feedback: the per-team visibility `<select>` list was removed outright
+  (redundant now that visibility is settable from the Teams tab's own
+  `TeamVisibilityBadge`, the section "+ Team" picker, and cross-section
+  drag) rather than just hidden behind the toggle, and the duplicate
+  favorite-Pokemon editor box was deleted entirely - `ProfileEditControls.tsx`
+  is gone, replaced by `FavoritePokemonEditor.tsx`, which now renders
+  directly inside `ProfileCard.tsx`'s own favorite-Pokemon display (the
+  same box everyone sees) via a new optional `favoriteEditing` prop, so
+  there's exactly one favorite-Pokemon UI element instead of two.
   Done check: an Edit button on your own profile page toggles edit
   affordances on/off; clicking the favorite Pokemon's sprite while editing
   opens the species picker in place.
@@ -89,6 +98,24 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+- **[Profile Section Remove-Team Control] — Leg 1** *(Last touched:
+  2026-10-18 · Re-checks: 0)*
+  Flagged live during Profile Edit Mode: Inline Favorite Pokemon Editing
+  Leg 4: removing the per-team visibility `<select>` dropdown from the
+  profile page (now redundant with the Teams tab's `TeamVisibilityBadge`,
+  the section "+ Team" picker, and cross-section drag) leaves no way to
+  take a team back out of its Open/Closed section from the profile page
+  itself - you can add a team to a section or drag it between sections,
+  but not remove one without leaving for the Teams tab and setting its
+  `TeamVisibilityBadge` back to Private. Needs a remove/un-pin control on
+  each `ProfileTeamCard.tsx` (own-profile + edit mode only), wired to
+  `updateTeam(teamId, { visibility: 'private' })` through `onAddTeamToTier`'s
+  existing prop shape or a new sibling prop.
+  Done check: on your own profile with Edit on, a control on each team
+  card in Open/Closed sections sets that team back to Private without
+  leaving the profile page.
+  Manual verification: yes
 
 - **[Profile Notes & Moderation] — Leg 1** *(Last touched: 2026-10-18 ·
   Re-checks: 0)*

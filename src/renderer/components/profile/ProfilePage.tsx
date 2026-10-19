@@ -13,10 +13,18 @@
  * server-side (worker/src/index.ts lowercases every lookup) - `username`
  * here can come from the lookup form below in whatever case was typed, not
  * just the exact-cased `syncUsername` the sidebar's own-profile link
- * passes. When it matches, ProfileEditControls renders the
- * team-visibility/teamsheet-tier/favorite-Pokémon editing controls that
- * used to live in Settings' PublicProfileSection - that section now just
- * links here instead of duplicating them.
+ * passes. When it matches, an Edit toggle appears (Profile Edit Mode:
+ * Inline Favorite Pokemon Editing, see TODO.md); turning it on builds the
+ * `favoriteEditing` prop ProfileCard uses to swap its plain favorite-
+ * Pokémon display for FavoritePokemonEditor (click-the-sprite picker,
+ * live local `settingsState`), replacing the old ProfileEditControls.tsx
+ * panel entirely - that component used to also carry a per-team visibility
+ * dropdown list, dropped once team visibility became settable directly
+ * from the Teams tab's own TeamVisibilityBadge, the profile section
+ * "+ Team" picker, and cross-section drag. `isEditing` resets to off on
+ * every mount (including navigating to a different profile and back),
+ * which is the desired default - edit affordances shouldn't persist across
+ * a profile visit by surprise.
  *
  * The username lookup box lives here rather than on every tab/the sidebar,
  * since opening a second profile from an already-open one is exactly what
@@ -61,9 +69,8 @@ import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseSettingsReturn } from '../../hooks/useSettings';
 import type { UseSpeciesRosterReturn } from '../../hooks/useSpeciesRoster';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
-import type { ImportedPokemonInfo, Team } from '../../types/pokemon';
+import type { ImportedPokemonInfo, SpeciesRosterEntry, Team } from '../../types/pokemon';
 import ProfileCard, { type ImportTeamStatus } from './ProfileCard';
-import ProfileEditControls from './ProfileEditControls';
 
 interface ProfilePageProps {
   username: string;
@@ -100,6 +107,7 @@ export default function ProfilePage({
   const state = usePublicProfile(username);
   const [lookup, setLookup] = useState('');
   const [importStatus, setImportStatus] = useState<Record<string, ImportTeamStatus>>({});
+  const [isEditing, setIsEditing] = useState(false);
 
   const isOwnProfile =
     !!syncState.syncUsername && syncState.syncUsername.toLowerCase() === username.toLowerCase();
@@ -147,15 +155,73 @@ export default function ProfilePage({
     onOpenProfile(trimmed);
   };
 
+  const { favoritePokemon } = settingsState.settings;
+
+  const handlePickFavorite = (entry: SpeciesRosterEntry) => {
+    void settingsState.updateSettings({
+      favoritePokemon: {
+        species: entry.name,
+        spriteUrl: entry.spriteUrl,
+        shinySpriteUrl: entry.shinySpriteUrl,
+        shiny: favoritePokemon.shiny,
+        isPublic: favoritePokemon.isPublic,
+        updatedAt: Date.now(),
+      },
+    });
+  };
+
+  const handleToggleFavoriteShiny = () => {
+    void settingsState.updateSettings({
+      favoritePokemon: { ...favoritePokemon, shiny: !favoritePokemon.shiny, updatedAt: Date.now() },
+    });
+  };
+
+  const handleToggleFavoritePublic = () => {
+    void settingsState.updateSettings({
+      favoritePokemon: {
+        ...favoritePokemon,
+        isPublic: !favoritePokemon.isPublic,
+        updatedAt: Date.now(),
+      },
+    });
+  };
+
+  const handleClearFavorite = () => {
+    void settingsState.updateSettings({
+      favoritePokemon: {
+        species: '',
+        spriteUrl: '',
+        shinySpriteUrl: '',
+        shiny: false,
+        isPublic: false,
+        updatedAt: Date.now(),
+      },
+    });
+  };
+
   return (
     <div className="flex flex-col items-center px-4 pb-10 md:px-0">
       <div className="flex w-full max-w-xl items-center justify-between gap-3 pt-2">
-        <button
-          onClick={onBack}
-          className="text-sm text-zinc-400 transition-colors cursor-pointer hover:text-zinc-200"
-        >
-          ← Back
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onBack}
+            className="text-sm text-zinc-400 transition-colors cursor-pointer hover:text-zinc-200"
+          >
+            ← Back
+          </button>
+          {isOwnProfile && (
+            <button
+              onClick={() => setIsEditing((prev) => !prev)}
+              className={`cursor-pointer rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
+                isEditing
+                  ? 'bg-accent-gold text-zinc-900'
+                  : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
+              }`}
+            >
+              {isEditing ? 'Done Editing' : 'Edit'}
+            </button>
+          )}
+        </div>
         <form onSubmit={handleLookup} className="flex items-center gap-1.5">
           <input
             type="text"
@@ -172,14 +238,6 @@ export default function ProfilePage({
           </button>
         </form>
       </div>
-
-      {isOwnProfile && (
-        <ProfileEditControls
-          settingsState={settingsState}
-          teamsState={teamsState}
-          speciesRosterState={speciesRosterState}
-        />
-      )}
 
       {state.status === 'loading' && (
         <p className="mt-10 text-sm text-zinc-500">Loading profile…</p>
@@ -200,6 +258,18 @@ export default function ProfilePage({
           onAddTeamToTier={
             isOwnProfile
               ? (teamId, tier) => teamsState.updateTeam(teamId, { visibility: tier })
+              : undefined
+          }
+          favoriteEditing={
+            isOwnProfile && isEditing
+              ? {
+                  favoritePokemon,
+                  roster: speciesRosterState.roster,
+                  onPick: handlePickFavorite,
+                  onToggleShiny: handleToggleFavoriteShiny,
+                  onTogglePublic: handleToggleFavoritePublic,
+                  onClear: handleClearFavorite,
+                }
               : undefined
           }
         />

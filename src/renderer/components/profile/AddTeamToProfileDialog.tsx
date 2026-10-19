@@ -4,8 +4,8 @@
  * ProfileTeamSection.tsx's trailing "+ Team" box. Lists every local team not
  * already in the section's own tier (`availableTeams`, computed by
  * ProfileCard.tsx from the full local `teams`, not the synced/lagging
- * `profile.teams` - same reasoning as ProfileEditControls.tsx's own
- * visibility dropdowns) and sets the picked team's `visibility` to that
+ * `profile.teams` - same reasoning as ProfilePage.tsx's own
+ * `favoriteEditing` prop) and sets the picked team's `visibility` to that
  * tier through the normal `updateTeam` path.
  *
  * Same Modal.tsx shell/list-of-buttons shape as AddToTeamDialog.tsx, with a
