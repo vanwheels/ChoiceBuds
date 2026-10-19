@@ -80,4 +80,17 @@ Entries prior to this file's oldest are in:
   (the Profile Social Scoping & Maintenance milestone's four legs, split
   out at the 2026-10-19 Profile Social Scoping & Maintenance boundary)
 
-(no entries yet since the last boundary)
+**Split useSavedPokemon.ts (Leg 1)** - 2026-10-19
+`useSavedPokemon.ts` had grown to 685 lines; mirrored the `useTeams.ts` split
+by moving pure load-path migration logic to `utils/savedPokemonMigrations.ts`
+and the sync-reconciliation algorithm to a pure `reconcileSyncedSavedPokemon`
+in `utils/savedPokemonSyncReconciliation.ts`, with CRUD mutators staying in
+the hook behind two new shared helpers (`commitSavedPokemon`,
+`updateEntryById`) needed to clear the cap given this file's heavier doc
+comments. `/leg-review` flagged a stale `ARCHITECTURE.md` reference (fixed in
+the same commit) and a pre-existing (not introduced here) sync-reconciliation
+gap - `reconcileSyncedSavedPokemon` doesn't migrate incoming records the way
+`reconcileSyncedTeams` does - now tracked as its own TODO.md item. File is
+497 lines. See commit def5a86.
+
+(no other entries yet since the last boundary)

@@ -20,17 +20,6 @@ Done when:
   against current persisted-field read paths, with findings written down
   even if the finding is "no other instances."
 
-- **[Split useSavedPokemon.ts] — Leg 1** *(Last touched: 2026-10-19 ·
-  Re-checks: 0)*
-  685 lines, explicitly documented in its own header as mirroring
-  `useTeams.ts`'s load/persist/CRUD shape — so the same split just done
-  there applies directly: pure migration logic to a new `utils/` module,
-  the sync-reconciliation algorithm to a pure function alongside it, CRUD
-  mutators stay in the hook. Done check: file under 500 lines, existing
-  `useSavedPokemon.test.ts` passes unmodified (zero behavior change).
-  Review: yes (persisted data shape + sync reconciliation). Manual
-  verification: no.
-
 - **[Comment Hygiene Sweep] — Leg 2** *(Last touched: 2026-10-19 ·
   Re-checks: 0)*
   Fix the three already-identified change-history comments, then
@@ -99,8 +88,23 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-(empty — the four items previously here were bundled into the Profile
-Social Scoping & Maintenance milestone on 2026-10-19, now shipped; see
+- **[useSavedPokemon Sync Doesn't Migrate Incoming Records] — Leg 1**
+  *(Last touched: 2026-10-19 · Re-checks: 0)*
+  Found during Split useSavedPokemon.ts's `/leg-review`:
+  `reconcileSyncedSavedPokemon` (utils/savedPokemonSyncReconciliation.ts)
+  never runs an incoming sync `records` entry through
+  normalizeSavedPokemon/bumpUpdatedAtForFixedEntries before it can win a
+  merge or get appended, unlike `reconcileSyncedTeams`'s
+  normalizeIncomingSyncTeam step on the Teams side - a pre-migration
+  device's stale data can land (and get persisted) here. Pre-existing gap,
+  not introduced by that split. See
+  `.claude/rules/sync-merge-migration-parity.md`. Done check: either fix
+  (mirror normalizeIncomingSyncTeam) or confirm no still-live pre-migration
+  devices make this moot, with the finding written down either way. Review:
+  yes (sync reconciliation). Manual verification: no.
+
+(The four items previously listed here were bundled into the Profile Social
+Scoping & Maintenance milestone on 2026-10-19, now shipped; see
 `MILESTONES.md`.)
 
 ## Future Milestones (unscheduled)
