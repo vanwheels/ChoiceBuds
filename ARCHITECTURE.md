@@ -244,6 +244,18 @@ change.
   same `renderNavItem` row styling/active-highlight the tab items use —
   generalized to take an explicit `isActive`/key pair instead of deriving
   it from `ActiveTab`.
+- `ProfileCard`'s per-section regulation filter (pill row: All/Reg M-A/
+  Reg M-B/Reg M-C, built off the same `ALL_REGULATION_IDS`/
+  `getRegulationLabel` source `TeamsPage.tsx`'s own Format Filter Buttons
+  use) narrows both Open/Closed sections to one regulation at a time;
+  shared by the in-app profile page and the standalone `/u/<username>`
+  route since both render through `ProfileCard`.
+- Any open-teamsheet team on someone else's profile (own profile and
+  closed-teamsheet teams excluded) gets an "Import to my Teams" action:
+  `utils/profileTeamImport.ts` converts the `PublicTeam`'s Pokemon into
+  `ShowdownPokemon`, then runs them through the normal
+  `enrichPokemonWithAPI` → `useTeams().addTeam()` pipeline — the same path
+  a pasted Showdown export goes through, not a separate import mechanism.
 
 ## Web build
 

@@ -79,3 +79,5 @@ milestone.
   [post-mortem](docs/postmortems/scoping-sweep.md)
 - **Profile System Revamp: Foundation** — 2026-10-18 — Shipped —
   [post-mortem](docs/postmortems/profile-system-revamp-foundation.md)
+- **Profile System Revamp: Previews & Import** — 2026-10-18 — Shipped —
+  [post-mortem](docs/postmortems/profile-system-revamp-previews-and-import.md)

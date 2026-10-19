@@ -16,16 +16,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Profile System Revamp: Previews & Import
-
-Done when:
-- You can import an open-teamsheet team from another account's profile
-  straight into your own Teams list.
-- Your own profile page groups previewed teams into open/closed teamsheet
-  sections with a drag-to-reorder order that persists, and a layout
-  choice.
-- Teams on a profile page can be filtered/broken down by regulation.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -54,6 +44,23 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
+- **[Profile Section Drag-and-Drop Between Open/Closed] — Leg 1**
+  *(Last touched: 2026-10-18 · Re-checks: 0)*
+  Split out of Profile Previews UI Consistency Pass Leg 5. Right now
+  `ProfileTeamSection.tsx`'s drag-reorder deliberately never crosses
+  between Open and Closed (see its own header comment) since a cross-
+  section drag used to have no defined meaning. This flips that: dragging
+  a team card from one section into the other becomes the primary way to
+  change its `visibility` tier, auto-persisting through `updateTeam` on
+  drop. Needs its own `useGridReorder`-adjacent design since the hook is
+  currently scoped to one section's ids at a time - probably related to
+  [Profile Section Add-Team Picker] below since both end up calling the
+  same visibility mutation. Flagged 2026-10-18 at the Previews & Import
+  milestone close as the priority pick for the next milestone's planning.
+  Done check: dragging a team card across the Open/Closed boundary updates
+  its visibility and the team re-renders in the destination section.
+  Manual verification: yes
+
 - **[Profile Edit Mode: Inline Favorite Pokemon Editing] — Leg 1**
   *(Last touched: 2026-10-18 · Re-checks: 0)*
   Split out of Profile Previews UI Consistency Pass Leg 5 (flagged live
@@ -77,22 +84,6 @@ unblocked.
   Done check: the picker lists every team not already in that tier; picking
   one adds it to the section and persists through the normal `updateTeam`
   path.
-  Manual verification: yes
-
-- **[Profile Section Drag-and-Drop Between Open/Closed] — Leg 1**
-  *(Last touched: 2026-10-18 · Re-checks: 0)*
-  Split out of Profile Previews UI Consistency Pass Leg 5. Right now
-  `ProfileTeamSection.tsx`'s drag-reorder deliberately never crosses
-  between Open and Closed (see its own header comment) since a cross-
-  section drag used to have no defined meaning. This flips that: dragging
-  a team card from one section into the other becomes the primary way to
-  change its `visibility` tier, auto-persisting through `updateTeam` on
-  drop. Needs its own `useGridReorder`-adjacent design since the hook is
-  currently scoped to one section's ids at a time - probably related to
-  [Profile Section Add-Team Picker] above since both end up calling the
-  same visibility mutation.
-  Done check: dragging a team card across the Open/Closed boundary updates
-  its visibility and the team re-renders in the destination section.
   Manual verification: yes
 
 - **[Teams Page Profile-Visibility Indicator] — Leg 1** *(Last touched:
@@ -145,6 +136,12 @@ unblocked.
   500-line hard cap, with no behavior change (full suite still passes).
 
 ## Future Milestones (unscheduled)
+
+Profile System Revamp: Previews & Import was promoted to current
+2026-10-18 and shipped the same day (see `MILESTONES.md`) - its Leg 5
+manual-review follow-ups split back out to Unscheduled above, with
+Profile Section Drag-and-Drop Between Open/Closed flagged as the pick for
+the next milestone's planning.
 
 `src/renderer/_archived/battle-logger/hooks/useBattleLogActions.ts` (1,001
 lines) is also over the 500-line hard cap flagged by the Project Revision v2
