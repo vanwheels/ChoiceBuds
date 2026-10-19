@@ -143,6 +143,14 @@ function ProfileTeamCard({
       dragControls={dragControls}
       data-reorder-id={team.id}
       transition={DRAG_REORDER_TRANSITION}
+      // Open-tier teams render much taller than closed ones
+      // (OpenTeamSetPreview below) - without an elevated z-index while
+      // dragging, a card picked up and moved down past a taller open team
+      // painted behind that team's extra content (later in DOM order) until
+      // the hit-test's reorder actually fired, instead of staying on top for
+      // the whole drag. Same whileDrag shape as PokemonCard.tsx/
+      // MoveBubbleGrid.tsx's own per-slot drag handles.
+      whileDrag={{ scale: 1.01, zIndex: 1, boxShadow: '0 8px 24px rgba(0,0,0,0.45)' }}
       {...(reorderHandlers ? toMotionDragProps(reorderHandlers) : {})}
       className="rounded-lg border border-zinc-700 bg-zinc-800 p-4"
     >
