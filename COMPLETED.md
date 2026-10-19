@@ -106,7 +106,6 @@ provenance convention (BoxPage.tsx, AppWeb.tsx, TeamPickerDropdown.tsx,
 etc.) or dated data-source citations in `config/` files, both out of scope
 for this sweep. Three more genuine no-value instances were rewritten
 anyway (`damageCalcEngine.ts`'s `STATUS_LABELS`, `clonePokemon.ts`,
-`CalcLauncherButton.tsx`). Lint and type-check clean. See commit
-<pending>.
+`CalcLauncherButton.tsx`). Lint and type-check clean. See commit bd9d064.
 
 (no other entries yet since the last boundary)
