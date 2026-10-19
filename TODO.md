@@ -49,6 +49,29 @@ Done when:
   opens the species picker in place.
   Manual verification: yes
 
+- **[Profile Add-Team Picker: Live Section Refresh] — Leg 5 (needs scoping)**
+  *(Last touched: 2026-10-18 · Re-checks: 0)*
+  Flagged by `/leg-review` on Leg 2 (2026-10-18): picking a team via the "+
+  Team" picker (Leg 1) correctly persists `visibility` through `updateTeam`,
+  but `ProfileCard.tsx`'s `openOrderedIds`/`closedOrderedIds` only resync
+  when `usePublicProfile`'s one-shot fetch changes identity, which never
+  happens mid-session - the added team silently doesn't appear in its
+  destination section until the profile is left and reopened (or reloaded).
+  This contradicts this milestone's own "Done when" bullet for the picker
+  surface. Unlike Leg 2's cross-section drag (which could paper over the
+  same staleness by overriding a team object already in hand), the common
+  case here is adding a previously-`private` team for the first time, which
+  has no client-side `PublicTeam` representation at all - a real fix needs
+  either a client-side public-safe synthesis of the local `Team` (kept in
+  sync with `worker/src/publicProfile.ts::extractPublicTeam`) or a profile
+  refetch mechanism (`usePublicProfile` currently exposes none), not a
+  small patch. Needs its own scoping pass to pick between those before
+  implementing.
+  Done check: picking a team via the "+ Team" picker makes it visible in
+  its destination section immediately, without leaving/reopening the
+  profile page.
+  Manual verification: yes
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something

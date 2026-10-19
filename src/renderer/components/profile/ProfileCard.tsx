@@ -158,7 +158,12 @@ export default function ProfileCard({
     },
     onReorder: (_tier, ids) => onReorderTeams?.(ids),
     onMoveTier: (teamId, toTier, ids) => {
-      void onAddTeamToTier?.(teamId, toTier)?.then(() => onReorderTeams?.(ids));
+      // Only persist the dropped-at-the-end order if the visibility write
+      // actually landed - otherwise a failed write still leaves the team
+      // stamped with a profileOrder for a tier its visibility never joined.
+      void onAddTeamToTier?.(teamId, toTier)?.then((success) => {
+        if (success) onReorderTeams?.(ids);
+      });
     },
   });
   const reorderable = !!onReorderTeams;
