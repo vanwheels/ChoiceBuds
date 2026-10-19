@@ -1,8 +1,59 @@
 # ChoiceBuds TODO
 
-No current milestone — Profile Social Scoping & Maintenance shipped
-2026-10-19 (see `MILESTONES.md`). Run `/plan-milestone` to pick the next
-one before starting new scoped work.
+## Current Milestone: Maintenance Sweep: useSavedPokemon Split & Housekeeping
+
+Planned 2026-10-19, off the back of Profile Social Scoping & Maintenance
+shipping the same day (see `MILESTONES.md`). Nothing was queued in
+Unscheduled/Future Milestones, so this milestone was scoped fresh from a
+maintenance audit rather than bundled from pre-existing items.
+
+Done when:
+- No live, non-archived, non-generated/data-table file exceeds the 500-line
+  hard cap (closes `useSavedPokemon.ts` at 685 lines — the next file-cap
+  violation in line after `useTeams.ts`).
+- The three known change-history comments (`App.tsx:83`,
+  `TeamOverflowMenu.tsx:98`, `pokeapi.test.ts:55` — flagged in the
+  2026-10-16 Project Revision v2 audit, never swept) are gone, plus a
+  bounded spot-check of other likely candidates.
+- The stored-snapshot-vs-live-recompute bug class (hit twice now —
+  `spriteUrl`, then the profile-section resync bug) has been checked
+  against current persisted-field read paths, with findings written down
+  even if the finding is "no other instances."
+
+- **[Split useSavedPokemon.ts] — Leg 1** *(Last touched: 2026-10-19 ·
+  Re-checks: 0)*
+  685 lines, explicitly documented in its own header as mirroring
+  `useTeams.ts`'s load/persist/CRUD shape — so the same split just done
+  there applies directly: pure migration logic to a new `utils/` module,
+  the sync-reconciliation algorithm to a pure function alongside it, CRUD
+  mutators stay in the hook. Done check: file under 500 lines, existing
+  `useSavedPokemon.test.ts` passes unmodified (zero behavior change).
+  Review: yes (persisted data shape + sync reconciliation). Manual
+  verification: no.
+
+- **[Comment Hygiene Sweep] — Leg 2** *(Last touched: 2026-10-19 ·
+  Re-checks: 0)*
+  Fix the three already-identified change-history comments, then
+  spot-check the broader candidate list this milestone's grep turned up
+  (most are legitimate present-tense logic descriptions, not narration —
+  only rewrite genuine "previously X, moved here" cases). Done check: the
+  three known instances fixed, lint/build clean. Review: no. Manual
+  verification: no.
+
+- **[Stored-Snapshot Audit] — Leg 3** *(Last touched: 2026-10-19 ·
+  Re-checks: 0)*
+  Grep renderer + worker for other persisted fields that are one-time
+  snapshots (like the old `spriteUrl`) rather than canonically recomputed,
+  per `.claude/rules/stored-snapshot-vs-live-recompute.md`. Write findings
+  to a short investigation doc; fix inline only if something small and
+  concrete turns up, otherwise split a follow-up leg. Done check: audit
+  doc written, any trivial fixes landed. Review: no. Manual verification:
+  no.
+
+  Explicitly out of scope: direct test coverage for `teamMigrations.ts`/
+  `teamSyncReconciliation.ts` — the last postmortem already decided that's
+  not a standing action item unless those files get touched again, and
+  this milestone doesn't touch them.
 
 Working task list for ongoing/planned work. Every item is titled
 `[Item/Sweep Name] — Leg N` (say "Start [title]" to kick off a session on
