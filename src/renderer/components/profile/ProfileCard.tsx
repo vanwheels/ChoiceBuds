@@ -26,6 +26,14 @@
  * direction (you can't drag someone else's preview, and dragging your own
  * import button away makes no sense).
  *
+ * `localTeams`/`onAddTeamToTier` (Profile Section Add-Team Picker, see
+ * TODO.md) are the same isOwnProfile-only pair again, feeding each
+ * section's "+ Team" box. `localTeams` is ProfilePage.tsx's full local
+ * `teamsState.teams` (not `profile.teams`, the synced/lagging copy this
+ * component otherwise renders from - same reasoning as
+ * ProfileEditControls.tsx's own visibility dropdowns), filtered here per
+ * tier to teams not already in it.
+ *
  * `gameDataState`/`spriteCacheState`/`databaseState` are optional for the
  * same reason - ProfilePage.tsx (in-app) always has all three (App.tsx/
  * AppWeb.tsx mount them once, app-wide) and passes them through for real
@@ -46,6 +54,7 @@
 
 import { useMemo, useState } from 'react';
 import type { PublicProfile, PublicTeam } from '../../services/syncApi';
+import type { Team } from '../../types/pokemon';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import type { UseDatabaseReturn } from '../../hooks/useDatabase';
@@ -74,6 +83,8 @@ export default function ProfileCard({
   onImportTeam,
   importStatus,
   onReorderTeams,
+  localTeams,
+  onAddTeamToTier,
 }: {
   profile: PublicProfile;
   gameDataState?: UseGameDataReturn;
@@ -82,6 +93,8 @@ export default function ProfileCard({
   onImportTeam?: (team: PublicTeam) => void;
   importStatus?: Record<string, ImportTeamStatus>;
   onReorderTeams?: (orderedIds: string[]) => void;
+  localTeams?: Team[];
+  onAddTeamToTier?: (teamId: string, tier: 'open' | 'closed') => Promise<boolean>;
 }) {
   const { layout, setLayout } = useProfileLayout();
   const [regulationFilter, setRegulationFilter] = useState<RegulationFilter>(ALL_REGULATIONS);
@@ -98,6 +111,9 @@ export default function ProfileCard({
 
   const openTeams = filteredTeams.filter((t) => t.visibility === 'open');
   const closedTeams = filteredTeams.filter((t) => t.visibility === 'closed');
+
+  const availableForOpen = localTeams?.filter((t) => t.visibility !== 'open');
+  const availableForClosed = localTeams?.filter((t) => t.visibility !== 'closed');
 
   return (
     <>
@@ -178,6 +194,8 @@ export default function ProfileCard({
         onImportTeam={onImportTeam}
         importStatus={importStatus}
         onReorderTeams={onReorderTeams}
+        availableTeamsToAdd={availableForOpen}
+        onAddTeam={onAddTeamToTier ? (teamId) => onAddTeamToTier(teamId, 'open') : undefined}
       />
 
       <ProfileTeamSection
@@ -190,6 +208,8 @@ export default function ProfileCard({
         onImportTeam={onImportTeam}
         importStatus={importStatus}
         onReorderTeams={onReorderTeams}
+        availableTeamsToAdd={availableForClosed}
+        onAddTeam={onAddTeamToTier ? (teamId) => onAddTeamToTier(teamId, 'closed') : undefined}
       />
     </>
   );

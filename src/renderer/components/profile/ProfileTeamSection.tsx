@@ -18,16 +18,28 @@
  * independently numbering their own teams 0..n never cross-contaminate: the
  * section split happens again, client-side, before either array's order is
  * read.
+ *
+ * Profile Section Add-Team Picker (see TODO.md): the trailing "+ Team" box
+ * (only rendered when `onAddTeam` is passed - ProfileCard.tsx only wires it
+ * up on your own profile, same isOwnProfile gate as onReorderTeams/
+ * onImportTeam) opens AddTeamToProfileDialog.tsx. `availableTeamsToAdd` is
+ * pre-filtered by ProfileCard.tsx to teams not already in this tier, so an
+ * otherwise-empty section (e.g. the first team ever added to Closed) still
+ * needs to render its header + the "+ Team" box rather than bailing out via
+ * the `teams.length === 0` check below.
  */
 
 import { useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import type { PublicTeam } from '../../services/syncApi';
+import type { Team } from '../../types/pokemon';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import type { UseDatabaseReturn } from '../../hooks/useDatabase';
 import { useGridReorder } from '../../hooks/useGridReorder';
 import type { ProfileLayout } from '../../hooks/useProfileLayout';
 import ProfileTeamCard, { type ImportTeamStatus } from './ProfileTeamCard';
+import AddTeamToProfileDialog from './AddTeamToProfileDialog';
 
 interface ProfileTeamSectionProps {
   title: string;
@@ -39,6 +51,8 @@ interface ProfileTeamSectionProps {
   onImportTeam?: (team: PublicTeam) => void;
   importStatus?: Record<string, ImportTeamStatus>;
   onReorderTeams?: (orderedIds: string[]) => void;
+  availableTeamsToAdd?: Team[];
+  onAddTeam?: (teamId: string) => Promise<boolean>;
 }
 
 export default function ProfileTeamSection({
@@ -51,7 +65,10 @@ export default function ProfileTeamSection({
   onImportTeam,
   importStatus,
   onReorderTeams,
+  availableTeamsToAdd,
+  onAddTeam,
 }: ProfileTeamSectionProps) {
+  const [isAddTeamOpen, setIsAddTeamOpen] = useState(false);
   // Same "adjust state during render" resync as the old ProfileCard.tsx -
   // see its prior header comment (now scoped to just this section's ids).
   const fetchedTeamIdsKey = teams.map((t) => t.id).join('|');
@@ -69,7 +86,7 @@ export default function ProfileTeamSection({
   const reorderable = !!onReorderTeams;
   const teamsById = new Map(teams.map((t) => [t.id, t]));
 
-  if (teams.length === 0) return null;
+  if (teams.length === 0 && !onAddTeam) return null;
 
   return (
     // max-w-6xl (not max-w-xl like the rest of the profile page) - the same
@@ -98,7 +115,25 @@ export default function ProfileTeamSection({
             />
           );
         })}
+        {onAddTeam && (
+          <button
+            onClick={() => setIsAddTeamOpen(true)}
+            className="w-full rounded-lg border-2 border-dashed border-zinc-700 px-4 py-3 text-sm font-semibold text-zinc-500 transition-colors cursor-pointer hover:border-accent-gold hover:text-accent-gold"
+          >
+            + Team
+          </button>
+        )}
       </div>
+      <AnimatePresence>
+        {isAddTeamOpen && onAddTeam && (
+          <AddTeamToProfileDialog
+            availableTeams={availableTeamsToAdd ?? []}
+            spriteCacheState={spriteCacheState}
+            onAddTeam={onAddTeam}
+            onClose={() => setIsAddTeamOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

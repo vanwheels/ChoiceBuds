@@ -27,18 +27,6 @@ Done when:
   with favorite-Pokemon editing moved onto its sprite.
 - Full test suite passes and all four legs are manually verified live.
 
-- **[Profile Section Add-Team Picker] — Leg 1** *(Last touched: 2026-10-18 ·
-  Re-checks: 0)*
-  Each Open/Closed teamsheet section (`ProfileTeamSection.tsx`) gets a
-  "+ Team" box at the bottom; clicking it opens a scrollable picker of your
-  own Teams reusing `MobileTeamRow.tsx`'s sprite-strip + team-name row
-  display, and picking one sets that team's `visibility` to the section's
-  tier.
-  Done check: the picker lists every team not already in that tier; picking
-  one adds it to the section and persists through the normal `updateTeam`
-  path.
-  Manual verification: yes
-
 - **[Profile Section Drag-and-Drop Between Open/Closed] — Leg 2**
   *(Last touched: 2026-10-18 · Re-checks: 0)*
   `ProfileTeamSection.tsx`'s drag-reorder deliberately never crosses between

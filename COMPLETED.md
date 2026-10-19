@@ -73,3 +73,26 @@ Entries prior to this file's oldest are in:
   boundary - named with the milestone slug since it shares its date range
   with the Profile System Revamp: Foundation and Scoping Sweep archives
   above)
+
+## [Profile Section Add-Team Picker] — Leg 1 (2026-10-18)
+
+Each Open/Closed teamsheet section (`ProfileTeamSection.tsx`) now gets a
+"+ Team" box at the bottom; clicking it opens `AddTeamToProfileDialog.tsx`,
+a scrollable picker of local teams not already in that tier (filtered from
+`teamsState.teams`, not the synced/lagging `profile.teams` the rest of the
+page renders from - same reasoning as `ProfileEditControls.tsx`'s own
+visibility dropdowns), each row showing a sprite strip + team name.
+Picking one persists through the normal `updateTeam` path. `ProfileCard.tsx`
+threads `localTeams`/`onAddTeamToTier` down the same isOwnProfile-only gate
+as `onReorderTeams`/`onImportTeam`. A self-contained sprite-strip
+computation (not factored into a shared util - a third narrow use, not a
+second) rather than reusing `MobileTeamRow.tsx` directly, since that
+component's interactive chrome (overflow menu, favorite star, regulation
+badge editing, swipe-overlay open) doesn't belong in a picker row. Sized
+like `CalcSavedSetsModal.tsx`'s own pick-from-list modal
+(`max-w-2xl max-h-[85vh]`) rather than `AddToTeamDialog.tsx`'s compact
+`max-w-sm`, after manual verification caught the smaller size both
+truncating long team names incorrectly (a stray `shrink-0` cancelling out
+`truncate`) and rendering sprites too small - also bumped from `w-6 h-6` to
+`w-10 h-10`, matching `VgcPasteCatalogRow.tsx`'s own picker-row sprite
+size. Manually verified live.

@@ -38,6 +38,12 @@
  * `teamsState.setProfileTeamOrder` directly (a thin wrapper, unlike
  * `handleImportTeam`'s enrichment pipeline), so it stays inline rather than
  * its own named handler.
+ *
+ * Profile Section Add-Team Picker (see TODO.md) is the same isOwnProfile-
+ * only pair again: `localTeams` is `teamsState.teams` itself (the full
+ * local list, not the synced `profile.teams` ProfileCard otherwise
+ * renders from) and `onAddTeamToTier` is a thin `updateTeam` wrapper, same
+ * shape as `onReorderTeams`'s wrapper above.
  */
 
 import { useState, type FormEvent } from 'react';
@@ -189,6 +195,12 @@ export default function ProfilePage({
           importStatus={importStatus}
           onReorderTeams={
             isOwnProfile ? (orderedIds) => teamsState.setProfileTeamOrder(orderedIds) : undefined
+          }
+          localTeams={isOwnProfile ? teamsState.teams : undefined}
+          onAddTeamToTier={
+            isOwnProfile
+              ? (teamId, tier) => teamsState.updateTeam(teamId, { visibility: tier })
+              : undefined
           }
         />
       )}
