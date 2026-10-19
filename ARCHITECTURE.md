@@ -166,6 +166,39 @@ change.
   account-wide singleton alongside `PlayerProfile`, merged the same
   `mergeSingleton` last-write-wins way.
 
+## In-app profile navigation
+
+- `src/renderer/hooks/useProfileNav.ts` — a back-stack of usernames (not a
+  single optional field) layered on top of `ActiveTab` in both `App.tsx`/
+  `AppWeb.tsx`: opening a profile pushes a username without changing the
+  active tab, so "Back" just pops the stack and whichever tab was already
+  active underneath reappears untouched. A real stack rather than one field
+  because the profile page's own username lookup can open a second profile
+  without losing the first — back from there returns to the previous
+  profile, not straight to the tab. `closeProfile` resets the whole stack
+  at once; `Sidebar.tsx`'s `onTabChange` calls it before switching tabs so
+  picking a different tab always lands on that tab rather than leaving a
+  (now-hidden) profile view stuck on screen underneath.
+- `src/renderer/components/profile/ProfilePage.tsx` — renders inside
+  `<main>` (not a route) whenever the stack is non-empty, sharing its
+  fetch/render logic (`usePublicProfile`/`ProfileCard`) with the standalone
+  `/u/<username>` route (`PublicProfilePage.tsx`) so both render off the
+  same `GET /profile/:username` call via `usePublicProfile`. Own-profile
+  detection compares lowercased usernames (`worker/src/index.ts` lowercases
+  every lookup server-side) against `useSync`'s `syncUsername`; when they
+  match, `ProfileEditControls` renders the team-visibility/teamsheet-tier/
+  favorite-Pokémon editing controls that used to live in Settings'
+  `PublicProfileSection` — that section now just links here instead of
+  duplicating them. Edits there write through the normal
+  `teamsState`/`settingsState` mutators and reflect immediately; the
+  `ProfileCard` preview rendered alongside can lag a few seconds behind
+  since it still reflects `useSync`'s last-synced server copy.
+- Pinned via `Sidebar.tsx`'s footer entry (desktop rail + mobile drawer,
+  hidden entirely when signed out) above the Settings entry, reusing the
+  same `renderNavItem` row styling/active-highlight the tab items use —
+  generalized to take an explicit `isActive`/key pair instead of deriving
+  it from `ActiveTab`.
+
 ## Web build
 
 - `src/renderer/services/storage/` — the `StorageAdapter` interface

@@ -16,20 +16,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Profile System Revamp: Foundation
-
-Done when:
-- From any tab, in-app, you can reach your own profile via a pinned sidebar
-  entry and press back to return to where you were.
-- Visiting another account's profile by exact username works the same way
-  in-app.
-- Editing your public teams/favorite Pokémon/teamsheet visibility
-  (private/closed/open) happens directly on the profile page, not in
-  Settings.
-
-All three criteria above are met as of Leg 4 (2026-10-18, see
-`COMPLETED.md`) - no legs left in this milestone. Ready for `/close-milestone`.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something

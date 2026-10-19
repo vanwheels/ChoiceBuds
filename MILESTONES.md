@@ -77,3 +77,5 @@ milestone.
   [post-mortem](docs/postmortems/public-profiles-and-team-sharing.md)
 - **Scoping Sweep** — 2026-10-18 — Shipped —
   [post-mortem](docs/postmortems/scoping-sweep.md)
+- **Profile System Revamp: Foundation** — 2026-10-18 — Shipped —
+  [post-mortem](docs/postmortems/profile-system-revamp-foundation.md)
