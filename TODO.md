@@ -27,20 +27,6 @@ Done when:
   with favorite-Pokemon editing moved onto its sprite.
 - Full test suite passes and all four legs are manually verified live.
 
-- **[Profile Section Drag-and-Drop Between Open/Closed] — Leg 2**
-  *(Last touched: 2026-10-18 · Re-checks: 0)*
-  `ProfileTeamSection.tsx`'s drag-reorder deliberately never crosses between
-  Open and Closed (see its own header comment) since a cross-section drag
-  used to have no defined meaning. This flips that: dragging a team card
-  from one section into the other changes its `visibility` tier,
-  auto-persisting through `updateTeam` on drop. Needs its own
-  `useGridReorder`-adjacent design since the hook is currently scoped to one
-  section's ids at a time.
-  Done check: dragging a team card across the Open/Closed boundary updates
-  its visibility and the team re-renders in the destination section.
-  Manual verification: yes · Review: yes (new cross-section drag state logic
-  touching persisted visibility)
-
 - **[Teams Page Profile-Visibility Indicator] — Leg 3** *(Last touched:
   2026-10-18 · Re-checks: 0)*
   The Teams tab itself (`TeamsPage.tsx`/`TeamCard.tsx`) should show a visual

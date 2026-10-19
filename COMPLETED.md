@@ -74,6 +74,31 @@ Entries prior to this file's oldest are in:
   with the Profile System Revamp: Foundation and Scoping Sweep archives
   above)
 
+## [Profile Section Drag-and-Drop Between Open/Closed] — Leg 2 (2026-10-18)
+
+Dragging a team card across the Open/Closed boundary on your own profile
+page now flips its `visibility` tier and persists through `updateTeam`,
+instead of the drag being confined to its starting section.
+`ProfileTeamSection.tsx` no longer owns its own reorder state - a new
+`useCrossTierReorder.ts` hook (useGridReorder-adjacent, reuses its pure
+`pickSlotIndex`/`moveToIndex`) lives in `ProfileCard.tsx` and coordinates
+both sections' ordered-id arrays at once, since a cross-section move has to
+remove an id from one array and append it to the other. Crossing sections
+appends at the end of the destination (no slot hit-testing against a tier
+the dragged card was never snapshotted against) and commits through the
+same `onAddTeamToTier`/`onReorderTeams` props the "+ Team" picker and
+intra-section reorder already used - no new props needed. The destination
+section overrides the rendered card's `visibility` to match its tier
+immediately, so detail level (full set vs. sprites-only) flips on drop
+rather than waiting on the next profile refetch. New
+`useCrossTierReorder.test.ts` covers the hook's pure cross-tier logic
+(`pointInRect`/`moveToOtherTier`), same pattern as `useGridReorder.test.ts`.
+Manually verified live against the `cbtestimport` test account (not real
+data - see `feedback_use_test_account_for_profile_verification` memory,
+added after an early verification pass mistakenly dragged real teams on the
+`vanny` account before catching the mistake and redoing it correctly). See
+commit <hash>.
+
 ## [Profile Section Add-Team Picker] — Leg 1 (2026-10-18)
 
 Each Open/Closed teamsheet section (`ProfileTeamSection.tsx`) now gets a

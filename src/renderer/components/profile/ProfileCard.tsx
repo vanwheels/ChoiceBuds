@@ -6,11 +6,11 @@
  * place instead of two hand-synced copies.
  *
  * Profile Page Sections & Layout (see TODO.md): teams now split into
- * "Open Teamsheets"/"Closed Teamsheets" sections (ProfileTeamSection.tsx -
- * see its own header for why a drag never crosses between them) instead of
- * one flat list, with a grid/list layout toggle (useProfileLayout.ts,
- * localStorage-backed, same as useSidebarCollapsed.ts) controlling how
- * every team card's per-Pokemon detail renders (ProfileTeamCard.tsx).
+ * "Open Teamsheets"/"Closed Teamsheets" sections (ProfileTeamSection.tsx)
+ * instead of one flat list, with a grid/list layout toggle
+ * (useProfileLayout.ts, localStorage-backed, same as
+ * useSidebarCollapsed.ts) controlling how every team card's per-Pokemon
+ * detail renders (ProfileTeamCard.tsx).
  *
  * `onImportTeam`/`importStatus` (Save/Import a Team From a Profile, see
  * TODO.md) are optional - the standalone, unauthenticated `/u/<username>`
@@ -32,7 +32,22 @@
  * `teamsState.teams` (not `profile.teams`, the synced/lagging copy this
  * component otherwise renders from - same reasoning as
  * ProfileEditControls.tsx's own visibility dropdowns), filtered here per
- * tier to teams not already in it.
+ * tier to teams not already in it. `onAddTeamToTier` is also what commits
+ * a cross-section drag below - both are just "set this team's visibility
+ * to this tier", the picker just drives it from a dialog instead of a
+ * drop.
+ *
+ * Profile Section Drag-and-Drop Between Open/Closed (see TODO.md): the two
+ * ProfileTeamSection instances no longer each own their own reorder state -
+ * a drag that crosses between them has to move the dragged id out of one
+ * section's ids and into the other's, which only this shared parent can
+ * coordinate. `useCrossTierReorder` (a useGridReorder-adjacent hook - see
+ * its own header comment) owns both sections' ordered-id arrays and hands
+ * back one containerRef + one getHandlers per tier. Committing a same-tier
+ * reorder still calls `onReorderTeams` exactly as before; committing a
+ * cross-tier move calls `onAddTeamToTier` (the real visibility write) then
+ * `onReorderTeams` (to persist the dropped-at-the-end position in the new
+ * tier) - same two existing props, no new ones needed.
  *
  * `gameDataState`/`spriteCacheState`/`databaseState` are optional for the
  * same reason - ProfilePage.tsx (in-app) always has all three (App.tsx/
@@ -59,6 +74,7 @@ import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import type { UseDatabaseReturn } from '../../hooks/useDatabase';
 import { useProfileLayout } from '../../hooks/useProfileLayout';
+import { useCrossTierReorder } from '../../hooks/useCrossTierReorder';
 import {
   ALL_REGULATION_IDS,
   getRegulationLabel,
@@ -111,9 +127,41 @@ export default function ProfileCard({
 
   const openTeams = filteredTeams.filter((t) => t.visibility === 'open');
   const closedTeams = filteredTeams.filter((t) => t.visibility === 'closed');
+  const teamsById = new Map(filteredTeams.map((t) => [t.id, t]));
 
   const availableForOpen = localTeams?.filter((t) => t.visibility !== 'open');
   const availableForClosed = localTeams?.filter((t) => t.visibility !== 'closed');
+
+  // Same "adjust state during render" resync ProfileTeamSection.tsx used to
+  // do itself, now once per tier here instead - each tier's ordered-id
+  // array has to live above both sections so a cross-tier drag can move an
+  // id from one into the other.
+  const openIdsKey = openTeams.map((t) => t.id).join('|');
+  const closedIdsKey = closedTeams.map((t) => t.id).join('|');
+  const [openOrderedIds, setOpenOrderedIds] = useState(() => openTeams.map((t) => t.id));
+  const [closedOrderedIds, setClosedOrderedIds] = useState(() => closedTeams.map((t) => t.id));
+  const [prevOpenIdsKey, setPrevOpenIdsKey] = useState(openIdsKey);
+  const [prevClosedIdsKey, setPrevClosedIdsKey] = useState(closedIdsKey);
+  if (openIdsKey !== prevOpenIdsKey) {
+    setPrevOpenIdsKey(openIdsKey);
+    setOpenOrderedIds(openTeams.map((t) => t.id));
+  }
+  if (closedIdsKey !== prevClosedIdsKey) {
+    setPrevClosedIdsKey(closedIdsKey);
+    setClosedOrderedIds(closedTeams.map((t) => t.id));
+  }
+
+  const { containerRefs, getHandlers } = useCrossTierReorder({
+    tiers: {
+      open: { ids: openOrderedIds, setIds: setOpenOrderedIds },
+      closed: { ids: closedOrderedIds, setIds: setClosedOrderedIds },
+    },
+    onReorder: (_tier, ids) => onReorderTeams?.(ids),
+    onMoveTier: (teamId, toTier, ids) => {
+      void onAddTeamToTier?.(teamId, toTier)?.then(() => onReorderTeams?.(ids));
+    },
+  });
+  const reorderable = !!onReorderTeams;
 
   return (
     <>
@@ -186,28 +234,34 @@ export default function ProfileCard({
 
       <ProfileTeamSection
         title="Open Teamsheets"
-        teams={openTeams}
+        tier="open"
+        orderedTeamIds={openOrderedIds}
+        teamsById={teamsById}
         layout={layout}
         gameDataState={gameDataState}
         spriteCacheState={spriteCacheState}
         databaseState={databaseState}
         onImportTeam={onImportTeam}
         importStatus={importStatus}
-        onReorderTeams={onReorderTeams}
+        containerRef={reorderable ? containerRefs.open : undefined}
+        getHandlers={reorderable ? (id) => getHandlers(id, 'open') : undefined}
         availableTeamsToAdd={availableForOpen}
         onAddTeam={onAddTeamToTier ? (teamId) => onAddTeamToTier(teamId, 'open') : undefined}
       />
 
       <ProfileTeamSection
         title="Closed Teamsheets"
-        teams={closedTeams}
+        tier="closed"
+        orderedTeamIds={closedOrderedIds}
+        teamsById={teamsById}
         layout={layout}
         gameDataState={gameDataState}
         spriteCacheState={spriteCacheState}
         databaseState={databaseState}
         onImportTeam={onImportTeam}
         importStatus={importStatus}
-        onReorderTeams={onReorderTeams}
+        containerRef={reorderable ? containerRefs.closed : undefined}
+        getHandlers={reorderable ? (id) => getHandlers(id, 'closed') : undefined}
         availableTeamsToAdd={availableForClosed}
         onAddTeam={onAddTeamToTier ? (teamId) => onAddTeamToTier(teamId, 'closed') : undefined}
       />
