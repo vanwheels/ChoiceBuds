@@ -68,6 +68,25 @@ Entries prior to this file's oldest are in:
   with the milestone slug since it shares its date range with the Scoping
   Sweep archive above)
 
+## [Drag-to-Rearrange Previewed Teams] — Leg 2 (2026-10-18)
+
+The profile page's team preview now has its own drag-to-reorder order,
+persisted via a new `Team.profileOrder` field kept deliberately separate
+from the private Teams tab's `sortOrder` - reordering one never touches
+the other. `useTeams.ts`'s new `setProfileTeamOrder` stamps it only on the
+dragged teams; the Worker's new `sortTeamsForProfile`
+(`worker/src/publicProfile.ts`) applies it before `GET /profile/:username`
+responds, so owner and visitor views agree. `ProfileCard.tsx` reuses the
+existing `useGridReorder` 2D hit-test drag (same one Teams/Box already
+use), gated behind a new optional `onReorderTeams` prop only wired up on
+your own profile. No `TeamsDatabase` schemaVersion bump - `profileOrder` is
+a plain additive optional field, same precedent as `sortOrder`/`favorite`
+(only `visibility`'s old-shape migration needed a real bump). A follow-up
+commit fixed a z-index stacking glitch found during manual verification:
+dragging a card past a taller open-tier team (extra competitive-set
+content) briefly painted it behind that team instead of on top. Manually
+verified live; `/leg-review` passed clean. See commits 74e8d3e, c3ddc7c.
+
 ## [Save/Import a Team From a Profile] — Leg 1 (2026-10-18)
 
 Added an "Import to my Teams" action on any open-teamsheet team shown on

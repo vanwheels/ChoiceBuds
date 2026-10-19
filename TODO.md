@@ -26,20 +26,6 @@ Done when:
   choice.
 - Teams on a profile page can be filtered/broken down by regulation.
 
-- **[Drag-to-Rearrange Previewed Teams] — Leg 2** *(Last touched:
-  2026-10-18 · Re-checks: 0)*
-  Let the profile page's team list be drag-reordered, persisting a
-  public-facing order. Decide during the leg whether this reuses the
-  existing private Teams-list order or needs its own field (likely the
-  latter, since reordering for public display shouldn't silently reorder
-  the private Teams tab) — if a new field, bump schemaVersion and migrate.
-  Done check: dragging a team on your own profile page changes the order
-  teams appear in on the public profile, persists across reload/sync, and
-  doesn't reorder the private Teams tab unless that's the decision made
-  during the leg.
-  Manual verification: yes
-  Review: yes (likely a persisted data shape change)
-
 - **[Profile Page Sections & Layout] — Leg 3** *(Last touched: 2026-10-18 ·
   Re-checks: 0)*
   Group previewed teams on the profile page into separate open-teamsheet /
