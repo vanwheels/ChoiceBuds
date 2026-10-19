@@ -147,8 +147,10 @@ change.
   closes (first fixed in `useTeams.ts`, then mirrored into the other two).
   `useTeams.ts`'s own version of this algorithm is a pure
   `reconcileSyncedTeams` in `utils/teamSyncReconciliation.ts` (split out of
-  the hook itself, see Split useTeams.ts in COMPLETED.md); `useBattles.ts`/
-  `useSavedPokemon.ts` still keep theirs inline.
+  the hook itself, see Split useTeams.ts in COMPLETED.md); `useSavedPokemon.ts`
+  mirrors that as `reconcileSyncedSavedPokemon` in
+  `utils/savedPokemonSyncReconciliation.ts` (see Split useSavedPokemon.ts in
+  COMPLETED.md). `useBattles.ts` still keeps theirs inline.
 - `GET /profile/:username` (no auth) is the one place the Worker reads
   inside an otherwise-opaque `Team`/`SavedPokemonEntry` record on purpose —
   `worker/src/publicProfile.ts`'s pure `extractPublicTeam`/
