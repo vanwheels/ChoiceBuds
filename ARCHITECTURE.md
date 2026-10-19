@@ -165,6 +165,16 @@ change.
   explicit choice, not a silent migration. `FavoritePokemon` is a second
   account-wide singleton alongside `PlayerProfile`, merged the same
   `mergeSingleton` last-write-wins way.
+  A Team Pokemon's own stored `spriteUrl` field is a static value captured
+  once at import time and is never shiny-aware (every real on-screen card
+  in the renderer recomputes it live instead via `utils/spriteUrl.ts`'s
+  `getPixelSpriteUrl`, which does respect the live `shiny` flag), so
+  `extractPublicPokemon` recomputes it the same way from the record's own
+  `pokedexNumber`/species/gender/shiny via `worker/src/spriteUrl.ts` — a
+  hand-duplicated port of that same renderer function, same "separate build
+  targets, no shared package" reasoning as `safetyFilter.ts` — falling back
+  to the stored field only when `pokedexNumber` is missing/malformed (very
+  old data predating that field).
 - The order teams appear in on a profile is its own field, `Team
   .profileOrder` — deliberately separate from the private Teams tab's own
   `sortOrder` (Drag-to-Rearrange Previewed Teams, see TODO.md/COMPLETED.md),

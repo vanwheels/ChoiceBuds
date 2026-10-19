@@ -10,6 +10,7 @@ function pokemon(
   overrides: {
     showdownData?: Record<string, unknown>;
     spriteUrl?: string | undefined;
+    pokedexNumber?: number;
   } = {},
 ): Record<string, unknown> {
   const { showdownData, ...rest } = overrides;
@@ -19,6 +20,11 @@ function pokemon(
     ...rest,
   };
 }
+
+const FLUTTER_MANE_BASE_SPRITE =
+  'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/987.png';
+const FLUTTER_MANE_SHINY_SPRITE =
+  'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/987.png';
 
 function team(overrides: Record<string, unknown> = {}): Record<string, unknown> & {
   id: string;
@@ -65,6 +71,31 @@ describe('extractPublicPokemon', () => {
     expect(result).toEqual({
       species: 'Flutter Mane',
       nickname: undefined,
+      spriteUrl: 'https://example.com/flutter-mane.png',
+    });
+  });
+
+  it('computes the live sprite URL from pokedexNumber/gender/shiny when pokedexNumber is present, overriding the stale stored field', () => {
+    expect(
+      extractPublicPokemon(pokemon({ pokedexNumber: 987, showdownData: { shiny: true } }), false),
+    ).toEqual({
+      species: 'Flutter Mane',
+      nickname: 'Scream',
+      spriteUrl: FLUTTER_MANE_SHINY_SPRITE,
+    });
+    expect(
+      extractPublicPokemon(pokemon({ pokedexNumber: 987, showdownData: { shiny: false } }), false),
+    ).toEqual({
+      species: 'Flutter Mane',
+      nickname: 'Scream',
+      spriteUrl: FLUTTER_MANE_BASE_SPRITE,
+    });
+  });
+
+  it('falls back to the stored spriteUrl field when pokedexNumber is missing/malformed', () => {
+    expect(extractPublicPokemon(pokemon({ showdownData: { shiny: true } }), false)).toEqual({
+      species: 'Flutter Mane',
+      nickname: 'Scream',
       spriteUrl: 'https://example.com/flutter-mane.png',
     });
   });

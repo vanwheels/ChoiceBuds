@@ -25,6 +25,7 @@
  */
 
 import { containsDisallowedContent } from './safetyFilter';
+import { getPixelSpriteUrl } from './spriteUrl';
 
 /** The Worker only ever needs `id`/`updatedAt` to merge a record - the rest of each collection's shape (Team/Battle/SavedPokemonEntry) is opaque to it. */
 interface HasIdAndUpdatedAt {
@@ -116,6 +117,30 @@ function readEvStat(rawEvs: Record<string, unknown>, key: string): number {
 }
 
 /**
+ * `ImportedPokemonInfo.spriteUrl` (the stored field this used to forward
+ * as-is) is a static value captured once at import time and is never
+ * shiny-aware - every real on-screen card in the renderer instead
+ * recomputes the sprite URL live via getPixelSpriteUrl, which does respect
+ * the `shiny` flag. Mirrors that here using the record's own
+ * `pokedexNumber`/species/gender/shiny (all already present, sprite
+ * selection isn't open-tier-only competitive data) so a public profile
+ * shows the right sprite regardless of visibility tier. Falls back to the
+ * stored field when `pokedexNumber` is missing/malformed (very old data
+ * predating that field) rather than guessing a sprite ID.
+ */
+function resolvePokemonSpriteUrl(
+  record: Record<string, unknown>,
+  sd: Record<string, unknown>,
+  species: string,
+  storedSpriteUrl: string,
+): string {
+  if (typeof record.pokedexNumber !== 'number') return storedSpriteUrl;
+  const gender = typeof sd.gender === 'string' ? sd.gender : '';
+  const shiny = sd.shiny === true;
+  return getPixelSpriteUrl(record.pokedexNumber, species, gender, shiny);
+}
+
+/**
  * One opaque `pokemon` array entry (an `ImportedPokemonInfo`, per the
  * renderer's types/pokemon.ts) down to the public-safe fields - just
  * species/nickname/spriteUrl for a `closed` team, plus the full
@@ -130,8 +155,9 @@ export function extractPublicPokemon(raw: unknown, includeSetData: boolean): Pub
   const sd = showdownData as Record<string, unknown>;
 
   const species = typeof sd.species === 'string' ? sd.species : '';
-  const spriteUrl = typeof record.spriteUrl === 'string' ? record.spriteUrl : '';
-  if (!species || !spriteUrl) return null;
+  const storedSpriteUrl = typeof record.spriteUrl === 'string' ? record.spriteUrl : '';
+  if (!species || !storedSpriteUrl) return null;
+  const spriteUrl = resolvePokemonSpriteUrl(record, sd, species, storedSpriteUrl);
 
   const rawNickname = typeof sd.nickname === 'string' ? sd.nickname : '';
   const nickname = rawNickname && !containsDisallowedContent(rawNickname) ? rawNickname : undefined;
