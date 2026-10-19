@@ -16,6 +16,85 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
+## Current Milestone: Profile System Revamp: Previews & Import
+
+Done when:
+- You can import an open-teamsheet team from another account's profile
+  straight into your own Teams list.
+- Your own profile page groups previewed teams into open/closed teamsheet
+  sections with a drag-to-reorder order that persists, and a layout
+  choice.
+- Teams on a profile page can be filtered/broken down by regulation.
+
+- **[Save/Import a Team From a Profile] — Leg 1** *(Last touched:
+  2026-10-18 · Re-checks: 0)*
+  Add an "Import to my Teams" action on any open-teamsheet team shown on
+  someone else's profile (own profile excluded), using the full set data
+  Foundation Leg 3's open tier exposes to build a real `Team` record
+  through the normal `useTeams().addTeam()` path. Closed-teamsheet teams
+  don't get the action since there's no set data to import.
+  Done check: importing an open-teamsheet team from another account's
+  profile adds a working copy to your own Teams list with matching
+  species/moves/items/EVs/nature; no import action appears on
+  closed-teamsheet teams.
+  Manual verification: yes
+
+- **[Drag-to-Rearrange Previewed Teams] — Leg 2** *(Last touched:
+  2026-10-18 · Re-checks: 0)*
+  Let the profile page's team list be drag-reordered, persisting a
+  public-facing order. Decide during the leg whether this reuses the
+  existing private Teams-list order or needs its own field (likely the
+  latter, since reordering for public display shouldn't silently reorder
+  the private Teams tab) — if a new field, bump schemaVersion and migrate.
+  Done check: dragging a team on your own profile page changes the order
+  teams appear in on the public profile, persists across reload/sync, and
+  doesn't reorder the private Teams tab unless that's the decision made
+  during the leg.
+  Manual verification: yes
+  Review: yes (likely a persisted data shape change)
+
+- **[Profile Page Sections & Layout] — Leg 3** *(Last touched: 2026-10-18 ·
+  Re-checks: 0)*
+  Group previewed teams on the profile page into separate open-teamsheet /
+  closed-teamsheet sections, and add a layout control for how they're
+  displayed (e.g. grid vs. list). Applies to both your own editable profile
+  view and visiting another account's. Also carries a visual-style redo
+  flagged live during Teamsheet Open/Closed Visibility Tiers Leg 3
+  (2026-10-18): `ProfileCard.tsx`'s current per-team render (plain text
+  rows for item/ability/nature/EVs/moves) should look like real team
+  cards/the export image format instead — applies to both open and closed
+  tiers, not just open's extra fields.
+  Done check: a profile with both open and closed teams shows them in two
+  distinct sections; switching the layout control changes the display
+  without losing drag order from Leg 2; both tiers render as styled cards
+  matching TeamCard.tsx/the export image's visual language, not a plain
+  text dump.
+  Manual verification: yes
+
+- **[Regulation Filter on Profile Page] — Leg 4** *(Last touched:
+  2026-10-18 · Re-checks: 0)*
+  Add a regulation filter/breakdown to the profile page's team list,
+  matching how other pages already filter by regulation, so a profile with
+  many teams can be narrowed down.
+  Done check: filtering by a regulation on a profile page shows only teams
+  in that regulation; clearing the filter shows all sections again.
+  Manual verification: yes
+
+- **[Profile Previews UI Consistency Pass] — Leg 5** *(Last touched:
+  2026-10-18 · Re-checks: 0)*
+  Review every UI surface Legs 1-4 introduced (import action/flow, drag
+  handles, layout toggle, section headers, regulation filter control)
+  against the app's existing design language (theme tokens in
+  `src/renderer/config/`, existing card/button/control patterns elsewhere
+  in the app) rather than each leg's author improvising its own look.
+  Scoped to this milestone's additions only, not a wider app-wide sweep.
+  Catch anything that reads as default/unstyled Electron chrome rather than
+  matching the rest of ChoiceBuds.
+  Done check: every new control/surface from Legs 1-4 uses existing theme
+  tokens and matches established component patterns (buttons, cards,
+  filters) elsewhere in the app; nothing looks like an unstyled default.
+  Manual verification: yes
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -83,69 +162,6 @@ unblocked.
   500-line hard cap, with no behavior change (full suite still passes).
 
 ## Future Milestones (unscheduled)
-
-**Profile System Revamp: Previews & Import** — split off Profile System
-Revamp's original 8-leg plan (2026-10-18) once Foundation (legs 1-4, above)
-is scoped as its own current milestone; promote this to current once
-Foundation ships. Legs, carried over as already scoped:
-
-Done when:
-- You can import an open-teamsheet team from another account's profile
-  straight into your own Teams list.
-- Your own profile page groups previewed teams into open/closed teamsheet
-  sections with a drag-to-reorder order that persists, and a layout
-  choice.
-- Teams on a profile page can be filtered/broken down by regulation.
-
-- **[Save/Import a Team From a Profile] — Leg 1**
-  Add an "Import to my Teams" action on any open-teamsheet team shown on
-  someone else's profile (own profile excluded), using the full set data
-  Foundation Leg 3's open tier exposes to build a real `Team` record
-  through the normal `useTeams().addTeam()` path. Closed-teamsheet teams
-  don't get the action since there's no set data to import.
-  Done check: importing an open-teamsheet team from another account's
-  profile adds a working copy to your own Teams list with matching
-  species/moves/items/EVs/nature; no import action appears on
-  closed-teamsheet teams.
-  Manual verification: yes
-
-- **[Drag-to-Rearrange Previewed Teams] — Leg 2**
-  Let the profile page's team list be drag-reordered, persisting a
-  public-facing order. Decide during the leg whether this reuses the
-  existing private Teams-list order or needs its own field (likely the
-  latter, since reordering for public display shouldn't silently reorder
-  the private Teams tab) — if a new field, bump schemaVersion and migrate.
-  Done check: dragging a team on your own profile page changes the order
-  teams appear in on the public profile, persists across reload/sync, and
-  doesn't reorder the private Teams tab unless that's the decision made
-  during the leg.
-  Manual verification: yes
-  Review: yes (likely a persisted data shape change)
-
-- **[Profile Page Sections & Layout] — Leg 3**
-  Group previewed teams on the profile page into separate open-teamsheet /
-  closed-teamsheet sections, and add a layout control for how they're
-  displayed (e.g. grid vs. list). Applies to both your own editable profile
-  view and visiting another account's. Also carries a visual-style redo
-  flagged live during Teamsheet Open/Closed Visibility Tiers Leg 3
-  (2026-10-18): `ProfileCard.tsx`'s current per-team render (plain text
-  rows for item/ability/nature/EVs/moves) should look like real team
-  cards/the export image format instead — applies to both open and closed
-  tiers, not just open's extra fields.
-  Done check: a profile with both open and closed teams shows them in two
-  distinct sections; switching the layout control changes the display
-  without losing drag order from Leg 2; both tiers render as styled cards
-  matching TeamCard.tsx/the export image's visual language, not a plain
-  text dump.
-  Manual verification: yes
-
-- **[Regulation Filter on Profile Page] — Leg 4**
-  Add a regulation filter/breakdown to the profile page's team list,
-  matching how other pages already filter by regulation, so a profile with
-  many teams can be narrowed down.
-  Done check: filtering by a regulation on a profile page shows only teams
-  in that regulation; clearing the filter shows all sections again.
-  Manual verification: yes
 
 `src/renderer/_archived/battle-logger/hooks/useBattleLogActions.ts` (1,001
 lines) is also over the 500-line hard cap flagged by the Project Revision v2
