@@ -28,6 +28,7 @@ import type {
   SpeciesRosterEntry,
   Team,
 } from '../../types/pokemon';
+import { getPixelSpriteUrl } from '../../utils/spriteUrl';
 import type { UseTeamsReturn } from '../../hooks/useTeams';
 import type { UseBattlesReturn } from '../../hooks/useBattles';
 import type { UseSpeciesRosterReturn } from '../../hooks/useSpeciesRoster';
@@ -79,7 +80,19 @@ function snapshotRoster(team: Team): BroughtPokemonSnapshot[] {
     gender: p.showdownData.gender,
     pokedexNumber: p.pokedexNumber,
     types: p.types,
-    spriteUrl: p.spriteUrl,
+    // Recomputed live, not read off the stored `p.spriteUrl` snapshot field -
+    // that field is only rewritten on a FORM_DIVERGENT gender toggle
+    // (EditablePokemonCore.tsx::handleGenderToggle), never on a shiny toggle,
+    // so it silently goes stale for any other Pokemon whose shiny state
+    // changed after import. Same stored-snapshot-vs-live-recompute bug class
+    // as the old public-profile spriteUrl bug - see
+    // .claude/rules/stored-snapshot-vs-live-recompute.md.
+    spriteUrl: getPixelSpriteUrl(
+      p.pokedexNumber,
+      p.showdownData.species,
+      p.showdownData.gender || 'M',
+      p.showdownData.shiny,
+    ),
     nature: p.showdownData.nature,
     evs: p.showdownData.evs,
     level: p.showdownData.level,
