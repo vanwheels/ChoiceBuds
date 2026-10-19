@@ -18,71 +18,8 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 
 ## Current Milestone: Profile Editing & Visibility Controls
 
-Done when:
-- Team visibility (open/closed/private) can be changed from all four
-  surfaces — the section add-team picker, cross-section drag, each team
-  card's own remove control, and the Teams tab — each persisting through
-  the existing `updateTeam` path, and each showing up in its destination
-  section immediately (no reload needed), even for a team with no prior
-  public exposure at all.
-- The profile page's own-profile editing controls (favorite-Pokemon editing
-  moved onto its sprite; the old per-team visibility dropdown list removed
-  outright as redundant) are permanently visible, matching the rest of the
-  app's always-on-editing convention — no Edit toggle.
-- Full test suite passes and all five legs are manually verified live.
-
-- **[Profile Section Remove-Team Control] — Leg 5**
-  *(Last touched: 2026-10-19 · Re-checks: 0)*
-  Flagged live during Leg 4: removing the per-team visibility `<select>`
-  dropdown from the profile page (now redundant with the Teams tab's own
-  `TeamVisibilityBadge`, the section "+ Team" picker, and cross-section
-  drag) left no way to take a team back out of its Open/Closed section
-  from the profile page itself - only the Teams tab's `TeamVisibilityBadge`
-  can set a team back to Private. Adds a small "×" remove control to each
-  `ProfileTeamCard.tsx` header (next to the regulation badge), threaded
-  down as a new `onRemoveTeam?: (teamId: string) => void` prop through
-  `ProfileCard.tsx` → `ProfileTeamSection.tsx` → `ProfileTeamCard.tsx`,
-  calling `teamsState.updateTeam(teamId, { visibility: 'private' })` from
-  `ProfilePage.tsx`, same path `onAddTeamToTier` already uses in the other
-  direction. `ProfileCard.tsx`'s own `openOrderedIds`/`closedOrderedIds`
-  are filtered immediately (optimistic local state, not waiting on a
-  profile refetch) so the card disappears right away.
-
-  Redesigned live (2026-10-19) after the first pass shipped but the "+
-  Team" button turned out to share Leg 6's staleness bug (see below), and
-  the user flagged that gating both controls behind an Edit toggle put this
-  page out of step with the rest of the app's always-on-editing convention
-  (e.g. `PokemonCard.tsx`'s own permanent "×"). The Edit toggle is gone
-  entirely from `ProfilePage.tsx` - `onRemoveTeam`/`favoriteEditing` are now
-  gated by `isOwnProfile` alone, same as `onReorderTeams`/`onAddTeamToTier`
-  already were. `FavoritePokemonEditor.tsx` no longer expands its search
-  box inline; the sprite (or the "+" placeholder) is permanently clickable
-  and opens a `Modal.tsx`-based popup with the search box and the shiny/
-  public toggles, matching `AddTeamToProfileDialog.tsx`'s own modal shape.
-
-  Folds in what was Leg 6 ("Profile Add-Team Picker: Live Section
-  Refresh"): the "+ Team" picker had the identical staleness bug (a brand-
-  new or just-retiered team has no real `PublicTeam` from the stale
-  `usePublicProfile` fetch to display), which making "+ Team" permanently
-  visible made far more likely to hit. Fixed via a client-side synthesis
-  util (`utils/publicTeamSynthesis.ts::synthesizePublicTeam`, with its own
-  unit test), mirroring `worker/src/publicProfile.ts::extractPublicTeam`'s
-  shape - `ProfileCard.tsx`'s new `overlayTeams` map holds a synthesized
-  stand-in only when the team has no existing `PublicTeam` to reuse (a
-  pure tier-switch already has one, stale visibility and all, which
-  `ProfileTeamSection.tsx` already overrides for display); `
-  handleAddTeamToTier` then pushes the id into the right ordered-id array
-  and drops it from the other, same optimistic-local-state shape as
-  `handleRemoveTeam`.
-
-  Done check: on your own profile, clicking a team card's "×" sets that
-  team back to Private and it disappears from its section immediately;
-  picking a team via "+ Team" (including one that's never been public
-  before) makes it appear in its destination section immediately; neither
-  needs leaving/reopening the profile page or an Edit toggle. Clicking the
-  favorite-Pokémon sprite (or its "+" placeholder) opens a popup with
-  search + shiny/public toggles.
-  Manual verification: yes
+All five legs shipped and are manually verified live (see `COMPLETED.md`)
+- ready for `/close-milestone`.
 
 ## Blocked
 

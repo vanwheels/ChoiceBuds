@@ -74,6 +74,34 @@ Entries prior to this file's oldest are in:
   with the Profile System Revamp: Foundation and Scoping Sweep archives
   above)
 
+## [Profile Section Remove-Team Control] — Leg 5 (2026-10-19)
+
+A small "×" on each `ProfileTeamCard.tsx` header now takes a team back out
+of its Open/Closed section (sets `visibility: 'private'` via the normal
+`updateTeam` path) - the one way left to do that from the profile page
+itself after Leg 4 removed the old per-team visibility dropdown. Redesigned
+mid-leg, twice, off live feedback: first to drop the Edit toggle entirely
+(gating "×"/"+ Team"/favorite-Pokemon editing behind it put the page out of
+step with the rest of the app's always-on-editing convention) and move
+favorite-Pokemon editing into a `Modal.tsx` popup opened by clicking the
+sprite; then to fix two bugs the redesign surfaced - the popup's search
+results list was an absolutely-positioned dropdown that `Modal.tsx`'s
+`overflow-hidden` panel silently clipped (now in-flow, with the current
+favorite shown above the search box), and `ProfileCard.tsx`'s section
+resync was keyed off a team list that included client-synthesized "+ Team"
+stand-ins, so any first-time add was resetting straight back to the stale
+fetch and resurrecting teams removed earlier in the same session (now keyed
+off the real fetched teams only). Also folds in the former Leg 6 ("Profile
+Add-Team Picker: Live Section Refresh"): a new `utils/
+publicTeamSynthesis.ts::synthesizePublicTeam` (mirroring `worker/src/
+publicProfile.ts::extractPublicTeam`, with its own unit test) builds a
+client-side stand-in for a team with no real `PublicTeam` yet, so "+ Team"
+shows its pick immediately instead of needing a reload - the same gap that
+made the always-visible "+ Team" button's first version look broken.
+Completes this milestone's "Done when" criteria. Full suite (875 tests),
+lint, and type-check all pass. Manually verified live (all three follow-up
+fixes confirmed in the same pass). See commits c1bafe2..c82dab9.
+
 ## [Profile Edit Mode: Inline Favorite Pokemon Editing] — Leg 4 (2026-10-18)
 
 `ProfileEditControls.tsx`'s always-visible panel (team visibility dropdowns
