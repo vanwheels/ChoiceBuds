@@ -203,6 +203,27 @@ change.
   `teamsState`/`settingsState` mutators and reflect immediately; the
   `ProfileCard` preview rendered alongside can lag a few seconds behind
   since it still reflects `useSync`'s last-synced server copy.
+- `ProfileCard` splits a profile's teams into "Open Teamsheets"/"Closed
+  Teamsheets" sections (`ProfileTeamSection`, one instance per tier) instead
+  of one flat list, and a localStorage-backed grid/list layout choice
+  (`useProfileLayout`, same pattern as `useSidebarCollapsed`) controls how
+  every team's Pokémon render (`ProfileTeamCard` → `ProfilePokemonTile`/
+  `ProfilePokemonRow`) — a visual-style redo so both tiers read as real team
+  cards (sprite/item/ability/moves/stat-alignment, mirroring
+  `TeamPosterTile.tsx`'s team-poster-export layout) rather than plain text
+  rows. Neither per-Pokemon component gets type-colored move chips or a
+  PokeAPI-sourced item icon the way `TeamPosterTile` does — `PublicTeam`'s
+  pokemon only carry what `GET /profile/:username` serves, and the
+  standalone `/u/<username>` route deliberately never pulls in the
+  PokeAPI-backed game-data cache (see Web build section below) — so items
+  only get an icon via `getItemFallbackSpriteUrl`'s static Serebii fallback
+  set and moves render as neutral chips. Each section owns its own
+  drag-in-progress order (`useGridReorder`) and commits only its own team
+  ids through `onReorderTeams`; this is safe even though `Team.profileOrder`
+  is one flat field across every team because `sortTeamsForProfile` is a
+  stable sort and the section split happens again, client-side, before
+  either array's order is read — see `ProfileTeamSection`'s own header
+  comment.
 - Pinned via `Sidebar.tsx`'s footer entry (desktop rail + mobile drawer,
   hidden entirely when signed out) above the Settings entry, reusing the
   same `renderNavItem` row styling/active-highlight the tab items use —
