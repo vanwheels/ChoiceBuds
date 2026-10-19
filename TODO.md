@@ -12,17 +12,6 @@ Done when:
 - `useTeams.ts` and whatever it's split into are each under the 500-line
   hard cap, with the full test suite passing and no behavior change.
 
-- **[Player Favoriting / Friend System] — Leg 3** *(Last touched:
-  2026-10-19 · Re-checks: 0)*
-  Decide whether a friend/favorite system is worth scoping now that Leg 2
-  has resolved the Player Search Directory question — a friend system
-  needs some way to find the other account first, so this leg runs after
-  and depends on Leg 2's outcome. Decide-first — no implementation in this
-  pass.
-  Done check: decision recorded in TODO.md (new scoped follow-up item, or
-  closed-as-won't-build note with rationale).
-  Manual verification: no. Review: no.
-
 - **[Split useTeams.ts] — Leg 4** *(Last touched: 2026-10-19 ·
   Re-checks: 0)*
   `src/renderer/hooks/useTeams.ts` is 634 lines, over CLAUDE.md's 500-line
