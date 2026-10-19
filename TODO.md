@@ -26,24 +26,6 @@ Done when:
   choice.
 - Teams on a profile page can be filtered/broken down by regulation.
 
-- **[Profile Page Sections & Layout] — Leg 3** *(Last touched: 2026-10-18 ·
-  Re-checks: 0)*
-  Group previewed teams on the profile page into separate open-teamsheet /
-  closed-teamsheet sections, and add a layout control for how they're
-  displayed (e.g. grid vs. list). Applies to both your own editable profile
-  view and visiting another account's. Also carries a visual-style redo
-  flagged live during Teamsheet Open/Closed Visibility Tiers Leg 3
-  (2026-10-18): `ProfileCard.tsx`'s current per-team render (plain text
-  rows for item/ability/nature/EVs/moves) should look like real team
-  cards/the export image format instead — applies to both open and closed
-  tiers, not just open's extra fields.
-  Done check: a profile with both open and closed teams shows them in two
-  distinct sections; switching the layout control changes the display
-  without losing drag order from Leg 2; both tiers render as styled cards
-  matching TeamCard.tsx/the export image's visual language, not a plain
-  text dump.
-  Manual verification: yes
-
 - **[Regulation Filter on Profile Page] — Leg 4** *(Last touched:
   2026-10-18 · Re-checks: 0)*
   Add a regulation filter/breakdown to the profile page's team list,
@@ -165,4 +147,19 @@ Public Profiles & Team Sharing was promoted to current 2026-10-17 and
 shipped the same day (see `MILESTONES.md`) - its original leg 4 (shared
 public team browse/upload database) split back out to Unscheduled above
 since its moderation model still needs its own scoping pass.
+
+Public route bundle split (noted 2026-10-18, during Profile Page Sections &
+Layout Leg 3's routing discussion): `/u/<username>` currently shares the
+main `web/` bundle with the full signed-in app (`web/main.tsx` statically
+imports both `AppWeb` and `PublicProfilePage`) rather than being a
+dedicated lightweight bundle the way `web/download/` is - `PublicProfilePage`
+just never calls the heavier Teams/Box/sync hooks, so the "no app state for
+anonymous visitors" goal is achieved at the runtime-behavior level, not the
+bundle-size level (an anonymous `/u/<username>` visitor still downloads the
+entire app bundle). Worth splitting into a dedicated `web/public/` Vite
+entry (served via the same `404.html` redirect trick `/u/<username>`
+already uses, since it needs a dynamic path segment `web/download/`
+doesn't) once a second public dynamic route actually gets built - e.g.
+public team displays not tied to a profile. Not worth restructuring the
+build for a pattern with only one real example today.
 

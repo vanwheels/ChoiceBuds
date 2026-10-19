@@ -68,6 +68,34 @@ Entries prior to this file's oldest are in:
   with the milestone slug since it shares its date range with the Scoping
   Sweep archive above)
 
+## [Profile Page Sections & Layout] — Leg 3 (2026-10-18)
+
+Previewed teams on a profile page now split into separate "Open
+Teamsheets"/"Closed Teamsheets" sections (`ProfileTeamSection.tsx`, each
+owning its own drag-reorder scope so a drag never crosses tiers), with a
+localStorage-backed grid/list layout choice (`useProfileLayout.ts`, same
+pattern as `useSidebarCollapsed.ts`) controlling whether each team's
+Pokemon render as poster-style tiles (`ProfilePokemonTile.tsx`) or a denser
+list (`ProfilePokemonRow.tsx`) - both mirroring `TeamPosterTile.tsx`'s
+team-poster-export layout instead of the old plain text-row dump, per the
+visual-style redo flagged live during Teamsheet Open/Closed Visibility
+Tiers Leg 3. Two follow-up fixes landed during manual verification: the
+per-Pokemon grid was capped at 3 columns inside a narrow fixed-width
+column, so a wide window left most of the page empty - switched to a
+`@container`-keyed grid (same pattern as `TeamCardRosterGrid.tsx`'s roster
+grid) inside a wider section so it actually reaches 6 columns when there's
+room, and `gameDataState`/`spriteCacheState` (already mounted app-wide)
+were threaded down for real type-colored move chips/item sprites when
+viewing a profile from inside the app (`utils/profileGameData.ts`,
+cache-only reads - the standalone `/u/<username>` route still has neither,
+by design). A third fix, found while verifying this leg: public profile
+sprites were being served from a Team Pokemon's stale, never-shiny-aware
+stored `spriteUrl` field instead of the live `pokedexNumber`/gender/shiny
+the rest of the app actually renders from - `worker/src/spriteUrl.ts`
+(hand-duplicated port of the renderer's `getPixelSpriteUrl`, same
+reasoning as `safetyFilter.ts`) fixes this for both tiers. Manually
+verified live. See commits 634cbfb, c142488, 04f7970.
+
 ## [Drag-to-Rearrange Previewed Teams] — Leg 2 (2026-10-18)
 
 The profile page's team preview now has its own drag-to-reorder order,
