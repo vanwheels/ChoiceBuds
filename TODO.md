@@ -26,15 +26,6 @@ Done when:
   choice.
 - Teams on a profile page can be filtered/broken down by regulation.
 
-- **[Regulation Filter on Profile Page] — Leg 4** *(Last touched:
-  2026-10-18 · Re-checks: 0)*
-  Add a regulation filter/breakdown to the profile page's team list,
-  matching how other pages already filter by regulation, so a profile with
-  many teams can be narrowed down.
-  Done check: filtering by a regulation on a profile page shows only teams
-  in that regulation; clearing the filter shows all sections again.
-  Manual verification: yes
-
 - **[Profile Previews UI Consistency Pass] — Leg 5** *(Last touched:
   2026-10-18 · Re-checks: 0)*
   Review every UI surface Legs 1-4 introduced (import action/flow, drag

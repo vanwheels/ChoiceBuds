@@ -68,6 +68,22 @@ Entries prior to this file's oldest are in:
   with the milestone slug since it shares its date range with the Scoping
   Sweep archive above)
 
+## [Regulation Filter on Profile Page] — Leg 4 (2026-10-18)
+
+Added a pill-row regulation filter (`All`/`Reg M-A`/`Reg M-B`/`Reg M-C`) to
+`ProfileCard.tsx`, narrowing both the Open and Closed Teamsheet sections
+down to one regulation - shared by the in-app profile page and the
+standalone `/u/<username>` route, since both render through this one
+component. Built from `ALL_REGULATION_IDS`/`getRegulationLabel`
+(`pokemonRules.ts`), the same source `TeamsPage.tsx`'s own Format Filter
+Buttons use, rather than a hardcoded list - a future regulation needs no
+change here. First pass gated the pill row on whether 2+ regulations were
+actually present (mirroring `StatisticsPage.tsx`'s season filter instead),
+which hid the control on profiles that hadn't yet mixed regulations;
+switched to always rendering every option, matching `TeamsPage.tsx`'s own
+convention exactly, once that was flagged live. Manually verified live.
+See commit af764a6.
+
 ## [Profile Page Sections & Layout] — Leg 3 (2026-10-18)
 
 Previewed teams on a profile page now split into separate "Open
