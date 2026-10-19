@@ -12,20 +12,9 @@ Done when:
 - `useTeams.ts` and whatever it's split into are each under the 500-line
   hard cap, with the full test suite passing and no behavior change.
 
-- **[Split useTeams.ts] — Leg 4** *(Last touched: 2026-10-19 ·
-  Re-checks: 0)*
-  `src/renderer/hooks/useTeams.ts` is 634 lines, over CLAUDE.md's 500-line
-  hard cap, flagged by `/leg-review` on Teamsheet Open/Closed Visibility
-  Tiers Leg 3 (2026-10-18) and carried for a third consecutive milestone.
-  Scope the natural seams (load/migration vs. CRUD mutators vs.
-  applySyncedState's reconciliation logic are the obvious candidates, worth
-  confirming before splitting) and execute the split with no behavior
-  change.
-  Done check: `useTeams.ts` and whatever it's split into are each under the
-  500-line hard cap, full test suite passes.
-  Manual verification: yes. Review: yes — touches load/migration/sync
-  reconciliation.
-
+All three done-when criteria above are now met — Split useTeams.ts Leg 4
+(the last of them) shipped 2026-10-19, manually verified, see
+`COMPLETED.md`. This milestone is ready for `/close-milestone`.
 
 Working task list for ongoing/planned work. Every item is titled
 `[Item/Sweep Name] — Leg N` (say "Start [title]" to kick off a session on

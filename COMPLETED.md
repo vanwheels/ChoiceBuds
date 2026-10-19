@@ -120,3 +120,18 @@ Entries prior to this file's oldest are in:
   question than what was asked). No code changed (scoping-only leg); see
   `docs/investigations/player-favoriting-friend-system-scope.md`. See
   commit `f172bb3`.
+
+- **[Split useTeams.ts] — Leg 4** (2026-10-19). Split `useTeams.ts` (634
+  lines, over CLAUDE.md's 500-line hard cap, flagged by `/leg-review` on
+  Teamsheet Open/Closed Visibility Tiers Leg 3 and carried for a third
+  consecutive milestone) along its natural seams: the pure load/migration
+  functions moved to `utils/teamMigrations.ts`, and `applySyncedState`'s
+  reconciliation algorithm moved to a pure `reconcileSyncedTeams` in
+  `utils/teamSyncReconciliation.ts`. CRUD mutators stayed in the hook — no
+  split precedent elsewhere and they're inherently stateful. `useTeams.ts`
+  is now 499 lines; the existing `useTeams.test.ts` was left untouched and
+  still passes unmodified, confirming no behavior change. `/leg-review`
+  passed with one non-blocking note (the two new util files were written
+  to be unit-tested without React but don't yet have their own direct test
+  file — pick up only if either gets touched again). See commit
+  (pending).
