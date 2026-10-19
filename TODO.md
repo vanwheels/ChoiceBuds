@@ -12,17 +12,6 @@ Done when:
 - `useTeams.ts` and whatever it's split into are each under the 500-line
   hard cap, with the full test suite passing and no behavior change.
 
-- **[Profile Notes & Moderation] — Leg 1** *(Last touched: 2026-10-19 ·
-  Re-checks: 0)*
-  Decide whether profile teams get a freeform notes field, and if so what
-  moderation model (or deliberate lack thereof) applies — same pattern as
-  the public-team-database question Scoping Sweep Leg 3 closed. This is a
-  decide-first leg: produce and record the decision, don't build off it in
-  the same pass even if the resolved scope turns out small.
-  Done check: decision recorded in TODO.md (either a new scoped
-  follow-up item, or a closed-as-won't-build note with rationale).
-  Manual verification: no. Review: no.
-
 - **[Player Search Directory] — Leg 2** *(Last touched: 2026-10-19 ·
   Re-checks: 0)*
   Decide whether a browsable/searchable username directory is worth
