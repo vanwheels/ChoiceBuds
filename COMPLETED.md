@@ -134,4 +134,4 @@ Entries prior to this file's oldest are in:
   passed with one non-blocking note (the two new util files were written
   to be unit-tested without React but don't yet have their own direct test
   file — pick up only if either gets touched again). See commit
-  (pending).
+  `c1405c0`.
