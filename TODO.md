@@ -26,21 +26,6 @@ Done when:
   choice.
 - Teams on a profile page can be filtered/broken down by regulation.
 
-- **[Profile Previews UI Consistency Pass] — Leg 5** *(Last touched:
-  2026-10-18 · Re-checks: 0)*
-  Review every UI surface Legs 1-4 introduced (import action/flow, drag
-  handles, layout toggle, section headers, regulation filter control)
-  against the app's existing design language (theme tokens in
-  `src/renderer/config/`, existing card/button/control patterns elsewhere
-  in the app) rather than each leg's author improvising its own look.
-  Scoped to this milestone's additions only, not a wider app-wide sweep.
-  Catch anything that reads as default/unstyled Electron chrome rather than
-  matching the rest of ChoiceBuds.
-  Done check: every new control/surface from Legs 1-4 uses existing theme
-  tokens and matches established component patterns (buttons, cards,
-  filters) elsewhere in the app; nothing looks like an unstyled default.
-  Manual verification: yes
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -68,6 +53,58 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+- **[Profile Edit Mode: Inline Favorite Pokemon Editing] — Leg 1**
+  *(Last touched: 2026-10-18 · Re-checks: 0)*
+  Split out of Profile Previews UI Consistency Pass Leg 5 (flagged live
+  2026-10-18): `ProfileEditControls.tsx`'s always-visible panel (team
+  visibility dropdowns + a permanently-shown species search box for the
+  favorite Pokemon) should become an explicit "Edit" toggle on the profile
+  page instead, with the favorite Pokemon editable by clicking directly on
+  its own sprite rather than a separate search box below it.
+  Done check: an Edit button on your own profile page toggles edit
+  affordances on/off; clicking the favorite Pokemon's sprite while editing
+  opens the species picker in place.
+  Manual verification: yes
+
+- **[Profile Section Add-Team Picker] — Leg 1** *(Last touched: 2026-10-18 ·
+  Re-checks: 0)*
+  Split out of Profile Previews UI Consistency Pass Leg 5. Each Open/Closed
+  teamsheet section (`ProfileTeamSection.tsx`) gets a "+ Team" box at the
+  bottom; clicking it opens a scrollable picker of your own Teams reusing
+  `MobileTeamRow.tsx`'s sprite-strip + team-name row display, and picking
+  one sets that team's `visibility` to the section's tier.
+  Done check: the picker lists every team not already in that tier; picking
+  one adds it to the section and persists through the normal `updateTeam`
+  path.
+  Manual verification: yes
+
+- **[Profile Section Drag-and-Drop Between Open/Closed] — Leg 1**
+  *(Last touched: 2026-10-18 · Re-checks: 0)*
+  Split out of Profile Previews UI Consistency Pass Leg 5. Right now
+  `ProfileTeamSection.tsx`'s drag-reorder deliberately never crosses
+  between Open and Closed (see its own header comment) since a cross-
+  section drag used to have no defined meaning. This flips that: dragging
+  a team card from one section into the other becomes the primary way to
+  change its `visibility` tier, auto-persisting through `updateTeam` on
+  drop. Needs its own `useGridReorder`-adjacent design since the hook is
+  currently scoped to one section's ids at a time - probably related to
+  [Profile Section Add-Team Picker] above since both end up calling the
+  same visibility mutation.
+  Done check: dragging a team card across the Open/Closed boundary updates
+  its visibility and the team re-renders in the destination section.
+  Manual verification: yes
+
+- **[Teams Page Profile-Visibility Indicator] — Leg 1** *(Last touched:
+  2026-10-18 · Re-checks: 0)*
+  Split out of Profile Previews UI Consistency Pass Leg 5. The Teams tab
+  itself (`TeamsPage.tsx`/`TeamCard.tsx`) should show a visual indicator on
+  any team currently visible on your profile (open or closed tier), with
+  the ability to add/remove/change that from the Teams page directly
+  instead of only from the profile page's own editing controls.
+  Done check: a team card on the Teams tab visibly marks its profile
+  visibility state, and that state can be changed from there.
+  Manual verification: yes
 
 - **[Profile Notes & Moderation] — Leg 1** *(Last touched: 2026-10-18 ·
   Re-checks: 0)*

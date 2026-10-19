@@ -68,6 +68,27 @@ Entries prior to this file's oldest are in:
   with the milestone slug since it shares its date range with the Scoping
   Sweep archive above)
 
+## [Profile Previews UI Consistency Pass] — Leg 5 (2026-10-18)
+
+Brought Legs 1-4's one-off styling in line with established patterns
+elsewhere in the app: `ProfileTeamCard.tsx`'s drag handle now matches
+`TeamCardHeader.tsx`/`BoxCard.tsx`'s responsive touch-target size and
+zinc-400 color, its regulation badge matches `RegulationBadge.tsx`'s
+padding/tracking, and the regulation filter pills match the layout
+toggle's height so the two selector groups in `ProfileCard.tsx`'s header
+row read as one family of controls. Also gave `ProfilePokemonTile.tsx`/
+`ProfilePokemonRow.tsx` the per-type `.type-glow-ring` border every other
+Pokemon card (`PokemonCard.tsx`/`BoxCard.tsx`) has, via a new cache-only
+`getProfileTypeGlowColors` lookup in `profileGameData.ts` off the optional
+`databaseState` prop (same graceful-fallback shape the existing item/move
+lookups there already use). Four further asks that came up during manual
+review - an Edit-mode toggle with click-the-sprite favorite editing, a "+
+Team" add picker per section, drag-and-drop between Open/Closed tiers, and
+a profile-visibility indicator on the Teams page itself - were split out
+to `TODO.md`'s Unscheduled section rather than folded into this leg, since
+they're new interaction models, not a consistency fix. See commit
+a81c40a.
+
 ## [Regulation Filter on Profile Page] — Leg 4 (2026-10-18)
 
 Added a pill-row regulation filter (`All`/`Reg M-A`/`Reg M-B`/`Reg M-C`) to
