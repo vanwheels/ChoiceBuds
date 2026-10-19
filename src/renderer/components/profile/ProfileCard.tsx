@@ -33,16 +33,35 @@
  * deliberately pulls in nothing beyond the one profile fetch (see its own
  * header comment). See ProfilePokemonTile.tsx for the fallback rendering
  * that keeps working without them.
+ *
+ * Regulation Filter on Profile Page (see TODO.md): a pill row - same
+ * always-show-every-option convention as TeamsPage.tsx's own Format Filter
+ * Buttons (never gated by what's actually present) and the same active/
+ * inactive styling as the layout toggle below - narrows `profile.teams` to
+ * one regulation before the open/closed split, so both the in-app and
+ * standalone routes get the filter for free from this one shared component.
  */
 
+import { useMemo, useState } from 'react';
 import type { PublicProfile, PublicTeam } from '../../services/syncApi';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import { useProfileLayout } from '../../hooks/useProfileLayout';
+import {
+  ALL_REGULATION_IDS,
+  getRegulationLabel,
+  isRegulationLabel,
+  toRegulationId,
+  type RegulationId,
+} from '../../utils/pokemonRules';
 import type { ImportTeamStatus } from './ProfileTeamCard';
 import ProfileTeamSection from './ProfileTeamSection';
 
 export type { ImportTeamStatus } from './ProfileTeamCard';
+
+const ALL_REGULATIONS = 'All';
+type RegulationFilter = RegulationId | typeof ALL_REGULATIONS;
+const REGULATION_FILTERS: RegulationFilter[] = [ALL_REGULATIONS, ...ALL_REGULATION_IDS];
 
 export default function ProfileCard({
   profile,
@@ -60,8 +79,20 @@ export default function ProfileCard({
   onReorderTeams?: (orderedIds: string[]) => void;
 }) {
   const { layout, setLayout } = useProfileLayout();
-  const openTeams = profile.teams.filter((t) => t.visibility === 'open');
-  const closedTeams = profile.teams.filter((t) => t.visibility === 'closed');
+  const [regulationFilter, setRegulationFilter] = useState<RegulationFilter>(ALL_REGULATIONS);
+
+  const filteredTeams = useMemo(
+    () =>
+      regulationFilter === ALL_REGULATIONS
+        ? profile.teams
+        : profile.teams.filter(
+            (t) => isRegulationLabel(t.format) && toRegulationId(t.format) === regulationFilter,
+          ),
+    [profile.teams, regulationFilter],
+  );
+
+  const openTeams = filteredTeams.filter((t) => t.visibility === 'open');
+  const closedTeams = filteredTeams.filter((t) => t.visibility === 'closed');
 
   return (
     <>
@@ -83,33 +114,51 @@ export default function ProfileCard({
       )}
 
       {profile.teams.length > 0 && (
-        <div className="mt-10 flex w-full max-w-6xl items-center justify-end gap-1.5">
-          <span className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
-            Layout:
-          </span>
-          <div className="flex overflow-hidden rounded-lg border border-zinc-600">
-            <button
-              onClick={() => setLayout('grid')}
-              title="Grid of per-Pokemon tiles, mirroring the team-poster export"
-              className={`cursor-pointer px-3 py-1 text-xs font-medium transition-colors ${
-                layout === 'grid'
-                  ? 'bg-accent-gold text-zinc-900'
-                  : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
-              }`}
-            >
-              Grid
-            </button>
-            <button
-              onClick={() => setLayout('list')}
-              title="Denser one-row-per-Pokemon list"
-              className={`cursor-pointer px-3 py-1 text-xs font-medium transition-colors ${
-                layout === 'list'
-                  ? 'bg-accent-gold text-zinc-900'
-                  : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
-              }`}
-            >
-              List
-            </button>
+        <div className="mt-10 flex w-full max-w-6xl flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap gap-2">
+            {REGULATION_FILTERS.map((filter) => (
+              <button
+                key={filter}
+                onClick={() => setRegulationFilter(filter)}
+                className={`cursor-pointer rounded-lg px-4 py-2 text-xs font-medium transition-colors ${
+                  regulationFilter === filter
+                    ? 'bg-accent-gold text-zinc-900'
+                    : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
+                }`}
+              >
+                {filter === ALL_REGULATIONS ? 'All' : getRegulationLabel(filter)}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
+              Layout:
+            </span>
+            <div className="flex overflow-hidden rounded-lg border border-zinc-600">
+              <button
+                onClick={() => setLayout('grid')}
+                title="Grid of per-Pokemon tiles, mirroring the team-poster export"
+                className={`cursor-pointer px-3 py-1 text-xs font-medium transition-colors ${
+                  layout === 'grid'
+                    ? 'bg-accent-gold text-zinc-900'
+                    : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
+                }`}
+              >
+                Grid
+              </button>
+              <button
+                onClick={() => setLayout('list')}
+                title="Denser one-row-per-Pokemon list"
+                className={`cursor-pointer px-3 py-1 text-xs font-medium transition-colors ${
+                  layout === 'list'
+                    ? 'bg-accent-gold text-zinc-900'
+                    : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
+                }`}
+              >
+                List
+              </button>
+            </div>
           </div>
         </div>
       )}
