@@ -1,11 +1,12 @@
 import type { PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent } from 'react';
-import { Team } from '../types/pokemon';
+import { Team, type TeamVisibility } from '../types/pokemon';
 import type { RegulationId } from '../utils/pokemonRules';
 import { getPixelSpriteUrl } from '../utils/spriteUrl';
 import { getTotalSP, MAX_TOTAL_SP } from '../utils/evTotal';
 import { getMegaApiSlug } from '../config/megaEvolution';
 import { getCachedMegaSprite } from '../hooks/useMegaSprite';
 import RegulationBadge from './RegulationBadge';
+import TeamVisibilityBadge from './TeamVisibilityBadge';
 import TeamOverflowMenu from './TeamOverflowMenu';
 
 interface TeamCardHeaderProps {
@@ -13,6 +14,7 @@ interface TeamCardHeaderProps {
   resolveSprite: (remoteUrl: string) => string;
   onContextMenu: (e: ReactMouseEvent<HTMLDivElement>) => void;
   onFormatChange: (format: Team['format']) => void;
+  onVisibilityChange: (visibility: TeamVisibility) => void;
   localTeamName: string;
   onTeamNameChange: (value: string) => void;
   onTeamNameBlur: () => void;
@@ -39,6 +41,7 @@ export default function TeamCardHeader({
   resolveSprite,
   onContextMenu,
   onFormatChange,
+  onVisibilityChange,
   localTeamName,
   onTeamNameChange,
   onTeamNameBlur,
@@ -69,7 +72,15 @@ export default function TeamCardHeader({
           a phone viewport, so below `md` each of the three becomes its own
           full-width row instead. */}
       <div className="flex flex-col gap-1 w-full md:min-w-[190px] md:max-w-[190px] md:shrink-0">
-        <RegulationBadge team={team} onChange={onFormatChange} />
+        {/* Visibility badge (Teams Page Profile-Visibility Indicator, see
+            TODO.md) sits next to the regulation badge - same
+            clickable-dropdown shape, shown for every team (including
+            Private) so the Teams tab always reflects current profile
+            visibility at a glance, not just when a team is already public. */}
+        <div className="flex items-center gap-1.5">
+          <RegulationBadge team={team} onChange={onFormatChange} />
+          <TeamVisibilityBadge team={team} onChange={onVisibilityChange} />
+        </div>
 
         {/* Team name - permanently editable (Always-On Editing Leg 1, see
             TODO.md), no more isEditingTeam gate. Shows the raw stored

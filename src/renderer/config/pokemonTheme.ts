@@ -234,3 +234,19 @@ export function getRegulationTheme(regulationId: string): {
     }
   );
 }
+
+/**
+ * Per-visibility-tier badge color (TeamVisibilityBadge, Teams Page
+ * Profile-Visibility Indicator - see TODO.md) - keyed by the `TeamVisibility`
+ * type in types/pokemon.ts. `private` reuses the same muted gray as an
+ * unmatched regulation above, since it's the "not shown anywhere" default.
+ */
+export const TEAM_VISIBILITY_THEMES: Record<string, { badgeBg: string }> = {
+  private: { badgeBg: 'bg-zinc-600 hover:bg-zinc-500' },
+  closed: { badgeBg: 'bg-sky-600 hover:bg-sky-500' },
+  open: { badgeBg: 'bg-emerald-600 hover:bg-emerald-500' },
+};
+
+export function getTeamVisibilityTheme(visibility: string): { badgeBg: string } {
+  return TEAM_VISIBILITY_THEMES[visibility] || TEAM_VISIBILITY_THEMES.private;
+}

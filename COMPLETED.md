@@ -74,6 +74,23 @@ Entries prior to this file's oldest are in:
   with the Profile System Revamp: Foundation and Scoping Sweep archives
   above)
 
+## [Teams Page Profile-Visibility Indicator] — Leg 3 (2026-10-18)
+
+The Teams tab now shows and controls each team's public-profile visibility
+tier directly, instead of that only being reachable from the profile
+page's own `ProfileEditControls.tsx`. A new `TeamVisibilityBadge.tsx`
+mirrors `RegulationBadge.tsx`'s clickable-badge-plus-dropdown shape exactly
+(backed by a new `TEAM_VISIBILITY_THEMES` table in `pokemonTheme.ts` -
+private/closed/open get their own badge colors), rendered next to the
+regulation badge in `TeamCardHeader.tsx`'s identity column and wired
+through `TeamCard.tsx` to the same `updateTeam(team.id, { visibility })`
+call `ProfileEditControls.tsx` already uses. The badge always renders,
+including for Private teams, so the Teams tab reflects current visibility
+at a glance rather than only once a team is already public. Scoped to
+desktop per the TODO item's own file list (`TeamsPage.tsx`/`TeamCard.tsx`)
+- `MobileTeamRow.tsx`'s compact row wasn't touched. Manually verified
+live. See commit <hash>.
+
 ## [Profile Section Drag-and-Drop Between Open/Closed] — Leg 2 (2026-10-18)
 
 Dragging a team card across the Open/Closed boundary on your own profile

@@ -303,6 +303,7 @@ export default function TeamCard({
         resolveSprite={spriteCacheState.resolveSprite}
         onContextMenu={handleTeamContextMenu}
         onFormatChange={(format) => updateTeam(team.id, { format })}
+        onVisibilityChange={(visibility) => updateTeam(team.id, { visibility })}
         localTeamName={localTeamName}
         onTeamNameChange={setLocalTeamName}
         onTeamNameBlur={async () => {

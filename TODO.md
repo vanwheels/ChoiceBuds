@@ -27,16 +27,6 @@ Done when:
   with favorite-Pokemon editing moved onto its sprite.
 - Full test suite passes and all four legs are manually verified live.
 
-- **[Teams Page Profile-Visibility Indicator] — Leg 3** *(Last touched:
-  2026-10-18 · Re-checks: 0)*
-  The Teams tab itself (`TeamsPage.tsx`/`TeamCard.tsx`) should show a visual
-  indicator on any team currently visible on your profile (open or closed
-  tier), with the ability to add/remove/change that from the Teams page
-  directly instead of only from the profile page's own editing controls.
-  Done check: a team card on the Teams tab visibly marks its profile
-  visibility state, and that state can be changed from there.
-  Manual verification: yes
-
 - **[Profile Edit Mode: Inline Favorite Pokemon Editing] — Leg 4**
   *(Last touched: 2026-10-18 · Re-checks: 0)*
   `ProfileEditControls.tsx`'s always-visible panel (team visibility
