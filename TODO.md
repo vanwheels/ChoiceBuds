@@ -29,7 +29,7 @@ Done when:
 - Full test suite passes and all five legs are manually verified live.
 
 - **[Profile Section Remove-Team Control] — Leg 5**
-  *(Last touched: 2026-10-18 · Re-checks: 0)*
+  *(Last touched: 2026-10-19 · Re-checks: 0)*
   Flagged live during Leg 4: removing the per-team visibility `<select>`
   dropdown from the profile page (now redundant with the Teams tab's own
   `TeamVisibilityBadge`, the section "+ Team" picker, and cross-section
@@ -37,12 +37,13 @@ Done when:
   from the profile page itself - only the Teams tab's `TeamVisibilityBadge`
   can set a team back to Private. Adds a small "×" remove control to each
   `ProfileTeamCard.tsx` header (next to the regulation badge, own-profile +
-  edit mode only - same gate as `onReorderTeams`/`onAddTeamToTier`/
-  `favoriteEditing`), threaded down as a new `onRemoveTeam?: (teamId:
-  string) => void` prop through `ProfileCard.tsx` → `ProfileTeamSection.tsx`
-  → `ProfileTeamCard.tsx`, calling `teamsState.updateTeam(teamId, {
-  visibility: 'private' })` from `ProfilePage.tsx`, same path
-  `onAddTeamToTier` already uses in the other direction.
+  edit mode only - same gate as `favoriteEditing`), threaded down as a new
+  `onRemoveTeam?: (teamId: string) => void` prop through `ProfileCard.tsx`
+  → `ProfileTeamSection.tsx` → `ProfileTeamCard.tsx`, calling
+  `teamsState.updateTeam(teamId, { visibility: 'private' })` from
+  `ProfilePage.tsx`, same path `onAddTeamToTier` already uses in the other
+  direction. Code done, full suite/lint/type-check pass (commit c1bafe2);
+  still needs the user's own live manual check before this leg closes.
   Done check: on your own profile with Edit on, clicking a team card's "×"
   sets that team back to Private and it disappears from its section
   immediately, without leaving the profile page.
