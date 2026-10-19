@@ -8,9 +8,12 @@ import { getFallbackGender } from '../config/pokemonRules';
 import { normalizeMegaSpeciesOnImport } from '../config/megaEvolution';
 
 /**
- * Default EV spread (all zeros)
+ * Default EV spread (all zeros) - exported so other call sites building a
+ * ShowdownPokemon from data that doesn't carry EVs (e.g. a profile import's
+ * closed-tier teams never reach this path, but a malformed open-tier entry
+ * could) can fall back to the same shape instead of hand-rolling zeros.
  */
-const DEFAULT_EVS: EVSpread = {
+export const DEFAULT_EVS: EVSpread = {
   hp: 0,
   attack: 0,
   defense: 0,

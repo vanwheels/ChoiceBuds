@@ -378,6 +378,7 @@ export default function AppWeb() {
               onOpenProfile={profileNav.openProfile}
               syncState={syncState}
               teamsState={teamsState}
+              databaseState={databaseState}
               settingsState={settingsState}
               speciesRosterState={speciesRosterState}
             />

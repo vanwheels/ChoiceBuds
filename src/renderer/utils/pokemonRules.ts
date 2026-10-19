@@ -519,6 +519,16 @@ export function toRegulationId(format: RegulationLabel): RegulationId {
   return LABEL_TO_REGULATION_ID[format];
 }
 
+/**
+ * Narrows an arbitrary string (e.g. a public profile's `PublicTeam.format`,
+ * which the Worker serves as plain `string`) down to a real `RegulationLabel`
+ * - used when rebuilding a `Team` from data that didn't originate from this
+ * app's own Format dropdown.
+ */
+export function isRegulationLabel(format: string): format is RegulationLabel {
+  return format in LABEL_TO_REGULATION_ID;
+}
+
 export function getRuleset(rulesetId: RegulationId): ChampionsRuleset {
   return CHAMPIONS_RULESETS[rulesetId];
 }

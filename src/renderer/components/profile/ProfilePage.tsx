@@ -21,15 +21,31 @@
  * The username lookup box lives here rather than on every tab/the sidebar,
  * since opening a second profile from an already-open one is exactly what
  * the back-stack is for.
+ *
+ * Import-to-my-Teams (Save/Import a Team From a Profile, see TODO.md) also
+ * lives here rather than in ProfileCard: it needs `teamsState`/
+ * `databaseState` to build and persist a real `Team`, neither of which the
+ * standalone, unauthenticated `/u/<username>` route (PublicProfilePage.tsx)
+ * has - keeping the conversion/enrichment logic out of the shared,
+ * presentational ProfileCard lets that route keep not needing them.
+ * `isOwnProfile` gates it off entirely on your own profile.
  */
 
 import { useState, type FormEvent } from 'react';
 import { usePublicProfile } from '../../hooks/usePublicProfile';
+import { enrichPokemonWithAPI } from '../../services/pokeapi';
+import type { PublicTeam } from '../../services/syncApi';
+import {
+  buildShowdownPokemonFromPublic,
+  resolveImportedTeamFormat,
+} from '../../utils/profileTeamImport';
 import type { UseSyncReturn } from '../../hooks/useSync';
 import type { UseTeamsReturn } from '../../hooks/useTeams';
+import type { UseDatabaseReturn } from '../../hooks/useDatabase';
 import type { UseSettingsReturn } from '../../hooks/useSettings';
 import type { UseSpeciesRosterReturn } from '../../hooks/useSpeciesRoster';
-import ProfileCard from './ProfileCard';
+import type { ImportedPokemonInfo, Team } from '../../types/pokemon';
+import ProfileCard, { type ImportTeamStatus } from './ProfileCard';
 import ProfileEditControls from './ProfileEditControls';
 
 interface ProfilePageProps {
@@ -38,6 +54,7 @@ interface ProfilePageProps {
   onOpenProfile: (username: string) => void;
   syncState: UseSyncReturn;
   teamsState: UseTeamsReturn;
+  databaseState: UseDatabaseReturn;
   settingsState: UseSettingsReturn;
   speciesRosterState: UseSpeciesRosterReturn;
 }
@@ -48,14 +65,51 @@ export default function ProfilePage({
   onOpenProfile,
   syncState,
   teamsState,
+  databaseState,
   settingsState,
   speciesRosterState,
 }: ProfilePageProps) {
   const state = usePublicProfile(username);
   const [lookup, setLookup] = useState('');
+  const [importStatus, setImportStatus] = useState<Record<string, ImportTeamStatus>>({});
 
   const isOwnProfile =
     !!syncState.syncUsername && syncState.syncUsername.toLowerCase() === username.toLowerCase();
+
+  const handleImportTeam = async (publicTeam: PublicTeam) => {
+    setImportStatus((prev) => ({ ...prev, [publicTeam.id]: 'importing' }));
+
+    try {
+      const enrichedPokemon: ImportedPokemonInfo[] = [];
+      for (const p of publicTeam.pokemon) {
+        enrichedPokemon.push(
+          await enrichPokemonWithAPI(
+            buildShowdownPokemonFromPublic(p),
+            databaseState.getCachedEntry,
+            databaseState.setCacheEntry,
+          ),
+        );
+      }
+
+      const newTeam: Team = {
+        id: crypto.randomUUID(),
+        name: publicTeam.name || 'Imported Team',
+        format: resolveImportedTeamFormat(
+          publicTeam.format,
+          settingsState.settings.defaultRegulation,
+        ),
+        pokemon: enrichedPokemon,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        author: username,
+      };
+
+      const success = await teamsState.addTeam(newTeam);
+      setImportStatus((prev) => ({ ...prev, [publicTeam.id]: success ? 'imported' : 'error' }));
+    } catch {
+      setImportStatus((prev) => ({ ...prev, [publicTeam.id]: 'error' }));
+    }
+  };
 
   const handleLookup = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -103,7 +157,13 @@ export default function ProfilePage({
         <p className="mt-10 text-sm text-zinc-500">Loading profile…</p>
       )}
 
-      {state.status === 'found' && <ProfileCard profile={state.profile} />}
+      {state.status === 'found' && (
+        <ProfileCard
+          profile={state.profile}
+          onImportTeam={isOwnProfile ? undefined : handleImportTeam}
+          importStatus={importStatus}
+        />
+      )}
 
       {state.status === 'not-found' && (
         <p className="mt-10 text-sm text-zinc-400">
