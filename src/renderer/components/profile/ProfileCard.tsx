@@ -189,6 +189,20 @@ export default function ProfileCard({
   const reorderable = !!onReorderTeams;
   const publicFavorite = profile.favoritePokemon;
 
+  // Same optimistic-local-state reasoning as useCrossTierReorder's onMoveTier
+  // above: the real visibility write (onRemoveTeam) only reaches this page's
+  // display via a profile refetch usePublicProfile never does mid-session
+  // (see TODO.md's Leg 6), so removal has to also drop the id from whichever
+  // ordered-id array currently holds it, immediately, rather than waiting on
+  // one.
+  const handleRemoveTeam = onRemoveTeam
+    ? (teamId: string) => {
+        setOpenOrderedIds((ids) => ids.filter((id) => id !== teamId));
+        setClosedOrderedIds((ids) => ids.filter((id) => id !== teamId));
+        onRemoveTeam(teamId);
+      }
+    : undefined;
+
   return (
     <>
       <img src="/mascot.png" alt="" className="h-20 w-20" />
@@ -279,7 +293,7 @@ export default function ProfileCard({
         getHandlers={reorderable ? (id) => getHandlers(id, 'open') : undefined}
         availableTeamsToAdd={availableForOpen}
         onAddTeam={onAddTeamToTier ? (teamId) => onAddTeamToTier(teamId, 'open') : undefined}
-        onRemoveTeam={onRemoveTeam}
+        onRemoveTeam={handleRemoveTeam}
       />
 
       <ProfileTeamSection
@@ -297,7 +311,7 @@ export default function ProfileCard({
         getHandlers={reorderable ? (id) => getHandlers(id, 'closed') : undefined}
         availableTeamsToAdd={availableForClosed}
         onAddTeam={onAddTeamToTier ? (teamId) => onAddTeamToTier(teamId, 'closed') : undefined}
-        onRemoveTeam={onRemoveTeam}
+        onRemoveTeam={handleRemoveTeam}
       />
     </>
   );
