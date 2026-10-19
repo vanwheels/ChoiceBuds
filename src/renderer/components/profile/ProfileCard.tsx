@@ -175,8 +175,6 @@ export default function ProfileCard({
     [allTeams, regulationFilter],
   );
 
-  const openTeams = filteredTeams.filter((t) => t.visibility === 'open');
-  const closedTeams = filteredTeams.filter((t) => t.visibility === 'closed');
   const teamsById = new Map(filteredTeams.map((t) => [t.id, t]));
 
   const availableForOpen = localTeams?.filter((t) => t.visibility !== 'open');
@@ -185,20 +183,39 @@ export default function ProfileCard({
   // Same "adjust state during render" resync ProfileTeamSection.tsx used to
   // do itself, now once per tier here instead - each tier's ordered-id
   // array has to live above both sections so a cross-tier drag can move an
-  // id from one into the other.
-  const openIdsKey = openTeams.map((t) => t.id).join('|');
-  const closedIdsKey = closedTeams.map((t) => t.id).join('|');
-  const [openOrderedIds, setOpenOrderedIds] = useState(() => openTeams.map((t) => t.id));
-  const [closedOrderedIds, setClosedOrderedIds] = useState(() => closedTeams.map((t) => t.id));
+  // id from one into the other. Keyed off the *real* fetched teams only
+  // (regulation-filtered, but never `overlayTeams`-merged) - keying off the
+  // overlay-merged list instead would reset straight back to
+  // `profile.teams`'s stale state (reviving anything removed this session)
+  // the moment any unrelated add synthesized a new overlay entry, since
+  // that alone changes what the merged list contains (confirmed live: an
+  // add was silently resurrecting teams removed earlier in the same
+  // session). Only an actual new fetch or a regulation-filter change should
+  // ever trigger this reset.
+  const realFilteredTeams = useMemo(
+    () =>
+      regulationFilter === ALL_REGULATIONS
+        ? profile.teams
+        : profile.teams.filter(
+            (t) => isRegulationLabel(t.format) && toRegulationId(t.format) === regulationFilter,
+          ),
+    [profile.teams, regulationFilter],
+  );
+  const realOpenTeams = realFilteredTeams.filter((t) => t.visibility === 'open');
+  const realClosedTeams = realFilteredTeams.filter((t) => t.visibility === 'closed');
+  const openIdsKey = realOpenTeams.map((t) => t.id).join('|');
+  const closedIdsKey = realClosedTeams.map((t) => t.id).join('|');
+  const [openOrderedIds, setOpenOrderedIds] = useState(() => realOpenTeams.map((t) => t.id));
+  const [closedOrderedIds, setClosedOrderedIds] = useState(() => realClosedTeams.map((t) => t.id));
   const [prevOpenIdsKey, setPrevOpenIdsKey] = useState(openIdsKey);
   const [prevClosedIdsKey, setPrevClosedIdsKey] = useState(closedIdsKey);
   if (openIdsKey !== prevOpenIdsKey) {
     setPrevOpenIdsKey(openIdsKey);
-    setOpenOrderedIds(openTeams.map((t) => t.id));
+    setOpenOrderedIds(realOpenTeams.map((t) => t.id));
   }
   if (closedIdsKey !== prevClosedIdsKey) {
     setPrevClosedIdsKey(closedIdsKey);
-    setClosedOrderedIds(closedTeams.map((t) => t.id));
+    setClosedOrderedIds(realClosedTeams.map((t) => t.id));
   }
 
   const { containerRefs, getHandlers } = useCrossTierReorder({
