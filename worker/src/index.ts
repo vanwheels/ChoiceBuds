@@ -67,7 +67,12 @@ import {
 } from './crypto';
 import { mergeCollection, mergeSingleton, type SyncTombstone } from './merge';
 import { containsDisallowedContent } from './safetyFilter';
-import { extractPublicTeam, extractPublicFavoritePokemon, type PublicTeam } from './publicProfile';
+import {
+  extractPublicTeam,
+  extractPublicFavoritePokemon,
+  sortTeamsForProfile,
+  type PublicTeam,
+} from './publicProfile';
 
 export interface Env {
   SYNC_KV: KVNamespace;
@@ -328,7 +333,9 @@ async function handleProfileGet(env: Env, lowerUsername: string): Promise<Respon
   }
 
   const payload = await getStoredSyncPayloadForProfile(env, lowerUsername);
-  const teams = payload.teams.map(extractPublicTeam).filter((t): t is PublicTeam => t !== null);
+  const teams = sortTeamsForProfile(payload.teams)
+    .map(extractPublicTeam)
+    .filter((t): t is PublicTeam => t !== null);
   const favoritePokemon = extractPublicFavoritePokemon(payload.favoritePokemon);
 
   return jsonResponse({

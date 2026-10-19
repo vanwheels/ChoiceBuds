@@ -543,6 +543,40 @@ describe('useTeams', () => {
     expect(b.updatedAt).toBeGreaterThanOrEqual(before);
   });
 
+  it('setProfileTeamOrder stamps ascending profileOrder + fresh updatedAt only on the named teams', async () => {
+    vi.mocked(window.electron.readTeamsDatabase).mockResolvedValueOnce({
+      schemaVersion: 1,
+      teams: [
+        makeTeam({ id: 'a', visibility: 'closed', updatedAt: 1 }),
+        makeTeam({ id: 'b', visibility: 'private', updatedAt: 1 }),
+        makeTeam({ id: 'c', visibility: 'open', updatedAt: 1 }),
+      ],
+      lastModified: 0,
+    });
+    const { result } = renderHook(() => useTeams());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    const before = Date.now();
+    await act(async () => {
+      await result.current.setProfileTeamOrder(['c', 'a']);
+    });
+
+    const [a, b, c] = result.current.teams;
+    // Array element order is untouched - setProfileTeamOrder never reorders
+    // this array's own position, only the previewed order the Worker reads.
+    expect([a.id, b.id, c.id]).toEqual(['a', 'b', 'c']);
+    expect(c.profileOrder).toBe(0);
+    expect(a.profileOrder).toBe(1);
+    expect(c.updatedAt).toBeGreaterThanOrEqual(before);
+    expect(a.updatedAt).toBeGreaterThanOrEqual(before);
+    // 'b' (private, never named) is left completely alone - no profileOrder
+    // stamp and no updatedAt bump, unlike setTeamOrder's leftover handling.
+    expect(b.profileOrder).toBeUndefined();
+    expect(b.updatedAt).toBe(1);
+    // The private Teams tab's own sortOrder is never touched by this mutator.
+    expect([a.sortOrder, b.sortOrder, c.sortOrder]).toEqual([undefined, undefined, undefined]);
+  });
+
   it('toggleCardExpansion, collapseCard and collapseAllCards manage the expansion set', async () => {
     const { result } = renderHook(() => useTeams());
     await waitFor(() => expect(result.current.isLoading).toBe(false));

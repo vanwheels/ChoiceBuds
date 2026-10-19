@@ -169,6 +169,20 @@ export interface Team {
   // (PublicProfileSection.tsx), not from the team card itself. See
   // TeamVisibility's own doc comment for what each tier exposes.
   visibility?: TeamVisibility;
+  // Drag-reorder position among this account's *previewed* (closed/open
+  // visibility) teams on the public profile page - separate from sortOrder
+  // above on purpose (Drag-to-Rearrange Previewed Teams, see TODO.md/
+  // COMPLETED.md): reordering the public-facing preview shouldn't silently
+  // reorder the private Teams tab, and vice versa. Set by useTeams.ts's
+  // setProfileTeamOrder, same last-write-wins-survives-sync reasoning as
+  // sortOrder (the Worker's merge has no concept of list position either).
+  // Read by worker/src/publicProfile.ts's sortTeamsForProfile when building
+  // GET /profile/:username's response - a private team can carry a stale
+  // value here harmlessly, since extractPublicTeam drops it before this
+  // field would ever matter. Undefined (never reordered, or a team private
+  // teams never get stamped at all) falls back to the existing relative
+  // order, same undefined-means-"off" convention as sortOrder/favorite.
+  profileOrder?: number;
 }
 
 /**

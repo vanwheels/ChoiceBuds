@@ -3,6 +3,7 @@ import {
   extractPublicPokemon,
   extractPublicTeam,
   extractPublicFavoritePokemon,
+  sortTeamsForProfile,
 } from './publicProfile';
 
 function pokemon(
@@ -183,6 +184,40 @@ describe('extractPublicTeam', () => {
   it('filters out malformed Pokemon entries while keeping valid ones', () => {
     const result = extractPublicTeam(team({ pokemon: [pokemon(), null, 'garbage'] }));
     expect(result?.pokemon).toHaveLength(1);
+  });
+});
+
+describe('sortTeamsForProfile', () => {
+  it('orders teams ascending by profileOrder when every team has one', () => {
+    const result = sortTeamsForProfile([
+      team({ id: 't1', profileOrder: 2 }),
+      team({ id: 't2', profileOrder: 0 }),
+      team({ id: 't3', profileOrder: 1 }),
+    ]);
+    expect(result.map((t) => t.id)).toEqual(['t2', 't3', 't1']);
+  });
+
+  it('keeps existing relative order for teams missing profileOrder (never reordered)', () => {
+    const result = sortTeamsForProfile([
+      team({ id: 't1' }),
+      team({ id: 't2' }),
+      team({ id: 't3' }),
+    ]);
+    expect(result.map((t) => t.id)).toEqual(['t1', 't2', 't3']);
+  });
+
+  it('does not mutate the input array', () => {
+    const input = [team({ id: 't1', profileOrder: 1 }), team({ id: 't2', profileOrder: 0 })];
+    sortTeamsForProfile(input);
+    expect(input.map((t) => t.id)).toEqual(['t1', 't2']);
+  });
+
+  it('ignores a malformed (non-number) profileOrder as if unset', () => {
+    const result = sortTeamsForProfile([
+      team({ id: 't1', profileOrder: 'nope' }),
+      team({ id: 't2', profileOrder: 0 }),
+    ]);
+    expect(result.map((t) => t.id)).toEqual(['t1', 't2']);
   });
 });
 

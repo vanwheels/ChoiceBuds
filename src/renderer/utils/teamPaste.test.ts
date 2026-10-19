@@ -86,4 +86,11 @@ describe('buildPastedTeam', () => {
 
     expect(pasted.sortOrder).toBeUndefined();
   });
+
+  it('clears profileOrder even when the source team has one, for the same reason as sortOrder', () => {
+    const source = makeTeam({ profileOrder: 3 });
+    const pasted = buildPastedTeam(source, []);
+
+    expect(pasted.profileOrder).toBeUndefined();
+  });
 });

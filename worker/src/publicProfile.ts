@@ -79,6 +79,31 @@ export interface PublicTeam {
   pokemon: PublicPokemon[];
 }
 
+/** Reads a stored team's opaque `profileOrder` field, or undefined if unset/malformed. */
+function readProfileOrder(team: HasIdAndUpdatedAt): number | undefined {
+  const value = team.profileOrder;
+  return typeof value === 'number' ? value : undefined;
+}
+
+/**
+ * Stable-sorts stored teams by the owner's drag-reordered public display
+ * order (`Team.profileOrder` in the renderer's types/pokemon.ts - Drag-to-
+ * Rearrange Previewed Teams, see TODO.md) before `handleProfileGet` filters
+ * them down via extractPublicTeam below. Same "only compare when both sides
+ * have it, otherwise keep relative order" convention as the renderer's own
+ * teamSort.ts::sortTeams, so a team never reordered (or a private team that
+ * never gets stamped at all) just keeps its existing position rather than
+ * being forced to one end.
+ */
+export function sortTeamsForProfile<T extends HasIdAndUpdatedAt>(teams: T[]): T[] {
+  return [...teams].sort((a, b) => {
+    const orderA = readProfileOrder(a);
+    const orderB = readProfileOrder(b);
+    if (orderA !== undefined && orderB !== undefined) return orderA - orderB;
+    return 0;
+  });
+}
+
 export interface PublicFavoritePokemon {
   species: string;
   spriteUrl: string;

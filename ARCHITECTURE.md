@@ -165,6 +165,16 @@ change.
   explicit choice, not a silent migration. `FavoritePokemon` is a second
   account-wide singleton alongside `PlayerProfile`, merged the same
   `mergeSingleton` last-write-wins way.
+- The order teams appear in on a profile is its own field, `Team
+  .profileOrder` — deliberately separate from the private Teams tab's own
+  `sortOrder` (Drag-to-Rearrange Previewed Teams, see TODO.md/COMPLETED.md),
+  since reordering one must never silently reorder the other.
+  `handleProfileGet` sorts by it (`worker/src/publicProfile.ts`'s
+  `sortTeamsForProfile`) before `extractPublicTeam` filters/shapes the
+  result; the renderer's `useTeams.ts::setProfileTeamOrder` stamps it (plus
+  a fresh `updatedAt`) only on the teams named in a completed drag on your
+  own profile page, leaving every other team - including the array's own
+  element order - untouched.
 
 ## In-app profile navigation
 

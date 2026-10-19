@@ -41,7 +41,11 @@ function nextPastedTeamName(baseName: string, existingNames: string[]): string {
  * instead of generally untied like any other new team, so it would render
  * adjacent to that one team and then visibly jump once anything reordered
  * the underlying teams array for an unrelated reason (e.g. an auto-sync
- * round-trip) - see TODO.md's Paste Team card-jump entry.
+ * round-trip) - see TODO.md's Paste Team card-jump entry. `profileOrder`
+ * (Drag-to-Rearrange Previewed Teams, see TODO.md/COMPLETED.md) is cleared
+ * for the identical reason - same stale-tie bug would otherwise hit
+ * worker/src/publicProfile.ts's sortTeamsForProfile the moment this pasted
+ * copy's `visibility` is ever toggled on.
  */
 export function buildPastedTeam(pasted: Team, existingTeamNames: string[]): Team {
   return {
@@ -51,6 +55,7 @@ export function buildPastedTeam(pasted: Team, existingTeamNames: string[]): Team
     pokemon: pasted.pokemon.map((p) => ({ ...p, id: crypto.randomUUID() })),
     favorite: false,
     sortOrder: undefined,
+    profileOrder: undefined,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };

@@ -190,6 +190,20 @@ export interface UseTeamsReturn {
    * keeps its existing relative order, appended after the given ones.
    */
   setTeamOrder: (orderedIds: string[]) => Promise<boolean>;
+  /**
+   * Stamps an ascending `profileOrder` on exactly the teams named in
+   * `orderedIds` (Drag-to-Rearrange Previewed Teams, see TODO.md) - called
+   * once per completed drag on your own profile page (ProfilePage.tsx), same
+   * shape as setTeamOrder above but deliberately not reusing its `sortOrder`
+   * field or reordering this array's own element order: the private Teams
+   * tab's order (sortTeams.ts) must stay untouched by a public-profile-only
+   * reorder. `orderedIds` only ever names the teams currently shown on the
+   * profile preview (closed/open visibility) - any other team is left
+   * completely alone (no profileOrder/updatedAt stamp at all), unlike
+   * setTeamOrder's leftover-appended handling, since there's no total order
+   * to maintain over teams that never appear there.
+   */
+  setProfileTeamOrder: (orderedIds: string[]) => Promise<boolean>;
 
   // UI state management
   toggleCardExpansion: (teamId: string) => void;
@@ -509,6 +523,28 @@ export function useTeams(): UseTeamsReturn {
     [enqueueMutation],
   );
 
+  const setProfileTeamOrder = useCallback(
+    (orderedIds: string[]): Promise<boolean> =>
+      enqueueMutation(async () => {
+        const orderById = new Map(orderedIds.map((id, index) => [id, index]));
+        const now = Date.now();
+        const updatedTeams = teamsRef.current.map((team) => {
+          const index = orderById.get(team.id);
+          if (index === undefined) return team;
+          return { ...team, profileOrder: index, updatedAt: now };
+        });
+
+        const success = await persistTeamsToDisk(updatedTeams, tombstonesRef.current);
+        if (success) {
+          teamsRef.current = updatedTeams;
+          setTeams(updatedTeams);
+          setError(null);
+        }
+        return success;
+      }),
+    [enqueueMutation],
+  );
+
   /**
    * Toggle expansion state for a specific team card
    */
@@ -674,6 +710,7 @@ export function useTeams(): UseTeamsReturn {
     updateTeam,
     deleteTeam,
     setTeamOrder,
+    setProfileTeamOrder,
     toggleCardExpansion,
     expandCard,
     collapseCard,

@@ -116,6 +116,7 @@ export function setup(settingsOverrides: Partial<AppSettings> = {}) {
     updateTeam: vi.fn(),
     deleteTeam: vi.fn(),
     setTeamOrder: vi.fn(),
+    setProfileTeamOrder: vi.fn(),
     toggleCardExpansion: vi.fn(),
     expandCard: vi.fn(),
     collapseCard: vi.fn(),

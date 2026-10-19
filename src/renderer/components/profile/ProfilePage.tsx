@@ -29,6 +29,15 @@
  * has - keeping the conversion/enrichment logic out of the shared,
  * presentational ProfileCard lets that route keep not needing them.
  * `isOwnProfile` gates it off entirely on your own profile.
+ *
+ * Drag-to-Rearrange Previewed Teams (see TODO.md) is the mirror image:
+ * `onReorderTeams` is only wired up when `isOwnProfile` is true - you can
+ * drag your own profile's preview order, never someone else's, and it's
+ * `undefined` on the standalone route for the same "no Teams state to
+ * write through" reason as the import action above. It calls
+ * `teamsState.setProfileTeamOrder` directly (a thin wrapper, unlike
+ * `handleImportTeam`'s enrichment pipeline), so it stays inline rather than
+ * its own named handler.
  */
 
 import { useState, type FormEvent } from 'react';
@@ -162,6 +171,9 @@ export default function ProfilePage({
           profile={state.profile}
           onImportTeam={isOwnProfile ? undefined : handleImportTeam}
           importStatus={importStatus}
+          onReorderTeams={
+            isOwnProfile ? (orderedIds) => teamsState.setProfileTeamOrder(orderedIds) : undefined
+          }
         />
       )}
 
