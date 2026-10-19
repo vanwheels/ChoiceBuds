@@ -106,3 +106,17 @@ Entries prior to this file's oldest are in:
   Worker friend-group scale, plus no demand signal. See
   `docs/investigations/player-search-directory-scope.md`. See commit
   `499d072`.
+
+- **[Player Favoriting / Friend System] — Leg 3** (2026-10-19). Decided
+  not to build a friend/favorite system. The real "friend system" reading
+  (request/accept, mutual) needs cross-account notification infrastructure
+  that doesn't exist anywhere in this Worker — sync is manual and
+  one-directional, `GET /profile/:username` is a one-shot unauthenticated
+  read, nothing lets one account learn of another's action. That's a new
+  subsystem, not a cheap addition, for a signal the milestone-planning
+  commit itself called tentative ("maybe"). A cheaper one-directional
+  bookmark alternative was considered and rejected on its own terms (same
+  friend-group scale as Leg 2, marginal value, answers a different
+  question than what was asked). No code changed (scoping-only leg); see
+  `docs/investigations/player-favoriting-friend-system-scope.md`. See
+  commit `f172bb3`.
