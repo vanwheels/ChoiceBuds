@@ -77,3 +77,18 @@ Entries prior to this file's oldest are in:
   (the Profile Editing & Visibility Controls milestone's five legs, split
   out at the 2026-10-19 Profile Editing & Visibility Controls boundary)
 
+## Profile Social Scoping & Maintenance
+
+- **[Profile Notes & Moderation] — Leg 1** (2026-10-19). Decided not to
+  expose `Team.notes` (an existing private, per-account-synced freeform
+  field) on public profiles. Unlike Scoping Sweep Leg 3's public-team-
+  database question, this one would be cheap to build (one more field on
+  the existing public-profile endpoint, filtered the same way nickname
+  already is) — the blocker is a privacy mismatch instead: `notes` is
+  personal strategy text written under a private-by-default expectation
+  that predates Public Profiles & Team Sharing, and publishing it the
+  moment a team's visibility tier flips to `open`/`closed` would be a
+  silent scope change to what that field means, with no demand signal
+  behind it. No code changed (scoping-only leg); see
+  `docs/investigations/profile-notes-and-moderation-scope.md`. See commit
+  `79f98f8`.
