@@ -50,6 +50,14 @@ cross-device sync, web build, and gender/form handling.
 
 ## Style rules
 
+- Editing affordances default to always-on, gated only by ownership
+  (`isOwnProfile`, etc.), never behind an explicit Edit-mode toggle —
+  `PokemonCard.tsx`'s permanent "×" and the profile page's permanent
+  edit controls are the existing convention. Before scoping a new gating
+  mechanism (a toggle, a mode switch) for an editing affordance, check
+  whether this convention already answers the question; building a toggle
+  and then removing it cost a full leg during Profile Editing & Visibility
+  Controls (see `docs/postmortems/profile-editing-and-visibility-controls.md`).
 - Strict decoupled architecture — no monolithic files.
 - `src/renderer/components/*` should stay small and single-purpose; extract
   sub-components when a file starts mixing unrelated concerns rather than

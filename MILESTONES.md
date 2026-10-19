@@ -81,3 +81,6 @@ milestone.
   [post-mortem](docs/postmortems/profile-system-revamp-foundation.md)
 - **Profile System Revamp: Previews & Import** — 2026-10-18 — Shipped —
   [post-mortem](docs/postmortems/profile-system-revamp-previews-and-import.md)
+- **Profile Editing & Visibility Controls** — 2026-10-18 to 2026-10-19 —
+  Shipped —
+  [post-mortem](docs/postmortems/profile-editing-and-visibility-controls.md)

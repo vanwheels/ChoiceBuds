@@ -31,6 +31,15 @@
  * Portaling out from under any such ancestor is the general fix, since any
  * future modal caller nested inside a `layout`-animated element would hit
  * the same bug otherwise.
+ *
+ * The panel itself is `overflow-hidden` (clips content to its rounded
+ * corners). Any absolutely-positioned child inside modal content - a
+ * search-results dropdown, an autocomplete list - gets silently clipped by
+ * this rather than overflowing visibly (hit live in
+ * FavoritePokemonEditor.tsx's species search, see
+ * docs/postmortems/profile-editing-and-visibility-controls.md). Render that
+ * kind of content in-flow instead of absolutely-positioned, or it will not
+ * be visible inside a Modal.
  */
 
 import { createPortal } from 'react-dom';

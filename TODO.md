@@ -16,11 +16,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Profile Editing & Visibility Controls
-
-All five legs shipped and are manually verified live (see `COMPLETED.md`)
-- ready for `/close-milestone`.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -94,6 +89,15 @@ Profile System Revamp: Previews & Import was promoted to current
 manual-review follow-ups split back out to Unscheduled above, with
 Profile Section Drag-and-Drop Between Open/Closed flagged as the pick for
 the next milestone's planning.
+
+Profile Editing & Visibility Controls (the milestone built from that pick)
+was promoted to current 2026-10-18 and shipped 2026-10-19 (see
+`MILESTONES.md`) - its own Leg 5 absorbed a planned Leg 6 and, per live
+feedback mid-leg, reversed the milestone's Leg 4 Edit-mode toggle back to
+always-on editing (see
+`docs/postmortems/profile-editing-and-visibility-controls.md`). No new
+follow-ups split out of this one beyond the `[Split useTeams.ts]` item
+already above, now flagged for a third consecutive milestone.
 
 `src/renderer/_archived/battle-logger/hooks/useBattleLogActions.ts` (1,001
 lines) is also over the 500-line hard cap flagged by the Project Revision v2

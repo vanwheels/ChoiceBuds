@@ -206,10 +206,26 @@ change.
   same `GET /profile/:username` call via `usePublicProfile`. Own-profile
   detection compares lowercased usernames (`worker/src/index.ts` lowercases
   every lookup server-side) against `useSync`'s `syncUsername`; when they
-  match, `ProfileEditControls` renders the team-visibility/teamsheet-tier/
-  favorite-Pokémon editing controls that used to live in Settings'
-  `PublicProfileSection` — that section now just links here instead of
-  duplicating them. Edits there write through the normal
+  match, every own-profile editing affordance — favorite-Pokémon edit, each
+  section's "+ Team" picker, cross-section drag, and the per-team "×"
+  remove control — is permanently visible, gated only by `isOwnProfile`.
+  There is no Edit-mode toggle: one shipped in Profile Editing & Visibility
+  Controls Leg 4 and was removed again the same milestone (Leg 5) once it
+  was clear that gating editing behind an extra click put this page out of
+  step with the rest of the app's always-on-editing convention (e.g.
+  `PokemonCard.tsx`'s own permanent "×"). The old always-visible
+  `ProfileEditControls.tsx` panel (per-team visibility dropdowns + a
+  favorite-Pokémon search box, originally moved here from Settings'
+  `PublicProfileSection`) is gone outright — team visibility is instead set
+  from three places, all committing through the same
+  `updateTeam(team.id, { visibility })` call: the Teams tab's own
+  `TeamVisibilityBadge` (next to `RegulationBadge` in
+  `TeamCardHeader.tsx`), each profile section's "+ Team" picker
+  (`AddTeamToProfileDialog.tsx`), and dragging a card across the
+  Open/Closed boundary. `FavoritePokemonEditor.tsx` replaces the plain
+  favorite-Pokémon display: the sprite (or "+" placeholder) is permanently
+  clickable and opens a `Modal.tsx` popup with the species search box and
+  shiny/public toggles. Edits write through the normal
   `teamsState`/`settingsState` mutators and reflect immediately; the
   `ProfileCard` preview rendered alongside can lag a few seconds behind
   since it still reflects `useSync`'s last-synced server copy.
@@ -231,14 +247,29 @@ change.
   `/u/<username>` route (`PublicProfilePage.tsx`) deliberately never pulls
   in the PokeAPI-backed game-data cache (see Web build section below) —
   without them, items only get an icon via `getItemFallbackSpriteUrl`'s
-  static Serebii fallback set and moves render as neutral chips. Each
-  section owns its own
-  drag-in-progress order (`useGridReorder`) and commits only its own team
-  ids through `onReorderTeams`; this is safe even though `Team.profileOrder`
-  is one flat field across every team because `sortTeamsForProfile` is a
-  stable sort and the section split happens again, client-side, before
-  either array's order is read — see `ProfileTeamSection`'s own header
-  comment.
+  static Serebii fallback set and moves render as neutral chips.
+  `ProfileCard` itself (not each section) owns both tiers' ordered-id
+  arrays via `useCrossTierReorder` (a `useGridReorder`-adjacent hook reusing
+  its pure `pickSlotIndex`/`moveToIndex`), so a drag crossing the
+  Open/Closed boundary can move an id out of one tier's array and into the
+  other's — committing through `onAddTeamToTier` (the visibility write)
+  then `onReorderTeams` (the dropped-at-the-end position), only persisting
+  the latter once the former actually succeeds. This is safe even though
+  `Team.profileOrder` is one flat field across every team because
+  `sortTeamsForProfile` is a stable sort and the section split happens
+  again, client-side, before either array's order is read.
+  Because `usePublicProfile`'s fetch is one-shot and never refreshes
+  mid-session, `ProfileCard` keeps its own optimistic local state so
+  adds/removes/moves show immediately instead of waiting on a reload:
+  `utils/publicTeamSynthesis.ts`'s `synthesizePublicTeam` (mirroring
+  `worker/src/publicProfile.ts`'s `extractPublicTeam`) builds a client-side
+  `PublicTeam` stand-in for a team added to a tier for the first time (one
+  with no real `PublicTeam` yet), merged into an overlay map. Each tier's
+  ordered-id array is still resynced only off the *real* fetched teams
+  (never the overlay-merged list) — keying the resync off the overlay
+  instead would reset straight back to the stale fetch and resurrect a team
+  removed earlier in the same session the moment any unrelated add changed
+  what the merged list contains (confirmed live during Leg 5).
 - Pinned via `Sidebar.tsx`'s footer entry (desktop rail + mobile drawer,
   hidden entirely when signed out) above the Settings entry, reusing the
   same `renderNavItem` row styling/active-highlight the tab items use —
