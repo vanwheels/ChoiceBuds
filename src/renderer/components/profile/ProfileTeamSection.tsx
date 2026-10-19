@@ -24,6 +24,7 @@ import { useState } from 'react';
 import type { PublicTeam } from '../../services/syncApi';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
+import type { UseDatabaseReturn } from '../../hooks/useDatabase';
 import { useGridReorder } from '../../hooks/useGridReorder';
 import type { ProfileLayout } from '../../hooks/useProfileLayout';
 import ProfileTeamCard, { type ImportTeamStatus } from './ProfileTeamCard';
@@ -34,6 +35,7 @@ interface ProfileTeamSectionProps {
   layout: ProfileLayout;
   gameDataState?: UseGameDataReturn;
   spriteCacheState?: UseSpriteCacheReturn;
+  databaseState?: UseDatabaseReturn;
   onImportTeam?: (team: PublicTeam) => void;
   importStatus?: Record<string, ImportTeamStatus>;
   onReorderTeams?: (orderedIds: string[]) => void;
@@ -45,6 +47,7 @@ export default function ProfileTeamSection({
   layout,
   gameDataState,
   spriteCacheState,
+  databaseState,
   onImportTeam,
   importStatus,
   onReorderTeams,
@@ -88,6 +91,7 @@ export default function ProfileTeamSection({
               layout={layout}
               gameDataState={gameDataState}
               spriteCacheState={spriteCacheState}
+              databaseState={databaseState}
               status={importStatus?.[team.id]}
               onImportTeam={onImportTeam}
               reorderHandlers={reorderable ? getHandlers(id) : undefined}

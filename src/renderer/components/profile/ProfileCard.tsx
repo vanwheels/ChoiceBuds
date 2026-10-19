@@ -26,13 +26,15 @@
  * direction (you can't drag someone else's preview, and dragging your own
  * import button away makes no sense).
  *
- * `gameDataState`/`spriteCacheState` are optional for the same reason -
- * ProfilePage.tsx (in-app) always has both (App.tsx/AppWeb.tsx mount them
- * once, app-wide) and passes them through for real type-colored move chips/
- * item sprites; PublicProfilePage.tsx never does, since that route
- * deliberately pulls in nothing beyond the one profile fetch (see its own
- * header comment). See ProfilePokemonTile.tsx for the fallback rendering
- * that keeps working without them.
+ * `gameDataState`/`spriteCacheState`/`databaseState` are optional for the
+ * same reason - ProfilePage.tsx (in-app) always has all three (App.tsx/
+ * AppWeb.tsx mount them once, app-wide) and passes them through for real
+ * type-colored move chips/item sprites/the same per-type `.type-glow-ring`
+ * card treatment PokemonCard.tsx/BoxCard.tsx use (Profile Previews UI
+ * Consistency Pass, see TODO.md); PublicProfilePage.tsx never does, since
+ * that route deliberately pulls in nothing beyond the one profile fetch
+ * (see its own header comment). See ProfilePokemonTile.tsx for the fallback
+ * rendering that keeps working without them.
  *
  * Regulation Filter on Profile Page (see TODO.md): a pill row - same
  * always-show-every-option convention as TeamsPage.tsx's own Format Filter
@@ -46,6 +48,7 @@ import { useMemo, useState } from 'react';
 import type { PublicProfile, PublicTeam } from '../../services/syncApi';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
+import type { UseDatabaseReturn } from '../../hooks/useDatabase';
 import { useProfileLayout } from '../../hooks/useProfileLayout';
 import {
   ALL_REGULATION_IDS,
@@ -67,6 +70,7 @@ export default function ProfileCard({
   profile,
   gameDataState,
   spriteCacheState,
+  databaseState,
   onImportTeam,
   importStatus,
   onReorderTeams,
@@ -74,6 +78,7 @@ export default function ProfileCard({
   profile: PublicProfile;
   gameDataState?: UseGameDataReturn;
   spriteCacheState?: UseSpriteCacheReturn;
+  databaseState?: UseDatabaseReturn;
   onImportTeam?: (team: PublicTeam) => void;
   importStatus?: Record<string, ImportTeamStatus>;
   onReorderTeams?: (orderedIds: string[]) => void;
@@ -120,7 +125,7 @@ export default function ProfileCard({
               <button
                 key={filter}
                 onClick={() => setRegulationFilter(filter)}
-                className={`cursor-pointer rounded-lg px-4 py-2 text-xs font-medium transition-colors ${
+                className={`cursor-pointer rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
                   regulationFilter === filter
                     ? 'bg-accent-gold text-zinc-900'
                     : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
@@ -169,6 +174,7 @@ export default function ProfileCard({
         layout={layout}
         gameDataState={gameDataState}
         spriteCacheState={spriteCacheState}
+        databaseState={databaseState}
         onImportTeam={onImportTeam}
         importStatus={importStatus}
         onReorderTeams={onReorderTeams}
@@ -180,6 +186,7 @@ export default function ProfileCard({
         layout={layout}
         gameDataState={gameDataState}
         spriteCacheState={spriteCacheState}
+        databaseState={databaseState}
         onImportTeam={onImportTeam}
         importStatus={importStatus}
         onReorderTeams={onReorderTeams}

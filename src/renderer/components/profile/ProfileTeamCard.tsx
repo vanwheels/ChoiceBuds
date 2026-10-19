@@ -19,6 +19,7 @@ import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { PublicTeam } from '../../services/syncApi';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
+import type { UseDatabaseReturn } from '../../hooks/useDatabase';
 import { getRegulationTheme } from '../../config/pokemonTheme';
 import { isRegulationLabel, toRegulationId } from '../../utils/pokemonRules';
 import { toMotionDragProps, type GridReorderHandlers } from '../../hooks/useGridReorder';
@@ -58,7 +59,8 @@ function ImportTeamButton({
   );
 }
 
-/** Same grip-icon glyph as TeamCardHeader.tsx's own drag handle, for visual consistency. */
+/** Same grip-icon glyph, sizing (larger touch target below `md`), and color
+ * as TeamCardHeader.tsx's/BoxCard.tsx's own drag handles, for visual consistency. */
 function GripHandle({
   onPointerDown,
 }: {
@@ -68,7 +70,7 @@ function GripHandle({
     <div
       onPointerDown={onPointerDown}
       title="Drag to reorder"
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-zinc-500 transition-colors select-none hover:bg-zinc-700 hover:text-zinc-200 cursor-grab"
+      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-zinc-400 transition-colors select-none hover:bg-zinc-700 hover:text-zinc-200 cursor-grab md:h-8 md:w-8"
     >
       <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
         <circle cx="9" cy="6" r="1.4" />
@@ -87,6 +89,7 @@ export default function ProfileTeamCard({
   layout,
   gameDataState,
   spriteCacheState,
+  databaseState,
   status,
   onImportTeam,
   reorderHandlers,
@@ -95,6 +98,7 @@ export default function ProfileTeamCard({
   layout: ProfileLayout;
   gameDataState?: UseGameDataReturn;
   spriteCacheState?: UseSpriteCacheReturn;
+  databaseState?: UseDatabaseReturn;
   status?: ImportTeamStatus;
   onImportTeam?: (team: PublicTeam) => void;
   reorderHandlers?: GridReorderHandlers;
@@ -134,7 +138,7 @@ export default function ProfileTeamCard({
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <span
-            className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white ${regulationTheme.badgeBg}`}
+            className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white ${regulationTheme.badgeBg}`}
           >
             {team.format}
           </span>
@@ -158,6 +162,7 @@ export default function ProfileTeamCard({
                 detailed={detailed}
                 gameDataState={gameDataState}
                 spriteCacheState={spriteCacheState}
+                databaseState={databaseState}
               />
             ))}
           </div>
@@ -171,6 +176,7 @@ export default function ProfileTeamCard({
               detailed={detailed}
               gameDataState={gameDataState}
               spriteCacheState={spriteCacheState}
+              databaseState={databaseState}
             />
           ))}
         </div>

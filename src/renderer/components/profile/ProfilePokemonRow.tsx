@@ -10,10 +10,16 @@
  * them.
  */
 
+import type { CSSProperties } from 'react';
 import type { PublicTeam } from '../../services/syncApi';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
-import { resolveProfileItemSpriteUrl, getProfileMoveChipTheme } from '../../utils/profileGameData';
+import type { UseDatabaseReturn } from '../../hooks/useDatabase';
+import {
+  resolveProfileItemSpriteUrl,
+  getProfileMoveChipTheme,
+  getProfileTypeGlowColors,
+} from '../../utils/profileGameData';
 import { formatStatAlignment } from '../../utils/statAlignment';
 
 type PublicPokemon = PublicTeam['pokemon'][number];
@@ -23,6 +29,7 @@ interface ProfilePokemonRowProps {
   detailed: boolean;
   gameDataState?: UseGameDataReturn;
   spriteCacheState?: UseSpriteCacheReturn;
+  databaseState?: UseDatabaseReturn;
 }
 
 export default function ProfilePokemonRow({
@@ -30,6 +37,7 @@ export default function ProfilePokemonRow({
   detailed,
   gameDataState,
   spriteCacheState,
+  databaseState,
 }: ProfilePokemonRowProps) {
   const itemSpriteUrl = pokemon.item
     ? resolveProfileItemSpriteUrl(pokemon.item, gameDataState, spriteCacheState)
@@ -38,9 +46,15 @@ export default function ProfilePokemonRow({
   const spriteUrl = spriteCacheState
     ? spriteCacheState.resolveSprite(pokemon.spriteUrl)
     : pokemon.spriteUrl;
+  const glowColors = getProfileTypeGlowColors(pokemon.species, databaseState);
 
-  return (
-    <div className="flex items-center gap-3 rounded-lg border border-zinc-700 bg-zinc-800 p-2">
+  // Same type-glow-ring-replaces-flat-border treatment as ProfilePokemonTile.tsx.
+  const row = (
+    <div
+      className={`flex items-center gap-3 rounded-[11px] bg-zinc-800 p-2 ${
+        glowColors ? '' : 'border border-zinc-700'
+      }`}
+    >
       <img
         src={spriteUrl}
         alt={pokemon.species}
@@ -89,6 +103,17 @@ export default function ProfilePokemonRow({
           </div>
         )}
       </div>
+    </div>
+  );
+
+  if (!glowColors) return row;
+
+  return (
+    <div
+      className="type-glow-ring"
+      style={{ '--glow-c1': glowColors[0], '--glow-c2': glowColors[1] } as CSSProperties}
+    >
+      {row}
     </div>
   );
 }

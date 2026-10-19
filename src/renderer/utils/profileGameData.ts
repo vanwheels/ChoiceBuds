@@ -3,19 +3,21 @@
  * Shared by ProfilePokemonTile.tsx/ProfilePokemonRow.tsx (Profile Page
  * Sections & Layout, see TODO.md) so both components resolve an item icon/
  * move-type theme the same way instead of two hand-duplicated copies.
- * `gameDataState`/`spriteCacheState` are optional - ProfilePage.tsx (in-app)
- * always has both, PublicProfilePage.tsx (the standalone, unauthenticated
- * `/u/<username>` route) never does, since that route deliberately pulls in
- * nothing beyond the one profile fetch. Cache-only reads (getCachedItem/
- * getCachedMove), same as TeamPosterTile.tsx - never triggers a live PokeAPI
- * fetch, so viewing a profile never adds new network calls; a move/item this
- * viewer's own cache doesn't already have just falls back silently.
+ * `gameDataState`/`spriteCacheState`/`databaseState` are optional -
+ * ProfilePage.tsx (in-app) always has all three, PublicProfilePage.tsx (the
+ * standalone, unauthenticated `/u/<username>` route) never does, since that
+ * route deliberately pulls in nothing beyond the one profile fetch.
+ * Cache-only reads (getCachedItem/getCachedMove/getCachedEntry), same as
+ * TeamPosterTile.tsx/PokemonCard.tsx - never triggers a live PokeAPI fetch,
+ * so viewing a profile never adds new network calls; a move/item/species
+ * this viewer's own cache doesn't already have just falls back silently.
  */
 
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
+import type { UseDatabaseReturn } from '../hooks/useDatabase';
 import { getItemFallbackSpriteUrl, getItemSpriteUrl } from './itemSprite';
-import { getTypeTheme, type TypeTheme } from '../config/pokemonTheme';
+import { getTypeTheme, getTypeGlowColors, type TypeTheme } from '../config/pokemonTheme';
 
 /**
  * Resolves a held item's icon URL. With a game-data cache available, this is
@@ -47,4 +49,20 @@ export function getProfileMoveChipTheme(
   if (!gameDataState) return null;
   const type = gameDataState.getCachedMove(move)?.type;
   return type ? getTypeTheme(type) : null;
+}
+
+/**
+ * A species' type-glow gradient colors (same `.type-glow-ring` treatment as
+ * every other Pokemon card in the app - PokemonCard.tsx/BoxCard.tsx/
+ * MobileBoxPokemonCard.tsx), or null (render the tile/row's plain
+ * border-zinc-700 fallback instead) without a database cache or on a cache
+ * miss.
+ */
+export function getProfileTypeGlowColors(
+  species: string,
+  databaseState?: UseDatabaseReturn,
+): [string, string] | null {
+  if (!databaseState) return null;
+  const types = databaseState.getCachedEntry(species)?.types;
+  return types && types.length > 0 ? getTypeGlowColors(types) : null;
 }

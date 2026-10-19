@@ -184,6 +184,7 @@ export default function ProfilePage({
           profile={state.profile}
           gameDataState={gameDataState}
           spriteCacheState={spriteCacheState}
+          databaseState={databaseState}
           onImportTeam={isOwnProfile ? undefined : handleImportTeam}
           importStatus={importStatus}
           onReorderTeams={
