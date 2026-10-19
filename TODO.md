@@ -1,30 +1,5 @@
 # ChoiceBuds TODO
 
-## Current Milestone: Maintenance Sweep: useSavedPokemon Split & Housekeeping
-
-Planned 2026-10-19, off the back of Profile Social Scoping & Maintenance
-shipping the same day (see `MILESTONES.md`). Nothing was queued in
-Unscheduled/Future Milestones, so this milestone was scoped fresh from a
-maintenance audit rather than bundled from pre-existing items.
-
-Done when:
-- No live, non-archived, non-generated/data-table file exceeds the 500-line
-  hard cap (closes `useSavedPokemon.ts` at 685 lines — the next file-cap
-  violation in line after `useTeams.ts`). **Met** — see Leg 1.
-- The three known change-history comments (`App.tsx:83`,
-  `TeamOverflowMenu.tsx:98`, `pokeapi.test.ts:55` — flagged in the
-  2026-10-16 Project Revision v2 audit, never swept) are gone, plus a
-  bounded spot-check of other likely candidates. **Met** — see Leg 2.
-- The stored-snapshot-vs-live-recompute bug class (hit twice now —
-  `spriteUrl`, then the profile-section resync bug) has been checked
-  against current persisted-field read paths, with findings written down
-  even if the finding is "no other instances." **Met** — see Leg 3.
-
-All three Done-when criteria are now met; this milestone is ready for
-`/close-milestone`.
-
-(Leg 3 — Stored-Snapshot Audit — shipped 2026-10-19, see COMPLETED.md.)
-
 Working task list for ongoing/planned work. Every item is titled
 `[Item/Sweep Name] — Leg N` (say "Start [title]" to kick off a session on
 it). Bodies stay short — commit-message-body length, not an investigation

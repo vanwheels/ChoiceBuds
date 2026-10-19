@@ -86,3 +86,6 @@ milestone.
   [post-mortem](docs/postmortems/profile-editing-and-visibility-controls.md)
 - **Profile Social Scoping & Maintenance** — 2026-10-19 — Shipped —
   [post-mortem](docs/postmortems/profile-social-scoping-and-maintenance.md)
+- **Maintenance Sweep: useSavedPokemon Split & Housekeeping** — 2026-10-19 —
+  Shipped —
+  [post-mortem](docs/postmortems/maintenance-sweep-usesavedpokemon-split-and-housekeeping.md)
