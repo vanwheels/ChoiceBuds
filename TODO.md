@@ -1,5 +1,66 @@
 # ChoiceBuds TODO
 
+## Current Milestone: Profile Social Scoping & Maintenance
+
+Done when:
+- Profile Notes & Moderation, Player Search Directory, and Player
+  Favoriting/Friend System each have a documented build-or-no-build
+  decision recorded in TODO.md/docs.
+- Any decision that calls for implementation gets scoped into a follow-up
+  leg rather than built in this milestone (scoping and building stay
+  separate passes).
+- `useTeams.ts` and whatever it's split into are each under the 500-line
+  hard cap, with the full test suite passing and no behavior change.
+
+- **[Profile Notes & Moderation] — Leg 1** *(Last touched: 2026-10-19 ·
+  Re-checks: 0)*
+  Decide whether profile teams get a freeform notes field, and if so what
+  moderation model (or deliberate lack thereof) applies — same pattern as
+  the public-team-database question Scoping Sweep Leg 3 closed. This is a
+  decide-first leg: produce and record the decision, don't build off it in
+  the same pass even if the resolved scope turns out small.
+  Done check: decision recorded in TODO.md (either a new scoped
+  follow-up item, or a closed-as-won't-build note with rationale).
+  Manual verification: no. Review: no.
+
+- **[Player Search Directory] — Leg 2** *(Last touched: 2026-10-19 ·
+  Re-checks: 0)*
+  Decide whether a browsable/searchable username directory is worth
+  revisiting, given Scoping Sweep already decided against a public team
+  database for similar discoverability-vs-moderation reasons. Profile
+  System Revamp shipped exact-username lookup only; this leg either
+  reaffirms that or scopes a follow-up. Decide-first — no implementation in
+  this pass.
+  Done check: decision recorded in TODO.md (new scoped follow-up item, or
+  closed-as-won't-build note with rationale).
+  Manual verification: no. Review: no.
+
+- **[Player Favoriting / Friend System] — Leg 3** *(Last touched:
+  2026-10-19 · Re-checks: 0)*
+  Decide whether a friend/favorite system is worth scoping now that Leg 2
+  has resolved the Player Search Directory question — a friend system
+  needs some way to find the other account first, so this leg runs after
+  and depends on Leg 2's outcome. Decide-first — no implementation in this
+  pass.
+  Done check: decision recorded in TODO.md (new scoped follow-up item, or
+  closed-as-won't-build note with rationale).
+  Manual verification: no. Review: no.
+
+- **[Split useTeams.ts] — Leg 4** *(Last touched: 2026-10-19 ·
+  Re-checks: 0)*
+  `src/renderer/hooks/useTeams.ts` is 634 lines, over CLAUDE.md's 500-line
+  hard cap, flagged by `/leg-review` on Teamsheet Open/Closed Visibility
+  Tiers Leg 3 (2026-10-18) and carried for a third consecutive milestone.
+  Scope the natural seams (load/migration vs. CRUD mutators vs.
+  applySyncedState's reconciliation logic are the obvious candidates, worth
+  confirming before splitting) and execute the split with no behavior
+  change.
+  Done check: `useTeams.ts` and whatever it's split into are each under the
+  500-line hard cap, full test suite passes.
+  Manual verification: yes. Review: yes — touches load/migration/sync
+  reconciliation.
+
+
 Working task list for ongoing/planned work. Every item is titled
 `[Item/Sweep Name] — Leg N` (say "Start [title]" to kick off a session on
 it). Bodies stay short — commit-message-body length, not an investigation
@@ -44,43 +105,8 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-- **[Profile Notes & Moderation] — Leg 1** *(Last touched: 2026-10-18 ·
-  Re-checks: 0)*
-  Split out of Profile System Revamp scoping. Whether profile teams get a
-  freeform notes field is still an open question from Vanny himself
-  ("would need moderation as well?") — needs its own scoping pass on the
-  moderation model (or lack thereof) before any implementation, same
-  pattern as the public-team-database question Scoping Sweep Leg 3 closed.
-
-- **[Player Search Directory] — Leg 1** *(Last touched: 2026-10-18 ·
-  Re-checks: 0)*
-  Split out of Profile System Revamp scoping. A browsable/searchable
-  directory of usernames is the same shape of decision as the public team
-  database Scoping Sweep Leg 3 decided against (2045642) — the Worker
-  becoming a discoverable, centrally-hosted directory, not just a
-  moderation question. Profile System Revamp ships exact-username lookup
-  only; this item is a decide-first leg if that stance ever gets revisited.
-
-- **[Player Favoriting / Friend System] — Leg 1** *(Last touched:
-  2026-10-18 · Re-checks: 0)*
-  Split out of Profile System Revamp scoping. Vanny's own framing was
-  tentative ("maybe"). Depends on the Player Search Directory decision
-  above — a friend/favorite system needs some way to find the other
-  account first, so this stays unscheduled until that's resolved.
-
-- **[Split useTeams.ts] — Leg 1** *(Last touched: 2026-10-18 ·
-  Re-checks: 0)*
-  Flagged by `/leg-review` on Teamsheet Open/Closed Visibility Tiers Leg 3
-  (2026-10-18): `src/renderer/hooks/useTeams.ts` is now 634 lines, further
-  over CLAUDE.md's 500-line hard cap (it was already at 588 before that
-  leg). Not a live bug — a maintenance split, same shape as the four files
-  the Project Revision v2 audit flagged that became Maintenance & Code
-  Health Sweep's legs. Needs its own scoping pass on where the natural
-  seams are (load/migration vs. the CRUD mutators vs. applySyncedState's
-  reconciliation logic look like the obvious candidates, but worth
-  confirming before splitting).
-  Done check: `useTeams.ts` and whatever it's split into are each under the
-  500-line hard cap, with no behavior change (full suite still passes).
+(empty — the four items previously here were bundled into the current
+Profile Social Scoping & Maintenance milestone above on 2026-10-19.)
 
 ## Future Milestones (unscheduled)
 
