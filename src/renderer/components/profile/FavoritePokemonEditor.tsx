@@ -1,22 +1,21 @@
 /**
  * FavoritePokemonEditor.tsx - Click-the-Sprite Favorite Pokémon Picker
  * Rendered by ProfileCard.tsx in place of the plain favorite-Pokémon
- * display, only when ProfilePage.tsx passes a `favoriteEditing` prop (own
- * profile + its Edit toggle on). Replaces the former ProfileEditControls.tsx,
- * which duplicated this display in a separate box alongside a per-team
- * visibility dropdown list - that list is gone now that team visibility can
- * be set directly from the Teams tab's own TeamVisibilityBadge, the profile
- * section "+ Team" picker, and cross-section drag (Profile Edit Mode:
- * Inline Favorite Pokemon Editing, see TODO.md). This is the one
- * favorite-Pokemon UI left: it's both the normal display and, when editing,
- * the picker - clicking the sprite itself (or the dashed placeholder when
- * none is set) opens the species search in place.
+ * display, whenever ProfilePage.tsx passes a `favoriteEditing` prop (own
+ * profile - no Edit toggle gate, see Profile Section Remove-Team Control's
+ * redesign in TODO.md). The sprite (or the dashed "+" placeholder when no
+ * favorite is set) is permanently clickable, matching the rest of the app's
+ * always-on-editing convention (e.g. PokemonCard.tsx's own permanent "×");
+ * clicking it opens a popup modal with the species search box plus the
+ * shiny/public toggles, rather than expanding the search inline the way an
+ * earlier Edit-mode-gated version of this component used to.
  */
 
 import { useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import type { FavoritePokemon } from '../../types/settings';
 import type { SpeciesRosterEntry } from '../../types/pokemon';
-import { useDismissable } from '../../hooks/useDismissable';
+import Modal from '../Modal';
 
 const MAX_SEARCH_RESULTS = 8;
 
@@ -37,12 +36,8 @@ export default function FavoritePokemonEditor({
   onTogglePublic,
   onClear,
 }: FavoritePokemonEditorProps) {
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const pickerRef = useDismissable<HTMLDivElement>(() => {
-    setPickerOpen(false);
-    setSearch('');
-  });
 
   const trimmedSearch = search.trim().toLowerCase();
   const matches = trimmedSearch
@@ -51,97 +46,131 @@ export default function FavoritePokemonEditor({
         .slice(0, MAX_SEARCH_RESULTS)
     : [];
 
+  const handleClose = () => {
+    setIsOpen(false);
+    setSearch('');
+  };
+
   const handlePick = (entry: SpeciesRosterEntry) => {
     setSearch('');
-    setPickerOpen(false);
     onPick(entry);
   };
 
+  const handleClear = () => {
+    onClear();
+    handleClose();
+  };
+
   return (
-    <div ref={pickerRef} className="relative mt-1 flex flex-col items-center">
-      {pickerOpen ? (
-        <div className="relative w-48">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search species..."
-            autoFocus
-            className="w-full px-3 py-1.5 text-sm bg-zinc-900 border border-zinc-600 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
+    <>
+      <button
+        type="button"
+        onClick={() => setIsOpen(true)}
+        title={
+          favoritePokemon.species
+            ? 'Click to change favorite Pokémon'
+            : 'Click to set a favorite Pokémon'
+        }
+        className="cursor-pointer rounded transition-opacity hover:opacity-75 focus:outline-none focus:ring-2 focus:ring-accent-gold"
+      >
+        {favoritePokemon.species ? (
+          <img
+            src={favoritePokemon.shiny ? favoritePokemon.shinySpriteUrl : favoritePokemon.spriteUrl}
+            alt={favoritePokemon.species}
+            className="h-20 w-20 object-contain [image-rendering:pixelated]"
           />
-          {matches.length > 0 && (
-            <div className="absolute z-10 mt-1 w-full max-h-56 overflow-y-auto rounded border border-zinc-600 bg-zinc-900 shadow-lg">
-              {matches.map((entry) => (
-                <div
-                  key={entry.id}
-                  onClick={() => handlePick(entry)}
-                  className="flex items-center gap-2 px-2 py-1.5 hover:bg-zinc-800 cursor-pointer"
-                >
-                  <img
-                    src={entry.spriteUrl}
-                    alt={entry.name}
-                    className="h-6 w-6 object-contain [image-rendering:pixelated]"
-                  />
-                  <span className="text-xs text-zinc-200">{entry.name}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      ) : favoritePokemon.species ? (
-        <>
-          <button
-            type="button"
-            onClick={() => setPickerOpen(true)}
-            title="Click to change favorite Pokémon"
-            className="cursor-pointer rounded transition-opacity hover:opacity-75 focus:outline-none focus:ring-2 focus:ring-accent-gold"
-          >
-            <img
-              src={
-                favoritePokemon.shiny ? favoritePokemon.shinySpriteUrl : favoritePokemon.spriteUrl
-              }
-              alt={favoritePokemon.species}
-              className="h-20 w-20 object-contain [image-rendering:pixelated]"
-            />
-          </button>
-          <span className="text-sm text-zinc-300">{favoritePokemon.species}</span>
-          <div className="mt-1 flex items-center gap-3 text-xs text-zinc-400">
-            <label className="flex items-center gap-1.5 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={favoritePokemon.shiny}
-                onChange={onToggleShiny}
-                className="cursor-pointer accent-accent-gold"
-              />
-              Shiny
-            </label>
-            <label className="flex items-center gap-1.5 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={favoritePokemon.isPublic}
-                onChange={onTogglePublic}
-                className="cursor-pointer accent-accent-gold"
-              />
-              Public
-            </label>
-            <button
-              onClick={onClear}
-              className="text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
-            >
-              Remove
-            </button>
+        ) : (
+          <div className="flex h-20 w-20 items-center justify-center rounded border border-dashed border-zinc-600 text-xl text-zinc-500 transition-colors hover:border-zinc-400 hover:text-zinc-300">
+            +
           </div>
-        </>
-      ) : (
-        <button
-          type="button"
-          onClick={() => setPickerOpen(true)}
-          title="Click to set a favorite Pokémon"
-          className="flex h-20 w-20 items-center justify-center rounded border border-dashed border-zinc-600 text-xl text-zinc-500 transition-colors cursor-pointer hover:border-zinc-400 hover:text-zinc-300"
-        >
-          +
-        </button>
+        )}
+      </button>
+      {favoritePokemon.species && (
+        <span className="text-sm text-zinc-300">{favoritePokemon.species}</span>
       )}
-    </div>
+
+      <AnimatePresence>
+        {isOpen && (
+          <Modal panelClassName="max-w-sm">
+            <div className="flex items-center justify-between gap-2 border-b border-zinc-700 px-6 py-4">
+              <h2 className="text-xl font-bold text-zinc-100">Favorite Pokémon</h2>
+              <button
+                onClick={handleClose}
+                className="cursor-pointer text-zinc-400 transition-colors hover:text-zinc-200"
+              >
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-3 p-6">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search species..."
+                  autoFocus
+                  className="w-full rounded border border-zinc-600 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent-gold"
+                />
+                {matches.length > 0 && (
+                  <div className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded border border-zinc-600 bg-zinc-900 shadow-lg">
+                    {matches.map((entry) => (
+                      <div
+                        key={entry.id}
+                        onClick={() => handlePick(entry)}
+                        className="flex cursor-pointer items-center gap-2 px-2 py-1.5 hover:bg-zinc-800"
+                      >
+                        <img
+                          src={entry.spriteUrl}
+                          alt={entry.name}
+                          className="h-6 w-6 object-contain [image-rendering:pixelated]"
+                        />
+                        <span className="text-xs text-zinc-200">{entry.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {favoritePokemon.species && (
+                <div className="flex items-center gap-3 border-t border-zinc-700 pt-3 text-xs text-zinc-400">
+                  <label className="flex cursor-pointer items-center gap-1.5">
+                    <input
+                      type="checkbox"
+                      checked={favoritePokemon.shiny}
+                      onChange={onToggleShiny}
+                      className="cursor-pointer accent-accent-gold"
+                    />
+                    Shiny
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-1.5">
+                    <input
+                      type="checkbox"
+                      checked={favoritePokemon.isPublic}
+                      onChange={onTogglePublic}
+                      className="cursor-pointer accent-accent-gold"
+                    />
+                    Public
+                  </label>
+                  <button
+                    onClick={handleClear}
+                    className="cursor-pointer text-zinc-500 transition-colors hover:text-zinc-300"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+            </div>
+          </Modal>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

@@ -13,18 +13,23 @@
  * server-side (worker/src/index.ts lowercases every lookup) - `username`
  * here can come from the lookup form below in whatever case was typed, not
  * just the exact-cased `syncUsername` the sidebar's own-profile link
- * passes. When it matches, an Edit toggle appears (Profile Edit Mode:
- * Inline Favorite Pokemon Editing, see TODO.md); turning it on builds the
- * `favoriteEditing` prop ProfileCard uses to swap its plain favorite-
- * Pokémon display for FavoritePokemonEditor (click-the-sprite picker,
- * live local `settingsState`), replacing the old ProfileEditControls.tsx
- * panel entirely - that component used to also carry a per-team visibility
+ * passes. When it matches, `isOwnProfile` builds the `favoriteEditing`
+ * prop ProfileCard uses to swap its plain favorite-Pokémon display for
+ * FavoritePokemonEditor (click-the-sprite picker + popup, live local
+ * `settingsState`), replacing the old ProfileEditControls.tsx panel
+ * entirely - that component used to also carry a per-team visibility
  * dropdown list, dropped once team visibility became settable directly
  * from the Teams tab's own TeamVisibilityBadge, the profile section
- * "+ Team" picker, and cross-section drag. `isEditing` resets to off on
- * every mount (including navigating to a different profile and back),
- * which is the desired default - edit affordances shouldn't persist across
- * a profile visit by surprise.
+ * "+ Team" picker, and cross-section drag.
+ *
+ * There used to be an explicit Edit toggle gating `favoriteEditing` and
+ * `onRemoveTeam` (Profile Edit Mode: Inline Favorite Pokemon Editing, then
+ * Profile Section Remove-Team Control, see TODO.md), hiding both behind an
+ * extra click. Dropped (same leg, redesigned) once it became clear that
+ * put this page out of step with the rest of the app's always-on-editing
+ * convention (PokemonCard.tsx's own permanent "x", etc.) - every own-profile
+ * editing affordance here is now permanently visible, gated only by
+ * `isOwnProfile`, same as `onReorderTeams`/`onAddTeamToTier` already were.
  *
  * The username lookup box lives here rather than on every tab/the sidebar,
  * since opening a second profile from an already-open one is exactly what
@@ -53,12 +58,10 @@
  * renders from) and `onAddTeamToTier` is a thin `updateTeam` wrapper, same
  * shape as `onReorderTeams`'s wrapper above.
  *
- * Profile Section Remove-Team Control (see TODO.md): `onRemoveTeam` is
- * gated by `isOwnProfile && isEditing` (same gate as `favoriteEditing`,
- * unlike the two props above which only need `isOwnProfile`) since it's an
- * edit-mode-only action. It's the same shape as `onAddTeamToTier` in
- * reverse - setting a team's visibility back to `'private'` via the same
- * `updateTeam` path.
+ * Profile Section Remove-Team Control (see TODO.md): `onRemoveTeam` is the
+ * same isOwnProfile-only shape as `onAddTeamToTier` now - it's that same
+ * prop in reverse, setting a team's visibility back to `'private'` via the
+ * same `updateTeam` path.
  */
 
 import { useState, type FormEvent } from 'react';
@@ -114,7 +117,6 @@ export default function ProfilePage({
   const state = usePublicProfile(username);
   const [lookup, setLookup] = useState('');
   const [importStatus, setImportStatus] = useState<Record<string, ImportTeamStatus>>({});
-  const [isEditing, setIsEditing] = useState(false);
 
   const isOwnProfile =
     !!syncState.syncUsername && syncState.syncUsername.toLowerCase() === username.toLowerCase();
@@ -209,26 +211,12 @@ export default function ProfilePage({
   return (
     <div className="flex flex-col items-center px-4 pb-10 md:px-0">
       <div className="flex w-full max-w-xl items-center justify-between gap-3 pt-2">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onBack}
-            className="text-sm text-zinc-400 transition-colors cursor-pointer hover:text-zinc-200"
-          >
-            ← Back
-          </button>
-          {isOwnProfile && (
-            <button
-              onClick={() => setIsEditing((prev) => !prev)}
-              className={`cursor-pointer rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
-                isEditing
-                  ? 'bg-accent-gold text-zinc-900'
-                  : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
-              }`}
-            >
-              {isEditing ? 'Done Editing' : 'Edit'}
-            </button>
-          )}
-        </div>
+        <button
+          onClick={onBack}
+          className="text-sm text-zinc-400 transition-colors cursor-pointer hover:text-zinc-200"
+        >
+          ← Back
+        </button>
         <form onSubmit={handleLookup} className="flex items-center gap-1.5">
           <input
             type="text"
@@ -268,7 +256,7 @@ export default function ProfilePage({
               : undefined
           }
           favoriteEditing={
-            isOwnProfile && isEditing
+            isOwnProfile
               ? {
                   favoritePokemon,
                   roster: speciesRosterState.roster,
@@ -280,7 +268,7 @@ export default function ProfilePage({
               : undefined
           }
           onRemoveTeam={
-            isOwnProfile && isEditing
+            isOwnProfile
               ? (teamId) => void teamsState.updateTeam(teamId, { visibility: 'private' })
               : undefined
           }

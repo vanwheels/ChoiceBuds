@@ -66,20 +66,34 @@
  * standalone routes get the filter for free from this one shared component.
  *
  * `favoriteEditing` (Profile Edit Mode: Inline Favorite Pokemon Editing,
- * see TODO.md) is the same isOwnProfile-only-and-optional shape as the
- * props above, passed only by ProfilePage.tsx when its Edit toggle is on.
- * When present it swaps the plain favorite-Pokemon display for
- * FavoritePokemonEditor, rendering live local settings state (so edits
- * reflect instantly) instead of `profile.favoritePokemon`'s lagging synced
- * copy - same reasoning as the other own-profile-only props using
- * `localTeams` instead of `profile.teams`.
+ * then de-gated from any Edit toggle by Profile Section Remove-Team
+ * Control's redesign, see TODO.md) is the same isOwnProfile-only-and-
+ * optional shape as the props above. When present it swaps the plain
+ * favorite-Pokemon display for FavoritePokemonEditor, rendering live local
+ * settings state (so edits reflect instantly) instead of
+ * `profile.favoritePokemon`'s lagging synced copy - same reasoning as the
+ * other own-profile-only props using `localTeams` instead of
+ * `profile.teams`. There's no Edit toggle gating it anymore - the sprite
+ * itself is permanently clickable on your own profile, opening
+ * FavoritePokemonEditor's own popup.
  *
  * `onRemoveTeam` (Profile Section Remove-Team Control, see TODO.md) is the
- * same isOwnProfile-and-edit-mode-only shape as `favoriteEditing` - passed
- * through unchanged to both ProfileTeamSection instances, which thread it
- * down to each ProfileTeamCard's own "x" button. It's the one way left to
- * take a team back out of its Open/Closed section from the profile page
- * itself, now that the old per-team visibility dropdown is gone.
+ * same isOwnProfile-only shape as `onAddTeamToTier` now (originally gated
+ * behind an Edit toggle too, dropped by the same redesign) - passed through
+ * to both ProfileTeamSection instances (wrapped, see `handleRemoveTeam`
+ * below), which thread it down to each ProfileTeamCard's own permanent "x"
+ * button. It's the one way left to take a team back out of its Open/Closed
+ * section from the profile page itself, now that the old per-team
+ * visibility dropdown is gone.
+ *
+ * `handleAddTeamToTier`/`overlayTeams` (Leg 6 fold-in, see TODO.md): adding
+ * a team that's never been public before has no existing `PublicTeam` in
+ * `profile.teams` to reuse (unlike a visibility-tier switch or a
+ * cross-section drag, which both already have one) - `overlayTeams` holds
+ * a client-synthesized stand-in (utils/publicTeamSynthesis.ts) for exactly
+ * that case, merged into `filteredTeams` below, so a first-time add (or a
+ * tier switch the stale fetch can't see yet) shows immediately instead of
+ * needing a reload.
  */
 
 import { useMemo, useState } from 'react';
@@ -97,6 +111,7 @@ import {
   toRegulationId,
   type RegulationId,
 } from '../../utils/pokemonRules';
+import { synthesizePublicTeam } from '../../utils/publicTeamSynthesis';
 import type { ImportTeamStatus } from './ProfileTeamCard';
 import ProfileTeamSection from './ProfileTeamSection';
 import FavoritePokemonEditor, { type FavoritePokemonEditorProps } from './FavoritePokemonEditor';
@@ -135,14 +150,29 @@ export default function ProfileCard({
   const { layout, setLayout } = useProfileLayout();
   const [regulationFilter, setRegulationFilter] = useState<RegulationFilter>(ALL_REGULATIONS);
 
+  // Leg 6 fold-in (see TODO.md): client-synthesized stand-ins for teams
+  // `profile.teams` doesn't know about yet (see this file's header
+  // comment). Keyed by id, merged into `allTeams` below only when
+  // `profile.teams` doesn't already have a real entry for that id - a real
+  // entry always wins once/if the stale fetch ever catches up.
+  const [overlayTeams, setOverlayTeams] = useState<Map<string, PublicTeam>>(new Map());
+
+  const allTeams = useMemo(() => {
+    if (overlayTeams.size === 0) return profile.teams;
+    const extras = Array.from(overlayTeams.values()).filter(
+      (t) => !profile.teams.some((pt) => pt.id === t.id),
+    );
+    return extras.length === 0 ? profile.teams : [...profile.teams, ...extras];
+  }, [profile.teams, overlayTeams]);
+
   const filteredTeams = useMemo(
     () =>
       regulationFilter === ALL_REGULATIONS
-        ? profile.teams
-        : profile.teams.filter(
+        ? allTeams
+        : allTeams.filter(
             (t) => isRegulationLabel(t.format) && toRegulationId(t.format) === regulationFilter,
           ),
-    [profile.teams, regulationFilter],
+    [allTeams, regulationFilter],
   );
 
   const openTeams = filteredTeams.filter((t) => t.visibility === 'open');
@@ -203,6 +233,44 @@ export default function ProfileCard({
       }
     : undefined;
 
+  // Same optimistic-local-state reasoning as handleRemoveTeam above, for
+  // the opposite direction (Leg 6 fold-in, see TODO.md and this file's
+  // header comment). `teamsById` is checked (not `localTeams`' own
+  // `visibility`) because a team can already have a real, just-stale
+  // `PublicTeam` under the *other* tier (a visibility switch, not a
+  // first-time add) - that case doesn't need synthesis, just moving its id
+  // across both ordered-id arrays the same way a cross-section drag would.
+  const handleAddTeamToTier = (teamId: string, tier: 'open' | 'closed'): Promise<boolean> => {
+    if (!onAddTeamToTier) return Promise.resolve(false);
+    return onAddTeamToTier(teamId, tier).then((success) => {
+      if (success) {
+        if (!teamsById.has(teamId)) {
+          const localTeam = localTeams?.find((t) => t.id === teamId);
+          if (localTeam) {
+            setOverlayTeams((prev) =>
+              new Map(prev).set(teamId, synthesizePublicTeam(localTeam, tier)),
+            );
+          }
+        }
+        setOpenOrderedIds((ids) =>
+          tier === 'open'
+            ? ids.includes(teamId)
+              ? ids
+              : [...ids, teamId]
+            : ids.filter((id) => id !== teamId),
+        );
+        setClosedOrderedIds((ids) =>
+          tier === 'closed'
+            ? ids.includes(teamId)
+              ? ids
+              : [...ids, teamId]
+            : ids.filter((id) => id !== teamId),
+        );
+      }
+      return success;
+    });
+  };
+
   return (
     <>
       <img src="/mascot.png" alt="" className="h-20 w-20" />
@@ -228,7 +296,7 @@ export default function ProfileCard({
         </div>
       )}
 
-      {profile.teams.length > 0 && (
+      {allTeams.length > 0 && (
         <div className="mt-10 flex w-full max-w-6xl flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap gap-2">
             {REGULATION_FILTERS.map((filter) => (
@@ -292,7 +360,7 @@ export default function ProfileCard({
         containerRef={reorderable ? containerRefs.open : undefined}
         getHandlers={reorderable ? (id) => getHandlers(id, 'open') : undefined}
         availableTeamsToAdd={availableForOpen}
-        onAddTeam={onAddTeamToTier ? (teamId) => onAddTeamToTier(teamId, 'open') : undefined}
+        onAddTeam={onAddTeamToTier ? (teamId) => handleAddTeamToTier(teamId, 'open') : undefined}
         onRemoveTeam={handleRemoveTeam}
       />
 
@@ -310,7 +378,7 @@ export default function ProfileCard({
         containerRef={reorderable ? containerRefs.closed : undefined}
         getHandlers={reorderable ? (id) => getHandlers(id, 'closed') : undefined}
         availableTeamsToAdd={availableForClosed}
-        onAddTeam={onAddTeamToTier ? (teamId) => onAddTeamToTier(teamId, 'closed') : undefined}
+        onAddTeam={onAddTeamToTier ? (teamId) => handleAddTeamToTier(teamId, 'closed') : undefined}
         onRemoveTeam={handleRemoveTeam}
       />
     </>
