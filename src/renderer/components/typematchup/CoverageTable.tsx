@@ -13,6 +13,24 @@ import { getPixelSpriteUrl } from '../../utils/spriteUrl';
 import TypeBadge from '../TypeBadge';
 import CoverageCell from './CoverageCell';
 
+// Threshold coloring for the two aggregate count columns (how many team
+// slots land on each side for this type), independent of CoverageCell's
+// per-cell magnitude palette - a row with 4+ weaknesses reads as a real
+// team-building problem (red) even if none of the individual hits is a 4x.
+const COUNT_BADGE = 'inline-block w-6 rounded py-0.5 font-semibold';
+
+function unfavorableCountClasses(count: number): string {
+  if (count === 0) return `${COUNT_BADGE} bg-zinc-700 text-zinc-300`;
+  if (count >= 3) return `${COUNT_BADGE} bg-red-900/50 text-red-300`;
+  return `${COUNT_BADGE} bg-yellow-900/50 text-yellow-300`;
+}
+
+function favorableCountClasses(count: number): string {
+  if (count === 0) return `${COUNT_BADGE} bg-yellow-900/50 text-yellow-300`;
+  if (count >= 3) return `${COUNT_BADGE} bg-blue-900/50 text-blue-300`;
+  return `${COUNT_BADGE} bg-green-900/50 text-green-300`;
+}
+
 interface CoverageTableProps {
   title: string;
   pokemon: ImportedPokemonInfo[];
@@ -77,12 +95,12 @@ export default function CoverageTable({
                 <CoverageCell key={j} multiplier={cell} favorableWhenAbove1={favorableWhenAbove1} />
               ))}
               <td className="text-center py-1.5 border border-zinc-700/60">
-                <span className="inline-block w-6 rounded bg-orange-900/50 text-orange-300 py-0.5 font-semibold">
+                <span className={unfavorableCountClasses(row.unfavorableCount)}>
                   {row.unfavorableCount}
                 </span>
               </td>
               <td className="text-center py-1.5 border border-zinc-700/60">
-                <span className="inline-block w-6 rounded bg-green-900/50 text-green-300 py-0.5 font-semibold">
+                <span className={favorableCountClasses(row.favorableCount)}>
                   {row.favorableCount}
                 </span>
               </td>
