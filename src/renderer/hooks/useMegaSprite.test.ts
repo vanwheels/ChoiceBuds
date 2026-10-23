@@ -38,6 +38,43 @@ describe('useMegaSprite', () => {
     expect(mockedFetchJSON).toHaveBeenCalledWith('/pokemon/venusaur-mega-test-1');
   });
 
+  it('extracts types (sorted by slot) and baseStats when the response includes them', async () => {
+    mockedFetchJSON.mockResolvedValueOnce({
+      id: 40001,
+      types: [
+        { slot: 2, type: { name: 'Dragon' } },
+        { slot: 1, type: { name: 'Fire' } },
+      ],
+      stats: [
+        { base_stat: 78, stat: { name: 'hp' } },
+        { base_stat: 130, stat: { name: 'attack' } },
+        { base_stat: 111, stat: { name: 'defense' } },
+        { base_stat: 130, stat: { name: 'special-attack' } },
+        { base_stat: 85, stat: { name: 'special-defense' } },
+        { base_stat: 100, stat: { name: 'speed' } },
+      ],
+    });
+    const { result } = renderHook(() => useMegaSprite('charizard-mega-x-stats-test-1'));
+    await waitFor(() => expect(result.current).not.toBeNull());
+    expect(result.current?.types).toEqual(['fire', 'dragon']);
+    expect(result.current?.baseStats).toEqual({
+      hp: 78,
+      attack: 130,
+      defense: 111,
+      specialAttack: 130,
+      specialDefense: 85,
+      speed: 100,
+    });
+  });
+
+  it('leaves types/baseStats undefined when the response has neither (e.g. a bare {id} fixture)', async () => {
+    mockedFetchJSON.mockResolvedValueOnce({ id: 40002 });
+    const { result } = renderHook(() => useMegaSprite('unreleased-mega-test-2'));
+    await waitFor(() => expect(result.current).not.toBeNull());
+    expect(result.current?.types).toBeUndefined();
+    expect(result.current?.baseStats).toBeUndefined();
+  });
+
   it('resolves to null (not a throw) when the slug has no PokeAPI resource yet', async () => {
     mockedFetchJSON.mockResolvedValueOnce(null);
     const { result } = renderHook(() => useMegaSprite('unreleased-mega-test-1'));

@@ -22,14 +22,16 @@
  * anything about swapping species.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import type { ImportedPokemonInfo, ShowdownPokemon } from '../types/pokemon';
+import type { AbilityData, ImportedPokemonInfo, ShowdownPokemon } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { RegulationId } from '../utils/pokemonRules';
 import { isGenderless, isFemaleLocked } from '../config/pokemonRules';
 import { getMegaApiSlug } from '../config/megaEvolution';
+import { getMegaAbility } from '../config/megaAbilities';
 import { useMegaSprite } from '../hooks/useMegaSprite';
+import { usePokemonFormToggle } from '../hooks/usePokemonFormToggle';
 import { getPixelSpriteUrl, getAnimatedSpriteUrl } from '../utils/spriteUrl';
 import { getTotalSP, MAX_TOTAL_SP } from '../utils/evTotal';
 import TypeBadge from './TypeBadge';
@@ -151,6 +153,41 @@ export default function EditablePokemonCore({
     : null;
   const useAnimated = animatedCandidateUrl !== null && animatedCandidateUrl !== failedAnimatedUrl;
   const displaySpriteUrl = useAnimated ? animatedCandidateUrl : staticSpriteUrl;
+
+  // Mega Team Card Flip (Leg 2, see TODO.md): a separate toggle from the
+  // always-on sprite swap above - holding the stone makes the Mega icon
+  // available (megaApiSlug non-null), but the ability/stats/typing panel
+  // only shows the Mega's own values while this slot's own toggle is
+  // actively pointed at that same slug. activeMegaSlug stays non-null only
+  // in that exact case, letting every override below derive from one value
+  // instead of repeating the `megaApiSlug !== null && activeForm ===
+  // megaApiSlug` check.
+  const { activeForm, toggleActiveForm } = usePokemonFormToggle(pokemon.id);
+  const activeMegaSlug = megaApiSlug !== null && activeForm === megaApiSlug ? megaApiSlug : null;
+  const displayedTypes = activeMegaSlug && megaSprite?.types ? megaSprite.types : types;
+  const displayedBaseStats =
+    activeMegaSlug && megaSprite?.baseStats ? megaSprite.baseStats : pokemon.baseStats;
+  const displayedSpeciesForStats = activeMegaSlug ?? showdownData.species;
+  const megaAbilityName = activeMegaSlug ? getMegaAbility(activeMegaSlug) : undefined;
+  const [megaAbilityData, setMegaAbilityData] = useState<AbilityData | null>(null);
+  // Clears stale data the moment megaAbilityName changes - same render-time
+  // pattern as EditOverlays.tsx's selectedItem/selectedAbility handling
+  // (https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes).
+  const [resolvedForMegaAbility, setResolvedForMegaAbility] = useState(megaAbilityName);
+  if (megaAbilityName !== resolvedForMegaAbility) {
+    setResolvedForMegaAbility(megaAbilityName);
+    if (!megaAbilityName) setMegaAbilityData(null);
+  }
+  useEffect(() => {
+    if (!megaAbilityName) return;
+    let cancelled = false;
+    gameDataState.getAbilityData(megaAbilityName).then((data) => {
+      if (!cancelled) setMegaAbilityData(data);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [megaAbilityName, gameDataState]);
 
   // Item/ability/move/EV edits commit immediately through this, same
   // "write on every mutation" convention gender/shiny toggling below uses.
@@ -331,7 +368,7 @@ export default function EditablePokemonCore({
           TeamCard's narrowest 6-column card (~182px). */}
       <div className="w-full flex justify-center items-center my-1.5 min-w-0">
         <div className="flex flex-row flex-wrap items-center justify-center gap-1.5 w-full">
-          {types.map((type, index) => (
+          {displayedTypes.map((type, index) => (
             <TypeBadge key={index} type={type} widthClass="w-[70px]" />
           ))}
         </div>
@@ -350,18 +387,29 @@ export default function EditablePokemonCore({
         rulesetId={rulesetId}
         resolveSprite={resolveSprite}
         onUpdatePokemon={updateShowdownData}
+        megaToggle={
+          megaApiSlug
+            ? { isActive: activeMegaSlug !== null, onToggle: () => toggleActiveForm(megaApiSlug) }
+            : undefined
+        }
+        megaAbilityOverride={
+          megaAbilityName ? { name: megaAbilityName, data: megaAbilityData } : undefined
+        }
       />
 
       {/* EVs Grid Block - permanently editable (Always-On Editing Leg 1, see
           TODO.md). Also cycles a read-only Base/Real Total display mode
           (Team Builder Stat Display: SP / Base / Real Total Toggle, see
           TODO.md) - species/level/gender/baseStats are what that Real Total
-          math needs beyond the SP editing StatsColumn already did. */}
+          math needs beyond the SP editing StatsColumn already did. Mega Team
+          Card Flip (see TODO.md): species/baseStats both swap to the active
+          Mega's own while the flip is on, so Base/Real Total read the Mega's
+          numbers the same way the SP grid's totals do. */}
       <StatsColumn
-        species={showdownData.species}
+        species={displayedSpeciesForStats}
         level={showdownData.level}
         gender={showdownData.gender}
-        baseStats={pokemon.baseStats}
+        baseStats={displayedBaseStats}
         evs={showdownData.evs}
         nature={showdownData.nature}
         onUpdatePokemon={updateShowdownData}

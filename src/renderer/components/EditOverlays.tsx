@@ -43,6 +43,7 @@ import ItemPickerPanel from './ItemPickerPanel';
 import AbilityCapsule from './AbilityCapsule';
 import AbilityPickerPanel from './AbilityPickerPanel';
 import MovePickerPanel from './MovePickerPanel';
+import MegaFormToggleBadge from './MegaFormToggleBadge';
 import Tooltip from './Tooltip';
 import TooltipContent from './TooltipContent';
 import FloatingCardPanel from './FloatingCardPanel';
@@ -53,6 +54,16 @@ interface EditOverlaysProps {
   rulesetId: RegulationId;
   resolveSprite: (remoteUrl: string) => string;
   onUpdatePokemon: (updates: Partial<ShowdownPokemon>) => void;
+  // Mega Team Card Flip (see TODO.md) - undefined when this slot isn't
+  // holding its own Mega Stone, so no badge renders at all. The badge only
+  // flips EditablePokemonCore.tsx's *display*: the ability capsule below
+  // still edits the real stored showdownData.ability either way, the same
+  // click target it always was - `megaAbilityOverride` (already resolved by
+  // EditablePokemonCore, which owns every other piece of Mega display state)
+  // just overrides what name/effect text that capsule and its tooltip show
+  // while active.
+  megaToggle?: { isActive: boolean; onToggle: () => void };
+  megaAbilityOverride?: { name: string; data: AbilityData | null };
 }
 
 export default function EditOverlays({
@@ -61,6 +72,8 @@ export default function EditOverlays({
   rulesetId,
   resolveSprite,
   onUpdatePokemon,
+  megaToggle,
+  megaAbilityOverride,
 }: EditOverlaysProps) {
   const {
     items,
@@ -340,6 +353,9 @@ export default function EditOverlays({
     };
   }, [selectedAbility, getAbilityData]);
 
+  const displayedAbilityName = megaAbilityOverride?.name || selectedAbility;
+  const displayedAbilityData = megaAbilityOverride ? megaAbilityOverride.data : abilityData;
+
   // Resolve full metadata (type/category/power/pp/accuracy/description) for the 4 equipped moves
   useEffect(() => {
     let cancelled = false;
@@ -359,23 +375,32 @@ export default function EditOverlays({
 
   return (
     <div className="flex flex-col items-center gap-2.5">
-      {/* Item Sprite Box */}
-      <ItemSpriteBox
-        selectedItem={selectedItem}
-        itemData={itemData}
-        spriteFailed={itemSpriteFailed}
-        fallbackSpriteFailed={itemFallbackSpriteFailed}
-        resolveSprite={resolveSprite}
-        onSpriteError={() => setItemSpriteFailed(true)}
-        onFallbackSpriteError={() => setItemFallbackSpriteFailed(true)}
-        onHoverEnter={(el) => hoverEnter('item', el)}
-        onHoverLeave={() => hoverLeave('item')}
-        onToggleMenu={(e) => toggleMenu('item', e)}
-      />
+      {/* Item Sprite Box - MegaFormToggleBadge sits in its top-right corner
+          (Mega Team Card Flip, see TODO.md) only while this slot holds its
+          own Mega Stone. */}
+      <div className="relative">
+        <ItemSpriteBox
+          selectedItem={selectedItem}
+          itemData={itemData}
+          spriteFailed={itemSpriteFailed}
+          fallbackSpriteFailed={itemFallbackSpriteFailed}
+          resolveSprite={resolveSprite}
+          onSpriteError={() => setItemSpriteFailed(true)}
+          onFallbackSpriteError={() => setItemFallbackSpriteFailed(true)}
+          onHoverEnter={(el) => hoverEnter('item', el)}
+          onHoverLeave={() => hoverLeave('item')}
+          onToggleMenu={(e) => toggleMenu('item', e)}
+        />
+        {megaToggle && (
+          <MegaFormToggleBadge isActive={megaToggle.isActive} onToggle={megaToggle.onToggle} />
+        )}
+      </div>
 
-      {/* Ability Capsule */}
+      {/* Ability Capsule - shows the Mega's forced ability while the flip is
+          active (megaAbilityOverride), but still edits the real stored
+          ability on click either way. */}
       <AbilityCapsule
-        selectedAbility={selectedAbility}
+        selectedAbility={displayedAbilityName}
         onHoverEnter={(el) => hoverEnter('ability', el)}
         onHoverLeave={() => hoverLeave('ability')}
         onToggleMenu={(e) => toggleMenu('ability', e)}
@@ -437,8 +462,8 @@ export default function EditOverlays({
               hoveredKey={hoveredKey}
               selectedItem={selectedItem}
               itemData={itemData}
-              selectedAbility={selectedAbility}
-              abilityData={abilityData}
+              selectedAbility={displayedAbilityName}
+              abilityData={displayedAbilityData}
               selectedMoves={selectedMoves}
               moveDataSlots={moveDataSlots}
             />

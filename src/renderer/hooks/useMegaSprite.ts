@@ -10,9 +10,20 @@
  * PokeAPI resource yet, so a 404 here is expected and just means "no mega
  * sprite available yet" - callers fall back to the normal sprite, never a
  * broken image. Cached in-memory per slug for the rest of the session.
+ *
+ * Also carries that same response's `types`/base `stats` (Mega Team Card
+ * Flip, see TODO.md) - a Mega form's PokeAPI resource already returns these
+ * in the one request this file was already making for the sprite id, so
+ * EditablePokemonCore.tsx's display-flip reads them off this same cached
+ * result rather than a second fetch. Optional or undefined any time the
+ * underlying response has no stats/types (not yet released, or a bare `{id}`
+ * fixture in this file's own tests) - callers fall back to the base form's
+ * own types/baseStats, same "never a broken image" tolerance the sprite URLs
+ * already get.
  */
 
 import { useState, useEffect } from 'react';
+import type { PokemonStats } from '../types/pokemon';
 import { fetchJSON } from '../services/pokeapiService';
 import { CURATED_MEGA_FORM_SLUGS } from '../config/megaEvolution';
 import { runWithConcurrency } from '../utils/concurrency';
@@ -23,10 +34,40 @@ export interface MegaSpriteResult {
   id: number;
   spriteUrl: string;
   shinySpriteUrl: string;
+  types?: string[];
+  baseStats?: PokemonStats;
 }
 
 interface PokeAPIPokemonResponse {
   id: number;
+  types?: Array<{ slot: number; type: { name: string } }>;
+  stats?: Array<{ base_stat: number; stat: { name: string } }>;
+}
+
+const STAT_FIELD_BY_NAME: Record<string, keyof PokemonStats> = {
+  hp: 'hp',
+  attack: 'attack',
+  defense: 'defense',
+  'special-attack': 'specialAttack',
+  'special-defense': 'specialDefense',
+  speed: 'speed',
+};
+
+function extractBaseStats(stats: PokeAPIPokemonResponse['stats']): PokemonStats | undefined {
+  if (!stats || stats.length === 0) return undefined;
+  const result: PokemonStats = {
+    hp: 0,
+    attack: 0,
+    defense: 0,
+    specialAttack: 0,
+    specialDefense: 0,
+    speed: 0,
+  };
+  for (const stat of stats) {
+    const field = STAT_FIELD_BY_NAME[stat.stat.name.toLowerCase()];
+    if (field) result[field] = stat.base_stat;
+  }
+  return result;
 }
 
 const cache = new Map<string, MegaSpriteResult | null>();
@@ -46,11 +87,17 @@ const cache = new Map<string, MegaSpriteResult | null>();
 // combination of prefetch/individual callers happens to race.
 const inFlight = new Map<string, Promise<MegaSpriteResult | null>>();
 
-function buildResult(id: number): MegaSpriteResult {
+function buildResult(data: PokeAPIPokemonResponse): MegaSpriteResult {
+  const { id } = data;
   return {
     id,
     spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`,
     shinySpriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${id}.png`,
+    types: data.types
+      ?.slice()
+      .sort((a, b) => a.slot - b.slot)
+      .map((t) => t.type.name.toLowerCase()),
+    baseStats: extractBaseStats(data.stats),
   };
 }
 
@@ -68,7 +115,7 @@ export async function fetchMegaSprite(apiSlug: string): Promise<MegaSpriteResult
 
   const request = (async () => {
     const data = await fetchJSON<PokeAPIPokemonResponse>(`/pokemon/${apiSlug}`);
-    const result = data ? buildResult(data.id) : null;
+    const result = data ? buildResult(data) : null;
     cache.set(apiSlug, result);
     inFlight.delete(apiSlug);
     return result;
