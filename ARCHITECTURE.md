@@ -80,6 +80,14 @@ change.
   refresh are the only things that need network after first launch). Editing
   a Pokémon goes straight through `useTeams().updateTeam()` calls from
   `TeamCard.tsx` — there is no separate draft/commit scratchpad hook.
+  `usePokemonFormToggle` (keyed by a roster slot's own stable id, not
+  species) holds the live "currently Mega-Evolved"/"currently in an
+  alternate stat-forme" display override that the team card, team builder,
+  and battle logger share (Mega & Alt-Form Toggle State, see TODO.md) — a
+  module-level store (subscribed to via `useSyncExternalStore`, same
+  session-only-cache shape as `useMegaSprite`'s sprite lookup) rather than
+  persisted/synced state, since Mega Evolution and Aegislash's Blade/Shield
+  only happen in-battle and are never part of a saved set.
 - `useTeams`, `useSavedPokemon`, `useBattles`, and `useSettings` each mirror
   their state into a ref and queue mutations through it rather than closing
   over state captured at render time, so two concurrent `update*` calls in
