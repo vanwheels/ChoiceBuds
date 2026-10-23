@@ -16,6 +16,33 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
+## Current Milestone: Ability-Affects-Move Indicator Scoping
+
+Done when:
+- A scope doc exists at `docs/investigations/ability-affects-move-indicator.md`
+  covering: the per-ability-per-move applicability data shape, which UI
+  surface(s) show the indicator, and how/where the Type Matchups mega toggle
+  plugs in.
+- Vanny has reviewed and signed off on that scope (no build legs get cut
+  without it).
+
+- **[Ability-Affects-Move Indicator Scoping] — Leg 1** *(Last touched:
+  2026-10-23 · Re-checks: 0)*
+  From the 2026-10-22 discussion pass: an in-UI indicator for when a
+  Pokémon's ability boosts/affects a specific move (e.g. Iron Fist boosting
+  Fire Punch but not Close Combat), so that's visible without leaving the
+  app to check Serebii/the calc. Scoping only — needs a data-layer design
+  pass (likely a new per-ability-per-move applicability table alongside the
+  existing curated effect tables in `config/`) before any build leg is cut.
+  Also fold in a related gap surfaced 2026-10-23: Type Matchups has no mega
+  toggle for Pokémon holding their mega stone, so defensive coverage shown
+  there doesn't reflect a mega's typing change and/or ability change (e.g.
+  Aerilate) — scope that toggle alongside this indicator work since both
+  turn on whether a currently-active ability/typing affects what's shown.
+  Done check: a scope doc exists covering data shape, which UI surface(s)
+  show the ability-affects-move indicator, and how/where the Type Matchups
+  mega toggle plugs in; no code yet. Review: no. Manual verification: no.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -44,17 +71,9 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-- **[Ability-Affects-Move Indicator: Scoping] — Leg 1** *(Last touched:
-  2026-10-22 · Re-checks: 0)*
-  From the 2026-10-22 discussion pass: an in-UI indicator for when a
-  Pokémon's ability boosts/affects a specific move (e.g. Iron Fist boosting
-  Fire Punch but not Close Combat), so that's visible without leaving the
-  app to check Serebii/the calc. Scoping only — needs a data-layer design
-  pass (likely a new per-ability-per-move applicability table alongside the
-  existing curated effect tables in `config/`) before any build leg is cut.
-  Done check: a scope doc exists covering data shape and which UI
-  surface(s) show the indicator; no code yet. Review: no. Manual
-  verification: no.
+(The Ability-Affects-Move Indicator: Scoping item previously listed here was
+promoted to current as the Ability-Affects-Move Indicator Scoping milestone
+on 2026-10-23 — see above.)
 
 (The four items previously listed here were bundled into the Profile Social
 Scoping & Maintenance milestone on 2026-10-19, now shipped; see
