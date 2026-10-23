@@ -85,4 +85,12 @@ Entries prior to this file's oldest are in:
   named with the milestone slug since it shares its date range with the
   Profile Social Scoping & Maintenance archive above)
 
-(no entries yet since the last boundary)
+**[Mega & Alt-Form Toggle State] — Leg 1** (2026-10-22): Added
+`usePokemonFormToggle`, a shared per-roster-slot toggle for the form
+currently displayed in place of a Pokémon's stored base form (a Mega
+Evolution, or a stat-only forme like Aegislash Blade/Shield) - a
+module-level store (subscribed to via `useSyncExternalStore`) rather than
+persisted/synced state, since Mega Evolution and Blade/Shield only happen
+in-battle. Foundation for Legs 2-4 of the Mega & Alt-Form Representation
+milestone and the separate Type Matchup Rework milestone. See commit
+de36abf.

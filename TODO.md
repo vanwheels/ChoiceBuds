@@ -36,17 +36,6 @@ Done when:
   to Shield, matching in-game start state) and a battle log entry can
   mark a Pokémon as mega-evolved with exactly one extra input.
 
-- **[Mega & Alt-Form Toggle State] — Leg 1** *(Last touched: 2026-10-22 ·
-  Re-checks: 0)*
-  Design and build the shared per-Pokémon toggle state for "currently
-  mega-evolved" / "currently in an alternate form" (starting with Aegislash
-  blade/shield), living alongside the existing team/saved-Pokémon hooks.
-  This is the foundation Legs 2-4 below and the separate Type Matchup
-  Rework milestone consume — get the state shape and hook API settled
-  before any UI reads from it. Done check: toggle state is readable/
-  settable through a hook, with unit tests on the state transitions.
-  Review: no. Manual verification: no (no UI yet).
-
 - **[Mega Team Card Flip] — Leg 2** *(Last touched: 2026-10-22 ·
   Re-checks: 0)*
   Show a mega icon next to a Pokémon's item slot when it holds the
