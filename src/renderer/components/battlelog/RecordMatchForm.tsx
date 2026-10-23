@@ -43,6 +43,7 @@ import type { UseSpeciesRosterReturn } from '../../hooks/useSpeciesRoster';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import { groupBattlesBySet, getSetOutcome } from '../../utils/battleSets';
 import { toRegulationId } from '../../utils/pokemonRules';
+import { excludeOpponentPickerNoise } from '../../utils/opponentFormNoise';
 import SpeciesPickerCard from '../SpeciesPickerCard';
 import TeamPickerDropdown from '../TeamPickerDropdown';
 import BroughtToggleTile from './BroughtToggleTile';
@@ -251,7 +252,7 @@ export default function RecordMatchForm({
   // second time and both entries independently marked brought, double-
   // counting one Pokemon in the opponent's brought-4.
   const opponentSpeciesSeen = new Set(opponentRoster.map((o) => o.species.toLowerCase()));
-  const opponentPickerRoster = speciesRosterState.roster.filter(
+  const opponentPickerRoster = excludeOpponentPickerNoise(speciesRosterState.roster).filter(
     (s) => !opponentSpeciesSeen.has(s.name.toLowerCase()),
   );
 
