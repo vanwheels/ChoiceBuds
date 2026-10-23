@@ -16,25 +16,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Team Editor & Box Fixes
-
-Done when:
-1. All three originally-scoped items (Box-exclusion bug in the swap-via-sprite-box
-   picker, Box expand-in-place → modal, Aegislash/Maushold form-picker stripped
-   from battle-logger opponent selection) are fixed and live-verified. **Done**
-   (Legs 1-3, see COMPLETED.md).
-2. Mega sprite display is unified with toggle state — sprite, types, stats,
-   ability, and Type Matchup coverage all gate together on `activeMegaSlug` —
-   live-verified against Golisopod (currently broken) and Aegislash (must stay
-   correct). **Done** (Leg 4, see COMPLETED.md).
-3. The `useSavedPokemon` sync migration gap is either fixed to mirror
-   `reconcileSyncedTeams`'s `normalizeIncomingSyncTeam` step, or confirmed moot
-   with the finding documented either way; passes `/leg-review`. **Done** (Leg
-   5, fixed and `/leg-review`-clean, see COMPLETED.md).
-
-All three done-when criteria are met and all five legs have shipped (see
-COMPLETED.md). This milestone is ready for `/close-milestone`.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -145,10 +126,11 @@ build for a pattern with only one real example today.
 Mega & Alt-Form Representation was promoted to current and shipped the
 same day (see `MILESTONES.md`) - its toggle state (`usePokemonFormToggle`)
 is now consumable by Type Matchup Rework. Type Matchup Rework was itself
-promoted to current 2026-10-23 (see above), and Team Editor & Box Fixes was
-promoted to current 2026-10-23 (see above), bundling in two Unscheduled bug
-fixes found since the pass (Mega sprite/toggle gating, useSavedPokemon sync
-migration gap). The remaining three, to be scoped in turn:
+promoted to current and shipped 2026-10-23 (see `MILESTONES.md`), and Team
+Editor & Box Fixes was promoted to current and shipped the same day (see
+`MILESTONES.md`), bundling in two Unscheduled bug fixes found since the
+pass (Mega sprite/toggle gating, useSavedPokemon sync migration gap). The
+remaining three, to be scoped in turn:
 
 - **Search & Filter: Tag-Chip Redesign** — replace the `#`-prefixed text
   search (team builder, Box, add-Pokémon flows) with Showdown-style

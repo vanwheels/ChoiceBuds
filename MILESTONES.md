@@ -93,3 +93,5 @@ milestone.
   [post-mortem](docs/postmortems/mega-alt-form-representation.md)
 - **Type Matchup Rework** — 2026-10-23 — Shipped —
   [post-mortem](docs/postmortems/type-matchup-rework.md)
+- **Team Editor & Box Fixes** — 2026-10-23 — Shipped —
+  [post-mortem](docs/postmortems/team-editor-and-box-fixes.md)

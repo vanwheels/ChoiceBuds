@@ -158,7 +158,15 @@ change.
   the hook itself, see Split useTeams.ts in COMPLETED.md); `useSavedPokemon.ts`
   mirrors that as `reconcileSyncedSavedPokemon` in
   `utils/savedPokemonSyncReconciliation.ts` (see Split useSavedPokemon.ts in
-  COMPLETED.md). `useBattles.ts` still keeps theirs inline.
+  COMPLETED.md). `useBattles.ts` still keeps theirs inline. Both
+  `reconcileSyncedTeams` and `reconcileSyncedSavedPokemon` also run every
+  incoming sync-merge-sourced record through the same normalization the
+  load-path migration applies (`normalizeIncomingSyncTeam`/
+  `normalizeIncomingSyncSavedPokemonEntry`), bumping `updatedAt` only when
+  that changed something sync-relevant, so a corrected copy can out-rank a
+  stale sender on the next push — see
+  `.claude/rules/sync-merge-migration-parity.md` for why this has to mirror
+  the load path and not just run there.
 - `GET /profile/:username` (no auth) is the one place the Worker reads
   inside an otherwise-opaque `Team`/`SavedPokemonEntry` record on purpose —
   `worker/src/publicProfile.ts`'s pure `extractPublicTeam`/
@@ -409,6 +417,22 @@ change.
   on top instead of being hidden behind the overlay — a prerequisite for any
   modal-opening affordance added inside the swipe deck.
 
+## Box entry modal
+
+- `src/renderer/components/BoxPageGrid.tsx` mounts a single
+  `BoxEntryModal.tsx` instance (not one per card) and swaps its `entry`
+  prop on expand instead of reflowing the grid in place — the Box's
+  previous expand-in-place behavior grew the grid cell itself, which
+  reshuffled every tile after it. A single shared instance also makes
+  prev/next navigation between box entries flicker-free: cycling swaps the
+  prop instead of closing one card's popup and mounting the next one's.
+  Navigation (Left/Right arrow keys or the modal's own flanking
+  sprite-preview buttons) walks the box's current search-filtered order.
+  `Modal.tsx` gained an opt-in `onOverlayClick` prop for this (every other
+  modal keeps click-outside inert by default), and `ContextMenu.tsx`'s
+  z-index sits above `Modal.tsx`'s so a right-click inside the popup still
+  opens on top of it rather than behind its overlay.
+
 ## Type Matchup coverage
 
 `components/typematchup/TypeMatchupPage.tsx` picks a saved team and renders
@@ -474,8 +498,10 @@ reading the toggle directly):
   grid/type badges to the Mega's own values, sourced from
   `useMegaSprite.ts`'s existing per-slug PokeAPI fetch (already pulling the
   Mega's sprite id, so types/base stats ride the same response) and
-  `config/megaAbilities.ts`'s forced-ability table. The always-on sprite
-  swap is driven purely by the held item and is unaffected by this toggle.
+  `config/megaAbilities.ts`'s forced-ability table. The sprite gates on the
+  same toggle (fixed in Team Editor & Box Fixes Leg 4 — it used to swap to
+  the Mega form as soon as a Mega Stone was held, ahead of this toggle,
+  while stats/types/ability correctly waited for it). The always-on sprite
   Aegislash gets `AegislashFormToggleBadge` instead: Blade's stats are
   derived from the stored Shield stats via `utils/aegislashForme.ts`'s
   Attack↔Defense/Sp. Atk↔Sp. Def swap (the real in-game rule) rather than a
