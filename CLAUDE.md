@@ -195,3 +195,12 @@ running on.
   live/manual verification step and it's actually performed, say so
   explicitly in that leg's COMPLETED.md entry — what was checked, not just
   that the feature was built — the same day, not as a later note.
+- **Scoping-only legs still get a COMPLETED.md entry** (added 2026-10-23,
+  after Ability-Affects-Move Indicator Scoping's Leg 1 was marked done
+  directly in TODO.md's own done-when bullets but never got a COMPLETED.md
+  line — `/close-milestone` had to reconstruct the entry retroactively from
+  TODO.md and `git log` instead of reading it straight from COMPLETED.md):
+  a leg with no code changed is still a leg. The moment it's marked done,
+  write its one-line COMPLETED.md entry (commit hash included, e.g. the
+  scope doc's own commit) the same day — inline resolution notes in
+  TODO.md's done-when bullets are not a substitute for the archival record.
