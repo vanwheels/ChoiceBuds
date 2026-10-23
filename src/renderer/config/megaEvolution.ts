@@ -196,6 +196,51 @@ export function getMegaFormsForSpecies(species: string): { item: string; suffix:
     .map(([item, entry]) => ({ item, suffix: entry.suffix }));
 }
 
+/**
+ * Battle Logger Mega control shape for an opponent Pokemon - the policy
+ * getMegaFormsForSpecies's own doc comment above describes, actually
+ * implemented: hidden entirely for a non-mega-capable species or one
+ * confirmed holding a different item, a plain toggle when there's exactly
+ * one possible form, a picker when there's real X/Y/Z ambiguity to resolve.
+ * `single.revealItem` is non-null exactly when the item isn't confirmed yet
+ * and marking Mega both sets it on the roster entry and flags the mark -
+ * declaring Mega IS revealing the stone; null when the held item already
+ * pins the exact form, so nothing new needs setting.
+ */
+export type OpponentMegaControl =
+  | { kind: 'none' }
+  | { kind: 'single'; slug: string; revealItem: string | null }
+  | { kind: 'choice'; options: { slug: string; item: string; suffix: string }[] };
+
+export function resolveOpponentMegaControl(
+  species: string,
+  heldItem: string | undefined,
+): OpponentMegaControl {
+  const knownSlug = getMegaApiSlug(heldItem, species);
+  if (heldItem) {
+    // A confirmed item that isn't this species' own stone rules Mega out
+    // entirely - they can't be holding two items at once.
+    return knownSlug ? { kind: 'single', slug: knownSlug, revealItem: null } : { kind: 'none' };
+  }
+
+  const forms = getMegaFormsForSpecies(species);
+  if (forms.length === 0) return { kind: 'none' };
+
+  const base = species.trim().toLowerCase();
+  if (forms.length === 1) {
+    return { kind: 'single', slug: `${base}-${forms[0].suffix}`, revealItem: forms[0].item };
+  }
+  return {
+    kind: 'choice',
+    options: forms.map((f) => ({ slug: `${base}-${f.suffix}`, item: f.item, suffix: f.suffix })),
+  };
+}
+
+/** Single-letter badge label for a Mega form choice button (Battle Logger's X/Y/Z picker) - "M" for an unambiguous suffix-less "mega", else the letter after "mega-" (X/Y/Z). */
+export function megaFormBadgeLetter(suffix: string): string {
+  return suffix === 'mega' ? 'M' : suffix.slice('mega-'.length).toUpperCase();
+}
+
 const MEGA_SPECIES_SUFFIX_PATTERN = /-Mega(-[XY])?$/i;
 
 /**

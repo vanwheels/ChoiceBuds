@@ -15,6 +15,8 @@ import {
   formatMegaLabel,
   getMegaApiSlug,
   getMegaFormsForSpecies,
+  megaFormBadgeLetter,
+  resolveOpponentMegaControl,
 } from './megaEvolution';
 
 describe('Floette Mega Evolution exception', () => {
@@ -48,5 +50,53 @@ describe('formatMegaLabel (Add Pokémon Table: Mega Form Rows Leg 2)', () => {
 
   it('labels Reg M-C\'s second "Mega Z" form, matching megaAbilities.ts\'s own naming', () => {
     expect(formatMegaLabel('Absol', 'mega-z')).toBe('Mega Absol Z');
+  });
+});
+
+describe('megaFormBadgeLetter (Battle Logger X/Y/Z picker)', () => {
+  it('labels an unambiguous single form "M"', () => {
+    expect(megaFormBadgeLetter('mega')).toBe('M');
+  });
+
+  it('labels a split form with its letter', () => {
+    expect(megaFormBadgeLetter('mega-x')).toBe('X');
+    expect(megaFormBadgeLetter('mega-y')).toBe('Y');
+    expect(megaFormBadgeLetter('mega-z')).toBe('Z');
+  });
+});
+
+describe('resolveOpponentMegaControl (Battle Logger Mega button)', () => {
+  it('hides the control entirely for a non-mega-capable species', () => {
+    expect(resolveOpponentMegaControl('Pikachu', undefined)).toEqual({ kind: 'none' });
+  });
+
+  it("hides the control when the confirmed held item is not this species' own stone", () => {
+    expect(resolveOpponentMegaControl('Gengar', 'Choice Scarf')).toEqual({ kind: 'none' });
+  });
+
+  it('resolves a single unambiguous form automatically, without confirming the item yet', () => {
+    expect(resolveOpponentMegaControl('Gengar', undefined)).toEqual({
+      kind: 'single',
+      slug: 'gengar-mega',
+      revealItem: 'gengarite',
+    });
+  });
+
+  it('resolves straight to single when the confirmed item already pins the exact form', () => {
+    expect(resolveOpponentMegaControl('Charizard', 'Charizardite X')).toEqual({
+      kind: 'single',
+      slug: 'charizard-mega-x',
+      revealItem: null,
+    });
+  });
+
+  it('offers a choice between every possible form when the item is still unconfirmed and ambiguous', () => {
+    expect(resolveOpponentMegaControl('Charizard', undefined)).toEqual({
+      kind: 'choice',
+      options: [
+        { slug: 'charizard-mega-x', item: 'charizardite x', suffix: 'mega-x' },
+        { slug: 'charizard-mega-y', item: 'charizardite y', suffix: 'mega-y' },
+      ],
+    });
   });
 });

@@ -21,6 +21,7 @@
 
 import type { Battle } from '../../types/pokemon';
 import { groupBattlesBySet, getSetOutcome } from '../../utils/battleSets';
+import { formatMegaLabel, MEGA_STONE_TO_SPECIES } from '../../config/megaEvolution';
 
 interface PastBattlesListProps {
   battles: Battle[];
@@ -46,14 +47,21 @@ const RESULT_LABELS: Record<Battle['result'], string> = {
   'in-progress': 'In Progress',
 };
 
-/** Resolves battle.megaEvolvedIds (either roster) to display names, for the summary badge's tooltip below. */
+/** "Mega {displayName}"/"Mega {displayName} X" when `item` is that species' own confirmed Mega Stone (see config/megaEvolution.ts), else `displayName` unchanged - a graceful fallback for a battle logged before item-based form tracking existed. */
+function megaEvolvedLabel(displayName: string, species: string, item: string | undefined): string {
+  const entry = item ? MEGA_STONE_TO_SPECIES[item.trim().toLowerCase()] : undefined;
+  if (!entry || entry.species !== species.trim().toLowerCase()) return displayName;
+  return formatMegaLabel(displayName, entry.suffix);
+}
+
+/** Resolves battle.megaEvolvedIds (either roster) to display labels, for the summary badge's tooltip below. */
 function getMegaEvolvedNames(battle: Battle): string[] {
   const playerNames = battle.playerRoster
     .filter((p) => battle.megaEvolvedIds.includes(p.id))
-    .map((p) => p.nickname || p.species);
+    .map((p) => megaEvolvedLabel(p.nickname || p.species, p.species, p.item));
   const opponentNames = battle.opponentRoster
     .filter((o) => battle.megaEvolvedIds.includes(o.id))
-    .map((o) => o.species);
+    .map((o) => megaEvolvedLabel(o.species, o.species, o.item));
   return [...playerNames, ...opponentNames];
 }
 

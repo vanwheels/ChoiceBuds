@@ -20,7 +20,7 @@
  * `addBattle`.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import type {
   Battle,
   BroughtPokemonSnapshot,
@@ -29,7 +29,14 @@ import type {
   Team,
 } from '../../types/pokemon';
 import { getPixelSpriteUrl, MEGA_BADGE_ICON_URL } from '../../utils/spriteUrl';
-import { toggleMegaEvolvedIds } from '../../utils/battleMegaToggle';
+import { setMegaEvolvedForSide, toggleMegaEvolvedIds } from '../../utils/battleMegaToggle';
+import {
+  formatMegaLabel,
+  getMegaApiSlug,
+  megaFormBadgeLetter,
+  resolveOpponentMegaControl,
+} from '../../config/megaEvolution';
+import { useMegaSprite } from '../../hooks/useMegaSprite';
 import type { UseTeamsReturn } from '../../hooks/useTeams';
 import type { UseBattlesReturn } from '../../hooks/useBattles';
 import type { UseSpeciesRosterReturn } from '../../hooks/useSpeciesRoster';
@@ -262,38 +269,145 @@ export default function RecordMatchForm({
   const toggleOpponentBrought = (pokemonId: string) =>
     setOpponentBroughtIds((prev) => toggleId(prev, pokemonId, MAX_BROUGHT));
 
-  /** Toggles pokemonId's Mega Evolved mark via the pure toggleMegaEvolvedIds (see utils/battleMegaToggle.ts), which also clears any other id already marked on the same side - only one Pokemon per side can Mega Evolve in a real battle. */
-  const toggleMegaEvolved = (pokemonId: string, sideRoster: { id: string }[]) =>
+  /** Toggles pokemonId's Mega Evolved mark on the player side - a player's held item is always known/fixed (the team's own set), so renderPlayerMegaControl below already gated this to a species actually holding its own Mega Stone; no item reveal needed here. */
+  const handlePlayerMegaToggle = (pokemonId: string) =>
     setMegaEvolvedIds((prev) =>
       toggleMegaEvolvedIds(
         prev,
         pokemonId,
-        sideRoster.map((p) => p.id),
+        playerRoster.map((p) => p.id),
       ),
     );
 
-  /** Shared Mega-toggle control rendered into both rosters' BroughtToggleTile `trailing` slot - same gold-circle/Mega-icon treatment as the team card's MegaFormToggleBadge, just inline rather than overlaid on the sprite since BroughtToggleTile's trailing content sits beside the tile, not on top of it. */
-  const renderMegaToggle = (pokemonId: string, sideRoster: { id: string }[]) => {
-    const isMega = megaEvolvedIds.includes(pokemonId);
-    return (
-      <button
-        type="button"
-        onClick={() => toggleMegaEvolved(pokemonId, sideRoster)}
-        title={isMega ? 'Mega Evolved - click to unmark' : 'Mark as Mega Evolved'}
-        className={`w-5 h-5 flex items-center justify-center rounded-full border transition-colors cursor-pointer ${
-          isMega
-            ? 'bg-accent-gold border-accent-gold'
-            : 'bg-zinc-800 border-zinc-600 hover:border-accent-gold'
-        }`}
-      >
-        <img
-          src={spriteCacheState.resolveSprite(MEGA_BADGE_ICON_URL)}
-          alt="Mega"
-          className="w-3 h-3"
-        />
-      </button>
+  /** Toggles an opponent's Mega Evolved mark for an already-unambiguous form (single possible Mega, or a confirmed item that already pins it) - `revealItem` is the roster entry's held item to set first, if it isn't known yet, since declaring Mega IS revealing the stone (see resolveOpponentMegaControl's doc comment). */
+  const handleOpponentMegaToggle = (pokemonId: string, revealItem: string | null) => {
+    if (revealItem && !megaEvolvedIds.includes(pokemonId)) {
+      setOpponentRoster((prev) =>
+        prev.map((o) => (o.id === pokemonId ? { ...o, item: revealItem } : o)),
+      );
+    }
+    setMegaEvolvedIds((prev) =>
+      toggleMegaEvolvedIds(
+        prev,
+        pokemonId,
+        opponentRoster.map((o) => o.id),
+      ),
     );
   };
+
+  /** Picks (or switches to) a specific Mega form for an opponent species with real X/Y/Z ambiguity - sets the roster entry's item to the chosen stone and marks Mega Evolved via setMegaEvolvedForSide (not a plain toggle, since the id may already be marked under a *different* form - a plain id-based toggle would just unmark it instead of reassigning). Re-clicking the currently-active form unmarks instead, mirroring the single-form toggle's behavior. */
+  const handleOpponentMegaChoice = (pokemonId: string, chosenItem: string) => {
+    const mon = opponentRoster.find((o) => o.id === pokemonId);
+    const isActiveForm =
+      megaEvolvedIds.includes(pokemonId) &&
+      mon?.item?.trim().toLowerCase() === chosenItem.trim().toLowerCase();
+    if (isActiveForm) {
+      setMegaEvolvedIds((prev) => prev.filter((id) => id !== pokemonId));
+      return;
+    }
+    setOpponentRoster((prev) =>
+      prev.map((o) => (o.id === pokemonId ? { ...o, item: chosenItem } : o)),
+    );
+    setMegaEvolvedIds((prev) =>
+      setMegaEvolvedForSide(
+        prev,
+        pokemonId,
+        opponentRoster.map((o) => o.id),
+      ),
+    );
+  };
+
+  /** Shared Mega badge styling - same gold-circle treatment as the team card's MegaFormToggleBadge, just inline (BroughtToggleTile's trailing slot sits beside the tile, not overlaid on it). */
+  function megaBadgeButton(args: {
+    key?: string;
+    isActive: boolean;
+    onClick: () => void;
+    title: string;
+    content: ReactNode;
+  }) {
+    return (
+      <button
+        key={args.key}
+        type="button"
+        onClick={args.onClick}
+        title={args.title}
+        className={`w-5 h-5 flex items-center justify-center rounded-full border text-[10px] font-bold transition-colors cursor-pointer ${
+          args.isActive
+            ? 'bg-accent-gold border-accent-gold text-zinc-900'
+            : 'bg-zinc-800 border-zinc-600 text-zinc-400 hover:border-accent-gold'
+        }`}
+      >
+        {args.content}
+      </button>
+    );
+  }
+
+  const megaIcon = (
+    <img src={spriteCacheState.resolveSprite(MEGA_BADGE_ICON_URL)} alt="Mega" className="w-3 h-3" />
+  );
+
+  /** Only rendered for a player Pokemon currently holding its own Mega Stone - a different held item (or none) means there's nothing to toggle, so this returns null rather than an always-visible control every roster slot would otherwise get. */
+  const renderPlayerMegaControl = (p: BroughtPokemonSnapshot) => {
+    const slug = getMegaApiSlug(p.item, p.species);
+    if (!slug) return null;
+    const isMega = megaEvolvedIds.includes(p.id);
+    return megaBadgeButton({
+      isActive: isMega,
+      onClick: () => handlePlayerMegaToggle(p.id),
+      title: isMega ? 'Mega Evolved - click to unmark' : 'Mark as Mega Evolved',
+      content: megaIcon,
+    });
+  };
+
+  /** See resolveOpponentMegaControl's doc comment for the full policy (hidden/single/choice). */
+  const renderOpponentMegaControl = (o: OpponentPokemonEntry) => {
+    const control = resolveOpponentMegaControl(o.species, o.item);
+    if (control.kind === 'none') return null;
+
+    if (control.kind === 'single') {
+      const isMega = megaEvolvedIds.includes(o.id);
+      return megaBadgeButton({
+        isActive: isMega,
+        onClick: () => handleOpponentMegaToggle(o.id, control.revealItem),
+        title: isMega ? 'Mega Evolved - click to unmark' : 'Mark as Mega Evolved',
+        content: megaIcon,
+      });
+    }
+
+    return (
+      <div className="flex gap-0.5">
+        {control.options.map((option) => {
+          const isActive =
+            megaEvolvedIds.includes(o.id) &&
+            o.item?.trim().toLowerCase() === option.item.toLowerCase();
+          return megaBadgeButton({
+            key: option.slug,
+            isActive,
+            onClick: () => handleOpponentMegaChoice(o.id, option.item),
+            title: formatMegaLabel(o.species, option.suffix),
+            content: megaFormBadgeLetter(option.suffix),
+          });
+        })}
+      </div>
+    );
+  };
+
+  // Mega sprite swap for a declared Mega - same useMegaSprite hook the team
+  // card's Mega Team Card Flip uses. At most one Pokemon per side can be
+  // marked (megaEvolvedIds' own invariant), so these are two plain hook
+  // calls rather than one per roster item (Rules of Hooks forbids the
+  // latter inside the .map() calls below).
+  const playerMegaMon = playerRoster.find((p) => megaEvolvedIds.includes(p.id)) ?? null;
+  const playerMegaSlug = playerMegaMon
+    ? getMegaApiSlug(playerMegaMon.item, playerMegaMon.species)
+    : null;
+  const playerMegaSprite = useMegaSprite(playerMegaSlug);
+
+  const opponentMegaMon = opponentRoster.find((o) => megaEvolvedIds.includes(o.id)) ?? null;
+  const opponentMegaSlug = opponentMegaMon
+    ? getMegaApiSlug(opponentMegaMon.item, opponentMegaMon.species)
+    : null;
+  const opponentMegaSprite = useMegaSprite(opponentMegaSlug);
 
   const handleAddOpponent = (species: SpeciesRosterEntry) => {
     setIsAddingOpponent(false);
@@ -439,12 +553,18 @@ export default function RecordMatchForm({
             {playerRoster.map((p) => (
               <BroughtToggleTile
                 key={p.id}
-                spriteUrl={p.spriteUrl}
+                spriteUrl={
+                  p.id === playerMegaMon?.id && playerMegaSprite
+                    ? p.spriteUrl.includes('/shiny/')
+                      ? playerMegaSprite.shinySpriteUrl
+                      : playerMegaSprite.spriteUrl
+                    : p.spriteUrl
+                }
                 resolveSprite={spriteCacheState.resolveSprite}
                 label={p.nickname || p.species}
                 selected={broughtIds.includes(p.id)}
                 onToggle={() => toggleBrought(p.id)}
-                trailing={renderMegaToggle(p.id, playerRoster)}
+                trailing={renderPlayerMegaControl(p)}
               />
             ))}
           </div>
@@ -460,14 +580,18 @@ export default function RecordMatchForm({
           {opponentRoster.map((o) => (
             <BroughtToggleTile
               key={o.id}
-              spriteUrl={o.spriteUrl}
+              spriteUrl={
+                o.id === opponentMegaMon?.id && opponentMegaSprite
+                  ? opponentMegaSprite.spriteUrl
+                  : o.spriteUrl
+              }
               resolveSprite={spriteCacheState.resolveSprite}
               label={o.species}
               selected={opponentBroughtIds.includes(o.id)}
               onToggle={() => toggleOpponentBrought(o.id)}
               trailing={
                 <>
-                  {renderMegaToggle(o.id, opponentRoster)}
+                  {renderOpponentMegaControl(o)}
                   <button
                     onClick={() => removeOpponent(o.id)}
                     title="Remove"
