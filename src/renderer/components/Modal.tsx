@@ -14,11 +14,18 @@
  * TeamExportImageModal's poster grid) content from mounting until a user
  * actually opens it, same as before this component existed.
  *
- * No overlay-click/Escape-to-close is wired up here - none of the modals
- * being ported to this component supported that before, so this stays a
- * pure animation shell rather than adding new dismissal behavior alongside
- * it. Sizing (max-width/max-height) varies per modal, so it's the one thing
- * left to the caller via `panelClassName` rather than baked in here.
+ * No Escape-to-close is wired up here - none of the modals being ported to
+ * this component supported that before, so this stays a pure animation
+ * shell rather than adding new dismissal behavior alongside it. Sizing
+ * (max-width/max-height) varies per modal, so it's the one thing left to the
+ * caller via `panelClassName` rather than baked in here.
+ *
+ * Click-outside-to-close is opt-in via `onOverlayClick` (BoxEntryModal.tsx's
+ * first consumer, Team Editor & Box Fixes Leg 2, see TODO.md) rather than
+ * always-on, since most existing callers are forms/dialogs where an
+ * accidental outside click shouldn't silently discard in-progress input.
+ * The panel itself stops propagation so a click inside it never reaches the
+ * overlay's own handler.
  *
  * Renders through a portal to document.body rather than in place (Export
  * Modal Stacking Fix, see TODO.md): PokemonCard.tsx's root motion.div uses
@@ -55,6 +62,8 @@ interface ModalProps {
   children: ReactNode;
   /** Tailwind max-width/max-height classes for the panel - defaults match the most common modal size in the app. */
   panelClassName?: string;
+  /** Opt-in click-outside-to-close - see header comment. Omitted (the default for every other caller) leaves the overlay inert. */
+  onOverlayClick?: () => void;
 }
 
 const panelVariants = {
@@ -62,7 +71,11 @@ const panelVariants = {
   visible: { opacity: 1, scale: 1, y: 0, transition: MODAL_PANEL_ENTER_TRANSITION },
 };
 
-export default function Modal({ children, panelClassName = 'max-w-3xl max-h-[90vh]' }: ModalProps) {
+export default function Modal({
+  children,
+  panelClassName = 'max-w-3xl max-h-[90vh]',
+  onOverlayClick,
+}: ModalProps) {
   return createPortal(
     <motion.div
       // z-[70]: above MobileTeamSwipeOverlay.tsx/MobileBoxSwipeOverlay.tsx's
@@ -71,6 +84,7 @@ export default function Modal({ children, panelClassName = 'max-w-3xl max-h-[90v
       // dialog must still render on top, not behind the opaque overlay it
       // was opened from.
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70]"
+      onClick={onOverlayClick}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -78,6 +92,7 @@ export default function Modal({ children, panelClassName = 'max-w-3xl max-h-[90v
     >
       <motion.div
         className={`bg-zinc-800 rounded-lg shadow-xl w-full overflow-hidden flex flex-col ${panelClassName}`}
+        onClick={(e) => e.stopPropagation()}
         variants={panelVariants}
         initial="hidden"
         animate="visible"

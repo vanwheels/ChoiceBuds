@@ -11,6 +11,10 @@
  * land anywhere, including near an edge. Portaled to document.body for the
  * same reason TeamOverflowMenu.tsx's dropdown is - a fixed-positioned
  * descendant of a scrolling container gets clipped by it.
+ *
+ * z-[80]: above Modal.tsx's z-[70] overlay, since a right-click inside a
+ * Modal's content (e.g. BoxCard.tsx's expanded-entry popup) must still open
+ * on top of that modal, not behind its own backdrop.
  */
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -75,7 +79,7 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
   return createPortal(
     <div
       ref={menuRef}
-      className="fixed z-50 min-w-[160px] rounded-lg border border-zinc-800 bg-zinc-900 shadow-2xl p-1.5"
+      className="fixed z-[80] min-w-[160px] rounded-lg border border-zinc-800 bg-zinc-900 shadow-2xl p-1.5"
       style={{ top: pos.top, left: pos.left }}
     >
       {items.map((item) => (
