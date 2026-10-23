@@ -16,6 +16,58 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
+## Current Milestone: Ability-Affects-Move Indicator & Type Matchup Mega Toggle
+
+Done when:
+- A new `AbilityMoveBoostRule` table (by-flag / by-effective-type /
+  by-base-power-threshold / explicit-list) covers every case in the scope
+  doc — including folding in the 5 type-changing abilities' same-type boost
+  and a hand-curated Sheer Force list sourced from Serebii, filtered to
+  Champions movepool — and `MoveBubbleGrid.tsx`/`TooltipContent.tsx`
+  surface it on every `EditOverlays`-based card (Team/Box/Builder,
+  desktop+mobile).
+- Type Matchup's Offensive and Defensive Coverage tables each get an
+  independent per-table Mega toggle control (single-form badge reuse +
+  split-form picker reuse per `.claude/rules/form-toggle-features.md`),
+  with zero changes to `useTeamMoveTypes.ts`/`typeCoverage.ts`'s resolution
+  logic.
+
+- **[Ability-Affects-Move Indicator & Type Matchup Mega Toggle] — Leg 1**
+  *(Last touched: 2026-10-23 · Re-checks: 0)*
+  New `config/` table (`AbilityMoveBoostRule`, keyed by ability slug)
+  covering all four rule kinds from the scope doc (by-flag, by-effective-
+  type via `getEffectiveMoveType`, by-base-power-threshold, explicit-list),
+  folding in the 5 type-changing abilities' same-type boost and a
+  hand-curated Sheer Force list from Serebii filtered to Champions
+  movepool. Pure data/logic, no UI wiring yet.
+  Done check: unit tests cover each rule kind, the Technician pre-boost-
+  power nuance, and the Sheer Force list.
+  Manual verification: no. Review: no.
+
+- **[Ability-Affects-Move Indicator & Type Matchup Mega Toggle] — Leg 2**
+  *(Last touched: 2026-10-23 · Re-checks: 0)*
+  `EditOverlays.tsx` runs the per-move check once from Leg 1's table and
+  feeds it to `MoveBubbleGrid.tsx` (corner badge, `MegaFormToggleBadge`
+  visual language) and `TooltipContent.tsx` (effect text next to the
+  flag-tag row). Depends on Leg 1.
+  Done check: badge/tooltip appear correctly for Iron Fist+Fire Punch,
+  Technician+Rock Smash, Sheer Force+Flamethrower test cases across
+  desktop Team card, Box card, and Builder.
+  Manual verification: yes. Review: no.
+
+- **[Ability-Affects-Move Indicator & Type Matchup Mega Toggle] — Leg 3**
+  *(Last touched: 2026-10-23 · Re-checks: 0)*
+  New page-local state shape keyed by `(slotId, table)` for Type Matchup
+  specifically (not a second read of `usePokemonFormToggle`). Wired into
+  `CoverageTable.tsx`'s header `<th>` sprite: single-form species reuse
+  `MegaFormToggleBadge`, split-form species (Charizard/Raichu X/Y) reuse
+  `resolveOpponentMegaControl`'s choice-picker shape, staying open to
+  correction per the form-toggle rule. Independent of Legs 1-2.
+  Done check: toggling a Mega on in one table doesn't affect the other
+  table or the Team card's own toggle; split-form picker allows
+  re-choosing.
+  Manual verification: yes. Review: no.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -44,17 +96,9 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-- **Ability-Affects-Move Indicator + Type Matchup Mega Toggle (build)** —
-  the Ability-Affects-Move Indicator Scoping milestone (promoted to current
-  and shipped 2026-10-23, see `MILESTONES.md`) produced a fully Vanny-
-  approved scope doc at
-  `docs/investigations/ability-affects-move-indicator.md` for both halves:
-  the per-ability-per-move boost indicator (new `AbilityMoveBoostRule`
-  table, `MoveBubbleGrid.tsx`/`TooltipContent.tsx` surfaces) and the Type
-  Matchup per-table independent Mega toggle (needs its own page-local state
-  shape, not a second read of `usePokemonFormToggle`). Ready to promote
-  straight to a build milestone via `/plan-milestone` — no further scoping
-  needed.
+(The Ability-Affects-Move Indicator + Type Matchup Mega Toggle item
+previously listed here was promoted to current 2026-10-23, see
+`MILESTONES.md`.)
 
 (The four items previously listed here were bundled into the Profile Social
 Scoping & Maintenance milestone on 2026-10-19, now shipped; see
