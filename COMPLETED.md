@@ -115,3 +115,17 @@ kind rather than a literal effective-type match, since the real mechanic
 only boosts a move actually *converted* from Normal (Normalize is the one
 exception, boosting every move unconditionally). Pure data/logic, no UI
 wiring. See commit abcb7d9.
+
+## [Ability-Affects-Move Indicator & Type Matchup Mega Toggle] — Leg 2 (2026-10-23)
+
+`EditOverlays.tsx` runs Leg 1's per-move ability-boost check once (against
+the Mega-displayed ability, so the indicator follows a Mega's forced
+ability the same way the ability capsule already does) and feeds it to
+`MoveBubbleGrid.tsx`'s corner badge and `TooltipContent.tsx`'s effect text
+next to the flag-tag row. Live-verified against Iron Fist + Fire
+Punch/Thunder Punch on Infernape across desktop Team card, Box card, and
+Builder; that pass caught the badge's `accent-gold` border disappearing
+against Electric's `bg-yellow-400` move bubble, fixed same-session by
+switching the badge's outline to `border-zinc-900` so it reads against
+every type color, not just the darker bubble backgrounds. See commit
+e156367.

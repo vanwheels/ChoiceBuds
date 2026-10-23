@@ -32,17 +32,6 @@ Done when:
   with zero changes to `useTeamMoveTypes.ts`/`typeCoverage.ts`'s resolution
   logic.
 
-- **[Ability-Affects-Move Indicator & Type Matchup Mega Toggle] — Leg 2**
-  *(Last touched: 2026-10-23 · Re-checks: 0)*
-  `EditOverlays.tsx` runs the per-move check once from Leg 1's table and
-  feeds it to `MoveBubbleGrid.tsx` (corner badge, `MegaFormToggleBadge`
-  visual language) and `TooltipContent.tsx` (effect text next to the
-  flag-tag row). Depends on Leg 1.
-  Done check: badge/tooltip appear correctly for Iron Fist+Fire Punch,
-  Technician+Rock Smash, Sheer Force+Flamethrower test cases across
-  desktop Team card, Box card, and Builder.
-  Manual verification: yes. Review: no.
-
 - **[Ability-Affects-Move Indicator & Type Matchup Mega Toggle] — Leg 3**
   *(Last touched: 2026-10-23 · Re-checks: 0)*
   New page-local state shape keyed by `(slotId, table)` for Type Matchup
