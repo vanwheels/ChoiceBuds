@@ -100,3 +100,18 @@ Entries prior to this file's oldest are in:
   at the 2026-10-23 Ability-Affects-Move Indicator Scoping boundary - named
   with the milestone slug since it shares its date range with the Type
   Matchup Rework and Team Editor & Box Fixes archives above)
+
+## [Ability-Affects-Move Indicator & Type Matchup Mega Toggle] — Leg 1 (2026-10-23)
+
+New `config/abilityMoveBoosts.ts` (`AbilityMoveBoostRule`, keyed by ability
+slug) covering all four rule kinds from the scope doc - by-flag (Iron
+Fist/Strong Jaw/Mega Launcher/Tough Claws), by-effective-type (Steely
+Spirit/Transistor/Dragon's Maw), by-base-power-threshold (Technician), and
+move-list (Sheer Force, hand-curated from Serebii and filtered against
+`championsMovepoolChanges.ts`'s `GLOBALLY_REMOVED_MOVES`) - plus the 5
+type-changing abilities' folded-in same-type boost (Pixilate/Aerilate/
+Refrigerate/Galvanize/Normalize), modeled as a distinct `retype-conversion`
+kind rather than a literal effective-type match, since the real mechanic
+only boosts a move actually *converted* from Normal (Normalize is the one
+exception, boosting every move unconditionally). Pure data/logic, no UI
+wiring. See commit abcb7d9.

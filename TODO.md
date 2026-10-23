@@ -32,18 +32,6 @@ Done when:
   with zero changes to `useTeamMoveTypes.ts`/`typeCoverage.ts`'s resolution
   logic.
 
-- **[Ability-Affects-Move Indicator & Type Matchup Mega Toggle] — Leg 1**
-  *(Last touched: 2026-10-23 · Re-checks: 0)*
-  New `config/` table (`AbilityMoveBoostRule`, keyed by ability slug)
-  covering all four rule kinds from the scope doc (by-flag, by-effective-
-  type via `getEffectiveMoveType`, by-base-power-threshold, explicit-list),
-  folding in the 5 type-changing abilities' same-type boost and a
-  hand-curated Sheer Force list from Serebii filtered to Champions
-  movepool. Pure data/logic, no UI wiring yet.
-  Done check: unit tests cover each rule kind, the Technician pre-boost-
-  power nuance, and the Sheer Force list.
-  Manual verification: no. Review: no.
-
 - **[Ability-Affects-Move Indicator & Type Matchup Mega Toggle] — Leg 2**
   *(Last touched: 2026-10-23 · Re-checks: 0)*
   `EditOverlays.tsx` runs the per-move check once from Leg 1's table and
