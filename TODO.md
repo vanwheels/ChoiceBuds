@@ -30,15 +30,6 @@ Done when:
    `reconcileSyncedTeams`'s `normalizeIncomingSyncTeam` step, or confirmed moot
    with the finding documented either way; passes `/leg-review`.
 
-- **[Team Editor & Box Fixes] — Leg 3** *(Last touched: 2026-10-23 ·
-  Re-checks: 0)*
-  Remove the irrelevant Aegislash blade/shield and Maushold family-size form
-  picker from opponent-team selection in the battle logger — Aegislash always
-  defaults to Shield there (correct), the picker is just noise. Touches battle
-  logger opponent-selection UI only. Done check: opponent-team selection no
-  longer shows either form picker; Aegislash still defaults to Shield.
-  Review: no. Manual verification: yes (visual, battle logger).
-
 - **[Team Editor & Box Fixes] — Leg 4** *(Last touched: 2026-10-23 ·
   Re-checks: 0)*
   Gate the Mega sprite (`EditablePokemonCore.tsx`'s `useMegaSprite`) on

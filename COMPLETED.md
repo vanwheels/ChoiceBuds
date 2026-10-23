@@ -91,6 +91,21 @@ Entries prior to this file's oldest are in:
   (the Type Matchup Rework milestone's three legs, split out at the
   2026-10-23 Type Matchup Rework boundary)
 
+## Team Editor & Box Fixes — Leg 3 (2026-10-23)
+
+Removed the Aegislash Blade/Shield and Maushold Family-Of-Four/-Three form
+picker noise from the battle logger's opponent-roster species picker.
+`useSpeciesRoster`'s PokeAPI-sourced list surfaces both forms of each as
+independently selectable rows - useful in the team builder's own pickers,
+where the exact forme matters, but just noise when logging what you saw an
+opponent bring. Added `utils/opponentFormNoise.ts` (with unit tests) and
+filtered `RecordMatchForm.tsx`'s `opponentPickerRoster` through it only,
+collapsing each pair to its canonical default (Aegislash-Shield,
+Maushold-Family-Of-Four) without touching the shared `useSpeciesRoster`
+hook or any other picker. Live-verified: searching "aegislash" or
+"maushold" in Record a Match's opponent picker now shows one entry each.
+See commit b83deb9.
+
 ## Team Editor & Box Fixes — Leg 2 (2026-10-23)
 
 Replaced the Box's expand-in-place interaction (reflowed the whole grid)
