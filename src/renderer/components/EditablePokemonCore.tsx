@@ -34,9 +34,11 @@ import { useMegaSprite } from '../hooks/useMegaSprite';
 import { usePokemonFormToggle } from '../hooks/usePokemonFormToggle';
 import { getPixelSpriteUrl, getAnimatedSpriteUrl, SHINY_BADGE_ICON_URL } from '../utils/spriteUrl';
 import { getTotalSP, MAX_TOTAL_SP } from '../utils/evTotal';
+import { AEGISLASH_BLADE_FORM, isAegislash, getAegislashBladeStats } from '../utils/aegislashForme';
 import TypeBadge from './TypeBadge';
 import StatsColumn from './StatsColumn';
 import EditOverlays from './EditOverlays';
+import AegislashFormToggleBadge from './AegislashFormToggleBadge';
 
 interface EditablePokemonCoreProps {
   pokemon: ImportedPokemonInfo;
@@ -165,9 +167,22 @@ export default function EditablePokemonCore({
   const { activeForm, toggleActiveForm } = usePokemonFormToggle(pokemon.id);
   const activeMegaSlug = megaApiSlug !== null && activeForm === megaApiSlug ? megaApiSlug : null;
   const displayedTypes = activeMegaSlug && megaSprite?.types ? megaSprite.types : types;
+
+  // Aegislash Form Toggle in Team Builder (see TODO.md) - Blade/Shield only
+  // ever swaps stats (ability stays Stance Change, typing stays Steel/Ghost
+  // in both formes), so unlike the Mega flip above this only ever touches
+  // displayedBaseStats/displayedSpeciesForStats, never displayedTypes.
+  const isAegislashSlot = isAegislash(showdownData.species);
+  const isAegislashBladeActive = isAegislashSlot && activeForm === AEGISLASH_BLADE_FORM;
+
   const displayedBaseStats =
-    activeMegaSlug && megaSprite?.baseStats ? megaSprite.baseStats : pokemon.baseStats;
-  const displayedSpeciesForStats = activeMegaSlug ?? showdownData.species;
+    activeMegaSlug && megaSprite?.baseStats
+      ? megaSprite.baseStats
+      : isAegislashBladeActive
+        ? getAegislashBladeStats(pokemon.baseStats)
+        : pokemon.baseStats;
+  const displayedSpeciesForStats =
+    activeMegaSlug ?? (isAegislashBladeActive ? AEGISLASH_BLADE_FORM : showdownData.species);
   const megaAbilityName = activeMegaSlug ? getMegaAbility(activeMegaSlug) : undefined;
   const [megaAbilityData, setMegaAbilityData] = useState<AbilityData | null>(null);
   // Clears stale data the moment megaAbilityName changes - same render-time
@@ -349,6 +364,17 @@ export default function EditablePokemonCore({
               />
             </div>
           </div>
+
+          {/* Blade/Shield toggle (Aegislash Form Toggle in Team Builder, see
+              TODO.md) - bottom-center, only for Aegislash. Not tied to a held
+              item (unlike MegaFormToggleBadge), so it sits on this sprite box
+              rather than the item box. */}
+          {isAegislashSlot && (
+            <AegislashFormToggleBadge
+              isBlade={isAegislashBladeActive}
+              onToggle={() => toggleActiveForm(AEGISLASH_BLADE_FORM)}
+            />
+          )}
         </div>
 
         {spriteOverlay}
