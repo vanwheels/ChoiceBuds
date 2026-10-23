@@ -133,8 +133,19 @@ Entries prior to this file's oldest are in:
   Pinsir team (Aerilate, Bug -> Bug/Flying): toggling Mega on shifted every
   expected Offensive and Defensive cell to its mathematically correct
   value (e.g. Ghost immune -> neutral, Rock 2x -> 4x, Ground resist ->
-  immune), and toggling off reverted every cell to the exact baseline. See
-  commit 33ef822.
+  immune), and toggling off reverted every cell to the exact baseline. A
+  follow-up `/leg-review` (run by the user after an earlier mis-step where
+  `code-review --high` was silently substituted for it) caught a real
+  latent bug: `useTeamMoveTypes`'s new `activeForms` parameter defaulted to
+  a fresh `{}` literal, which would never stabilize across renders for any
+  caller that omitted it, spinning its fetch effect forever (reproduced at
+  14,514 `getMoveData` calls in ~160ms; not reachable today since the only
+  call site always passes a memoized value, but the hook is exported).
+  Fixed with a shared `EMPTY_ACTIVE_FORMS` constant default plus a
+  regression test, alongside five stale "see TODO.md" cross-references the
+  same review caught (TODO.md's entry collapsed to a Done-When summary once
+  the milestone closed; repointed to COMPLETED.md). See commits 33ef822
+  and d8a85a1.
 
 Type Matchup Rework's three Done-When criteria (magnitude-graded cells,
 Team Gap Analysis removed, Mega/Alt-Form-aware coverage) are now all met -
