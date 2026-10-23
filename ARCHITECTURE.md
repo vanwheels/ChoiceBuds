@@ -418,3 +418,37 @@ when Showdown text omits an explicit `(M)`/`(F)`) and
 Basculegion/Indeedee/Oinkologne/Meowstic as distinct `-male`/`-female`
 resources, not one gender-neutral entry). When adding a new
 gender-divergent or gender-locked/genderless species, update both.
+
+## Mega & alt-form display toggle
+
+A roster slot's stored set never changes for Mega Evolution or Aegislash's
+Blade/Shield — both are in-battle-only states, so the toggle is purely a
+display override, keyed by the slot's own stable id via
+`usePokemonFormToggle` (see Renderer layers above). Three consumers read it:
+
+- **Team card** (`EditablePokemonCore.tsx`): a Mega Stone held item shows
+  `MegaFormToggleBadge`; toggling it swaps the ability capsule/stats
+  grid/type badges to the Mega's own values, sourced from
+  `useMegaSprite.ts`'s existing per-slug PokeAPI fetch (already pulling the
+  Mega's sprite id, so types/base stats ride the same response) and
+  `config/megaAbilities.ts`'s forced-ability table. The always-on sprite
+  swap is driven purely by the held item and is unaffected by this toggle.
+  Aegislash gets `AegislashFormToggleBadge` instead: Blade's stats are
+  derived from the stored Shield stats via `utils/aegislashForme.ts`'s
+  Attack↔Defense/Sp. Atk↔Sp. Def swap (the real in-game rule) rather than a
+  second hardcoded table, and its sprite flips too via the same
+  `useMegaSprite` PokeAPI-slug fetch (Blade has its own ordinary PokeAPI
+  resource).
+- **Team builder card**: same toggle/components as the team card.
+- **Battle logger** (`RecordMatchForm.tsx`): a separate, stricter concern —
+  not "what does this Mega look like" but "did this Pokémon Mega Evolve in
+  this logged match." `config/megaEvolution.ts::resolveOpponentMegaControl`
+  gates the control per roster tile: hidden for a non-Mega-capable species
+  or one confirmed holding a different item, a plain toggle for an
+  unambiguous Mega form, an X/Y/Z picker for real ambiguity (e.g. Charizard)
+  that never collapses back to a plain toggle once answered, so a misclick
+  stays correctable. The player's own tile only shows the control when
+  already holding its own real Mega Stone. `utils/battleMegaToggle.ts` holds
+  the pure one-Mega-per-side mutual-exclusion logic (marking one clears any
+  other mark on the same side), and `PastBattlesList.tsx` surfaces a "Mega"
+  badge/tooltip on any saved match with a mark.

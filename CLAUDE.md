@@ -187,3 +187,11 @@ running on.
   context without losing anything real. Call out the boundary explicitly
   when a leg finishes ("that's one leg done, safe to `/clear` before the
   next") rather than silently plowing into the next leg in the same context.
+- **Record live verification when it happens** (added 2026-10-22, after
+  Mega & Alt-Form Representation's Leg 2 was verified live against a real
+  Mega but that check never made it into COMPLETED.md — `/close-milestone`'s
+  acceptance-criteria review couldn't tell met from unmet from the log and
+  had to ask instead of read): whenever a leg's done check includes a
+  live/manual verification step and it's actually performed, say so
+  explicitly in that leg's COMPLETED.md entry — what was checked, not just
+  that the feature was built — the same day, not as a later note.

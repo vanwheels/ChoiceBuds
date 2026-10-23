@@ -16,30 +16,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Mega & Alt-Form Representation
-
-Six candidate milestones came out of a 2026-10-22 feedback/discussion pass
-(see that session for full reasoning); this one was picked to go first
-because Type Matchup Rework (below, in Future Milestones) depends on its
-toggle state. The other five are summarized under Future Milestones below.
-Planned via `/plan-milestone` 2026-10-22; Unscheduled triage found nothing
-to bundle (both items there are unrelated systems, neither past the
-re-check limit).
-
-Done when:
-- A shared per-Pokémon mega/alt-form toggle exists and is consumed by the
-  team card, team builder, and battle logger.
-- Toggling a held mega stone's icon flips the team card to show that
-  Mega's ability/stats/typing (existing mega sprite display untouched),
-  verified live on a stat/ability/type-changing Mega.
-- Aegislash's Blade/Shield can be toggled in the team builder (defaulting
-  to Shield, matching in-game start state) and a battle log entry can
-  mark a Pokémon as mega-evolved with exactly one extra input.
-
-All four legs of this milestone are now shipped (see `COMPLETED.md`) - its
-"Done when" criteria are all met. Ready for `/close-milestone` whenever
-that's convenient.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -162,8 +138,10 @@ public team displays not tied to a profile. Not worth restructuring the
 build for a pattern with only one real example today.
 
 2026-10-22 feedback/discussion pass produced six candidate milestones;
-Mega & Alt-Form Representation was promoted to current above. The other
-five, to be scoped in turn after that one ships and gets evaluated:
+Mega & Alt-Form Representation was promoted to current and shipped the
+same day (see `MILESTONES.md`) - its toggle state (`usePokemonFormToggle`)
+is now consumable by Type Matchup Rework below. The other five, to be
+scoped in turn:
 
 - **Search & Filter: Tag-Chip Redesign** — replace the `#`-prefixed text
   search (team builder, Box, add-Pokémon flows) with Showdown-style

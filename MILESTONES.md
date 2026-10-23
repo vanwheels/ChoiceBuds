@@ -89,3 +89,5 @@ milestone.
 - **Maintenance Sweep: useSavedPokemon Split & Housekeeping** — 2026-10-19 —
   Shipped —
   [post-mortem](docs/postmortems/maintenance-sweep-usesavedpokemon-split-and-housekeeping.md)
+- **Mega & Alt-Form Representation** — 2026-10-22 — Shipped —
+  [post-mortem](docs/postmortems/mega-alt-form-representation.md)
