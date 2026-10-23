@@ -1,12 +1,16 @@
 import { describe, it, expect } from 'vitest';
+import { Generations } from '@smogon/calc';
 import {
   computeOffensiveCoverage,
   computeDefensiveCoverage,
   getDefensiveMultiplier,
   slotResistsThreat,
+  resolveDefensiveSlot,
   type DefendingSlot,
 } from './typeCoverage';
 import { ALL_TYPES } from '../config/typeEffectiveness';
+
+const gen = Generations.get(9);
 
 function slot(types: string[], ability?: string): DefendingSlot {
   return { types, ability };
@@ -126,5 +130,30 @@ describe('slotResistsThreat', () => {
   it('does not immunize a type the ability does not cover', () => {
     // Levitate blocks Ground, not Electric
     expect(slotResistsThreat(['electric'], slot(['flying'], 'Levitate'))).toBe(false);
+  });
+});
+
+describe('resolveDefensiveSlot', () => {
+  it('returns the base slot unchanged when no Mega is active', () => {
+    const base = slot(['bug'], 'Hyper Cutter');
+    expect(resolveDefensiveSlot(gen, base, null)).toBe(base);
+  });
+
+  it("overrides the base slot's types with the active Mega's own typing (Pinsir -> Bug/Flying)", () => {
+    const base = slot(['bug'], 'Hyper Cutter');
+    const result = resolveDefensiveSlot(gen, base, 'pinsir-mega');
+    expect(result.types.map((t) => t.toLowerCase())).toEqual(['bug', 'flying']);
+  });
+
+  it("overrides the base slot's ability with the active Mega's guaranteed ability", () => {
+    const base = slot(['bug'], 'Hyper Cutter');
+    const result = resolveDefensiveSlot(gen, base, 'pinsir-mega');
+    expect(result.ability).toBe('Aerilate');
+  });
+
+  it('falls back to the base types when the active slug has no entry in the species dex', () => {
+    const base = slot(['bug'], 'Hyper Cutter');
+    const result = resolveDefensiveSlot(gen, base, 'not-a-real-mega');
+    expect(result.types).toBe(base.types);
   });
 });

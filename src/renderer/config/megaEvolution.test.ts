@@ -16,6 +16,7 @@ import {
   getMegaApiSlug,
   getMegaFormsForSpecies,
   megaFormBadgeLetter,
+  resolveActiveMegaSlug,
   resolveOpponentMegaControl,
 } from './megaEvolution';
 
@@ -35,6 +36,24 @@ describe('Floette Mega Evolution exception', () => {
   it("uses @smogon/calc's own naming (floette-mega) in the curated slug set, not the mechanically-derived floette-eternal-mega", () => {
     expect(CURATED_MEGA_FORM_SLUGS.has('floette-mega')).toBe(true);
     expect(CURATED_MEGA_FORM_SLUGS.has('floette-eternal-mega')).toBe(false);
+  });
+});
+
+describe('resolveActiveMegaSlug', () => {
+  it("returns the slug when the toggle points at this slot's own held Mega Stone", () => {
+    expect(resolveActiveMegaSlug('Gengarite', 'Gengar', 'gengar-mega')).toBe('gengar-mega');
+  });
+
+  it('returns null when no toggle is active', () => {
+    expect(resolveActiveMegaSlug('Gengarite', 'Gengar', null)).toBeNull();
+  });
+
+  it('returns null when the toggle points at a different slug (e.g. a stale/foreign one)', () => {
+    expect(resolveActiveMegaSlug('Gengarite', 'Gengar', 'charizard-mega-x')).toBeNull();
+  });
+
+  it('returns null when the species holds no Mega Stone at all, regardless of the toggle', () => {
+    expect(resolveActiveMegaSlug(undefined, 'Gengar', 'gengar-mega')).toBeNull();
   });
 });
 

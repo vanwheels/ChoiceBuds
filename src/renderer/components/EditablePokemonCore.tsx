@@ -28,7 +28,7 @@ import type { AbilityData, ImportedPokemonInfo, ShowdownPokemon } from '../types
 import type { UseGameDataReturn } from '../hooks/useGameData';
 import type { RegulationId } from '../utils/pokemonRules';
 import { isGenderless, isFemaleLocked } from '../config/pokemonRules';
-import { getMegaApiSlug } from '../config/megaEvolution';
+import { getMegaApiSlug, resolveActiveMegaSlug } from '../config/megaEvolution';
 import { getMegaAbility } from '../config/megaAbilities';
 import { useMegaSprite } from '../hooks/useMegaSprite';
 import { usePokemonFormToggle } from '../hooks/usePokemonFormToggle';
@@ -147,11 +147,11 @@ export default function EditablePokemonCore({
   // flip (unlike Mega's always-on-while-held sprite swap) needs it to decide
   // the sprite too, not just the stats panel. activeMegaSlug stays non-null
   // only while the stone is held AND this slot's toggle actively points at
-  // that same slug, letting every Mega override below derive from one value
-  // instead of repeating the `megaApiSlug !== null && activeForm ===
-  // megaApiSlug` check.
+  // that same slug (config/megaEvolution.ts's `resolveActiveMegaSlug`, also
+  // shared by Type Matchup Rework's coverage tables - see TODO.md's Leg 3),
+  // letting every Mega override below derive from one value.
   const { activeForm, toggleActiveForm } = usePokemonFormToggle(pokemon.id);
-  const activeMegaSlug = megaApiSlug !== null && activeForm === megaApiSlug ? megaApiSlug : null;
+  const activeMegaSlug = resolveActiveMegaSlug(showdownData.item, showdownData.species, activeForm);
 
   // Aegislash Form Toggle in Team Builder (Leg 3, see TODO.md): Blade/Shield
   // is a display-time stance, not item-driven like Mega, so its sprite only

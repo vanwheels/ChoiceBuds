@@ -140,4 +140,33 @@ describe('useTeamMoveTypes', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.moveTypesByPokemon).toEqual([['normal']]);
   });
+
+  it("resolves a move's type against the active Mega's guaranteed ability, not the base form's", async () => {
+    const getMoveData = vi.fn(() => Promise.resolve(makeMove('Tackle', 'normal', 'physical')));
+    const gameData = makeGameData(getMoveData);
+    // Base Pinsir has no type-changing ability; its Mega form is guaranteed
+    // Aerilate (config/megaAbilities.ts) - Tackle should only report as
+    // Flying once that Mega form is the active toggle.
+    const pinsir = makePokemon({ species: 'Pinsir', item: 'Pinsirite', moves: ['Tackle'] });
+    const team = makeTeam([pinsir]);
+
+    const { result } = renderHook(() =>
+      useTeamMoveTypes(team, gameData, { [pinsir.id]: 'pinsir-mega' }),
+    );
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.moveTypesByPokemon).toEqual([['flying']]);
+  });
+
+  it("ignores a toggle pointed at a form that is not this slot's own Mega", async () => {
+    const getMoveData = vi.fn(() => Promise.resolve(makeMove('Tackle', 'normal', 'physical')));
+    const gameData = makeGameData(getMoveData);
+    const pinsir = makePokemon({ species: 'Pinsir', moves: ['Tackle'] }); // no Mega Stone held
+    const team = makeTeam([pinsir]);
+
+    const { result } = renderHook(() =>
+      useTeamMoveTypes(team, gameData, { [pinsir.id]: 'pinsir-mega' }),
+    );
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.moveTypesByPokemon).toEqual([['normal']]);
+  });
 });

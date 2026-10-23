@@ -181,6 +181,29 @@ export function getMegaApiSlug(heldItem: string | undefined, species: string): s
 }
 
 /**
+ * Whether a roster slot's `usePokemonFormToggle` state currently points at
+ * its OWN held Mega Stone's slug, not just any truthy toggle value - a
+ * toggle left over from a since-removed item, or one that (through some
+ * future bug) points at a different species' Mega, must not count. The one
+ * check every Mega-aware display surface needs before treating a slot as
+ * "Mega active": EditablePokemonCore.tsx's team/Box card (sprite/stats/
+ * ability panel), hooks/useTeamMoveTypes.ts (Offensive Coverage's move-type
+ * resolution), and TypeMatchupPage.tsx's `defensiveSlots` (Defensive
+ * Coverage) all resolve the same slug this way - factored out here (Type
+ * Matchup Rework Leg 3, see TODO.md) so the rule lives in exactly one place
+ * instead of each surface re-deriving `getMegaApiSlug(...) === activeForm`
+ * on its own.
+ */
+export function resolveActiveMegaSlug(
+  heldItem: string | undefined,
+  species: string,
+  activeForm: string | null,
+): string | null {
+  const megaApiSlug = getMegaApiSlug(heldItem, species);
+  return megaApiSlug !== null && activeForm === megaApiSlug ? megaApiSlug : null;
+}
+
+/**
  * Every Mega Stone (and therefore every Mega form) available to a species -
  * empty for a non-mega-capable species, one entry for most mega-capable
  * ones, two for Charizard/Raichu's X/Y split. Powers the Battle Logger's

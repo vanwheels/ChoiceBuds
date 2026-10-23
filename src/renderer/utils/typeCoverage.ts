@@ -13,10 +13,20 @@
  * "Threats Only" checkbox (moved here from the now-removed usageThreats.ts
  * when Type Matchup Rework retired its Team Gap Analysis panel in favor of
  * CoverageGapsPanel.tsx's per-type shared-weakness/resistance view).
+ *
+ * `resolveDefensiveSlot` (Type Matchup Rework Leg 3, see TODO.md) overrides a
+ * `DefendingSlot` with an active Mega form's own typing/ability -
+ * `@smogon/calc`'s species dex (`gen.species.get`) is the only source in this
+ * codebase for a Mega form's types (PokeAPI has no entry for them - see
+ * hooks/useMegaSprite.ts's header), the same source SpeedTiersPage.tsx
+ * already reads its own Mega roster rows' types from.
  */
 
+import type { Generation } from '@smogon/calc/dist/data/interface';
+import { toID } from '@smogon/calc';
 import { ALL_TYPES, getEffectivenessMultiplier } from '../config/typeEffectiveness';
 import { getImmuneTypes } from '../config/typeImmunityAbilities';
+import { resolveActiveAbility } from '../config/megaAbilities';
 
 export interface DefendingSlot {
   types: string[];
@@ -99,6 +109,28 @@ export function computeDefensiveCoverage(defenders: DefendingSlot[]): CoverageRo
  * SpeedTiersPage.tsx's "Threats Only" checkbox (the resist check only, not
  * a full ranked-usage-threat computation).
  */
+/**
+ * Overrides `base` with an active Mega form's own types/ability - unchanged
+ * when `activeMegaSlug` is null (no active Mega toggle for this slot, or a
+ * stat-only forme like Aegislash Blade/Shield, which never touches typing or
+ * ability - see EditablePokemonCore.tsx). Falls back to `base.types` when
+ * `gen.species.get` has no entry for the slug (not yet released on
+ * @smogon/calc's bundled dex), same "never a broken result" tolerance
+ * useMegaSprite.ts's sprite/stat lookups already get.
+ */
+export function resolveDefensiveSlot(
+  gen: Generation,
+  base: DefendingSlot,
+  activeMegaSlug: string | null,
+): DefendingSlot {
+  if (!activeMegaSlug) return base;
+  const megaTypes = gen.species.get(toID(activeMegaSlug))?.types;
+  return {
+    types: megaTypes ? [...megaTypes] : base.types,
+    ability: resolveActiveAbility(activeMegaSlug, base.ability),
+  };
+}
+
 export function slotResistsThreat(threatTypes: string[], defender: DefendingSlot): boolean {
   return (
     Math.max(

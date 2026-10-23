@@ -172,3 +172,23 @@ export function getMegaAbility(megaSlug: string | null): string | undefined {
   if (!megaSlug) return undefined;
   return MEGA_ABILITIES[megaSlug];
 }
+
+/**
+ * A roster slot's effective ability once an active Mega toggle is factored
+ * in - the Mega's own guaranteed ability when one is known, else the stored
+ * base ability unchanged (including when `activeMegaSlug` is null, i.e. no
+ * active Mega toggle at all). Shared by hooks/useTeamMoveTypes.ts (Offensive
+ * Coverage's move-type resolution) and utils/typeCoverage.ts's
+ * `resolveDefensiveSlot` (Defensive Coverage) - both need this exact
+ * "Mega ability, falling back to base" rule, unlike
+ * EditablePokemonCore.tsx's own `megaAbilityName`, which deliberately has NO
+ * base-ability fallback (undefined there means "nothing new to fetch/show",
+ * not "keep showing the base ability").
+ */
+export function resolveActiveAbility(
+  activeMegaSlug: string | null,
+  baseAbility: string | undefined,
+): string | undefined {
+  if (!activeMegaSlug) return baseAbility;
+  return getMegaAbility(activeMegaSlug) ?? baseAbility;
+}

@@ -11,7 +11,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { MEGA_STONE_TO_SPECIES } from './megaEvolution';
-import { getMegaAbility, MEGA_ABILITIES } from './megaAbilities';
+import { getMegaAbility, MEGA_ABILITIES, resolveActiveAbility } from './megaAbilities';
 
 describe('getMegaAbility', () => {
   it('returns undefined for a null slug', () => {
@@ -29,6 +29,20 @@ describe('getMegaAbility', () => {
   it("resolves Reg M-C's Mega Z slugs to their own (not their ordinary Mega's) ability", () => {
     expect(getMegaAbility('lucario-mega-z')).toBe('Aura Guard');
     expect(getMegaAbility('lucario-mega')).toBe('Adaptability');
+  });
+});
+
+describe('resolveActiveAbility', () => {
+  it('falls back to the base ability when no Mega is active', () => {
+    expect(resolveActiveAbility(null, 'Hyper Cutter')).toBe('Hyper Cutter');
+  });
+
+  it("resolves the active Mega's guaranteed ability over the base ability", () => {
+    expect(resolveActiveAbility('pinsir-mega', 'Hyper Cutter')).toBe('Aerilate');
+  });
+
+  it('falls back to the base ability when the active slug has no known Mega ability', () => {
+    expect(resolveActiveAbility('not-a-real-mega', 'Hyper Cutter')).toBe('Hyper Cutter');
   });
 });
 

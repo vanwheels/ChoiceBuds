@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
-import { usePokemonFormToggle, setPokemonActiveForm } from './usePokemonFormToggle';
+import {
+  usePokemonFormToggle,
+  setPokemonActiveForm,
+  useActiveFormsForIds,
+} from './usePokemonFormToggle';
 
 // Module-level store, same caveat as useMegaSprite.test.ts - every test
 // below uses its own never-reused pokemonId.
@@ -75,5 +79,36 @@ describe('usePokemonFormToggle', () => {
 
     act(() => result.current.setActiveForm('gengar-mega'));
     expect(result.current.activeForm).toBe(activeFormBefore);
+  });
+});
+
+describe('useActiveFormsForIds', () => {
+  it('starts every given id at null (base form)', () => {
+    const { result } = renderHook(() => useActiveFormsForIds(['multi-test-1a', 'multi-test-1b']));
+    expect(result.current).toEqual({ 'multi-test-1a': null, 'multi-test-1b': null });
+  });
+
+  it('picks up a toggle set externally (e.g. from a mounted Team Builder card)', () => {
+    const { result } = renderHook(() => useActiveFormsForIds(['multi-test-2a', 'multi-test-2b']));
+
+    act(() => setPokemonActiveForm('multi-test-2a', 'gengar-mega'));
+    expect(result.current).toEqual({ 'multi-test-2a': 'gengar-mega', 'multi-test-2b': null });
+  });
+
+  it('returns a stable object reference across re-renders when nothing changed', () => {
+    const { result, rerender } = renderHook(() => useActiveFormsForIds(['multi-test-3']));
+    const first = result.current;
+    rerender();
+    expect(result.current).toBe(first);
+  });
+
+  it('stops reacting to an id once it drops out of the given list', () => {
+    const { result, rerender } = renderHook(({ ids }) => useActiveFormsForIds(ids), {
+      initialProps: { ids: ['multi-test-4a', 'multi-test-4b'] },
+    });
+    rerender({ ids: ['multi-test-4a'] });
+
+    act(() => setPokemonActiveForm('multi-test-4b', 'aegislash-blade'));
+    expect(result.current).toEqual({ 'multi-test-4a': null });
   });
 });

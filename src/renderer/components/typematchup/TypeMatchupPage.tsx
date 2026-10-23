@@ -15,6 +15,20 @@
  * config/typeImmunityAbilities.ts, consumed via utils/typeCoverage.ts's
  * `getDefensiveMultiplier`.
  *
+ * Both tables also account for an active Mega toggle (Type Matchup Rework
+ * Leg 3, see TODO.md): `useActiveFormsForIds` reads every selected team
+ * slot's `usePokemonFormToggle` state at once (Rules of Hooks forbids
+ * calling that hook itself inside this file's own `team.pokemon.map()`
+ * calls), and `config/megaEvolution.ts`'s `resolveActiveMegaSlug` +
+ * `utils/typeCoverage.ts`'s `resolveDefensiveSlot` (shared with
+ * hooks/useTeamMoveTypes.ts's own Mega-aware ability resolution, so the
+ * "is this slot's toggle pointing at its own held Mega Stone" rule lives in
+ * one place) resolve a slot's typing/ability from `@smogon/calc`'s species
+ * dex instead of the stored base form. Aegislash's Blade/Shield toggle needs
+ * no equivalent handling here: per EditablePokemonCore.tsx, that forme
+ * change never touches typing or ability (Steel/Ghost and Stance Change
+ * either way), so the untouched base-form read already covers it correctly.
+ *
  * The page used to carry a third panel below these two tables (Team Gap
  * Analysis, a ladder-usage-threat heuristic via GameDataCache.usage) -
  * removed outright in Type Matchup Rework (see COMPLETED.md) rather than
@@ -25,13 +39,22 @@
  */
 
 import { useMemo, useState } from 'react';
+import { Generations } from '@smogon/calc';
 import type { UseTeamsReturn } from '../../hooks/useTeams';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import { useTeamMoveTypes } from '../../hooks/useTeamMoveTypes';
-import { computeOffensiveCoverage, computeDefensiveCoverage } from '../../utils/typeCoverage';
+import { useActiveFormsForIds } from '../../hooks/usePokemonFormToggle';
+import {
+  computeOffensiveCoverage,
+  computeDefensiveCoverage,
+  resolveDefensiveSlot,
+} from '../../utils/typeCoverage';
+import { resolveActiveMegaSlug } from '../../config/megaEvolution';
 import TeamPickerDropdown from '../TeamPickerDropdown';
 import CoverageTable from './CoverageTable';
+
+const GEN_NUM = 9;
 
 interface TypeMatchupPageProps {
   teamsState: UseTeamsReturn;
@@ -47,16 +70,32 @@ export default function TypeMatchupPage({
   const { teams } = teamsState;
   const [selectedTeamId, setSelectedTeamId] = useState('');
   const selectedTeam = teams.find((t) => t.id === selectedTeamId);
+  const gen = useMemo(() => Generations.get(GEN_NUM), []);
 
-  const { moveTypesByPokemon, isLoading } = useTeamMoveTypes(selectedTeam, gameDataState);
+  const pokemonIds = useMemo(() => (selectedTeam?.pokemon ?? []).map((p) => p.id), [selectedTeam]);
+  const activeForms = useActiveFormsForIds(pokemonIds);
+
+  const { moveTypesByPokemon, isLoading } = useTeamMoveTypes(
+    selectedTeam,
+    gameDataState,
+    activeForms,
+  );
 
   const defensiveSlots = useMemo(
     () =>
-      (selectedTeam?.pokemon ?? []).map((p) => ({
-        types: p.types,
-        ability: p.showdownData.ability,
-      })),
-    [selectedTeam],
+      (selectedTeam?.pokemon ?? []).map((p) => {
+        const activeMegaSlug = resolveActiveMegaSlug(
+          p.showdownData.item,
+          p.showdownData.species,
+          activeForms[p.id] ?? null,
+        );
+        return resolveDefensiveSlot(
+          gen,
+          { types: p.types, ability: p.showdownData.ability },
+          activeMegaSlug,
+        );
+      }),
+    [selectedTeam, activeForms, gen],
   );
   const offensiveRows = useMemo(
     () => computeOffensiveCoverage(moveTypesByPokemon),

@@ -27,7 +27,7 @@
  * instead and components subscribe to it via useSyncExternalStore.
  */
 
-import { useCallback, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 
 const state = new Map<string, string | null>();
 const listeners = new Map<string, Set<() => void>>();
@@ -102,4 +102,50 @@ export function usePokemonFormToggle(pokemonId: string): PokemonFormToggle {
   );
 
   return { activeForm, setActiveForm, toggleActiveForm };
+}
+
+/**
+ * Subscribes to several roster slots' active-form state at once, keyed by
+ * their own `pokemonId`s - the shape Type Matchup Rework's coverage tables
+ * need (Leg 3, see TODO.md), where Rules of Hooks forbids calling
+ * `usePokemonFormToggle` itself once per slot inside a `team.pokemon.map()`
+ * over a dynamic-length roster.
+ *
+ * Returns a stable object reference across re-renders unless some id's
+ * active form actually changed - "adjust state during render" pattern, same
+ * shape as EditablePokemonCore.tsx's prop-resync checks - so a downstream
+ * `useMemo`/`useEffect` keyed off this return value doesn't recompute every
+ * render just because this hook's own render produced a fresh object
+ * literal. A plain `useRef` can't hold this instead: React's
+ * `react-hooks/refs` rule forbids reading/writing a ref's `current` during
+ * render (only in effects/handlers), so the memoized snapshot has to live in
+ * state, updated via `setSnapshot` during render the same "adjust state
+ * during render" way.
+ *
+ * Still subscribes via `useEffect` (not just a render-time read) because a
+ * toggle flipped elsewhere (e.g. Team Builder) must be picked up by this
+ * hook's own re-render even while its component stays mounted hidden behind
+ * a `display: none` tab (see App.tsx's `visitedTabs` keep-alive) - a
+ * one-time read on mount would go stale the moment the user switches back.
+ */
+export function useActiveFormsForIds(pokemonIds: string[]): Record<string, string | null> {
+  const idsKey = pokemonIds.join('\u0000');
+  const [, forceRender] = useState(0);
+  const [snapshot, setSnapshot] = useState<Record<string, string | null>>(() =>
+    Object.fromEntries(pokemonIds.map((id) => [id, getSnapshot(id)])),
+  );
+
+  const next = Object.fromEntries(pokemonIds.map((id) => [id, getSnapshot(id)]));
+  const changed =
+    Object.keys(next).length !== Object.keys(snapshot).length ||
+    Object.entries(next).some(([id, form]) => snapshot[id] !== form);
+  if (changed) setSnapshot(next);
+
+  useEffect(() => {
+    const unsubscribes = pokemonIds.map((id) => subscribe(id, () => forceRender((n) => n + 1)));
+    return () => unsubscribes.forEach((unsubscribe) => unsubscribe());
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- idsKey represents pokemonIds' content, not identity
+  }, [idsKey]);
+
+  return changed ? next : snapshot;
 }
