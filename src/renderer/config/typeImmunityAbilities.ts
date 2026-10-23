@@ -1,9 +1,9 @@
 /**
- * Type-Immunity Abilities (Team Gap Analysis - Defensive Coverage)
+ * Type-Immunity Abilities (Defensive Coverage)
  * Feeds utils/typeCoverage.ts's `getDefensiveMultiplier` (consumed by both
- * `computeDefensiveCoverage` and utils/usageThreats.ts's
- * `computeUsageThreats`): before either checks an attacking type against a
- * team slot's own types, the slot's actual equipped ability
+ * `computeDefensiveCoverage` and that same file's `slotResistsThreat`):
+ * before either checks an attacking type against a team slot's own types,
+ * the slot's actual equipped ability
  * (`ImportedPokemonInfo.showdownData.ability` - always known for a saved
  * team) is checked for a full-immunity override. Defensive-side counterpart
  * to config/typeChangingAbilities.ts's role on the offensive side (see

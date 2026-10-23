@@ -10,54 +10,39 @@
  *
  * Offensive Coverage accounts for type-changing abilities (Pixilate turning
  * Normal moves Fairy, etc.) via hooks/useTeamMoveTypes.ts - see
- * config/typeChangingAbilities.ts. Defensive Coverage (and the Team Gap
- * Analysis panel below it) accounts for type-immunity abilities (Levitate,
- * Water Absorb, etc.) the same way - see config/typeImmunityAbilities.ts,
- * consumed via utils/typeCoverage.ts's `getDefensiveMultiplier`.
+ * config/typeChangingAbilities.ts. Defensive Coverage (and the Coverage Gaps
+ * panel below it) accounts for type-immunity abilities (Levitate, Water
+ * Absorb, etc.) the same way - see config/typeImmunityAbilities.ts, consumed
+ * via utils/typeCoverage.ts's `getDefensiveMultiplier`.
  *
- * Team Gap Analysis (UsageThreatsList) is a third, additive panel below the
- * two coverage tables - real ranked-ladder-usage Pokemon (GameDataCache.usage,
- * kept warm in the background by hooks/useUsageSync.ts) the team has no
- * typing answer for at all, plus a second, separate section for threats only
- * one team slot resists/is immune to (a fragile single answer). See
- * utils/usageThreats.ts for both computations. A third UsageThreatsList
- * section, Likely Coverage Gaps, layers a threat's likely moveset (top-N
- * ranked-usage moves, resolved through its own top-ranked ability) on top of
- * the same resistance check - see utils/usageCoverageGaps.ts.
+ * Coverage Gaps (CoverageGapsPanel) is a third, additive panel below the two
+ * coverage tables - an objective shared-weakness/resistance-coverage view
+ * built directly from Defensive Coverage's own per-type
+ * unfavorableCount/favorableCount (see utils/typeCoverage.ts's CoverageRow),
+ * no separate computation of its own. Replaces the earlier Team Gap Analysis
+ * panel (ladder-usage-threat heuristic via GameDataCache.usage) removed in
+ * Type Matchup Rework - see COMPLETED.md.
  */
 
 import { useMemo, useState } from 'react';
 import type { UseTeamsReturn } from '../../hooks/useTeams';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
-import type { UseDatabaseReturn } from '../../hooks/useDatabase';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import { useTeamMoveTypes } from '../../hooks/useTeamMoveTypes';
 import { computeOffensiveCoverage, computeDefensiveCoverage } from '../../utils/typeCoverage';
-import {
-  computeUsageThreats,
-  computePartiallyCoveredUsageThreats,
-  type UsageThreat,
-} from '../../utils/usageThreats';
-import {
-  computeMovesetCoverageGaps,
-  COVERAGE_GAP_MOVE_CUTOFF,
-  type MovesetGapCandidate,
-} from '../../utils/usageCoverageGaps';
 import TeamPickerDropdown from '../TeamPickerDropdown';
 import CoverageTable from './CoverageTable';
-import UsageThreatsList from './UsageThreatsList';
+import CoverageGapsPanel from './CoverageGapsPanel';
 
 interface TypeMatchupPageProps {
   teamsState: UseTeamsReturn;
   gameDataState: UseGameDataReturn;
-  databaseState: UseDatabaseReturn;
   spriteCacheState: UseSpriteCacheReturn;
 }
 
 export default function TypeMatchupPage({
   teamsState,
   gameDataState,
-  databaseState,
   spriteCacheState,
 }: TypeMatchupPageProps) {
   const { teams } = teamsState;
@@ -65,8 +50,6 @@ export default function TypeMatchupPage({
   const selectedTeam = teams.find((t) => t.id === selectedTeamId);
 
   const { moveTypesByPokemon, isLoading } = useTeamMoveTypes(selectedTeam, gameDataState);
-  const { cache: gameDataCache } = gameDataState;
-  const { getCachedEntry } = databaseState;
 
   const defensiveSlots = useMemo(
     () =>
@@ -76,72 +59,11 @@ export default function TypeMatchupPage({
       })),
     [selectedTeam],
   );
-  // Team's own raw base-Speed range, for Speed Annotation (see
-  // utils/usageThreats.ts's UsageThreat.speed doc comment) - base stat only,
-  // same as the threat side, not each slot's actual EV'd speed.
-  const teamSpeedRange = useMemo(() => {
-    const speeds = (selectedTeam?.pokemon ?? []).map((p) => p.baseStats.speed);
-    return speeds.length > 0 ? { min: Math.min(...speeds), max: Math.max(...speeds) } : null;
-  }, [selectedTeam]);
   const offensiveRows = useMemo(
     () => computeOffensiveCoverage(moveTypesByPokemon),
     [moveTypesByPokemon],
   );
   const defensiveRows = useMemo(() => computeDefensiveCoverage(defensiveSlots), [defensiveSlots]);
-
-  const usageCandidates = useMemo<UsageThreat[]>(() => {
-    if (!gameDataCache) return [];
-    return Object.values(gameDataCache.usage)
-      .map((entry): UsageThreat | null => {
-        const dbEntry = getCachedEntry(entry.species);
-        if (!dbEntry) return null;
-        return {
-          species: entry.species,
-          types: dbEntry.types,
-          columnPosition: entry.columnPosition,
-          spriteUrl: dbEntry.spriteUrl,
-          speed: dbEntry.baseStats.speed,
-        };
-      })
-      .filter((c): c is UsageThreat => c !== null);
-  }, [gameDataCache, getCachedEntry]);
-  const usageThreats = useMemo(
-    () => computeUsageThreats(defensiveSlots, usageCandidates),
-    [defensiveSlots, usageCandidates],
-  );
-  const partiallyCoveredUsageThreats = useMemo(
-    () => computePartiallyCoveredUsageThreats(defensiveSlots, usageCandidates),
-    [defensiveSlots, usageCandidates],
-  );
-
-  const movesetGapCandidates = useMemo<MovesetGapCandidate[]>(() => {
-    if (!gameDataCache) return [];
-    return Object.values(gameDataCache.usage)
-      .map((entry): MovesetGapCandidate | null => {
-        const dbEntry = getCachedEntry(entry.species);
-        if (!dbEntry) return null;
-        const topMoves = entry.moves
-          .slice(0, COVERAGE_GAP_MOVE_CUTOFF)
-          .map((m) => {
-            const moveData = gameDataCache.moves[m.name.toLowerCase()];
-            return moveData ? { name: m.name, type: moveData.type } : null;
-          })
-          .filter((m): m is { name: string; type: string } => m !== null);
-        return {
-          species: entry.species,
-          spriteUrl: dbEntry.spriteUrl,
-          columnPosition: entry.columnPosition,
-          topAbility: entry.abilities[0]?.name,
-          topMoves,
-          speed: dbEntry.baseStats.speed,
-        };
-      })
-      .filter((c): c is MovesetGapCandidate => c !== null);
-  }, [gameDataCache, getCachedEntry]);
-  const movesetCoverageGaps = useMemo(
-    () => computeMovesetCoverageGaps(defensiveSlots, movesetGapCandidates),
-    [defensiveSlots, movesetGapCandidates],
-  );
 
   return (
     <div className="flex flex-col gap-6 px-4 md:px-0">
@@ -193,13 +115,7 @@ export default function TypeMatchupPage({
               spriteCacheState={spriteCacheState}
             />
           </div>
-          <UsageThreatsList
-            threats={usageThreats}
-            partiallyCoveredThreats={partiallyCoveredUsageThreats}
-            movesetCoverageGaps={movesetCoverageGaps}
-            teamSpeedRange={teamSpeedRange}
-            spriteCacheState={spriteCacheState}
-          />
+          <CoverageGapsPanel defensiveRows={defensiveRows} />
         </>
       )}
     </div>

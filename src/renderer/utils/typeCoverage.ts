@@ -7,6 +7,12 @@
  * `getDefensiveMultiplier`, mirroring how offensive coverage already
  * accounts for type-changing abilities upstream in hooks/useTeamMoveTypes.ts
  * before the move types it passes in here.
+ *
+ * Also exports `slotResistsThreat`, a single-slot-vs-many-types resist check
+ * built on the same `getDefensiveMultiplier` - used by SpeedTiersPage.tsx's
+ * "Threats Only" checkbox (moved here from the now-removed usageThreats.ts
+ * when Type Matchup Rework retired its Team Gap Analysis panel in favor of
+ * CoverageGapsPanel.tsx's per-type shared-weakness/resistance view).
  */
 
 import { ALL_TYPES, getEffectivenessMultiplier } from '../config/typeEffectiveness';
@@ -84,4 +90,19 @@ export function computeDefensiveCoverage(defenders: DefendingSlot[]): CoverageRo
       favorableCount: cells.filter((c) => c !== null && c < 1).length,
     };
   });
+}
+
+/**
+ * Whether one team slot resists or is immune to every one of a set of
+ * attacking types - i.e. its best (max) effectiveness against that slot is
+ * < 1. Same Math.max(...) pattern computeOffensiveCoverage uses. Used by
+ * SpeedTiersPage.tsx's "Threats Only" checkbox (the resist check only, not
+ * a full ranked-usage-threat computation).
+ */
+export function slotResistsThreat(threatTypes: string[], defender: DefendingSlot): boolean {
+  return (
+    Math.max(
+      ...threatTypes.map((t) => getDefensiveMultiplier(t, defender.types, defender.ability)),
+    ) < 1
+  );
 }

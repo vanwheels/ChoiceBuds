@@ -29,10 +29,10 @@
  * matchup's speed, not the team's overall weaknesses. A "Threats Only"
  * checkbox (Leg 9, see TODO.md) narrows whichever roster scope is already
  * selected down to species the selected team has no typing answer for at
- * all - reuses utils/usageThreats.ts's slotResistsThreat (the resist check
- * only, not computeUsageThreats itself, which carries its own hidden rank
- * cutoff that would shadow the Top 60/Top 120 scope above) rather than
- * replacing roster scope.
+ * all - reuses utils/typeCoverage.ts's slotResistsThreat (the resist check
+ * only, no ranked-usage-threat computation involved, which would carry its
+ * own hidden rank cutoff that would shadow the Top 60/Top 120 scope above)
+ * rather than replacing roster scope.
  *
  * Min Spread Usage (Leg 11, see TODO.md): a page-level stepper controlling
  * how much of a species' own real usage a ranked stat spread needs to get
@@ -100,7 +100,7 @@ import {
   patchPokemonWithOverride,
   type TeamSpeedOverride,
 } from '../../utils/speedTierOverrides';
-import { slotResistsThreat } from '../../utils/usageThreats';
+import { slotResistsThreat } from '../../utils/typeCoverage';
 import TeamPickerDropdown from '../TeamPickerDropdown';
 import SpeedTierFieldPanel, { ToggleButton } from './SpeedTierFieldPanel';
 import SpeedTierList from './SpeedTierList';

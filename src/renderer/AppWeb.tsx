@@ -282,7 +282,6 @@ export default function AppWeb() {
                   <TypeMatchupPage
                     teamsState={teamsState}
                     gameDataState={gameDataState}
-                    databaseState={databaseState}
                     spriteCacheState={spriteCacheState}
                   />
                 </Suspense>

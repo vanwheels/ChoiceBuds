@@ -297,7 +297,6 @@ export default function App() {
                     <TypeMatchupPage
                       teamsState={teamsState}
                       gameDataState={gameDataState}
-                      databaseState={databaseState}
                       spriteCacheState={spriteCacheState}
                     />
                   </Suspense>

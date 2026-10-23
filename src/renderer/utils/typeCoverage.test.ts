@@ -3,6 +3,7 @@ import {
   computeOffensiveCoverage,
   computeDefensiveCoverage,
   getDefensiveMultiplier,
+  slotResistsThreat,
   type DefendingSlot,
 } from './typeCoverage';
 import { ALL_TYPES } from '../config/typeEffectiveness';
@@ -98,5 +99,32 @@ describe('getDefensiveMultiplier', () => {
 
   it('treats a missing ability the same as no override', () => {
     expect(getDefensiveMultiplier('ground', ['flying'], undefined)).toBe(0); // Flying is already immune to Ground by typing
+  });
+});
+
+describe('slotResistsThreat', () => {
+  it('returns true when the slot resists every one of the threat types', () => {
+    // Water resists Fire (0.5x)
+    expect(slotResistsThreat(['fire'], slot(['water']))).toBe(true);
+  });
+
+  it("returns false when the slot is weak to the threat's best type", () => {
+    // Water is weak to Electric (2x)
+    expect(slotResistsThreat(['electric'], slot(['water']))).toBe(false);
+  });
+
+  it("uses the best (max) of a dual-typed threat's two types against the slot", () => {
+    // Water/Grass: Water resisted by Water (0.5x) but Grass is super-effective vs Water (2x) -> best is 2, not resisted
+    expect(slotResistsThreat(['water', 'grass'], slot(['water']))).toBe(false);
+  });
+
+  it('treats a full ability-based immunity as a resist', () => {
+    // Electric is 2x vs a Flying-type slot, but Motor Drive fully no-sells it
+    expect(slotResistsThreat(['electric'], slot(['flying'], 'Motor Drive'))).toBe(true);
+  });
+
+  it('does not immunize a type the ability does not cover', () => {
+    // Levitate blocks Ground, not Electric
+    expect(slotResistsThreat(['electric'], slot(['flying'], 'Levitate'))).toBe(false);
   });
 });
