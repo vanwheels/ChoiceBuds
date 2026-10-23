@@ -21,34 +21,20 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 Done when:
 - Offensive/Defensive coverage cells are colored by magnitude (4x/immune
   distinct from 2x/0.5) instead of one flat color per favorable/unfavorable
-  side.
+  side. ✅ Leg 1.
 - The Team Gap Analysis panel (ladder-usage-threat heuristic) is removed
   outright from the Type Matchup page, with no replacement panel - the two
   CoverageTables' own per-type counts already show the same information a
   replacement panel would just re-sort, so a second panel over the same
   data was tried and dropped same-leg as redundant. No residual references
-  to `usageThreats.ts`/`usageCoverageGaps.ts` from this page.
+  to `usageThreats.ts`/`usageCoverageGaps.ts` from this page. ✅ Leg 2.
 - When a team slot has an active Mega/alt-form (`usePokemonFormToggle`),
   both Offensive and Defensive coverage reflect that form's typing/
   ability/moves instead of the base form; with no active form, behavior is
-  unchanged.
+  unchanged. ✅ Leg 3.
 
-- **[Type Matchup Rework] — Leg 3** *(Last touched: 2026-10-23 ·
-  Re-checks: 0)*
-  Wire Mega/Alt-Form toggle into coverage. When a team slot's
-  `usePokemonFormToggle` has an `activeForm`, both `defensiveSlots`
-  (types/ability, for `computeDefensiveCoverage`) and the move-type
-  resolution feeding `computeOffensiveCoverage` (via `useTeamMoveTypes`)
-  must resolve from that form instead of the stored base form - e.g. an
-  active Aerilate Mega's offensive row should reflect Normal→Flying
-  conversion, and its defensive row should use the Mega's own typing/
-  ability. Needs a way to resolve a Mega slug's types (paralleling
-  `megaAbilities.ts`'s existing `getMegaAbility`). Depends on the
-  already-shipped toggle state; touches shared toggle consumption +
-  type-coverage logic across two tables. Done check: toggling a known
-  type-changing Mega (e.g. Aerilate) shifts both Offensive and Defensive
-  rows to match; untoggled slots are unaffected. Review: yes. Manual
-  verification: yes.
+All three Done-When criteria are met as of Leg 3 (2026-10-23, commit
+33ef822) - this milestone is ready for `/close-milestone`.
 
 ## Blocked
 

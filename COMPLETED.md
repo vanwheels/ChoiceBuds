@@ -115,3 +115,27 @@ Entries prior to this file's oldest are in:
   columns. Manually verified live in the running app: Team Gap Analysis
   panel gone, no residual replacement panel, page shows only the two
   `CoverageTable`s. See commit b506506.
+
+- **[Type Matchup Rework] — Leg 3** (2026-10-23)
+  Wired the Mega/Alt-Form toggle (`usePokemonFormToggle`) into both
+  coverage tables via a new `useActiveFormsForIds` (subscribes to several
+  roster slots' toggle state at once, since Rules of Hooks forbids calling
+  the single-id hook inside a dynamic `team.pokemon.map()`). A code-review
+  pass flagged the "is this toggle pointing at its own held Mega Stone"
+  check as duplicated across `EditablePokemonCore.tsx`,
+  `useTeamMoveTypes.ts`, and `TypeMatchupPage.tsx`, and the defensive-slot
+  Mega-type resolution as untestable inline component logic - both fixed
+  by factoring into shared, tested pure functions
+  (`megaEvolution.ts`'s `resolveActiveMegaSlug`, `megaAbilities.ts`'s
+  `resolveActiveAbility`, `typeCoverage.ts`'s `resolveDefensiveSlot`),
+  also adopted by `EditablePokemonCore.tsx`'s existing Mega Team Card Flip
+  logic. Live-verified via the `run-desktop` driver with a disposable Mega
+  Pinsir team (Aerilate, Bug -> Bug/Flying): toggling Mega on shifted every
+  expected Offensive and Defensive cell to its mathematically correct
+  value (e.g. Ghost immune -> neutral, Rock 2x -> 4x, Ground resist ->
+  immune), and toggling off reverted every cell to the exact baseline. See
+  commit 33ef822.
+
+Type Matchup Rework's three Done-When criteria (magnitude-graded cells,
+Team Gap Analysis removed, Mega/Alt-Form-aware coverage) are now all met -
+see `TODO.md`/`MILESTONES.md` for closing this milestone out.
