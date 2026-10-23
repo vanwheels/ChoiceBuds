@@ -21,29 +21,19 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 Done when:
 1. All three originally-scoped items (Box-exclusion bug in the swap-via-sprite-box
    picker, Box expand-in-place → modal, Aegislash/Maushold form-picker stripped
-   from battle-logger opponent selection) are fixed and live-verified.
+   from battle-logger opponent selection) are fixed and live-verified. **Done**
+   (Legs 1-3, see COMPLETED.md).
 2. Mega sprite display is unified with toggle state — sprite, types, stats,
    ability, and Type Matchup coverage all gate together on `activeMegaSlug` —
    live-verified against Golisopod (currently broken) and Aegislash (must stay
-   correct).
+   correct). **Done** (Leg 4, see COMPLETED.md).
 3. The `useSavedPokemon` sync migration gap is either fixed to mirror
    `reconcileSyncedTeams`'s `normalizeIncomingSyncTeam` step, or confirmed moot
-   with the finding documented either way; passes `/leg-review`.
+   with the finding documented either way; passes `/leg-review`. **Done** (Leg
+   5, fixed and `/leg-review`-clean, see COMPLETED.md).
 
-- **[Team Editor & Box Fixes] — Leg 5** *(Last touched: 2026-10-23 ·
-  Re-checks: 0)*
-  `reconcileSyncedSavedPokemon` never ran an incoming sync record through
-  `normalizeSavedPokemon`/`bumpUpdatedAtForFixedEntries` before it could win
-  a merge or get appended, unlike `reconcileSyncedTeams`. Fixed by adding
-  `normalizeIncomingSyncSavedPokemonEntry` to `savedPokemonMigrations.ts`
-  (mirrors `normalizeIncomingSyncTeam`: runs the gender-split-species fix,
-  bumps `updatedAt` only when that changed something sync-relevant) and
-  wiring it into `reconcileSyncedSavedPokemon`'s merge-win and append paths.
-  Covered by new `savedPokemonMigrations.test.ts`/
-  `savedPokemonSyncReconciliation.test.ts`; full suite (907 tests), lint,
-  and type-check all pass. Done check: fix applied and tested — done.
-  Review: yes (sync reconciliation) — **not yet run, needs `/leg-review`**.
-  Manual verification: no.
+All three done-when criteria are met and all five legs have shipped (see
+COMPLETED.md). This milestone is ready for `/close-milestone`.
 
 ## Blocked
 

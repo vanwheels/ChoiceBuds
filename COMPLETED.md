@@ -91,6 +91,25 @@ Entries prior to this file's oldest are in:
   (the Type Matchup Rework milestone's three legs, split out at the
   2026-10-23 Type Matchup Rework boundary)
 
+## Team Editor & Box Fixes — Leg 5 (2026-10-23)
+
+`reconcileSyncedSavedPokemon` never ran an incoming sync record through
+`normalizeSavedPokemon`/`bumpUpdatedAtForFixedEntries` before it could win a
+merge or get appended, unlike `reconcileSyncedTeams`'s
+`normalizeIncomingSyncTeam` step (the gap `.claude/rules/sync-merge-
+migration-parity.md` flags). Fixed by adding
+`normalizeIncomingSyncSavedPokemonEntry` to `savedPokemonMigrations.ts`,
+mirroring `normalizeIncomingSyncTeam`: runs the gender-split-species fix
+and bumps `updatedAt` only when that changed something sync-relevant, so
+the corrected copy can out-rank the stale sender on the next push. Wired
+into `reconcileSyncedSavedPokemon`'s merge-win and append paths. Covered by
+new `savedPokemonMigrations.test.ts`/`savedPokemonSyncReconciliation.test.ts`;
+full suite (907 tests), lint, and type-check all pass. Passed `/leg-review`
+(no findings - confirmed the mirror is faithful to the team-side original,
+confirmed the single-Pokemon-per-entry comparison is correct rather than a
+shortcut, confirmed no second `applySyncedState` call site was missed).
+See commit f5c52d585bbd8734d22118ac50b1f34ac39c15cd.
+
 ## Team Editor & Box Fixes — Leg 4 (2026-10-23)
 
 Gated `EditablePokemonCore.tsx`'s Mega sprite (`staticSpriteUrl`/
