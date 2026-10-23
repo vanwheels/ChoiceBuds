@@ -25,14 +25,16 @@ export function migrateSavedPokemonDatabase(database: SavedPokemonDatabase): Sav
 }
 
 /**
- * Self-heals any Box entry whose species was stored as PokeAPI's raw
+ * Self-heals a single Box entry whose species was stored as PokeAPI's raw
  * "-Male"/"-Female" resource text (fixGenderSplitResourceSpeciesText, see
  * its own doc comment and TODO.md's Roster Picker leg), at the read
  * boundary - same never-eagerly-persisted treatment as useTeams.ts's own
- * normalizeTeam.
+ * normalizeTeam. Split out (singular) so normalizeIncomingSyncSavedPokemonEntry
+ * below can run the same fix on one sync-merge-sourced entry at a time,
+ * mirroring teamMigrations.ts's normalizeTeam/normalizeIncomingSyncTeam split.
  */
-export function normalizeSavedPokemon(entries: SavedPokemonEntry[]): SavedPokemonEntry[] {
-  return entries.map((entry) => ({
+function normalizeSavedPokemonEntry(entry: SavedPokemonEntry): SavedPokemonEntry {
+  return {
     ...entry,
     pokemon: {
       ...entry.pokemon,
@@ -41,7 +43,43 @@ export function normalizeSavedPokemon(entries: SavedPokemonEntry[]): SavedPokemo
         species: fixGenderSplitResourceSpeciesText(entry.pokemon.showdownData.species),
       },
     },
-  }));
+  };
+}
+
+/** Maps normalizeSavedPokemonEntry over the whole load-path collection. */
+export function normalizeSavedPokemon(entries: SavedPokemonEntry[]): SavedPokemonEntry[] {
+  return entries.map(normalizeSavedPokemonEntry);
+}
+
+/**
+ * Whether normalizeSavedPokemonEntry actually changed something sync-relevant
+ * (species text) between a raw entry and its normalized result - mirrors
+ * teamMigrations.ts's normalizationChangedSyncRelevantFields, same reason:
+ * telling a sync-relevant fix apart from a no-op normalize.
+ */
+function normalizationChangedSyncRelevantFields(
+  raw: SavedPokemonEntry,
+  fixed: SavedPokemonEntry,
+): boolean {
+  return raw.pokemon.showdownData.species !== fixed.pokemon.showdownData.species;
+}
+
+/**
+ * Runs a sync-merge-sourced entry (savedPokemonSyncReconciliation.ts's
+ * reconcileSyncedSavedPokemon `records`, which can originate from a device
+ * still running pre-migration code) through the same normalizeSavedPokemonEntry
+ * path the load path uses, so a legacy-shaped entry pulled down mid-sync
+ * reads correctly immediately rather than only after this device's next full
+ * reload - mirrors teamMigrations.ts's normalizeIncomingSyncTeam. Bumps
+ * `updatedAt` to now only when normalization changed something sync-relevant,
+ * so the corrected copy can out-rank the still-stale sender on this device's
+ * next push.
+ */
+export function normalizeIncomingSyncSavedPokemonEntry(raw: SavedPokemonEntry): SavedPokemonEntry {
+  const normalized = normalizeSavedPokemonEntry(raw);
+  return normalizationChangedSyncRelevantFields(raw, normalized)
+    ? { ...normalized, updatedAt: Date.now() }
+    : normalized;
 }
 
 /**

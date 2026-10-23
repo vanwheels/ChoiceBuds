@@ -6,16 +6,20 @@
  * doc comment for the full rationale, including the TeamCard Notes blur race
  * and the resurrect-after-delete fix).
  *
- * Unlike reconcileSyncedTeams, this does NOT run incoming `records` entries
- * through normalizeSavedPokemon/bumpUpdatedAtForFixedEntries before they can
- * win a merge or get appended - a remote entry from a pre-migration device
- * can still land (and get persisted) with stale/un-migrated data. This gap
- * pre-dates this split (the old inline applySyncedState had the same gap);
- * see .claude/rules/sync-merge-migration-parity.md and TODO.md's
- * Stored-Snapshot Audit leg for the open follow-up.
+ * Whichever side the merge picks runs through
+ * normalizeIncomingSyncSavedPokemonEntry before landing in the result
+ * whenever it's a `records` entry (never a local one, already normalized on
+ * its own last load) - mirrors reconcileSyncedTeams's own
+ * normalizeIncomingSyncTeam call; see
+ * .claude/rules/sync-merge-migration-parity.md for why a load-path migration
+ * needs this sync-merge-path mirror too. `remote.updatedAt > local.updatedAt`/
+ * the unmatched-remote filter below both still compare the *raw* incoming
+ * `updatedAt`, since normalizing first would let a stale remote record win
+ * just by being newly reshaped.
  */
 
 import type { SavedPokemonEntry, SyncTombstone } from '../types/pokemon';
+import { normalizeIncomingSyncSavedPokemonEntry } from './savedPokemonMigrations';
 
 export interface ReconciledSavedPokemonSyncState {
   entries: SavedPokemonEntry[];
@@ -44,9 +48,13 @@ export function reconcileSyncedSavedPokemon(
   const entries = [
     ...localEntries.map((local) => {
       const remote = remoteById.get(local.id);
-      return remote && remote.updatedAt > local.updatedAt ? remote : local;
+      return remote && remote.updatedAt > local.updatedAt
+        ? normalizeIncomingSyncSavedPokemonEntry(remote)
+        : local;
     }),
-    ...records.filter((remote) => !localIds.has(remote.id) && !tombstonedIds.has(remote.id)),
+    ...records
+      .filter((remote) => !localIds.has(remote.id) && !tombstonedIds.has(remote.id))
+      .map(normalizeIncomingSyncSavedPokemonEntry),
   ];
   const pushedIds = new Set(pushedTombstones.map((t) => t.id));
   const tombstones = localTombstones.filter((t) => !pushedIds.has(t.id));

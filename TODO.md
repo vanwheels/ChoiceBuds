@@ -32,13 +32,18 @@ Done when:
 
 - **[Team Editor & Box Fixes] — Leg 5** *(Last touched: 2026-10-23 ·
   Re-checks: 0)*
-  `reconcileSyncedSavedPokemon` never runs an incoming sync record through
-  `normalizeSavedPokemon`/`bumpUpdatedAtForFixedEntries` before it can win a
-  merge or get appended, unlike `reconcileSyncedTeams`. Fix by mirroring
-  `normalizeIncomingSyncTeam`, or confirm no still-live pre-migration devices
-  make this moot — document the finding either way. Done check: fix applied
-  and tested, or moot-confirmation documented in TODO.md/COMPLETED.md.
-  Review: yes (sync reconciliation). Manual verification: no.
+  `reconcileSyncedSavedPokemon` never ran an incoming sync record through
+  `normalizeSavedPokemon`/`bumpUpdatedAtForFixedEntries` before it could win
+  a merge or get appended, unlike `reconcileSyncedTeams`. Fixed by adding
+  `normalizeIncomingSyncSavedPokemonEntry` to `savedPokemonMigrations.ts`
+  (mirrors `normalizeIncomingSyncTeam`: runs the gender-split-species fix,
+  bumps `updatedAt` only when that changed something sync-relevant) and
+  wiring it into `reconcileSyncedSavedPokemon`'s merge-win and append paths.
+  Covered by new `savedPokemonMigrations.test.ts`/
+  `savedPokemonSyncReconciliation.test.ts`; full suite (907 tests), lint,
+  and type-check all pass. Done check: fix applied and tested — done.
+  Review: yes (sync reconciliation) — **not yet run, needs `/leg-review`**.
+  Manual verification: no.
 
 ## Blocked
 
