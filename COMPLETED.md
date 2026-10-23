@@ -101,3 +101,17 @@ Entries prior to this file's oldest are in:
   pass. Manually verified live in the running app across two feedback
   rounds (color distinction, then threshold boundaries). See commit
   2878045.
+
+- **[Type Matchup Rework] — Leg 2** (2026-10-23)
+  Removed the Team Gap Analysis panel (`UsageThreatsList.tsx`,
+  `usageThreats.ts`, `usageCoverageGaps.ts`, and their tests) outright -
+  no replacement panel. `slotResistsThreat` moved into `typeCoverage.ts`
+  (alongside `getDefensiveMultiplier`) since `SpeedTiersPage.tsx`'s
+  "Threats Only" checkbox still depends on it; its tests moved there too.
+  A first pass added a replacement "Coverage Gaps" panel re-surfacing
+  `computeDefensiveCoverage`'s `unfavorableCount`/`favorableCount` per
+  type, live-rejected same leg as redundant - the Defensive
+  `CoverageTable` already shows those exact counts in its own Weak/Resist
+  columns. Manually verified live in the running app: Team Gap Analysis
+  panel gone, no residual replacement panel, page shows only the two
+  `CoverageTable`s. See commit b506506.

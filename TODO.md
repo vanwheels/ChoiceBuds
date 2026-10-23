@@ -33,23 +33,6 @@ Done when:
   ability/moves instead of the base form; with no active form, behavior is
   unchanged.
 
-- **[Type Matchup Rework] — Leg 2** *(Last touched: 2026-10-23 ·
-  Re-checks: 0)*
-  Retire Team Gap Analysis outright, no replacement panel. Removed
-  `UsageThreatsList.tsx` and its two dedicated utils (`usageThreats.ts`,
-  `usageCoverageGaps.ts`) and their wiring in `TypeMatchupPage.tsx`.
-  `slotResistsThreat` moved into `typeCoverage.ts` (its natural home
-  alongside `getDefensiveMultiplier`) since `SpeedTiersPage.tsx`'s "Threats
-  Only" checkbox still depends on it; `GameDataCache.usage`/`useUsageSync`
-  stay as-is for that same reason. A same-leg first pass added a
-  replacement "Coverage Gaps" panel surfacing `computeDefensiveCoverage`'s
-  `unfavorableCount`/`favorableCount` per type - dropped on live review as
-  redundant, since the Defensive `CoverageTable` already shows those same
-  counts per type in its own Weak/Resist columns; a second panel just
-  re-sorted the same data with no new information. Done check: Team Gap
-  Analysis panel and its two utils are gone, page shows only the two
-  `CoverageTable`s. Review: no. Manual verification: yes.
-
 - **[Type Matchup Rework] — Leg 3** *(Last touched: 2026-10-23 ·
   Re-checks: 0)*
   Wire Mega/Alt-Form toggle into coverage. When a team slot's
