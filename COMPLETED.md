@@ -128,3 +128,19 @@ animated) only while the toggle is actively pointed at Blade - unlike
 Mega's sprite, which stays always-on whenever the stone is held regardless
 of the stats toggle, since Aegislash's forme isn't item-driven. See commit
 1d7d83c.
+
+**[Battle Log Mega-Evolved Note] — Leg 4** (2026-10-22): RecordMatchForm
+had no way to set `Battle.megaEvolvedIds` (it existed on disk already, left
+over from the archived live-logging flow, but the form just hardcoded it
+to `[]`). Added one Mega-toggle control, reused on both the player and
+opponent roster tiles via `BroughtToggleTile`'s existing `trailing` slot,
+that marks/unmarks a Pokemon as Mega Evolved - marking one clears any
+other mark already set on the same side, matching the real one-Mega-
+per-side VGC rule (pure toggle logic split into
+`utils/battleMegaToggle.ts` so it's unit-tested without React).
+`PastBattlesList`'s saved-match summary now shows a small "Mega" badge,
+tooltip naming which Pokemon, whenever a battle has at least one mark.
+Live-verified via `run-desktop`: recorded a disposable test battle marking
+a player-side Pokemon Mega Evolved, confirmed the badge/tooltip in the
+summary list, then deleted it and confirmed on a fresh reload that no
+stray data remained. See commit 0961243.

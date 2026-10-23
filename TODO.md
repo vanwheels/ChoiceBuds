@@ -36,13 +36,9 @@ Done when:
   to Shield, matching in-game start state) and a battle log entry can
   mark a Pokémon as mega-evolved with exactly one extra input.
 
-- **[Battle Log Mega-Evolved Note] — Leg 4** *(Last touched: 2026-10-22 ·
-  Re-checks: 0)*
-  Add exactly one additional input to the battle logger for marking a
-  Pokémon as mega-evolved during a battle. Done check: a mon can be marked
-  mega-evolved and that shows up in the log entry/summary. Review: yes
-  (adds a field to persisted, synced battle-log data). Manual
-  verification: yes.
+All four legs of this milestone are now shipped (see `COMPLETED.md`) - its
+"Done when" criteria are all met. Ready for `/close-milestone` whenever
+that's convenient.
 
 ## Blocked
 
