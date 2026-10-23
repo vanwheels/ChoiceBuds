@@ -46,6 +46,17 @@ const RESULT_LABELS: Record<Battle['result'], string> = {
   'in-progress': 'In Progress',
 };
 
+/** Resolves battle.megaEvolvedIds (either roster) to display names, for the summary badge's tooltip below. */
+function getMegaEvolvedNames(battle: Battle): string[] {
+  const playerNames = battle.playerRoster
+    .filter((p) => battle.megaEvolvedIds.includes(p.id))
+    .map((p) => p.nickname || p.species);
+  const opponentNames = battle.opponentRoster
+    .filter((o) => battle.megaEvolvedIds.includes(o.id))
+    .map((o) => o.species);
+  return [...playerNames, ...opponentNames];
+}
+
 /** Shows the team name unless `gameLabel` is set - a Bo3 set always uses one team for all 3 games, so grouped rows show the team name once in the set header instead (see the group render below). */
 function BattleRow({
   battle,
@@ -72,6 +83,14 @@ function BattleRow({
         </div>
       </div>
       <div className="flex items-center gap-3 shrink-0">
+        {battle.megaEvolvedIds.length > 0 && (
+          <span
+            title={`Mega Evolved: ${getMegaEvolvedNames(battle).join(', ')}`}
+            className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-purple-600/80 text-white cursor-help"
+          >
+            Mega
+          </span>
+        )}
         {battle.notes && (
           <span title={battle.notes} className="text-zinc-500 hover:text-zinc-300 cursor-help">
             <svg

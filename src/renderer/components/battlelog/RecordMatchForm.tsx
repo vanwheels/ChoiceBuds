@@ -28,7 +28,8 @@ import type {
   SpeciesRosterEntry,
   Team,
 } from '../../types/pokemon';
-import { getPixelSpriteUrl } from '../../utils/spriteUrl';
+import { getPixelSpriteUrl, MEGA_BADGE_ICON_URL } from '../../utils/spriteUrl';
+import { toggleMegaEvolvedIds } from '../../utils/battleMegaToggle';
 import type { UseTeamsReturn } from '../../hooks/useTeams';
 import type { UseBattlesReturn } from '../../hooks/useBattles';
 import type { UseSpeciesRosterReturn } from '../../hooks/useSpeciesRoster';
@@ -128,6 +129,7 @@ function buildMatchRecord(args: {
   broughtIds: string[];
   opponentRoster: OpponentPokemonEntry[];
   opponentBroughtIds: string[];
+  megaEvolvedIds: string[];
   opponentName: string;
   result: 'win' | 'loss';
   notes: string;
@@ -139,6 +141,7 @@ function buildMatchRecord(args: {
     broughtIds,
     opponentRoster,
     opponentBroughtIds,
+    megaEvolvedIds,
     opponentName,
     result,
     notes,
@@ -161,7 +164,7 @@ function buildMatchRecord(args: {
     opponentRoster,
     opponentBroughtIds,
     opponentActiveIds: [null, null],
-    megaEvolvedIds: [],
+    megaEvolvedIds,
     statStages: {},
     statusConditions: {},
     statusSetOnTurn: {},
@@ -197,6 +200,15 @@ export default function RecordMatchForm({
   );
   const [opponentBroughtIds, setOpponentBroughtIds] = useState<string[]>(
     editingBattle?.opponentBroughtIds ?? [],
+  );
+  // ids (either roster) marked Mega Evolved this battle - mirrors
+  // Battle.megaEvolvedIds (see types/battle.ts). Real VGC rule is at most
+  // one Mega per side, enforced in toggleMegaEvolved below rather than left
+  // to the user, since it's a hard game constraint rather than something
+  // only the user watching the real battle can judge (unlike outcomes/notes
+  // elsewhere in this flexible manual log).
+  const [megaEvolvedIds, setMegaEvolvedIds] = useState<string[]>(
+    editingBattle?.megaEvolvedIds ?? [],
   );
   // Snapshotted once per team selection (see handleSelectTeam) rather than
   // derived in render - snapshotRoster mints fresh crypto.randomUUID() ids,
@@ -239,6 +251,8 @@ export default function RecordMatchForm({
   const handleSelectTeam = (nextTeamId: string) => {
     setTeamId(nextTeamId);
     setBroughtIds([]); // roster identity (crypto.randomUUID() ids) is re-rolled per snapshot, so a prior selection can't carry over
+    const oldPlayerIds = new Set(playerRoster.map((p) => p.id));
+    setMegaEvolvedIds((prev) => prev.filter((id) => !oldPlayerIds.has(id))); // same reason - a stale player-side Mega mark can't carry over either
     const nextTeam = eligibleTeams.find((t) => t.id === nextTeamId);
     setPlayerRoster(nextTeam ? snapshotRoster(nextTeam) : []);
   };
@@ -247,6 +261,39 @@ export default function RecordMatchForm({
     setBroughtIds((prev) => toggleId(prev, pokemonId, MAX_BROUGHT));
   const toggleOpponentBrought = (pokemonId: string) =>
     setOpponentBroughtIds((prev) => toggleId(prev, pokemonId, MAX_BROUGHT));
+
+  /** Toggles pokemonId's Mega Evolved mark via the pure toggleMegaEvolvedIds (see utils/battleMegaToggle.ts), which also clears any other id already marked on the same side - only one Pokemon per side can Mega Evolve in a real battle. */
+  const toggleMegaEvolved = (pokemonId: string, sideRoster: { id: string }[]) =>
+    setMegaEvolvedIds((prev) =>
+      toggleMegaEvolvedIds(
+        prev,
+        pokemonId,
+        sideRoster.map((p) => p.id),
+      ),
+    );
+
+  /** Shared Mega-toggle control rendered into both rosters' BroughtToggleTile `trailing` slot - same gold-circle/Mega-icon treatment as the team card's MegaFormToggleBadge, just inline rather than overlaid on the sprite since BroughtToggleTile's trailing content sits beside the tile, not on top of it. */
+  const renderMegaToggle = (pokemonId: string, sideRoster: { id: string }[]) => {
+    const isMega = megaEvolvedIds.includes(pokemonId);
+    return (
+      <button
+        type="button"
+        onClick={() => toggleMegaEvolved(pokemonId, sideRoster)}
+        title={isMega ? 'Mega Evolved - click to unmark' : 'Mark as Mega Evolved'}
+        className={`w-5 h-5 flex items-center justify-center rounded-full border transition-colors cursor-pointer ${
+          isMega
+            ? 'bg-accent-gold border-accent-gold'
+            : 'bg-zinc-800 border-zinc-600 hover:border-accent-gold'
+        }`}
+      >
+        <img
+          src={spriteCacheState.resolveSprite(MEGA_BADGE_ICON_URL)}
+          alt="Mega"
+          className="w-3 h-3"
+        />
+      </button>
+    );
+  };
 
   const handleAddOpponent = (species: SpeciesRosterEntry) => {
     setIsAddingOpponent(false);
@@ -268,6 +315,7 @@ export default function RecordMatchForm({
   const removeOpponent = (id: string) => {
     setOpponentRoster((prev) => prev.filter((o) => o.id !== id));
     setOpponentBroughtIds((prev) => prev.filter((broughtId) => broughtId !== id)); // drop a stale brought-selection if its entry is removed entirely
+    setMegaEvolvedIds((prev) => prev.filter((megaId) => megaId !== id)); // drop a stale Mega mark the same way
   };
 
   /** Merges Calc-reported moves/ability/item back into a specific opponent-roster entry by id, whenever the global Calc popup's write-back link points at it (Regular Calc Battle Log Integration Leg 2, now dispatched by entryId via registerBattleLogSession's onUpdateEntry rather than a per-tile-bound closure - Leg 3). Moves union rather than overwrite (case-insensitive, since `OpponentPokemonEntry.moves` is a growable tag list, not the Calc grid's fixed 4 slots) - ability/item overwrite directly since they're single values. Wrapped in useCallback so the registration effect below doesn't re-register on every unrelated render. */
@@ -324,6 +372,7 @@ export default function RecordMatchForm({
           broughtIds,
           opponentRoster,
           opponentBroughtIds,
+          megaEvolvedIds,
           opponentName: trimmedName || undefined,
           result,
           notes: trimmedNotes || undefined,
@@ -336,6 +385,7 @@ export default function RecordMatchForm({
               broughtIds,
               opponentRoster,
               opponentBroughtIds,
+              megaEvolvedIds,
               opponentName,
               result,
               notes,
@@ -394,6 +444,7 @@ export default function RecordMatchForm({
                 label={p.nickname || p.species}
                 selected={broughtIds.includes(p.id)}
                 onToggle={() => toggleBrought(p.id)}
+                trailing={renderMegaToggle(p.id, playerRoster)}
               />
             ))}
           </div>
@@ -415,13 +466,16 @@ export default function RecordMatchForm({
               selected={opponentBroughtIds.includes(o.id)}
               onToggle={() => toggleOpponentBrought(o.id)}
               trailing={
-                <button
-                  onClick={() => removeOpponent(o.id)}
-                  title="Remove"
-                  className="text-zinc-500 hover:text-red-400 cursor-pointer"
-                >
-                  ×
-                </button>
+                <>
+                  {renderMegaToggle(o.id, opponentRoster)}
+                  <button
+                    onClick={() => removeOpponent(o.id)}
+                    title="Remove"
+                    className="text-zinc-500 hover:text-red-400 cursor-pointer"
+                  >
+                    ×
+                  </button>
+                </>
               }
             />
           ))}
