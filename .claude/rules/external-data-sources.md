@@ -83,6 +83,16 @@ the sites involved.
    (`getPixelSpriteUrl`) via `onError` when Showdown's roster doesn't yet
    have a given species/form.
 
+   Same CDN, a second, separate sub-path (decided 2026-10-22, Mega Team Card
+   Flip): `/sprites/misc/mega.png` and `/sprites/misc/shiny.png` are
+   hotlinked as static `<img>` icons for `EditablePokemonCore.tsx`'s shiny
+   corner badge and `MegaFormToggleBadge.tsx`'s Mega-flip badge
+   (`utils/spriteUrl.ts`'s `MEGA_BADGE_ICON_URL`/`SHINY_BADGE_ICON_URL`) —
+   Showdown's own UI icons for these two concepts, reused instead of a
+   hand-drawn glyph. Still image hotlinking only, resolved through the same
+   `resolveSprite()` local-cache path every other hotlinked sprite in the app
+   uses.
+
 7. **Showdown `champions` mod source read (decided 2026-09-01).**
    `smogon/pokemon-showdown`'s public GitHub repo, specifically its
    code-level `champions` mod (`data/mods/champions/*.ts`, e.g.

@@ -75,3 +75,15 @@ export function getAnimatedSpriteUrl(name: string, gender: string, shiny: boolea
 
   return `https://play.pokemonshowdown.com/sprites/${folder}/${id}.gif`;
 }
+
+/**
+ * Static "misc" UI icons hotlinked from the same Showdown sprite CDN as
+ * getAnimatedSpriteUrl above (same hotlink exception) - Showdown's own
+ * client's icons for "this is a Mega Evolution" and "this Pokémon is shiny"
+ * respectively, reused here rather than a hand-drawn glyph. EditablePokemonCore.tsx's
+ * shiny corner badge and MegaFormToggleBadge.tsx both resolve these through
+ * useSpriteCache's resolveSprite() the same way every other hotlinked sprite
+ * in the app does, so they get the same local-cache treatment.
+ */
+export const MEGA_BADGE_ICON_URL = 'https://play.pokemonshowdown.com/sprites/misc/mega.png';
+export const SHINY_BADGE_ICON_URL = 'https://play.pokemonshowdown.com/sprites/misc/shiny.png';

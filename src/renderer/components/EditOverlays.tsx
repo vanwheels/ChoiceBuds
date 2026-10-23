@@ -392,7 +392,11 @@ export default function EditOverlays({
           onToggleMenu={(e) => toggleMenu('item', e)}
         />
         {megaToggle && (
-          <MegaFormToggleBadge isActive={megaToggle.isActive} onToggle={megaToggle.onToggle} />
+          <MegaFormToggleBadge
+            isActive={megaToggle.isActive}
+            onToggle={megaToggle.onToggle}
+            resolveSprite={resolveSprite}
+          />
         )}
       </div>
 

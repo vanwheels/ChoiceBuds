@@ -32,7 +32,7 @@ import { getMegaApiSlug } from '../config/megaEvolution';
 import { getMegaAbility } from '../config/megaAbilities';
 import { useMegaSprite } from '../hooks/useMegaSprite';
 import { usePokemonFormToggle } from '../hooks/usePokemonFormToggle';
-import { getPixelSpriteUrl, getAnimatedSpriteUrl } from '../utils/spriteUrl';
+import { getPixelSpriteUrl, getAnimatedSpriteUrl, SHINY_BADGE_ICON_URL } from '../utils/spriteUrl';
 import { getTotalSP, MAX_TOTAL_SP } from '../utils/evTotal';
 import TypeBadge from './TypeBadge';
 import StatsColumn from './StatsColumn';
@@ -341,15 +341,12 @@ export default function EditablePokemonCore({
             title="Click to toggle shiny status"
           >
             <div className="w-[22px] h-[22px] flex items-center justify-center rounded-md border border-transparent transition-colors group-hover:bg-zinc-900/55 group-hover:border-zinc-600/60">
-              <span
-                className={
-                  isLocalShiny
-                    ? 'text-sm select-none filter-none opacity-100'
-                    : 'text-sm select-none grayscale opacity-30'
-                }
-              >
-                ✨
-              </span>
+              <img
+                src={resolveSprite(SHINY_BADGE_ICON_URL)}
+                alt="Shiny"
+                draggable={false}
+                className={`w-4 h-4 select-none ${isLocalShiny ? 'filter-none opacity-100' : 'grayscale opacity-30'}`}
+              />
             </div>
           </div>
         </div>
