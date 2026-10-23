@@ -409,6 +409,46 @@ change.
   on top instead of being hidden behind the overlay — a prerequisite for any
   modal-opening affordance added inside the swipe deck.
 
+## Type Matchup coverage
+
+`components/typematchup/TypeMatchupPage.tsx` picks a saved team and renders
+two tables (`CoverageTable.tsx`, one each for Offensive/Defensive), modeled
+on vgcmulticalc.com's type-calc tool. No third panel exists below them —
+Type Matchup Rework removed the former ladder-usage Team Gap Analysis panel
+outright rather than replacing it; a same-leg attempt at a "Coverage Gaps"
+replacement was dropped as redundant with the Defensive table's own Weak/
+Resist columns (see
+`docs/postmortems/type-matchup-rework.md`).
+
+- **Cell coloring** (`CoverageCell.tsx`): color encodes favorability to the
+  viewing team (caller passes `favorableWhenAbove1`, since a 2x is good
+  offensively but bad defensively), and intensity grades by magnitude within
+  that direction — mild (2x/0.5x) vs. extreme (4x/0.25x) get distinct
+  shades, with immune always a neutral gray badge regardless of direction.
+  `CoverageTable.tsx`'s own aggregate Weak/Resist and Not Very Effective/
+  Super Effective count badges threshold-color by count (0 / 1-2 / 3+).
+- **Offensive Coverage** uses each member's actual damaging moves
+  (`hooks/useTeamMoveTypes.ts`), accounting for type-changing abilities
+  (`config/typeChangingAbilities.ts`, e.g. Pixilate). **Defensive Coverage**
+  uses each member's own typing, accounting for type-immunity abilities
+  (`config/typeImmunityAbilities.ts`) via `utils/typeCoverage.ts`'s
+  `getDefensiveMultiplier`.
+- **Mega/alt-form awareness**: both tables read the same
+  `usePokemonFormToggle` state the team card uses (see "Mega & alt-form
+  display toggle" below) via `useActiveFormsForIds`, which subscribes to
+  every selected team slot's toggle at once (Rules of Hooks forbids calling
+  the single-id hook inside a dynamic `.map()`). A slot's "is the active
+  toggle pointing at its own held Mega Stone" check and the resulting
+  ability/typing resolution are shared, tested pure functions —
+  `megaEvolution.ts::resolveActiveMegaSlug`,
+  `megaAbilities.ts::resolveActiveAbility`,
+  `typeCoverage.ts::resolveDefensiveSlot` (typing/ability sourced from
+  `@smogon/calc`'s species dex, the only in-repo source for a Mega form's
+  own types) — rather than duplicated per call site; `EditablePokemonCore.tsx`
+  reuses the same functions for its own Mega Team Card Flip. Aegislash needs
+  no equivalent handling here since its Blade/Shield toggle never changes
+  typing or ability.
+
 ## Gender/form handling
 
 VGC-legal species have two gender concerns that must stay in sync across two
@@ -424,7 +464,10 @@ gender-divergent or gender-locked/genderless species, update both.
 A roster slot's stored set never changes for Mega Evolution or Aegislash's
 Blade/Shield — both are in-battle-only states, so the toggle is purely a
 display override, keyed by the slot's own stable id via
-`usePokemonFormToggle` (see Renderer layers above). Three consumers read it:
+`usePokemonFormToggle` (see Renderer layers above). Four consumers read it
+(the fourth, Type Matchup's coverage tables, is covered in its own section
+above since it shares resolution logic with this one rather than just
+reading the toggle directly):
 
 - **Team card** (`EditablePokemonCore.tsx`): a Mega Stone held item shows
   `MegaFormToggleBadge`; toggling it swaps the ability capsule/stats

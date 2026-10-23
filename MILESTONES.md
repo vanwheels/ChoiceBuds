@@ -91,3 +91,5 @@ milestone.
   [post-mortem](docs/postmortems/maintenance-sweep-usesavedpokemon-split-and-housekeeping.md)
 - **Mega & Alt-Form Representation** — 2026-10-22 — Shipped —
   [post-mortem](docs/postmortems/mega-alt-form-representation.md)
+- **Type Matchup Rework** — 2026-10-23 — Shipped —
+  [post-mortem](docs/postmortems/type-matchup-rework.md)

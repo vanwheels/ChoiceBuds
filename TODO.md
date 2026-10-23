@@ -16,26 +16,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Type Matchup Rework
-
-Done when:
-- Offensive/Defensive coverage cells are colored by magnitude (4x/immune
-  distinct from 2x/0.5) instead of one flat color per favorable/unfavorable
-  side. ✅ Leg 1.
-- The Team Gap Analysis panel (ladder-usage-threat heuristic) is removed
-  outright from the Type Matchup page, with no replacement panel - the two
-  CoverageTables' own per-type counts already show the same information a
-  replacement panel would just re-sort, so a second panel over the same
-  data was tried and dropped same-leg as redundant. No residual references
-  to `usageThreats.ts`/`usageCoverageGaps.ts` from this page. ✅ Leg 2.
-- When a team slot has an active Mega/alt-form (`usePokemonFormToggle`),
-  both Offensive and Defensive coverage reflect that form's typing/
-  ability/moves instead of the base form; with no active form, behavior is
-  unchanged. ✅ Leg 3.
-
-All three Done-When criteria are met as of Leg 3 (2026-10-23, commit
-33ef822) - this milestone is ready for `/close-milestone`.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -63,6 +43,29 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+- **[Unify Mega Sprite Display With Toggle State] — Leg 1** *(Last touched:
+  2026-10-23 · Re-checks: 0)*
+  Found live 2026-10-23 via Type Matchup Rework's close-out: `EditablePokemonCore.tsx`'s
+  Mega sprite (`megaSprite = useMegaSprite(megaApiSlug)`, keyed only on held
+  item + species) has been "always-on while held" since before Mega & Alt-
+  Form Representation's Leg 2 — that milestone's post mortem notes the
+  sprite swap was already always-on and untouched by that leg. But
+  `displayedTypes`/`displayedBaseStats`/`megaAbilityName` (Leg 2's own
+  work) and Type Matchup Rework's coverage tables (Leg 3) all correctly
+  gate on `activeMegaSlug`, which requires `usePokemonFormToggle`'s toggle
+  to be explicitly on. Net effect: a Pokémon holding a Mega Stone shows its
+  Mega sprite unconditionally while its type badges/stats/ability/Type
+  Matchup coverage stay on base form until the toggle is flipped —
+  confirmed live with Golisopod (Mega sprite visible, Type Matchup still
+  showing base Bug/Water, not Mega Bug/Steel). Reverses the "always show
+  Mega sprite when holding stone" decision: gate the sprite the same way
+  as everything else (`activeMegaSlug`), one toggle controlling every
+  visible property together. Done check: holding a Mega Stone shows the
+  base sprite/types/stats until the toggle is turned on, then sprite,
+  types, stats, ability, and Type Matchup coverage all switch together;
+  verify Aegislash's existing toggle-gated sprite behavior is unaffected.
+  Review: no. Manual verification: yes (visual, team card + Type Matchup).
 
 - **[Ability-Affects-Move Indicator: Scoping] — Leg 1** *(Last touched:
   2026-10-22 · Re-checks: 0)*
