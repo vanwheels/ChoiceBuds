@@ -133,6 +133,16 @@ export default function PokemonCard({
   const swapRoster = speciesRosterState.roster.filter(
     (s) => !otherTeamSpecies.has(s.name.toLowerCase()),
   );
+  // "From Box" results for Roster Swap (Team Editor & Box Fixes Leg 1, see
+  // TODO.md) - the swap picker was omitting `savedPokemon`/`onSelectSaved`
+  // entirely, so it never showed Box Pokémon the way TeamCard.tsx's trailing
+  // "+ Add Pokémon" picker does (see that file's own addPickerSavedPokemon).
+  // Same Species Clause filter as that picker, just measured against
+  // otherTeamSpecies above instead of the whole roster, since this slot's
+  // own species stays pickable for a swap.
+  const swapSavedPokemon = savedPokemonState.savedPokemon.filter(
+    (e) => !otherTeamSpecies.has(e.pokemon.showdownData.species.toLowerCase()),
+  );
   const [glowC1, glowC2] = getTypeGlowColors(types);
   const glowRingStyle = { '--glow-c1': glowC1, '--glow-c2': glowC2 } as CSSProperties;
 
@@ -172,6 +182,14 @@ export default function PokemonCard({
 
   const handleSwapPickSaved = async (entry: SavedPokemonEntry) => {
     setSavedSetPickerSpecies(null);
+    await rosterActions.loadSavedSet(team, pokemonIndex, entry);
+  };
+
+  // Picking a Box result directly from the swap picker's own "From Box"
+  // section (as opposed to SavedSetPicker's same-species popover above) -
+  // same loadSavedSet call, just closing the swap picker instead.
+  const handleSwapFromBox = async (entry: SavedPokemonEntry) => {
+    setIsSwapPickerOpen(false);
     await rosterActions.loadSavedSet(team, pokemonIndex, entry);
   };
 
@@ -336,6 +354,8 @@ export default function PokemonCard({
               getCachedEntry={getCachedEntry}
               onSelect={handleSwapSelect}
               onClose={() => setIsSwapPickerOpen(false)}
+              savedPokemon={swapSavedPokemon}
+              onSelectSaved={handleSwapFromBox}
             />
           )}
         </AnimatePresence>
