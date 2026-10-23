@@ -151,8 +151,7 @@ form distinction, no sprite swap): replaced the plain toggle with
 non-mega-capable species or one confirmed holding a different item, a
 plain toggle for an unambiguous form (revealing the item when it marks
 Mega, since declaring Mega IS revealing the stone), and an X/Y/Z picker
-only for real ambiguity, collapsing back to a plain toggle once the
-picker's choice reveals the exact item. The player's own roster only
+for real ambiguity. The player's own roster only
 shows the control when already holding its own real Mega Stone, since
 a player's held item is always known up front. Both sides now swap the
 roster tile's sprite via the existing `useMegaSprite` hook, and the
@@ -161,4 +160,15 @@ again via `run-desktop` against real team data (`Mence Balance`'s
 Salamence): gating correctly showed the control on only the one
 stone-holding team member, the X/Y picker resolved correctly for a
 test Charizard, and marking a second opponent Mega correctly cleared
-the first through to the persisted summary. See commit 191bd70.
+the first through to the persisted summary. See commit 191bd70. Second
+follow-up the same day: that pass still collapsed a multi-form species'
+picker to a plain toggle the moment its item was set (including right
+after the picker itself set it), leaving no way to fix a misclick (e.g.
+Raichu X tapped instead of Y) short of removing and re-adding the
+opponent Pokemon - confirmed live. A multi-form species now always gets
+the full picker, never collapses, with the currently-chosen option
+highlighted; the component's own switch-handling code already supported
+this, only the gating function needed to change. Live-verified via
+`run-desktop`: picked Charizard X, confirmed the picker was still there,
+then switched to Y and confirmed the highlight moved. See commit
+2eed364.
