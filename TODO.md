@@ -36,15 +36,6 @@ Done when:
   to Shield, matching in-game start state) and a battle log entry can
   mark a Pokémon as mega-evolved with exactly one extra input.
 
-- **[Aegislash Form Toggle in Team Builder] — Leg 3** *(Last touched:
-  2026-10-22 · Re-checks: 0)*
-  Expose a Blade/Shield toggle for Aegislash in the team builder using
-  Leg 1's toggle state, defaulting to Shield per existing behavior.
-  Confirm this doesn't disturb the calc/team-building Aegislash defaults
-  already locked in from prior work. Done check: toggle changes displayed
-  ability/stats, default stays Shield on a fresh add. Review: no. Manual
-  verification: yes.
-
 - **[Battle Log Mega-Evolved Note] — Leg 4** *(Last touched: 2026-10-22 ·
   Re-checks: 0)*
   Add exactly one additional input to the battle logger for marking a

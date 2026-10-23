@@ -109,3 +109,15 @@ flip is active. See commit 39d56af. Follow-up the same day: replaced the
 toggle badge's placeholder "M" glyph and the shiny corner badge's unicode
 emoji with Showdown's own `/sprites/misc/mega.png`/`shiny.png` icons. See
 commit ddfe933.
+
+**[Aegislash Form Toggle in Team Builder] — Leg 3** (2026-10-22): Added a
+Blade/Shield toggle badge to the team builder card's own sprite box
+(`AegislashFormToggleBadge.tsx`, shown only for Aegislash), wired through
+Leg 1's shared `usePokemonFormToggle` state the same way Mega's toggle is -
+defaults to Shield (the stored forme) on a fresh add. Unlike the Mega flip,
+only stats change between formes (ability stays Stance Change, typing stays
+Steel/Ghost in both) - Blade's base stats are derived from the stored
+Shield stats via `utils/aegislashForme.ts`'s Attack<->Defense/Sp. Atk<->Sp.
+Def swap (the real in-game forme-change rule) rather than a second
+hardcoded stat table, so they can't drift from the stored value. See commit
+64edf44.
