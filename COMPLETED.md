@@ -143,4 +143,22 @@ tooltip naming which Pokemon, whenever a battle has at least one mark.
 Live-verified via `run-desktop`: recorded a disposable test battle marking
 a player-side Pokemon Mega Evolved, confirmed the badge/tooltip in the
 summary list, then deleted it and confirmed on a fresh reload that no
-stray data remained. See commit 0961243.
+stray data remained. See commit 0961243. Follow-up the same day, after
+live feedback that this first pass was too permissive (any Pokemon could
+be marked regardless of whether it can actually Mega Evolve, no X/Y/Z
+form distinction, no sprite swap): replaced the plain toggle with
+`resolveOpponentMegaControl` (`config/megaEvolution.ts`) - hidden for a
+non-mega-capable species or one confirmed holding a different item, a
+plain toggle for an unambiguous form (revealing the item when it marks
+Mega, since declaring Mega IS revealing the stone), and an X/Y/Z picker
+only for real ambiguity, collapsing back to a plain toggle once the
+picker's choice reveals the exact item. The player's own roster only
+shows the control when already holding its own real Mega Stone, since
+a player's held item is always known up front. Both sides now swap the
+roster tile's sprite via the existing `useMegaSprite` hook, and the
+summary names the specific form via `formatMegaLabel`. Live-verified
+again via `run-desktop` against real team data (`Mence Balance`'s
+Salamence): gating correctly showed the control on only the one
+stone-holding team member, the X/Y picker resolved correctly for a
+test Charizard, and marking a second opponent Mega correctly cleared
+the first through to the persisted summary. See commit 191bd70.
