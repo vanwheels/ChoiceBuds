@@ -37,6 +37,7 @@ import type { RegulationId } from '../utils/pokemonRules';
 import { normalizeSlug } from '../utils/pokemonRules';
 import { toReadableName } from '../utils/displayName';
 import { measureDropdownMaxHeight } from '../utils/measureDropdownHeight';
+import { getAbilityMoveBoostMultiplier } from '../config/abilityMoveBoosts';
 import MoveBubbleGrid, { type HoverKey } from './MoveBubbleGrid';
 import ItemSpriteBox from './ItemSpriteBox';
 import ItemPickerPanel from './ItemPickerPanel';
@@ -356,6 +357,18 @@ export default function EditOverlays({
   const displayedAbilityName = megaAbilityOverride?.name || selectedAbility;
   const displayedAbilityData = megaAbilityOverride ? megaAbilityOverride.data : abilityData;
 
+  // Per-move "does the equipped ability boost this equipped move" check
+  // (Ability-Affects-Move Indicator, see TODO.md) - uses displayedAbilityName
+  // so the indicator follows the Mega's forced ability while the flip is
+  // active, same as the ability capsule/tooltip above.
+  const moveBoosts = useMemo(
+    () =>
+      moveDataSlots.map((move) =>
+        move ? getAbilityMoveBoostMultiplier(displayedAbilityName, move) : null,
+      ),
+    [moveDataSlots, displayedAbilityName],
+  );
+
   // Resolve full metadata (type/category/power/pp/accuracy/description) for the 4 equipped moves
   useEffect(() => {
     let cancelled = false;
@@ -414,6 +427,7 @@ export default function EditOverlays({
       <MoveBubbleGrid
         moveDataSlots={moveDataSlots}
         selectedMoves={selectedMoves}
+        moveBoosts={moveBoosts}
         onToggleMenu={toggleMenu}
         onHoverEnter={hoverEnter}
         onHoverLeave={hoverLeave}
@@ -470,6 +484,7 @@ export default function EditOverlays({
               abilityData={displayedAbilityData}
               selectedMoves={selectedMoves}
               moveDataSlots={moveDataSlots}
+              moveBoosts={moveBoosts}
             />
           }
           anchorRect={hoveredRect}

@@ -30,6 +30,11 @@ export type HoverKey = 'item' | 'ability' | `move${0 | 1 | 2 | 3}` | null;
 interface MoveBubbleGridProps {
   moveDataSlots: Array<MoveData | null>;
   selectedMoves: string[];
+  // Per-slot ability-boost-move multiplier (Ability-Affects-Move Indicator,
+  // see TODO.md) - null means the equipped ability doesn't boost that slot's
+  // move. Already resolved against the Mega-displayed ability by
+  // EditOverlays.tsx; this component just renders the corner badge.
+  moveBoosts: Array<number | null>;
   onToggleMenu: (key: string, e: MouseEvent<HTMLDivElement>) => void;
   onHoverEnter: (key: HoverKey, triggerEl: HTMLElement) => void;
   onHoverLeave: (key: HoverKey) => void;
@@ -51,6 +56,7 @@ interface MoveBubbleProps {
   originalIndex: number;
   theme: TypeTheme;
   label: string;
+  boosted: boolean;
   gridRef: RefObject<HTMLDivElement | null>;
   onToggleMenu: (key: string, e: MouseEvent<HTMLDivElement>) => void;
   onHoverEnter: (key: HoverKey, triggerEl: HTMLElement) => void;
@@ -63,6 +69,7 @@ function MoveBubble({
   originalIndex,
   theme,
   label,
+  boosted,
   gridRef,
   onToggleMenu,
   onHoverEnter,
@@ -127,9 +134,25 @@ function MoveBubble({
         if (!didDrag.current) onToggleMenu(key, e);
       }}
       {...longPress}
-      className={`w-full min-h-[2.75rem] flex items-center justify-center text-center whitespace-normal break-words px-0.5 py-1 rounded-xl text-xs @max-[160px]:text-[10.5px] @max-[160px]:tracking-tight @max-[160px]:px-0 font-bold transition-colors select-none ${theme.bg} ${theme.text} hover:opacity-80 cursor-grab`}
+      className={`relative w-full min-h-[2.75rem] flex items-center justify-center text-center whitespace-normal break-words px-0.5 py-1 rounded-xl text-xs @max-[160px]:text-[10.5px] @max-[160px]:tracking-tight @max-[160px]:px-0 font-bold transition-colors select-none ${theme.bg} ${theme.text} hover:opacity-80 cursor-grab`}
     >
       {label}
+      {/* Ability-boosts-this-move indicator (Ability-Affects-Move Indicator,
+          see TODO.md) - MegaFormToggleBadge's corner-circle visual language,
+          but purely informational (no click target of its own): full detail
+          is in the shared tooltip this bubble already opens on hover. */}
+      {boosted && (
+        <span
+          aria-hidden="true"
+          // border-zinc-900 (not border-accent-gold) so the badge stays
+          // legible over every type color, not just the darker bubble
+          // backgrounds - a same-tone border disappeared against Electric's
+          // bg-yellow-400 bubble (confirmed live 2026-10-23).
+          className="absolute -top-1.5 -right-1.5 z-10 w-4 h-4 flex items-center justify-center rounded-full border-2 border-zinc-900 bg-accent-gold text-zinc-900 text-[10px] font-bold leading-none pointer-events-none"
+        >
+          ↑
+        </span>
+      )}
     </motion.div>
   );
 }
@@ -137,6 +160,7 @@ function MoveBubble({
 export default function MoveBubbleGrid({
   moveDataSlots,
   selectedMoves,
+  moveBoosts,
   onToggleMenu,
   onHoverEnter,
   onHoverLeave,
@@ -202,6 +226,7 @@ export default function MoveBubbleGrid({
           originalIndex={originalIndex}
           theme={themes[originalIndex]}
           label={selectedMoves[originalIndex] || `Move ${originalIndex + 1}`}
+          boosted={moveBoosts[originalIndex] !== null}
           gridRef={gridRef}
           onToggleMenu={onToggleMenu}
           onHoverEnter={onHoverEnter}

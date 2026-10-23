@@ -29,6 +29,10 @@ interface TooltipContentProps {
   abilityData: AbilityData | null;
   selectedMoves: string[];
   moveDataSlots: Array<MoveData | null>;
+  // Per-slot ability-boost-move multiplier (Ability-Affects-Move Indicator,
+  // see TODO.md), already resolved against the Mega-displayed ability
+  // upstream - null means the equipped ability doesn't boost that slot's move.
+  moveBoosts: Array<number | null>;
 }
 
 export default function TooltipContent({
@@ -39,6 +43,7 @@ export default function TooltipContent({
   abilityData,
   selectedMoves,
   moveDataSlots,
+  moveBoosts,
 }: TooltipContentProps) {
   const [failedBadges, setFailedBadges] = useState<Record<string, boolean>>({});
 
@@ -68,6 +73,7 @@ export default function TooltipContent({
     if (!move) {
       return <div className="text-zinc-400">{selectedMoves[index] || 'No move selected'}</div>;
     }
+    const boost = moveBoosts[index];
     return (
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
@@ -102,6 +108,11 @@ export default function TooltipContent({
                 </span>
               );
             })}
+          </div>
+        )}
+        {boost !== null && (
+          <div className="text-accent-gold font-semibold">
+            {selectedAbility} boosts this move's power by {Math.round((boost - 1) * 100)}%
           </div>
         )}
         <div className="text-zinc-400">{move.description}</div>
