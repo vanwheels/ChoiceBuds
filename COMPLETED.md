@@ -91,6 +91,26 @@ Entries prior to this file's oldest are in:
   (the Type Matchup Rework milestone's three legs, split out at the
   2026-10-23 Type Matchup Rework boundary)
 
+## Team Editor & Box Fixes — Leg 2 (2026-10-23)
+
+Replaced the Box's expand-in-place interaction (reflowed the whole grid)
+with a `Modal.tsx` popup - the grid slot now always stays the collapsed
+tile. Expanded-entry editing moved into its own `BoxEntryModal.tsx`,
+mounted once by `BoxPageGrid.tsx` rather than per-card, since live
+feedback during the leg asked for prev/next navigation between entries and
+a per-card modal instance made cycling visibly close one card's popup and
+reopen the next one's; a single instance swapping its `entry` prop instead
+avoids that flicker. Also added from the same feedback pass: Escape and
+click-outside-the-card both close the popup (`Modal.tsx` gained an opt-in
+`onOverlayClick` prop, inert by default for every other modal), and
+Left/Right arrow keys or flanking sprite-preview buttons cycle prev/next
+within the box's current search-filtered order. `ContextMenu.tsx`'s
+z-index moved above `Modal.tsx`'s so a right-click inside the new popup
+still opens on top of it instead of behind its overlay. Live-verified
+across all of the above (padding/clipping, Escape, click-outside,
+prev/next cycling without flicker) on the desktop Box tab. See commit
+5f14bf4.
+
 ## Team Editor & Box Fixes — Leg 1 (2026-10-23)
 
 Fixed Roster Swap's sprite-box picker never showing Box Pokémon: it called

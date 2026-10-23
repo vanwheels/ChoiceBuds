@@ -30,13 +30,6 @@ Done when:
    `reconcileSyncedTeams`'s `normalizeIncomingSyncTeam` step, or confirmed moot
    with the finding documented either way; passes `/leg-review`.
 
-- **[Team Editor & Box Fixes] — Leg 2** *(Last touched: 2026-10-23 ·
-  Re-checks: 0)*
-  Replace the Box's expand-in-place interaction (currently shifts the whole
-  grid awkwardly) with a popup/modal. Touches Box UI only. Done check:
-  expanding a Box entry opens a modal/popup instead of reflowing the grid.
-  Review: no. Manual verification: yes (visual, Box).
-
 - **[Team Editor & Box Fixes] — Leg 3** *(Last touched: 2026-10-23 ·
   Re-checks: 0)*
   Remove the irrelevant Aegislash blade/shield and Maushold family-size form
