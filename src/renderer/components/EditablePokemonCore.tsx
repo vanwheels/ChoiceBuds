@@ -141,40 +141,55 @@ export default function EditablePokemonCore({
   // Stone - see config/megaEvolution.ts for the verified stone->species map.
   const megaApiSlug = getMegaApiSlug(showdownData.item, showdownData.species);
   const megaSprite = useMegaSprite(megaApiSlug);
-  const staticSpriteUrl = megaSprite
-    ? isLocalShiny
-      ? megaSprite.shinySpriteUrl
-      : megaSprite.spriteUrl
-    : spriteUrl;
 
-  // Showdown's sprite roster can lag official reveals (a newly-added Mega,
-  // in particular) - onError below records this exact URL as failed so the
-  // card degrades to the static PNG instead of a broken image.
-  const animatedCandidateUrl = showAnimatedSprites
-    ? getAnimatedSpriteUrl(megaApiSlug || showdownData.species, localGender || 'M', isLocalShiny)
-    : null;
-  const useAnimated = animatedCandidateUrl !== null && animatedCandidateUrl !== failedAnimatedUrl;
-  const displaySpriteUrl = useAnimated ? animatedCandidateUrl : staticSpriteUrl;
-
-  // Mega Team Card Flip (Leg 2, see TODO.md): a separate toggle from the
-  // always-on sprite swap above - holding the stone makes the Mega icon
-  // available (megaApiSlug non-null), but the ability/stats/typing panel
-  // only shows the Mega's own values while this slot's own toggle is
-  // actively pointed at that same slug. activeMegaSlug stays non-null only
-  // in that exact case, letting every override below derive from one value
+  // Mega Team Card Flip (Leg 2, see TODO.md): the shared per-slot toggle -
+  // read here, before the sprite derivations below, since Leg 3's Aegislash
+  // flip (unlike Mega's always-on-while-held sprite swap) needs it to decide
+  // the sprite too, not just the stats panel. activeMegaSlug stays non-null
+  // only while the stone is held AND this slot's toggle actively points at
+  // that same slug, letting every Mega override below derive from one value
   // instead of repeating the `megaApiSlug !== null && activeForm ===
   // megaApiSlug` check.
   const { activeForm, toggleActiveForm } = usePokemonFormToggle(pokemon.id);
   const activeMegaSlug = megaApiSlug !== null && activeForm === megaApiSlug ? megaApiSlug : null;
-  const displayedTypes = activeMegaSlug && megaSprite?.types ? megaSprite.types : types;
 
-  // Aegislash Form Toggle in Team Builder (see TODO.md) - Blade/Shield only
-  // ever swaps stats (ability stays Stance Change, typing stays Steel/Ghost
-  // in both formes), so unlike the Mega flip above this only ever touches
-  // displayedBaseStats/displayedSpeciesForStats, never displayedTypes.
+  // Aegislash Form Toggle in Team Builder (Leg 3, see TODO.md): Blade/Shield
+  // is a display-time stance, not item-driven like Mega, so its sprite only
+  // flips while this slot's toggle is actively pointed at Blade - there's no
+  // Mega-style "always shown while holding X" state for it. Reuses
+  // useMegaSprite's generic PokeAPI-slug fetch (id/sprite/types/baseStats)
+  // since Aegislash-Blade has its own ordinary PokeAPI resource, the same as
+  // a real Mega form's distinct id.
   const isAegislashSlot = isAegislash(showdownData.species);
   const isAegislashBladeActive = isAegislashSlot && activeForm === AEGISLASH_BLADE_FORM;
+  const aegislashBladeSprite = useMegaSprite(isAegislashSlot ? AEGISLASH_BLADE_FORM : null);
 
+  const staticSpriteUrl = megaSprite
+    ? isLocalShiny
+      ? megaSprite.shinySpriteUrl
+      : megaSprite.spriteUrl
+    : isAegislashBladeActive && aegislashBladeSprite
+      ? isLocalShiny
+        ? aegislashBladeSprite.shinySpriteUrl
+        : aegislashBladeSprite.spriteUrl
+      : spriteUrl;
+
+  // Showdown's sprite roster can lag official reveals (a newly-added Mega,
+  // in particular) - onError below records this exact URL as failed so the
+  // card degrades to the static PNG instead of a broken image.
+  const animatedSpeciesSlug =
+    megaApiSlug || (isAegislashBladeActive ? AEGISLASH_BLADE_FORM : showdownData.species);
+  const animatedCandidateUrl = showAnimatedSprites
+    ? getAnimatedSpriteUrl(animatedSpeciesSlug, localGender || 'M', isLocalShiny)
+    : null;
+  const useAnimated = animatedCandidateUrl !== null && animatedCandidateUrl !== failedAnimatedUrl;
+  const displaySpriteUrl = useAnimated ? animatedCandidateUrl : staticSpriteUrl;
+
+  const displayedTypes = activeMegaSlug && megaSprite?.types ? megaSprite.types : types;
+
+  // Blade/Shield only ever swaps stats and sprite - ability stays Stance
+  // Change and typing stays Steel/Ghost in both formes - so unlike the Mega
+  // flip above, isAegislashBladeActive never touches displayedTypes.
   const displayedBaseStats =
     activeMegaSlug && megaSprite?.baseStats
       ? megaSprite.baseStats

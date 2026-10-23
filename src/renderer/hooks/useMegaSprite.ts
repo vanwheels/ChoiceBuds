@@ -1,10 +1,16 @@
 /**
- * useMegaSprite Hook - Live Mega Form Sprite Lookup
+ * useMegaSprite Hook - Live Mega/Alt-Form Sprite Lookup
  * Given a PokeAPI resource slug (e.g. "gengar-mega", "charizard-mega-x"),
  * fetches that Pokémon's real `id` and derives its sprite URLs from it -
  * Mega forms live at their own distinct PokeAPI id (e.g. Mega Venusaur is
  * 10033, not a suffixed filename off Venusaur's own id 3), so this can't be
  * computed locally the way the base/female sprite variants are.
+ *
+ * Not strictly Mega-only despite the name: EditablePokemonCore.tsx also
+ * calls this with "aegislash-blade" for the Aegislash Form Toggle (Leg 3,
+ * see TODO.md) - that forme has its own ordinary PokeAPI resource at a
+ * distinct id too, same shape as a real Mega form, so the generic fetch/
+ * cache below works unchanged for it.
  *
  * Species newly added to Mega Evolution by Pokémon Champions mostly have no
  * PokeAPI resource yet, so a 404 here is expected and just means "no mega
