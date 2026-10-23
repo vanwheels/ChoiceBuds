@@ -30,17 +30,6 @@ Done when:
    `reconcileSyncedTeams`'s `normalizeIncomingSyncTeam` step, or confirmed moot
    with the finding documented either way; passes `/leg-review`.
 
-- **[Team Editor & Box Fixes] — Leg 4** *(Last touched: 2026-10-23 ·
-  Re-checks: 0)*
-  Gate the Mega sprite (`EditablePokemonCore.tsx`'s `useMegaSprite`) on
-  `activeMegaSlug`, same as `displayedTypes`/`displayedBaseStats`/
-  `megaAbilityName`/Type Matchup coverage, instead of showing it
-  unconditionally whenever a Mega Stone is held. One toggle should control
-  every visible property together. Done check: holding a Mega Stone shows
-  base sprite/types/stats until the toggle is on, then all switch together;
-  Aegislash's existing toggle-gated sprite behavior unaffected. Review: no.
-  Manual verification: yes (visual, team card + Type Matchup).
-
 - **[Team Editor & Box Fixes] — Leg 5** *(Last touched: 2026-10-23 ·
   Re-checks: 0)*
   `reconcileSyncedSavedPokemon` never runs an incoming sync record through

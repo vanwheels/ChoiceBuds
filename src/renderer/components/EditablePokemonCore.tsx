@@ -164,21 +164,23 @@ export default function EditablePokemonCore({
   const isAegislashBladeActive = isAegislashSlot && activeForm === AEGISLASH_BLADE_FORM;
   const aegislashBladeSprite = useMegaSprite(isAegislashSlot ? AEGISLASH_BLADE_FORM : null);
 
-  const staticSpriteUrl = megaSprite
-    ? isLocalShiny
-      ? megaSprite.shinySpriteUrl
-      : megaSprite.spriteUrl
-    : isAegislashBladeActive && aegislashBladeSprite
+  const staticSpriteUrl =
+    activeMegaSlug && megaSprite
       ? isLocalShiny
-        ? aegislashBladeSprite.shinySpriteUrl
-        : aegislashBladeSprite.spriteUrl
-      : spriteUrl;
+        ? megaSprite.shinySpriteUrl
+        : megaSprite.spriteUrl
+      : isAegislashBladeActive && aegislashBladeSprite
+        ? isLocalShiny
+          ? aegislashBladeSprite.shinySpriteUrl
+          : aegislashBladeSprite.spriteUrl
+        : spriteUrl;
 
   // Showdown's sprite roster can lag official reveals (a newly-added Mega,
   // in particular) - onError below records this exact URL as failed so the
   // card degrades to the static PNG instead of a broken image.
   const animatedSpeciesSlug =
-    megaApiSlug || (isAegislashBladeActive ? AEGISLASH_BLADE_FORM : showdownData.species);
+    (activeMegaSlug ? megaApiSlug : null) ||
+    (isAegislashBladeActive ? AEGISLASH_BLADE_FORM : showdownData.species);
   const animatedCandidateUrl = showAnimatedSprites
     ? getAnimatedSpriteUrl(animatedSpeciesSlug, localGender || 'M', isLocalShiny)
     : null;

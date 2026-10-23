@@ -91,6 +91,19 @@ Entries prior to this file's oldest are in:
   (the Type Matchup Rework milestone's three legs, split out at the
   2026-10-23 Type Matchup Rework boundary)
 
+## Team Editor & Box Fixes — Leg 4 (2026-10-23)
+
+Gated `EditablePokemonCore.tsx`'s Mega sprite (`staticSpriteUrl`/
+`animatedSpeciesSlug`) on `activeMegaSlug`, matching how
+`displayedTypes`/`displayedBaseStats`/`megaAbilityName` already worked -
+previously the sprite swapped to the Mega form as soon as a Mega Stone was
+held, before the toggle, while those other properties correctly waited for
+it. Live-verified: holding a Mega Stone now shows the base sprite/types/
+stats until the toggle is switched on, then sprite/types/stats/Type
+Matchup coverage all switch together, checked against both Golisopod
+(previously broken) and Aegislash (Blade/Shield toggle unaffected). See
+commit <hash>.
+
 ## Team Editor & Box Fixes — Leg 3 (2026-10-23)
 
 Removed the Aegislash Blade/Shield and Maushold Family-Of-Four/-Three form
