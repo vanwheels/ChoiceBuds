@@ -30,23 +30,6 @@ Done when:
    `reconcileSyncedTeams`'s `normalizeIncomingSyncTeam` step, or confirmed moot
    with the finding documented either way; passes `/leg-review`.
 
-- **[Team Editor & Box Fixes] — Leg 1** *(Last touched: 2026-10-23 ·
-  Re-checks: 0)*
-  Fix: swapping an existing team Pokémon via its sprite box opens the Add
-  Pokémon picker with Box Pokémon excluded, when it shouldn't be. Touches the
-  team editor / add-Pokémon-picker flow only. Done check: swapping via sprite
-  box shows Box Pokémon in the picker, same as adding a new slot does.
-  Review: no. Manual verification: yes (functional, team editor) - code
-  fixed and type-check/lint/tests pass; awaiting live confirmation.
-  Root cause: `PokemonCard.tsx`'s Roster Swap picker called
-  `AddPokemonStatTable` without its optional `savedPokemon`/`onSelectSaved`
-  pair, so its "From Box" section never rendered for that flow - unlike
-  `TeamCard.tsx`'s trailing "+ Add Pokémon" picker, which already passed
-  both. Fixed by adding a `swapSavedPokemon` list (same Species Clause
-  filter as `TeamCard.tsx`'s `addPickerSavedPokemon`, measured against
-  `otherTeamSpecies`) and a `handleSwapFromBox` handler
-  (`rosterActions.loadSavedSet`) wired into that same call.
-
 - **[Team Editor & Box Fixes] — Leg 2** *(Last touched: 2026-10-23 ·
   Re-checks: 0)*
   Replace the Box's expand-in-place interaction (currently shifts the whole

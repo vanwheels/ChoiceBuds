@@ -90,3 +90,14 @@ Entries prior to this file's oldest are in:
 - [docs/archive/completed-2026-10-23-to-2026-10-23.md](docs/archive/completed-2026-10-23-to-2026-10-23.md)
   (the Type Matchup Rework milestone's three legs, split out at the
   2026-10-23 Type Matchup Rework boundary)
+
+## Team Editor & Box Fixes — Leg 1 (2026-10-23)
+
+Fixed Roster Swap's sprite-box picker never showing Box Pokémon: it called
+`AddPokemonStatTable` without the `savedPokemon`/`onSelectSaved` pair
+`TeamCard.tsx`'s own "+ Add Pokémon" picker already passed, so its "From
+Box" section never rendered there. Mirrored that picker's Species
+Clause-filtered saved-pokemon list and wired it through
+`rosterActions.loadSavedSet`. Live-verified: swapping via the sprite box
+now shows a "From Box" section with Box Pokémon, same as adding a new
+slot. See commit c143a34.
