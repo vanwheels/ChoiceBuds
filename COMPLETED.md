@@ -102,7 +102,7 @@ it. Live-verified: holding a Mega Stone now shows the base sprite/types/
 stats until the toggle is switched on, then sprite/types/stats/Type
 Matchup coverage all switch together, checked against both Golisopod
 (previously broken) and Aegislash (Blade/Shield toggle unaffected). See
-commit <hash>.
+commit 2e52eec101ab5d8b90947858fd7224998a443fc5.
 
 ## Team Editor & Box Fixes — Leg 3 (2026-10-23)
 
