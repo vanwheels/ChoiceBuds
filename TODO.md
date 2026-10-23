@@ -32,16 +32,6 @@ Done when:
   ability/moves instead of the base form; with no active form, behavior is
   unchanged.
 
-- **[Type Matchup Rework] — Leg 1** *(Last touched: 2026-10-23 ·
-  Re-checks: 0)*
-  Magnitude-graded coverage cell coloring. `CoverageCell.tsx` currently
-  maps every favorable multiplier to one green and every unfavorable
-  multiplier to one orange, losing the 2x vs. 4x / 0.5x vs. 0.25x/immune
-  distinction. Add intensity tiers within each color. Single file, pure
-  display logic. Done check: Offensive and Defensive tables both show
-  distinct shades per multiplier tier, not just per favorable/unfavorable
-  side. Review: no. Manual verification: yes.
-
 - **[Type Matchup Rework] — Leg 2** *(Last touched: 2026-10-23 ·
   Re-checks: 0)*
   Retire Team Gap Analysis, add Coverage Gaps view. Remove

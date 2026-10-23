@@ -87,3 +87,17 @@ Entries prior to this file's oldest are in:
 - [docs/archive/completed-2026-10-22-to-2026-10-22.md](docs/archive/completed-2026-10-22-to-2026-10-22.md)
   (the Mega & Alt-Form Representation milestone's four legs, split out at
   the 2026-10-22 Mega & Alt-Form Representation boundary)
+
+## Type Matchup Rework
+
+- **[Type Matchup Rework] — Leg 1** (2026-10-23)
+  Graded `CoverageCell.tsx`'s coverage cells by magnitude instead of one
+  flat color per favorable/unfavorable side: green/blue for mild/extreme
+  favorable, orange/red for mild/extreme unfavorable, with immune staying
+  a neutral gray badge regardless of direction. Also recolored
+  `CoverageTable.tsx`'s aggregate Weak/Resist and Not Very
+  Effective/Super Effective count badges to threshold-color by count (0 /
+  1-2 / 3+) after live feedback flagged they'd been missed in the first
+  pass. Manually verified live in the running app across two feedback
+  rounds (color distinction, then threshold boundaries). See commit
+  2878045.
