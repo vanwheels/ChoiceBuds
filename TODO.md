@@ -16,6 +16,65 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
+## Current Milestone: Team Editor & Box Fixes
+
+Done when:
+1. All three originally-scoped items (Box-exclusion bug in the swap-via-sprite-box
+   picker, Box expand-in-place → modal, Aegislash/Maushold form-picker stripped
+   from battle-logger opponent selection) are fixed and live-verified.
+2. Mega sprite display is unified with toggle state — sprite, types, stats,
+   ability, and Type Matchup coverage all gate together on `activeMegaSlug` —
+   live-verified against Golisopod (currently broken) and Aegislash (must stay
+   correct).
+3. The `useSavedPokemon` sync migration gap is either fixed to mirror
+   `reconcileSyncedTeams`'s `normalizeIncomingSyncTeam` step, or confirmed moot
+   with the finding documented either way; passes `/leg-review`.
+
+- **[Team Editor & Box Fixes] — Leg 1** *(Last touched: 2026-10-23 ·
+  Re-checks: 0)*
+  Fix: swapping an existing team Pokémon via its sprite box opens the Add
+  Pokémon picker with Box Pokémon excluded, when it shouldn't be. Touches the
+  team editor / add-Pokémon-picker flow only. Done check: swapping via sprite
+  box shows Box Pokémon in the picker, same as adding a new slot does.
+  Review: no. Manual verification: yes (functional, team editor).
+
+- **[Team Editor & Box Fixes] — Leg 2** *(Last touched: 2026-10-23 ·
+  Re-checks: 0)*
+  Replace the Box's expand-in-place interaction (currently shifts the whole
+  grid awkwardly) with a popup/modal. Touches Box UI only. Done check:
+  expanding a Box entry opens a modal/popup instead of reflowing the grid.
+  Review: no. Manual verification: yes (visual, Box).
+
+- **[Team Editor & Box Fixes] — Leg 3** *(Last touched: 2026-10-23 ·
+  Re-checks: 0)*
+  Remove the irrelevant Aegislash blade/shield and Maushold family-size form
+  picker from opponent-team selection in the battle logger — Aegislash always
+  defaults to Shield there (correct), the picker is just noise. Touches battle
+  logger opponent-selection UI only. Done check: opponent-team selection no
+  longer shows either form picker; Aegislash still defaults to Shield.
+  Review: no. Manual verification: yes (visual, battle logger).
+
+- **[Team Editor & Box Fixes] — Leg 4** *(Last touched: 2026-10-23 ·
+  Re-checks: 0)*
+  Gate the Mega sprite (`EditablePokemonCore.tsx`'s `useMegaSprite`) on
+  `activeMegaSlug`, same as `displayedTypes`/`displayedBaseStats`/
+  `megaAbilityName`/Type Matchup coverage, instead of showing it
+  unconditionally whenever a Mega Stone is held. One toggle should control
+  every visible property together. Done check: holding a Mega Stone shows
+  base sprite/types/stats until the toggle is on, then all switch together;
+  Aegislash's existing toggle-gated sprite behavior unaffected. Review: no.
+  Manual verification: yes (visual, team card + Type Matchup).
+
+- **[Team Editor & Box Fixes] — Leg 5** *(Last touched: 2026-10-23 ·
+  Re-checks: 0)*
+  `reconcileSyncedSavedPokemon` never runs an incoming sync record through
+  `normalizeSavedPokemon`/`bumpUpdatedAtForFixedEntries` before it can win a
+  merge or get appended, unlike `reconcileSyncedTeams`. Fix by mirroring
+  `normalizeIncomingSyncTeam`, or confirm no still-live pre-migration devices
+  make this moot — document the finding either way. Done check: fix applied
+  and tested, or moot-confirmation documented in TODO.md/COMPLETED.md.
+  Review: yes (sync reconciliation). Manual verification: no.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -44,29 +103,6 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-- **[Unify Mega Sprite Display With Toggle State] — Leg 1** *(Last touched:
-  2026-10-23 · Re-checks: 0)*
-  Found live 2026-10-23 via Type Matchup Rework's close-out: `EditablePokemonCore.tsx`'s
-  Mega sprite (`megaSprite = useMegaSprite(megaApiSlug)`, keyed only on held
-  item + species) has been "always-on while held" since before Mega & Alt-
-  Form Representation's Leg 2 — that milestone's post mortem notes the
-  sprite swap was already always-on and untouched by that leg. But
-  `displayedTypes`/`displayedBaseStats`/`megaAbilityName` (Leg 2's own
-  work) and Type Matchup Rework's coverage tables (Leg 3) all correctly
-  gate on `activeMegaSlug`, which requires `usePokemonFormToggle`'s toggle
-  to be explicitly on. Net effect: a Pokémon holding a Mega Stone shows its
-  Mega sprite unconditionally while its type badges/stats/ability/Type
-  Matchup coverage stay on base form until the toggle is flipped —
-  confirmed live with Golisopod (Mega sprite visible, Type Matchup still
-  showing base Bug/Water, not Mega Bug/Steel). Reverses the "always show
-  Mega sprite when holding stone" decision: gate the sprite the same way
-  as everything else (`activeMegaSlug`), one toggle controlling every
-  visible property together. Done check: holding a Mega Stone shows the
-  base sprite/types/stats until the toggle is turned on, then sprite,
-  types, stats, ability, and Type Matchup coverage all switch together;
-  verify Aegislash's existing toggle-gated sprite behavior is unaffected.
-  Review: no. Manual verification: yes (visual, team card + Type Matchup).
-
 - **[Ability-Affects-Move Indicator: Scoping] — Leg 1** *(Last touched:
   2026-10-22 · Re-checks: 0)*
   From the 2026-10-22 discussion pass: an in-UI indicator for when a
@@ -78,21 +114,6 @@ unblocked.
   Done check: a scope doc exists covering data shape and which UI
   surface(s) show the indicator; no code yet. Review: no. Manual
   verification: no.
-
-- **[useSavedPokemon Sync Doesn't Migrate Incoming Records] — Leg 1**
-  *(Last touched: 2026-10-19 · Re-checks: 0)*
-  Found during Split useSavedPokemon.ts's `/leg-review`:
-  `reconcileSyncedSavedPokemon` (utils/savedPokemonSyncReconciliation.ts)
-  never runs an incoming sync `records` entry through
-  normalizeSavedPokemon/bumpUpdatedAtForFixedEntries before it can win a
-  merge or get appended, unlike `reconcileSyncedTeams`'s
-  normalizeIncomingSyncTeam step on the Teams side - a pre-migration
-  device's stale data can land (and get persisted) here. Pre-existing gap,
-  not introduced by that split. See
-  `.claude/rules/sync-merge-migration-parity.md`. Done check: either fix
-  (mirror normalizeIncomingSyncTeam) or confirm no still-live pre-migration
-  devices make this moot, with the finding written down either way. Review:
-  yes (sync reconciliation). Manual verification: no.
 
 (The four items previously listed here were bundled into the Profile Social
 Scoping & Maintenance milestone on 2026-10-19, now shipped; see
@@ -164,8 +185,10 @@ build for a pattern with only one real example today.
 Mega & Alt-Form Representation was promoted to current and shipped the
 same day (see `MILESTONES.md`) - its toggle state (`usePokemonFormToggle`)
 is now consumable by Type Matchup Rework. Type Matchup Rework was itself
-promoted to current 2026-10-23 (see above). The other four, to be scoped
-in turn:
+promoted to current 2026-10-23 (see above), and Team Editor & Box Fixes was
+promoted to current 2026-10-23 (see above), bundling in two Unscheduled bug
+fixes found since the pass (Mega sprite/toggle gating, useSavedPokemon sync
+migration gap). The remaining three, to be scoped in turn:
 
 - **Search & Filter: Tag-Chip Redesign** — replace the `#`-prefixed text
   search (team builder, Box, add-Pokémon flows) with Showdown-style
@@ -186,13 +209,4 @@ in turn:
   the calc; default-highlight and auto-display damage rolls for the
   faster Pokémon's highest-damaging move when two Pokémon are selected;
   item/Pokémon sprites in the calc UI (lowest priority of the three).
-- **Team Editor & Box Fixes** — fix the bug where swapping an existing
-  team Pokémon via its sprite box excludes Box Pokémon from the Add
-  Pokémon picker (it shouldn't); switch the Box's expand-in-place
-  (currently shifts the whole grid awkwardly) to a popup/modal; strip the
-  irrelevant Aegislash blade/shield and Maushold family-size form picker
-  from opponent-team selection in the battle logger (unrelated quick fix,
-  not the Aegislash toggle feature above — Aegislash always defaults to
-  Shield there and that's correct, the split is just noise in that
-  specific picker).
 
