@@ -16,6 +16,64 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
+## Current Milestone: Mega & Alt-Form Representation
+
+Six candidate milestones came out of a 2026-10-22 feedback/discussion pass
+(see that session for full reasoning); this one was picked to go first
+because Type Matchup Rework (below, in Future Milestones) depends on its
+toggle state. The other five are summarized under Future Milestones below.
+Planned via `/plan-milestone` 2026-10-22; Unscheduled triage found nothing
+to bundle (both items there are unrelated systems, neither past the
+re-check limit).
+
+Done when:
+- A shared per-Pokémon mega/alt-form toggle exists and is consumed by the
+  team card, team builder, and battle logger.
+- Toggling a held mega stone's icon flips the team card to show that
+  Mega's ability/stats/typing (existing mega sprite display untouched),
+  verified live on a stat/ability/type-changing Mega.
+- Aegislash's Blade/Shield can be toggled in the team builder (defaulting
+  to Shield, matching in-game start state) and a battle log entry can
+  mark a Pokémon as mega-evolved with exactly one extra input.
+
+- **[Mega & Alt-Form Toggle State] — Leg 1** *(Last touched: 2026-10-22 ·
+  Re-checks: 0)*
+  Design and build the shared per-Pokémon toggle state for "currently
+  mega-evolved" / "currently in an alternate form" (starting with Aegislash
+  blade/shield), living alongside the existing team/saved-Pokémon hooks.
+  This is the foundation Legs 2-4 below and the separate Type Matchup
+  Rework milestone consume — get the state shape and hook API settled
+  before any UI reads from it. Done check: toggle state is readable/
+  settable through a hook, with unit tests on the state transitions.
+  Review: no. Manual verification: no (no UI yet).
+
+- **[Mega Team Card Flip] — Leg 2** *(Last touched: 2026-10-22 ·
+  Re-checks: 0)*
+  Show a mega icon next to a Pokémon's item slot when it holds the
+  matching mega stone; toggling it flips the team card to show the mega's
+  ability, stats, and typing in place of the base form, using Leg 1's
+  toggle state. Keep the existing always-on mega sprite display as-is —
+  only the stat/ability/typing panel flips. Done check: flip verified live
+  for at least one Mega with a stat/ability/type change (e.g., Mega
+  Charizard X). Review: no. Manual verification: yes (visual).
+
+- **[Aegislash Form Toggle in Team Builder] — Leg 3** *(Last touched:
+  2026-10-22 · Re-checks: 0)*
+  Expose a Blade/Shield toggle for Aegislash in the team builder using
+  Leg 1's toggle state, defaulting to Shield per existing behavior.
+  Confirm this doesn't disturb the calc/team-building Aegislash defaults
+  already locked in from prior work. Done check: toggle changes displayed
+  ability/stats, default stays Shield on a fresh add. Review: no. Manual
+  verification: yes.
+
+- **[Battle Log Mega-Evolved Note] — Leg 4** *(Last touched: 2026-10-22 ·
+  Re-checks: 0)*
+  Add exactly one additional input to the battle logger for marking a
+  Pokémon as mega-evolved during a battle. Done check: a mon can be marked
+  mega-evolved and that shows up in the log entry/summary. Review: yes
+  (adds a field to persisted, synced battle-log data). Manual
+  verification: yes.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -43,6 +101,18 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+- **[Ability-Affects-Move Indicator: Scoping] — Leg 1** *(Last touched:
+  2026-10-22 · Re-checks: 0)*
+  From the 2026-10-22 discussion pass: an in-UI indicator for when a
+  Pokémon's ability boosts/affects a specific move (e.g. Iron Fist boosting
+  Fire Punch but not Close Combat), so that's visible without leaving the
+  app to check Serebii/the calc. Scoping only — needs a data-layer design
+  pass (likely a new per-ability-per-move applicability table alongside the
+  existing curated effect tables in `config/`) before any build leg is cut.
+  Done check: a scope doc exists covering data shape and which UI
+  surface(s) show the indicator; no code yet. Review: no. Manual
+  verification: no.
 
 - **[useSavedPokemon Sync Doesn't Migrate Incoming Records] — Leg 1**
   *(Last touched: 2026-10-19 · Re-checks: 0)*
@@ -124,4 +194,45 @@ already uses, since it needs a dynamic path segment `web/download/`
 doesn't) once a second public dynamic route actually gets built - e.g.
 public team displays not tied to a profile. Not worth restructuring the
 build for a pattern with only one real example today.
+
+2026-10-22 feedback/discussion pass produced six candidate milestones;
+Mega & Alt-Form Representation was promoted to current above. The other
+five, to be scoped in turn after that one ships and gets evaluated:
+
+- **Search & Filter: Tag-Chip Redesign** — replace the `#`-prefixed text
+  search (team builder, Box, add-Pokémon flows) with Showdown-style
+  multi-select chips (type/move/ability/tier/egg group/...). Folds in two
+  bugs as side effects of the new model rather than separate patches:
+  `#`-filtered searches currently exclude Mega evolutions from results
+  (e.g. `#dragon` should surface Mega Charizard X), and single-text search
+  can't disambiguate a term that's both a type and a move name (`#psychic`
+  as type vs. the move Psychic).
+- **Type Matchup Rework** — color-code Not Very Effective/Super
+  Effective/Total Weak/Total Resist by magnitude instead of one flat color
+  per category; retire Team Gap Analysis (concluded 2026-10-22 it can't
+  convey trustworthy information given set variance, Mega/Tera, and
+  dynamic game state) in favor of an objective shared-weakness/resistance
+  coverage view; wire in the Mega & Alt-Form Representation milestone's
+  toggle state so matchups reflect Mega typing/ability changes (e.g.
+  Aerilate). Depends on that milestone's Leg 1 toggle state.
+- **Selection UX & Data Audit** — two different-kind legs, not one: (a)
+  stop truncating move/ability/item descriptions in selection dropdowns —
+  currently only the full text shows, and only after the fact on hover
+  once already added to a Pokémon; (b) audit curated move/ability
+  description coverage for gaps (Upper Hand flagged as missing; verify
+  exact names before auditing further — "Temper Flare" as given doesn't
+  match a known Gen 9 move/ability).
+- **Calc Improvements** — highlight the selected Pokémon's sprite box in
+  the calc; default-highlight and auto-display damage rolls for the
+  faster Pokémon's highest-damaging move when two Pokémon are selected;
+  item/Pokémon sprites in the calc UI (lowest priority of the three).
+- **Team Editor & Box Fixes** — fix the bug where swapping an existing
+  team Pokémon via its sprite box excludes Box Pokémon from the Add
+  Pokémon picker (it shouldn't); switch the Box's expand-in-place
+  (currently shifts the whole grid awkwardly) to a popup/modal; strip the
+  irrelevant Aegislash blade/shield and Maushold family-size form picker
+  from opponent-team selection in the battle logger (unrelated quick fix,
+  not the Aegislash toggle feature above — Aegislash always defaults to
+  Shield there and that's correct, the split is just noise in that
+  specific picker).
 
