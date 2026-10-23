@@ -190,7 +190,7 @@ export function getMegaApiSlug(heldItem: string | undefined, species: string): s
  * ability panel), hooks/useTeamMoveTypes.ts (Offensive Coverage's move-type
  * resolution), and TypeMatchupPage.tsx's `defensiveSlots` (Defensive
  * Coverage) all resolve the same slug this way - factored out here (Type
- * Matchup Rework Leg 3, see TODO.md) so the rule lives in exactly one place
+ * Matchup Rework Leg 3, see COMPLETED.md) so the rule lives in exactly one place
  * instead of each surface re-deriving `getMegaApiSlug(...) === activeForm`
  * on its own.
  */

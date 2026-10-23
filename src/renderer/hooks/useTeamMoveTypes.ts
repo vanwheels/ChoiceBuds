@@ -13,7 +13,7 @@
  * being returned, so Offensive Coverage reflects what the move actually
  * hits with rather than its unmodified listed type.
  *
- * `activeForms` (Type Matchup Rework Leg 3, see TODO.md) is the team's
+ * `activeForms` (Type Matchup Rework Leg 3, see COMPLETED.md) is the team's
  * per-slot Mega/Alt-Form toggle state (`usePokemonFormToggle`, read via
  * `useActiveFormsForIds` since Rules of Hooks forbids calling the
  * single-id hook itself inside this file's own `team.pokemon.map()`). A
@@ -24,7 +24,12 @@
  * stored base ability - e.g. an active Aerilate Mega's Normal-type moves
  * report as Flying. Aegislash's Blade/Shield toggle never needs this: per
  * EditablePokemonCore.tsx, that forme change never touches the equipped
- * ability (Stance Change either way).
+ * ability (Stance Change either way). Defaults to the shared
+ * `EMPTY_ACTIVE_FORMS` constant, not a fresh `{}` literal - a per-call
+ * default expression would hand every omitted-argument caller a new object
+ * identity each render, which sits in this hook's own effect dependency
+ * array below and would never stabilize (confirmed live in `/leg-review`:
+ * 14,514 `getMoveData` calls in ~160ms from exactly that).
  *
  * `isLoading` is derived (whether the currently-selected team's id has been
  * resolved yet), not a separate state var set synchronously at the top of
@@ -45,10 +50,13 @@ export interface UseTeamMoveTypesReturn {
   isLoading: boolean;
 }
 
+/** Stable shared reference for the omitted-`activeForms` default - see this file's header comment for why a fresh `{}` literal default would be a bug. */
+const EMPTY_ACTIVE_FORMS: Record<string, string | null> = {};
+
 export function useTeamMoveTypes(
   team: Team | undefined,
   gameDataState: UseGameDataReturn,
-  activeForms: Record<string, string | null> = {},
+  activeForms: Record<string, string | null> = EMPTY_ACTIVE_FORMS,
 ): UseTeamMoveTypesReturn {
   const { getMoveData } = gameDataState;
   const [moveTypesByPokemon, setMoveTypesByPokemon] = useState<string[][]>([]);

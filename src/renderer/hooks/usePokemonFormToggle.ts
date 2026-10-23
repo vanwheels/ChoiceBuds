@@ -107,7 +107,7 @@ export function usePokemonFormToggle(pokemonId: string): PokemonFormToggle {
 /**
  * Subscribes to several roster slots' active-form state at once, keyed by
  * their own `pokemonId`s - the shape Type Matchup Rework's coverage tables
- * need (Leg 3, see TODO.md), where Rules of Hooks forbids calling
+ * need (Leg 3, see COMPLETED.md), where Rules of Hooks forbids calling
  * `usePokemonFormToggle` itself once per slot inside a `team.pokemon.map()`
  * over a dynamic-length roster.
  *

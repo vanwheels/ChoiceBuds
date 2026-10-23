@@ -157,6 +157,23 @@ describe('useTeamMoveTypes', () => {
     expect(result.current.moveTypesByPokemon).toEqual([['flying']]);
   });
 
+  it('does not refetch on every render when activeForms is omitted (stable default, not a fresh {} per call)', async () => {
+    const getMoveData = vi.fn(() => Promise.resolve(makeMove('Tackle', 'normal', 'physical')));
+    const gameData = makeGameData(getMoveData);
+    const team = makeTeam([makePokemon({ moves: ['Tackle'] })]);
+    const { result, rerender } = renderHook(() => useTeamMoveTypes(team, gameData));
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    const callsAfterSettling = getMoveData.mock.calls.length;
+
+    rerender();
+    rerender();
+    rerender();
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(getMoveData.mock.calls.length).toBe(callsAfterSettling);
+  });
+
   it("ignores a toggle pointed at a form that is not this slot's own Mega", async () => {
     const getMoveData = vi.fn(() => Promise.resolve(makeMove('Tackle', 'normal', 'physical')));
     const gameData = makeGameData(getMoveData);

@@ -14,7 +14,7 @@
  * when Type Matchup Rework retired its Team Gap Analysis panel in favor of
  * CoverageGapsPanel.tsx's per-type shared-weakness/resistance view).
  *
- * `resolveDefensiveSlot` (Type Matchup Rework Leg 3, see TODO.md) overrides a
+ * `resolveDefensiveSlot` (Type Matchup Rework Leg 3, see COMPLETED.md) overrides a
  * `DefendingSlot` with an active Mega form's own typing/ability -
  * `@smogon/calc`'s species dex (`gen.species.get`) is the only source in this
  * codebase for a Mega form's types (PokeAPI has no entry for them - see

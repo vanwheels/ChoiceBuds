@@ -16,7 +16,7 @@
  * `getDefensiveMultiplier`.
  *
  * Both tables also account for an active Mega toggle (Type Matchup Rework
- * Leg 3, see TODO.md): `useActiveFormsForIds` reads every selected team
+ * Leg 3, see COMPLETED.md): `useActiveFormsForIds` reads every selected team
  * slot's `usePokemonFormToggle` state at once (Rules of Hooks forbids
  * calling that hook itself inside this file's own `team.pokemon.map()`
  * calls), and `config/megaEvolution.ts`'s `resolveActiveMegaSlug` +
