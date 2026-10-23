@@ -16,6 +16,63 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
+## Current Milestone: Type Matchup Rework
+
+Done when:
+- Offensive/Defensive coverage cells are colored by magnitude (4x/immune
+  distinct from 2x/0.5) instead of one flat color per favorable/unfavorable
+  side.
+- The Team Gap Analysis panel (ladder-usage-threat heuristic) is removed
+  from the Type Matchup page, replaced by an objective shared-weakness/
+  resistance coverage view built from the coverage tables' own per-type
+  counts - no residual references to `usageThreats.ts`/
+  `usageCoverageGaps.ts` from this page.
+- When a team slot has an active Mega/alt-form (`usePokemonFormToggle`),
+  both Offensive and Defensive coverage reflect that form's typing/
+  ability/moves instead of the base form; with no active form, behavior is
+  unchanged.
+
+- **[Type Matchup Rework] — Leg 1** *(Last touched: 2026-10-23 ·
+  Re-checks: 0)*
+  Magnitude-graded coverage cell coloring. `CoverageCell.tsx` currently
+  maps every favorable multiplier to one green and every unfavorable
+  multiplier to one orange, losing the 2x vs. 4x / 0.5x vs. 0.25x/immune
+  distinction. Add intensity tiers within each color. Single file, pure
+  display logic. Done check: Offensive and Defensive tables both show
+  distinct shades per multiplier tier, not just per favorable/unfavorable
+  side. Review: no. Manual verification: yes.
+
+- **[Type Matchup Rework] — Leg 2** *(Last touched: 2026-10-23 ·
+  Re-checks: 0)*
+  Retire Team Gap Analysis, add Coverage Gaps view. Remove
+  `UsageThreatsList.tsx` and its two dedicated utils (`usageThreats.ts`,
+  `usageCoverageGaps.ts`) and their wiring in `TypeMatchupPage.tsx`; add a
+  new panel below the two `CoverageTable`s that surfaces
+  `computeDefensiveCoverage`'s existing `unfavorableCount`/`favorableCount`
+  per type - no new ladder-usage computation needed, the data already
+  exists per-row. `GameDataCache.usage`/`useUsageSync` stay as-is -
+  `SpeedTiersPage.tsx` still depends on them, this leg only removes the
+  Type-Matchup-specific consumers. Done check: Team Gap Analysis panel and
+  its two utils are gone; new Coverage Gaps panel renders from existing
+  per-type counts. Review: no. Manual verification: yes.
+
+- **[Type Matchup Rework] — Leg 3** *(Last touched: 2026-10-23 ·
+  Re-checks: 0)*
+  Wire Mega/Alt-Form toggle into coverage. When a team slot's
+  `usePokemonFormToggle` has an `activeForm`, both `defensiveSlots`
+  (types/ability, for `computeDefensiveCoverage`) and the move-type
+  resolution feeding `computeOffensiveCoverage` (via `useTeamMoveTypes`)
+  must resolve from that form instead of the stored base form - e.g. an
+  active Aerilate Mega's offensive row should reflect Normal→Flying
+  conversion, and its defensive row should use the Mega's own typing/
+  ability. Needs a way to resolve a Mega slug's types (paralleling
+  `megaAbilities.ts`'s existing `getMegaAbility`). Depends on the
+  already-shipped toggle state; touches shared toggle consumption +
+  type-coverage logic across two tables. Done check: toggling a known
+  type-changing Mega (e.g. Aerilate) shifts both Offensive and Defensive
+  rows to match; untoggled slots are unaffected. Review: yes. Manual
+  verification: yes.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -140,8 +197,9 @@ build for a pattern with only one real example today.
 2026-10-22 feedback/discussion pass produced six candidate milestones;
 Mega & Alt-Form Representation was promoted to current and shipped the
 same day (see `MILESTONES.md`) - its toggle state (`usePokemonFormToggle`)
-is now consumable by Type Matchup Rework below. The other five, to be
-scoped in turn:
+is now consumable by Type Matchup Rework. Type Matchup Rework was itself
+promoted to current 2026-10-23 (see above). The other four, to be scoped
+in turn:
 
 - **Search & Filter: Tag-Chip Redesign** — replace the `#`-prefixed text
   search (team builder, Box, add-Pokémon flows) with Showdown-style
@@ -151,14 +209,6 @@ scoped in turn:
   (e.g. `#dragon` should surface Mega Charizard X), and single-text search
   can't disambiguate a term that's both a type and a move name (`#psychic`
   as type vs. the move Psychic).
-- **Type Matchup Rework** — color-code Not Very Effective/Super
-  Effective/Total Weak/Total Resist by magnitude instead of one flat color
-  per category; retire Team Gap Analysis (concluded 2026-10-22 it can't
-  convey trustworthy information given set variance, Mega/Tera, and
-  dynamic game state) in favor of an objective shared-weakness/resistance
-  coverage view; wire in the Mega & Alt-Form Representation milestone's
-  toggle state so matchups reflect Mega typing/ability changes (e.g.
-  Aerilate). Depends on that milestone's Leg 1 toggle state.
 - **Selection UX & Data Audit** — two different-kind legs, not one: (a)
   stop truncating move/ability/item descriptions in selection dropdowns —
   currently only the full text shows, and only after the fact on hover
