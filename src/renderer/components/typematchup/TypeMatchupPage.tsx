@@ -10,18 +10,18 @@
  *
  * Offensive Coverage accounts for type-changing abilities (Pixilate turning
  * Normal moves Fairy, etc.) via hooks/useTeamMoveTypes.ts - see
- * config/typeChangingAbilities.ts. Defensive Coverage (and the Coverage Gaps
- * panel below it) accounts for type-immunity abilities (Levitate, Water
- * Absorb, etc.) the same way - see config/typeImmunityAbilities.ts, consumed
- * via utils/typeCoverage.ts's `getDefensiveMultiplier`.
+ * config/typeChangingAbilities.ts. Defensive Coverage accounts for
+ * type-immunity abilities (Levitate, Water Absorb, etc.) the same way - see
+ * config/typeImmunityAbilities.ts, consumed via utils/typeCoverage.ts's
+ * `getDefensiveMultiplier`.
  *
- * Coverage Gaps (CoverageGapsPanel) is a third, additive panel below the two
- * coverage tables - an objective shared-weakness/resistance-coverage view
- * built directly from Defensive Coverage's own per-type
- * unfavorableCount/favorableCount (see utils/typeCoverage.ts's CoverageRow),
- * no separate computation of its own. Replaces the earlier Team Gap Analysis
- * panel (ladder-usage-threat heuristic via GameDataCache.usage) removed in
- * Type Matchup Rework - see COMPLETED.md.
+ * The page used to carry a third panel below these two tables (Team Gap
+ * Analysis, a ladder-usage-threat heuristic via GameDataCache.usage) -
+ * removed outright in Type Matchup Rework (see COMPLETED.md) rather than
+ * replaced. An objective per-type view was tried as a replacement first and
+ * dropped same-leg: it just re-sorted Defensive Coverage's own
+ * unfavorableCount/favorableCount, already visible in that table's own Weak/
+ * Resist columns, so it added no information a second panel would justify.
  */
 
 import { useMemo, useState } from 'react';
@@ -32,7 +32,6 @@ import { useTeamMoveTypes } from '../../hooks/useTeamMoveTypes';
 import { computeOffensiveCoverage, computeDefensiveCoverage } from '../../utils/typeCoverage';
 import TeamPickerDropdown from '../TeamPickerDropdown';
 import CoverageTable from './CoverageTable';
-import CoverageGapsPanel from './CoverageGapsPanel';
 
 interface TypeMatchupPageProps {
   teamsState: UseTeamsReturn;
@@ -94,29 +93,26 @@ export default function TypeMatchupPage({
       ) : isLoading ? (
         <p className="text-sm text-zinc-400">Loading move data...</p>
       ) : (
-        <>
-          <div className="grid grid-cols-1 2xl:grid-cols-2 gap-6">
-            <CoverageTable
-              title="Offensive Coverage"
-              pokemon={selectedTeam.pokemon}
-              rows={offensiveRows}
-              favorableWhenAbove1
-              unfavorableLabel="Not Very Effective"
-              favorableLabel="Super Effective"
-              spriteCacheState={spriteCacheState}
-            />
-            <CoverageTable
-              title="Defensive Coverage"
-              pokemon={selectedTeam.pokemon}
-              rows={defensiveRows}
-              favorableWhenAbove1={false}
-              unfavorableLabel="Total Weak"
-              favorableLabel="Total Resist"
-              spriteCacheState={spriteCacheState}
-            />
-          </div>
-          <CoverageGapsPanel defensiveRows={defensiveRows} />
-        </>
+        <div className="grid grid-cols-1 2xl:grid-cols-2 gap-6">
+          <CoverageTable
+            title="Offensive Coverage"
+            pokemon={selectedTeam.pokemon}
+            rows={offensiveRows}
+            favorableWhenAbove1
+            unfavorableLabel="Not Very Effective"
+            favorableLabel="Super Effective"
+            spriteCacheState={spriteCacheState}
+          />
+          <CoverageTable
+            title="Defensive Coverage"
+            pokemon={selectedTeam.pokemon}
+            rows={defensiveRows}
+            favorableWhenAbove1={false}
+            unfavorableLabel="Total Weak"
+            favorableLabel="Total Resist"
+            spriteCacheState={spriteCacheState}
+          />
+        </div>
       )}
     </div>
   );

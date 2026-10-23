@@ -23,10 +23,11 @@ Done when:
   distinct from 2x/0.5) instead of one flat color per favorable/unfavorable
   side.
 - The Team Gap Analysis panel (ladder-usage-threat heuristic) is removed
-  from the Type Matchup page, replaced by an objective shared-weakness/
-  resistance coverage view built from the coverage tables' own per-type
-  counts - no residual references to `usageThreats.ts`/
-  `usageCoverageGaps.ts` from this page.
+  outright from the Type Matchup page, with no replacement panel - the two
+  CoverageTables' own per-type counts already show the same information a
+  replacement panel would just re-sort, so a second panel over the same
+  data was tried and dropped same-leg as redundant. No residual references
+  to `usageThreats.ts`/`usageCoverageGaps.ts` from this page.
 - When a team slot has an active Mega/alt-form (`usePokemonFormToggle`),
   both Offensive and Defensive coverage reflect that form's typing/
   ability/moves instead of the base form; with no active form, behavior is
@@ -34,17 +35,20 @@ Done when:
 
 - **[Type Matchup Rework] — Leg 2** *(Last touched: 2026-10-23 ·
   Re-checks: 0)*
-  Retire Team Gap Analysis, add Coverage Gaps view. Remove
+  Retire Team Gap Analysis outright, no replacement panel. Removed
   `UsageThreatsList.tsx` and its two dedicated utils (`usageThreats.ts`,
-  `usageCoverageGaps.ts`) and their wiring in `TypeMatchupPage.tsx`; add a
-  new panel below the two `CoverageTable`s that surfaces
-  `computeDefensiveCoverage`'s existing `unfavorableCount`/`favorableCount`
-  per type - no new ladder-usage computation needed, the data already
-  exists per-row. `GameDataCache.usage`/`useUsageSync` stay as-is -
-  `SpeedTiersPage.tsx` still depends on them, this leg only removes the
-  Type-Matchup-specific consumers. Done check: Team Gap Analysis panel and
-  its two utils are gone; new Coverage Gaps panel renders from existing
-  per-type counts. Review: no. Manual verification: yes.
+  `usageCoverageGaps.ts`) and their wiring in `TypeMatchupPage.tsx`.
+  `slotResistsThreat` moved into `typeCoverage.ts` (its natural home
+  alongside `getDefensiveMultiplier`) since `SpeedTiersPage.tsx`'s "Threats
+  Only" checkbox still depends on it; `GameDataCache.usage`/`useUsageSync`
+  stay as-is for that same reason. A same-leg first pass added a
+  replacement "Coverage Gaps" panel surfacing `computeDefensiveCoverage`'s
+  `unfavorableCount`/`favorableCount` per type - dropped on live review as
+  redundant, since the Defensive `CoverageTable` already shows those same
+  counts per type in its own Weak/Resist columns; a second panel just
+  re-sorted the same data with no new information. Done check: Team Gap
+  Analysis panel and its two utils are gone, page shows only the two
+  `CoverageTable`s. Review: no. Manual verification: yes.
 
 - **[Type Matchup Rework] — Leg 3** *(Last touched: 2026-10-23 ·
   Re-checks: 0)*
