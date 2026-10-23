@@ -105,4 +105,7 @@ it was already fetching for the sprite id); the ability override is sourced
 from `config/megaAbilities.ts`'s existing forced-ability table. The ability
 capsule's click target is unchanged - it still edits the real stored
 `showdownData.ability`; the override only changes what's displayed while the
-flip is active. See commit 39d56af.
+flip is active. See commit 39d56af. Follow-up the same day: replaced the
+toggle badge's placeholder "M" glyph and the shiny corner badge's unicode
+emoji with Showdown's own `/sprites/misc/mega.png`/`shiny.png` icons. See
+commit ddfe933.
