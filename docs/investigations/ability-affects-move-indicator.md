@@ -55,6 +55,14 @@ explicit-list rule above) or accepting partial coverage from
 `meta` alone — Vanny's call, flagged as an open question below rather than
 decided here.
 
+**Decided (2026-10-23):** hand-curate the Sheer Force move list, sourced
+from Serebii's dedicated ability page
+(`serebii.net/abilitydex/sheerforce.shtml` — covered by this repo's
+external-data-sources exception #2, manual research for hand-authoring
+static config), filtered down to only the moves that exist in the app's
+own Champions movepool data (Serebii's list includes mainline moves not in
+Champions).
+
 Also explicitly **out of scope for this new table**: the five type-changing
 abilities' own 1.2x same-type power boost (Pixilate/Aerilate/Refrigerate/
 Galvanize/Normalize) — `typeChangingAbilities.ts`'s header already
@@ -105,17 +113,18 @@ two existing children:
   in-the-moment team-building context the ask is about. Can be revisited
   later if wanted, but not part of this scope.
 
-### Open questions for Vanny before a build leg is cut
+### Open questions for Vanny before a build leg is cut — resolved 2026-10-23
 
-1. Sheer Force: accept partial coverage from `MoveData.meta` alone, or
-   hand-curate a move list for the stat-chance secondary effects it
-   misses?
-2. Fold the 5 type-changing abilities' power boost into this same table
-   (recommended — same mechanic shape, one less place to look), or treat
-   it as a separate follow-up to `typeChangingAbilities.ts`?
-3. Badge visual: a corner dot (cheap, always-visible) vs. a tag inline
-   with the existing move-flag tags in the tooltip only (cheaper to build,
-   less glanceable on the bubble itself)?
+1. ~~Sheer Force: accept partial coverage...~~ **Decided: hand-curate from
+   Serebii, filtered to Champions movepool** (see above).
+2. ~~Fold the 5 type-changing abilities' power boost...~~ **Decided: fold
+   into the same table.**
+3. ~~Badge visual...~~ **Decided: corner dot/badge on the move bubble
+   itself** (`MoveBubbleGrid.tsx`, same visual language as
+   `MegaFormToggleBadge`'s corner-badge treatment) — not an ability-level
+   checkbox; the per-move distinction (Iron Fist affects Fire Punch but not
+   Close Combat) is the point of the feature, so the indicator has to live
+   on the move, not the ability.
 
 ## Part 2: Type Matchup mega toggle
 
@@ -166,10 +175,18 @@ No changes needed to `useTeamMoveTypes.ts`/`typeCoverage.ts`'s resolution
 logic itself — both already consume `activeForms` correctly; this is a
 pure UI-affordance addition over already-correct data.
 
-### Open question for Vanny
+### Open question for Vanny — resolved 2026-10-23
 
-Does the toggle belong on the sprite header cell (affects both
-Offensive and Defensive tables for that slot at once, matching how the
-underlying toggle is genuinely shared state), or does it need to be
-per-table (unlikely to ever want it mega'd in one table but not the
-other, but flagging the question rather than assuming)?
+**Decided: per-table control**, with genuinely independent state — Vanny's
+chosen option was explicitly "in case there's ever a reason to view one
+table mega'd and the other not," not just a duplicated control over the
+same shared value. This means this toggle **cannot** be a second read of
+`usePokemonFormToggle` as-is (that store is per-Pokémon-id, shared
+everywhere, including the Team card badge) — it needs its own
+page-local/per-table state dimension for Type Matchup specifically,
+separate from the Team card's mega toggle. A build leg needs to design that
+state shape (likely a small local store or page-level state keyed by
+`(slotId, table)` rather than reusing the global store), not just wire the
+existing badge into two places. This is a real scope increase over the
+"pure UI-affordance addition over already-correct data" framing earlier in
+this doc — flag this explicitly when sizing the build leg.

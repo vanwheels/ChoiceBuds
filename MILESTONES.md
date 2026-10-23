@@ -95,3 +95,5 @@ milestone.
   [post-mortem](docs/postmortems/type-matchup-rework.md)
 - **Team Editor & Box Fixes** — 2026-10-23 — Shipped —
   [post-mortem](docs/postmortems/team-editor-and-box-fixes.md)
+- **Ability-Affects-Move Indicator Scoping** — 2026-10-23 — Shipped —
+  [post-mortem](docs/postmortems/ability-affects-move-indicator-scoping.md)

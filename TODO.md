@@ -16,41 +16,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Ability-Affects-Move Indicator Scoping
-
-Done when:
-- A scope doc exists at `docs/investigations/ability-affects-move-indicator.md`
-  covering: the per-ability-per-move applicability data shape, which UI
-  surface(s) show the indicator, and how/where the Type Matchups mega toggle
-  plugs in. **Done 2026-10-23** — doc written, covering both parts plus 3
-  open questions for Vanny (Sheer Force coverage, whether to fold in the 5
-  type-changing abilities' own power boost, badge visual) and one for the
-  mega toggle (per-slot vs. per-table control). Also found live during
-  scoping: the Type Matchup mega toggle's underlying read-wiring already
-  shipped in Type Matchup Rework Leg 3 — the real remaining gap is narrower
-  than this item's own framing (no toggle *control* on the page, not
-  missing resolution logic).
-- Vanny has reviewed and signed off on that scope (no build legs get cut
-  without it). **Pending.**
-
-- **[Ability-Affects-Move Indicator Scoping] — Leg 1** *(Last touched:
-  2026-10-23 · Re-checks: 0)*
-  From the 2026-10-22 discussion pass: an in-UI indicator for when a
-  Pokémon's ability boosts/affects a specific move (e.g. Iron Fist boosting
-  Fire Punch but not Close Combat), so that's visible without leaving the
-  app to check Serebii/the calc. Scoping only — needs a data-layer design
-  pass (likely a new per-ability-per-move applicability table alongside the
-  existing curated effect tables in `config/`) before any build leg is cut.
-  Also fold in a related gap surfaced 2026-10-23: Type Matchups has no mega
-  toggle for Pokémon holding their mega stone, so defensive coverage shown
-  there doesn't reflect a mega's typing change and/or ability change (e.g.
-  Aerilate) — scope that toggle alongside this indicator work since both
-  turn on whether a currently-active ability/typing affects what's shown.
-  Done check: a scope doc exists covering data shape, which UI surface(s)
-  show the ability-affects-move indicator, and how/where the Type Matchups
-  mega toggle plugs in; no code yet. Review: no. Manual verification: no.
-  See `docs/investigations/ability-affects-move-indicator.md`.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -79,9 +44,17 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-(The Ability-Affects-Move Indicator: Scoping item previously listed here was
-promoted to current as the Ability-Affects-Move Indicator Scoping milestone
-on 2026-10-23 — see above.)
+- **Ability-Affects-Move Indicator + Type Matchup Mega Toggle (build)** —
+  the Ability-Affects-Move Indicator Scoping milestone (promoted to current
+  and shipped 2026-10-23, see `MILESTONES.md`) produced a fully Vanny-
+  approved scope doc at
+  `docs/investigations/ability-affects-move-indicator.md` for both halves:
+  the per-ability-per-move boost indicator (new `AbilityMoveBoostRule`
+  table, `MoveBubbleGrid.tsx`/`TooltipContent.tsx` surfaces) and the Type
+  Matchup per-table independent Mega toggle (needs its own page-local state
+  shape, not a second read of `usePokemonFormToggle`). Ready to promote
+  straight to a build milestone via `/plan-milestone` — no further scoping
+  needed.
 
 (The four items previously listed here were bundled into the Profile Social
 Scoping & Maintenance milestone on 2026-10-19, now shipped; see

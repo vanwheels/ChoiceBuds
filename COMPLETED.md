@@ -95,3 +95,8 @@ Entries prior to this file's oldest are in:
   2026-10-23 Team Editor & Box Fixes boundary - named with the milestone
   slug since it shares its date range with the Type Matchup Rework archive
   above)
+- [docs/archive/completed-2026-10-23-to-2026-10-23-ability-affects-move-indicator-scoping.md](docs/archive/completed-2026-10-23-to-2026-10-23-ability-affects-move-indicator-scoping.md)
+  (the Ability-Affects-Move Indicator Scoping milestone's one leg, split out
+  at the 2026-10-23 Ability-Affects-Move Indicator Scoping boundary - named
+  with the milestone slug since it shares its date range with the Type
+  Matchup Rework and Team Editor & Box Fixes archives above)
