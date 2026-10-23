@@ -22,9 +22,16 @@ Done when:
 - A scope doc exists at `docs/investigations/ability-affects-move-indicator.md`
   covering: the per-ability-per-move applicability data shape, which UI
   surface(s) show the indicator, and how/where the Type Matchups mega toggle
-  plugs in.
+  plugs in. **Done 2026-10-23** — doc written, covering both parts plus 3
+  open questions for Vanny (Sheer Force coverage, whether to fold in the 5
+  type-changing abilities' own power boost, badge visual) and one for the
+  mega toggle (per-slot vs. per-table control). Also found live during
+  scoping: the Type Matchup mega toggle's underlying read-wiring already
+  shipped in Type Matchup Rework Leg 3 — the real remaining gap is narrower
+  than this item's own framing (no toggle *control* on the page, not
+  missing resolution logic).
 - Vanny has reviewed and signed off on that scope (no build legs get cut
-  without it).
+  without it). **Pending.**
 
 - **[Ability-Affects-Move Indicator Scoping] — Leg 1** *(Last touched:
   2026-10-23 · Re-checks: 0)*
@@ -42,6 +49,7 @@ Done when:
   Done check: a scope doc exists covering data shape, which UI surface(s)
   show the ability-affects-move indicator, and how/where the Type Matchups
   mega toggle plugs in; no code yet. Review: no. Manual verification: no.
+  See `docs/investigations/ability-affects-move-indicator.md`.
 
 ## Blocked
 
