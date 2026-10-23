@@ -94,3 +94,15 @@ persisted/synced state, since Mega Evolution and Blade/Shield only happen
 in-battle. Foundation for Legs 2-4 of the Mega & Alt-Form Representation
 milestone and the separate Type Matchup Rework milestone. See commit
 de36abf.
+
+**[Mega Team Card Flip] — Leg 2** (2026-10-22): A roster slot's held Mega
+Stone now shows a small toggle badge next to the item slot; toggling it (via
+Leg 1's shared `usePokemonFormToggle` state) flips the team card's ability
+capsule/stats grid/type badges to the Mega's own values, while the existing
+always-on Mega sprite swap stays untouched. `useMegaSprite.ts`'s per-slug
+PokeAPI fetch now also surfaces the Mega's types/base stats (same response
+it was already fetching for the sprite id); the ability override is sourced
+from `config/megaAbilities.ts`'s existing forced-ability table. The ability
+capsule's click target is unchanged - it still edits the real stored
+`showdownData.ability`; the override only changes what's displayed while the
+flip is active. See commit 39d56af.

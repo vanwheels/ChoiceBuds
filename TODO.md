@@ -36,16 +36,6 @@ Done when:
   to Shield, matching in-game start state) and a battle log entry can
   mark a Pokémon as mega-evolved with exactly one extra input.
 
-- **[Mega Team Card Flip] — Leg 2** *(Last touched: 2026-10-22 ·
-  Re-checks: 0)*
-  Show a mega icon next to a Pokémon's item slot when it holds the
-  matching mega stone; toggling it flips the team card to show the mega's
-  ability, stats, and typing in place of the base form, using Leg 1's
-  toggle state. Keep the existing always-on mega sprite display as-is —
-  only the stat/ability/typing panel flips. Done check: flip verified live
-  for at least one Mega with a stat/ability/type change (e.g., Mega
-  Charizard X). Review: no. Manual verification: yes (visual).
-
 - **[Aegislash Form Toggle in Team Builder] — Leg 3** *(Last touched:
   2026-10-22 · Re-checks: 0)*
   Expose a Blade/Shield toggle for Aegislash in the team builder using
