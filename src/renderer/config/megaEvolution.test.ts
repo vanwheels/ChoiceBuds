@@ -82,16 +82,26 @@ describe('resolveOpponentMegaControl (Battle Logger Mega button)', () => {
     });
   });
 
-  it('resolves straight to single when the confirmed item already pins the exact form', () => {
-    expect(resolveOpponentMegaControl('Charizard', 'Charizardite X')).toEqual({
+  it('stays single (not choice) for an unambiguous species even once the confirmed item pins the exact form - no ambiguity to correct', () => {
+    expect(resolveOpponentMegaControl('Gengar', 'Gengarite')).toEqual({
       kind: 'single',
-      slug: 'charizard-mega-x',
+      slug: 'gengar-mega',
       revealItem: null,
     });
   });
 
   it('offers a choice between every possible form when the item is still unconfirmed and ambiguous', () => {
     expect(resolveOpponentMegaControl('Charizard', undefined)).toEqual({
+      kind: 'choice',
+      options: [
+        { slug: 'charizard-mega-x', item: 'charizardite x', suffix: 'mega-x' },
+        { slug: 'charizard-mega-y', item: 'charizardite y', suffix: 'mega-y' },
+      ],
+    });
+  });
+
+  it('keeps offering the full choice - never collapses to single - once a form is already confirmed, so a misclick (e.g. X instead of Y) can be corrected', () => {
+    expect(resolveOpponentMegaControl('Charizard', 'Charizardite X')).toEqual({
       kind: 'choice',
       options: [
         { slug: 'charizard-mega-x', item: 'charizardite x', suffix: 'mega-x' },

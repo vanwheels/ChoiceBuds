@@ -201,11 +201,19 @@ export function getMegaFormsForSpecies(species: string): { item: string; suffix:
  * getMegaFormsForSpecies's own doc comment above describes, actually
  * implemented: hidden entirely for a non-mega-capable species or one
  * confirmed holding a different item, a plain toggle when there's exactly
- * one possible form, a picker when there's real X/Y/Z ambiguity to resolve.
+ * one possible form, a picker whenever there's real X/Y/Z ambiguity.
  * `single.revealItem` is non-null exactly when the item isn't confirmed yet
  * and marking Mega both sets it on the roster entry and flags the mark -
  * declaring Mega IS revealing the stone; null when the held item already
  * pins the exact form, so nothing new needs setting.
+ *
+ * A multi-form species always gets `choice`, even once an item is already
+ * set to one of its own stones - never `single`. Collapsing to `single`
+ * once a form was picked (the original shape) left no way to correct a
+ * misclick (Raichu X tapped instead of Y) short of removing and re-adding
+ * the Pokemon - confirmed live 2026-10-22. The caller highlights whichever
+ * option matches the current item, so the full picker doubles as both
+ * "declare which form" and "fix which form" without extra state.
  */
 export type OpponentMegaControl =
   | { kind: 'none' }
@@ -216,24 +224,27 @@ export function resolveOpponentMegaControl(
   species: string,
   heldItem: string | undefined,
 ): OpponentMegaControl {
-  const knownSlug = getMegaApiSlug(heldItem, species);
-  if (heldItem) {
-    // A confirmed item that isn't this species' own stone rules Mega out
-    // entirely - they can't be holding two items at once.
-    return knownSlug ? { kind: 'single', slug: knownSlug, revealItem: null } : { kind: 'none' };
-  }
-
   const forms = getMegaFormsForSpecies(species);
   if (forms.length === 0) return { kind: 'none' };
 
-  const base = species.trim().toLowerCase();
-  if (forms.length === 1) {
-    return { kind: 'single', slug: `${base}-${forms[0].suffix}`, revealItem: forms[0].item };
+  const knownSlug = getMegaApiSlug(heldItem, species);
+  if (heldItem && !knownSlug) {
+    // A confirmed item that isn't this species' own stone rules Mega out
+    // entirely - they can't be holding two items at once.
+    return { kind: 'none' };
   }
-  return {
-    kind: 'choice',
-    options: forms.map((f) => ({ slug: `${base}-${f.suffix}`, item: f.item, suffix: f.suffix })),
-  };
+
+  const base = species.trim().toLowerCase();
+  if (forms.length > 1) {
+    return {
+      kind: 'choice',
+      options: forms.map((f) => ({ slug: `${base}-${f.suffix}`, item: f.item, suffix: f.suffix })),
+    };
+  }
+
+  return knownSlug
+    ? { kind: 'single', slug: knownSlug, revealItem: null }
+    : { kind: 'single', slug: `${base}-${forms[0].suffix}`, revealItem: forms[0].item };
 }
 
 /** Single-letter badge label for a Mega form choice button (Battle Logger's X/Y/Z picker) - "M" for an unambiguous suffix-less "mega", else the letter after "mega-" (X/Y/Z). */
