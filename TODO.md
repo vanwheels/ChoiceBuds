@@ -29,22 +29,9 @@ Done when:
   (following the existing Fairy Feather hardcoded-fallback precedent, moved
   to a dedicated `config/` table if the list is long enough to warrant
   one), with any overflow too large for one session split to Unscheduled.
+  **All three criteria are now met — see Leg 3 in COMPLETED.md. Next step:
+  `/close-milestone`.**
 
-- **[Missing Description Curated Fallbacks] — Leg 3** *(Last touched:
-  2026-10-24 · Re-checks: 0)*
-  Write curated fallback description text for the 52-move gap list Leg 2
-  found (0 abilities needed one) — see
-  `docs/investigations/missing-move-ability-descriptions.md` for the full
-  list and methodology. Follow the existing Fairy Feather hardcoded-
-  fallback precedent in `pokeapiService.ts`, moved to a dedicated `config/`
-  table given the list's size, per the project's curated-static-data
-  convention. If the list is too large for one session, fix what fits and
-  split the remainder to Unscheduled as a scoped follow-up rather than
-  blocking this leg.
-  Done check: every one of the 52 moves now shows real description text
-  instead of the fallback (or as much as fits one session, with the rest
-  split out), verified by spot-checking a sample in the picker panels.
-  Manual verification: yes.
 
 ## Blocked
 

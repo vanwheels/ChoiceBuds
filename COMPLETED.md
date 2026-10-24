@@ -5,6 +5,23 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **[Missing Description Curated Fallbacks] — Leg 3** (2026-10-24)
+  Wrote curated fallback descriptions for all 52 moves Leg 2's audit found
+  falling back to PokeAPI's "No description available" text (Upper Hand,
+  Temper Flare, Tera Blast, etc. — full list in
+  `docs/investigations/missing-move-ability-descriptions.md`), hand-authored
+  from Bulbapedia/Serebii's move pages per the project's external-data-
+  sources research convention. Added `config/missingMoveDescriptions.ts`
+  (with a Vitest suite covering the normalize/already-has-a-description/
+  not-in-table cases plus a count check against the full 52-move list) and
+  wired it into `useGameData.ts`'s existing read-boundary override pattern
+  alongside `championsMoveOverrides.ts`, rather than `pokeapiService.ts`'s
+  fetch-time Fairy Feather precedent, so the fix self-heals move data
+  already sitting in a user's `NEVER_EXPIRES` game-data-cache.json instead
+  of requiring a cache-version bump. All three of Selection UX & Data
+  Audit's "Done when" criteria are now met — next step is `/close-milestone`.
+  See commit f513bec8a9e52b90208290557eca75c01ebd06b1.
+
 - **[Missing Move/Ability Description Audit] — Leg 2** (2026-10-24)
   Enumerated every move/ability across the full Reg M-C (most inclusive)
   Champions-legal species pool via live PokeAPI data — 266 species slugs
