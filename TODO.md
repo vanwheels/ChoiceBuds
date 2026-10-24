@@ -30,30 +30,20 @@ Done when:
   to a dedicated `config/` table if the list is long enough to warrant
   one), with any overflow too large for one session split to Unscheduled.
 
-- **[Missing Move/Ability Description Audit] — Leg 2** *(Last touched:
-  2026-10-24 · Re-checks: 0)*
-  Enumerate every move and ability currently falling back to
-  `pokeapiService.ts`'s `extractEffectDescription`'s `'No description
-  available'` text across the Gen 9 VGC-legal pool. Upper Hand and Temper
-  Flare were flagged as examples, not the full list — confirm they're in
-  it, then find the rest. Produces a gap list only, no fixes yet; size is
-  unknown until this leg runs.
-  Done check: a written list of every move/ability currently showing the
-  fallback text, confirmed against Upper Hand/Temper Flare.
-  Manual verification: no.
-
 - **[Missing Description Curated Fallbacks] — Leg 3** *(Last touched:
   2026-10-24 · Re-checks: 0)*
-  Write curated fallback description text for Leg 2's gap list, following
-  the existing Fairy Feather hardcoded-fallback precedent in
-  `pokeapiService.ts` — move to a dedicated `config/` table instead if the
-  list is long enough to warrant one, per the project's curated-static-data
+  Write curated fallback description text for the 52-move gap list Leg 2
+  found (0 abilities needed one) — see
+  `docs/investigations/missing-move-ability-descriptions.md` for the full
+  list and methodology. Follow the existing Fairy Feather hardcoded-
+  fallback precedent in `pokeapiService.ts`, moved to a dedicated `config/`
+  table given the list's size, per the project's curated-static-data
   convention. If the list is too large for one session, fix what fits and
   split the remainder to Unscheduled as a scoped follow-up rather than
   blocking this leg.
-  Done check: every gap from Leg 2's list (or as much as fits one session)
-  now shows real description text instead of the fallback, verified by
-  spot-checking a sample in the picker panels.
+  Done check: every one of the 52 moves now shows real description text
+  instead of the fallback (or as much as fits one session, with the rest
+  split out), verified by spot-checking a sample in the picker panels.
   Manual verification: yes.
 
 ## Blocked
@@ -83,6 +73,20 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+Tera Blast movepool leak (found 2026-10-24, during the Missing Move/
+Ability Description Audit's Leg 2 — see
+`docs/investigations/missing-move-ability-descriptions.md`'s side-finding):
+`config/championsMovepoolChanges.ts`'s documented "Tera Blast doesn't exist
+in Champions" removal (`GLOBALLY_REMOVED_MOVES`) only runs through the
+`hasChampionsMoveData === false` fallback path, which is dead for
+virtually the entire current roster per that file's own "Prune Dead" note.
+The unconditional removal path (`CHAMPIONS_PATCH_MOVEPOOL_REMOVALS`) only
+covers Archaludon's Mirror Coat/Metal Burst, so any species whose live
+PokeAPI `champions` tag includes Tera Blast gets it offered as a pickable
+move today. Needs scoping: likely add Tera Blast to the unconditional
+removal table, or re-confirm with the user whether Champions still truly
+lacks it before assuming the documented rule is still correct.
 
 (Mega Form List Ordering and Type-Changing Ability Move Badge Color,
 previously listed here, were bundled into the Display Bug Fix Sweep
