@@ -29,21 +29,6 @@ Done when:
   own type/ability, consistently across all three surfaces - no separate
   "Mega" chip required anywhere.
 
-- **[Search & Filter: Tag-Chip Redesign] — Leg 1** *(Last touched:
-  2026-10-23 · Re-checks: 0)*
-  Foundation leg, no picker wiring yet. New chip data model
-  (`{category: type|move|ability, value}`) and a shared `TagChipInput`
-  component (text box + rendered chips + category-labeled autocomplete
-  dropdown + remove affordance). Autocomplete filtering is space/hyphen-
-  insensitive (so "fireblast"/"fire blast"/"fire-blast" all match the same
-  move) and disambiguates a name that's both a type and a move (e.g.
-  Psychic) as separate labeled options. Unit tests cover the matching/dedupe
-  logic directly (no React needed).
-  Done check: pure-logic unit tests pass for matching/dedupe/disambiguation;
-  component renders standalone (e.g. in a throwaway harness) with no real
-  consumer yet.
-  Manual verification: no. Review: no.
-
 - **[Search & Filter: Tag-Chip Redesign] — Leg 2** *(Last touched:
   2026-10-23 · Re-checks: 0)*
   Wire Leg 1's `TagChipInput` into `SpeciesPickerCard.tsx` (Roster Swap +
@@ -52,7 +37,12 @@ Done when:
   `usePokemonTypeFilter`/`usePokemonMoveFilter`/`usePokemonAbilityFilter`
   hooks instead of the current type→move→ability text-probing fallback
   chain, since the chip already carries its category. No Mega rows yet
-  (unchanged from today).
+  (unchanged from today). No existing flat "all ability names" list to
+  source `abilityOptions` autocomplete candidates from (confirmed during
+  Leg 1 - `useMoveNameList.ts`/`fetchAllMoveNames` cover moves, nothing
+  equivalent exists for abilities); this leg needs to add that pairing
+  (`fetchAllAbilityNames`/`useAbilityNameList`, same shape) before it can
+  wire `TagChipInput`'s ability column.
   Done check: species results match the same set a chip combo as the old
   `#tag` combo would, with the type/move disambiguation now explicit in the
   UI instead of order-dependent guessing.
