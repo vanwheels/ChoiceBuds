@@ -441,6 +441,7 @@ export default function CalcPokemonPanel({
         <CalcTeamTray
           teams={teams}
           preferredTeamId={preferredTeamId}
+          currentSpecies={state.species}
           resolveSprite={resolveSprite}
           onLoadPokemon={(p) => onChange(teamPokemonToCalcUpdates(p))}
         />
@@ -448,6 +449,7 @@ export default function CalcPokemonPanel({
       {opponentRoster && (
         <CalcOpponentTray
           opponentRoster={opponentRoster}
+          currentSpecies={state.species}
           resolveSprite={resolveSprite}
           onLoadPokemon={handleLoadOpponent}
         />

@@ -25,12 +25,17 @@ import type { OpponentPokemonEntry } from '../../types/pokemon';
 
 interface CalcOpponentTrayProps {
   opponentRoster: OpponentPokemonEntry[];
+  /** The panel's own `state.species` (CalcPokemonPanel) - see
+   * CalcTeamTray.tsx's matching prop doc for why this is derived from panel
+   * state rather than a separately tracked click selection. */
+  currentSpecies: string;
   resolveSprite: (remoteUrl: string) => string;
   onLoadPokemon: (entry: OpponentPokemonEntry) => void;
 }
 
 export default function CalcOpponentTray({
   opponentRoster,
+  currentSpecies,
   resolveSprite,
   onLoadPokemon,
 }: CalcOpponentTrayProps) {
@@ -48,7 +53,11 @@ export default function CalcOpponentTray({
             type="button"
             onClick={() => onLoadPokemon(entry)}
             title={`${entry.species} - click to load`}
-            className="w-9 h-9 shrink-0 rounded bg-zinc-800 border border-zinc-600 hover:border-accent-gold flex items-center justify-center cursor-pointer transition-colors"
+            className={`w-9 h-9 shrink-0 rounded bg-zinc-800 flex items-center justify-center cursor-pointer transition-colors ${
+              entry.species === currentSpecies
+                ? 'border-2 border-accent-gold ring-1 ring-accent-gold'
+                : 'border border-zinc-600 hover:border-accent-gold'
+            }`}
           >
             <img
               src={resolveSprite(entry.spriteUrl)}

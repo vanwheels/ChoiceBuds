@@ -34,6 +34,12 @@ import TeamPickerDropdown from '../TeamPickerDropdown';
 interface CalcTeamTrayProps {
   teams: Team[];
   preferredTeamId?: string;
+  /** The panel's own `state.species` (CalcPokemonPanel) - a tray sprite box
+   * highlights when it matches, the same derived-from-state convention
+   * FormeToggle.tsx already uses for its own highlight, rather than tracking
+   * a separate "last clicked" selection that drag/manual-edit/Mega-toggle
+   * loads wouldn't update. */
+  currentSpecies: string;
   resolveSprite: (remoteUrl: string) => string;
   onLoadPokemon: (p: ImportedPokemonInfo) => void;
 }
@@ -41,6 +47,7 @@ interface CalcTeamTrayProps {
 export default function CalcTeamTray({
   teams,
   preferredTeamId,
+  currentSpecies,
   resolveSprite,
   onLoadPokemon,
 }: CalcTeamTrayProps) {
@@ -78,7 +85,11 @@ export default function CalcTeamTray({
               onDragStart={handleDragStart(selectedTeam.id, i)}
               onClick={() => onLoadPokemon(p)}
               title={`${p.showdownData.nickname || p.showdownData.species} - click or drag onto a panel to load`}
-              className="w-9 h-9 shrink-0 rounded bg-zinc-800 border border-zinc-600 hover:border-accent-gold flex items-center justify-center cursor-grab transition-colors"
+              className={`w-9 h-9 shrink-0 rounded bg-zinc-800 flex items-center justify-center cursor-grab transition-colors ${
+                p.showdownData.species === currentSpecies
+                  ? 'border-2 border-accent-gold ring-1 ring-accent-gold'
+                  : 'border border-zinc-600 hover:border-accent-gold'
+              }`}
             >
               <img
                 src={resolveSprite(
