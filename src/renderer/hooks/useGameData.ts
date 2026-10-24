@@ -36,6 +36,7 @@ import { useDebouncedWrite } from './useDebouncedWrite';
 import { getStorageAdapter } from '../services/storage';
 import { NEVER_EXPIRES } from '../utils/cacheExpiry';
 import { applyChampionsMoveOverride } from '../config/championsMoveOverrides';
+import { applyMissingMoveDescriptionFallback } from '../config/missingMoveDescriptions';
 import { applyMoveFlags } from '../config/moveFlags';
 import { applyChampionsAbilityOverride } from '../config/championsAbilityOverrides';
 import {
@@ -175,7 +176,12 @@ export function useGameData(): UseGameDataReturn {
   // what's fetched/cached) so corrections are self-healing against data
   // already sitting in a user's 30-day game-data-cache.json, and any future
   // tweak to the override tables takes effect immediately - see
-  // config/championsMoveOverrides.ts.
+  // config/championsMoveOverrides.ts. applyMissingMoveDescriptionFallback
+  // (config/missingMoveDescriptions.ts) rides along on the same self-healing
+  // read boundary for a different reason: it's filling a PokeAPI data gap
+  // (empty effect_entries on ~52 Gen 9 moves), not a Champions balance
+  // difference, so it applies unconditionally and runs after the Champions
+  // override so a future Champions-specific description would still win.
   //
   // `target` was added to MoveData after `flags`, and `meta` after `target` -
   // an entry cached before either addition (still valid for 30 days) is
@@ -189,7 +195,7 @@ export function useGameData(): UseGameDataReturn {
   const getCachedMove = useCallback((moveName: string): MoveData | null => {
     const move = readCacheEntry(cacheRef.current?.moves, normalizeNameForAPI(moveName));
     if (!move || !move.target || !move.meta) return null;
-    return applyMoveFlags(applyChampionsMoveOverride(move));
+    return applyMoveFlags(applyMissingMoveDescriptionFallback(applyChampionsMoveOverride(move)));
   }, []);
 
   // A synthesized placeholder (spriteUrl === '', see the background-load
@@ -268,7 +274,9 @@ export function useGameData(): UseGameDataReturn {
         () => fetchMoveData(normalizedName),
         `Failed to fetch move "${moveName}"`,
       );
-      return fresh ? applyMoveFlags(applyChampionsMoveOverride(fresh)) : null;
+      return fresh
+        ? applyMoveFlags(applyMissingMoveDescriptionFallback(applyChampionsMoveOverride(fresh)))
+        : null;
     },
     [getCachedMove],
   );
