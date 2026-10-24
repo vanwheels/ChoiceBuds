@@ -32,15 +32,6 @@ Done when:
   own type/ability, consistently across both `AddPokemonStatTable.tsx` and
   Box's saved-build search - no separate "Mega" chip required anywhere.
 
-- **[Search & Filter: Tag-Chip Redesign] — Leg 3** *(Last touched:
-  2026-10-23 · Re-checks: 0)*
-  Wire `TagChipInput` into Box search (`BoxPage.tsx`/`BoxPageToolbar.tsx`),
-  same swap-in pattern as Leg 2 against the same species-level hooks. No
-  Mega yet.
-  Done check: Box search filters saved builds correctly by chip combo,
-  matching the prior `#tag`-equivalent results.
-  Manual verification: yes. Review: no.
-
 - **[Search & Filter: Tag-Chip Redesign] — Leg 4** *(Last touched:
   2026-10-24 · Re-checks: 0)*
   Narrowed from its original scope now that Leg 2 already wired

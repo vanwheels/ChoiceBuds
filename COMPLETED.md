@@ -135,3 +135,12 @@ Entries prior to this file's oldest are in:
   collapses the whole result list, the modal panel no longer shrinks to
   fit a narrow result set, and the autocomplete dropdown no longer floats
   over (and hides) matching rows below it. See commit `6780314`.
+
+- **[Search & Filter: Tag-Chip Redesign] — Leg 3** (2026-10-24): Wired
+  `TagChipInput` into Box search (`BoxPageToolbar.tsx`'s desktop box,
+  `BoxPage.tsx`'s mobile popover box - two instances sharing one `chips`
+  array), same category-routed `usePokemonTypeFilter`/
+  `usePokemonMoveFilter`/`usePokemonAbilityFilter` pattern as Leg 2,
+  replacing the last remaining `parseTagFilters` `#tag`-chain consumer. No
+  Mega chip-matching yet (Leg 4/5). Live-verified by the user against real
+  saved builds in `npm run dev`. See commit `44ad153`.
