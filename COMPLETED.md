@@ -20,7 +20,7 @@ local ("see below"/"see above").
   `docs/investigations/missing-move-ability-descriptions.md`; a related
   Tera Blast movepool-correctness gap found along the way was split out as
   its own Unscheduled TODO.md item rather than folded into this leg. See
-  commit <<PENDING>>.
+  commit 080d1b8223787a72790ed4e962a39c88dca1a46a.
 
 - **[Selection Dropdown Description Truncation] — Leg 1** (2026-10-24)
   Removed the `truncate` className on the description `div` in
