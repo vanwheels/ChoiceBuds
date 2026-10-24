@@ -75,22 +75,29 @@
  * gates that to a one-time seed so a later toggle back to Custom never
  * clobbers an already-dragged order.
  *
- * Search (Box Tab: Search Leg 8, see TODO.md): a plain text input next to
- * the sort-mode toggle, filtering `displayedEntries` *after* sort-mode
- * selection is applied - so in Custom mode the surviving matches still
- * render in whatever drag order they hold in the underlying array, just
- * with non-matching entries hidden rather than removed. Dragging is
+ * Search (Box Tab: Search Leg 8, see TODO.md; chip-based as of Search &
+ * Filter: Tag-Chip Redesign Leg 3) filters `displayedEntries` *after*
+ * sort-mode selection is applied - so in Custom mode the surviving matches
+ * still render in whatever drag order they hold in the underlying array,
+ * just with non-matching entries hidden rather than removed. Dragging is
  * disabled outright while a search filter is active (`isSearching` below) -
  * `setSavedPokemonOrder` persists whatever full order the Reorder.Group
  * hands it, so reordering a filtered subset would silently move every
  * matching entry ahead of every hidden one, unlike the old target-based
  * `reorderSavedPokemon` this replaced (which located the drop target in the
- * full underlying array, so hidden entries never moved). Search behavior
- * itself is a straight port of `SpeciesPickerCard.tsx`'s own '#tag'-chain
- * resolution (no '#tag' -> plain substring match against label OR species;
- * one or more '#tag's -> type -> move -> ability resolution per tag, ANDed
- * together, matched against the entry's underlying species) rather than a
- * reimplementation, so the two search bars behave identically.
+ * full underlying array, so hidden entries never moved). Chip resolution
+ * (type/move/ability, each chip routed directly by its own category into
+ * usePokemonTypeFilter/usePokemonMoveFilter/usePokemonAbilityFilter,
+ * matched against the entry's underlying species) and the plain-text query
+ * (matched against label OR species) are the same split
+ * AddPokemonStatTable.tsx/SpeciesPickerCard.tsx use - see either file's
+ * header comment for the full writeup, including why a still-pending chip
+ * imposes no constraint yet rather than excluding everything. Two
+ * `TagChipInput` instances share this one `chips`/`search` state - the
+ * desktop toolbar's (`BoxPageToolbar.tsx`, hidden below `md`) and the
+ * mobile popover's (`useMobileHeaderActions` below, hidden at `md` and
+ * above) - each keeps its own typed-query text locally but both resolve
+ * against the same shared chip array.
  *
  * Favoriting (Box Tab: Favoriting Leg 1, see TODO.md): `SavedPokemonEntry.
  * favorite`, toggled via `BoxCard.tsx`'s own corner-star buttons, sorts
@@ -101,7 +108,7 @@
  * own base sort.
  */
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import type {
   BoxSortMode,
@@ -109,6 +116,7 @@ import type {
   SavedPokemonEntry,
   SpeciesRosterEntry,
 } from '../types/pokemon';
+import type { TagChip } from '../types/tagChip';
 import { useGridReorder } from '../hooks/useGridReorder';
 import type { UseSavedPokemonReturn } from '../hooks/useSavedPokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
@@ -119,9 +127,10 @@ import type { UseSettingsReturn } from '../hooks/useSettings';
 import type { UseTeamsReturn } from '../hooks/useTeams';
 import { useRosterActions } from '../hooks/useRosterActions';
 import { usePokemonTypeFilter } from '../hooks/usePokemonTypeFilter';
-import { usePokemonMoveFilter, isMoveResolved } from '../hooks/usePokemonMoveFilter';
+import { usePokemonMoveFilter } from '../hooks/usePokemonMoveFilter';
 import { usePokemonAbilityFilter } from '../hooks/usePokemonAbilityFilter';
-import { parseTagFilters } from '../utils/tagSearch';
+import { useMoveNameList } from '../hooks/useMoveNameList';
+import { useAbilityNameList } from '../hooks/useAbilityNameList';
 import { ALL_TYPES } from '../config/typeEffectiveness';
 import { normalizeNameForAPI } from '../services/pokeapiService';
 import { toRegulationId } from '../utils/pokemonRules';
@@ -134,6 +143,7 @@ import BoxPageToolbar from './BoxPageToolbar';
 import BoxPageGrid from './BoxPageGrid';
 import BoxPageOverlays from './BoxPageOverlays';
 import MobileFilterPopover from './MobileFilterPopover';
+import TagChipInput from './TagChipInput';
 import { SearchIcon, FilterIcon } from './icons/SidebarIcons';
 
 interface BoxPageProps {
@@ -180,6 +190,7 @@ export default function BoxPage({
   );
 
   const [search, setSearch] = useState('');
+  const [chips, setChips] = useState<TagChip[]>([]);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [isBuildingSpecies, setIsBuildingSpecies] = useState(false);
   // Holds the freshly-built Pokémon and its pre-generated id between
@@ -233,48 +244,48 @@ export default function BoxPage({
       : sortAlphabetically(savedPokemonState.savedPokemon),
   );
 
-  // Search (see header comment) - a straight port of
-  // SpeciesPickerCard.tsx's own '#tag'-chain resolution, applied to each
-  // entry's underlying species instead of a roster species name.
-  const tags = parseTagFilters(search).filter((t) => t.length > 0);
-  const isTypeTag = (t: string): boolean => (ALL_TYPES as readonly string[]).includes(t);
-  const typeTags = tags.filter(isTypeTag);
-  const normalizedNonTypeTags = tags.filter((t) => !isTypeTag(t)).map(normalizeNameForAPI);
+  // Search (see header comment) - chips route directly by category into
+  // usePokemonTypeFilter/usePokemonMoveFilter/usePokemonAbilityFilter, same
+  // pattern as AddPokemonStatTable.tsx/SpeciesPickerCard.tsx.
+  const moveNameList = useMoveNameList();
+  const abilityNameList = useAbilityNameList();
+  const moveOptions = useMemo(() => moveNameList.map(normalizeNameForAPI), [moveNameList]);
+  const abilityOptions = useMemo(() => abilityNameList.map(normalizeNameForAPI), [abilityNameList]);
 
-  const typeMembers = usePokemonTypeFilter(typeTags);
-  const moveMembers = usePokemonMoveFilter(normalizedNonTypeTags);
-  const moveFailedTags = normalizedNonTypeTags.filter(
-    (t) => isMoveResolved(t) && moveMembers.get(t) === null,
-  );
-  const abilityMembers = usePokemonAbilityFilter(moveFailedTags);
+  const typeChipValues = chips.filter((c) => c.category === 'type').map((c) => c.value);
+  const moveChipValues = chips.filter((c) => c.category === 'move').map((c) => c.value);
+  const abilityChipValues = chips.filter((c) => c.category === 'ability').map((c) => c.value);
 
-  // Resolves one tag to its matching species set, or null while it's still
-  // in flight somewhere along the type -> move -> ability chain.
-  function resolvedSetForTag(tag: string): Set<string> | null {
-    if (isTypeTag(tag)) return typeMembers.get(tag) ?? null;
-    const normalized = normalizeNameForAPI(tag);
-    const moveSet = moveMembers.get(normalized) ?? null;
-    if (moveSet !== null) return moveSet;
-    if (isMoveResolved(normalized)) return abilityMembers.get(normalized) ?? null;
-    return null;
+  const typeMembers = usePokemonTypeFilter(typeChipValues);
+  const moveMembers = usePokemonMoveFilter(moveChipValues);
+  const abilityMembers = usePokemonAbilityFilter(abilityChipValues);
+
+  // Resolves one chip to its matching species set, or null while its
+  // category's hook is still fetching.
+  function resolvedSetForChip(chip: TagChip): Set<string> | null {
+    if (chip.category === 'type') return typeMembers.get(chip.value) ?? null;
+    if (chip.category === 'move') return moveMembers.get(chip.value) ?? null;
+    return abilityMembers.get(chip.value) ?? null;
   }
 
-  const tagSets = tags.map(resolvedSetForTag);
-  const anyTagPending = tagSets.some((set) => set === null);
+  const chipSets = chips.map(resolvedSetForChip);
 
-  const matchesTags = (speciesName: string): boolean =>
-    anyTagPending ? false : tagSets.every((set) => set!.has(speciesName.toLowerCase()));
+  // A still-pending chip (`set === null`) imposes no constraint yet rather
+  // than excluding everything, so results narrow progressively as each
+  // chip resolves - see AddPokemonStatTable.tsx's header comment.
+  const matchesChips = (speciesName: string): boolean =>
+    chipSets.every((set) => set === null || set.has(speciesName.toLowerCase()));
 
-  const displayedEntries =
-    tags.length === 0
-      ? sortedEntries.filter(
-          (entry) =>
-            entry.label.toLowerCase().includes(search.toLowerCase()) ||
-            entry.pokemon.showdownData.species.toLowerCase().includes(search.toLowerCase()),
-        )
-      : sortedEntries.filter((entry) => matchesTags(entry.pokemon.showdownData.species));
+  const matchesSearchText = (entry: SavedPokemonEntry): boolean =>
+    search.trim().length === 0 ||
+    entry.label.toLowerCase().includes(search.toLowerCase()) ||
+    entry.pokemon.showdownData.species.toLowerCase().includes(search.toLowerCase());
 
-  const isSearching = search.trim().length > 0;
+  const displayedEntries = sortedEntries
+    .filter(matchesSearchText)
+    .filter((entry) => chips.length === 0 || matchesChips(entry.pokemon.showdownData.species));
+
+  const isSearching = search.trim().length > 0 || chips.length > 0;
 
   // Shared between the desktop grid and MobileBoxGrid.tsx (Box Mobile:
   // Compact Grid + Swipe Deck leg, see TODO.md) so both surfaces render the
@@ -282,9 +293,7 @@ export default function BoxPage({
   const emptyStateContent =
     displayedEntries.length === 0 ? (
       isSearching ? (
-        <p className="text-lg">
-          {tags.length > 0 && anyTagPending ? 'Loading…' : 'No builds match search'}
-        </p>
+        <p className="text-lg">No builds match search</p>
       ) : (
         <>
           <p className="text-lg">No saved builds yet</p>
@@ -396,12 +405,14 @@ export default function BoxPage({
     'Box',
     <>
       <MobileFilterPopover label="Search builds" icon={<SearchIcon />} isActive={isSearching}>
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search builds... (#fire, #dragon dance, ...)"
-          className="w-full px-3 py-2 text-sm text-white bg-zinc-800 border border-zinc-700 rounded-md outline-none focus:border-accent-gold placeholder:text-zinc-500"
+        <TagChipInput
+          chips={chips}
+          onChipsChange={setChips}
+          typeOptions={[...ALL_TYPES]}
+          moveOptions={moveOptions}
+          abilityOptions={abilityOptions}
+          placeholder="Search builds..."
+          onQueryChange={setSearch}
         />
       </MobileFilterPopover>
       <MobileFilterPopover
@@ -432,8 +443,12 @@ export default function BoxPage({
     <div className="h-full flex flex-col">
       <BoxPageToolbar
         displayedCount={displayedEntries.length}
-        search={search}
-        onSearchChange={setSearch}
+        chips={chips}
+        onChipsChange={setChips}
+        typeOptions={[...ALL_TYPES]}
+        moveOptions={moveOptions}
+        abilityOptions={abilityOptions}
+        onQueryChange={setSearch}
         sortMode={sortMode}
         onSetSortMode={handleSetSortMode}
       />

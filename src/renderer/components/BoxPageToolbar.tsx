@@ -1,22 +1,34 @@
 import type { BoxSortMode } from '../types/pokemon';
+import type { TagChip } from '../types/tagChip';
+import TagChipInput from './TagChipInput';
 
 interface BoxPageToolbarProps {
   displayedCount: number;
-  search: string;
-  onSearchChange: (search: string) => void;
+  chips: TagChip[];
+  onChipsChange: (chips: TagChip[]) => void;
+  typeOptions: string[];
+  moveOptions: string[];
+  abilityOptions: string[];
+  onQueryChange: (query: string) => void;
   sortMode: BoxSortMode;
   onSetSortMode: (mode: BoxSortMode) => void;
 }
 
-// Desktop header: build count, search input, and the Alphabetical/Custom
-// sort-mode toggle - split out of BoxPage.tsx (File Cap Splits: BoxPage.tsx,
-// see TODO.md) with no behavior change. Hidden below `md`, where
-// BoxPage.tsx's useMobileHeaderActions call publishes the same search
-// input/sort toggle into Sidebar.tsx's mobile top bar instead.
+// Desktop header: build count, chip search (TagChipInput, Search & Filter:
+// Tag-Chip Redesign Leg 3 - see TODO.md and BoxPage.tsx's header comment),
+// and the Alphabetical/Custom sort-mode toggle - split out of BoxPage.tsx
+// (File Cap Splits: BoxPage.tsx, see TODO.md) with no behavior change.
+// Hidden below `md`, where BoxPage.tsx's useMobileHeaderActions call
+// publishes its own separate TagChipInput instance (sharing the same
+// `chips` state) into Sidebar.tsx's mobile top bar instead.
 export default function BoxPageToolbar({
   displayedCount,
-  search,
-  onSearchChange,
+  chips,
+  onChipsChange,
+  typeOptions,
+  moveOptions,
+  abilityOptions,
+  onQueryChange,
   sortMode,
   onSetSortMode,
 }: BoxPageToolbarProps) {
@@ -31,15 +43,17 @@ export default function BoxPageToolbar({
         </div>
 
         <div className="flex gap-2 items-center flex-wrap">
-          {/* Search (Box Tab: Search Leg 8, see TODO.md) - same '#tag'
-              chain SpeciesPickerCard.tsx's own search bar supports. */}
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search builds... (#fire, #dragon dance, ...)"
-            className="w-full md:w-64 px-3 py-2 text-sm text-white bg-zinc-700 border border-zinc-600 rounded-lg outline-none focus:border-accent-gold placeholder:text-zinc-500"
-          />
+          <div className="w-full md:w-64">
+            <TagChipInput
+              chips={chips}
+              onChipsChange={onChipsChange}
+              typeOptions={typeOptions}
+              moveOptions={moveOptions}
+              abilityOptions={abilityOptions}
+              placeholder="Search builds..."
+              onQueryChange={onQueryChange}
+            />
+          </div>
 
           {/* Sort-mode toggle (Box Tab: Reorder Leg 7, see TODO.md) - same
               pill-button filter style TeamsPage.tsx uses for its format
