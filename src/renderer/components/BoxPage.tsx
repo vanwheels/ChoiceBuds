@@ -99,6 +99,16 @@
  * above) - each keeps its own typed-query text locally but both resolve
  * against the same shared chip array.
  *
+ * Mega chip matching (Search & Filter: Tag-Chip Redesign Leg 5, see
+ * TODO.md): an entry holding its own Mega Stone (`getMegaApiSlug`) also
+ * matches a type/ability chip against the Mega form's own type/ability
+ * (`matchesChipsWithMega` below), OR'd against the base species' own match
+ * rather than replacing it - the entry is one card representing a build
+ * that's both pre- and post-Mega depending on battle state, unlike
+ * AddPokemonStatTable.tsx's Leg 4 (a separate Mega row per stone, where the
+ * Mega's own type/ability fully substitutes the base species' instead).
+ *
+
  * Favoriting (Box Tab: Favoriting Leg 1, see TODO.md): `SavedPokemonEntry.
  * favorite`, toggled via `BoxCard.tsx`'s own corner-star buttons, sorts
  * favorited entries to the top of `sortedEntries` - applied after either
@@ -110,6 +120,7 @@
 
 import { useMemo, useState } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
+import { Generations, toID } from '@smogon/calc';
 import type {
   BoxSortMode,
   ImportedPokemonInfo,
@@ -133,6 +144,8 @@ import { useMoveNameList } from '../hooks/useMoveNameList';
 import { useAbilityNameList } from '../hooks/useAbilityNameList';
 import { ALL_TYPES } from '../config/typeEffectiveness';
 import { normalizeNameForAPI } from '../services/pokeapiService';
+import { getMegaApiSlug } from '../config/megaEvolution';
+import { getMegaAbility } from '../config/megaAbilities';
 import { toRegulationId } from '../utils/pokemonRules';
 import { readPokemonFromClipboard } from '../utils/clipboardPayload';
 import { parseShowdownText } from '../services/parser';
@@ -159,6 +172,11 @@ interface BoxPageProps {
 // buildSlot never calls updateTeam - see the header comment above.
 const NOOP_UPDATE_TEAM = async () => false;
 
+// Same gen/calc-dex lookup AddPokemonStatTable.tsx uses for its own Mega
+// rows (see that file's GEN_NUM) - resolves a Mega slug's own types/BST for
+// chip matching below, not for stats display here.
+const GEN_NUM = 9;
+
 // Same species-then-label sort CalcSavedSetsModal.tsx uses for its own
 // management list - Alphabetical mode's own sort, and also what seeds Custom
 // mode's array order the first time it's switched to (see header comment).
@@ -181,6 +199,7 @@ export default function BoxPage({
   teamsState,
 }: BoxPageProps) {
   const rulesetId = toRegulationId(settingsState.settings.defaultRegulation);
+  const gen = Generations.get(GEN_NUM);
   const rosterActions = useRosterActions(
     NOOP_UPDATE_TEAM,
     databaseState.getCachedEntry,
@@ -276,6 +295,37 @@ export default function BoxPage({
   const matchesChips = (speciesName: string): boolean =>
     chipSets.every((set) => set === null || set.has(speciesName.toLowerCase()));
 
+  // Leg 5: a build holding its OWN Mega Stone also matches a type/ability
+  // chip against the Mega form's own type/ability, not just the base
+  // species' - Mega Evolution happens in-battle, so the build "is" both.
+  // OR'd per chip against the base check (matchesChips above) rather than
+  // replacing it outright - unlike AddPokemonStatTable.tsx's separate Mega
+  // row (which fully substitutes the Mega's own type/ability), a Box entry
+  // is one card, not a base-row/Mega-row pair, so either lens should count.
+  // Move chips are unaffected either way - Mega Evolution doesn't change a
+  // species' learnset.
+  const matchesChipsWithMega = (entry: SavedPokemonEntry): boolean => {
+    const { species, item } = entry.pokemon.showdownData;
+    const megaSlug = getMegaApiSlug(item, species);
+    if (!megaSlug) return matchesChips(species);
+
+    const megaSpecies = gen.species.get(toID(megaSlug));
+    const megaAbility = getMegaAbility(megaSlug);
+    const speciesLower = species.toLowerCase();
+
+    return chips.every((chip, i) => {
+      const set = chipSets[i];
+      if (set === null || set.has(speciesLower)) return true;
+      if (chip.category === 'type' && megaSpecies) {
+        return megaSpecies.types.some((t) => t.toLowerCase() === chip.value);
+      }
+      if (chip.category === 'ability' && megaAbility) {
+        return normalizeNameForAPI(megaAbility) === chip.value;
+      }
+      return false;
+    });
+  };
+
   const matchesSearchText = (entry: SavedPokemonEntry): boolean =>
     search.trim().length === 0 ||
     entry.label.toLowerCase().includes(search.toLowerCase()) ||
@@ -283,7 +333,7 @@ export default function BoxPage({
 
   const displayedEntries = sortedEntries
     .filter(matchesSearchText)
-    .filter((entry) => chips.length === 0 || matchesChips(entry.pokemon.showdownData.species));
+    .filter((entry) => chips.length === 0 || matchesChipsWithMega(entry));
 
   const isSearching = search.trim().length > 0 || chips.length > 0;
 
