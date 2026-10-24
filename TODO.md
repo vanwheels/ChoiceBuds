@@ -146,17 +146,11 @@ is now consumable by Type Matchup Rework. Type Matchup Rework was itself
 promoted to current and shipped 2026-10-23 (see `MILESTONES.md`), and Team
 Editor & Box Fixes was promoted to current and shipped the same day (see
 `MILESTONES.md`), bundling in two Unscheduled bug fixes found since the
-pass (Mega sprite/toggle gating, useSavedPokemon sync migration gap). The
-remaining three, to be scoped in turn:
+pass (Mega sprite/toggle gating, useSavedPokemon sync migration gap).
+Search & Filter: Tag-Chip Redesign was itself promoted to current and
+shipped 2026-10-24 (see `MILESTONES.md`). The remaining two, to be scoped
+in turn:
 
-- **Search & Filter: Tag-Chip Redesign** — replace the `#`-prefixed text
-  search (team builder, Box, add-Pokémon flows) with Showdown-style
-  multi-select chips (type/move/ability/tier/egg group/...). Folds in two
-  bugs as side effects of the new model rather than separate patches:
-  `#`-filtered searches currently exclude Mega evolutions from results
-  (e.g. `#dragon` should surface Mega Charizard X), and single-text search
-  can't disambiguate a term that's both a type and a move name (`#psychic`
-  as type vs. the move Psychic).
 - **Selection UX & Data Audit** — two different-kind legs, not one: (a)
   stop truncating move/ability/item descriptions in selection dropdowns —
   currently only the full text shows, and only after the fact on hover
