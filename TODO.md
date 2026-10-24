@@ -32,15 +32,11 @@ Done when:
   own type/ability, consistently across both `AddPokemonStatTable.tsx` and
   Box's saved-build search - no separate "Mega" chip required anywhere.
 
-- **[Search & Filter: Tag-Chip Redesign] — Leg 5** *(Last touched:
-  2026-10-23 · Re-checks: 0)*
-  Extend Box's chip matching so a saved build holding a Mega Stone matches
-  an active chip against the Mega form's own type/ability, not just the
-  base species' - a predicate-only change (Box filters existing builds, it
-  doesn't create new rows), lighter than Leg 4.
-  Done check: a saved build holding a Mega Stone whose Mega form (not its
-  base form) matches an active chip shows up in Box search results.
-  Manual verification: yes. Review: no.
+(Leg 5 - extending Box's chip matching so a saved build holding a Mega
+Stone matches an active chip against the Mega form's own type/ability -
+shipped 2026-10-24, live-verified via run-desktop; see COMPLETED.md. This
+was the milestone's last open done-when criterion - all three are now met,
+so this milestone is ready for `/close-milestone`.)
 
 (A Leg 5 previously listed here - "Add Mega rows to `SpeciesPickerCard.tsx`
 ... so Mega forms are selectable here for the first time" - was dropped

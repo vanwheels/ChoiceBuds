@@ -160,3 +160,23 @@ Entries prior to this file's oldest are in:
   confirmed override (Aerodactyl/Barbaracle/Charizard X/Golisopod/
   Metagross), no false positives once the async ability-member fetch
   resolved. See commit `63384b1`.
+
+- **[Search & Filter: Tag-Chip Redesign] — Leg 5** (2026-10-24): Extended
+  `BoxPage.tsx`'s own chip matching (`matchesChipsWithMega`) so a saved
+  build holding its own Mega Stone (`getMegaApiSlug`) also matches a
+  type/ability chip against the Mega form's own type (`calcSpecies.types`)
+  or guaranteed ability (`getMegaAbility`), OR'd per chip against the
+  existing base-species check rather than replacing it outright - a Box
+  entry is one card representing a build that's both pre- and post-Mega
+  depending on battle state, unlike Leg 4's separate per-stone Mega row.
+  Move chips unaffected. This was the milestone's last open done-when
+  criterion - all three are now met, so `/close-milestone` is next.
+  Live-verified via `run-desktop`: saved a disposable Charizard holding
+  Charizardite X, confirmed it was absent from a Dragon-chip search on the
+  pre-change build then present after, deleted via a real Playwright
+  right-click (`button: 'right'`) on the test tile - a plain DOM
+  `dispatchEvent('contextmenu')` never reached `BoxCard.tsx`'s React
+  handler, so the first verification attempt had to switch to a real
+  simulated click. Cleanup confirmed via the saved-build count dropping
+  back to 25 and the real saved builds all still present. See commit
+  `9db7d2e`.
