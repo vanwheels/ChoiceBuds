@@ -16,6 +16,57 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
+## Current Milestone: Selection UX & Data Audit
+
+Done when:
+- Move/ability/item descriptions in the three selection dropdowns
+  (`MovePickerPanel.tsx`, `AbilityPickerPanel.tsx`, `ItemPickerPanel.tsx`)
+  show full text, not truncated to one line.
+- Leg 2 has enumerated every move/ability currently falling back to
+  `pokeapiService.ts`'s `'No description available'` text across the Gen 9
+  VGC-legal pool, confirming Upper Hand and Temper Flare are among them.
+- Curated fallback descriptions have been written for Leg 2's gap list
+  (following the existing Fairy Feather hardcoded-fallback precedent, moved
+  to a dedicated `config/` table if the list is long enough to warrant
+  one), with any overflow too large for one session split to Unscheduled.
+
+- **[Selection Dropdown Description Truncation] — Leg 1** *(Last touched:
+  2026-10-24 · Re-checks: 0)*
+  Remove the `truncate` className on the description `div` in
+  `MovePickerPanel.tsx`, `AbilityPickerPanel.tsx`, and `ItemPickerPanel.tsx`
+  so full text wraps instead of cutting off — matches the existing
+  hover-tooltip text, just shown up front instead of only after adding to a
+  Pokémon.
+  Done check: all three picker dropdowns render full, unclipped
+  descriptions for a move/ability/item with long text.
+  Manual verification: yes.
+
+- **[Missing Move/Ability Description Audit] — Leg 2** *(Last touched:
+  2026-10-24 · Re-checks: 0)*
+  Enumerate every move and ability currently falling back to
+  `pokeapiService.ts`'s `extractEffectDescription`'s `'No description
+  available'` text across the Gen 9 VGC-legal pool. Upper Hand and Temper
+  Flare were flagged as examples, not the full list — confirm they're in
+  it, then find the rest. Produces a gap list only, no fixes yet; size is
+  unknown until this leg runs.
+  Done check: a written list of every move/ability currently showing the
+  fallback text, confirmed against Upper Hand/Temper Flare.
+  Manual verification: no.
+
+- **[Missing Description Curated Fallbacks] — Leg 3** *(Last touched:
+  2026-10-24 · Re-checks: 0)*
+  Write curated fallback description text for Leg 2's gap list, following
+  the existing Fairy Feather hardcoded-fallback precedent in
+  `pokeapiService.ts` — move to a dedicated `config/` table instead if the
+  list is long enough to warrant one, per the project's curated-static-data
+  convention. If the list is too large for one session, fix what fits and
+  split the remainder to Unscheduled as a scoped follow-up rather than
+  blocking this leg.
+  Done check: every gap from Leg 2's list (or as much as fits one session)
+  now shows real description text instead of the fallback, verified by
+  spot-checking a sample in the picker panels.
+  Manual verification: yes.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -128,16 +179,10 @@ Editor & Box Fixes was promoted to current and shipped the same day (see
 `MILESTONES.md`), bundling in two Unscheduled bug fixes found since the
 pass (Mega sprite/toggle gating, useSavedPokemon sync migration gap).
 Search & Filter: Tag-Chip Redesign was itself promoted to current and
-shipped 2026-10-24 (see `MILESTONES.md`). The remaining two, to be scoped
-in turn:
+shipped 2026-10-24 (see `MILESTONES.md`). Selection UX & Data Audit was
+itself promoted to current 2026-10-24 (see the Current Milestone section
+above). The remaining one, still to be scoped:
 
-- **Selection UX & Data Audit** — two different-kind legs, not one: (a)
-  stop truncating move/ability/item descriptions in selection dropdowns —
-  currently only the full text shows, and only after the fact on hover
-  once already added to a Pokémon; (b) audit curated move/ability
-  description coverage for gaps (Upper Hand flagged as missing; verify
-  exact names before auditing further — "Temper Flare" as given doesn't
-  match a known Gen 9 move/ability).
 - **Calc Improvements** — highlight the selected Pokémon's sprite box in
   the calc; default-highlight and auto-display damage rolls for the
   faster Pokémon's highest-damaging move when two Pokémon are selected;
