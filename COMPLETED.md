@@ -18,8 +18,11 @@ local ("see below"/"see above").
   alongside `championsMoveOverrides.ts`, rather than `pokeapiService.ts`'s
   fetch-time Fairy Feather precedent, so the fix self-heals move data
   already sitting in a user's `NEVER_EXPIRES` game-data-cache.json instead
-  of requiring a cache-version bump. All three of Selection UX & Data
-  Audit's "Done when" criteria are now met — next step is `/close-milestone`.
+  of requiring a cache-version bump. Live-verified in the running app: the
+  picker panels now show real description text instead of "No description
+  available" for the spot-checked sample (Upper Hand, Tera Blast, Shed
+  Tail). All three of Selection UX & Data Audit's "Done when" criteria are
+  now met — next step is `/close-milestone`.
   See commit f513bec8a9e52b90208290557eca75c01ebd06b1.
 
 - **[Missing Move/Ability Description Audit] — Leg 2** (2026-10-24)
