@@ -299,53 +299,62 @@ export default function AddPokemonStatTable({
   // One row per Mega Stone, gated to species already in `legalRoster` (see
   // this file's header). Matched by plain-text search on the "Mega
   // {Species}" label same as before, plus matchesMegaChips for any active
-  // type/move/ability chip (implicit Mega matching, see file header).
-  const megaRows: StatTableRow[] = Object.entries(MEGA_STONE_TO_SPECIES).flatMap(
-    ([item, entry]) => {
-      const baseSpecies = legalRoster.find(
-        (pkmn) => pkmn.name.toLowerCase() === entry.species.toLowerCase(),
-      );
-      if (!baseSpecies) return [];
+  // type/move/ability chip (implicit Mega matching, see file header). Grouped
+  // by base species name (not a flat list) so each Mega row can be spliced in
+  // directly below its own base species below, rather than all Mega rows
+  // trailing the full species list.
+  const megaRowsBySpecies = new Map<string, StatTableRow[]>();
+  Object.entries(MEGA_STONE_TO_SPECIES).forEach(([item, entry]) => {
+    const baseSpecies = legalRoster.find(
+      (pkmn) => pkmn.name.toLowerCase() === entry.species.toLowerCase(),
+    );
+    if (!baseSpecies) return;
 
-      const slug = `${entry.species}-${entry.suffix}`;
-      const calcSpecies = gen.species.get(toID(slug));
-      const stats: PokemonStats | null = calcSpecies
-        ? {
-            hp: calcSpecies.baseStats.hp,
-            attack: calcSpecies.baseStats.atk,
-            defense: calcSpecies.baseStats.def,
-            specialAttack: calcSpecies.baseStats.spa,
-            specialDefense: calcSpecies.baseStats.spd,
-            speed: calcSpecies.baseStats.spe,
-          }
-        : null;
-      const displayName = formatMegaLabel(baseSpecies.name, entry.suffix);
-      const megaAbility = getMegaAbility(slug);
+    const slug = `${entry.species}-${entry.suffix}`;
+    const calcSpecies = gen.species.get(toID(slug));
+    const stats: PokemonStats | null = calcSpecies
+      ? {
+          hp: calcSpecies.baseStats.hp,
+          attack: calcSpecies.baseStats.atk,
+          defense: calcSpecies.baseStats.def,
+          specialAttack: calcSpecies.baseStats.spa,
+          specialDefense: calcSpecies.baseStats.spd,
+          speed: calcSpecies.baseStats.spe,
+        }
+      : null;
+    const displayName = formatMegaLabel(baseSpecies.name, entry.suffix);
+    const megaAbility = getMegaAbility(slug);
 
-      if (!matchesSearchText(displayName)) return [];
-      if (!matchesMegaChips(calcSpecies, megaAbility, baseSpecies.name)) return [];
+    if (!matchesSearchText(displayName)) return;
+    if (!matchesMegaChips(calcSpecies, megaAbility, baseSpecies.name)) return;
 
-      return [
-        {
-          key: `mega:${item}`,
-          displayName,
-          spriteUrl: getCachedMegaSprite(slug)?.spriteUrl ?? baseSpecies.spriteUrl,
-          types: calcSpecies ? [...calcSpecies.types] : [],
-          abilities: megaAbility ? [megaAbility] : [],
-          hp: stats?.hp ?? null,
-          attack: stats?.attack ?? null,
-          defense: stats?.defense ?? null,
-          specialAttack: stats?.specialAttack ?? null,
-          specialDefense: stats?.specialDefense ?? null,
-          speed: stats?.speed ?? null,
-          bst: stats ? computeBST(stats) : null,
-          onClick: () => onSelect(baseSpecies, toTitleCase(item)),
-        },
-      ];
-    },
-  );
+    const megaRow: StatTableRow = {
+      key: `mega:${item}`,
+      displayName,
+      spriteUrl: getCachedMegaSprite(slug)?.spriteUrl ?? baseSpecies.spriteUrl,
+      types: calcSpecies ? [...calcSpecies.types] : [],
+      abilities: megaAbility ? [megaAbility] : [],
+      hp: stats?.hp ?? null,
+      attack: stats?.attack ?? null,
+      defense: stats?.defense ?? null,
+      specialAttack: stats?.specialAttack ?? null,
+      specialDefense: stats?.specialDefense ?? null,
+      speed: stats?.speed ?? null,
+      bst: stats ? computeBST(stats) : null,
+      onClick: () => onSelect(baseSpecies, toTitleCase(item)),
+    };
+    const existing = megaRowsBySpecies.get(baseSpecies.name);
+    if (existing) {
+      existing.push(megaRow);
+    } else {
+      megaRowsBySpecies.set(baseSpecies.name, [megaRow]);
+    }
+  });
 
-  const rows = [...speciesRows, ...megaRows];
+  const rows: StatTableRow[] = filteredRoster.flatMap((species, i) => [
+    speciesRows[i],
+    ...(megaRowsBySpecies.get(species.name) ?? []),
+  ]);
   const sortedRows = sort ? sortStatTableRows(rows, sort, (row) => row[sort.key]) : rows;
 
   const handleSortClick = (key: StatTableSortKey) =>
