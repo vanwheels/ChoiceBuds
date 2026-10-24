@@ -16,6 +16,43 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
+## Current Milestone: Display Bug Fix Sweep
+
+Done when:
+- Mega-Stone rows appear directly below their own base species in
+  `AddPokemonStatTable.tsx`'s row list, instead of all being appended after
+  the full base-species list.
+- Move bubbles on Team/Box/Builder cards and their tooltips show the
+  effective type color from an equipped type-changing ability (Aerilate,
+  Pixilate, Refrigerate, Galvanize, Normalize, Liquid Voice), not the
+  move's raw listed type.
+
+- **[Mega Form List Ordering] — Leg 1**
+  *(Last touched: 2026-10-24 · Re-checks: 0)*
+  `AddPokemonStatTable.tsx`'s row list (`const rows = [...speciesRows,
+  ...megaRows]`, line ~348) appends every Mega-Stone row after the full
+  base-species list rather than placing each Mega row directly below its
+  own base species. Fix the row list so each Mega-Stone row is inserted
+  directly after its own base species.
+  Done check: row list renders each Mega row immediately below its base
+  species for every species with a Mega form.
+  Manual verification: yes. Review: no.
+
+- **[Type-Changing Ability Move Badge Color] — Leg 2**
+  *(Last touched: 2026-10-23 · Re-checks: 0)*
+  On Team/Box/Builder cards, a move whose type an equipped ability changes
+  (Aerilate, Pixilate, Refrigerate, Galvanize, Normalize, Liquid Voice) still
+  shows its badge in the move's raw listed type color rather than the
+  effective type the ability produces. Update `MoveBubbleGrid.tsx`'s move
+  bubbles (and `TooltipContent.tsx`) to color via
+  `config/typeChangingAbilities.ts`'s `getEffectiveMoveType` - already used
+  by `hooks/useTeamMoveTypes.ts` for the same purpose in Type Matchup's
+  Offensive Coverage - instead of the move's own `type` field directly.
+  Done check: a Pokémon holding one of the six type-changing abilities
+  shows its moves' badges in the ability-transformed type on cards and in
+  tooltips.
+  Manual verification: yes. Review: no.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -44,30 +81,9 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-- **[Mega Form List Ordering] — Leg 1**
-  *(Last touched: 2026-10-24 · Re-checks: 0)*
-  `AddPokemonStatTable.tsx`'s row list (`const rows = [...speciesRows,
-  ...megaRows]`, line ~348) appends every Mega-Stone row after the full
-  base-species list rather than placing each Mega row directly below its
-  own base species. Surfaced 2026-10-24 during Search & Filter: Tag-Chip
-  Redesign's close-out; flagged as separate scope rather than folded into
-  that milestone since it's a display-ordering concern, not part of its
-  chip-matching done-when.
-
-- **[Type-Changing Ability Move Badge Color] — Leg 1**
-  *(Last touched: 2026-10-23 · Re-checks: 0)*
-  On Team/Box/Builder cards, a move whose type an equipped ability changes
-  (Aerilate, Pixilate, Refrigerate, Galvanize, Normalize, Liquid Voice) still
-  shows its badge in the move's raw listed type color rather than the
-  effective type the ability produces. `MoveBubbleGrid.tsx`'s move bubbles
-  (and `TooltipContent.tsx`) should color via
-  `config/typeChangingAbilities.ts`'s `getEffectiveMoveType` - already used
-  by `hooks/useTeamMoveTypes.ts` for the same purpose in Type Matchup's
-  Offensive Coverage - instead of the move's own `type` field directly.
-  Surfaced 2026-10-23 during Ability-Affects-Move Indicator & Type Matchup
-  Mega Toggle Leg 3; flagged as separate scope rather than folded into that
-  leg since it's a different surface (card move bubbles, not Type Matchup)
-  and outside that milestone's done-when.
+(Mega Form List Ordering and Type-Changing Ability Move Badge Color,
+previously listed here, were bundled into the Display Bug Fix Sweep
+milestone on 2026-10-24 - see above.)
 
 (The Ability-Affects-Move Indicator + Type Matchup Mega Toggle item
 previously listed here was promoted to current 2026-10-23 and shipped the
