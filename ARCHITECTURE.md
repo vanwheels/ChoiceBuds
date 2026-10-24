@@ -107,10 +107,11 @@ change.
 - `src/renderer/config/` — static lookup tables only (type/move/ability data,
   VGC legality lists, theme maps, Champions balance-patch overrides applied
   at the read boundary in `useGameData.ts`: `championsMoveOverrides.ts`,
-  `championsAbilityOverrides.ts`, `championsMovepoolChanges.ts`). No
-  hardcoded colors or species lists belong anywhere else. External-source
-  policy for this directory and `services/` lives in
-  `.claude/rules/external-data-sources.md`.
+  `championsAbilityOverrides.ts`, `championsMovepoolChanges.ts`;
+  `missingMoveDescriptions.ts` fills PokeAPI's own description gaps at the
+  same read boundary, same pattern, different reason). No hardcoded colors
+  or species lists belong anywhere else. External-source policy for this
+  directory and `services/` lives in `.claude/rules/external-data-sources.md`.
 - `src/renderer/components/` — presentational only.
 
 ## Data flow for an import

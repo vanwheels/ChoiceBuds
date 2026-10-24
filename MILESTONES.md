@@ -105,3 +105,5 @@ milestone.
   [post-mortem](docs/postmortems/search-and-filter-tag-chip-redesign.md)
 - **Display Bug Fix Sweep** — 2026-10-24 — Shipped —
   [post-mortem](docs/postmortems/display-bug-fix-sweep.md)
+- **Selection UX & Data Audit** — 2026-10-24 — Shipped —
+  [post-mortem](docs/postmortems/selection-ux-data-audit.md)
