@@ -21,26 +21,14 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 Done when:
 - Mega-Stone rows appear directly below their own base species in
   `AddPokemonStatTable.tsx`'s row list, instead of all being appended after
-  the full base-species list.
+  the full base-species list. ✅ done (see COMPLETED.md).
 - Move bubbles on Team/Box/Builder cards and their tooltips show the
   effective type color from an equipped type-changing ability (Aerilate,
   Pixilate, Refrigerate, Galvanize, Normalize, Liquid Voice), not the
-  move's raw listed type.
+  move's raw listed type. ✅ done (see COMPLETED.md).
 
-- **[Type-Changing Ability Move Badge Color] — Leg 2**
-  *(Last touched: 2026-10-23 · Re-checks: 0)*
-  On Team/Box/Builder cards, a move whose type an equipped ability changes
-  (Aerilate, Pixilate, Refrigerate, Galvanize, Normalize, Liquid Voice) still
-  shows its badge in the move's raw listed type color rather than the
-  effective type the ability produces. Update `MoveBubbleGrid.tsx`'s move
-  bubbles (and `TooltipContent.tsx`) to color via
-  `config/typeChangingAbilities.ts`'s `getEffectiveMoveType` - already used
-  by `hooks/useTeamMoveTypes.ts` for the same purpose in Type Matchup's
-  Offensive Coverage - instead of the move's own `type` field directly.
-  Done check: a Pokémon holding one of the six type-changing abilities
-  shows its moves' badges in the ability-transformed type on cards and in
-  tooltips.
-  Manual verification: yes. Review: no.
+Both done-when items are now shipped - this milestone is ready for
+`/close-milestone`.
 
 ## Blocked
 
