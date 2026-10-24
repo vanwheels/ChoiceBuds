@@ -127,8 +127,8 @@ export default function CalcPage({
     pokemon2Speed,
     p1Results,
     p2Results,
-    selectedResult,
     setSelectedResult,
+    effectiveSelectedResult,
     selectedEntry,
   } = calcState;
 
@@ -224,7 +224,9 @@ export default function CalcPage({
           moves={pokemon1.moves}
           results={p1Results}
           moveOptions={pokemon1MoveOptions}
-          selectedIndex={selectedResult?.side === 'p1' ? selectedResult.index : null}
+          selectedIndex={
+            effectiveSelectedResult?.side === 'p1' ? effectiveSelectedResult.index : null
+          }
           onChangeMove={setPokemon1Move}
           onSelect={(index) => setSelectedResult({ side: 'p1', index })}
           usagePercentByName={pokemon1MovePercentByName}
@@ -234,7 +236,9 @@ export default function CalcPage({
           moves={pokemon2.moves}
           results={p2Results}
           moveOptions={pokemon2MoveOptions}
-          selectedIndex={selectedResult?.side === 'p2' ? selectedResult.index : null}
+          selectedIndex={
+            effectiveSelectedResult?.side === 'p2' ? effectiveSelectedResult.index : null
+          }
           onChangeMove={setPokemon2Move}
           onSelect={(index) => setSelectedResult({ side: 'p2', index })}
           usagePercentByName={pokemon2MovePercentByName}

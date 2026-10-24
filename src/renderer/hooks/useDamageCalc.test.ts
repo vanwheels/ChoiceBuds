@@ -379,8 +379,63 @@ describe('useDamageCalc', () => {
     act(() => result.current.setSelectedResult({ side: 'p1', index: 99 }));
     expect(result.current.selectedEntry).toBe(null);
 
+    // Clearing the manual pick falls back to the default best move (Calc
+    // Auto Damage-Roll Display) rather than back to null - Gengar/Shadow
+    // Ball here is both the only move set and the default best.
     act(() => result.current.setSelectedResult(null));
-    expect(result.current.selectedEntry).toBe(null);
+    expect(result.current.selectedEntry).toBe(result.current.p1Results[0]);
+  });
+
+  it("effectiveSelectedResult defaults to the faster side's highest-damaging move with no manual click", () => {
+    const { result } = setup();
+    act(() => {
+      // Gengar (base Spe 110) outspeeds Garchomp (base Spe 102) at equal
+      // level/EVs/nature, so the default pick should land on Gengar's side.
+      result.current.setPokemon1({ species: 'Gengar' });
+      result.current.setPokemon2({ species: 'Garchomp' });
+    });
+    act(() => {
+      result.current.setPokemon1Move(0, { name: 'Lick' });
+      result.current.setPokemon1Move(1, { name: 'Shadow Ball' });
+    });
+
+    expect(result.current.selectedResult).toBe(null);
+    expect(result.current.pokemon1Speed).not.toBeNull();
+    expect(result.current.pokemon2Speed).not.toBeNull();
+    expect(result.current.pokemon1Speed! > result.current.pokemon2Speed!).toBe(true);
+    // Shadow Ball out-damages the weaker Lick, so index 1 is the default pick.
+    expect(result.current.effectiveSelectedResult).toEqual({ side: 'p1', index: 1 });
+    expect(result.current.selectedEntry).toBe(result.current.p1Results[1]);
+  });
+
+  it('a manual setSelectedResult overrides the default highest-damaging pick', () => {
+    const { result } = setup();
+    act(() => {
+      result.current.setPokemon1({ species: 'Gengar' });
+      result.current.setPokemon2({ species: 'Garchomp' });
+    });
+    act(() => {
+      result.current.setPokemon1Move(0, { name: 'Lick' });
+      result.current.setPokemon1Move(1, { name: 'Shadow Ball' });
+    });
+    expect(result.current.effectiveSelectedResult).toEqual({ side: 'p1', index: 1 });
+
+    act(() => result.current.setSelectedResult({ side: 'p1', index: 0 }));
+
+    expect(result.current.effectiveSelectedResult).toEqual({ side: 'p1', index: 0 });
+    expect(result.current.selectedEntry).toBe(result.current.p1Results[0]);
+  });
+
+  it('effectiveSelectedResult stays null until both sides have a species selected', () => {
+    const { result } = setup();
+    expect(result.current.effectiveSelectedResult).toBe(null);
+
+    act(() => result.current.setPokemon1({ species: 'Gengar' }));
+    act(() => result.current.setPokemon1Move(0, { name: 'Shadow Ball' }));
+    expect(result.current.effectiveSelectedResult).toBe(null);
+
+    act(() => result.current.setPokemon2({ species: 'Garchomp' }));
+    expect(result.current.effectiveSelectedResult).toEqual({ side: 'p1', index: 0 });
   });
 
   it('pokemon1MoveOptions is the full move list (same reference) while no species is selected', () => {

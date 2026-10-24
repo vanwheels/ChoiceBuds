@@ -110,6 +110,12 @@ export interface UseDamageCalcReturn {
   p2Results: CalcMoveResultEntry[];
   selectedResult: SelectedResultRef | null;
   setSelectedResult: (ref: SelectedResultRef | null) => void;
+  /** `selectedResult` once a move's been clicked, otherwise the faster side's
+   * highest-damaging move (Calc Auto Damage-Roll Display) - what the move
+   * grids/result panel should actually render as "selected", so a manual
+   * click always wins over the auto pick without needing an effect to
+   * reconcile the two. */
+  effectiveSelectedResult: SelectedResultRef | null;
   selectedEntry: CalcMoveResultEntry | null;
 }
 
@@ -317,11 +323,36 @@ export function useDamageCalc(
     [gen, pokemon1, pokemon2, field],
   );
 
+  // Default pick once both Pokemon are set up and neither move grid has been
+  // clicked yet - the faster side's highest-average-damage move (average of
+  // its range, matching the scalar the move grid itself already sorts
+  // on-screen by). A speed tie favors p1; real Showdown ties resolve
+  // randomly, so there's no single "correct" side to prefer here.
+  const defaultBestResult = useMemo<SelectedResultRef | null>(() => {
+    if (!pokemon1.species || !pokemon2.species) return null;
+    if (pokemon1Speed === null || pokemon2Speed === null) return null;
+    const side: 'p1' | 'p2' = pokemon1Speed >= pokemon2Speed ? 'p1' : 'p2';
+    const results = side === 'p1' ? p1Results : p2Results;
+    let bestIndex: number | null = null;
+    let bestAvgDamage = -Infinity;
+    results.forEach((entry, index) => {
+      if (!entry.range || entry.errorMessage) return;
+      const avgDamage = (entry.range[0] + entry.range[1]) / 2;
+      if (avgDamage > bestAvgDamage) {
+        bestAvgDamage = avgDamage;
+        bestIndex = index;
+      }
+    });
+    return bestIndex === null ? null : { side, index: bestIndex };
+  }, [pokemon1.species, pokemon2.species, pokemon1Speed, pokemon2Speed, p1Results, p2Results]);
+
+  const effectiveSelectedResult = selectedResult ?? defaultBestResult;
+
   const selectedEntry = useMemo(() => {
-    if (!selectedResult) return null;
-    const list = selectedResult.side === 'p1' ? p1Results : p2Results;
-    return list[selectedResult.index] ?? null;
-  }, [selectedResult, p1Results, p2Results]);
+    if (!effectiveSelectedResult) return null;
+    const list = effectiveSelectedResult.side === 'p1' ? p1Results : p2Results;
+    return list[effectiveSelectedResult.index] ?? null;
+  }, [effectiveSelectedResult, p1Results, p2Results]);
 
   return {
     regulationId,
@@ -356,6 +387,7 @@ export function useDamageCalc(
     p2Results,
     selectedResult,
     setSelectedResult,
+    effectiveSelectedResult,
     selectedEntry,
   };
 }
