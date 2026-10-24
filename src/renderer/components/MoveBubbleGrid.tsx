@@ -19,6 +19,7 @@ import type { MouseEvent, PointerEvent, RefObject } from 'react';
 import { motion } from 'framer-motion';
 import type { MoveData } from '../types/pokemon';
 import { getTypeTheme, type TypeTheme } from '../config/pokemonTheme';
+import { getEffectiveMoveType } from '../config/typeChangingAbilities';
 import { DRAG_REORDER_TRANSITION } from '../config/motion';
 import { useLongPress } from '../hooks/useLongPress';
 
@@ -35,6 +36,11 @@ interface MoveBubbleGridProps {
   // move. Already resolved against the Mega-displayed ability by
   // EditOverlays.tsx; this component just renders the corner badge.
   moveBoosts: Array<number | null>;
+  // Equipped ability (already resolved against a Mega's forced ability
+  // upstream, same as moveBoosts) - fed into getEffectiveMoveType so a
+  // bubble's color reflects a type-changing ability's (Aerilate/Pixilate/
+  // etc.) transformed type rather than the move's raw listed type.
+  ability: string | undefined;
   onToggleMenu: (key: string, e: MouseEvent<HTMLDivElement>) => void;
   onHoverEnter: (key: HoverKey, triggerEl: HTMLElement) => void;
   onHoverLeave: (key: HoverKey) => void;
@@ -161,16 +167,21 @@ export default function MoveBubbleGrid({
   moveDataSlots,
   selectedMoves,
   moveBoosts,
+  ability,
   onToggleMenu,
   onHoverEnter,
   onHoverLeave,
   onReorderMoves,
 }: MoveBubbleGridProps) {
   // Move-type background/text classes only need recomputing when the 4
-  // equipped moves actually change, not on every render during mount/hover.
+  // equipped moves or the equipped ability actually change, not on every
+  // render during mount/hover.
   const themes = useMemo(
-    () => moveDataSlots.map((move) => (move ? getTypeTheme(move.type) : NEUTRAL_THEME)),
-    [moveDataSlots],
+    () =>
+      moveDataSlots.map((move) =>
+        move ? getTypeTheme(getEffectiveMoveType(move.name, move.type, ability)) : NEUTRAL_THEME,
+      ),
+    [moveDataSlots, ability],
   );
 
   // Local visual order of original slot indices, permuted live during a

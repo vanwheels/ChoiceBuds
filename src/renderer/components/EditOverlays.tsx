@@ -428,6 +428,7 @@ export default function EditOverlays({
         moveDataSlots={moveDataSlots}
         selectedMoves={selectedMoves}
         moveBoosts={moveBoosts}
+        ability={displayedAbilityName}
         onToggleMenu={toggleMenu}
         onHoverEnter={hoverEnter}
         onHoverLeave={hoverLeave}

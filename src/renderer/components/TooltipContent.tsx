@@ -9,6 +9,7 @@ import { useState } from 'react';
 import type { ItemData, MoveData, AbilityData } from '../types/pokemon';
 import type { HoverKey } from './MoveBubbleGrid';
 import { toReadableName } from '../utils/displayName';
+import { getEffectiveMoveType } from '../config/typeChangingAbilities';
 import TypeBadge from './TypeBadge';
 import { VISIBLE_MOVE_FLAGS, MOVE_FLAG_LABELS } from '../config/moveFlags';
 import { getMoveFlagTheme } from '../config/pokemonTheme';
@@ -78,7 +79,7 @@ export default function TooltipContent({
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <span className="font-bold text-white">{toReadableName(move.name)}</span>
-          <TypeBadge type={move.type} />
+          <TypeBadge type={getEffectiveMoveType(move.name, move.type, selectedAbility)} />
         </div>
         <div className="flex items-center gap-1.5 text-zinc-300">
           {!failedBadges[move.category] ? (
