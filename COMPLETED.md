@@ -118,6 +118,14 @@ Entries prior to this file's oldest are in:
   slug since it shares its date range with the Display Bug Fix Sweep
   archive above)
 
+- **[Calc Sprite Box Highlight] — Leg 2** (2026-10-24)
+  Highlighted the loaded Pokémon's sprite box in `CalcTeamTray.tsx`/
+  `CalcOpponentTray.tsx`, deriving the highlight from the panel's own
+  `state.species` (same convention `FormeToggle.tsx` already uses) rather
+  than tracking a separate click selection, so drag-drop loads, manual
+  species edits, and Mega-toggling update it too. Manually verified in
+  `npm run dev`. See commit 48a2ee77f203a2fda5fd41871a54b68614831e85.
+
 - **[Tera Blast Movepool Leak Fix] — Leg 1** (2026-10-24)
   Closed the leak documented in
   `docs/investigations/missing-move-ability-descriptions.md`'s side-finding:

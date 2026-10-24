@@ -24,15 +24,6 @@ Done when:
 - With two Pokémon selected, the faster one's highest-damaging move is auto-highlighted and its damage roll auto-displayed without a manual move click.
 - Item and Pokémon sprites appear in the calc UI (lowest priority — may slip to a future milestone if the other three take longer than expected).
 
-- **[Calc Sprite Box Highlight] — Leg 2** *(Last touched: 2026-10-24 ·
-  Re-checks: 0)*
-  Highlight the selected Pokémon's sprite box in `CalcTeamTray.tsx`/
-  `CalcOpponentTray.tsx` so the active selection is visually obvious,
-  establishing the selection-state convention Leg 3 builds on.
-  Done check: selecting a Pokémon in either tray visibly highlights its
-  sprite box; deselecting/switching updates it correctly. Manual
-  verification: yes.
-
 - **[Calc Auto Damage-Roll Display] — Leg 3** *(Last touched: 2026-10-24 ·
   Re-checks: 0)*
   When two Pokémon are selected, default-highlight and auto-display damage
