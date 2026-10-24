@@ -16,6 +16,92 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
+## Current Milestone: Search & Filter: Tag-Chip Redesign
+
+Done when:
+- Team builder (roster swap + add-Pokémon slot), Box search, and the
+  Add-Pokémon stat table all use multi-select type/move/ability chips
+  instead of free-text `#tag` syntax; multiple chips still AND together.
+- Chip matching ignores spaces/hyphens in move/ability names ("fireblast" =
+  "fire blast" = "fire-blast") and disambiguates a name that's both a type
+  and a move (e.g. Psychic) via distinct chip options, not text guessing.
+- Mega forms surface as results wherever an active chip matches the Mega's
+  own type/ability, consistently across all three surfaces - no separate
+  "Mega" chip required anywhere.
+
+- **[Search & Filter: Tag-Chip Redesign] — Leg 1** *(Last touched:
+  2026-10-23 · Re-checks: 0)*
+  Foundation leg, no picker wiring yet. New chip data model
+  (`{category: type|move|ability, value}`) and a shared `TagChipInput`
+  component (text box + rendered chips + category-labeled autocomplete
+  dropdown + remove affordance). Autocomplete filtering is space/hyphen-
+  insensitive (so "fireblast"/"fire blast"/"fire-blast" all match the same
+  move) and disambiguates a name that's both a type and a move (e.g.
+  Psychic) as separate labeled options. Unit tests cover the matching/dedupe
+  logic directly (no React needed).
+  Done check: pure-logic unit tests pass for matching/dedupe/disambiguation;
+  component renders standalone (e.g. in a throwaway harness) with no real
+  consumer yet.
+  Manual verification: no. Review: no.
+
+- **[Search & Filter: Tag-Chip Redesign] — Leg 2** *(Last touched:
+  2026-10-23 · Re-checks: 0)*
+  Wire Leg 1's `TagChipInput` into `SpeciesPickerCard.tsx` (Roster Swap +
+  the trailing "+ Add Pokémon" slot), replacing its free-text `#tag` input.
+  Each chip routes directly by category into the existing
+  `usePokemonTypeFilter`/`usePokemonMoveFilter`/`usePokemonAbilityFilter`
+  hooks instead of the current type→move→ability text-probing fallback
+  chain, since the chip already carries its category. No Mega rows yet
+  (unchanged from today).
+  Done check: species results match the same set a chip combo as the old
+  `#tag` combo would, with the type/move disambiguation now explicit in the
+  UI instead of order-dependent guessing.
+  Manual verification: yes. Review: no.
+
+- **[Search & Filter: Tag-Chip Redesign] — Leg 3** *(Last touched:
+  2026-10-23 · Re-checks: 0)*
+  Wire `TagChipInput` into Box search (`BoxPage.tsx`/`BoxPageToolbar.tsx`),
+  same swap-in pattern as Leg 2 against the same species-level hooks. No
+  Mega yet.
+  Done check: Box search filters saved builds correctly by chip combo,
+  matching the prior `#tag`-equivalent results.
+  Manual verification: yes. Review: no.
+
+- **[Search & Filter: Tag-Chip Redesign] — Leg 4** *(Last touched:
+  2026-10-23 · Re-checks: 0)*
+  Wire `TagChipInput` into `AddPokemonStatTable.tsx`, and flip its existing
+  Mega-row gating from requiring an explicit `#mega` tag (the 2026-09-11
+  decision in `docs/investigations/mega-form-rows-scoping.md`) to implicit:
+  any matching type/move/ability chip now also surfaces Mega rows whose own
+  stats/type/ability match, no separate Mega chip needed. Update that
+  investigation doc's recorded decision to reflect the reversal.
+  Done check: a chip like "Dragon" surfaces Mega Charizard X without a
+  Mega chip present; existing non-Mega filtering still matches Legs 2/3's
+  behavior.
+  Manual verification: yes. Review: no.
+
+- **[Search & Filter: Tag-Chip Redesign] — Leg 5** *(Last touched:
+  2026-10-23 · Re-checks: 0)*
+  Add Mega rows to `SpeciesPickerCard.tsx`, reusing
+  `AddPokemonStatTable.tsx`'s existing Mega-row generation/selection pattern
+  (one row per Mega Stone in `MEGA_STONE_TO_SPECIES`, selecting creates the
+  base species with an item override) so Mega forms are selectable here for
+  the first time, matched implicitly per Leg 4's behavior.
+  Done check: a chip combo that only a Mega form satisfies surfaces that
+  Mega's row in Roster Swap and the Add-Pokémon slot; selecting it creates
+  the base species holding the correct Mega Stone.
+  Manual verification: yes. Review: no.
+
+- **[Search & Filter: Tag-Chip Redesign] — Leg 6** *(Last touched:
+  2026-10-23 · Re-checks: 0)*
+  Extend Box's chip matching so a saved build holding a Mega Stone matches
+  an active chip against the Mega form's own type/ability, not just the
+  base species' - a predicate-only change (Box filters existing builds, it
+  doesn't create new rows), lighter than Leg 5.
+  Done check: a saved build holding a Mega Stone whose Mega form (not its
+  base form) matches an active chip shows up in Box search results.
+  Manual verification: yes. Review: no.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
