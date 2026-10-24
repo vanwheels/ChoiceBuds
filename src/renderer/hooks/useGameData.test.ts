@@ -341,7 +341,7 @@ describe('useGameData', () => {
   });
 
   describe('species learnsets', () => {
-    it('does not apply hand-curated movepool changes once PokeAPI has its own champions move data', async () => {
+    it('does not apply hand-curated movepool changes once PokeAPI has its own champions move data, but still strips Tera Blast unconditionally', async () => {
       const cache = makeCache({
         learnsets: {
           gengar: makeLearnset({
@@ -355,7 +355,7 @@ describe('useGameData', () => {
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
 
       const learnset = await result.current.getSpeciesLearnset('gengar');
-      expect(learnset?.moves).toEqual(['shadow-ball', 'tera-blast']);
+      expect(learnset?.moves).toEqual(['shadow-ball']); // tera-blast stripped by applyChampionsPatchRemovals
     });
 
     it('applies the globally-removed-moves correction on a fresh fetch when PokeAPI has no champions move data yet', async () => {
@@ -394,7 +394,9 @@ describe('useGameData', () => {
       const learnset = await result.current.getSpeciesLearnset('gengar');
       expect(fetchSpeciesLearnset).toHaveBeenCalledWith('gengar', undefined);
       expect(learnset?.hasChampionsMoveData).toBe(true);
-      expect(learnset?.moves).toEqual(['shadow-ball', 'tera-blast']); // no hand-table correction now that PokeAPI has real data
+      // no hand-table correction now that PokeAPI has real data, but tera-blast
+      // is still stripped by applyChampionsPatchRemovals, which runs unconditionally
+      expect(learnset?.moves).toEqual(['shadow-ball']);
     });
 
     it('treats a cache entry predating hasChampionsMoveData as a miss and re-fetches', async () => {

@@ -751,14 +751,30 @@ export function applyChampionsMovepoolChanges(speciesSlug: string, moves: string
  * data for Archaludon still includes both as of this writing (confirmed
  * live) - expected, since PokeAPI has no way to know about a patch that
  * postdates its own snapshot.
+ *
+ * TERA BLAST LEAK FIX (2026-10-24): this file's header already documents
+ * Tera Blast as a game-wide absence (`GLOBALLY_REMOVED_MOVES`), but that
+ * array is only consulted on the `hasChampionsMoveData === false` fallback
+ * path, which is dead for virtually the entire current roster (see the
+ * "Prune Dead" note above). `applyChampionsPatchRemovals` runs
+ * unconditionally for every species regardless of `hasChampionsMoveData`,
+ * so that's the path that actually needs the blanket rule - added below as
+ * its own always-on list rather than a per-species
+ * `CHAMPIONS_PATCH_MOVEPOOL_REMOVALS` entry, same reasoning as
+ * `GLOBALLY_REMOVED_MOVES` itself: PokeAPI offers Tera Blast as a universal
+ * TM move for nearly every species, so a per-species list would mean an
+ * entry for virtually the entire roster. See
+ * docs/investigations/missing-move-ability-descriptions.md's side-finding
+ * for the original diagnosis.
  */
+const CHAMPIONS_PATCH_GLOBALLY_REMOVED_MOVES = ['tera-blast'];
+
 export const CHAMPIONS_PATCH_MOVEPOOL_REMOVALS: Record<string, string[]> = {
   archaludon: ['mirror-coat', 'metal-burst'],
 };
 
 export function applyChampionsPatchRemovals(speciesSlug: string, moves: string[]): string[] {
   const removals = CHAMPIONS_PATCH_MOVEPOOL_REMOVALS[speciesSlug];
-  if (!removals || removals.length === 0) return moves;
-  const removeSet = new Set(removals);
+  const removeSet = new Set([...CHAMPIONS_PATCH_GLOBALLY_REMOVED_MOVES, ...(removals ?? [])]);
   return moves.filter((move) => !removeSet.has(move));
 }

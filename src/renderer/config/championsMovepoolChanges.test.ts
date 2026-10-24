@@ -151,4 +151,18 @@ describe('applyChampionsPatchRemovals', () => {
     const result = applyChampionsPatchRemovals('unlisted-species', ['tackle', 'moonblast']);
     expect(result).toEqual(['tackle', 'moonblast']);
   });
+
+  it('strips Tera Blast for any species regardless of per-species patch-removal entries', () => {
+    const result = applyChampionsPatchRemovals('unlisted-species', ['tera-blast', 'moonblast']);
+    expect(result).toEqual(['moonblast']);
+  });
+
+  it('strips both Tera Blast and a per-species patch removal together', () => {
+    const result = applyChampionsPatchRemovals('archaludon', [
+      'tera-blast',
+      'mirror-coat',
+      'flash-cannon',
+    ]);
+    expect(result).toEqual(['flash-cannon']);
+  });
 });
