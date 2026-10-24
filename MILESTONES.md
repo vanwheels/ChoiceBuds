@@ -97,3 +97,6 @@ milestone.
   [post-mortem](docs/postmortems/team-editor-and-box-fixes.md)
 - **Ability-Affects-Move Indicator Scoping** — 2026-10-23 — Shipped —
   [post-mortem](docs/postmortems/ability-affects-move-indicator-scoping.md)
+- **Ability-Affects-Move Indicator & Type Matchup Mega Toggle** — 2026-10-23 —
+  Shipped —
+  [post-mortem](docs/postmortems/ability-affects-move-indicator-and-type-matchup-mega-toggle.md)

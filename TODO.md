@@ -16,25 +16,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Ability-Affects-Move Indicator & Type Matchup Mega Toggle
-
-Done when:
-- A new `AbilityMoveBoostRule` table (by-flag / by-effective-type /
-  by-base-power-threshold / explicit-list) covers every case in the scope
-  doc — including folding in the 5 type-changing abilities' same-type boost
-  and a hand-curated Sheer Force list sourced from Serebii, filtered to
-  Champions movepool — and `MoveBubbleGrid.tsx`/`TooltipContent.tsx`
-  surface it on every `EditOverlays`-based card (Team/Box/Builder,
-  desktop+mobile).
-- Type Matchup's Offensive and Defensive Coverage tables each get an
-  independent per-table Mega toggle control (single-form badge reuse +
-  split-form picker reuse per `.claude/rules/form-toggle-features.md`),
-  with zero changes to `useTeamMoveTypes.ts`/`typeCoverage.ts`'s resolution
-  logic.
-
-Leg 3 (the milestone's last leg) shipped 2026-10-23, see `COMPLETED.md` -
-both done-when bullets above are now met.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -79,8 +60,8 @@ unblocked.
   and outside that milestone's done-when.
 
 (The Ability-Affects-Move Indicator + Type Matchup Mega Toggle item
-previously listed here was promoted to current 2026-10-23, see
-`MILESTONES.md`.)
+previously listed here was promoted to current 2026-10-23 and shipped the
+same day, see `MILESTONES.md`.)
 
 (The four items previously listed here were bundled into the Profile Social
 Scoping & Maintenance milestone on 2026-10-19, now shipped; see

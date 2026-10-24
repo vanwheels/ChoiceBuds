@@ -457,21 +457,50 @@ Resist columns (see
   uses each member's own typing, accounting for type-immunity abilities
   (`config/typeImmunityAbilities.ts`) via `utils/typeCoverage.ts`'s
   `getDefensiveMultiplier`.
-- **Mega/alt-form awareness**: both tables read the same
-  `usePokemonFormToggle` state the team card uses (see "Mega & alt-form
-  display toggle" below) via `useActiveFormsForIds`, which subscribes to
-  every selected team slot's toggle at once (Rules of Hooks forbids calling
-  the single-id hook inside a dynamic `.map()`). A slot's "is the active
-  toggle pointing at its own held Mega Stone" check and the resulting
-  ability/typing resolution are shared, tested pure functions —
+- **Mega/alt-form awareness, independent per table**: each table has its
+  own Mega *preview* toggle, deliberately **not** a read of the shared
+  `usePokemonFormToggle` store the Team card uses (see "Mega & alt-form
+  display toggle" below). `TypeMatchupPage.tsx` holds page-local
+  `megaFormsByTable` state keyed by table (`offensive`/`defensive`) then by
+  slot id, so flipping a Mega preview in one table never affects the other
+  table or the Team card's own toggle. `CoverageTable.tsx`'s header `<th>`
+  wires the control in (single-form species reuse `MegaFormToggleBadge`;
+  Charizard/Raichu's X/Y split renders one letter badge per form, gated to
+  the slot's real held stone so a toggle can never look active without
+  changing anything downstream). The shared, tested pure functions —
   `megaEvolution.ts::resolveActiveMegaSlug`,
   `megaAbilities.ts::resolveActiveAbility`,
   `typeCoverage.ts::resolveDefensiveSlot` (typing/ability sourced from
   `@smogon/calc`'s species dex, the only in-repo source for a Mega form's
-  own types) — rather than duplicated per call site; `EditablePokemonCore.tsx`
-  reuses the same functions for its own Mega Team Card Flip. Aegislash needs
-  no equivalent handling here since its Blade/Shield toggle never changes
-  typing or ability.
+  own types) — still do the actual resolution once a slug is picked, same
+  as `EditablePokemonCore.tsx`'s Mega Team Card Flip; only *which* toggle
+  state feeds them differs here. `useTeamMoveTypes.ts`/`typeCoverage.ts`'s
+  resolution logic itself was unchanged by this — this is a pure
+  UI-affordance/state-shape addition over already-correct data. Aegislash
+  needs no equivalent handling here since its Blade/Shield toggle never
+  changes typing or ability.
+
+## Ability-affects-move indicator
+
+`config/abilityMoveBoosts.ts` is a `Record<string, AbilityMoveBoostRule>`
+keyed by ability slug, joining the codebase's existing family of curated
+per-ability effect tables (`typeChangingAbilities.ts`,
+`moveBlockingAbilities.ts`, `hitReactiveAbilities.ts`, `reactiveAbilities.ts`)
+with one more: whether the ability boosts a given equipped move's power.
+`AbilityMoveBoostRule` is a union over four rule shapes (by move flag, by
+effective type via `getEffectiveMoveType`, by base-power threshold, explicit
+move-list) plus a fifth `retype-conversion` kind folding in the five
+type-changing abilities' own same-type boost (Pixilate/Aerilate/Refrigerate/
+Galvanize/Normalize) — modeled separately from a literal effective-type
+match since the real mechanic only boosts a move actually *converted* from
+Normal, with Normalize as the one unconditional exception. `EditOverlays.tsx`
+runs the per-move check once per render (against the Mega-displayed ability)
+and feeds the result to `MoveBubbleGrid.tsx`'s corner badge and
+`TooltipContent.tsx`'s effect text — the same single-evaluation-point pattern
+`EditOverlays` already uses for item/ability tooltips. Out of scope: the Calc
+tab (its damage % already reflects every ability-move interaction via
+`@smogon/calc`) and static/read-only displays (`TeamPosterTile.tsx`, profile
+tiles).
 
 ## Gender/form handling
 
