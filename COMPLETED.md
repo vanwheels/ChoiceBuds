@@ -118,6 +118,18 @@ Entries prior to this file's oldest are in:
   slug since it shares its date range with the Display Bug Fix Sweep
   archive above)
 
+- **[Calc Auto Damage-Roll Display] — Leg 3** (2026-10-24)
+  Added `useDamageCalc.ts`'s `effectiveSelectedResult` (`selectedResult ??`
+  a memoized default pick: once both Pokémon have a species and a
+  resolvable speed, the faster side's highest-average-damage move,
+  skipping error/empty entries) - both `CalcMoveGrid`s' `selectedIndex` and
+  `CalcResultPanel`'s `entry` now read from it instead of the raw click
+  state, so the damage roll shows with no manual move click but a real
+  click still wins. Manually verified: picking two Pokémon with moves set
+  auto-highlights and displays the faster side's best move with no click,
+  and clicking a different move row pins that instead. See commit
+  51edbb348f5e04db6186c8081369993123b1210f.
+
 - **[Calc Sprite Box Highlight] — Leg 2** (2026-10-24)
   Highlighted the loaded Pokémon's sprite box in `CalcTeamTray.tsx`/
   `CalcOpponentTray.tsx`, deriving the highlight from the panel's own

@@ -24,16 +24,6 @@ Done when:
 - With two Pokémon selected, the faster one's highest-damaging move is auto-highlighted and its damage roll auto-displayed without a manual move click.
 - Item and Pokémon sprites appear in the calc UI (lowest priority — may slip to a future milestone if the other three take longer than expected).
 
-- **[Calc Auto Damage-Roll Display] — Leg 3** *(Last touched: 2026-10-24 ·
-  Re-checks: 0)*
-  When two Pokémon are selected, default-highlight and auto-display damage
-  rolls for the faster Pokémon's highest-damaging move in
-  `CalcMoveGrid.tsx`/`CalcResultPanel.tsx`, without requiring a manual move
-  click.
-  Done check: picking two Pokémon in the calc auto-selects and displays the
-  faster side's best move and its damage roll with no extra click. Manual
-  verification: yes.
-
 - **[Calc UI Sprites] — Leg 4** *(Last touched: 2026-10-24 · Re-checks: 0)*
   Add item and Pokémon sprites to the calc UI panels (lowest priority of
   the three features).
