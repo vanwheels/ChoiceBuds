@@ -3,17 +3,30 @@
  * (Add Pokémon: Sortable Base-Stat Table Leg 1, see TODO.md)
  *
  * Replaces SpeciesPickerCard.tsx at TeamCard.tsx's trailing "+ Add Pokémon"
- * slot only - SpeciesPickerCard itself is unchanged and keeps serving
- * PokemonCard.tsx's Roster Swap picker. Renders as a modal/overlay (Modal.tsx)
- * rather than in-slot: a 8-column stat table (sprite+name, HP/Atk/Def/SpA/
- * SpD/Spe, BST) doesn't fit SpeciesPickerCard's 280px card width.
+ * slot, PokemonCard.tsx's Roster Swap picker, and BoxPage.tsx's "+ New
+ * Build" flow - SpeciesPickerCard.tsx itself is only still used by Battle
+ * Logger's RecordMatchForm.tsx opponent picker now. Renders as a modal/
+ * overlay (Modal.tsx) rather than in-slot: a 8-column stat table (sprite+
+ * name, HP/Atk/Def/SpA/SpD/Spe, BST) doesn't fit SpeciesPickerCard's 280px
+ * card width.
  *
- * Search supports the same '#tag' type/move/ability chain SpeciesPickerCard
- * does (e.g. '#fire #drought #tailwind', ANDed together) - ported over
- * as-is (see that file's header comment for the full type -> move -> ability
- * fallback/resolution writeup) rather than reimplemented, since dropping it
- * when this component replaced SpeciesPickerCard at this call site was a
- * real regression, not an intentional cut.
+ * Search uses TagChipInput (type/move/ability chips, see types/tagChip.ts -
+ * Search & Filter: Tag-Chip Redesign Leg 2, see TODO.md), replacing the old
+ * '#tag' text-probing chain this component used to port over from
+ * SpeciesPickerCard.tsx verbatim. Each chip already carries its own category
+ * so it routes directly to usePokemonTypeFilter/usePokemonMoveFilter/
+ * usePokemonAbilityFilter - no more type -> move -> ability guessing. A
+ * still-pending chip imposes no filter constraint yet rather than excluding
+ * everything, so results narrow progressively as each chip resolves instead
+ * of the table flashing empty/"Loading…" and popping back. TagChipInput is
+ * the only search input rendered - its typed query doubles as a plain
+ * species-name substring filter (via `onQueryChange`) that combines (ANDs)
+ * with any active chips, rather than this component also rendering its own
+ * separate text box (the first wiring pass did that - two search bars for
+ * one search). Mega rows (below) have no chip-category equivalent to the
+ * old standalone '#mega' tag yet - they still only show in the unfiltered
+ * browse view (no chips active); implicit Mega matching per active chip is
+ * TODO.md's next leg.
  *
  * Column headers sort the whole table (Showdown Random Battle Dex-style) -
  * see utils/statTable.ts for the actual sort/BST math, kept pure and
@@ -42,17 +55,13 @@
  * moves) still comes from the normal usage-based default. Plain-text search
  * still matches Mega rows by their "Mega {Species}" label.
  *
- * `#mega` (Add Pokémon Table: Mega Form Rows Leg 3, see TODO.md and
- * docs/investigations/mega-form-rows-scoping.md) is a standalone `#tag` that
- * filters the whole modal (table + "From Box") to Mega-only rows, and ANDs
- * correctly with any other `#type`/`#ability` tags against the Mega form's
- * *own* type/guaranteed ability where those differ from the base species' -
- * e.g. `#mega #water` matches Mega Gyarados (retyped Water/Dark), and
- * `#mega #thermal exchange` matches only Mega Baxcalibur, not every Dragon
- * with a Baxcalibur base form. `#move` tags need no special handling - Mega
- * Evolving doesn't change a species' learnset, so they still resolve off the
- * base species' own move-tag membership. Without `#mega`, Mega rows are
- * still excluded from `#tag` search entirely, same as before Leg 3.
+ * The old standalone `#mega` tag (Add Pokémon Table: Mega Form Rows Leg 3)
+ * that filtered the whole modal to Mega-only rows and ANDed against a Mega
+ * form's own retyped/guaranteed-ability matchup has no chip equivalent as of
+ * the Tag-Chip Redesign - see this file's header comment above for the
+ * current interim behavior (Mega rows only in the unfiltered browse view)
+ * and `docs/investigations/mega-form-rows-scoping.md` for the decision this
+ * reverses.
  *
  * `savedPokemon`/`onSelectSaved` (From Box) mirrors SpeciesPickerCard's own
  * opt-in pair exactly - same filtering rules, same omitted-means-no-section
@@ -83,7 +92,7 @@
  * alongside the existing 7 stat columns without cramming.
  */
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Generations, toID } from '@smogon/calc';
 import type {
   PokeAPICacheEntry,
@@ -92,6 +101,7 @@ import type {
   SpeciesRosterEntry,
 } from '../types/pokemon';
 import type { RegulationId } from '../utils/pokemonRules';
+import type { TagChip } from '../types/tagChip';
 import { validateSpeciesLegality } from '../utils/pokemonRules';
 import { normalizeSpeciesForAPI } from '../services/pokeapi';
 import { normalizeNameForAPI } from '../services/pokeapiService';
@@ -100,9 +110,10 @@ import { getStatLabelColor } from '../config/pokemonTheme';
 import { computeBST, nextStatTableSort, sortStatTableRows } from '../utils/statTable';
 import type { StatTableSort, StatTableSortKey } from '../utils/statTable';
 import { usePokemonTypeFilter } from '../hooks/usePokemonTypeFilter';
-import { usePokemonMoveFilter, isMoveResolved } from '../hooks/usePokemonMoveFilter';
+import { usePokemonMoveFilter } from '../hooks/usePokemonMoveFilter';
 import { usePokemonAbilityFilter } from '../hooks/usePokemonAbilityFilter';
-import { parseTagFilters } from '../utils/tagSearch';
+import { useMoveNameList } from '../hooks/useMoveNameList';
+import { useAbilityNameList } from '../hooks/useAbilityNameList';
 import { ALL_TYPES } from '../config/typeEffectiveness';
 import { MEGA_STONE_TO_SPECIES, formatMegaLabel } from '../config/megaEvolution';
 import { getMegaAbility } from '../config/megaAbilities';
@@ -110,6 +121,7 @@ import { getCachedMegaSprite, useMegaSpritePrefetch } from '../hooks/useMegaSpri
 import { toTitleCase, toReadableName } from '../utils/displayName';
 import TypeBadge from './TypeBadge';
 import Modal from './Modal';
+import TagChipInput from './TagChipInput';
 
 // Same Gen 9 dex SpeedTiersPage.tsx reads Mega base stats/types from - see
 // this file's header comment.
@@ -170,6 +182,7 @@ export default function AddPokemonStatTable({
   onSelectSaved,
 }: AddPokemonStatTableProps) {
   const [search, setSearch] = useState('');
+  const [chips, setChips] = useState<TagChip[]>([]);
   const [sort, setSort] = useState<StatTableSort | null>(null);
   const gen = Generations.get(GEN_NUM);
   // Warms useMegaSprite.ts's module-level id/URL cache for every
@@ -182,54 +195,51 @@ export default function AddPokemonStatTable({
   // than staying pinned to whatever was cached at first render.
   useMegaSpritePrefetch();
 
-  // Same '#tag' type -> move -> ability resolution chain as
-  // SpeciesPickerCard.tsx - see that file's header comment for the full
-  // writeup. Multiple '#tag's are ANDed together.
-  const tags = parseTagFilters(search).filter((t) => t.length > 0);
-  const isTagMode = tags.length > 0;
-  const hasMegaTag = tags.includes('mega');
-  // '#mega' itself isn't a type/move/ability - strip it out before the rest
-  // of the chain below resolves, so it doesn't get mistaken for (and fail
-  // to resolve as) a move/ability tag. See the Mega rows section below for
-  // what it actually does.
-  const filterTags = tags.filter((t) => t !== 'mega');
-  const isTypeTag = (t: string): boolean => (ALL_TYPES as readonly string[]).includes(t);
-  const typeTags = filterTags.filter(isTypeTag);
-  const normalizedNonTypeTags = filterTags.filter((t) => !isTypeTag(t)).map(normalizeNameForAPI);
+  // Chip option candidates - see SpeciesPickerCard.tsx's identical comment
+  // for why move/ability names need re-normalizing back to their slug form.
+  const moveNameList = useMoveNameList();
+  const abilityNameList = useAbilityNameList();
+  const moveOptions = useMemo(() => moveNameList.map(normalizeNameForAPI), [moveNameList]);
+  const abilityOptions = useMemo(() => abilityNameList.map(normalizeNameForAPI), [abilityNameList]);
 
-  const typeMembers = usePokemonTypeFilter(typeTags);
-  const moveMembers = usePokemonMoveFilter(normalizedNonTypeTags);
-  const moveFailedTags = normalizedNonTypeTags.filter(
-    (t) => isMoveResolved(t) && moveMembers.get(t) === null,
-  );
-  const abilityMembers = usePokemonAbilityFilter(moveFailedTags);
+  // Each chip already carries its own category, so it routes directly to
+  // the matching hook - no more type -> move -> ability text-probing
+  // fallback chain (see file header comment).
+  const typeChipValues = chips.filter((c) => c.category === 'type').map((c) => c.value);
+  const moveChipValues = chips.filter((c) => c.category === 'move').map((c) => c.value);
+  const abilityChipValues = chips.filter((c) => c.category === 'ability').map((c) => c.value);
 
-  function resolvedSetForTag(tag: string): Set<string> | null {
-    if (isTypeTag(tag)) return typeMembers.get(tag) ?? null;
-    const normalized = normalizeNameForAPI(tag);
-    const moveSet = moveMembers.get(normalized) ?? null;
-    if (moveSet !== null) return moveSet;
-    if (isMoveResolved(normalized)) return abilityMembers.get(normalized) ?? null;
-    return null;
+  const typeMembers = usePokemonTypeFilter(typeChipValues);
+  const moveMembers = usePokemonMoveFilter(moveChipValues);
+  const abilityMembers = usePokemonAbilityFilter(abilityChipValues);
+
+  // Resolves one chip to its matching species set, or null while its
+  // category's hook is still fetching.
+  function resolvedSetForChip(chip: TagChip): Set<string> | null {
+    if (chip.category === 'type') return typeMembers.get(chip.value) ?? null;
+    if (chip.category === 'move') return moveMembers.get(chip.value) ?? null;
+    return abilityMembers.get(chip.value) ?? null;
   }
 
-  const tagSets = filterTags.map(resolvedSetForTag);
-  const anyTagPending = tagSets.some((set) => set === null);
+  const chipSets = chips.map(resolvedSetForChip);
 
   // Shared by both the plain-roster and "From Box" halves below - a species
   // (by its own name) or a saved build (by its underlying species) matches
-  // the #tag chain the same way.
-  const matchesTags = (speciesName: string): boolean =>
-    anyTagPending ? false : tagSets.every((set) => set!.has(speciesName.toLowerCase()));
+  // every active chip. A still-pending chip (`set === null`) imposes no
+  // constraint yet rather than excluding everything - narrowing happens
+  // progressively as each chip resolves, instead of the whole table
+  // collapsing to empty/"Loading…" and popping back (see file header
+  // comment - this read as a flicker in testing).
+  const matchesChips = (speciesName: string): boolean =>
+    chipSets.every((set) => set === null || set.has(speciesName.toLowerCase()));
+
+  const matchesSearchText = (name: string): boolean =>
+    search.trim().length === 0 || name.toLowerCase().includes(search.toLowerCase());
 
   const legalRoster = roster.filter((pkmn) => validateSpeciesLegality(pkmn.name, rulesetId));
-  // '#mega' is a standalone filter to Mega-only rows (see below) - no plain
-  // species rows alongside it.
-  const filteredRoster = hasMegaTag
-    ? []
-    : !isTagMode
-      ? legalRoster.filter((pkmn) => pkmn.name.toLowerCase().includes(search.toLowerCase()))
-      : legalRoster.filter((pkmn) => matchesTags(pkmn.name));
+  const filteredRoster = legalRoster
+    .filter((pkmn) => matchesSearchText(pkmn.name))
+    .filter((pkmn) => chips.length === 0 || matchesChips(pkmn.name));
 
   const speciesRows: StatTableRow[] = filteredRoster.map((species) => {
     const cacheEntry = getCachedEntry(normalizeSpeciesForAPI(species.name));
@@ -252,17 +262,11 @@ export default function AddPokemonStatTable({
   });
 
   // One row per Mega Stone, gated to species already in `legalRoster` (see
-  // this file's header). Shown in plain-text mode (matched by "Mega
-  // {Species}" label, as before) or, in tag mode, only once '#mega' is one
-  // of the tags - a standalone filter to Mega-only rows that then ANDs any
-  // remaining tags against the Mega form's *own* type/guaranteed ability
-  // (config/megaAbilities.ts's MEGA_ABILITIES) where those differ from the
-  // base species', not just its base form's (see docs/investigations/
-  // mega-form-rows-scoping.md). Move tags need no special handling - Mega
-  // Evolving doesn't change a species' learnset, so they still resolve off
-  // the base species' own move-tag membership, same `tagSets` the plain
-  // roster rows above already use.
-  const showMegaRows = !isTagMode || hasMegaTag;
+  // this file's header). Matched by plain-text search on the "Mega
+  // {Species}" label same as before. No chip-category equivalent to the old
+  // standalone '#mega' tag yet (see file header comment) - any active chip
+  // hides Mega rows entirely until implicit chip matching is added.
+  const showMegaRows = chips.length === 0;
   const megaRows: StatTableRow[] = showMegaRows
     ? Object.entries(MEGA_STONE_TO_SPECIES).flatMap(([item, entry]) => {
         const baseSpecies = legalRoster.find(
@@ -285,35 +289,7 @@ export default function AddPokemonStatTable({
         const displayName = formatMegaLabel(baseSpecies.name, entry.suffix);
         const megaAbility = getMegaAbility(slug);
 
-        if (isTagMode) {
-          // '#mega' alone (no other tags) matches every Mega row unfiltered -
-          // filterTags is empty, so .every() below is vacuously true.
-          if (anyTagPending) return [];
-          const baseLower = baseSpecies.name.toLowerCase();
-          const matchesRemainingTags = filterTags.every((tag, i) => {
-            if (isTypeTag(tag)) {
-              // Own types, not the base species' - some Megas retype (e.g.
-              // Mega Gyarados is Water/Dark, not Water/Flying).
-              const types = calcSpecies ? calcSpecies.types.map((t) => t.toLowerCase()) : [];
-              return types.includes(tag);
-            }
-            const normalized = normalizeNameForAPI(tag);
-            const isAbilityTag =
-              isMoveResolved(normalized) && (moveMembers.get(normalized) ?? null) === null;
-            // A confirmed Mega ability replaces the base species' normal/
-            // hidden pair outright, so it wins over the base-species
-            // membership check below rather than falling back onto it. Move
-            // tags, and ability tags with no confirmed override yet (see
-            // megaAbilities.ts's header), still fall through to that same
-            // base-species check `tagSets[i]` already resolved above.
-            if (isAbilityTag && megaAbility) return normalizeNameForAPI(megaAbility) === normalized;
-            const set = tagSets[i];
-            return set ? set.has(baseLower) : false;
-          });
-          if (!matchesRemainingTags) return [];
-        } else if (!displayName.toLowerCase().includes(search.toLowerCase())) {
-          return [];
-        }
+        if (!matchesSearchText(displayName)) return [];
 
         return [
           {
@@ -341,23 +317,26 @@ export default function AddPokemonStatTable({
   const handleSortClick = (key: StatTableSortKey) =>
     setSort((prev) => nextStatTableSort(prev, key));
 
-  // '#mega' filters the whole modal to Mega-only rows - a saved Box build is
-  // never one of those, so it drops out entirely rather than staying visible
-  // alongside them.
-  const showBoxResults = savedPokemon !== undefined && onSelectSaved !== undefined && !hasMegaTag;
+  const showBoxResults = savedPokemon !== undefined && onSelectSaved !== undefined;
   const filteredSaved = showBoxResults
     ? savedPokemon
         .filter((entry) => validateSpeciesLegality(entry.pokemon.showdownData.species, rulesetId))
-        .filter((entry) =>
-          !isTagMode
-            ? entry.label.toLowerCase().includes(search.toLowerCase()) ||
-              entry.pokemon.showdownData.species.toLowerCase().includes(search.toLowerCase())
-            : matchesTags(entry.pokemon.showdownData.species),
+        .filter(
+          (entry) =>
+            entry.label.toLowerCase().includes(search.toLowerCase()) ||
+            matchesSearchText(entry.pokemon.showdownData.species),
         )
+        .filter((entry) => chips.length === 0 || matchesChips(entry.pokemon.showdownData.species))
     : [];
 
   return (
-    <Modal panelClassName="max-w-5xl max-h-[85vh]">
+    // Fixed h-[85vh], not max-h: with only a max-height, Modal.tsx's panel
+    // shrink-wraps to however few rows a narrow chip/search match leaves,
+    // which visibly resized the whole dialog smaller on every keystroke and
+    // could squeeze matching rows out of view below the fold. A fixed
+    // height keeps the dialog's size constant regardless of result count -
+    // the table's own overflow-auto area handles scrolling as before.
+    <Modal panelClassName="max-w-5xl h-[85vh]">
       <div className="px-6 py-4 border-b border-zinc-700 flex items-center justify-between shrink-0">
         <h2 className="text-xl font-bold text-zinc-100">Add Pokémon</h2>
         <button onClick={onClose} className="text-zinc-400 hover:text-zinc-200 transition-colors">
@@ -373,13 +352,14 @@ export default function AddPokemonStatTable({
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col gap-3 p-4">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search species... (#fire, #dragon dance, #mega, #mega #water, ...)"
+        <TagChipInput
+          chips={chips}
+          onChipsChange={setChips}
+          typeOptions={[...ALL_TYPES]}
+          moveOptions={moveOptions}
+          abilityOptions={abilityOptions}
+          onQueryChange={setSearch}
           autoFocus
-          className="w-full px-3 py-2 text-sm font-semibold text-white bg-zinc-900 border border-zinc-700 rounded-lg outline-none focus:border-accent-gold"
         />
 
         {filteredSaved.length > 0 && (
@@ -446,7 +426,7 @@ export default function AddPokemonStatTable({
               {sortedRows.length === 0 ? (
                 <tr>
                   <td colSpan={STAT_COLUMNS.length + 3} className="py-6 text-center text-zinc-400">
-                    {tags.length > 0 && anyTagPending ? 'Loading…' : 'No legal species found'}
+                    No legal species found
                   </td>
                 </tr>
               ) : (

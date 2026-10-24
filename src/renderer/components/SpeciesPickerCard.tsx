@@ -12,11 +12,22 @@
  * stretch to, so the full unfiltered roster would render and stretch the
  * slot/row instead of scrolling - hence the fixed cap here.
  *
- * Multiple '#tag's in one search (e.g. '#fire #shadowclaw #flashfire') are
- * ANDed together - a species must match every tag, mixing type/move/ability
- * tags freely in the same query. Each tag runs through its own type -> move
- * -> ability fallback chain independently (see the per-tag loop below),
- * then a species is kept only if it appears in every tag's resolved set.
+ * Multiple chips (type/move/ability, via TagChipInput - see
+ * types/tagChip.ts) AND together - a species must match every chip. Each
+ * chip already carries its own category (no more type -> move -> ability
+ * text-probing fallback chain), so it routes directly to the matching
+ * usePokemonTypeFilter/usePokemonMoveFilter/usePokemonAbilityFilter hook. A
+ * chip whose category hook is still fetching doesn't filter anything out
+ * yet (its set is treated as "no constraint" rather than "excludes
+ * everything") - narrowing happens progressively as each chip resolves,
+ * instead of the whole result list collapsing to empty/"Loading…" and
+ * popping back, which read as a flicker in testing.
+ *
+ * TagChipInput is the only search input rendered here - its typed query
+ * doubles as a plain species-name substring match (via its
+ * `onQueryChange`), combining (ANDing) with any active chips, rather than
+ * this component also rendering its own separate text box (the first
+ * wiring pass did that and it read as two search bars for one search).
  *
  * `savedPokemon`/`onSelectSaved` (Box Tab: Add from Box via Add Pokémon
  * Search, see TODO.md) are an opt-in pair - only TeamCard.tsx's trailing
@@ -26,24 +37,27 @@
  * it already has its own species-then-saved-set two-step via
  * SavedSetPicker.tsx. When omitted, this renders exactly as before - one
  * flat species list, no "From Box" section. Same search (plain-text
- * label/species match, or the same #tag chain by underlying species) as the
+ * label/species match, plus the same chip set by underlying species) as the
  * species half of the list, and the same `validateSpeciesLegality` filter,
  * so a Box entry follows the same rules the species list next to it already
  * does.
  */
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { SavedPokemonEntry, SpeciesRosterEntry } from '../types/pokemon';
 import type { RegulationId } from '../utils/pokemonRules';
+import type { TagChip } from '../types/tagChip';
 import { validateSpeciesLegality } from '../utils/pokemonRules';
 import { useDismissable } from '../hooks/useDismissable';
 import { usePokemonTypeFilter } from '../hooks/usePokemonTypeFilter';
-import { usePokemonMoveFilter, isMoveResolved } from '../hooks/usePokemonMoveFilter';
+import { usePokemonMoveFilter } from '../hooks/usePokemonMoveFilter';
 import { usePokemonAbilityFilter } from '../hooks/usePokemonAbilityFilter';
-import { parseTagFilters } from '../utils/tagSearch';
+import { useMoveNameList } from '../hooks/useMoveNameList';
+import { useAbilityNameList } from '../hooks/useAbilityNameList';
 import { ALL_TYPES } from '../config/typeEffectiveness';
 import { normalizeNameForAPI } from '../services/pokeapiService';
 import { getPixelSpriteUrl } from '../utils/spriteUrl';
+import TagChipInput from './TagChipInput';
 
 interface SpeciesPickerCardProps {
   roster: SpeciesRosterEntry[];
@@ -65,65 +79,66 @@ export default function SpeciesPickerCard({
   onSelectSaved,
 }: SpeciesPickerCardProps) {
   const [search, setSearch] = useState('');
+  const [chips, setChips] = useState<TagChip[]>([]);
   const ref = useDismissable<HTMLDivElement>(onClose);
 
-  // A '#tag' is a type lookup when it names one of the 18 real types;
-  // otherwise it's tried as a move name first, surfacing every species that
-  // can learn it (learned_by_pokemon) rather than requiring an exact species
-  // name match - see usePokemonMoveFilter.ts. Only once the move lookup
-  // confirms a 404 (isMoveResolved true, its set still null - not just
-  // "hasn't loaded yet") does it fall back to an ability name lookup
-  // against /ability/{name}'s `pokemon` field - see usePokemonAbilityFilter.ts.
-  // Multiple '#tag's run this same chain independently and are ANDed
-  // together at the end (see file header comment).
-  const tags = parseTagFilters(search).filter((t) => t.length > 0);
-  const isTypeTag = (t: string): boolean => (ALL_TYPES as readonly string[]).includes(t);
-  const typeTags = tags.filter(isTypeTag);
-  const normalizedNonTypeTags = tags.filter((t) => !isTypeTag(t)).map(normalizeNameForAPI);
+  // Chip option candidates. Move/ability names come back prettified for
+  // display from their name-list hooks (e.g. "Fire Blast") - re-normalizing
+  // through normalizeNameForAPI recovers the canonical slug ("fire-blast")
+  // TagChip.value is documented to carry (see types/tagChip.ts), since
+  // that's the same shape useMoveNameList.ts's own round-trip guarantee
+  // already relies on.
+  const moveNameList = useMoveNameList();
+  const abilityNameList = useAbilityNameList();
+  const moveOptions = useMemo(() => moveNameList.map(normalizeNameForAPI), [moveNameList]);
+  const abilityOptions = useMemo(() => abilityNameList.map(normalizeNameForAPI), [abilityNameList]);
 
-  const typeMembers = usePokemonTypeFilter(typeTags);
-  const moveMembers = usePokemonMoveFilter(normalizedNonTypeTags);
-  const moveFailedTags = normalizedNonTypeTags.filter(
-    (t) => isMoveResolved(t) && moveMembers.get(t) === null,
-  );
-  const abilityMembers = usePokemonAbilityFilter(moveFailedTags);
+  // Each chip already carries its own category, so it routes directly to
+  // the matching hook - no more type -> move -> ability text-probing
+  // fallback chain (see file header comment).
+  const typeChipValues = chips.filter((c) => c.category === 'type').map((c) => c.value);
+  const moveChipValues = chips.filter((c) => c.category === 'move').map((c) => c.value);
+  const abilityChipValues = chips.filter((c) => c.category === 'ability').map((c) => c.value);
 
-  // Resolves one tag to its matching species set, or null while it's still
-  // in flight somewhere along the type -> move -> ability chain.
-  function resolvedSetForTag(tag: string): Set<string> | null {
-    if (isTypeTag(tag)) return typeMembers.get(tag) ?? null;
-    const normalized = normalizeNameForAPI(tag);
-    const moveSet = moveMembers.get(normalized) ?? null;
-    if (moveSet !== null) return moveSet;
-    if (isMoveResolved(normalized)) return abilityMembers.get(normalized) ?? null;
-    return null;
+  const typeMembers = usePokemonTypeFilter(typeChipValues);
+  const moveMembers = usePokemonMoveFilter(moveChipValues);
+  const abilityMembers = usePokemonAbilityFilter(abilityChipValues);
+
+  // Resolves one chip to its matching species set, or null while its
+  // category's hook is still fetching.
+  function resolvedSetForChip(chip: TagChip): Set<string> | null {
+    if (chip.category === 'type') return typeMembers.get(chip.value) ?? null;
+    if (chip.category === 'move') return moveMembers.get(chip.value) ?? null;
+    return abilityMembers.get(chip.value) ?? null;
   }
 
-  const tagSets = tags.map(resolvedSetForTag);
-  const anyTagPending = tagSets.some((set) => set === null);
+  const chipSets = chips.map(resolvedSetForChip);
 
   // Shared by both halves of the list below - a species (by its own name) or
-  // a saved build (by its underlying species) matches the #tag chain the
-  // same way.
-  const matchesTags = (speciesName: string): boolean =>
-    anyTagPending ? false : tagSets.every((set) => set!.has(speciesName.toLowerCase()));
+  // a saved build (by its underlying species) matches every active chip. A
+  // still-pending chip (`set === null`) imposes no constraint yet - see
+  // file header comment.
+  const matchesChips = (speciesName: string): boolean =>
+    chipSets.every((set) => set === null || set.has(speciesName.toLowerCase()));
+
+  const matchesSearchText = (name: string): boolean =>
+    search.trim().length === 0 || name.toLowerCase().includes(search.toLowerCase());
 
   const legalRoster = roster.filter((pkmn) => validateSpeciesLegality(pkmn.name, rulesetId));
-  const filtered =
-    tags.length === 0
-      ? legalRoster.filter((pkmn) => pkmn.name.toLowerCase().includes(search.toLowerCase()))
-      : legalRoster.filter((pkmn) => matchesTags(pkmn.name));
+  const filtered = legalRoster
+    .filter((pkmn) => matchesSearchText(pkmn.name))
+    .filter((pkmn) => chips.length === 0 || matchesChips(pkmn.name));
 
   const showBoxResults = savedPokemon !== undefined && onSelectSaved !== undefined;
   const filteredSaved = showBoxResults
     ? savedPokemon
         .filter((entry) => validateSpeciesLegality(entry.pokemon.showdownData.species, rulesetId))
-        .filter((entry) =>
-          tags.length === 0
-            ? entry.label.toLowerCase().includes(search.toLowerCase()) ||
-              entry.pokemon.showdownData.species.toLowerCase().includes(search.toLowerCase())
-            : matchesTags(entry.pokemon.showdownData.species),
+        .filter(
+          (entry) =>
+            entry.label.toLowerCase().includes(search.toLowerCase()) ||
+            matchesSearchText(entry.pokemon.showdownData.species),
         )
+        .filter((entry) => chips.length === 0 || matchesChips(entry.pokemon.showdownData.species))
     : [];
 
   return (
@@ -139,24 +154,20 @@ export default function SpeciesPickerCard({
         ×
       </button>
 
-      {/* Search bar aligned with the Nickname row on other cards */}
-      <div className="text-center">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search species... (#fire, #dragon dance, #fire #flash fire, ...)"
-          autoFocus
-          className="w-full px-2 py-1 text-sm font-bold text-white bg-zinc-800 border border-zinc-600 rounded text-center outline-none focus:border-accent-gold"
-        />
-      </div>
+      <TagChipInput
+        chips={chips}
+        onChipsChange={setChips}
+        typeOptions={[...ALL_TYPES]}
+        moveOptions={moveOptions}
+        abilityOptions={abilityOptions}
+        onQueryChange={setSearch}
+        autoFocus
+      />
 
       {/* Results fill the rest of the slot, capped and scrollable */}
       <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-1">
         {filtered.length === 0 && filteredSaved.length === 0 ? (
-          <p className="text-xs text-zinc-400 text-center mt-4">
-            {tags.length > 0 && anyTagPending ? 'Loading…' : 'No legal species found'}
-          </p>
+          <p className="text-xs text-zinc-400 text-center mt-4">No legal species found</p>
         ) : (
           <>
             {filteredSaved.length > 0 && (

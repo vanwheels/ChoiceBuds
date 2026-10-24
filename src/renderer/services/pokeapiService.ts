@@ -205,6 +205,21 @@ export async function fetchAllMoveNames(): Promise<string[]> {
   return (data?.results ?? []).map((r) => r.name);
 }
 
+interface PokeAPIAbilityListResponse {
+  results?: Array<{ name: string }>;
+}
+
+/**
+ * Fetches every ability name PokeAPI knows about, in one cheap call (no
+ * per-ability metadata) - mirrors fetchAllMoveNames above, used to power
+ * hooks/useAbilityNameList.ts's TagChipInput autocomplete candidates (Search
+ * & Filter: Tag-Chip Redesign, Leg 2).
+ */
+export async function fetchAllAbilityNames(): Promise<string[]> {
+  const data = await fetchJSON<PokeAPIAbilityListResponse>('/ability?limit=500');
+  return (data?.results ?? []).map((r) => r.name);
+}
+
 /**
  * Fetches a species' true legal learnset (abilities + learnable moves) from
  * PokeAPI. This is the validation source of truth for what a given species

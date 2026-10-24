@@ -20,7 +20,7 @@ const OPTIONS = {
 describe('TagChipInput', () => {
   it('renders standalone with no chips selected', () => {
     render(createElement(TagChipInput, { chips: [], onChipsChange: vi.fn(), ...OPTIONS }));
-    expect(screen.getByPlaceholderText('Search type/move/ability...')).toBeTruthy();
+    expect(screen.getByPlaceholderText('Search species, type, move, or ability...')).toBeTruthy();
   });
 
   it('renders existing chips with a remove affordance', () => {
@@ -32,7 +32,7 @@ describe('TagChipInput', () => {
 
   it('shows disambiguated, category-labeled options when typing a dual type/move name', () => {
     render(createElement(TagChipInput, { chips: [], onChipsChange: vi.fn(), ...OPTIONS }));
-    fireEvent.change(screen.getByPlaceholderText('Search type/move/ability...'), {
+    fireEvent.change(screen.getByPlaceholderText('Search species, type, move, or ability...'), {
       target: { value: 'psychic' },
     });
     expect(screen.getAllByText('Psychic')).toHaveLength(2);
@@ -43,10 +43,22 @@ describe('TagChipInput', () => {
   it('adds a chip and clears the query on option click', () => {
     const onChipsChange = vi.fn();
     render(createElement(TagChipInput, { chips: [], onChipsChange, ...OPTIONS }));
-    const input = screen.getByPlaceholderText('Search type/move/ability...');
+    const input = screen.getByPlaceholderText('Search species, type, move, or ability...');
     fireEvent.change(input, { target: { value: 'fire' } });
     fireEvent.click(screen.getByText('Fire'));
     expect(onChipsChange).toHaveBeenCalledWith([{ category: 'type', value: 'fire' }]);
+  });
+
+  it('reports every query change via onQueryChange, including the post-pick clear', () => {
+    const onChipsChange = vi.fn();
+    const onQueryChange = vi.fn();
+    render(createElement(TagChipInput, { chips: [], onChipsChange, onQueryChange, ...OPTIONS }));
+    const input = screen.getByPlaceholderText('Search species, type, move, or ability...');
+    fireEvent.change(input, { target: { value: 'char' } });
+    expect(onQueryChange).toHaveBeenLastCalledWith('char');
+    fireEvent.change(input, { target: { value: 'fire' } });
+    fireEvent.click(screen.getByText('Fire'));
+    expect(onQueryChange).toHaveBeenLastCalledWith('');
   });
 
   it('removes a chip on remove-button click', () => {
