@@ -30,17 +30,6 @@ Done when:
   to a dedicated `config/` table if the list is long enough to warrant
   one), with any overflow too large for one session split to Unscheduled.
 
-- **[Selection Dropdown Description Truncation] — Leg 1** *(Last touched:
-  2026-10-24 · Re-checks: 0)*
-  Remove the `truncate` className on the description `div` in
-  `MovePickerPanel.tsx`, `AbilityPickerPanel.tsx`, and `ItemPickerPanel.tsx`
-  so full text wraps instead of cutting off — matches the existing
-  hover-tooltip text, just shown up front instead of only after adding to a
-  Pokémon.
-  Done check: all three picker dropdowns render full, unclipped
-  descriptions for a move/ability/item with long text.
-  Manual verification: yes.
-
 - **[Missing Move/Ability Description Audit] — Leg 2** *(Last touched:
   2026-10-24 · Re-checks: 0)*
   Enumerate every move and ability currently falling back to

@@ -5,6 +5,13 @@ active task list quick to scan. Newest entries first. Cross-references to
 still-open items point to `TODO.md`; references to other entries here stay
 local ("see below"/"see above").
 
+- **[Selection Dropdown Description Truncation] — Leg 1** (2026-10-24)
+  Removed the `truncate` className on the description `div` in
+  `MovePickerPanel.tsx`, `AbilityPickerPanel.tsx`, and `ItemPickerPanel.tsx`
+  so descriptions wrap in full instead of clipping to one line. Live-verified
+  in the running app: a long move/ability/item description now wraps fully
+  in all three picker dropdowns. See commit 0711d9094709e63533089c3b7338404f2bc3140e.
+
 Archived at milestone boundaries as of the 2026-09-30 split (Post-Parity
 Polish - see `MILESTONES.md`), per CLAUDE.md's archiving rules: a shipped
 milestone becomes the real cutoff instead of an arbitrary entry count.
