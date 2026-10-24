@@ -106,7 +106,7 @@ export default function MovePickerPanel({
                     Pow {move.power ?? '--'} · Acc {move.accuracy ?? '--'} · PP {move.pp}
                   </span>
                 </div>
-                <div className="text-zinc-400 text-xs truncate">{move.description}</div>
+                <div className="text-zinc-400 text-xs">{move.description}</div>
               </div>
             );
           })

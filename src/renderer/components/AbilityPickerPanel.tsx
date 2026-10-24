@@ -74,7 +74,7 @@ export default function AbilityPickerPanel({
                     </span>
                   )}
                 </div>
-                <div className="text-zinc-400 text-xs truncate">{ability.description}</div>
+                <div className="text-zinc-400 text-xs">{ability.description}</div>
               </div>
             );
           })

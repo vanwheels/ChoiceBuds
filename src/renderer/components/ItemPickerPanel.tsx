@@ -95,7 +95,7 @@ export default function ItemPickerPanel({
                       </span>
                     )}
                   </div>
-                  <div className="text-zinc-400 text-xs truncate">{item.description}</div>
+                  <div className="text-zinc-400 text-xs">{item.description}</div>
                 </div>
               </div>
             );
