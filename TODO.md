@@ -24,18 +24,6 @@ Done when:
 - With two Pokémon selected, the faster one's highest-damaging move is auto-highlighted and its damage roll auto-displayed without a manual move click.
 - Item and Pokémon sprites appear in the calc UI (lowest priority — may slip to a future milestone if the other three take longer than expected).
 
-- **[Tera Blast Movepool Leak Fix] — Leg 1** *(Last touched: 2026-10-24 ·
-  Re-checks: 0)*
-  Add Tera Blast to `CHAMPIONS_PATCH_MOVEPOOL_REMOVALS` in
-  `config/championsMovepoolChanges.ts`, same shape as the existing
-  Archaludon entries, closing the leak where any species whose live PokeAPI
-  `champions` tag includes Tera Blast gets it offered as pickable. Scoped
-  2026-10-24 during the Missing Move/Ability Description Audit's Leg 2 —
-  see `docs/investigations/missing-move-ability-descriptions.md`'s
-  side-finding for the dead-fallback-path diagnosis.
-  Done check: Tera Blast no longer appears in the move picker for any
-  Champions roster Pokémon. Manual verification: yes.
-
 - **[Calc Sprite Box Highlight] — Leg 2** *(Last touched: 2026-10-24 ·
   Re-checks: 0)*
   Highlight the selected Pokémon's sprite box in `CalcTeamTray.tsx`/

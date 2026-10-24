@@ -117,3 +117,27 @@ Entries prior to this file's oldest are in:
   2026-10-24 Selection UX & Data Audit boundary - named with the milestone
   slug since it shares its date range with the Display Bug Fix Sweep
   archive above)
+
+- **[Tera Blast Movepool Leak Fix] — Leg 1** (2026-10-24)
+  Closed the leak documented in
+  `docs/investigations/missing-move-ability-descriptions.md`'s side-finding:
+  `CHAMPIONS_PATCH_MOVEPOOL_REMOVALS`/`applyChampionsPatchRemovals` runs
+  unconditionally for every species (before the `hasChampionsMoveData`
+  gate), but the "Tera Blast doesn't exist in Champions" rule only lived in
+  `GLOBALLY_REMOVED_MOVES`, which is only consulted on the
+  `hasChampionsMoveData === false` fallback path — dead for virtually the
+  entire roster. Added a blanket `CHAMPIONS_PATCH_GLOBALLY_REMOVED_MOVES`
+  list (`tera-blast`) to `config/championsMovepoolChanges.ts` that
+  `applyChampionsPatchRemovals` now strips for every species, rather than a
+  per-species `CHAMPIONS_PATCH_MOVEPOOL_REMOVALS` entry (would mean an
+  entry for virtually the whole roster, same reasoning
+  `GLOBALLY_REMOVED_MOVES` itself already documents). Updated two
+  `useGameData.test.ts` cases that had asserted the old leaky behavior,
+  confirmed with the user before changing their expectations since they'd
+  previously been passing. Live-verified in the running app (Calc popup,
+  Playwright-driven): Gengar (common species, `hasChampionsMoveData: true`)
+  no longer offers Tera Blast in its move search at all, and Baxcalibur
+  (Reg M-C, `hasChampionsMoveData: false` fallback path) still excludes
+  Tera Blast too with no regression to its own signature move (Glaive Rush
+  still pickable).
+  See commit 4dcd56f5e099043c52e513c741709464cf5275a2.
