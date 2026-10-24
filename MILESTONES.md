@@ -100,3 +100,6 @@ milestone.
 - **Ability-Affects-Move Indicator & Type Matchup Mega Toggle** — 2026-10-23 —
   Shipped —
   [post-mortem](docs/postmortems/ability-affects-move-indicator-and-type-matchup-mega-toggle.md)
+- **Search & Filter: Tag-Chip Redesign** — 2026-10-23 to 2026-10-24 —
+  Shipped —
+  [post-mortem](docs/postmortems/search-and-filter-tag-chip-redesign.md)

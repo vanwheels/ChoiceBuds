@@ -16,36 +16,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Search & Filter: Tag-Chip Redesign
-
-Done when:
-- Team builder (Roster Swap + the "+ Add Pokémon" slot, both served by
-  `AddPokemonStatTable.tsx` since 2026-10-16 - `SpeciesPickerCard.tsx` no
-  longer serves either, see COMPLETED.md's Leg 2 entry) and Box search
-  (`BoxPage.tsx`/`BoxPageToolbar.tsx`) all use multi-select type/move/
-  ability chips instead of free-text `#tag` syntax; multiple chips still
-  AND together.
-- Chip matching ignores spaces/hyphens in move/ability names ("fireblast" =
-  "fire blast" = "fire-blast") and disambiguates a name that's both a type
-  and a move (e.g. Psychic) via distinct chip options, not text guessing.
-- Mega forms surface as results wherever an active chip matches the Mega's
-  own type/ability, consistently across both `AddPokemonStatTable.tsx` and
-  Box's saved-build search - no separate "Mega" chip required anywhere.
-
-(Leg 5 - extending Box's chip matching so a saved build holding a Mega
-Stone matches an active chip against the Mega form's own type/ability -
-shipped 2026-10-24, live-verified via run-desktop; see COMPLETED.md. This
-was the milestone's last open done-when criterion - all three are now met,
-so this milestone is ready for `/close-milestone`.)
-
-(A Leg 5 previously listed here - "Add Mega rows to `SpeciesPickerCard.tsx`
-... so Mega forms are selectable here for the first time" - was dropped
-2026-10-24 as moot: its premise assumed `SpeciesPickerCard.tsx` still
-served Roster Swap/the Add-Pokémon slot, which Leg 2's correction found was
-already false as of 2026-10-16 - `AddPokemonStatTable.tsx` has served both
-since then and already has Mega rows. Nothing left to do there; the old
-Leg 6 was renumbered up to fill the gap.)
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -73,6 +43,16 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+- **[Mega Form List Ordering] — Leg 1**
+  *(Last touched: 2026-10-24 · Re-checks: 0)*
+  `AddPokemonStatTable.tsx`'s row list (`const rows = [...speciesRows,
+  ...megaRows]`, line ~348) appends every Mega-Stone row after the full
+  base-species list rather than placing each Mega row directly below its
+  own base species. Surfaced 2026-10-24 during Search & Filter: Tag-Chip
+  Redesign's close-out; flagged as separate scope rather than folded into
+  that milestone since it's a display-ordering concern, not part of its
+  chip-matching done-when.
 
 - **[Type-Changing Ability Move Badge Color] — Leg 1**
   *(Last touched: 2026-10-23 · Re-checks: 0)*
