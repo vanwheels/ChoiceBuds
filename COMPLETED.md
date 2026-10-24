@@ -123,7 +123,7 @@ wrapping instead of forcing `whitespace-nowrap` width, both fixed same-
 session after live feedback that the sprite row felt cramped and the
 columns uneven. Live-verified: Mega toggle isolation between tables and the
 Team card, split-form re-toggling, sprite swap, and the widened/uniform
-column layout. See commit REPLACE_WITH_HASH.
+column layout. See commit 98f8278.
 
 ## [Ability-Affects-Move Indicator & Type Matchup Mega Toggle] — Leg 1 (2026-10-23)
 
