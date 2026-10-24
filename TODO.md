@@ -54,9 +54,11 @@ virtually the entire current roster per that file's own "Prune Dead" note.
 The unconditional removal path (`CHAMPIONS_PATCH_MOVEPOOL_REMOVALS`) only
 covers Archaludon's Mirror Coat/Metal Burst, so any species whose live
 PokeAPI `champions` tag includes Tera Blast gets it offered as a pickable
-move today. Needs scoping: likely add Tera Blast to the unconditional
-removal table, or re-confirm with the user whether Champions still truly
-lacks it before assuming the documented rule is still correct.
+move today. Scoped 2026-10-24: confirmed with the user that Tera Blast is
+still not in Champions, so the fix is to add it to
+`CHAMPIONS_PATCH_MOVEPOOL_REMOVALS` (the unconditional path) in
+`config/championsMovepoolChanges.ts`, same shape as the existing
+Archaludon entries. Ready to start as its own leg.
 
 (Mega Form List Ordering and Type-Changing Ability Move Badge Color,
 previously listed here, were bundled into the Display Bug Fix Sweep
