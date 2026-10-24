@@ -67,6 +67,23 @@ Needs a small signature extension:
 
 ## #mega tag (full type/ability integration, per 2026-09-11 decision)
 
+**Reversed by Tag-Chip Redesign Leg 4 (2026-10-24):** the Tag-Chip Redesign
+replaced the whole `#tag` text-search model with explicit type/move/
+ability chips, which have no "Mega" category - there's no chip that can
+isolate Mega-only rows the way `#mega` used to. Leg 2 of that redesign
+left Mega rows gated to "no chips active" as an interim measure; Leg 4
+replaces that gate with the implicit matching this section originally
+specified: any active type/move/ability chip now matches a Mega row by
+checking the Mega form's own stats (below) instead of hiding Mega rows
+outright. See `AddPokemonStatTable.tsx`'s `matchesMegaChips`.
+
+The standalone "Mega-only" filter itself (the first half of what `#mega`
+did) is still gone with no equivalent - only the AND-against-the-Mega's-
+own-stats half carries over.
+
+Original 2026-09-11 decision (now implemented via chips instead of a
+`#mega` tag):
+
 `#mega` is a standalone-filterable tag (only Mega rows shown when active),
 and also combines correctly with type/move/ability tags against the Mega
 form's **own** stats where those differ from the base species':

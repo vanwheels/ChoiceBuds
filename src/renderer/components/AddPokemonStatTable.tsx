@@ -24,9 +24,12 @@
  * with any active chips, rather than this component also rendering its own
  * separate text box (the first wiring pass did that - two search bars for
  * one search). Mega rows (below) have no chip-category equivalent to the
- * old standalone '#mega' tag yet - they still only show in the unfiltered
- * browse view (no chips active); implicit Mega matching per active chip is
- * TODO.md's next leg.
+ * old standalone '#mega' tag - instead, any active type/move/ability chip
+ * matches implicitly against a Mega row's own type/ability (Tag-Chip
+ * Redesign Leg 4, see TODO.md and
+ * docs/investigations/mega-form-rows-scoping.md), the same way the old
+ * standalone '#mega' tag used to AND against a Mega form's own retyped/
+ * guaranteed-ability matchup before the chip redesign replaced it.
  *
  * Column headers sort the whole table (Showdown Random Battle Dex-style) -
  * see utils/statTable.ts for the actual sort/BST math, kept pure and
@@ -56,12 +59,19 @@
  * still matches Mega rows by their "Mega {Species}" label.
  *
  * The old standalone `#mega` tag (Add Pokémon Table: Mega Form Rows Leg 3)
- * that filtered the whole modal to Mega-only rows and ANDed against a Mega
- * form's own retyped/guaranteed-ability matchup has no chip equivalent as of
- * the Tag-Chip Redesign - see this file's header comment above for the
- * current interim behavior (Mega rows only in the unfiltered browse view)
- * and `docs/investigations/mega-form-rows-scoping.md` for the decision this
- * reverses.
+ * that filtered the whole modal to Mega-only rows has no direct chip
+ * equivalent as of the Tag-Chip Redesign - there's no "Mega" chip category,
+ * so a Mega row can't be isolated on its own. What it ANDed against (a Mega
+ * form's own retyped/guaranteed-ability matchup) carries over implicitly
+ * instead (Leg 4): any active type chip is checked against the Mega slug's
+ * own `calcSpecies.types`, and any active ability chip against
+ * `getMegaAbility(slug)` (falling back to the base species' own ability-tag
+ * membership for the Mega forms with no confirmed override - see
+ * `megaAbilities.ts`'s header). Move chips are unaffected either way - Mega
+ * Evolution doesn't change a species' learnset, so they still check the
+ * base species' own move-tag membership. See
+ * `docs/investigations/mega-form-rows-scoping.md` for the full decision
+ * trail.
  *
  * `savedPokemon`/`onSelectSaved` (From Box) mirrors SpeciesPickerCard's own
  * opt-in pair exactly - same filtering rules, same omitted-means-no-section
@@ -236,6 +246,31 @@ export default function AddPokemonStatTable({
   const matchesSearchText = (name: string): boolean =>
     search.trim().length === 0 || name.toLowerCase().includes(search.toLowerCase());
 
+  // Mega-row equivalent of matchesChips - a type/ability chip checks the
+  // Mega slug's own type/ability instead of the base species' (see file
+  // header comment), since those can differ from the base form (e.g. Mega
+  // Gyarados retypes to Water/Dark). Move chips are unaffected - Mega
+  // Evolution doesn't change a species' learnset - so they still fall
+  // through to the base species' own move-tag membership.
+  const matchesMegaChips = (
+    calcSpecies: ReturnType<typeof gen.species.get>,
+    megaAbility: string | undefined,
+    baseSpeciesName: string,
+  ): boolean =>
+    chips.every((chip, i) => {
+      if (chip.category === 'type') {
+        if (!calcSpecies) return false;
+        return calcSpecies.types.some((t) => t.toLowerCase() === chip.value);
+      }
+      if (chip.category === 'ability' && megaAbility) {
+        return normalizeNameForAPI(megaAbility) === chip.value;
+      }
+      // Ability chip with no confirmed Mega-ability override, or a move
+      // chip - both fall back to the base species' own chip-set membership.
+      const set = chipSets[i];
+      return set === null || set.has(baseSpeciesName.toLowerCase());
+    });
+
   const legalRoster = roster.filter((pkmn) => validateSpeciesLegality(pkmn.name, rulesetId));
   const filteredRoster = legalRoster
     .filter((pkmn) => matchesSearchText(pkmn.name))
@@ -263,53 +298,52 @@ export default function AddPokemonStatTable({
 
   // One row per Mega Stone, gated to species already in `legalRoster` (see
   // this file's header). Matched by plain-text search on the "Mega
-  // {Species}" label same as before. No chip-category equivalent to the old
-  // standalone '#mega' tag yet (see file header comment) - any active chip
-  // hides Mega rows entirely until implicit chip matching is added.
-  const showMegaRows = chips.length === 0;
-  const megaRows: StatTableRow[] = showMegaRows
-    ? Object.entries(MEGA_STONE_TO_SPECIES).flatMap(([item, entry]) => {
-        const baseSpecies = legalRoster.find(
-          (pkmn) => pkmn.name.toLowerCase() === entry.species.toLowerCase(),
-        );
-        if (!baseSpecies) return [];
+  // {Species}" label same as before, plus matchesMegaChips for any active
+  // type/move/ability chip (implicit Mega matching, see file header).
+  const megaRows: StatTableRow[] = Object.entries(MEGA_STONE_TO_SPECIES).flatMap(
+    ([item, entry]) => {
+      const baseSpecies = legalRoster.find(
+        (pkmn) => pkmn.name.toLowerCase() === entry.species.toLowerCase(),
+      );
+      if (!baseSpecies) return [];
 
-        const slug = `${entry.species}-${entry.suffix}`;
-        const calcSpecies = gen.species.get(toID(slug));
-        const stats: PokemonStats | null = calcSpecies
-          ? {
-              hp: calcSpecies.baseStats.hp,
-              attack: calcSpecies.baseStats.atk,
-              defense: calcSpecies.baseStats.def,
-              specialAttack: calcSpecies.baseStats.spa,
-              specialDefense: calcSpecies.baseStats.spd,
-              speed: calcSpecies.baseStats.spe,
-            }
-          : null;
-        const displayName = formatMegaLabel(baseSpecies.name, entry.suffix);
-        const megaAbility = getMegaAbility(slug);
+      const slug = `${entry.species}-${entry.suffix}`;
+      const calcSpecies = gen.species.get(toID(slug));
+      const stats: PokemonStats | null = calcSpecies
+        ? {
+            hp: calcSpecies.baseStats.hp,
+            attack: calcSpecies.baseStats.atk,
+            defense: calcSpecies.baseStats.def,
+            specialAttack: calcSpecies.baseStats.spa,
+            specialDefense: calcSpecies.baseStats.spd,
+            speed: calcSpecies.baseStats.spe,
+          }
+        : null;
+      const displayName = formatMegaLabel(baseSpecies.name, entry.suffix);
+      const megaAbility = getMegaAbility(slug);
 
-        if (!matchesSearchText(displayName)) return [];
+      if (!matchesSearchText(displayName)) return [];
+      if (!matchesMegaChips(calcSpecies, megaAbility, baseSpecies.name)) return [];
 
-        return [
-          {
-            key: `mega:${item}`,
-            displayName,
-            spriteUrl: getCachedMegaSprite(slug)?.spriteUrl ?? baseSpecies.spriteUrl,
-            types: calcSpecies ? [...calcSpecies.types] : [],
-            abilities: megaAbility ? [megaAbility] : [],
-            hp: stats?.hp ?? null,
-            attack: stats?.attack ?? null,
-            defense: stats?.defense ?? null,
-            specialAttack: stats?.specialAttack ?? null,
-            specialDefense: stats?.specialDefense ?? null,
-            speed: stats?.speed ?? null,
-            bst: stats ? computeBST(stats) : null,
-            onClick: () => onSelect(baseSpecies, toTitleCase(item)),
-          },
-        ];
-      })
-    : [];
+      return [
+        {
+          key: `mega:${item}`,
+          displayName,
+          spriteUrl: getCachedMegaSprite(slug)?.spriteUrl ?? baseSpecies.spriteUrl,
+          types: calcSpecies ? [...calcSpecies.types] : [],
+          abilities: megaAbility ? [megaAbility] : [],
+          hp: stats?.hp ?? null,
+          attack: stats?.attack ?? null,
+          defense: stats?.defense ?? null,
+          specialAttack: stats?.specialAttack ?? null,
+          specialDefense: stats?.specialDefense ?? null,
+          speed: stats?.speed ?? null,
+          bst: stats ? computeBST(stats) : null,
+          onClick: () => onSelect(baseSpecies, toTitleCase(item)),
+        },
+      ];
+    },
+  );
 
   const rows = [...speciesRows, ...megaRows];
   const sortedRows = sort ? sortStatTableRows(rows, sort, (row) => row[sort.key]) : rows;
