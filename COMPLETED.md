@@ -144,3 +144,19 @@ Entries prior to this file's oldest are in:
   replacing the last remaining `parseTagFilters` `#tag`-chain consumer. No
   Mega chip-matching yet (Leg 4/5). Live-verified by the user against real
   saved builds in `npm run dev`. See commit `44ad153`.
+
+- **[Search & Filter: Tag-Chip Redesign] — Leg 4** (2026-10-24): Replaced
+  `AddPokemonStatTable.tsx`'s interim Leg 2 Mega-row gating ("no chips
+  active") with implicit matching: an active type chip now checks the Mega
+  slug's own `calcSpecies.types` instead of the base species', and an
+  active ability chip checks `getMegaAbility(slug)` first, falling back to
+  the base species' own ability-tag membership for Mega forms with no
+  confirmed override. Move chips are unaffected (Mega Evolution doesn't
+  change a species' learnset). Updated
+  `docs/investigations/mega-form-rows-scoping.md` to record the reversal.
+  Live-verified via `run-desktop`: a Dragon type chip surfaces Mega
+  Charizard X/Ampharos/Sceptile alongside the real Dragon-types, and a
+  Tough Claws ability chip surfaces exactly the five Mega forms with that
+  confirmed override (Aerodactyl/Barbaracle/Charizard X/Golisopod/
+  Metagross), no false positives once the async ability-member fetch
+  resolved. See commit `63384b1`.

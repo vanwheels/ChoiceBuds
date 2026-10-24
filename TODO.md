@@ -32,21 +32,6 @@ Done when:
   own type/ability, consistently across both `AddPokemonStatTable.tsx` and
   Box's saved-build search - no separate "Mega" chip required anywhere.
 
-- **[Search & Filter: Tag-Chip Redesign] — Leg 4** *(Last touched:
-  2026-10-24 · Re-checks: 0)*
-  Narrowed from its original scope now that Leg 2 already wired
-  `TagChipInput` into `AddPokemonStatTable.tsx`: flip its Mega-row gating
-  from Leg 2's interim "only in the unfiltered browse view" behavior (no
-  chip category exists for the old standalone `#mega` tag) to implicit -
-  any active type/move/ability chip that matches a Mega form's own stats/
-  type/ability also surfaces that Mega's row, no separate Mega chip needed.
-  Update `docs/investigations/mega-form-rows-scoping.md`'s recorded
-  `#mega`-tag decision to reflect the reversal.
-  Done check: a chip like "Dragon" surfaces Mega Charizard X without a
-  Mega chip present, across Roster Swap/the "+ Add Pokémon" slot/Box's
-  "+ New Build"; existing non-Mega filtering still matches Leg 2's behavior.
-  Manual verification: yes. Review: no.
-
 - **[Search & Filter: Tag-Chip Redesign] — Leg 5** *(Last touched:
   2026-10-23 · Re-checks: 0)*
   Extend Box's chip matching so a saved build holding a Mega Stone matches
