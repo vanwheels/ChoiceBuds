@@ -116,3 +116,22 @@ Entries prior to this file's oldest are in:
   matching and type/move disambiguation (e.g. Psychic); a component render
   test caught `addChip` storing the autocomplete option's `label` onto the
   chip itself, fixed before merge. See commit `2dc9bcc`.
+
+- **[Search & Filter: Tag-Chip Redesign] — Leg 2** (2026-10-24): The leg's
+  original scope targeted `SpeciesPickerCard.tsx` for Roster Swap + the
+  "+ Add Pokémon" slot, but `AddPokemonStatTable.tsx` had already replaced
+  it at both call sites (plus Box's "+ New Build") back on 2026-10-16 -
+  wired `TagChipInput` into `AddPokemonStatTable.tsx` instead, the real
+  target, each chip now routing directly by category into
+  `usePokemonTypeFilter`/`usePokemonMoveFilter`/`usePokemonAbilityFilter`
+  rather than the old `#tag` text-probing chain. Added
+  `fetchAllAbilityNames`/`useAbilityNameList.ts` for the ability column's
+  autocomplete candidates. Also wired `TagChipInput` into
+  `SpeciesPickerCard.tsx` itself (still live for Battle Logger's opponent
+  picker) before finding the above. Live-verified 2026-10-24 across three
+  rounds in `npm run dev` (Roster Swap + the Add-Pokémon slot, Psychic
+  type/Expanding Force move chip combo), surfacing and fixing five UX
+  issues: two search boxes merged into one, a loading chip no longer
+  collapses the whole result list, the modal panel no longer shrinks to
+  fit a narrow result set, and the autocomplete dropdown no longer floats
+  over (and hides) matching rows below it. See commit `6780314`.

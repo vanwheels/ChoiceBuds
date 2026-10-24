@@ -21,7 +21,7 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 Done when:
 - Team builder (Roster Swap + the "+ Add Pokémon" slot, both served by
   `AddPokemonStatTable.tsx` since 2026-10-16 - `SpeciesPickerCard.tsx` no
-  longer serves either, see Leg 2's correction note) and Box search
+  longer serves either, see COMPLETED.md's Leg 2 entry) and Box search
   (`BoxPage.tsx`/`BoxPageToolbar.tsx`) all use multi-select type/move/
   ability chips instead of free-text `#tag` syntax; multiple chips still
   AND together.
@@ -31,62 +31,6 @@ Done when:
 - Mega forms surface as results wherever an active chip matches the Mega's
   own type/ability, consistently across both `AddPokemonStatTable.tsx` and
   Box's saved-build search - no separate "Mega" chip required anywhere.
-
-- **[Search & Filter: Tag-Chip Redesign] — Leg 2** *(Last touched:
-  2026-10-24 · Re-checks: 0)*
-  Corrected mid-leg: this item's original text targeted
-  `SpeciesPickerCard.tsx` for Roster Swap + the "+ Add Pokémon" slot, but
-  `AddPokemonStatTable.tsx` had already replaced `SpeciesPickerCard.tsx` at
-  both those call sites (plus Box's "+ New Build") back on 2026-10-16 -
-  `SpeciesPickerCard.tsx` now only serves Battle Logger's
-  `RecordMatchForm.tsx` opponent picker, outside this milestone's done-when.
-  Wired `TagChipInput` into `AddPokemonStatTable.tsx` instead - the real
-  target for "Team builder"/"the Add-Pokémon stat table," which turned out
-  to be the same component. Each chip routes directly by category into
-  `usePokemonTypeFilter`/`usePokemonMoveFilter`/`usePokemonAbilityFilter`,
-  replacing the `#tag` text-probing chain it had ported over from
-  `SpeciesPickerCard.tsx`. Added `fetchAllAbilityNames`/
-  `useAbilityNameList.ts` (mirrors the existing move-name-list hook) to
-  source the ability column's autocomplete candidates - nothing existed for
-  abilities before. Also wired `TagChipInput` into `SpeciesPickerCard.tsx`
-  itself before discovering the above - harmless, a real fix for Battle
-  Logger's opponent picker, kept as a bonus outside this milestone's
-  done-when. Mega rows in `AddPokemonStatTable.tsx` are unchanged by this
-  leg: chips have no category equivalent to the old standalone `#mega` tag,
-  so they still only show in the unfiltered browse view (no chips active);
-  implicit Mega matching per active chip is Leg 4.
-  Live-verified 2026-10-24, then five follow-up fixes across three rounds of
-  that live pass: (1) the first wiring had each consumer render its own
-  separate plain-text species-name box next to `TagChipInput`'s own query
-  box - read as two search bars for one search, so `TagChipInput` gained an
-  `onQueryChange` prop and is now the only input either consumer renders;
-  (2) a still-pending chip (new, not-yet-cached type/move/ability) collapsed
-  the whole result list to empty/"Loading…" until its fetch resolved, a
-  visible flicker - `matchesChips` now treats a pending chip's `null` set as
-  "no constraint yet" instead of "excludes everything," so results narrow in
-  progressively; (3) `TagChipInput`'s autocomplete dropdown
-  (`AddPokemonStatTable.tsx`'s modal) rendered behind the stat table's
-  sticky header - both were `z-10` and the header's own stacking context won
-  the tie; (4) `Modal.tsx`'s panel only had `max-h-[85vh]` (a ceiling, not a
-  floor), so it shrink-wrapped to however few rows a narrow chip/search
-  match left, visibly resizing the whole dialog smaller on every keystroke
-  and squeezing matching rows below the fold - `AddPokemonStatTable.tsx`'s
-  `panelClassName` is now a fixed `h-[85vh]` instead; (5) even at a fixed
-  panel height, the dropdown (still absolutely positioned at that point)
-  floated over the table rows beneath it and hid matches - `Modal.tsx`'s own
-  header comment already documents this exact class of bug
-  ("absolutely-positioned child... render in-flow instead"), so the
-  dropdown is now in-flow (pushes content below it down while open) rather
-  than `absolute`, which also subsumes fix (3) since an in-flow element
-  can't be painted behind a sibling's sticky header.
-  Done check: species results match the same set a chip combo as the old
-  `#tag` combo would, with the type/move disambiguation now explicit in the
-  UI instead of order-dependent guessing - across Roster Swap, the
-  "+ Add Pokémon" slot, and Box's "+ New Build" (all
-  `AddPokemonStatTable.tsx`).
-  Manual verification: yes - live-verified 2026-10-24 in `npm run dev`
-  (Psychic type chip + Expanding Force move chip combo, correct results).
-  Review: no.
 
 - **[Search & Filter: Tag-Chip Redesign] — Leg 3** *(Last touched:
   2026-10-23 · Re-checks: 0)*
