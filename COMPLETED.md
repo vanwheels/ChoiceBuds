@@ -109,23 +109,6 @@ Entries prior to this file's oldest are in:
 - [docs/archive/completed-2026-10-23-to-2026-10-24-search-and-filter-tag-chip-redesign.md](docs/archive/completed-2026-10-23-to-2026-10-24-search-and-filter-tag-chip-redesign.md)
   (the Search & Filter: Tag-Chip Redesign milestone's five legs, split out
   at the 2026-10-24 Search & Filter: Tag-Chip Redesign boundary)
-
-**[Type-Changing Ability Move Badge Color] — Leg 2** (2026-10-24): Move
-bubbles on Team/Box/Builder cards (`MoveBubbleGrid.tsx`) and the shared move
-tooltip (`TooltipContent.tsx`) now color via
-`config/typeChangingAbilities.ts`'s `getEffectiveMoveType` instead of the
-move's raw listed type, so an equipped type-changing ability (Aerilate/
-Pixilate/Refrigerate/Galvanize/Normalize/Liquid Voice) retints both to the
-ability-transformed type, matching Type Matchup's Offensive Coverage.
-`MoveBubbleGrid` takes the same Mega-aware ability `EditOverlays.tsx`
-already resolved for the move-boost indicator. Live-verified in the running
-app: confirmed both the bubble color and tooltip type badge update for a
-Pokémon holding one of the six abilities. See commit
-bf08e2edd692087e04fed3b4e2c2b4376a5cf201.
-
-**[Mega Form List Ordering] — Leg 1** (2026-10-24): Mega-Stone rows in
-`AddPokemonStatTable.tsx` now splice in directly below their own base
-species (grouped by species name into a Map) instead of all trailing the
-full base-species list. Live-verified in the running app: confirmed Mega
-rows now render immediately under their base species. See commit
-b17f9405a1e807f97d810ad0ee8db8228a371ad8.
+- [docs/archive/completed-2026-10-24-to-2026-10-24-display-bug-fix-sweep.md](docs/archive/completed-2026-10-24-to-2026-10-24-display-bug-fix-sweep.md)
+  (the Display Bug Fix Sweep milestone's two legs, split out at the
+  2026-10-24 Display Bug Fix Sweep boundary)

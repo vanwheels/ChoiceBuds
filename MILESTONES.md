@@ -103,3 +103,5 @@ milestone.
 - **Search & Filter: Tag-Chip Redesign** — 2026-10-23 to 2026-10-24 —
   Shipped —
   [post-mortem](docs/postmortems/search-and-filter-tag-chip-redesign.md)
+- **Display Bug Fix Sweep** — 2026-10-24 — Shipped —
+  [post-mortem](docs/postmortems/display-bug-fix-sweep.md)

@@ -16,20 +16,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Display Bug Fix Sweep
-
-Done when:
-- Mega-Stone rows appear directly below their own base species in
-  `AddPokemonStatTable.tsx`'s row list, instead of all being appended after
-  the full base-species list. ✅ done (see COMPLETED.md).
-- Move bubbles on Team/Box/Builder cards and their tooltips show the
-  effective type color from an equipped type-changing ability (Aerilate,
-  Pixilate, Refrigerate, Galvanize, Normalize, Liquid Voice), not the
-  move's raw listed type. ✅ done (see COMPLETED.md).
-
-Both done-when items are now shipped - this milestone is ready for
-`/close-milestone`.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -60,7 +46,8 @@ unblocked.
 
 (Mega Form List Ordering and Type-Changing Ability Move Badge Color,
 previously listed here, were bundled into the Display Bug Fix Sweep
-milestone on 2026-10-24 - see above.)
+milestone, promoted to current and shipped 2026-10-24; see
+`MILESTONES.md`.)
 
 (The Ability-Affects-Move Indicator + Type Matchup Mega Toggle item
 previously listed here was promoted to current 2026-10-23 and shipped the

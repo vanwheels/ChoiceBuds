@@ -500,7 +500,10 @@ and feeds the result to `MoveBubbleGrid.tsx`'s corner badge and
 `EditOverlays` already uses for item/ability tooltips. Out of scope: the Calc
 tab (its damage % already reflects every ability-move interaction via
 `@smogon/calc`) and static/read-only displays (`TeamPosterTile.tsx`, profile
-tiles).
+tiles). The same `getEffectiveMoveType` call also drives the move bubble's
+own color and its tooltip's type badge (not just the boost indicator) for a
+Mega-aware equipped ability, matching the effective type Offensive Coverage
+already shows.
 
 ## Gender/form handling
 
@@ -575,7 +578,9 @@ AND together. Two consumers:
   instead of the base species' values — so a Mega row surfaces wherever its
   own type/ability matches, with no separate "Mega" chip anywhere. Move
   chips are unaffected since Mega Evolution doesn't change a species'
-  learnset.
+  learnset. Mega rows are grouped into a `Map` keyed by base species name
+  and spliced in directly below that species' own row, rather than all
+  Mega rows trailing the full species list.
 - **Box search** (`BoxPageToolbar.tsx` desktop, `BoxPage.tsx` mobile
   popover — one shared `chips` array) — `matchesChipsWithMega` applies the
   same Mega-aware check per chip, but OR'd against the base-species check
