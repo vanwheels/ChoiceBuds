@@ -27,17 +27,6 @@ Done when:
   Pixilate, Refrigerate, Galvanize, Normalize, Liquid Voice), not the
   move's raw listed type.
 
-- **[Mega Form List Ordering] — Leg 1**
-  *(Last touched: 2026-10-24 · Re-checks: 0)*
-  `AddPokemonStatTable.tsx`'s row list (`const rows = [...speciesRows,
-  ...megaRows]`, line ~348) appends every Mega-Stone row after the full
-  base-species list rather than placing each Mega row directly below its
-  own base species. Fix the row list so each Mega-Stone row is inserted
-  directly after its own base species.
-  Done check: row list renders each Mega row immediately below its base
-  species for every species with a Mega form.
-  Manual verification: yes. Review: no.
-
 - **[Type-Changing Ability Move Badge Color] — Leg 2**
   *(Last touched: 2026-10-23 · Re-checks: 0)*
   On Team/Box/Builder cards, a move whose type an equipped ability changes

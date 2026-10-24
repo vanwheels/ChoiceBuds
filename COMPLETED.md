@@ -109,3 +109,10 @@ Entries prior to this file's oldest are in:
 - [docs/archive/completed-2026-10-23-to-2026-10-24-search-and-filter-tag-chip-redesign.md](docs/archive/completed-2026-10-23-to-2026-10-24-search-and-filter-tag-chip-redesign.md)
   (the Search & Filter: Tag-Chip Redesign milestone's five legs, split out
   at the 2026-10-24 Search & Filter: Tag-Chip Redesign boundary)
+
+**[Mega Form List Ordering] — Leg 1** (2026-10-24): Mega-Stone rows in
+`AddPokemonStatTable.tsx` now splice in directly below their own base
+species (grouped by species name into a Map) instead of all trailing the
+full base-species list. Live-verified in the running app: confirmed Mega
+rows now render immediately under their base species. See commit
+b17f9405a1e807f97d810ad0ee8db8228a371ad8.
