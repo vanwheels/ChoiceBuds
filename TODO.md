@@ -16,6 +16,51 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
+## Current Milestone: Calc Improvements
+
+Done when:
+- Tera Blast no longer appears as a pickable move for any Champions-tagged species.
+- Selecting a Pokémon in the calc visually highlights its sprite box in the team/opponent tray.
+- With two Pokémon selected, the faster one's highest-damaging move is auto-highlighted and its damage roll auto-displayed without a manual move click.
+- Item and Pokémon sprites appear in the calc UI (lowest priority — may slip to a future milestone if the other three take longer than expected).
+
+- **[Tera Blast Movepool Leak Fix] — Leg 1** *(Last touched: 2026-10-24 ·
+  Re-checks: 0)*
+  Add Tera Blast to `CHAMPIONS_PATCH_MOVEPOOL_REMOVALS` in
+  `config/championsMovepoolChanges.ts`, same shape as the existing
+  Archaludon entries, closing the leak where any species whose live PokeAPI
+  `champions` tag includes Tera Blast gets it offered as pickable. Scoped
+  2026-10-24 during the Missing Move/Ability Description Audit's Leg 2 —
+  see `docs/investigations/missing-move-ability-descriptions.md`'s
+  side-finding for the dead-fallback-path diagnosis.
+  Done check: Tera Blast no longer appears in the move picker for any
+  Champions roster Pokémon. Manual verification: yes.
+
+- **[Calc Sprite Box Highlight] — Leg 2** *(Last touched: 2026-10-24 ·
+  Re-checks: 0)*
+  Highlight the selected Pokémon's sprite box in `CalcTeamTray.tsx`/
+  `CalcOpponentTray.tsx` so the active selection is visually obvious,
+  establishing the selection-state convention Leg 3 builds on.
+  Done check: selecting a Pokémon in either tray visibly highlights its
+  sprite box; deselecting/switching updates it correctly. Manual
+  verification: yes.
+
+- **[Calc Auto Damage-Roll Display] — Leg 3** *(Last touched: 2026-10-24 ·
+  Re-checks: 0)*
+  When two Pokémon are selected, default-highlight and auto-display damage
+  rolls for the faster Pokémon's highest-damaging move in
+  `CalcMoveGrid.tsx`/`CalcResultPanel.tsx`, without requiring a manual move
+  click.
+  Done check: picking two Pokémon in the calc auto-selects and displays the
+  faster side's best move and its damage roll with no extra click. Manual
+  verification: yes.
+
+- **[Calc UI Sprites] — Leg 4** *(Last touched: 2026-10-24 · Re-checks: 0)*
+  Add item and Pokémon sprites to the calc UI panels (lowest priority of
+  the three features).
+  Done check: item/Pokémon sprites render correctly across the calc's
+  panels for all selectable Pokémon/items. Manual verification: yes.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -44,21 +89,9 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-Tera Blast movepool leak (found 2026-10-24, during the Missing Move/
-Ability Description Audit's Leg 2 — see
-`docs/investigations/missing-move-ability-descriptions.md`'s side-finding):
-`config/championsMovepoolChanges.ts`'s documented "Tera Blast doesn't exist
-in Champions" removal (`GLOBALLY_REMOVED_MOVES`) only runs through the
-`hasChampionsMoveData === false` fallback path, which is dead for
-virtually the entire current roster per that file's own "Prune Dead" note.
-The unconditional removal path (`CHAMPIONS_PATCH_MOVEPOOL_REMOVALS`) only
-covers Archaludon's Mirror Coat/Metal Burst, so any species whose live
-PokeAPI `champions` tag includes Tera Blast gets it offered as a pickable
-move today. Scoped 2026-10-24: confirmed with the user that Tera Blast is
-still not in Champions, so the fix is to add it to
-`CHAMPIONS_PATCH_MOVEPOOL_REMOVALS` (the unconditional path) in
-`config/championsMovepoolChanges.ts`, same shape as the existing
-Archaludon entries. Ready to start as its own leg.
+(Tera Blast movepool leak, previously listed here, was bundled into the
+Calc Improvements milestone, promoted to current 2026-10-24; see
+`MILESTONES.md`.)
 
 (Mega Form List Ordering and Type-Changing Ability Move Badge Color,
 previously listed here, were bundled into the Display Bug Fix Sweep
@@ -146,10 +179,7 @@ pass (Mega sprite/toggle gating, useSavedPokemon sync migration gap).
 Search & Filter: Tag-Chip Redesign was itself promoted to current and
 shipped 2026-10-24 (see `MILESTONES.md`). Selection UX & Data Audit was
 itself promoted to current and shipped 2026-10-24 (see `MILESTONES.md`).
-The remaining one, still to be scoped:
-
-- **Calc Improvements** — highlight the selected Pokémon's sprite box in
-  the calc; default-highlight and auto-display damage rolls for the
-  faster Pokémon's highest-damaging move when two Pokémon are selected;
-  item/Pokémon sprites in the calc UI (lowest priority of the three).
+Calc Improvements, the last of the six, was itself promoted to current
+2026-10-24 (see `MILESTONES.md`), bundling in the Tera Blast movepool leak
+fix from Unscheduled above.
 
