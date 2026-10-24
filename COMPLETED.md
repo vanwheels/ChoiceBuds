@@ -106,3 +106,13 @@ Entries prior to this file's oldest are in:
   Type Matchup Mega Toggle boundary - named with the milestone slug since it
   shares its date range with the Ability-Affects-Move Indicator Scoping, Type
   Matchup Rework, and Team Editor & Box Fixes archives above)
+
+## Search & Filter: Tag-Chip Redesign
+
+- **[Search & Filter: Tag-Chip Redesign] — Leg 1** (2026-10-23): Added the
+  `{category, value}` `TagChip` data model, pure matching/dedupe/
+  disambiguation logic, and a standalone `TagChipInput` component (no real
+  consumer wired in yet). Unit tests cover space/hyphen-insensitive
+  matching and type/move disambiguation (e.g. Psychic); a component render
+  test caught `addChip` storing the autocomplete option's `label` onto the
+  chip itself, fixed before merge. See commit `2dc9bcc`.
