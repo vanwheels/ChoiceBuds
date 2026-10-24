@@ -15,19 +15,34 @@
  * config/typeImmunityAbilities.ts, consumed via utils/typeCoverage.ts's
  * `getDefensiveMultiplier`.
  *
- * Both tables also account for an active Mega toggle (Type Matchup Rework
- * Leg 3, see COMPLETED.md): `useActiveFormsForIds` reads every selected team
- * slot's `usePokemonFormToggle` state at once (Rules of Hooks forbids
- * calling that hook itself inside this file's own `team.pokemon.map()`
- * calls), and `config/megaEvolution.ts`'s `resolveActiveMegaSlug` +
- * `utils/typeCoverage.ts`'s `resolveDefensiveSlot` (shared with
- * hooks/useTeamMoveTypes.ts's own Mega-aware ability resolution, so the
- * "is this slot's toggle pointing at its own held Mega Stone" rule lives in
- * one place) resolve a slot's typing/ability from `@smogon/calc`'s species
- * dex instead of the stored base form. Aegislash's Blade/Shield toggle needs
- * no equivalent handling here: per EditablePokemonCore.tsx, that forme
- * change never touches typing or ability (Steel/Ghost and Stance Change
- * either way), so the untouched base-form read already covers it correctly.
+ * Both tables also account for an active Mega toggle, but - unlike the Mega
+ * Team Card Flip badge on the Team/Box cards - each table keeps its OWN
+ * page-local toggle state (`megaFormsByTable`, keyed by table then by
+ * `ImportedPokemonInfo.id`), not a read of the shared
+ * `usePokemonFormToggle`/`useActiveFormsForIds` store those cards use
+ * (Ability-Affects-Move Indicator & Type Matchup Mega Toggle Leg 3, see
+ * TODO.md/COMPLETED.md). Flipping a Mega on here is a coverage-table-only
+ * preview; it must never bleed into the other table or into what the
+ * Team/Box card itself shows for that same Pokemon. `config/megaEvolution.ts`'s
+ * `resolveActiveMegaSlug` + `utils/typeCoverage.ts`'s `resolveDefensiveSlot`
+ * (shared with hooks/useTeamMoveTypes.ts's own Mega-aware ability
+ * resolution, so the "is this slot's toggle pointing at its own held Mega
+ * Stone" rule lives in one place) resolve a slot's typing/ability from
+ * `@smogon/calc`'s species dex instead of the stored base form. Aegislash's
+ * Blade/Shield toggle needs no equivalent handling here: per
+ * EditablePokemonCore.tsx, that forme change never touches typing or
+ * ability (Steel/Ghost and Stance Change either way), so the untouched
+ * base-form read already covers it correctly.
+ *
+ * `resolveActiveMegaSlug` only resolves non-null when the toggled slug
+ * matches the slot's actual held item - a toggle can never make a Pokemon
+ * "more Mega" than its real set allows, same constraint the Team card's own
+ * badge has. CoverageTable.tsx's split-form (Charizard/Raichu X/Y) picker
+ * follows that same rule rather than letting either letter apply freely:
+ * only the option matching the real held stone can ever light up, since
+ * useTeamMoveTypes.ts's own held-item gate (out of scope to change this leg)
+ * would otherwise silently ignore the other one - see CoverageTable.tsx's
+ * own header comment for the full reasoning.
  *
  * The page used to carry a third panel below these two tables (Team Gap
  * Analysis, a ladder-usage-threat heuristic via GameDataCache.usage) -
@@ -38,23 +53,25 @@
  * Resist columns, so it added no information a second panel would justify.
  */
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Generations } from '@smogon/calc';
 import type { UseTeamsReturn } from '../../hooks/useTeams';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import { useTeamMoveTypes } from '../../hooks/useTeamMoveTypes';
-import { useActiveFormsForIds } from '../../hooks/usePokemonFormToggle';
 import {
   computeOffensiveCoverage,
   computeDefensiveCoverage,
   resolveDefensiveSlot,
 } from '../../utils/typeCoverage';
 import { resolveActiveMegaSlug } from '../../config/megaEvolution';
+import { useMegaSpritePrefetch } from '../../hooks/useMegaSprite';
 import TeamPickerDropdown from '../TeamPickerDropdown';
 import CoverageTable from './CoverageTable';
 
 const GEN_NUM = 9;
+
+type CoverageTableKind = 'offensive' | 'defensive';
 
 interface TypeMatchupPageProps {
   teamsState: UseTeamsReturn;
@@ -72,13 +89,40 @@ export default function TypeMatchupPage({
   const selectedTeam = teams.find((t) => t.id === selectedTeamId);
   const gen = useMemo(() => Generations.get(GEN_NUM), []);
 
-  const pokemonIds = useMemo(() => (selectedTeam?.pokemon ?? []).map((p) => p.id), [selectedTeam]);
-  const activeForms = useActiveFormsForIds(pokemonIds);
+  // Warms useMegaSprite's shared id/URL cache for every curated Mega slug up
+  // front (same pattern SpeedTiersPage's Mega rows use) - CoverageTable.tsx
+  // reads it synchronously per column via getCachedMegaSprite rather than
+  // calling useMegaSprite itself, since Rules of Hooks forbids calling that
+  // hook inside its own per-pokemon .map(). Without this, a team visited
+  // here before its own Team/Box card has ever rendered (which would
+  // otherwise warm the same cache per-held-stone) would show the base sprite
+  // even with the toggle active.
+  useMegaSpritePrefetch();
+
+  // Page-local, per-table Mega preview state - see this file's header
+  // comment for why this can't just be another `useActiveFormsForIds` read
+  // of the shared team-card store.
+  const [megaFormsByTable, setMegaFormsByTable] = useState<
+    Record<CoverageTableKind, Record<string, string | null>>
+  >({ offensive: {}, defensive: {} });
+
+  const toggleMegaForm = useCallback(
+    (table: CoverageTableKind, pokemonId: string, slug: string) => {
+      setMegaFormsByTable((prev) => {
+        const current = prev[table][pokemonId] ?? null;
+        return {
+          ...prev,
+          [table]: { ...prev[table], [pokemonId]: current === slug ? null : slug },
+        };
+      });
+    },
+    [],
+  );
 
   const { moveTypesByPokemon, isLoading } = useTeamMoveTypes(
     selectedTeam,
     gameDataState,
-    activeForms,
+    megaFormsByTable.offensive,
   );
 
   const defensiveSlots = useMemo(
@@ -87,7 +131,7 @@ export default function TypeMatchupPage({
         const activeMegaSlug = resolveActiveMegaSlug(
           p.showdownData.item,
           p.showdownData.species,
-          activeForms[p.id] ?? null,
+          megaFormsByTable.defensive[p.id] ?? null,
         );
         return resolveDefensiveSlot(
           gen,
@@ -95,7 +139,7 @@ export default function TypeMatchupPage({
           activeMegaSlug,
         );
       }),
-    [selectedTeam, activeForms, gen],
+    [selectedTeam, megaFormsByTable.defensive, gen],
   );
   const offensiveRows = useMemo(
     () => computeOffensiveCoverage(moveTypesByPokemon),
@@ -141,6 +185,8 @@ export default function TypeMatchupPage({
             unfavorableLabel="Not Very Effective"
             favorableLabel="Super Effective"
             spriteCacheState={spriteCacheState}
+            activeForms={megaFormsByTable.offensive}
+            onToggleMegaForm={(pokemonId, slug) => toggleMegaForm('offensive', pokemonId, slug)}
           />
           <CoverageTable
             title="Defensive Coverage"
@@ -150,6 +196,8 @@ export default function TypeMatchupPage({
             unfavorableLabel="Total Weak"
             favorableLabel="Total Resist"
             spriteCacheState={spriteCacheState}
+            activeForms={megaFormsByTable.defensive}
+            onToggleMegaForm={(pokemonId, slug) => toggleMegaForm('defensive', pokemonId, slug)}
           />
         </div>
       )}

@@ -32,18 +32,8 @@ Done when:
   with zero changes to `useTeamMoveTypes.ts`/`typeCoverage.ts`'s resolution
   logic.
 
-- **[Ability-Affects-Move Indicator & Type Matchup Mega Toggle] — Leg 3**
-  *(Last touched: 2026-10-23 · Re-checks: 0)*
-  New page-local state shape keyed by `(slotId, table)` for Type Matchup
-  specifically (not a second read of `usePokemonFormToggle`). Wired into
-  `CoverageTable.tsx`'s header `<th>` sprite: single-form species reuse
-  `MegaFormToggleBadge`, split-form species (Charizard/Raichu X/Y) reuse
-  `resolveOpponentMegaControl`'s choice-picker shape, staying open to
-  correction per the form-toggle rule. Independent of Legs 1-2.
-  Done check: toggling a Mega on in one table doesn't affect the other
-  table or the Team card's own toggle; split-form picker allows
-  re-choosing.
-  Manual verification: yes. Review: no.
+Leg 3 (the milestone's last leg) shipped 2026-10-23, see `COMPLETED.md` -
+both done-when bullets above are now met.
 
 ## Blocked
 
@@ -72,6 +62,21 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+- **[Type-Changing Ability Move Badge Color] — Leg 1**
+  *(Last touched: 2026-10-23 · Re-checks: 0)*
+  On Team/Box/Builder cards, a move whose type an equipped ability changes
+  (Aerilate, Pixilate, Refrigerate, Galvanize, Normalize, Liquid Voice) still
+  shows its badge in the move's raw listed type color rather than the
+  effective type the ability produces. `MoveBubbleGrid.tsx`'s move bubbles
+  (and `TooltipContent.tsx`) should color via
+  `config/typeChangingAbilities.ts`'s `getEffectiveMoveType` - already used
+  by `hooks/useTeamMoveTypes.ts` for the same purpose in Type Matchup's
+  Offensive Coverage - instead of the move's own `type` field directly.
+  Surfaced 2026-10-23 during Ability-Affects-Move Indicator & Type Matchup
+  Mega Toggle Leg 3; flagged as separate scope rather than folded into that
+  leg since it's a different surface (card move bubbles, not Type Matchup)
+  and outside that milestone's done-when.
 
 (The Ability-Affects-Move Indicator + Type Matchup Mega Toggle item
 previously listed here was promoted to current 2026-10-23, see
