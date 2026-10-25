@@ -38,6 +38,7 @@ import type { UseDatabaseReturn } from '../hooks/useDatabase';
 import type { UseSavedPokemonReturn } from '../hooks/useSavedPokemon';
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
 import type { UseSettingsReturn } from '../hooks/useSettings';
+import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
 import CalcPage from './calc/CalcPage';
 
 interface CalcPopupProps {
@@ -49,6 +50,7 @@ interface CalcPopupProps {
   savedPokemonState: UseSavedPokemonReturn;
   spriteCacheState: UseSpriteCacheReturn;
   settingsState: UseSettingsReturn;
+  speciesRosterState: UseSpeciesRosterReturn;
   /** Forwarded straight through to CalcPage - the active Battle Log session's live opponent roster, if any (Regular Calc Battle Log Integration Leg 3). See App.tsx's battleLogSession doc. */
   battleLogOpponentRoster?: OpponentPokemonEntry[];
   /** Forwarded straight through to CalcPage - the active Battle Log session's write-back updater, if any (Regular Calc Battle Log Integration Leg 2/3). See App.tsx's battleLogSession doc. */

@@ -78,6 +78,7 @@ import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseDatabaseReturn } from '../../hooks/useDatabase';
 import type { UseVgcPastesCacheReturn } from '../../hooks/useVgcPastesCache';
 import type { UseVgcRealSetsCacheReturn } from '../../hooks/useVgcRealSetsCache';
+import type { UseSpeciesRosterReturn } from '../../hooks/useSpeciesRoster';
 import { useCalcRealSetsLookup } from '../../hooks/useCalcRealSetsLookup';
 import {
   CALC_TEAM_POKEMON_DRAG_TYPE,
@@ -118,6 +119,8 @@ interface CalcPokemonPanelProps {
   savedPokemonState: UseSavedPokemonReturn;
   gameDataState: UseGameDataReturn;
   databaseState: UseDatabaseReturn;
+  /** Shared single instance (App.tsx's own) - see CalcPage.tsx's prop doc; threaded straight through to CalcPokemonPanelFields for its species sprite preview. */
+  speciesRosterState: UseSpeciesRosterReturn;
   /** The current Calc tab's regulation, keying both caches below the same way useVgcPastesCache.ts/useVgcRealSetsCache.ts already do (RegulationLabel, not the internal RegulationId) - see CalcPage.tsx's getRegulationLabel(regulationId) call site. */
   regulation: RegulationLabel;
   /** Shared single instance (mounted once in CalcPage.tsx, not per-panel) - see this file's header comment for why a per-panel instance would race on its own persisted-cache writes. Read-only from this panel's perspective except for the Refresh Catalog action CalcRealSetsSection's empty state offers. */
@@ -152,6 +155,7 @@ export default function CalcPokemonPanel({
   savedPokemonState,
   gameDataState,
   databaseState,
+  speciesRosterState,
   regulation,
   vgcPastesState,
   vgcRealSetsState,
@@ -472,6 +476,8 @@ export default function CalcPokemonPanel({
         naturePercentByName={naturePercentByName}
         savedSetPickerSpecies={savedSetPickerSpecies}
         savedPokemonState={savedPokemonState}
+        gameDataState={gameDataState}
+        speciesRosterState={speciesRosterState}
         resolveSprite={resolveSprite}
         regulation={regulation}
         vgcPastesState={vgcPastesState}

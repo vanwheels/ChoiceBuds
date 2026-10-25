@@ -410,6 +410,7 @@ export default function AppWeb() {
               savedPokemonState={savedPokemonState}
               spriteCacheState={spriteCacheState}
               settingsState={settingsState}
+              speciesRosterState={speciesRosterState}
               battleLogOpponentRoster={battleLogSession?.roster}
               onUpdateOpponentEntry={battleLogSession?.onUpdateEntry}
               battleLogPlayerTeamId={battleLogSession?.teamId}

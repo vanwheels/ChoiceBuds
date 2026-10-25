@@ -16,6 +16,7 @@ import { AnimatePresence } from 'framer-motion';
 import { useDamageCalc, ALL_REGULATION_IDS } from '../../hooks/useDamageCalc';
 import { useVgcPastesCache } from '../../hooks/useVgcPastesCache';
 import { useVgcRealSetsCache } from '../../hooks/useVgcRealSetsCache';
+import { useMegaSpritePrefetch } from '../../hooks/useMegaSprite';
 import type { OpponentPokemonEntry } from '../../types/pokemon';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseTeamsReturn } from '../../hooks/useTeams';
@@ -23,6 +24,7 @@ import type { UseDatabaseReturn } from '../../hooks/useDatabase';
 import type { UseSavedPokemonReturn } from '../../hooks/useSavedPokemon';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import type { UseSettingsReturn } from '../../hooks/useSettings';
+import type { UseSpeciesRosterReturn } from '../../hooks/useSpeciesRoster';
 import { getRegulationLabel, toRegulationId } from '../../utils/pokemonRules';
 import CalcPokemonPanel from './CalcPokemonPanel';
 import CalcMoveGrid from './CalcMoveGrid';
@@ -37,6 +39,8 @@ interface CalcPageProps {
   savedPokemonState: UseSavedPokemonReturn;
   spriteCacheState: UseSpriteCacheReturn;
   settingsState: UseSettingsReturn;
+  /** Shared single instance (App.tsx's own, not a new one) - lets each CalcPokemonPanel resolve a live sprite preview for `state.species` on the fly, since Calc's own species strings (sourced from @smogon/calc's bundled dex, see useDamageCalc.ts) carry no national dex id of their own (see utils/calcSpriteResolve.ts). */
+  speciesRosterState: UseSpeciesRosterReturn;
   /** The currently open Battle Log session's live opponent roster, if any (Regular Calc Battle Log Integration Leg 3, see App.tsx's battleLogSession doc) - passed only to the Pokemon 2 panel below, which is reserved for the opponent during a Battle Log session (Leg 4 - see this file's render for why Pokemon 1 never receives it). Undefined outside that flow (e.g. the plain floating launcher opened with no Battle Log session active). */
   battleLogOpponentRoster?: OpponentPokemonEntry[];
   /** Merges a write back into a specific opponent-roster entry by id (Regular Calc Battle Log Integration Leg 2/3) - the effect below calls this whenever pokemon2's moves/ability/item change, but only once the Pokemon 2 panel has actually loaded an opponent entry via its tray (see linkedEntryId below). Undefined outside a Battle Log session, same as battleLogOpponentRoster. */
@@ -52,11 +56,18 @@ export default function CalcPage({
   savedPokemonState,
   spriteCacheState,
   settingsState,
+  speciesRosterState,
   battleLogOpponentRoster,
   onUpdateOpponentEntry,
   battleLogPlayerTeamId,
 }: CalcPageProps) {
   const [isSavedSetsOpen, setIsSavedSetsOpen] = useState(false);
+  // Warms hooks/useMegaSprite.ts's shared module-level cache for every
+  // Champions-legal Mega form - same mounted-once pattern TeamCard.tsx/
+  // TypeMatchupPage.tsx already use, needed here so each panel's own
+  // species sprite preview (utils/calcSpriteResolve.ts) can resolve a Mega
+  // forme's sprite without a per-panel fetch.
+  useMegaSpritePrefetch();
   // Which opponent-roster entry (if any) the Pokemon 2 panel's "Load from
   // Opponent" tray last loaded - set via onLoadOpponentEntry below, and the
   // target of the write-back effect further down. Reset to null (React's
@@ -265,6 +276,7 @@ export default function CalcPage({
           savedPokemonState={savedPokemonState}
           gameDataState={gameDataState}
           databaseState={databaseState}
+          speciesRosterState={speciesRosterState}
           regulation={getRegulationLabel(regulationId)}
           vgcPastesState={vgcPastesState}
           vgcRealSetsState={vgcRealSetsState}
@@ -300,6 +312,7 @@ export default function CalcPage({
           savedPokemonState={savedPokemonState}
           gameDataState={gameDataState}
           databaseState={databaseState}
+          speciesRosterState={speciesRosterState}
           regulation={getRegulationLabel(regulationId)}
           vgcPastesState={vgcPastesState}
           vgcRealSetsState={vgcRealSetsState}

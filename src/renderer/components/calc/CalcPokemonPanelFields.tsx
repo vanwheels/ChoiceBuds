@@ -5,10 +5,14 @@ import type { FormeFamily } from '../../utils/calcFormes';
 import type { SavedPokemonEntry, RegulationLabel } from '../../types/pokemon';
 import type { ChampionsUsageEntry } from '../../types/gameData';
 import type { UseSavedPokemonReturn } from '../../hooks/useSavedPokemon';
+import type { UseGameDataReturn } from '../../hooks/useGameData';
+import type { UseSpeciesRosterReturn } from '../../hooks/useSpeciesRoster';
 import type { UseVgcPastesCacheReturn } from '../../hooks/useVgcPastesCache';
 import type { UseCalcRealSetsLookupReturn } from '../../hooks/useCalcRealSetsLookup';
 import { normalizeSlug } from '../../utils/pokemonRules';
 import { realSetBundleToCalcUpdates } from '../../utils/calcTeamImport';
+import { resolveCalcPokemonSpriteUrl } from '../../utils/calcSpriteResolve';
+import { getItemFallbackSpriteUrl } from '../../utils/itemSprite';
 import CalcAutocomplete from './CalcAutocomplete';
 import SavedSetPicker from '../SavedSetPicker';
 import CalcStatRows from './CalcStatRows';
@@ -33,6 +37,8 @@ interface CalcPokemonPanelFieldsProps {
   naturePercentByName: Record<string, number>;
   savedSetPickerSpecies: string | null;
   savedPokemonState: UseSavedPokemonReturn;
+  gameDataState: UseGameDataReturn;
+  speciesRosterState: UseSpeciesRosterReturn;
   resolveSprite: (remoteUrl: string) => string;
   regulation: RegulationLabel;
   vgcPastesState: UseVgcPastesCacheReturn;
@@ -66,6 +72,8 @@ export default function CalcPokemonPanelFields({
   naturePercentByName,
   savedSetPickerSpecies,
   savedPokemonState,
+  gameDataState,
+  speciesRosterState,
   resolveSprite,
   regulation,
   vgcPastesState,
@@ -77,9 +85,42 @@ export default function CalcPokemonPanelFields({
   onMegaToggle,
   onCycleGender,
 }: CalcPokemonPanelFieldsProps) {
+  // Live preview only - Calc's own species text carries no national dex id
+  // the way a saved Team/Box entry's pokedexNumber does, so this resolves
+  // one on the fly against the shared roster (see utils/calcSpriteResolve.ts
+  // for why a plain roster lookup alone isn't enough).
+  const speciesSpriteUrl = resolveCalcPokemonSpriteUrl(
+    state.species,
+    state.gender,
+    speciesRosterState.roster,
+  );
+
+  // Synchronous cache-only read (same convention as the item/ability
+  // dropdowns' own usage ranking just below) - gameDataState.items is
+  // already a background-warmed collection covering every VGC-legal item
+  // (see useGameData.ts's own header comment), so this is cold only for the
+  // brief window before that first background fetch completes.
+  const itemData = state.item ? gameDataState.getCachedItem(state.item) : null;
+  const itemFallbackSpriteUrl = state.item ? getItemFallbackSpriteUrl(state.item) : null;
+
   return (
     <>
       <div className="flex gap-2 items-end">
+        <div
+          className="w-9 h-9 shrink-0 bg-zinc-800 rounded-lg border border-zinc-600 flex items-center justify-center overflow-hidden"
+          title={state.species || undefined}
+        >
+          {speciesSpriteUrl ? (
+            <img
+              src={resolveSprite(speciesSpriteUrl)}
+              alt={state.species}
+              loading="lazy"
+              className="w-7 h-7 object-contain [image-rendering:pixelated]"
+            />
+          ) : (
+            <span className="text-[9px] text-zinc-500">—</span>
+          )}
+        </div>
         <div className="flex-1 relative min-w-0">
           <CalcAutocomplete
             label="Species (Forme)"
@@ -123,14 +164,44 @@ export default function CalcPokemonPanelFields({
       )}
 
       <div className="grid grid-cols-2 gap-2">
-        <CalcAutocomplete
-          label="Item"
-          value={state.item}
-          options={itemOptions}
-          placeholder="None"
-          onChange={(item) => onChange({ item })}
-          usagePercentByName={itemPercentByName}
-        />
+        <div className="flex gap-2 items-end">
+          <div className="w-9 h-9 shrink-0 bg-zinc-800 rounded-lg border border-zinc-600 flex items-center justify-center overflow-hidden">
+            {itemData?.spriteUrl ? (
+              <img
+                src={resolveSprite(itemData.spriteUrl)}
+                alt={state.item}
+                loading="lazy"
+                className="w-6 h-6 object-contain [image-rendering:pixelated]"
+              />
+            ) : itemFallbackSpriteUrl ? (
+              // Fairy Feather and the Champions-new Mega Stones have no
+              // PokeAPI sprite - fall back to Serebii's itemdex sprite (see
+              // CLAUDE.md exception), same as ItemSpriteBox.tsx.
+              <img
+                src={resolveSprite(itemFallbackSpriteUrl)}
+                alt={state.item}
+                loading="lazy"
+                className="w-6 h-6 object-contain"
+              />
+            ) : state.item ? (
+              <span className="text-sm leading-none" role="img" aria-label="Unknown item">
+                🎒
+              </span>
+            ) : (
+              <span className="text-[9px] text-zinc-500">—</span>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <CalcAutocomplete
+              label="Item"
+              value={state.item}
+              options={itemOptions}
+              placeholder="None"
+              onChange={(item) => onChange({ item })}
+              usagePercentByName={itemPercentByName}
+            />
+          </div>
+        </div>
         <CalcAutocomplete
           label="Ability"
           value={state.ability}
