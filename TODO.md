@@ -19,16 +19,14 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 ## Current Milestone: Calc Improvements
 
 Done when:
-- Tera Blast no longer appears as a pickable move for any Champions-tagged species.
-- Selecting a Pokémon in the calc visually highlights its sprite box in the team/opponent tray.
-- With two Pokémon selected, the faster one's highest-damaging move is auto-highlighted and its damage roll auto-displayed without a manual move click.
-- Item and Pokémon sprites appear in the calc UI (lowest priority — may slip to a future milestone if the other three take longer than expected).
+- Tera Blast no longer appears as a pickable move for any Champions-tagged species. ✓
+- Selecting a Pokémon in the calc visually highlights its sprite box in the team/opponent tray. ✓
+- With two Pokémon selected, the faster one's highest-damaging move is auto-highlighted and its damage roll auto-displayed without a manual move click. ✓
+- Item and Pokémon sprites appear in the calc UI. ✓
 
-- **[Calc UI Sprites] — Leg 4** *(Last touched: 2026-10-24 · Re-checks: 0)*
-  Add item and Pokémon sprites to the calc UI panels (lowest priority of
-  the three features).
-  Done check: item/Pokémon sprites render correctly across the calc's
-  panels for all selectable Pokémon/items. Manual verification: yes.
+All four done-when criteria are now met (see COMPLETED.md's Calc UI
+Sprites — Leg 4, 2026-10-24) — this milestone is ready for
+`/close-milestone`.
 
 ## Blocked
 

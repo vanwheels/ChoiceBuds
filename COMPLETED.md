@@ -118,6 +118,23 @@ Entries prior to this file's oldest are in:
   slug since it shares its date range with the Display Bug Fix Sweep
   archive above)
 
+- **[Calc UI Sprites] — Leg 4** (2026-10-24)
+  Added `utils/calcSpriteResolve.ts` to resolve a live sprite URL for
+  Calc's own `state.species` text (sourced from @smogon/calc's bundled
+  dex, carries no national dex id the way a saved Team/Box entry's
+  `pokedexNumber` does), reusing `vgcPasteRowDisplay.ts`'s already-
+  validated tiered lookup (direct roster match, then
+  `normalizeSpeciesForAPI`'s slug fallback for bare default-forme names,
+  then the Mega-sprite cache for Mega formes) rather than duplicating
+  it. `CalcPokemonPanelFields.tsx` now renders that species sprite plus
+  an item sprite (reusing `ItemSpriteBox.tsx`'s PokeAPI -> Serebii ->
+  emoji fallback chain) next to their respective fields; threaded
+  `speciesRosterState` through `App.tsx`/`AppWeb.tsx` -> `CalcPopup` ->
+  `CalcPage` -> `CalcPokemonPanel` and added a `useMegaSpritePrefetch()`
+  call in `CalcPage.tsx` so Mega sprites resolve too. Manually verified
+  in `npm run dev`'s Calc popup. Closes out all four "Calc Improvements"
+  done-when criteria. See commit 24dcb801eec6a389535718c1395d91244b5a5cca.
+
 - **[Calc Auto Damage-Roll Display] — Leg 3** (2026-10-24)
   Added `useDamageCalc.ts`'s `effectiveSelectedResult` (`selectedResult ??`
   a memoized default pick: once both Pokémon have a species and a
