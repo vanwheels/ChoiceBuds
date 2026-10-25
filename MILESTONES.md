@@ -107,3 +107,5 @@ milestone.
   [post-mortem](docs/postmortems/display-bug-fix-sweep.md)
 - **Selection UX & Data Audit** — 2026-10-24 — Shipped —
   [post-mortem](docs/postmortems/selection-ux-data-audit.md)
+- **Calc Improvements** — 2026-10-24 — Shipped —
+  [post-mortem](docs/postmortems/calc-improvements.md)

@@ -506,6 +506,39 @@ own color and its tooltip's type badge (not just the boost indicator) for a
 Mega-aware equipped ability, matching the effective type Offensive Coverage
 already shows.
 
+## Calc popup
+
+`CalcPage.tsx` renders the damage calculator: two `CalcMoveGrid`s (one per
+Pokémon) above a shared `CalcResultPanel`, then a 3-column row
+(`CalcPokemonPanel` | `CalcFieldPanel` | `CalcPokemonPanel`). `useDamageCalc.ts`
+wraps `@smogon/calc` and owns both sides' state; `CalcPage.tsx` instantiates
+it (not `App.tsx`) so the engine stays behind the lazy-loaded tab boundary.
+
+- **Result selection**: `useDamageCalc.ts`'s `effectiveSelectedResult` is
+  `selectedResult ?? ` a memoized default — once both Pokémon have a species
+  and a resolvable speed, the faster side's highest-average-damage move
+  (skipping error/empty entries). Both `CalcMoveGrid`s' `selectedIndex` and
+  `CalcResultPanel`'s `entry` read from it, so the likely matchup shows with
+  no manual click, but a real click on a move row still pins that instead.
+- **Sprites**: Calc's `state.species` is typed/selected against
+  `@smogon/calc`'s own bundled species list, which carries no national dex
+  id the way a saved Team/Box entry's `pokedexNumber` does. `utils/
+  calcSpriteResolve.ts`'s `resolveCalcPokemonSpriteUrl` resolves one on the
+  fly, reusing `vgcPasteRowDisplay.ts`'s tiered roster lookup (direct match,
+  then `normalizeSpeciesForAPI`'s slug fallback) plus `useMegaSprite.ts`'s
+  cache for Mega formes, rather than duplicating that lookup.
+  `CalcPokemonPanelFields.tsx` renders the resolved species sprite plus an
+  item sprite (reusing `ItemSpriteBox.tsx`'s PokeAPI → Serebii → emoji
+  fallback chain). `speciesRosterState` is threaded down from `App.tsx`/
+  `AppWeb.tsx` for this; `CalcPage.tsx` also calls `useMegaSpritePrefetch()`
+  so Mega sprites resolve too.
+- **Sprite-box highlight**: `CalcTeamTray.tsx`/`CalcOpponentTray.tsx`
+  highlight the loaded Pokémon's sprite box by comparing each tray entry's
+  species against the active panel's own `state.species` (the same
+  convention `FormeToggle.tsx` uses), not a separate click-selection state —
+  so drag-drop loads, manual species edits, and Mega-toggling all update the
+  highlight for free.
+
 ## Gender/form handling
 
 VGC-legal species have two gender concerns that must stay in sync across two

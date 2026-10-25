@@ -16,18 +16,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Calc Improvements
-
-Done when:
-- Tera Blast no longer appears as a pickable move for any Champions-tagged species. ✓
-- Selecting a Pokémon in the calc visually highlights its sprite box in the team/opponent tray. ✓
-- With two Pokémon selected, the faster one's highest-damaging move is auto-highlighted and its damage roll auto-displayed without a manual move click. ✓
-- Item and Pokémon sprites appear in the calc UI. ✓
-
-All four done-when criteria are now met (see COMPLETED.md's Calc UI
-Sprites — Leg 4, 2026-10-24) — this milestone is ready for
-`/close-milestone`.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
