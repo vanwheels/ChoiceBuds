@@ -28,9 +28,20 @@
  * `overflow-hidden`, or (AddPokemonStatTable.tsx's case, live-verified
  * 2026-10-24) floats over the result rows beneath it and hides matches
  * rather than letting them show through.
+ *
+ * Escape clears the typed query, but a click outside this component does
+ * NOT (hotfix 2026-10-24, see TODO.md) - every consumer (AddPokemonStatTable,
+ * SpeciesPickerCard, BoxPage/BoxPageToolbar) renders its actual result rows
+ * as siblings below this component, outside its own DOM. A mousedown-based
+ * "click outside clears the query" listener (the old `useDismissable` wiring
+ * this used) fired on the mousedown that started a result click, widening
+ * the filtered list and reflowing rows out from under the pointer before
+ * the click/mouseup landed - silently eating the pick instead of selecting
+ * it. Confirmed live: clicking any search/Box result in "+ Add Pokémon"
+ * reset the search instead of adding the Pokémon.
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { TagChip } from '../types/tagChip';
 import {
   addChip,
@@ -38,7 +49,6 @@ import {
   excludeSelectedOptions,
   removeChip,
 } from '../utils/tagChipMatch';
-import { useDismissable } from '../hooks/useDismissable';
 
 interface TagChipInputProps {
   chips: TagChip[];
@@ -73,7 +83,17 @@ export default function TagChipInput({
     setQuery(next);
     onQueryChange?.(next);
   };
-  const ref = useDismissable<HTMLDivElement>(() => updateQuery(''));
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setQuery('');
+        onQueryChange?.('');
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onQueryChange]);
 
   const options = excludeSelectedOptions(
     buildChipOptions(query, { types: typeOptions, moves: moveOptions, abilities: abilityOptions }),
@@ -81,7 +101,7 @@ export default function TagChipInput({
   );
 
   return (
-    <div ref={ref} className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1">
       {chips.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {chips.map((chip) => (
