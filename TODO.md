@@ -1,4 +1,4 @@
-# ChoiceBuds TODO
+﻿# ChoiceBuds TODO
 
 Working task list for ongoing/planned work. Every item is titled
 `[Item/Sweep Name] — Leg N` (say "Start [title]" to kick off a session on
@@ -15,6 +15,58 @@ priority. Only one milestone is "current" at a time — see root `CLAUDE.md`'s
 Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
+
+## Current Milestone: Sprite, Filter & Search Fixes
+
+Done when:
+- Forme sprites (Castform-Snowy, Landorus-Therian, Mega X/Y) load their
+  animated GIF in the Calc without a 404 or visible delay; the static sprite
+  shows first.
+- Mega Golisopod appears under the Steel filter in + Add Pokemon, and other
+  Megas with altered typing are checked.
+- Searching a species name in team search returns every team containing it,
+  on both app and web.
+
+- **[Animated Sprite Forme Filenames] — Leg 1** *(Last touched: 2026-10-27 ·
+  Re-checks: 0)*
+  `getAnimatedSpriteUrl` strips the hyphen from forme names, but Showdown's
+  files keep it (`castform-snowy.gif`, `landorus-therian.gif`,
+  `charizard-megax.gif`), so every forme 404s - slowly on a cold miss - and
+  falls back to static. Fix the id rule (existing tests assert the buggy
+  output; needs the user's confirmation to change), and have
+  `CalcSideSprite` show the static sprite first. See
+  [docs/investigations/calc-forme-sprite-load-delay.md](docs/investigations/calc-forme-sprite-load-delay.md).
+  Done check: forme sprites load animated in the Calc with no visible delay;
+  full suite passes. Manual verification: yes. Review: no.
+
+- **[Mega Golisopod Steel Filter Bug] — Leg 1** *(Last touched: 2026-10-27 ·
+  Re-checks: 0)*
+  Found during manual testing: Mega Golisopod doesn't show up under the
+  Steel filter in + Add Pokemon. Likely cause: species filtering there
+  isn't accounting for the type change caused by mega evolving, so
+  Golisopod's base typing is used instead of its Mega's. Scope the cause,
+  check whether other Megas with altered typing are affected, then fix; if
+  the cause is non-trivial, split scoping from the fix.
+  Done check: Mega Golisopod shows under Steel and every other affected Mega
+  is covered by a test. Manual verification: yes. Review: no.
+
+- **[Team Search by Species] — Leg 1 (scoping)** *(Last touched: 2026-10-27 ·
+  Re-checks: 0)*
+  Searching a Pokémon's name in any team search should return every team
+  containing that Pokémon. Scoping only: list which search boxes exist
+  across app and web and decide whether one shared matcher can serve them
+  all. No code; ends at the written plan.
+  Done check: scope written up (investigation doc or TODO body) with Leg 2
+  defined. Manual verification: no. Review: no.
+
+- **[Team Search by Species] — Leg 2** *(Last touched: 2026-10-27 ·
+  Re-checks: 0)*
+  Build the shared species matcher and wire it into each team search box
+  found in Leg 1, with tests written from the stated rule (name search
+  returns every team containing that species). Final shape depends on Leg 1.
+  Done check: species search works on app and web; full suite passes.
+  Manual verification: yes. Review: yes if Leg 1 finds it spans several
+  systems.
 
 ## Blocked
 
@@ -44,30 +96,7 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-- **[Animated Sprite Forme Filenames] — Leg 1** *(Last touched: 2026-10-26 ·
-  Re-checks: 0)*
-  `getAnimatedSpriteUrl` strips the hyphen from forme names, but Showdown's
-  files keep it (`castform-snowy.gif`, `landorus-therian.gif`,
-  `charizard-megax.gif`), so every forme 404s - slowly on a cold miss - and
-  falls back to static. Fix the id rule (existing tests assert the buggy
-  output; needs the user's confirmation to change), and have
-  `CalcSideSprite` show the static sprite first. See
-  [docs/investigations/calc-forme-sprite-load-delay.md](docs/investigations/calc-forme-sprite-load-delay.md).
-
-- **[Mega Golisopod Steel Filter Bug] — Leg 1** *(Last touched: 2026-10-26 ·
-  Re-checks: 0)*
-  Found during manual testing: Mega Golisopod doesn't show up under the
-  Steel filter in + Add Pokemon. Likely cause: species filtering there
-  isn't accounting for the type change caused by mega evolving, so
-  Golisopod's base (non-Steel) typing is used instead of its Mega's
-  Bug/Water + Steel-relevant typing. Needs scoping to confirm whether this
-  affects other Megas with altered typing, not just Golisopod.
-
-- **[Team Search by Species] — Leg 1** *(Last touched: 2026-10-26 ·
-  Re-checks: 0)*
-  Searching a Pokémon's name in any team search should return every team
-  containing that Pokémon. Needs scoping first: which search boxes exist
-  across app and web, and whether one shared matcher can serve them all.
+(Empty - bundled into the current milestone 2026-10-27.)
 
 ## Future Milestones (unscheduled)
 
