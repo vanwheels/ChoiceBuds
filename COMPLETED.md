@@ -135,6 +135,13 @@ Entries prior to this file's oldest are in:
   2026-10-27 Sprite, Filter & Search Fixes boundary - named with the
   milestone slug since it shares its date range with no other archive)
 
+- **[Calc Sprite Swap Flicker] — Leg 1** (2026-10-27)
+  `CalcSideSprite` now cross-fades the static sprite into the Showdown GIF and renders
+  the GIF at a uniform 1.2x native size (a 3x-capped attempt had shrunk Megas), spanning
+  the move-grid row height. Also moved the regulation buttons into the popup header beside
+  the close X (user request, small scope add). Verified live by the user: no flicker, Mega
+  and base sprites look proportionate. Full suite, lint and type-check green. See commit b55312c.
+
 - **[Mega Stone Slug Coverage Test] — Leg 1** (2026-10-27)
   Added a test walking every `MEGA_STONE_TO_SPECIES` entry (plus Meowstic-F) that
   asserts the resolved slug exists in a saved PokeAPI Mega-resource fixture; full

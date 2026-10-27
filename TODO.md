@@ -27,17 +27,6 @@ Done when:
 - A test fails on any Mega stone whose `getMegaApiSlug` doesn't resolve to a
   valid PokeAPI resource name.
 
-- **[Calc Sprite Swap Flicker] — Leg 1** *(Last touched: 2026-10-27 ·
-  Re-checks: 0)*
-  `CalcSideSprite` swaps from the static sprite to the GIF the moment the GIF
-  loads, which is a noticeable flicker when picking a Mega (seen with
-  Charizard). Smooth the swap (e.g. a short cross-fade) without reintroducing
-  the blank wait on a slow GIF. The static PokeAPI sprite and the Showdown
-  GIF also render at different sizes/scales in the same `h-28 w-28` box,
-  which likely adds to the pop and varies between species; normalize that
-  too. Done check: no visible pop or size jump when selecting formes. Manual
-  verification: yes. Review: no.
-
 - **[Calc Side Panel Height Parity] — Leg 1** *(Last touched: 2026-10-27 ·
   Re-checks: 0)*
   Found verifying Box Integration Leg 6: the two Pokémon panels' heights differ
