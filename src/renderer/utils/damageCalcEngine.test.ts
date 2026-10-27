@@ -151,6 +151,33 @@ describe('computeSideResults', () => {
     expect(entry.multihitRange).toBe(null);
   });
 
+  it('reports the field/ability-resolved move type, not the static one', () => {
+    const run = (
+      attacker: CalcPokemonState,
+      weather: '' | 'Rain' = '',
+      terrain: '' | 'Grassy' = '',
+    ) =>
+      computeSideResults(
+        gen,
+        attacker,
+        pokemonState({ species: 'Garchomp' }),
+        noSide,
+        noSide,
+        'Doubles',
+        weather,
+        terrain,
+      )[0].moveType;
+
+    expect(run(pokemonWithMove('Gengar', 'Weather Ball'))).toBe('Normal');
+    expect(run(pokemonWithMove('Gengar', 'Weather Ball'), 'Rain')).toBe('Water');
+    expect(run(pokemonWithMove('Gengar', 'Terrain Pulse'), '', 'Grassy')).toBe('Grass');
+
+    const pixilate = pokemonWithMove('Sylveon', 'Hyper Voice');
+    pixilate.ability = 'Pixilate';
+    expect(run(pixilate)).toBe('Fairy');
+    expect(run(pokemonWithMove('Sylveon', 'Hyper Voice'))).toBe('Normal');
+  });
+
   it("describes stat spreads in this app's native SP scale, not @smogon/calc's own EV scale", () => {
     const attacker = pokemonWithMove('Rillaboom', 'Wood Hammer', {});
     attacker.ability = 'Grassy Surge';
@@ -325,7 +352,16 @@ describe('computeSideResults at partial defender HP', () => {
   const full = pokemonState({ species: 'Blissey' });
   const low = pokemonState({ species: 'Blissey', curHp: 1 });
   const run = (def: CalcPokemonState) =>
-    computeSideResults(gen, attacker, def, field.pokemon1Side, field.pokemon2Side, 'Singles', '', '')[0];
+    computeSideResults(
+      gen,
+      attacker,
+      def,
+      field.pokemon1Side,
+      field.pokemon2Side,
+      'Singles',
+      '',
+      '',
+    )[0];
 
   it('keeps damage % relative to max HP but KO text uses current HP', () => {
     const f = run(full);

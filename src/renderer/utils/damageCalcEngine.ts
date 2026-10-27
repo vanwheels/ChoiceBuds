@@ -205,6 +205,8 @@ export interface CalcMoveResultEntry {
   multihitRange: [number, number] | null;
   /** The hit count actually used for this result (engine default if the slot didn't set one) */
   effectiveHits: number | null;
+  /** The type calculate() actually used (Weather Ball, -ate abilities, etc. resolved); absent when no calc ran, so callers fall back to the static `getCalcMoveType`. */
+  moveType?: string;
 }
 
 function emptyEntry(moveName: string): CalcMoveResultEntry {
@@ -488,14 +490,21 @@ export function computeSideResults(
         overrides: getChampionsCalcMoveOverride(slot.name),
       });
       const result = calculate(gen, atkPokemon, defPokemon, move, field);
+      // calculate() resolves the type on its own clone of the move (gen789.js), so read it from result.move.
+      const withType = (entry: CalcMoveResultEntry): CalcMoveResultEntry => ({
+        ...entry,
+        moveType: result.move.type,
+      });
       const range = result.range();
       if (isFullyBlocked(range, move.category)) {
-        return blockedEntry(
-          slot.name,
-          range,
-          attacker.species,
-          defender.species,
-          result.rawDesc.defenderAbility,
+        return withType(
+          blockedEntry(
+            slot.name,
+            range,
+            attacker.species,
+            defender.species,
+            result.rawDesc.defenderAbility,
+          ),
         );
       }
       const maxHP = defPokemon.maxHP();
@@ -531,14 +540,16 @@ export function computeSideResults(
         const adjustedDamages = [
           ...new Set(flattenDamage(result.damage).map((d) => Math.floor(d * multiplier))),
         ].sort((a, b) => a - b);
-        return adjustedEntry(
-          slot.name,
-          adjustedRange,
-          adjustedDamages,
-          maxHP,
-          multihitRange,
-          multihitRange ? move.hits : null,
-          descParts.join(' '),
+        return withType(
+          adjustedEntry(
+            slot.name,
+            adjustedRange,
+            adjustedDamages,
+            maxHP,
+            multihitRange,
+            multihitRange ? move.hits : null,
+            descParts.join(' '),
+          ),
         );
       }
 
@@ -553,6 +564,7 @@ export function computeSideResults(
         errorMessage: null,
         multihitRange,
         effectiveHits: multihitRange ? move.hits : null,
+        moveType: result.move.type,
       };
     } catch (err) {
       return errorEntry(slot.name, err);

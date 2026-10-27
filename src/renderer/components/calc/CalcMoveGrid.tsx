@@ -27,7 +27,7 @@ interface CalcMoveGridProps {
   onSelect: (index: number) => void;
   /** Ladder usage % per move (Regular Calc Usage-Data Auto-Populate Leg 1) - computed in the sibling CalcPokemonPanel and lifted up through CalcPage, since that's where the fetched ChampionsUsageEntry lives. Same shape CalcAutocomplete already expects. */
   usagePercentByName?: Record<string, number>;
-  /** Move name -> calc type, used to tint each row with the type's theme color. */
+  /** Move name -> static calc type, the fallback to tint each row with the type's theme color. */
   getMoveType: (moveName: string) => string | null;
 }
 
@@ -51,7 +51,8 @@ export default function CalcMoveGrid({
         const result = results[index];
         const isSelected = selectedIndex === index;
         const [minHits, maxHits] = result?.multihitRange ?? [null, null];
-        const moveType = getMoveType(slot.name);
+        // The result carries the field/ability-resolved type; the static lookup covers rows with no calc yet.
+        const moveType = result?.moveType ?? getMoveType(slot.name);
         const theme = moveType ? getTypeTheme(moveType) : null;
         return (
           <div
