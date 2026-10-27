@@ -1,6 +1,6 @@
 import type { NatureName, StatsTable } from '@smogon/calc/dist/data/interface';
 import type { CalcPokemonState, NatureStatEffect } from '../../hooks/useDamageCalc';
-import { STATUS_OPTIONS, STATUS_LABELS } from '../../hooks/useDamageCalc';
+import { STATUS_LABELS } from '../../hooks/useDamageCalc';
 import type { FormeFamily } from '../../utils/calcFormes';
 import type { SavedPokemonEntry, RegulationLabel } from '../../types/pokemon';
 import type { ChampionsUsageEntry } from '../../types/gameData';
@@ -9,13 +9,14 @@ import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseSpeciesRosterReturn } from '../../hooks/useSpeciesRoster';
 import type { UseVgcPastesCacheReturn } from '../../hooks/useVgcPastesCache';
 import type { UseCalcRealSetsLookupReturn } from '../../hooks/useCalcRealSetsLookup';
-import { normalizeSlug } from '../../utils/pokemonRules';
 import { realSetBundleToCalcUpdates } from '../../utils/calcTeamImport';
 import { resolveCalcPokemonSpriteUrl } from '../../utils/calcSpriteResolve';
 import { getItemFallbackSpriteUrl, getItemSpriteUrl } from '../../utils/itemSprite';
-import { getNatureEffect } from '../../config/vgcData';
 import TooltipContent from '../TooltipContent';
 import CalcAutocomplete from './CalcAutocomplete';
+import NaturePickerPanel from '../NaturePickerPanel';
+import CalcDropdown from './CalcDropdown';
+import CalcStatusPanel from './CalcStatusPanel';
 import NatureEffectLabel from './NatureEffectLabel';
 import SavedSetPicker from '../SavedSetPicker';
 import CalcStatRows from './CalcStatRows';
@@ -274,39 +275,35 @@ export default function CalcPokemonPanelFields({
             Nature
             <NatureEffectLabel nature={state.nature} />
           </label>
-          <select
-            value={state.nature}
-            onChange={(e) => onChange({ nature: e.target.value as NatureName })}
-            className="px-2 py-0.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
-          >
-            {sortedNatureOptions.map((n) => {
-              const percent = naturePercentByName[normalizeSlug(n)];
-              const effect = getNatureEffect(n);
-              const effectText = effect ? ` +${effect.plus} −${effect.minus}` : '';
-              return (
-                <option key={n} value={n}>
-                  {n}
-                  {effectText}
-                  {percent != null ? ` (${percent.toFixed(1)}%)` : ''}
-                </option>
-              );
-            })}
-          </select>
+          <CalcDropdown label={state.nature}>
+            {(close) => (
+              <NaturePickerPanel
+                maxHeight={240}
+                options={sortedNatureOptions}
+                percentByName={naturePercentByName}
+                onSelect={(nature) => {
+                  onChange({ nature: nature as NatureName });
+                  close();
+                }}
+                onClose={close}
+              />
+            )}
+          </CalcDropdown>
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Status</label>
-          <select
-            value={state.status}
-            onChange={(e) => onChange({ status: e.target.value as CalcPokemonState['status'] })}
-            className="px-2 py-0.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
-          >
-            <option value="">Healthy</option>
-            {STATUS_OPTIONS.map((s) => (
-              <option key={s} value={s}>
-                {STATUS_LABELS[s]}
-              </option>
-            ))}
-          </select>
+          <CalcDropdown label={state.status ? STATUS_LABELS[state.status] : 'Healthy'}>
+            {(close) => (
+              <CalcStatusPanel
+                current={state.status}
+                onSelect={(status) => {
+                  onChange({ status });
+                  close();
+                }}
+                onClose={close}
+              />
+            )}
+          </CalcDropdown>
         </div>
       </div>
 
