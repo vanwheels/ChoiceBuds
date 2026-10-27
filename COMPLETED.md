@@ -128,7 +128,7 @@ Entries prior to this file's oldest are in:
 
 ## [Calc Tooltip Type Without Opponent] — Leg 1 (2026-10-26)
 
-`computeSideResults` now resolves each move's type (Weather Ball, Terrain Pulse, -ate abilities) even with no defender loaded, by running `calculate()` against the attacker as a stand-in and returning only `moveType`; the move row tint and tooltip badge pick it up with no component change. Automated: new engine test plus full suite/lint/type-check green. Manual UI check not yet done. See commit 3755ffe.
+`computeSideResults` now resolves each move's type (Weather Ball, Terrain Pulse, -ate abilities) even with no defender loaded, by running `calculate()` against the attacker as a stand-in and returning only `moveType`; the move row tint and tooltip badge pick it up with no component change. Automated: new engine test plus full suite/lint/type-check green. Manually verified live 2026-10-26 (Weather Ball in Rain with no opponent loaded: row tint and tooltip badge turn Water). See commit 3755ffe.
 
 ## [Calc Move Tooltip: Dynamic Type & Ability Boost] — Leg 1 (2026-10-26)
 
