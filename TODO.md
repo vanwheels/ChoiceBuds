@@ -28,13 +28,6 @@ in Box); each side gets its own bottom Box panel showing the same Box
 Pokémon, click loads into that side; smart pickers show learnable/legal
 entries first, then an "All" section when searching beyond them.
 
-- **[Calc Page Rework: Box Integration] — Leg 6** *(Last touched: 2026-10-26 ·
-  Re-checks: 0)*
-  Remove the Saved Sets feature (`CalcSavedSetsModal.tsx`, its persisted
-  data, and the tab), make "Save Set" write a Pokémon to Box, and add a
-  per-side bottom Box panel. Touches persisted data, so it gets a
-  `/leg-review` before closing. Manual verification.
-
 - **[Calc Page Rework: Custom Dropdowns] — Leg 7** *(Last touched: 2026-10-26 ·
   Re-checks: 0)*
   Replace the native Nature (and Status) `<select>`s in
