@@ -16,6 +16,44 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
+## Current Milestone: Sprite Scoping
+
+Done when:
+- The Calc forme sprite load delay has an identified cause, written up in
+  `docs/investigations/`.
+- Pokéos and Project Pokémon HOME are assessed against the Champions roster
+  (formes, shinies, Megas) with a source recommendation, written up in
+  `docs/investigations/`.
+- Any fix either write-up recommends is a tracked TODO item, not built in
+  this milestone.
+
+Do Leg 1 first: its findings may change what the second scoping leg needs
+to cover.
+
+- **[Calc Forme Sprite Load Delay] — Leg 1** *(Last touched: 2026-10-26 ·
+  Re-checks: 0)*
+  Found verifying Sprites & Icons Leg 2: some forme sprites (Castform Snowy)
+  take 5-10+ seconds to appear in the new side sprite. Needs scoping: slow
+  Showdown GIF fetch vs. the 404-then-static-fallback path in
+  `CalcSideSprite.tsx` vs. a sprite-cache miss.
+  Done when: the cause is identified and written to
+  `docs/investigations/`; any fix becomes a new tracked item. No code
+  changes. Manual verification: yes (reproduce with Castform Snowy).
+  Review: no.
+
+- **[Animated Sprite Source Scoping] — Leg 1** *(Last touched: 2026-10-26 ·
+  Re-checks: 0)*
+  Showdown's animated set misses some formes, shinies and Gen 9/Champions
+  Megas. Investigate Pokéos (pokeos.com/archive/assets/home; user reports GIFs
+  for modern Megas) and Project Pokémon's HOME 3D-model GIFs (Gens 1-8, no
+  Gen 9) for coverage against the Champions roster (formes, shinies, Megas),
+  file format, hotlink vs. self-host, and license/usage terms. Neither site is
+  in CLAUDE.md's hotlink exception list. Scoping only; write findings to
+  `docs/investigations/`.
+  Done when: both sources are assessed with a recommendation in
+  `docs/investigations/`; any follow-up work becomes a tracked item. No code
+  changes. Manual verification: no. Review: no.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -44,6 +82,28 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
+- **[Mega Golisopod Steel Filter Bug] — Leg 1** *(Last touched: 2026-10-26 ·
+  Re-checks: 0)*
+  Found during manual testing: Mega Golisopod doesn't show up under the
+  Steel filter in + Add Pokemon. Likely cause: species filtering there
+  isn't accounting for the type change caused by mega evolving, so
+  Golisopod's base (non-Steel) typing is used instead of its Mega's
+  Bug/Water + Steel-relevant typing. Needs scoping to confirm whether this
+  affects other Megas with altered typing, not just Golisopod.
+
+- **[Team Search by Species] — Leg 1** *(Last touched: 2026-10-26 ·
+  Re-checks: 0)*
+  Searching a Pokémon's name in any team search should return every team
+  containing that Pokémon. Needs scoping first: which search boxes exist
+  across app and web, and whether one shared matcher can serve them all.
+
+## Future Milestones (unscheduled)
+
+### Calc Follow-ups (own milestone, not yet planned)
+
+Deferred out of Sprite Scoping (2026-10-26) so that milestone stays
+scoping-only. Plan with `/plan-milestone` when picked up.
+
 - **[Calc Move Tooltip: Dynamic Type & Ability Boost] — Leg 1** *(Last touched:
   2026-10-26 · Re-checks: 0)*
   Deferred from Calc Page Rework Leg 5 and not picked up by Leg 8: the Calc
@@ -67,40 +127,6 @@ unblocked.
   `CalcAutocomplete.tsx` slices results to `MAX_RESULTS = 50`. Keep a path to
   all items later (e.g. the Leg 5 "All" section). Also confirm every Champions
   item has an icon.
-
-- **[Calc Forme Sprite Load Delay] — Leg 1** *(Last touched: 2026-10-26 ·
-  Re-checks: 0)*
-  Found verifying Sprites & Icons Leg 2: some forme sprites (Castform Snowy)
-  take 5-10+ seconds to appear in the new side sprite. Needs scoping: slow
-  Showdown GIF fetch vs. the 404-then-static-fallback path in
-  `CalcSideSprite.tsx` vs. a sprite-cache miss.
-
-- **[Animated Sprite Source Scoping] — Leg 1** *(Last touched: 2026-10-26 ·
-  Re-checks: 0)*
-  Showdown's animated set misses some formes, shinies and Gen 9/Champions
-  Megas. Investigate Pokéos (pokeos.com/archive/assets/home; user reports GIFs
-  for modern Megas) and Project Pokémon's HOME 3D-model GIFs (Gens 1-8, no
-  Gen 9) for coverage against the Champions roster (formes, shinies, Megas),
-  file format, hotlink vs. self-host, and license/usage terms. Neither site is
-  in CLAUDE.md's hotlink exception list. Scoping only; write findings to
-  `docs/investigations/`.
-
-- **[Mega Golisopod Steel Filter Bug] — Leg 1** *(Last touched: 2026-10-26 ·
-  Re-checks: 0)*
-  Found during manual testing: Mega Golisopod doesn't show up under the
-  Steel filter in + Add Pokemon. Likely cause: species filtering there
-  isn't accounting for the type change caused by mega evolving, so
-  Golisopod's base (non-Steel) typing is used instead of its Mega's
-  Bug/Water + Steel-relevant typing. Needs scoping to confirm whether this
-  affects other Megas with altered typing, not just Golisopod.
-
-- **[Team Search by Species] — Leg 1** *(Last touched: 2026-10-26 ·
-  Re-checks: 0)*
-  Searching a Pokémon's name in any team search should return every team
-  containing that Pokémon. Needs scoping first: which search boxes exist
-  across app and web, and whether one shared matcher can serve them all.
-
-## Future Milestones (unscheduled)
 
 Password reset flow, deferred out of Web Version: Teams & Box MVP's scoping
 (2026-09-29, see `docs/investigations/web-version-scope.md`) - not yet
