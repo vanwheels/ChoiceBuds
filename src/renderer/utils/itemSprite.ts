@@ -1,8 +1,12 @@
 import { VGC_MEGA_STONES } from '../config/vgcData';
 
+/** Non-Mega-Stone items audited 2026-10-27 as having no PokeAPI sprite. */
+export const SEREBII_ONLY_HOLD_ITEMS = ['Fairy Feather', 'Leek'] as const;
+
 /**
  * Serebii itemdex sprite fallback for held items PokeAPI has no sprite for:
- * Fairy Feather (Gen 9, post-dates PokeAPI's default sprite set) and every
+ * Fairy Feather (Gen 9, post-dates PokeAPI's default sprite set), Leek (PokeAPI
+ * still knows it only as Stick, so /item/leek 404s), and every
  * Champions-new Mega Stone (Barbaracite, Chimechite, ...) - PokeAPI returns the
  * item with a null sprite or 404s entirely. Image hotlink only, per CLAUDE.md's
  * serebii exception #1. Serebii's filename is the lowercased name with spaces/
@@ -10,7 +14,9 @@ import { VGC_MEGA_STONES } from '../config/vgcData';
  * Returns null for anything else so ordinary items keep the 🎒 fallback.
  */
 const SEREBII_FALLBACK_ITEMS: ReadonlySet<string> = new Set(
-  [...VGC_MEGA_STONES, 'Fairy Feather'].map((name) => name.toLowerCase().replace(/[\s-]/g, '')),
+  [...VGC_MEGA_STONES, ...SEREBII_ONLY_HOLD_ITEMS].map((name) =>
+    name.toLowerCase().replace(/[\s-]/g, ''),
+  ),
 );
 
 export function getItemFallbackSpriteUrl(itemName: string): string | null {

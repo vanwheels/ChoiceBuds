@@ -35,6 +35,9 @@ Done when:
   (`ItemSpriteBox`/`ItemPickerPanel` path), fix any missing icons, and add a
   test that fails on a Champions item with no resolvable icon. Done when the
   test passes and the user confirms no blank icons in the calc item picker.
+  Progress 2026-10-27: audit found one gap, Leek (PokeAPI has no `leek`
+  item); fixed via the Serebii fallback and an `itemSprite.test.ts` coverage
+  test. Only the user's manual check of the picker remains.
 
 ## Blocked
 
