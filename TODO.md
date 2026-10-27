@@ -30,18 +30,7 @@ Done when:
 Do Leg 1 first: its findings may change what the second scoping leg needs
 to cover.
 
-- **[Animated Sprite Source Scoping] — Leg 1** *(Last touched: 2026-10-26 ·
-  Re-checks: 0)*
-  Showdown's animated set misses some formes, shinies and Gen 9/Champions
-  Megas. Investigate Pokéos (pokeos.com/archive/assets/home; user reports GIFs
-  for modern Megas) and Project Pokémon's HOME 3D-model GIFs (Gens 1-8, no
-  Gen 9) for coverage against the Champions roster (formes, shinies, Megas),
-  file format, hotlink vs. self-host, and license/usage terms. Neither site is
-  in CLAUDE.md's hotlink exception list. Scoping only; write findings to
-  `docs/investigations/`.
-  Done when: both sources are assessed with a recommendation in
-  `docs/investigations/`; any follow-up work becomes a tracked item. No code
-  changes. Manual verification: no. Review: no.
+Both scoping legs are done; close the milestone with `/close-milestone`.
 
 ## Blocked
 
