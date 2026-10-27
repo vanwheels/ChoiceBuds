@@ -12,7 +12,6 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
 import { useDamageCalc, ALL_REGULATION_IDS } from '../../hooks/useDamageCalc';
 import { useVgcPastesCache } from '../../hooks/useVgcPastesCache';
 import { useVgcRealSetsCache } from '../../hooks/useVgcRealSetsCache';
@@ -26,12 +25,13 @@ import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import type { UseSettingsReturn } from '../../hooks/useSettings';
 import type { UseSpeciesRosterReturn } from '../../hooks/useSpeciesRoster';
 import { getRegulationLabel, toRegulationId } from '../../utils/pokemonRules';
+import { teamPokemonToCalcUpdates } from '../../utils/calcTeamImport';
 import CalcPokemonPanel from './CalcPokemonPanel';
 import CalcMoveGrid from './CalcMoveGrid';
 import CalcSideSprite from './CalcSideSprite';
 import CalcFieldPanel from './CalcFieldPanel';
 import CalcResultPanel from './CalcResultPanel';
-import CalcSavedSetsModal from './CalcSavedSetsModal';
+import CalcBoxPanel from './CalcBoxPanel';
 
 interface CalcPageProps {
   gameDataState: UseGameDataReturn;
@@ -62,7 +62,6 @@ export default function CalcPage({
   onUpdateOpponentEntry,
   battleLogPlayerTeamId,
 }: CalcPageProps) {
-  const [isSavedSetsOpen, setIsSavedSetsOpen] = useState(false);
   // Warms hooks/useMegaSprite.ts's shared module-level cache for every
   // Champions-legal Mega form - same mounted-once pattern TeamCard.tsx/
   // TypeMatchupPage.tsx already use, needed here so each panel's own
@@ -213,12 +212,6 @@ export default function CalcPage({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex justify-end gap-2">
-        <button
-          onClick={() => setIsSavedSetsOpen(true)}
-          className="px-3 py-1 text-xs font-bold uppercase tracking-wide rounded transition-colors cursor-pointer bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-        >
-          Saved Sets
-        </button>
         {ALL_REGULATION_IDS.map((id) => (
           <button
             key={id}
@@ -349,18 +342,24 @@ export default function CalcPage({
         />
       </div>
 
-      <p className="text-center text-[10px] text-zinc-600">Powered by @smogon/calc</p>
+      <div className="flex flex-wrap gap-3">
+        <CalcBoxPanel
+          title="Pokémon 1 Box"
+          entries={savedPokemonState.savedPokemon}
+          currentSpecies={pokemon1.species}
+          resolveSprite={spriteCacheState.resolveSprite}
+          onLoadEntry={(entry) => setPokemon1(teamPokemonToCalcUpdates(entry.pokemon))}
+        />
+        <CalcBoxPanel
+          title="Pokémon 2 Box"
+          entries={savedPokemonState.savedPokemon}
+          currentSpecies={pokemon2.species}
+          resolveSprite={spriteCacheState.resolveSprite}
+          onLoadEntry={(entry) => setPokemon2(teamPokemonToCalcUpdates(entry.pokemon))}
+        />
+      </div>
 
-      <AnimatePresence>
-        {isSavedSetsOpen && (
-          <CalcSavedSetsModal
-            onClose={() => setIsSavedSetsOpen(false)}
-            databaseState={databaseState}
-            savedPokemonState={savedPokemonState}
-            resolveSprite={spriteCacheState.resolveSprite}
-          />
-        )}
-      </AnimatePresence>
+      <p className="text-center text-[10px] text-zinc-600">Powered by @smogon/calc</p>
     </div>
   );
 }

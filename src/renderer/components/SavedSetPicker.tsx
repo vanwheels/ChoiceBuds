@@ -19,9 +19,9 @@
  * does today), while dismissing (the × button or clicking outside) has to
  * cancel the whole swap and leave the slot's current occupant untouched.
  *
- * Deletion/renaming aren't offered here - that's CalcSavedSetsModal.tsx's
- * job, kept as one single place to manage the saved-set library instead of
- * splitting it across every surface that can load from it.
+ * Deletion/renaming aren't offered here - that's the Box tab's job, kept as
+ * one single place to manage the library instead of splitting it across
+ * every surface that can load from it.
  */
 
 import type { SavedPokemonEntry } from '../types/pokemon';

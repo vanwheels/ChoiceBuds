@@ -2,9 +2,8 @@
  * BoxPage.tsx - Saved Builds Library Browser
  *
  * Box Tab Leg 1 (see TODO.md's Saved Builds Box milestone). A discoverable
- * home for useSavedPokemon.ts's flat library outside the Calc page (which
- * only exposes it via CalcSavedSetsModal, reachable solely by already
- * knowing a species has a saved match there). Every entry renders as a
+ * home for useSavedPokemon.ts's flat library (the Calc page only offers a
+ * per-side picker, CalcBoxPanel.tsx, for loading from it). Every entry renders as a
  * BoxCard.tsx, collapsed by default (sprite + label), expanding in place to
  * a full editable card on click - no fixed pagination/page-size, a plain
  * flex-wrap so collapsed tiles and one or more wider expanded cards reflow
@@ -177,8 +176,7 @@ const NOOP_UPDATE_TEAM = async () => false;
 // chip matching below, not for stats display here.
 const GEN_NUM = 9;
 
-// Same species-then-label sort CalcSavedSetsModal.tsx uses for its own
-// management list - Alphabetical mode's own sort, and also what seeds Custom
+// Same species-then-label sort CalcBoxPanel.tsx uses - Alphabetical mode's own sort, and also what seeds Custom
 // mode's array order the first time it's switched to (see header comment).
 function sortAlphabetically(entries: SavedPokemonEntry[]): SavedPokemonEntry[] {
   return [...entries].sort((a, b) => {
@@ -252,8 +250,7 @@ export default function BoxPage({
   // Custom mode renders savedPokemon's own array order as-is (BoxCard.tsx's
   // drag handles rearrange that array directly via reorderSavedPokemon) -
   // Alphabetical mode re-derives species-then-label order every render, same
-  // as CalcSavedSetsModal.tsx's own management list, for consistent browsing
-  // order across both surfaces.
+  // as CalcBoxPanel.tsx, for consistent browsing order across both surfaces.
   // Favorites-first applies after either Alphabetical or Custom ordering
   // (Box Tab: Favoriting, see TODO.md) - same composition point/precedent as
   // TeamsPage.tsx layering sortTeams over its own base sort.

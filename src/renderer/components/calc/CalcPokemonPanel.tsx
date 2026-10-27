@@ -433,10 +433,10 @@ export default function CalcPokemonPanel({
             type="button"
             onClick={handleSaveSet}
             disabled={!state.species || isSaving}
-            title="Save to Saved Sets"
+            title="Save to Box"
             className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded transition-colors cursor-pointer bg-zinc-800 text-zinc-400 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {justSaved ? 'Saved!' : isSaving ? 'Saving...' : 'Save Set'}
+            {justSaved ? 'Saved!' : isSaving ? 'Saving...' : 'Save to Box'}
           </button>
         </div>
       </div>

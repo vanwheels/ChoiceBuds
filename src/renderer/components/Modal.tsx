@@ -2,8 +2,7 @@
  * Modal.tsx - Shared Modal Shell
  * Owns the overlay/panel markup and Framer Motion enter/exit transitions
  * every modal in the app previously duplicated on its own (ImportTeamModal,
- * ExportTeamModal, TeamSheetPdfModal, TeamExportImageModal,
- * CalcSavedSetsModal). Mount/unmount of this component IS open/close - the
+ * ExportTeamModal, TeamSheetPdfModal, TeamExportImageModal). Mount/unmount of this component IS open/close - the
  * caller's own `{isOpen && <SomeModal/>}` conditional still drives
  * visibility exactly as before, just now wrapped in an `AnimatePresence` at
  * the call site (TeamCard.tsx, PokemonCard.tsx, TeamsPage.tsx,

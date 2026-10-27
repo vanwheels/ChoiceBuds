@@ -14,7 +14,7 @@
  * into a shared util since this is a third narrow use rather than a second
  * (per CLAUDE.md: duplication over a premature abstraction here).
  *
- * Sized/laid out like CalcSavedSetsModal.tsx's own pick-from-list modal
+ * Sized/laid out as a pick-from-list modal
  * (`max-w-2xl max-h-[85vh]`, a `flex-1 overflow-y-auto` body) rather than
  * AddToTeamDialog.tsx's compact `max-w-sm` - a sprite-strip row needs more
  * horizontal room than a bare team name, and this list has no 6/6 "Full"

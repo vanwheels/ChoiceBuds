@@ -16,8 +16,7 @@
  * right-click context menu, same ContextMenu.tsx shell PokemonCard.tsx's
  * own right-click menu uses - these used to only be reachable via Calc's
  * Saved Pokémon Sets modal. Rename is inline (click "Rename" then edit in
- * place, same pattern CalcSavedSetsModal.tsx's own management list already
- * used) rather than a separate dialog. BoxEntryModal.tsx's own expanded-view
+ * place, same inline-rename pattern the old Saved Sets list used) rather than a separate dialog. BoxEntryModal.tsx's own expanded-view
  * context menu is a second, independent copy of this one rather than a
  * shared hook - see its header comment.
  *
