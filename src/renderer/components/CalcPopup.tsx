@@ -24,6 +24,7 @@
  * of today's modals support that either.
  */
 
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import {
@@ -70,6 +71,9 @@ const panelVariants = {
 };
 
 export default function CalcPopup({ isOpen, onClose, ...calcPageProps }: CalcPopupProps) {
+  // State (not a ref) so CalcPage re-renders once the header element exists
+  // and can portal its regulation buttons into it.
+  const [regulationSlot, setRegulationSlot] = useState<HTMLDivElement | null>(null);
   return createPortal(
     <motion.div
       className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${isOpen ? '' : 'pointer-events-none'}`}
@@ -86,23 +90,26 @@ export default function CalcPopup({ isOpen, onClose, ...calcPageProps }: CalcPop
       >
         <div className="px-6 py-4 border-b border-zinc-700 flex items-center justify-between shrink-0">
           <h2 className="text-xl font-bold text-zinc-100">Calc</h2>
-          <button
-            onClick={onClose}
-            className="text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+          <div className="flex items-center gap-4">
+            <div ref={setRegulationSlot} />
+            <button
+              onClick={onClose}
+              className="text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4">
-          <CalcPage {...calcPageProps} />
+          <CalcPage {...calcPageProps} regulationSlot={regulationSlot} />
         </div>
       </motion.div>
     </motion.div>,

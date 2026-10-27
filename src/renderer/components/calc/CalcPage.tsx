@@ -12,6 +12,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useDamageCalc, ALL_REGULATION_IDS } from '../../hooks/useDamageCalc';
 import { useVgcPastesCache } from '../../hooks/useVgcPastesCache';
 import { useVgcRealSetsCache } from '../../hooks/useVgcRealSetsCache';
@@ -48,6 +49,8 @@ interface CalcPageProps {
   onUpdateOpponentEntry?: (entryId: string, updates: Partial<OpponentPokemonEntry>) => void;
   /** The currently open Battle Log session's own team id, if any (Regular Calc Battle Log Integration Leg 4) - passed only to the Pokemon 1 panel below as its preferred "Load from Team" default, since Pokemon 1 is reserved for the player's own side during a Battle Log session. Undefined outside that flow, same as battleLogOpponentRoster. */
   battleLogPlayerTeamId?: string;
+  /** Element in the host's header row (CalcPopup's, beside the close X) that the regulation buttons portal into; the regulation state lives here, so the buttons can't simply be rendered by the host. Buttons are omitted until it mounts. */
+  regulationSlot?: HTMLElement | null;
 }
 
 export default function CalcPage({
@@ -61,6 +64,7 @@ export default function CalcPage({
   battleLogOpponentRoster,
   onUpdateOpponentEntry,
   battleLogPlayerTeamId,
+  regulationSlot,
 }: CalcPageProps) {
   // Warms hooks/useMegaSprite.ts's shared module-level cache for every
   // Champions-legal Mega form - same mounted-once pattern TeamCard.tsx/
@@ -211,21 +215,25 @@ export default function CalcPage({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex justify-end gap-2">
-        {ALL_REGULATION_IDS.map((id) => (
-          <button
-            key={id}
-            onClick={() => setRegulationId(id)}
-            className={`px-3 py-1 text-xs font-bold uppercase tracking-wide rounded transition-colors cursor-pointer ${
-              regulationId === id
-                ? 'bg-accent-gold text-zinc-900'
-                : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
-            }`}
-          >
-            {getRegulationLabel(id)}
-          </button>
-        ))}
-      </div>
+      {regulationSlot &&
+        createPortal(
+          <div className="flex gap-2">
+            {ALL_REGULATION_IDS.map((id) => (
+              <button
+                key={id}
+                onClick={() => setRegulationId(id)}
+                className={`px-3 py-1 text-xs font-bold uppercase tracking-wide rounded transition-colors cursor-pointer ${
+                  regulationId === id
+                    ? 'bg-accent-gold text-zinc-900'
+                    : 'bg-zinc-700 text-zinc-400 hover:bg-zinc-600'
+                }`}
+              >
+                {getRegulationLabel(id)}
+              </button>
+            ))}
+          </div>,
+          regulationSlot,
+        )}
 
       <div className="relative flex flex-wrap justify-center gap-3">
         <CalcSideSprite
