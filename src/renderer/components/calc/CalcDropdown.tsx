@@ -2,9 +2,6 @@ import { useRef, useState, type ReactNode } from 'react';
 
 interface CalcDropdownProps {
   label: string;
-  /** Which trigger edge the panel lines up with, so a right-column panel grows leftward inside the Pokémon box. */
-  align?: 'left' | 'right';
-  panelWidthClass?: string;
   children: (close: () => void) => ReactNode;
 }
 
@@ -15,12 +12,7 @@ interface CalcDropdownProps {
  * was open at mousedown: otherwise that same mousedown closes the panel and
  * the following click would immediately reopen it.
  */
-export default function CalcDropdown({
-  label,
-  align = 'left',
-  panelWidthClass = 'w-64',
-  children,
-}: CalcDropdownProps) {
+export default function CalcDropdown({ label, children }: CalcDropdownProps) {
   const [open, setOpen] = useState(false);
   const wasOpenOnPress = useRef(false);
 
@@ -38,9 +30,7 @@ export default function CalcDropdown({
         <span className="text-zinc-400 text-[10px]">▾</span>
       </button>
       {open && (
-        <div
-          className={`absolute z-50 top-full mt-1 ${align === 'right' ? 'right-0' : 'left-0'} ${panelWidthClass}`}
-        >
+        <div className="absolute z-50 top-full mt-1 left-0 w-full">
           {children(() => setOpen(false))}
         </div>
       )}

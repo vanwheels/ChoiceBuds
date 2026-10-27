@@ -275,10 +275,10 @@ export default function CalcPokemonPanelFields({
             Nature
             <NatureEffectLabel nature={state.nature} />
           </label>
-          <CalcDropdown label={state.nature} panelWidthClass="w-[calc(200%+0.5rem)] max-w-72">
+          <CalcDropdown label={state.nature}>
             {(close) => (
               <NaturePickerPanel
-                maxHeight={170}
+                maxHeight={120}
                 options={sortedNatureOptions}
                 percentByName={naturePercentByName}
                 onSelect={(nature) => {
@@ -292,11 +292,7 @@ export default function CalcPokemonPanelFields({
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Status</label>
-          <CalcDropdown
-            label={state.status ? STATUS_LABELS[state.status] : 'Healthy'}
-            align="right"
-            panelWidthClass="w-full"
-          >
+          <CalcDropdown label={state.status ? STATUS_LABELS[state.status] : 'Healthy'}>
             {(close) => (
               <CalcStatusPanel
                 current={state.status}
