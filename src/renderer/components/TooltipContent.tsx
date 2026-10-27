@@ -34,6 +34,10 @@ interface TooltipContentProps {
   // see TODO.md), already resolved against the Mega-displayed ability
   // upstream - null means the equipped ability doesn't boost that slot's move.
   moveBoosts: Array<number | null>;
+  // Per-slot type already resolved by a caller that knows more than the
+  // equipped ability (Calc's field/ability-resolved type) - wins over the
+  // ability-only getEffectiveMoveType fallback.
+  moveTypeOverrides?: Array<string | null>;
 }
 
 export default function TooltipContent({
@@ -45,6 +49,7 @@ export default function TooltipContent({
   selectedMoves,
   moveDataSlots,
   moveBoosts,
+  moveTypeOverrides,
 }: TooltipContentProps) {
   const [failedBadges, setFailedBadges] = useState<Record<string, boolean>>({});
 
@@ -79,7 +84,11 @@ export default function TooltipContent({
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <span className="font-bold text-white">{toReadableName(move.name)}</span>
-          <TypeBadge type={getEffectiveMoveType(move.name, move.type, selectedAbility)} />
+          <TypeBadge
+            type={
+              moveTypeOverrides?.[index] ?? getEffectiveMoveType(move.name, move.type, selectedAbility)
+            }
+          />
         </div>
         <div className="flex items-center gap-1.5 text-zinc-300">
           {!failedBadges[move.category] ? (

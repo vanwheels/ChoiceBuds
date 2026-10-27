@@ -11,6 +11,7 @@
 import type { CalcMoveSlot, CalcMoveResultEntry } from '../../hooks/useDamageCalc';
 import { getTypeTheme } from '../../config/pokemonTheme';
 import type { MoveData } from '../../types/pokemon';
+import { getAbilityMoveBoostMultiplier } from '../../config/abilityMoveBoosts';
 import TooltipContent from '../TooltipContent';
 import CalcAutocomplete from './CalcAutocomplete';
 
@@ -29,6 +30,8 @@ interface CalcMoveGridProps {
   usagePercentByName?: Record<string, number>;
   /** Move name -> static calc type, the fallback to tint each row with the type's theme color. */
   getMoveType: (moveName: string) => string | null;
+  /** This Pokémon's equipped ability, for the tooltip's ability-boost line. */
+  ability: string;
 }
 
 export default function CalcMoveGrid({
@@ -43,6 +46,7 @@ export default function CalcMoveGrid({
   onSelect,
   usagePercentByName,
   getMoveType,
+  ability,
 }: CalcMoveGridProps) {
   return (
     <div className="relative z-10 flex-none basis-[calc(25%-0.5rem)] min-w-[340px] bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-1">
@@ -78,16 +82,18 @@ export default function CalcMoveGrid({
                   priorityOptions={legalMoveOptions}
                   renderTooltip={(name) => {
                     const move = getMoveData(name);
+                    const resolvedType = result?.moveType ?? null;
                     return move ? (
                       <TooltipContent
                         hoveredKey="move0"
                         selectedItem=""
                         itemData={null}
-                        selectedAbility=""
+                        selectedAbility={ability}
                         abilityData={null}
                         selectedMoves={[name]}
                         moveDataSlots={[move]}
-                        moveBoosts={[null]}
+                        moveBoosts={[getAbilityMoveBoostMultiplier(ability, move)]}
+                        moveTypeOverrides={[resolvedType]}
                       />
                     ) : null;
                   }}

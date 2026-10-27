@@ -244,6 +244,7 @@ export default function CalcPage({
         />
         <CalcMoveGrid
           getMoveType={getMoveType}
+          ability={pokemon1.ability}
           title="Pokémon 1's Moves"
           moves={pokemon1.moves}
           results={p1Results}
@@ -259,6 +260,7 @@ export default function CalcPage({
         />
         <CalcMoveGrid
           getMoveType={getMoveType}
+          ability={pokemon2.ability}
           title="Pokémon 2's Moves"
           moves={pokemon2.moves}
           results={p2Results}
