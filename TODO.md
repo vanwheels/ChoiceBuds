@@ -28,15 +28,6 @@ in Box); each side gets its own bottom Box panel showing the same Box
 Pokémon, click loads into that side; smart pickers show learnable/legal
 entries first, then an "All" section when searching beyond them.
 
-- **[Calc Page Rework: Custom Dropdowns] — Leg 7** *(Last touched: 2026-10-26 ·
-  Re-checks: 0)*
-  Replace the native Nature (and Status) `<select>`s in
-  `CalcPokemonPanelFields.tsx` with a custom picker so options can carry
-  mixed-color `+Atk −SpA` text and usage %. Start from the team builder's
-  `NaturePickerPanel.tsx` (add optional usage-% and sort-order props; it
-  already colors via `getStatLabelColor`) rather than building new. Should
-  land before Leg 5 so the smart pickers share it. Manual verification.
-
 - **[Calc Page Rework: Dynamic Move Types] — Leg 8** *(Last touched:
   2026-10-26 · Re-checks: 0)*
   Move-row type coloring should follow the field and ability: Weather Ball,
