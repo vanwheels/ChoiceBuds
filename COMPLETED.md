@@ -126,6 +126,10 @@ Entries prior to this file's oldest are in:
   (the Calc Page Rework milestone's eight legs, split out at the 2026-10-26
   Calc Page Rework boundary)
 
+## [Calc Tooltip Type Without Opponent] — Leg 1 (2026-10-26)
+
+`computeSideResults` now resolves each move's type (Weather Ball, Terrain Pulse, -ate abilities) even with no defender loaded, by running `calculate()` against the attacker as a stand-in and returning only `moveType`; the move row tint and tooltip badge pick it up with no component change. Automated: new engine test plus full suite/lint/type-check green. Manual UI check not yet done. See commit 3755ffe.
+
 ## [Calc Move Tooltip: Dynamic Type & Ability Boost] — Leg 1 (2026-10-26)
 
 Calc's move tooltip now shows the type `calculate()` resolved (`moveType` on the result entry) and the team builder's ability-boost line, via new `ability` / `moveTypeOverrides` props on `CalcMoveGrid` / `TooltipContent`. Type-check, lint and the full suite pass; verified live by the user (tooltip type badge and ability-boost line). The resolved type only appears once an opponent is loaded, since `moveType` comes from the calc result; without one the tooltip falls back to the static/ability-only type (tracked in TODO.md as Calc Tooltip Type Without Opponent). See commit c580b34.
