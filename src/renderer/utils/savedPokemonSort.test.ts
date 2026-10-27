@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sortSavedPokemonByFavorite } from './savedPokemonSort';
+import { sortSavedPokemonAlphabetically, sortSavedPokemonByFavorite } from './savedPokemonSort';
 import type { ImportedPokemonInfo, SavedPokemonEntry, ShowdownPokemon } from '../types/pokemon';
 
 const ZERO_EVS = { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 };
@@ -78,5 +78,26 @@ describe('sortSavedPokemonByFavorite', () => {
     const entries = [makeEntry({ id: 'a' }), makeEntry({ id: 'b' })];
 
     expect(sortSavedPokemonByFavorite(entries).map((e) => e.id)).toEqual(['a', 'b']);
+  });
+});
+
+describe('sortSavedPokemonAlphabetically', () => {
+  function entryOf(id: string, species: string, label: string): SavedPokemonEntry {
+    const base = makeEntry({ id, label });
+    return {
+      ...base,
+      pokemon: { ...base.pokemon, showdownData: { ...base.pokemon.showdownData, species } },
+    };
+  }
+
+  it('sorts by species, then label, without mutating the input', () => {
+    const input = [
+      entryOf('1', 'Incineroar', 'B set'),
+      entryOf('2', 'Amoonguss', 'Z set'),
+      entryOf('3', 'Incineroar', 'A set'),
+    ];
+    const out = sortSavedPokemonAlphabetically(input);
+    expect(out.map((e) => e.id)).toEqual(['2', '3', '1']);
+    expect(input.map((e) => e.id)).toEqual(['1', '2', '3']);
   });
 });

@@ -149,7 +149,10 @@ import { toRegulationId } from '../utils/pokemonRules';
 import { readPokemonFromClipboard } from '../utils/clipboardPayload';
 import { parseShowdownText } from '../services/parser';
 import { enrichPokemonWithAPI } from '../services/pokeapi';
-import { sortSavedPokemonByFavorite } from '../utils/savedPokemonSort';
+import {
+  sortSavedPokemonAlphabetically,
+  sortSavedPokemonByFavorite,
+} from '../utils/savedPokemonSort';
 import { useMobileHeaderActions } from '../hooks/useMobileHeaderActions';
 import BoxPageToolbar from './BoxPageToolbar';
 import BoxPageGrid from './BoxPageGrid';
@@ -175,17 +178,6 @@ const NOOP_UPDATE_TEAM = async () => false;
 // rows (see that file's GEN_NUM) - resolves a Mega slug's own types/BST for
 // chip matching below, not for stats display here.
 const GEN_NUM = 9;
-
-// Same species-then-label sort CalcBoxPanel.tsx uses - Alphabetical mode's own sort, and also what seeds Custom
-// mode's array order the first time it's switched to (see header comment).
-function sortAlphabetically(entries: SavedPokemonEntry[]): SavedPokemonEntry[] {
-  return [...entries].sort((a, b) => {
-    const speciesCompare = a.pokemon.showdownData.species.localeCompare(
-      b.pokemon.showdownData.species,
-    );
-    return speciesCompare !== 0 ? speciesCompare : a.label.localeCompare(b.label);
-  });
-}
 
 export default function BoxPage({
   savedPokemonState,
@@ -257,7 +249,7 @@ export default function BoxPage({
   const sortedEntries = sortSavedPokemonByFavorite(
     sortMode === 'custom'
       ? savedPokemonState.savedPokemon
-      : sortAlphabetically(savedPokemonState.savedPokemon),
+      : sortSavedPokemonAlphabetically(savedPokemonState.savedPokemon),
   );
 
   // Search (see header comment) - chips route directly by category into
@@ -380,7 +372,9 @@ export default function BoxPage({
       // First-ever switch to Custom: seed the stored array order from the
       // current Alphabetical view so the grid doesn't visually jump, then
       // never do this again (see header comment).
-      const alphabeticalIds = sortAlphabetically(savedPokemonState.savedPokemon).map((e) => e.id);
+      const alphabeticalIds = sortSavedPokemonAlphabetically(savedPokemonState.savedPokemon).map(
+        (e) => e.id,
+      );
       await savedPokemonState.setSavedPokemonOrder(alphabeticalIds);
       await settingsState.updateSettings({ boxSortMode: mode, boxCustomOrderSeeded: true });
     } else {

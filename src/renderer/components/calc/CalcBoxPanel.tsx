@@ -9,7 +9,10 @@
 import { useMemo, useState } from 'react';
 import type { SavedPokemonEntry } from '../../types/pokemon';
 import { getPixelSpriteUrl } from '../../utils/spriteUrl';
-import { sortSavedPokemonByFavorite } from '../../utils/savedPokemonSort';
+import {
+  sortSavedPokemonAlphabetically,
+  sortSavedPokemonByFavorite,
+} from '../../utils/savedPokemonSort';
 import CalcBoxHoverCard from './CalcBoxHoverCard';
 
 interface CalcBoxPanelProps {
@@ -44,15 +47,10 @@ export default function CalcBoxPanel({
     anchor: DOMRect;
     bounds: DOMRect;
   } | null>(null);
-  const sorted = useMemo(() => {
-    const alphabetical = [...entries].sort((a, b) => {
-      const bySpecies = a.pokemon.showdownData.species.localeCompare(
-        b.pokemon.showdownData.species,
-      );
-      return bySpecies !== 0 ? bySpecies : a.label.localeCompare(b.label);
-    });
-    return sortSavedPokemonByFavorite(alphabetical);
-  }, [entries]);
+  const sorted = useMemo(
+    () => sortSavedPokemonByFavorite(sortSavedPokemonAlphabetically(entries)),
+    [entries],
+  );
 
   return (
     <div className="w-full bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-2">

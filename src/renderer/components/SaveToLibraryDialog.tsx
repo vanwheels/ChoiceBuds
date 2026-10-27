@@ -13,8 +13,7 @@
  *
  * Deliberately just a name + sprite, not a full set editor - editing the
  * actual build happens after the fact from wherever the saved entry lives
- * (Calc's saved-sets list today, the Box tab's own editable card once that
- * ships - see TODO.md).
+ * (the Box tab's own editable card).
  */
 
 import { useState } from 'react';

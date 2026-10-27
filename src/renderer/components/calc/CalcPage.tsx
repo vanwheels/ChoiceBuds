@@ -355,7 +355,13 @@ export default function CalcPage({
             entries={savedPokemonState.savedPokemon}
             currentSpecies={pokemon2.species}
             resolveSprite={spriteCacheState.resolveSprite}
-            onLoadEntry={(entry) => setPokemon2(teamPokemonToCalcUpdates(entry.pokemon))}
+            onLoadEntry={(entry) => {
+              // A Box set replaces whatever opponent entry Pokemon 2 was linked to;
+              // leaving the link would write this set's moves/ability/item back
+              // into that opponent's Battle Log roster entry.
+              setLinkedEntryId(null);
+              setPokemon2(teamPokemonToCalcUpdates(entry.pokemon));
+            }}
           />
         </div>
       </div>
