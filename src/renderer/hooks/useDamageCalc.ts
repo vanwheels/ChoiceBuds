@@ -40,6 +40,7 @@ import { resolveCalcSpecies } from '../utils/championsStats';
 import { resolveAutoField } from '../utils/calcAutoField';
 import { useCalcLegalOptions, type CalcLegalOptions } from './useCalcLegalOptions';
 import { getMegaAbility } from '../config/megaAbilities';
+import { VGC_ITEMS } from '../config/vgcData';
 import type { UseGameDataReturn } from './useGameData';
 import {
   getNatureStatEffect,
@@ -95,6 +96,8 @@ export interface UseDamageCalcReturn {
   setPokemon2Side: (updates: Partial<CalcSideConditions>) => void;
   speciesOptions: string[];
   itemOptions: string[];
+  /** Every item @smogon/calc knows, not just the Champions pool in `itemOptions`. */
+  allItemOptions: string[];
   abilityOptions: string[];
   natureOptions: NatureName[];
   /** A move's calc type (e.g. "Fire"), or null if unknown - drives move-row type coloring. */
@@ -154,7 +157,11 @@ export function useDamageCalc(
     [gen, regulationId],
   );
   const moveOptions = useMemo(() => [...gen.moves].map((m) => m.name).sort(), [gen]);
-  const itemOptions = useMemo(() => [...gen.items].map((i) => i.name).sort(), [gen]);
+  // Champions pool only; names are @smogon/calc's own spelling (asserted in
+  // useDamageCalc.test.ts) so a pick always resolves in the damage calc.
+  const itemOptions = useMemo(() => [...VGC_ITEMS].sort(), []);
+  // Full mainline list, kept for the later "All" section (Calc Item Picker Leg 5).
+  const allItemOptions = useMemo(() => [...gen.items].map((i) => i.name).sort(), [gen]);
   const abilityOptions = useMemo(() => [...gen.abilities].map((a) => a.name).sort(), [gen]);
   const getMoveType = useCallback((moveName: string) => getCalcMoveType(gen, moveName), [gen]);
   const natureOptions = useMemo(
@@ -359,6 +366,7 @@ export function useDamageCalc(
     setPokemon2Side,
     speciesOptions,
     itemOptions,
+    allItemOptions,
     abilityOptions,
     natureOptions,
     getMoveType,

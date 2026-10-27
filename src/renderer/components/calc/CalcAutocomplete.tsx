@@ -43,6 +43,8 @@ interface CalcAutocompleteProps {
   priorityOptions?: string[];
   /** Full hover tooltip body per option (and for the current value on the input), shown in the team builder's shared Tooltip; null shows none. */
   renderTooltip?: (option: string) => ReactNode;
+  /** Row cap for large lists (moves, abilities); pass Infinity for a short curated list that must scroll fully. */
+  maxResults?: number;
 }
 
 export default function CalcAutocomplete({
@@ -56,6 +58,7 @@ export default function CalcAutocomplete({
   renderOptionIcon,
   priorityOptions,
   renderTooltip,
+  maxResults = MAX_RESULTS,
 }: CalcAutocompleteProps) {
   const [query, setQuery] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
@@ -92,7 +95,7 @@ export default function CalcAutocomplete({
   const prioritized = isOpen ? (priorityOptions ?? []).filter(matches).sort(byUsage) : [];
   const rest =
     isOpen && showAll ? options.filter((o) => !prioritySet.has(o) && matches(o)).sort(byUsage) : [];
-  const filtered = [...prioritized, ...rest].slice(0, MAX_RESULTS);
+  const filtered = [...prioritized, ...rest].slice(0, maxResults);
   const firstAllIndex = priorityOptions && prioritized.length > 0 ? prioritized.length : -1;
 
   const handleSelect = (option: string) => {

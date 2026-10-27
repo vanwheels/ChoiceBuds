@@ -3,6 +3,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { useDamageCalc } from './useDamageCalc';
 import type { UseGameDataReturn } from './useGameData';
 import type { RegulationId } from '../utils/pokemonRules';
+import { VGC_ITEMS } from '../config/vgcData';
 
 const ZERO_STATS = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
 
@@ -128,6 +129,18 @@ describe('useDamageCalc', () => {
     expect(result.current.abilityOptions).toEqual([...result.current.abilityOptions].sort());
     expect(result.current.natureOptions).toContain('Timid');
     expect(result.current.natureOptions).toEqual([...result.current.natureOptions].sort());
+  });
+
+  it('itemOptions is exactly the Champions pool, and every entry exists in @smogon/calc', () => {
+    const { result } = setup();
+
+    expect(result.current.itemOptions).toHaveLength(VGC_ITEMS.length);
+    expect(result.current.itemOptions).not.toContain('Choice Band');
+    const missing = result.current.itemOptions.filter(
+      (name) => !result.current.allItemOptions.includes(name),
+    );
+    expect(missing).toEqual([]);
+    expect(result.current.allItemOptions).toContain('Choice Band');
   });
 
   it('setPokemon1/setPokemon2 merge a partial update without disturbing other fields', () => {

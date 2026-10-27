@@ -214,6 +214,7 @@ export default function CalcPokemonPanelFields({
               label="Item"
               value={state.item}
               options={itemOptions}
+              maxResults={Infinity}
               placeholder="None"
               onChange={(item) => onChange({ item })}
               usagePercentByName={itemPercentByName}
