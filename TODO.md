@@ -30,17 +30,6 @@ Done when:
 Do Leg 1 first: its findings may change what the second scoping leg needs
 to cover.
 
-- **[Calc Forme Sprite Load Delay] — Leg 1** *(Last touched: 2026-10-26 ·
-  Re-checks: 0)*
-  Found verifying Sprites & Icons Leg 2: some forme sprites (Castform Snowy)
-  take 5-10+ seconds to appear in the new side sprite. Needs scoping: slow
-  Showdown GIF fetch vs. the 404-then-static-fallback path in
-  `CalcSideSprite.tsx` vs. a sprite-cache miss.
-  Done when: the cause is identified and written to
-  `docs/investigations/`; any fix becomes a new tracked item. No code
-  changes. Manual verification: yes (reproduce with Castform Snowy).
-  Review: no.
-
 - **[Animated Sprite Source Scoping] — Leg 1** *(Last touched: 2026-10-26 ·
   Re-checks: 0)*
   Showdown's animated set misses some formes, shinies and Gen 9/Champions
@@ -81,6 +70,16 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+- **[Animated Sprite Forme Filenames] — Leg 1** *(Last touched: 2026-10-26 ·
+  Re-checks: 0)*
+  `getAnimatedSpriteUrl` strips the hyphen from forme names, but Showdown's
+  files keep it (`castform-snowy.gif`, `landorus-therian.gif`,
+  `charizard-megax.gif`), so every forme 404s - slowly on a cold miss - and
+  falls back to static. Fix the id rule (existing tests assert the buggy
+  output; needs the user's confirmation to change), and have
+  `CalcSideSprite` show the static sprite first. See
+  [docs/investigations/calc-forme-sprite-load-delay.md](docs/investigations/calc-forme-sprite-load-delay.md).
 
 - **[Mega Golisopod Steel Filter Bug] — Leg 1** *(Last touched: 2026-10-26 ·
   Re-checks: 0)*
