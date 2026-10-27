@@ -48,6 +48,28 @@ function setup(
   return { result, getEnrichedSpeciesOptions };
 }
 
+describe('useDamageCalc auto weather/terrain', () => {
+  it('sets weather when a species/ability change brings in a setter', () => {
+    const { result } = setup();
+    act(() => result.current.setPokemon1({ species: 'Torkoal', ability: 'Drought' }));
+    expect(result.current.field.weather).toBe('Sun');
+  });
+
+  it('lets a manual chip click override it, and leaves it alone on unrelated edits', () => {
+    const { result } = setup();
+    act(() => result.current.setPokemon1({ species: 'Torkoal', ability: 'Drought' }));
+    act(() => result.current.setField({ weather: 'Rain' }));
+    act(() => result.current.setPokemon1({ item: 'Charcoal' }));
+    expect(result.current.field.weather).toBe('Rain');
+  });
+
+  it('applies a Mega-granted setter when only the species changes', () => {
+    const { result } = setup();
+    act(() => result.current.setPokemon2({ species: 'Tyranitar-Mega' }));
+    expect(result.current.field.weather).toBe('Sand');
+  });
+});
+
 describe('useDamageCalc', () => {
   it('initializes both Pokemon/field slots to their defaults, keyed off the given default regulation', () => {
     const { result } = setup({}, 'REG-MA');

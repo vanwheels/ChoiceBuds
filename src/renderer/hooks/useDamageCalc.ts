@@ -37,6 +37,8 @@ import {
 } from '../utils/pokemonRules';
 import { getFormeFamily, type FormeFamily } from '../utils/calcFormes';
 import { resolveCalcSpecies } from '../utils/championsStats';
+import { resolveAutoField } from '../utils/calcAutoField';
+import { getMegaAbility } from '../config/megaAbilities';
 import type { UseGameDataReturn } from './useGameData';
 import {
   normalizeMoveSlug,
@@ -274,10 +276,38 @@ export function useDamageCalc(
     return filtered.length > 0 ? filtered : moveOptions;
   }, [moveOptions, pokemon2LearnedSlugs]);
 
-  const setPokemon1 = (updates: Partial<CalcPokemonState>) =>
+  // A species/ability change re-applies the entering Pokemon's weather/terrain
+  // (Calc Page Rework: Auto Weather & Terrain) as a one-shot write, so a later
+  // manual chip click simply overrides it. Other edits never touch the field.
+  const applyAutoField = (
+    side: 'p1' | 'p2',
+    prev: CalcPokemonState,
+    updates: Partial<CalcPokemonState>,
+  ) => {
+    const next = { ...prev, ...updates };
+    if (next.species === prev.species && next.ability === prev.ability) return;
+    const [p1, p2] = side === 'p1' ? [next, pokemon2] : [pokemon1, next];
+    const abilityOf = (p: CalcPokemonState) =>
+      p.ability || getMegaAbility(p.species.toLowerCase()) || '';
+    const fieldUpdates = resolveAutoField({
+      changedSide: side,
+      p1Ability: abilityOf(p1),
+      p2Ability: abilityOf(p2),
+      p1Speed: computeEffectiveSpeed(gen, p1, '', '', field.pokemon1Side),
+      p2Speed: computeEffectiveSpeed(gen, p2, '', '', field.pokemon2Side),
+      gameType: field.gameType,
+    });
+    if (Object.keys(fieldUpdates).length > 0) setFieldState((f) => ({ ...f, ...fieldUpdates }));
+  };
+
+  const setPokemon1 = (updates: Partial<CalcPokemonState>) => {
+    applyAutoField('p1', pokemon1, updates);
     setPokemon1State((prev) => ({ ...prev, ...updates }));
-  const setPokemon2 = (updates: Partial<CalcPokemonState>) =>
+  };
+  const setPokemon2 = (updates: Partial<CalcPokemonState>) => {
+    applyAutoField('p2', pokemon2, updates);
     setPokemon2State((prev) => ({ ...prev, ...updates }));
+  };
 
   const setMoveAt = (side: 'p1' | 'p2', index: number, updates: Partial<CalcMoveSlot>) => {
     const setter = side === 'p1' ? setPokemon1State : setPokemon2State;
