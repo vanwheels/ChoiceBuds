@@ -21,6 +21,17 @@ interface CalcBoxPanelProps {
   onLoadEntry: (entry: SavedPokemonEntry) => void;
 }
 
+/** Nearest scrolling ancestor beyond the tile grid itself (the Calc popup body); the window if none. */
+function getHoverBounds(tile: HTMLElement): DOMRect {
+  let el = tile.parentElement?.parentElement ?? null;
+  while (el) {
+    const overflowY = getComputedStyle(el).overflowY;
+    if (overflowY === 'auto' || overflowY === 'scroll') return el.getBoundingClientRect();
+    el = el.parentElement;
+  }
+  return new DOMRect(0, 0, window.innerWidth, window.innerHeight);
+}
+
 export default function CalcBoxPanel({
   title,
   entries,
@@ -28,9 +39,11 @@ export default function CalcBoxPanel({
   resolveSprite,
   onLoadEntry,
 }: CalcBoxPanelProps) {
-  const [hovered, setHovered] = useState<{ entry: SavedPokemonEntry; anchor: DOMRect } | null>(
-    null,
-  );
+  const [hovered, setHovered] = useState<{
+    entry: SavedPokemonEntry;
+    anchor: DOMRect;
+    bounds: DOMRect;
+  } | null>(null);
   const sorted = useMemo(() => {
     const alphabetical = [...entries].sort((a, b) => {
       const bySpecies = a.pokemon.showdownData.species.localeCompare(
@@ -58,7 +71,11 @@ export default function CalcBoxPanel({
                 type="button"
                 onClick={() => onLoadEntry(entry)}
                 onPointerEnter={(e) =>
-                  setHovered({ entry, anchor: e.currentTarget.getBoundingClientRect() })
+                  setHovered({
+                    entry,
+                    anchor: e.currentTarget.getBoundingClientRect(),
+                    bounds: getHoverBounds(e.currentTarget),
+                  })
                 }
                 onPointerLeave={() => setHovered(null)}
                 className={`w-9 h-9 shrink-0 rounded bg-zinc-800 flex items-center justify-center cursor-pointer transition-colors ${
@@ -79,7 +96,9 @@ export default function CalcBoxPanel({
           })}
         </div>
       )}
-      {hovered && <CalcBoxHoverCard entry={hovered.entry} anchor={hovered.anchor} />}
+      {hovered && (
+        <CalcBoxHoverCard entry={hovered.entry} anchor={hovered.anchor} bounds={hovered.bounds} />
+      )}
     </div>
   );
 }

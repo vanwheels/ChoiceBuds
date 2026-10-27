@@ -13,19 +13,21 @@ interface CalcBoxHoverCardProps {
   entry: SavedPokemonEntry;
   /** The hovered tile's bounds - the card sits below it, flipping above when there's no room. */
   anchor: DOMRect;
+  /** The card must stay inside this rect (the Calc popup's body) rather than the whole window - a fixed card isn't clipped by the popup, so it would otherwise spill past its edge. */
+  bounds: DOMRect;
 }
 
 const CARD_WIDTH = 200;
 const CARD_HEIGHT_ESTIMATE = 150;
 const GAP = 6;
 
-export default function CalcBoxHoverCard({ entry, anchor }: CalcBoxHoverCardProps) {
+export default function CalcBoxHoverCard({ entry, anchor, bounds }: CalcBoxHoverCardProps) {
   const { nickname, species, item, nature, moves } = entry.pokemon.showdownData;
   const left = Math.max(
-    GAP,
-    Math.min(anchor.left + anchor.width / 2 - CARD_WIDTH / 2, window.innerWidth - CARD_WIDTH - GAP),
+    bounds.left + GAP,
+    Math.min(anchor.left + anchor.width / 2 - CARD_WIDTH / 2, bounds.right - CARD_WIDTH - GAP),
   );
-  const fitsBelow = anchor.bottom + GAP + CARD_HEIGHT_ESTIMATE < window.innerHeight;
+  const fitsBelow = anchor.bottom + GAP + CARD_HEIGHT_ESTIMATE < bounds.bottom;
   const top = fitsBelow ? anchor.bottom + GAP : anchor.top - GAP - CARD_HEIGHT_ESTIMATE;
   const shownMoves = moves.filter(Boolean);
 

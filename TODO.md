@@ -82,6 +82,13 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
+- **[Calc Side Panel Height Parity] — Leg 1** *(Last touched: 2026-10-26 ·
+  Re-checks: 0)*
+  Found verifying Box Integration Leg 6: the two Pokémon panels' heights differ
+  depending on whether a species is loaded and whether it has a Base/Mega or
+  other forme toggle row, so the sides (and their Box panels below) don't line
+  up. Make both sides reserve the same height regardless of content.
+
 - **[Calc Item Picker: Champions Items & Full Scroll] — Leg 1** *(Last touched:
   2026-10-26 · Re-checks: 0)*
   Found verifying Sprites & Icons Leg 2: the Calc item picker lists every
