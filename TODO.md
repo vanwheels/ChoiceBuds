@@ -34,8 +34,8 @@ entries first, then an "All" section when searching beyond them.
   width, color move boxes by type, replace weather/terrain dropdowns with
   always-visible chips, and color natures with +/- next to names. Done when:
   all five render correctly in `dev` and `dev:web`. Manual verification.
-  Implemented 2026-10-26, awaiting manual check (type-check/lint/965 tests
-  pass).
+  Implemented 2026-10-26; user verified move colors, weather, widths. Left:
+  recheck inactive weather/terrain chips' colored outline.
 
 - **[Calc Page Rework: Sprites & Icons] — Leg 2** *(Last touched: 2026-10-26 ·
   Re-checks: 0)*
@@ -70,6 +70,15 @@ entries first, then an "All" section when searching beyond them.
   data, and the tab), make "Save Set" write a Pokémon to Box, and add a
   per-side bottom Box panel. Touches persisted data, so it gets a
   `/leg-review` before closing. Manual verification.
+
+- **[Calc Page Rework: Custom Dropdowns] — Leg 7** *(Last touched: 2026-10-26 ·
+  Re-checks: 0)*
+  Replace the native Nature (and Status) `<select>`s in
+  `CalcPokemonPanelFields.tsx` with a custom picker so options can carry
+  mixed-color `+Atk −SpA` text and usage %. Start from the team builder's
+  `NaturePickerPanel.tsx` (add optional usage-% and sort-order props; it
+  already colors via `getStatLabelColor`) rather than building new. Should
+  land before Leg 5 so the smart pickers share it. Manual verification.
 
 ## Blocked
 

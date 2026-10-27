@@ -83,6 +83,8 @@ function ChipGroup<T extends string>({
                   ? `${theme.bg} ${theme.text}`
                   : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
               }`}
+              // Hex `glow` rather than a Tailwind class: border color varies per chip.
+              style={{ boxShadow: isActive ? undefined : `inset 0 0 0 1px ${theme.glow}` }}
             >
               {option}
             </button>
