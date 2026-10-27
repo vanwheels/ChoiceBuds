@@ -9,7 +9,8 @@
  * narrows `options`, it only reorders/annotates them. `priorityOptions` (the
  * species-legal subset) works the same way: it lists first, and the rest of
  * `options` follows under an "All" heading only once the user types a query
- * that isn't just the current value.
+ * that isn't just the current value. Opening an unedited field lists every
+ * option (select-all on focus), so a click never requires deleting text first.
  */
 
 import { Fragment, useState } from 'react';
@@ -62,6 +63,7 @@ export default function CalcAutocomplete({
 }: CalcAutocompleteProps) {
   const [query, setQuery] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
+  const [edited, setEdited] = useState(false);
   const [hovered, setHovered] = useState<{ option: string; rect: DOMRect } | null>(null);
   const hoverProps = (option: string) => ({
     onMouseEnter: (e: MouseEvent<HTMLElement>) =>
@@ -70,6 +72,7 @@ export default function CalcAutocomplete({
   });
   const ref = useDismissable<HTMLDivElement>(() => {
     setQuery(value);
+    setEdited(false);
     setIsOpen(false);
   });
 
@@ -80,6 +83,7 @@ export default function CalcAutocomplete({
   if (value !== syncedValue) {
     setSyncedValue(value);
     setQuery(value);
+    setEdited(false);
   }
 
   // Most-used-first; anything with no usage entry sorts after every ranked
@@ -87,11 +91,14 @@ export default function CalcAutocomplete({
   // Array.sort is stable - same convention as EditOverlays.tsx's sort.
   const byUsage = (a: string, b: string) =>
     (usagePercentByName?.[normalizeSlug(b)] ?? -1) - (usagePercentByName?.[normalizeSlug(a)] ?? -1);
-  const matches = (o: string) => o.toLowerCase().includes(query.toLowerCase());
+  // Until the user types, the box just shows the current value; filtering by
+  // it would hide every other option, so an unedited open lists everything.
+  const activeQuery = edited ? query : '';
+  const matches = (o: string) => o.toLowerCase().includes(activeQuery.toLowerCase());
   const prioritySet = new Set(priorityOptions);
-  // Typing the current value back (focus without edits) shouldn't dump the
-  // whole list under "All" - that section is for searching beyond the suggestions.
-  const showAll = !priorityOptions || (query.trim() !== '' && query !== value);
+  // "All" is for searching beyond the suggestions, so a cleared-by-typing box
+  // keeps only the priority list; an unedited open shows the full list.
+  const showAll = !priorityOptions || !edited || query.trim() !== '';
   const prioritized = isOpen ? (priorityOptions ?? []).filter(matches).sort(byUsage) : [];
   const rest =
     isOpen && showAll ? options.filter((o) => !prioritySet.has(o) && matches(o)).sort(byUsage) : [];
@@ -102,6 +109,7 @@ export default function CalcAutocomplete({
     onChange(option);
     onSelect?.(option);
     setQuery(option);
+    setEdited(false);
     setIsOpen(false);
   };
 
@@ -116,9 +124,15 @@ export default function CalcAutocomplete({
         placeholder={placeholder}
         onChange={(e) => {
           setQuery(e.target.value);
+          setEdited(true);
           setIsOpen(true);
         }}
-        onFocus={() => setIsOpen(true)}
+        onFocus={(e) => {
+          // Select-all so the first keystroke replaces the value, like the Nature dropdown.
+          e.target.select();
+          setEdited(false);
+          setIsOpen(true);
+        }}
         {...(renderTooltip && !isOpen ? hoverProps(value) : {})}
         className="px-2 py-0.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
       />
