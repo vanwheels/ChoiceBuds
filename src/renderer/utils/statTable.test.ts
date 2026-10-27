@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { computeBST, nextStatTableSort, sortStatTableRows } from './statTable';
+import { Generations, toID } from '@smogon/calc';
+import {
+  assembleStatTableRows,
+  computeBST,
+  nextStatTableSort,
+  sortStatTableRows,
+} from './statTable';
+import { MEGA_STONE_TO_SPECIES } from '../config/megaEvolution';
 import type { PokemonStats } from '../types/pokemon';
 
 const stats = (overrides: Partial<PokemonStats> = {}): PokemonStats => ({
@@ -82,4 +89,61 @@ describe('sortStatTableRows', () => {
     sortStatTableRows(rows, { key: 'bst', direction: 'desc' }, getValue);
     expect(rows).toEqual(original);
   });
+});
+
+describe('assembleStatTableRows', () => {
+  it('keeps a Mega row when its base species row was filtered out', () => {
+    const rows = assembleStatTableRows(
+      ['Gyarados', 'Golisopod'],
+      new Map(),
+      new Map([['Golisopod', ['Mega Golisopod']]]),
+    );
+    expect(rows).toEqual(['Mega Golisopod']);
+  });
+
+  it('places each Mega row directly after its own base row, in roster order', () => {
+    const rows = assembleStatTableRows(
+      ['Gyarados', 'Golisopod', 'Garchomp'],
+      new Map([
+        ['Gyarados', 'Gyarados'],
+        ['Garchomp', 'Garchomp'],
+      ]),
+      new Map([
+        ['Gyarados', ['Mega Gyarados']],
+        ['Golisopod', ['Mega Golisopod']],
+      ]),
+    );
+    expect(rows).toEqual(['Gyarados', 'Mega Gyarados', 'Mega Golisopod', 'Garchomp']);
+  });
+});
+
+describe('Megas whose typing differs from their base species', () => {
+  const gen = Generations.get(9);
+  const retyped = Object.values(MEGA_STONE_TO_SPECIES).filter((entry) => {
+    const mega = gen.species.get(toID(`${entry.species}-${entry.suffix}`));
+    const base = gen.species.get(toID(entry.species));
+    return mega && base && mega.types.some((t) => !base.types.includes(t));
+  });
+
+  it('includes Mega Golisopod, whose Steel typing the Steel filter must find', () => {
+    const entry = MEGA_STONE_TO_SPECIES['golisopite'];
+    expect(retyped).toContain(entry);
+    expect(gen.species.get(toID('golisopod-mega'))?.types).toContain('Steel');
+  });
+
+  it.each(retyped.map((e) => [`${e.species}-${e.suffix}`, e] as const))(
+    'keeps %s visible when only its own typing matches a chip',
+    (_slug, entry) => {
+      const mega = gen.species.get(toID(`${entry.species}-${entry.suffix}`))!;
+      const base = gen.species.get(toID(entry.species))!;
+      // Base row is absent: the chip type is one the base species lacks.
+      expect(mega.types.some((t) => !base.types.includes(t))).toBe(true);
+      const rows = assembleStatTableRows(
+        [entry.species],
+        new Map(),
+        new Map([[entry.species, [`${entry.species}-${entry.suffix}`]]]),
+      );
+      expect(rows).toHaveLength(1);
+    },
+  );
 });

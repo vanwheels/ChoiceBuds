@@ -64,3 +64,24 @@ export function sortStatTableRows<T>(
   });
   return withValue.map((w) => w.row);
 }
+
+/**
+ * Interleaves each species' row with its own Mega rows, in roster order.
+ * Mega rows are emitted for every species in `orderedSpecies` that has
+ * any, independent of whether the base species' own row matched the active
+ * filters: a Mega's type/ability can differ from its base (Mega Golisopod is
+ * Bug/Steel, base Golisopod Bug/Water), so a Steel chip must keep the Mega
+ * row while dropping the base row. `speciesRowByName` holds only the base
+ * rows that passed the filters; `megaRowsByName` holds only the Mega rows
+ * that passed their own filter.
+ */
+export function assembleStatTableRows<T>(
+  orderedSpecies: string[],
+  speciesRowByName: Map<string, T>,
+  megaRowsByName: Map<string, T[]>,
+): T[] {
+  return orderedSpecies.flatMap((name) => {
+    const base = speciesRowByName.get(name);
+    return [...(base === undefined ? [] : [base]), ...(megaRowsByName.get(name) ?? [])];
+  });
+}

@@ -117,7 +117,7 @@ import { normalizeSpeciesForAPI } from '../services/pokeapi';
 import { normalizeNameForAPI } from '../services/pokeapiService';
 import { getPixelSpriteUrl } from '../utils/spriteUrl';
 import { getStatLabelColor } from '../config/pokemonTheme';
-import { computeBST, nextStatTableSort, sortStatTableRows } from '../utils/statTable';
+import { assembleStatTableRows, computeBST, nextStatTableSort, sortStatTableRows } from '../utils/statTable';
 import type { StatTableSort, StatTableSortKey } from '../utils/statTable';
 import { usePokemonTypeFilter } from '../hooks/usePokemonTypeFilter';
 import { usePokemonMoveFilter } from '../hooks/usePokemonMoveFilter';
@@ -351,10 +351,12 @@ export default function AddPokemonStatTable({
     }
   });
 
-  const rows: StatTableRow[] = filteredRoster.flatMap((species, i) => [
-    speciesRows[i],
-    ...(megaRowsBySpecies.get(species.name) ?? []),
-  ]);
+  const speciesRowByName = new Map(filteredRoster.map((s, i) => [s.name, speciesRows[i]]));
+  const rows: StatTableRow[] = assembleStatTableRows(
+    legalRoster.map((s) => s.name),
+    speciesRowByName,
+    megaRowsBySpecies,
+  );
   const sortedRows = sort ? sortStatTableRows(rows, sort, (row) => row[sort.key]) : rows;
 
   const handleSortClick = (key: StatTableSortKey) =>

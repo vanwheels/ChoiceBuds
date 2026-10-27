@@ -37,6 +37,8 @@ Done when:
   the cause is non-trivial, split scoping from the fix.
   Done check: Mega Golisopod shows under Steel and every other affected Mega
   is covered by a test. Manual verification: yes. Review: no.
+  Status: fix committed (Mega rows were only emitted beside a base row that
+  passed the filters); awaiting manual check of Steel in + Add Pokemon.
 
 - **[Team Search by Species] — Leg 1 (scoping)** *(Last touched: 2026-10-27 ·
   Re-checks: 0)*
