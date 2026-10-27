@@ -27,7 +27,7 @@
  * keep working unchanged.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Generations, toID } from '@smogon/calc';
 import type { StatsTable, NatureName } from '@smogon/calc/dist/data/interface';
 import {
@@ -38,10 +38,10 @@ import {
 import { getFormeFamily, type FormeFamily } from '../utils/calcFormes';
 import { resolveCalcSpecies } from '../utils/championsStats';
 import { resolveAutoField } from '../utils/calcAutoField';
+import { useCalcLegalOptions, type CalcLegalOptions } from './useCalcLegalOptions';
 import { getMegaAbility } from '../config/megaAbilities';
 import type { UseGameDataReturn } from './useGameData';
 import {
-  normalizeMoveSlug,
   getNatureStatEffect,
   getCalcMoveType,
   defaultPokemonState,
@@ -99,8 +99,13 @@ export interface UseDamageCalcReturn {
   natureOptions: NatureName[];
   /** A move's calc type (e.g. "Fire"), or null if unknown - drives move-row type coloring. */
   getMoveType: (moveName: string) => string | null;
+  /** Every calc move name - the pickers' unrestricted pool; the per-side lists below are the species-legal subset (or this same list while unresolved). */
+  moveOptions: string[];
   pokemon1MoveOptions: string[];
   pokemon2MoveOptions: string[];
+  /** Per-side species-legal moves/abilities (empty until the learnset resolves) - sort first in the pickers. */
+  pokemon1Legal: CalcLegalOptions;
+  pokemon2Legal: CalcLegalOptions;
   pokemon1Formes: FormeFamily;
   pokemon2Formes: FormeFamily;
   pokemon1BaseStats: StatsTable | null;
@@ -133,8 +138,6 @@ export function useDamageCalc(
   const [pokemon2, setPokemon2State] = useState<CalcPokemonState>(defaultPokemonState);
   const [field, setFieldState] = useState<CalcFieldState>(defaultFieldState);
   const [selectedResult, setSelectedResult] = useState<SelectedResultRef | null>(null);
-  const [pokemon1LearnedSlugs, setPokemon1LearnedSlugs] = useState<Set<string> | null>(null);
-  const [pokemon2LearnedSlugs, setPokemon2LearnedSlugs] = useState<Set<string> | null>(null);
 
   const gen = useMemo(() => Generations.get(GEN_NUM), []);
   const allSpecies = useMemo(
@@ -211,70 +214,23 @@ export function useDamageCalc(
   );
 
   const { getEnrichedSpeciesOptions } = gameDataState;
+  const pokemon1Legal = useCalcLegalOptions(
+    pokemon1.species,
+    pokemon1.gender,
+    getEnrichedSpeciesOptions,
+    moveOptions,
+    abilityOptions,
+  );
+  const pokemon2Legal = useCalcLegalOptions(
+    pokemon2.species,
+    pokemon2.gender,
+    getEnrichedSpeciesOptions,
+    moveOptions,
+    abilityOptions,
+  );
 
-  // Clears the stale learned-moves set the moment a species empties out (not
-  // on every species/gender change - a change to a different species just
-  // re-fetches below, matching the original effect's own guard) - set during
-  // render rather than in an effect, see
-  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
-  const [resolvedForSpecies1, setResolvedForSpecies1] = useState(pokemon1.species);
-  if (pokemon1.species !== resolvedForSpecies1) {
-    setResolvedForSpecies1(pokemon1.species);
-    if (!pokemon1.species) setPokemon1LearnedSlugs(null);
-  }
-
-  useEffect(() => {
-    if (!pokemon1.species) return;
-    let cancelled = false;
-    getEnrichedSpeciesOptions(pokemon1.species, pokemon1.gender || undefined)
-      .then(({ moves }) => {
-        if (!cancelled)
-          setPokemon1LearnedSlugs(new Set(moves.map((m) => normalizeMoveSlug(m.name))));
-      })
-      .catch(() => {
-        if (!cancelled) setPokemon1LearnedSlugs(null);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [pokemon1.species, pokemon1.gender, getEnrichedSpeciesOptions]);
-
-  const [resolvedForSpecies2, setResolvedForSpecies2] = useState(pokemon2.species);
-  if (pokemon2.species !== resolvedForSpecies2) {
-    setResolvedForSpecies2(pokemon2.species);
-    if (!pokemon2.species) setPokemon2LearnedSlugs(null);
-  }
-
-  useEffect(() => {
-    if (!pokemon2.species) return;
-    let cancelled = false;
-    getEnrichedSpeciesOptions(pokemon2.species, pokemon2.gender || undefined)
-      .then(({ moves }) => {
-        if (!cancelled)
-          setPokemon2LearnedSlugs(new Set(moves.map((m) => normalizeMoveSlug(m.name))));
-      })
-      .catch(() => {
-        if (!cancelled) setPokemon2LearnedSlugs(null);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [pokemon2.species, pokemon2.gender, getEnrichedSpeciesOptions]);
-
-  const pokemon1MoveOptions = useMemo(() => {
-    if (!pokemon1LearnedSlugs) return moveOptions;
-    const filtered = moveOptions.filter((name) =>
-      pokemon1LearnedSlugs.has(normalizeMoveSlug(name)),
-    );
-    return filtered.length > 0 ? filtered : moveOptions;
-  }, [moveOptions, pokemon1LearnedSlugs]);
-  const pokemon2MoveOptions = useMemo(() => {
-    if (!pokemon2LearnedSlugs) return moveOptions;
-    const filtered = moveOptions.filter((name) =>
-      pokemon2LearnedSlugs.has(normalizeMoveSlug(name)),
-    );
-    return filtered.length > 0 ? filtered : moveOptions;
-  }, [moveOptions, pokemon2LearnedSlugs]);
+  const pokemon1MoveOptions = pokemon1Legal.moves.length > 0 ? pokemon1Legal.moves : moveOptions;
+  const pokemon2MoveOptions = pokemon2Legal.moves.length > 0 ? pokemon2Legal.moves : moveOptions;
 
   // A species/ability change re-applies the entering Pokemon's weather/terrain
   // (Calc Page Rework: Auto Weather & Terrain) as a one-shot write, so a later
@@ -406,8 +362,11 @@ export function useDamageCalc(
     abilityOptions,
     natureOptions,
     getMoveType,
+    moveOptions,
     pokemon1MoveOptions,
     pokemon2MoveOptions,
+    pokemon1Legal,
+    pokemon2Legal,
     pokemon1Formes,
     pokemon2Formes,
     pokemon1BaseStats,

@@ -122,8 +122,11 @@ export default function CalcPage({
     setPokemon1Side,
     setPokemon2Side,
     speciesOptions,
+    moveOptions,
     pokemon1MoveOptions,
     pokemon2MoveOptions,
+    pokemon1Legal,
+    pokemon2Legal,
     itemOptions,
     abilityOptions,
     natureOptions,
@@ -207,6 +210,9 @@ export default function CalcPage({
     }
   }, [onUpdateOpponentEntry, linkedEntryId, pokemon2.moves, pokemon2.ability, pokemon2.item]);
 
+  const getMoveDescription = (name: string) =>
+    gameDataState.getCachedMove(name)?.description ?? null;
+
   return (
     <div className="flex flex-col gap-2">
       <div className="flex justify-end gap-2">
@@ -251,7 +257,9 @@ export default function CalcPage({
           title="Pokémon 1's Moves"
           moves={pokemon1.moves}
           results={p1Results}
-          moveOptions={pokemon1MoveOptions}
+          moveOptions={moveOptions}
+          legalMoveOptions={pokemon1MoveOptions}
+          getMoveDescription={getMoveDescription}
           selectedIndex={
             effectiveSelectedResult?.side === 'p1' ? effectiveSelectedResult.index : null
           }
@@ -264,7 +272,9 @@ export default function CalcPage({
           title="Pokémon 2's Moves"
           moves={pokemon2.moves}
           results={p2Results}
-          moveOptions={pokemon2MoveOptions}
+          moveOptions={moveOptions}
+          legalMoveOptions={pokemon2MoveOptions}
+          getMoveDescription={getMoveDescription}
           selectedIndex={
             effectiveSelectedResult?.side === 'p2' ? effectiveSelectedResult.index : null
           }
@@ -283,6 +293,7 @@ export default function CalcPage({
           speciesOptions={speciesOptions}
           itemOptions={itemOptions}
           abilityOptions={abilityOptions}
+          legalAbilityOptions={pokemon1Legal.abilities}
           natureOptions={natureOptions}
           moveOptions={pokemon1MoveOptions}
           formes={pokemon1Formes}
@@ -318,6 +329,7 @@ export default function CalcPage({
           speciesOptions={speciesOptions}
           itemOptions={itemOptions}
           abilityOptions={abilityOptions}
+          legalAbilityOptions={pokemon2Legal.abilities}
           natureOptions={natureOptions}
           moveOptions={pokemon2MoveOptions}
           formes={pokemon2Formes}

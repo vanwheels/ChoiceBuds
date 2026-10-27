@@ -28,6 +28,7 @@ interface CalcPokemonPanelFieldsProps {
   speciesOptions: string[];
   itemOptions: string[];
   abilityOptions: string[];
+  legalAbilityOptions: string[];
   sortedNatureOptions: NatureName[];
   formes: FormeFamily;
   megaGroup: string[];
@@ -63,6 +64,7 @@ export default function CalcPokemonPanelFields({
   speciesOptions,
   itemOptions,
   abilityOptions,
+  legalAbilityOptions,
   sortedNatureOptions,
   formes,
   megaGroup,
@@ -213,6 +215,7 @@ export default function CalcPokemonPanelFields({
               placeholder="None"
               onChange={(item) => onChange({ item })}
               usagePercentByName={itemPercentByName}
+              getDescription={(name) => gameDataState.getCachedItem(name)?.effect || null}
               renderOptionIcon={(option) => {
                 const url = getItemSpriteUrl(
                   option,
@@ -237,6 +240,8 @@ export default function CalcPokemonPanelFields({
           placeholder="None"
           onChange={(ability) => onChange({ ability })}
           usagePercentByName={abilityPercentByName}
+          priorityOptions={legalAbilityOptions}
+          getDescription={(name) => gameDataState.getCachedAbility(name)?.description || null}
         />
       </div>
 

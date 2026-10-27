@@ -17,6 +17,9 @@ interface CalcMoveGridProps {
   moves: CalcMoveSlot[];
   results: CalcMoveResultEntry[];
   moveOptions: string[];
+  /** Species-legal subset of `moveOptions`, listed first in each picker. */
+  legalMoveOptions: string[];
+  getMoveDescription: (moveName: string) => string | null;
   selectedIndex: number | null;
   onChangeMove: (index: number, updates: Partial<CalcMoveSlot>) => void;
   onSelect: (index: number) => void;
@@ -31,6 +34,8 @@ export default function CalcMoveGrid({
   moves,
   results,
   moveOptions,
+  legalMoveOptions,
+  getMoveDescription,
   selectedIndex,
   onChangeMove,
   onSelect,
@@ -67,6 +72,8 @@ export default function CalcMoveGrid({
                 <CalcAutocomplete
                   value={slot.name}
                   options={moveOptions}
+                  priorityOptions={legalMoveOptions}
+                  getDescription={getMoveDescription}
                   placeholder="Search moves..."
                   onChange={(name) => onChangeMove(index, { name, hits: undefined })}
                   usagePercentByName={usagePercentByName}

@@ -6,10 +6,13 @@
  * this is a plain sandbox picker: any of @smogon/calc's own data names can
  * be chosen, matching the real Showdown calculator's unrestricted pickers -
  * `usagePercentByName` (Regular Calc Usage-Data Auto-Populate Leg 1) never
- * narrows `options`, it only reorders/annotates them.
+ * narrows `options`, it only reorders/annotates them. `priorityOptions` (the
+ * species-legal subset) works the same way: it lists first, and the rest of
+ * `options` follows under an "All" heading only once the user types a query
+ * that isn't just the current value.
  */
 
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useDismissable } from '../../hooks/useDismissable';
 import { normalizeSlug } from '../../utils/pokemonRules';
@@ -35,6 +38,10 @@ interface CalcAutocompleteProps {
   usagePercentByName?: Record<string, number>;
   /** Optional leading icon/sprite per dropdown row (species, item). Rows without it keep today's text-only layout. */
   renderOptionIcon?: (option: string) => ReactNode;
+  /** Subset of `options` (e.g. the species' legal moves/abilities) listed ahead of the rest. */
+  priorityOptions?: string[];
+  /** Hover text per option (and for the current value on the input); null/undefined shows none. */
+  getDescription?: (option: string) => string | null | undefined;
 }
 
 export default function CalcAutocomplete({
@@ -46,6 +53,8 @@ export default function CalcAutocomplete({
   onSelect,
   usagePercentByName,
   renderOptionIcon,
+  priorityOptions,
+  getDescription,
 }: CalcAutocompleteProps) {
   const [query, setQuery] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
@@ -66,16 +75,18 @@ export default function CalcAutocomplete({
   // Most-used-first; anything with no usage entry sorts after every ranked
   // option, keeping its original (alphabetical) relative order since
   // Array.sort is stable - same convention as EditOverlays.tsx's sort.
-  const filtered = isOpen
-    ? options
-        .filter((o) => o.toLowerCase().includes(query.toLowerCase()))
-        .sort(
-          (a, b) =>
-            (usagePercentByName?.[normalizeSlug(b)] ?? -1) -
-            (usagePercentByName?.[normalizeSlug(a)] ?? -1),
-        )
-        .slice(0, MAX_RESULTS)
-    : [];
+  const byUsage = (a: string, b: string) =>
+    (usagePercentByName?.[normalizeSlug(b)] ?? -1) - (usagePercentByName?.[normalizeSlug(a)] ?? -1);
+  const matches = (o: string) => o.toLowerCase().includes(query.toLowerCase());
+  const prioritySet = new Set(priorityOptions);
+  // Typing the current value back (focus without edits) shouldn't dump the
+  // whole list under "All" - that section is for searching beyond the suggestions.
+  const showAll = !priorityOptions || (query.trim() !== '' && query !== value);
+  const prioritized = isOpen ? (priorityOptions ?? []).filter(matches).sort(byUsage) : [];
+  const rest =
+    isOpen && showAll ? options.filter((o) => !prioritySet.has(o) && matches(o)).sort(byUsage) : [];
+  const filtered = [...prioritized, ...rest].slice(0, MAX_RESULTS);
+  const firstAllIndex = priorityOptions && prioritized.length > 0 ? prioritized.length : -1;
 
   const handleSelect = (option: string) => {
     onChange(option);
@@ -98,31 +109,39 @@ export default function CalcAutocomplete({
           setIsOpen(true);
         }}
         onFocus={() => setIsOpen(true)}
+        title={getDescription?.(value) ?? undefined}
         className="px-2 py-0.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
       />
       {isOpen && filtered.length > 0 && (
         <div className="absolute z-50 top-full left-0 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-zinc-700 bg-slate-900 shadow-xl">
-          {filtered.map((option) => {
+          {filtered.map((option, i) => {
             const percent = usagePercentByName?.[normalizeSlug(option)];
             return (
-              <button
-                key={option}
-                type="button"
-                onClick={() => handleSelect(option)}
-                className="w-full flex items-center gap-2 text-left px-2 py-1 text-sm text-zinc-200 hover:bg-accent-gold hover:text-zinc-900 transition-colors cursor-pointer"
-              >
-                {renderOptionIcon && (
-                  <span className="w-7 h-7 shrink-0 flex items-center justify-center">
-                    {renderOptionIcon(option)}
-                  </span>
+              <Fragment key={option}>
+                {i === firstAllIndex && (
+                  <div className="px-2 py-0.5 text-[10px] uppercase tracking-wide text-zinc-500 bg-zinc-800/60">
+                    All
+                  </div>
                 )}
-                <span className="flex-1 truncate">{option}</span>
-                {percent != null && (
-                  <span className="text-accent-gold text-[10px] font-bold whitespace-nowrap">
-                    {percent.toFixed(1)}%
-                  </span>
-                )}
-              </button>
+                <button
+                  type="button"
+                  title={getDescription?.(option) ?? undefined}
+                  onClick={() => handleSelect(option)}
+                  className="w-full flex items-center gap-2 text-left px-2 py-1 text-sm text-zinc-200 hover:bg-accent-gold hover:text-zinc-900 transition-colors cursor-pointer"
+                >
+                  {renderOptionIcon && (
+                    <span className="w-7 h-7 shrink-0 flex items-center justify-center">
+                      {renderOptionIcon(option)}
+                    </span>
+                  )}
+                  <span className="flex-1 truncate">{option}</span>
+                  {percent != null && (
+                    <span className="text-accent-gold text-[10px] font-bold whitespace-nowrap">
+                      {percent.toFixed(1)}%
+                    </span>
+                  )}
+                </button>
+              </Fragment>
             );
           })}
         </div>

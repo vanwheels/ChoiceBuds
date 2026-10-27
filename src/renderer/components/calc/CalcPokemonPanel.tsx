@@ -102,6 +102,8 @@ interface CalcPokemonPanelProps {
   speciesOptions: string[];
   itemOptions: string[];
   abilityOptions: string[];
+  /** Species-legal abilities (Champions overrides applied), listed first in the Ability picker. */
+  legalAbilityOptions: string[];
   natureOptions: NatureName[];
   /** This panel's own move-slot options (CalcPage's pokemon1MoveOptions/pokemon2MoveOptions) - used only to rank the move axis via applyUsageWeighting(); the move pickers themselves live in the sibling CalcMoveGrid, not here. */
   moveOptions: string[];
@@ -142,6 +144,7 @@ export default function CalcPokemonPanel({
   speciesOptions,
   itemOptions,
   abilityOptions,
+  legalAbilityOptions,
   natureOptions,
   moveOptions,
   formes,
@@ -465,6 +468,7 @@ export default function CalcPokemonPanel({
         speciesOptions={speciesOptions}
         itemOptions={itemOptions}
         abilityOptions={abilityOptions}
+        legalAbilityOptions={legalAbilityOptions}
         sortedNatureOptions={sortedNatureOptions}
         formes={formes}
         megaGroup={megaGroup}
