@@ -28,15 +28,6 @@ in Box); each side gets its own bottom Box panel showing the same Box
 Pokémon, click loads into that side; smart pickers show learnable/legal
 entries first, then an "All" section when searching beyond them.
 
-- **[Calc Page Rework: Layout] — Leg 1** *(Last touched: 2026-10-26 ·
-  Re-checks: 0)*
-  Widen the popup (`CalcPopup.tsx` is `max-w-6xl`), cut move boxes to ~50%
-  width, color move boxes by type, replace weather/terrain dropdowns with
-  always-visible chips, and color natures with +/- next to names. Done when:
-  all five render correctly in `dev` and `dev:web`. Manual verification.
-  Implemented 2026-10-26; user verified move colors, weather, widths. Left:
-  recheck inactive weather/terrain chips' colored outline.
-
 - **[Calc Page Rework: Sprites & Icons] — Leg 2** *(Last touched: 2026-10-26 ·
   Re-checks: 0)*
   Semi-transparent animated sprites for each side, behind text, in the space

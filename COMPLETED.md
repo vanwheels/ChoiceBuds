@@ -122,3 +122,14 @@ Entries prior to this file's oldest are in:
   Calc Improvements boundary - named with the milestone slug since it
   shares its date range with the Display Bug Fix Sweep and Selection UX &
   Data Audit archives above)
+
+## Calc Page Rework
+
+- **[Calc Page Rework: Layout] — Leg 1** (2026-10-26): Widened the Calc popup,
+  narrowed move boxes to ~25% each, tinted the move input through the Crit box
+  by calc move type, replaced weather/terrain dropdowns with type-colored chips
+  (inactive chips outlined, primal/Mega Rayquaza weathers removed), and added
+  colored +/- nature effects. Verified manually in the running app: popup
+  width, move boxes, move tint, weather chips, and the inactive-chip outlines.
+  The colored nature +/- label and `dev:web` weren't separately reported. See
+  commit 1f4a5e4a6631f34b898ee9d97751b5deeea21073.
