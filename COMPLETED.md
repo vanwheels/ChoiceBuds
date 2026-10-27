@@ -135,6 +135,13 @@ Entries prior to this file's oldest are in:
   2026-10-27 Sprite, Filter & Search Fixes boundary - named with the
   milestone slug since it shares its date range with no other archive)
 
+- **[Calc Autocomplete: Show All On Focus] — Leg 1** (2026-10-27)
+  `CalcAutocomplete` now selects all text on focus and lists every option while unedited (the
+  "All" section included), so species/item/ability/move fields no longer need text deleted first;
+  typing replaces the value and filters as before. Verified live by the user across the species,
+  item, ability and move fields (full list on click, typing filters, click-away restores value).
+  Full suite, lint and type-check green. See commit 7a94b5f.
+
 - **[Calc Item Picker: Champions Items & Full Scroll] — Leg 1** (2026-10-27)
   Calc item picker now lists only `VGC_ITEMS` (full `@smogon/calc` list kept as
   `allItemOptions` for the Leg 5 "All" section) and passes `maxResults={Infinity}` so it

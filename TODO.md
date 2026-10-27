@@ -27,18 +27,6 @@ Done when:
 - A test fails on any Mega stone whose `getMegaApiSlug` doesn't resolve to a
   valid PokeAPI resource name.
 
-- **[Calc Autocomplete: Show All On Focus] — Leg 1** *(Last touched:
-  2026-10-27 · Re-checks: 0)*
-  The Calc species, item and ability inputs (`CalcAutocomplete.tsx`) only show
-  the full list after the field is cleared by hand. Make them behave like the
-  Nature dropdown: opening the field lists every option, and typing replaces
-  the current value (select-all on focus, or clear on focus) so filtering
-  starts immediately. Check the `showAll` rule for `priorityOptions` (it hides
-  the "All" section until the query differs from the value) and the move
-  fields, which share the component. Done check: clicking species, item or
-  ability shows the full list without deleting text, and typing filters it.
-  Manual verification: yes. Review: no.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
