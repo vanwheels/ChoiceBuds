@@ -594,6 +594,13 @@ reading the toggle directly):
   second hardcoded table, and its sprite flips too via the same
   `useMegaSprite` PokeAPI-slug fetch (Blade has its own ordinary PokeAPI
   resource).
+  The team header's mini sprite strip resolves through
+  `resolveActiveMegaSlug` with each slot's toggle state
+  (`useActiveFormsForIds`). `useMegaSprite` retries PokeAPI with backoff,
+  never caches a failure, and each card prefetches only its own slugs;
+  `toPokeApiMegaResource` aliases Meowstic/Floette Megas to PokeAPI's own
+  resource names. The Mega sprite shows static first, swapping to Showdown's
+  GIF on load, since the CDN can hang on a missing Mega GIF.
 - **Team builder card**: same toggle/components as the team card.
 - **Battle logger** (`RecordMatchForm.tsx`): a separate, stricter concern —
   not "what does this Mega look like" but "did this Pokémon Mega Evolve in

@@ -213,3 +213,9 @@ running on.
   tooltip's dynamic type was deferred from Leg 5 and recorded only in
   COMPLETED.md prose, so Leg 8 didn't pick it up). Any "deferred" in a leg's
   COMPLETED.md entry gets a matching TODO.md item in the same commit.
+- **Table-driven fixes get a sibling check** (added 2026-10-27, Sprite, Filter
+  & Search Fixes: the Mega toggle bug surfaced as five separate legs, one
+  species or surface at a time). Before closing a fix for one species/row in
+  Mega, form or sprite code, ask which other rows share the cause and grep or
+  test the whole table, not just the reported one. `TODO.md`'s Mega Stone
+  slug-coverage test is the standing check for Mega slugs.

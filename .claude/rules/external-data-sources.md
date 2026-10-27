@@ -167,6 +167,19 @@ Showdown's default client, then had to self-correct same-day once the
 in-beta new client's actual behavior (replacing Pokepaste outright) came to
 light.
 
+## Request bursts and sprite CDNs
+
+Added from the Sprite, Filter & Search Fixes post mortem
+(`docs/postmortems/sprite-filter-and-search-fixes.md`).
+
+- Before adding any code that fires several PokeAPI requests at once, check
+  it has retry with backoff and never caches a failed fetch. An ~81-slug
+  Mega prefetch drew 429s and pinned cards to the base sprite. Prefetch only
+  what the visible component needs.
+- Showdown's animated-sprite CDN can hang on a file it lacks, so never render
+  the GIF as the only sprite. Show the static sprite and swap to the GIF on
+  load.
+
 ## Keeping this current
 
 Any new external data or asset source (a new site to hotlink from, a new

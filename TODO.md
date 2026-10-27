@@ -12,24 +12,7 @@ rather than mixed into the active list. This file adopted that format as of
 an item had been sitting. Reordered into priority order 2026-08-31; within
 the current milestone and "Unscheduled", items are listed highest-to-lowest
 priority. Only one milestone is "current" at a time — see root `CLAUDE.md`'s
-Task Tracking rules for the full section-lifecycle (`## Current Milestone:
-<name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
-[COMPLETED.md](COMPLETED.md).
-
-## Current Milestone: Sprite, Filter & Search Fixes
-
-Done when:
-- Forme sprites (Castform-Snowy, Landorus-Therian, Mega X/Y) load their
-  animated GIF in the Calc without a 404 or visible delay; the static sprite
-  shows first.
-- Mega Golisopod appears under the Steel filter in + Add Pokemon, and other
-  Megas with altered typing are checked.
-- Toggling Mega form on the Teams page shows a Mega sprite for every Mega,
-  including the newer ones.
-- Searching a species name in team search returns every team containing it,
-  on both app and web.
-
-## Blocked
+Task Tracking rules for the full section-lifecycle (`## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
 outside this project — a person, a dependency, or an external decision.
@@ -56,6 +39,13 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+- **[Mega Stone Slug Coverage Test] — Leg 1** *(Last touched: 2026-10-27 ·
+  Re-checks: 0)*
+  Add a test that walks every Mega stone and asserts `getMegaApiSlug`
+  resolves to an expected PokeAPI resource name, so a bad species (Meowstic,
+  Floette, Meowstic-F were each found live) fails a test instead. Done check:
+  test passes, full suite green. Manual verification: no. Review: no.
 
 - **[Calc Sprite Swap Flicker] — Leg 1** *(Last touched: 2026-10-27 ·
   Re-checks: 0)*

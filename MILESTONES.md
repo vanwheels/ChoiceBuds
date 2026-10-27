@@ -113,3 +113,5 @@ milestone.
   [post-mortem](docs/postmortems/calc-page-rework.md)
 - **Sprite Scoping** — 2026-10-26 — Shipped —
   [post-mortem](docs/postmortems/sprite-scoping.md)
+- **Sprite, Filter & Search Fixes** — 2026-10-27 — Shipped —
+  [post-mortem](docs/postmortems/sprite-filter-and-search-fixes.md)
