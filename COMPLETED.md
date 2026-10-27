@@ -135,6 +135,12 @@ Entries prior to this file's oldest are in:
   2026-10-27 Sprite, Filter & Search Fixes boundary - named with the
   milestone slug since it shares its date range with no other archive)
 
+- **[Calc Item Picker: Item Icon Coverage] — Leg 1** (2026-10-27)
+  Audited every `VGC_ITEMS` entry against PokeAPI/Serebii; Leek was the only
+  one without an icon (no `leek` item in PokeAPI), fixed via the Serebii
+  fallback, with a coverage test in `itemSprite.test.ts`. Live-verified by the
+  user: no blank icons in the calc item picker. See commit 097b2bf.
+
 - **[Calc Autocomplete: Show All On Focus] — Leg 1** (2026-10-27)
   `CalcAutocomplete` now selects all text on focus and lists every option while unedited (the
   "All" section included), so species/item/ability/move fields no longer need text deleted first;
