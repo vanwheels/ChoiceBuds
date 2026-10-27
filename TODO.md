@@ -104,6 +104,13 @@ unblocked.
 Deferred out of Sprite Scoping (2026-10-26) so that milestone stays
 scoping-only. Plan with `/plan-milestone` when picked up.
 
+- **[Calc Tooltip Type Without Opponent] — Leg 1** *(Last touched: 2026-10-26 ·
+  Re-checks: 0)*
+  Found verifying Calc Move Tooltip Leg 1: the tooltip's type badge only
+  reflects field/ability-resolved types once an opponent is loaded, because
+  `moveType` comes from the calc result. Decide whether to resolve the type
+  without a defender (e.g. a type-only helper) or accept the static fallback.
+
 - **[Calc Side Panel Height Parity] — Leg 1** *(Last touched: 2026-10-26 ·
   Re-checks: 0)*
   Found verifying Box Integration Leg 6: the two Pokémon panels' heights differ

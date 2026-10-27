@@ -128,4 +128,4 @@ Entries prior to this file's oldest are in:
 
 ## [Calc Move Tooltip: Dynamic Type & Ability Boost] — Leg 1 (2026-10-26)
 
-Calc's move tooltip now shows the type `calculate()` resolved (`moveType` on the result entry) and the team builder's ability-boost line, via new `ability` / `moveTypeOverrides` props on `CalcMoveGrid` / `TooltipContent`. Type-check, lint and the full suite pass; live visual check not yet done. See commit c580b34.
+Calc's move tooltip now shows the type `calculate()` resolved (`moveType` on the result entry) and the team builder's ability-boost line, via new `ability` / `moveTypeOverrides` props on `CalcMoveGrid` / `TooltipContent`. Type-check, lint and the full suite pass; verified live by the user (tooltip type badge and ability-boost line). The resolved type only appears once an opponent is loaded, since `moveType` comes from the calc result; without one the tooltip falls back to the static/ability-only type (tracked in TODO.md as Calc Tooltip Type Without Opponent). See commit c580b34.
