@@ -126,6 +126,10 @@ Entries prior to this file's oldest are in:
   (the Calc Page Rework milestone's eight legs, split out at the 2026-10-26
   Calc Page Rework boundary)
 
+## [Calc Forme Sprite Load Delay] — Leg 1 (2026-10-26)
+
+Cause identified, no code changed: `getAnimatedSpriteUrl` strips the hyphen from forme names (`castformsnowy.gif`) but Showdown's files keep it (`castform-snowy.gif`), so every forme 404s, and Showdown's cold 404s take 7-20s before `CalcSideSprite` falls back to static. Reproduced with curl against the CDN (not yet re-checked in the app UI); fix tracked as [Animated Sprite Forme Filenames]. See commit 0eb6de2.
+
 ## [Calc Tooltip Type Without Opponent] — Leg 1 (2026-10-26)
 
 `computeSideResults` now resolves each move's type (Weather Ball, Terrain Pulse, -ate abilities) even with no defender loaded, by running `calculate()` against the attacker as a stand-in and returning only `moveType`; the move row tint and tooltip badge pick it up with no component change. Automated: new engine test plus full suite/lint/type-check green. Manually verified live 2026-10-26 (Weather Ball in Rain with no opponent loaded: row tint and tooltip badge turn Water). See commit 3755ffe.
