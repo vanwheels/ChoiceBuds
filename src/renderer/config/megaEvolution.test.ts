@@ -29,6 +29,24 @@ describe('toPokeApiMegaResource', () => {
   });
 });
 
+describe('Meowstic-F Mega', () => {
+  it('gives a Meowstic-F holding Meowsticite its own female Mega slug', () => {
+    expect(getMegaApiSlug('Meowsticite', 'Meowstic-F')).toBe('meowstic-f-mega');
+    expect(getMegaApiSlug('Meowsticite', 'Meowstic')).toBe('meowstic-mega');
+  });
+
+  it("resolves the female slug to PokeAPI's meowstic-female-mega resource", () => {
+    expect(toPokeApiMegaResource('meowstic-f-mega')).toBe('meowstic-female-mega');
+  });
+
+  it('keeps the female slug active only for the Meowstic-F holder', () => {
+    expect(resolveActiveMegaSlug('Meowsticite', 'Meowstic-F', 'meowstic-f-mega')).toBe(
+      'meowstic-f-mega',
+    );
+    expect(resolveActiveMegaSlug('Meowsticite', 'Meowstic', 'meowstic-f-mega')).toBeNull();
+  });
+});
+
 describe('Floette Mega Evolution exception', () => {
   it('resolves the held-item match against floette-eternal, not bare floette', () => {
     expect(getMegaApiSlug('Floettite', 'Floette-Eternal')).toBe('floette-eternal-mega');

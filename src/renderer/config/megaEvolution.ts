@@ -161,12 +161,23 @@ CURATED_MEGA_FORM_SLUGS.add('floette-mega');
  * stats never load. Found by sweeping every CURATED_MEGA_FORM_SLUGS entry
  * against PokeAPI (2026-10-27): these two were the only misses of 81.
  * Meowstic is gender-divergent on PokeAPI and has no gender-less Mega
- * resource, so it resolves to the male one (Mega Meowstic-F is a separate gap:
- * getMegaApiSlug never matches species "Meowstic-F" in the first place).
+ * resource, so the male slug resolves to the male one and the female slug
+ * (see FEMALE_MEGA_SPECIES) to the female one.
  */
 const POKEAPI_MEGA_RESOURCE_ALIASES: Record<string, string> = {
   'floette-eternal-mega': 'floette-mega',
   'meowstic-mega': 'meowstic-male-mega',
+  'meowstic-f-mega': 'meowstic-female-mega',
+};
+
+/**
+ * Gender-divergent species whose female form is stored as its own species
+ * ("Meowstic-F") but holds the same Mega Stone as the male. The stone table
+ * keys on the male species, so the female needs its own slug (the Mega's
+ * sprite/stats differ) rather than reusing the male's.
+ */
+const FEMALE_MEGA_SPECIES: Record<string, string> = {
+  'meowstic-f': 'meowstic',
 };
 
 /** The PokeAPI `/pokemon/` resource name for one of this file's Mega slugs. */
@@ -196,7 +207,12 @@ export function getMegaApiSlug(heldItem: string | undefined, species: string): s
   if (!heldItem) return null;
   const entry = MEGA_STONE_TO_SPECIES[heldItem.trim().toLowerCase()];
   if (!entry) return null;
-  return entry.species === species.trim().toLowerCase() ? `${entry.species}-${entry.suffix}` : null;
+  const normalized = species.trim().toLowerCase();
+  if (entry.species === normalized) return `${entry.species}-${entry.suffix}`;
+  if (FEMALE_MEGA_SPECIES[normalized] === entry.species) {
+    return `${normalized}-${entry.suffix}`;
+  }
+  return null;
 }
 
 /**

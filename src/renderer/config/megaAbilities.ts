@@ -143,6 +143,7 @@ export const MEGA_ABILITIES: Record<string, string> = {
   'medicham-mega': 'Pure Power',
   'meganium-mega': 'Mega Sol',
   'meowstic-mega': 'Trace',
+  'meowstic-f-mega': 'Trace',
   'metagross-mega': 'Tough Claws',
   'pidgeot-mega': 'No Guard',
   'pinsir-mega': 'Aerilate',
