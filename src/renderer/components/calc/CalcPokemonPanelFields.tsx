@@ -278,7 +278,7 @@ export default function CalcPokemonPanelFields({
           <CalcDropdown label={state.nature}>
             {(close) => (
               <NaturePickerPanel
-                maxHeight={120}
+                maxHeight={216}
                 options={sortedNatureOptions}
                 percentByName={naturePercentByName}
                 onSelect={(nature) => {
