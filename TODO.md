@@ -29,15 +29,6 @@ Done when:
 - Searching a species name in team search returns every team containing it,
   on both app and web.
 
-- **[Team Header Mega Sprite Ignores Toggle] — Leg 1** *(Last touched:
-  2026-10-27 · Re-checks: 0)*
-  `TeamCardHeader.tsx`'s mini sprite strip shows the Mega sprite whenever
-  the stone is held, ignoring the per-slot Mega toggle that the expanded
-  card, types, stats and ability already respect. Found while fixing Mega
-  Team Card Sprite Toggle Bug. Done check: the strip shows the base sprite
-  until the toggle is on, via `resolveActiveMegaSlug`. Manual verification:
-  yes. Review: no.
-
 - **[Mega Meowstic-F Toggle Gap] — Leg 1** *(Last touched: 2026-10-27 ·
   Re-checks: 0)*
   `getMegaApiSlug` requires species to equal `meowstic` exactly, so a
