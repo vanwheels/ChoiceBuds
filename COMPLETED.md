@@ -125,6 +125,7 @@ Entries prior to this file's oldest are in:
 
 ## Calc Page Rework
 
+- **[Calc Page Rework: Smart Pickers & Hover Details] — Leg 5** (2026-10-26): Calc ability and move pickers list the species' legal options first (new `useCalcLegalOptions`, Champions overrides respected) with the rest under an "All" heading once the user searches; item, ability and move hovers use the team builder's shared `Tooltip`/`TooltipContent`. Live-verified by the user in the running app: legal-first ordering and All section on both pickers, full tooltips on rows and current values. Ability-boost line and dynamic move type in the move tooltip are deferred to Leg 8. See commits 1133d9c and 52560d5.
 - **[Calc Page Rework: Auto Weather & Terrain] — Leg 4** (2026-10-26): A species/ability change in the Calc now sets weather/terrain from `config/fieldSettingAbilities.ts` via the pure `utils/calcAutoField.ts` (Doubles: slower setter wins, tie/Singles: side that just changed; one-shot write so chip clicks override). Megas resolve through their granted ability. Tests written from the rule (8 resolver + 3 hook); two of my own resolver expectations were wrong and corrected the same leg. Live-verified by the user in the running app. See commit 71e99f4.
 
 - **[Calc Page Rework: Current HP] — Leg 3** (2026-10-26): Added current HP as synced flat/% inputs (`curHp` state, null = full) feeding `@smogon/calc`, so KO text uses current HP while damage % stays of max HP. Tests cover the %/flat sync and the engine at partial HP; live-verified in the running app by the user. See commit 8de63bd.

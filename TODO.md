@@ -28,13 +28,6 @@ in Box); each side gets its own bottom Box panel showing the same Box
 Pokémon, click loads into that side; smart pickers show learnable/legal
 entries first, then an "All" section when searching beyond them.
 
-- **[Calc Page Rework: Smart Pickers & Hover Details] — Leg 5** *(Last
-  touched: 2026-10-26 · Re-checks: 0)*
-  Ability and move pickers list the current species' own options first
-  (Champions ability overrides and movepool changes respected), with search
-  for the rest. Item, ability, and move show descriptions on hover. Split
-  into abilities/hover and moves if it won't fit one session.
-
 - **[Calc Page Rework: Box Integration] — Leg 6** *(Last touched: 2026-10-26 ·
   Re-checks: 0)*
   Remove the Saved Sets feature (`CalcSavedSetsModal.tsx`, its persisted
