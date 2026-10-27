@@ -27,18 +27,6 @@ Done when:
 - Searching a species name in team search returns every team containing it,
   on both app and web.
 
-- **[Animated Sprite Forme Filenames] — Leg 1** *(Last touched: 2026-10-27 ·
-  Re-checks: 0)*
-  `getAnimatedSpriteUrl` strips the hyphen from forme names, but Showdown's
-  files keep it (`castform-snowy.gif`, `landorus-therian.gif`,
-  `charizard-megax.gif`), so every forme 404s - slowly on a cold miss - and
-  falls back to static. Fix the id rule (existing tests assert the buggy
-  output; needs the user's confirmation to change), and have
-  `CalcSideSprite` show the static sprite first. See
-  [docs/investigations/calc-forme-sprite-load-delay.md](docs/investigations/calc-forme-sprite-load-delay.md).
-  Done check: forme sprites load animated in the Calc with no visible delay;
-  full suite passes. Manual verification: yes. Review: no.
-
 - **[Mega Golisopod Steel Filter Bug] — Leg 1** *(Last touched: 2026-10-27 ·
   Re-checks: 0)*
   Found during manual testing: Mega Golisopod doesn't show up under the
@@ -96,7 +84,13 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-(Empty - bundled into the current milestone 2026-10-27.)
+- **[Calc Sprite Swap Flicker] — Leg 1** *(Last touched: 2026-10-27 ·
+  Re-checks: 0)*
+  `CalcSideSprite` swaps from the static sprite to the GIF the moment the GIF
+  loads, which is a noticeable flicker when picking a Mega (seen with
+  Charizard). Smooth the swap (e.g. a short cross-fade) without reintroducing
+  the blank wait on a slow GIF. Done check: no visible pop when selecting
+  formes. Manual verification: yes. Review: no.
 
 ## Future Milestones (unscheduled)
 

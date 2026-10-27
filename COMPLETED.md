@@ -131,3 +131,13 @@ Entries prior to this file's oldest are in:
   milestone slug since it shares its date range with the Calc Page Rework
   archive above)
 
+
+## Current milestone: Sprite, Filter & Search Fixes
+
+- **[Animated Sprite Forme Filenames] — Leg 1** (2026-10-27): Animated GIF
+  ids now keep the species/forme hyphen (`castform-snowy`, `charizard-megax`)
+  with an exception list for hyphenated base names, and `CalcSideSprite`
+  shows the static sprite first, swapping to the GIF on load. Verified live
+  in the Calc with Mega Charizard X/Y: the GIF loads with no delay; the
+  static-to-GIF swap is briefly visible (tracked in TODO.md). Landorus
+  couldn't be live-checked, as it isn't in Champions. See commit ffdc5a5.
