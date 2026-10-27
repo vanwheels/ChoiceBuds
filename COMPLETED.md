@@ -135,6 +135,13 @@ Entries prior to this file's oldest are in:
   2026-10-27 Sprite, Filter & Search Fixes boundary - named with the
   milestone slug since it shares its date range with no other archive)
 
+- **[Calc Item Picker: Champions Items & Full Scroll] — Leg 1** (2026-10-27)
+  Calc item picker now lists only `VGC_ITEMS` (full `@smogon/calc` list kept as
+  `allItemOptions` for the Leg 5 "All" section) and passes `maxResults={Infinity}` so it
+  scrolls fully. A new test asserts every Champions item exists in `@smogon/calc`. Verified
+  live by the user (Champions-only list, scrolls to the end). Full suite, lint and type-check
+  green. See commit 25f8a72.
+
 - **[Calc Side Panel Height Parity] — Leg 1** (2026-10-27)
   Calc Pokémon panel root now `flex-1`, so it fills its column (already stretched to the
   taller side) and both panels and their Box panels align. Verified live by the user with
