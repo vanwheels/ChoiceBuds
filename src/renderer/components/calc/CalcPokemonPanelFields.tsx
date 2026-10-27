@@ -14,6 +14,7 @@ import { realSetBundleToCalcUpdates } from '../../utils/calcTeamImport';
 import { resolveCalcPokemonSpriteUrl } from '../../utils/calcSpriteResolve';
 import { getItemFallbackSpriteUrl, getItemSpriteUrl } from '../../utils/itemSprite';
 import { getNatureEffect } from '../../config/vgcData';
+import TooltipContent from '../TooltipContent';
 import CalcAutocomplete from './CalcAutocomplete';
 import NatureEffectLabel from './NatureEffectLabel';
 import SavedSetPicker from '../SavedSetPicker';
@@ -215,7 +216,18 @@ export default function CalcPokemonPanelFields({
               placeholder="None"
               onChange={(item) => onChange({ item })}
               usagePercentByName={itemPercentByName}
-              getDescription={(name) => gameDataState.getCachedItem(name)?.effect || null}
+              renderTooltip={(name) => (
+                <TooltipContent
+                  hoveredKey="item"
+                  selectedItem={name}
+                  itemData={gameDataState.getCachedItem(name)}
+                  selectedAbility=""
+                  abilityData={null}
+                  selectedMoves={[]}
+                  moveDataSlots={[]}
+                  moveBoosts={[]}
+                />
+              )}
               renderOptionIcon={(option) => {
                 const url = getItemSpriteUrl(
                   option,
@@ -241,7 +253,18 @@ export default function CalcPokemonPanelFields({
           onChange={(ability) => onChange({ ability })}
           usagePercentByName={abilityPercentByName}
           priorityOptions={legalAbilityOptions}
-          getDescription={(name) => gameDataState.getCachedAbility(name)?.description || null}
+          renderTooltip={(name) => (
+            <TooltipContent
+              hoveredKey="ability"
+              selectedItem=""
+              itemData={null}
+              selectedAbility={name}
+              abilityData={gameDataState.getCachedAbility(name)}
+              selectedMoves={[]}
+              moveDataSlots={[]}
+              moveBoosts={[]}
+            />
+          )}
         />
       </div>
 

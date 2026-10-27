@@ -210,9 +210,6 @@ export default function CalcPage({
     }
   }, [onUpdateOpponentEntry, linkedEntryId, pokemon2.moves, pokemon2.ability, pokemon2.item]);
 
-  const getMoveDescription = (name: string) =>
-    gameDataState.getCachedMove(name)?.description ?? null;
-
   return (
     <div className="flex flex-col gap-2">
       <div className="flex justify-end gap-2">
@@ -259,7 +256,7 @@ export default function CalcPage({
           results={p1Results}
           moveOptions={moveOptions}
           legalMoveOptions={pokemon1MoveOptions}
-          getMoveDescription={getMoveDescription}
+          getMoveData={gameDataState.getCachedMove}
           selectedIndex={
             effectiveSelectedResult?.side === 'p1' ? effectiveSelectedResult.index : null
           }
@@ -274,7 +271,7 @@ export default function CalcPage({
           results={p2Results}
           moveOptions={moveOptions}
           legalMoveOptions={pokemon2MoveOptions}
-          getMoveDescription={getMoveDescription}
+          getMoveData={gameDataState.getCachedMove}
           selectedIndex={
             effectiveSelectedResult?.side === 'p2' ? effectiveSelectedResult.index : null
           }

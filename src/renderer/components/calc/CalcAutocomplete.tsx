@@ -13,7 +13,8 @@
  */
 
 import { Fragment, useState } from 'react';
-import type { ReactNode } from 'react';
+import type { MouseEvent, ReactNode } from 'react';
+import Tooltip from '../Tooltip';
 import { useDismissable } from '../../hooks/useDismissable';
 import { normalizeSlug } from '../../utils/pokemonRules';
 
@@ -40,8 +41,8 @@ interface CalcAutocompleteProps {
   renderOptionIcon?: (option: string) => ReactNode;
   /** Subset of `options` (e.g. the species' legal moves/abilities) listed ahead of the rest. */
   priorityOptions?: string[];
-  /** Hover text per option (and for the current value on the input); null/undefined shows none. */
-  getDescription?: (option: string) => string | null | undefined;
+  /** Full hover tooltip body per option (and for the current value on the input), shown in the team builder's shared Tooltip; null shows none. */
+  renderTooltip?: (option: string) => ReactNode;
 }
 
 export default function CalcAutocomplete({
@@ -54,10 +55,16 @@ export default function CalcAutocomplete({
   usagePercentByName,
   renderOptionIcon,
   priorityOptions,
-  getDescription,
+  renderTooltip,
 }: CalcAutocompleteProps) {
   const [query, setQuery] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
+  const [hovered, setHovered] = useState<{ option: string; rect: DOMRect } | null>(null);
+  const hoverProps = (option: string) => ({
+    onMouseEnter: (e: MouseEvent<HTMLElement>) =>
+      setHovered({ option, rect: e.currentTarget.getBoundingClientRect() }),
+    onMouseLeave: () => setHovered(null),
+  });
   const ref = useDismissable<HTMLDivElement>(() => {
     setQuery(value);
     setIsOpen(false);
@@ -109,7 +116,7 @@ export default function CalcAutocomplete({
           setIsOpen(true);
         }}
         onFocus={() => setIsOpen(true)}
-        title={getDescription?.(value) ?? undefined}
+        {...(renderTooltip && !isOpen ? hoverProps(value) : {})}
         className="px-2 py-0.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
       />
       {isOpen && filtered.length > 0 && (
@@ -125,7 +132,7 @@ export default function CalcAutocomplete({
                 )}
                 <button
                   type="button"
-                  title={getDescription?.(option) ?? undefined}
+                  {...(renderTooltip ? hoverProps(option) : {})}
                   onClick={() => handleSelect(option)}
                   className="w-full flex items-center gap-2 text-left px-2 py-1 text-sm text-zinc-200 hover:bg-accent-gold hover:text-zinc-900 transition-colors cursor-pointer"
                 >
@@ -146,6 +153,12 @@ export default function CalcAutocomplete({
           })}
         </div>
       )}
+      {renderTooltip &&
+        hovered &&
+        (() => {
+          const body = renderTooltip(hovered.option);
+          return body ? <Tooltip content={body} anchorRect={hovered.rect} cardRect={null} /> : null;
+        })()}
     </div>
   );
 }

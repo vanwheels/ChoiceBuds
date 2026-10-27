@@ -10,6 +10,8 @@
 
 import type { CalcMoveSlot, CalcMoveResultEntry } from '../../hooks/useDamageCalc';
 import { getTypeTheme } from '../../config/pokemonTheme';
+import type { MoveData } from '../../types/pokemon';
+import TooltipContent from '../TooltipContent';
 import CalcAutocomplete from './CalcAutocomplete';
 
 interface CalcMoveGridProps {
@@ -19,7 +21,7 @@ interface CalcMoveGridProps {
   moveOptions: string[];
   /** Species-legal subset of `moveOptions`, listed first in each picker. */
   legalMoveOptions: string[];
-  getMoveDescription: (moveName: string) => string | null;
+  getMoveData: (moveName: string) => MoveData | null;
   selectedIndex: number | null;
   onChangeMove: (index: number, updates: Partial<CalcMoveSlot>) => void;
   onSelect: (index: number) => void;
@@ -35,7 +37,7 @@ export default function CalcMoveGrid({
   results,
   moveOptions,
   legalMoveOptions,
-  getMoveDescription,
+  getMoveData,
   selectedIndex,
   onChangeMove,
   onSelect,
@@ -73,7 +75,21 @@ export default function CalcMoveGrid({
                   value={slot.name}
                   options={moveOptions}
                   priorityOptions={legalMoveOptions}
-                  getDescription={getMoveDescription}
+                  renderTooltip={(name) => {
+                    const move = getMoveData(name);
+                    return move ? (
+                      <TooltipContent
+                        hoveredKey="move0"
+                        selectedItem=""
+                        itemData={null}
+                        selectedAbility=""
+                        abilityData={null}
+                        selectedMoves={[name]}
+                        moveDataSlots={[move]}
+                        moveBoosts={[null]}
+                      />
+                    ) : null;
+                  }}
                   placeholder="Search moves..."
                   onChange={(name) => onChangeMove(index, { name, hits: undefined })}
                   usagePercentByName={usagePercentByName}
