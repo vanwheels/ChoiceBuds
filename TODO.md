@@ -12,7 +12,62 @@ rather than mixed into the active list. This file adopted that format as of
 an item had been sitting. Reordered into priority order 2026-08-31; within
 the current milestone and "Unscheduled", items are listed highest-to-lowest
 priority. Only one milestone is "current" at a time — see root `CLAUDE.md`'s
-Task Tracking rules for the full section-lifecycle (`## Blocked
+Task Tracking rules for the full section-lifecycle.
+
+## Current Milestone: Calc Follow-ups
+
+Done when:
+
+- Selecting a forme or Mega in the calc shows no visible sprite pop or size
+  jump.
+- Both calc side panels and their Box panels line up regardless of loaded
+  species or forme toggle row.
+- The calc item picker lists only Champions items, scrolls fully, and every
+  Champions item has an icon.
+- A test fails on any Mega stone whose `getMegaApiSlug` doesn't resolve to a
+  valid PokeAPI resource name.
+
+- **[Mega Stone Slug Coverage Test] — Leg 1** *(Last touched: 2026-10-27 ·
+  Re-checks: 0)*
+  Add a test that walks every Mega stone and asserts `getMegaApiSlug`
+  resolves to an expected PokeAPI resource name, so a bad species (Meowstic,
+  Floette, Meowstic-F were each found live) fails a test instead. Done check:
+  test passes, full suite green. Manual verification: no. Review: no.
+
+- **[Calc Sprite Swap Flicker] — Leg 1** *(Last touched: 2026-10-27 ·
+  Re-checks: 0)*
+  `CalcSideSprite` swaps from the static sprite to the GIF the moment the GIF
+  loads, which is a noticeable flicker when picking a Mega (seen with
+  Charizard). Smooth the swap (e.g. a short cross-fade) without reintroducing
+  the blank wait on a slow GIF. The static PokeAPI sprite and the Showdown
+  GIF also render at different sizes/scales in the same `h-28 w-28` box,
+  which likely adds to the pop and varies between species; normalize that
+  too. Done check: no visible pop or size jump when selecting formes. Manual
+  verification: yes. Review: no.
+
+- **[Calc Side Panel Height Parity] — Leg 1** *(Last touched: 2026-10-27 ·
+  Re-checks: 0)*
+  Found verifying Box Integration Leg 6: the two Pokémon panels' heights differ
+  depending on whether a species is loaded and whether it has a Base/Mega or
+  other forme toggle row, so the sides (and their Box panels below) don't line
+  up. Make both sides reserve the same height regardless of content. Sequenced
+  after the sprite leg since the sprite box size feeds panel height. Done
+  check: sides and Box panels align with empty, single-forme and multi-forme
+  species on each side. Manual verification: yes. Review: no.
+
+- **[Calc Item Picker: Champions Items & Full Scroll] — Leg 1** *(Last
+  touched: 2026-10-27 · Re-checks: 0)*
+  Found verifying Sprites & Icons Leg 2: the Calc item picker lists every
+  mainline item (`useDamageCalc.ts` builds `itemOptions` from `gen.items`)
+  instead of just Champions items (`VGC_ITEMS` in `config/vgcData.ts` is the
+  likely source). The list also stops scrolling partway because
+  `CalcAutocomplete.tsx` slices results to `MAX_RESULTS = 50`. Keep a path to
+  all items later (e.g. the Leg 5 "All" section). Also confirm every Champions
+  item has an icon; split the icon audit into its own leg if it turns up many
+  gaps. Done check: picker shows only Champions items, scrolls through all of
+  them, none missing an icon. Manual verification: yes. Review: no.
+
+## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
 outside this project — a person, a dependency, or an external decision.
@@ -40,46 +95,7 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-- **[Mega Stone Slug Coverage Test] — Leg 1** *(Last touched: 2026-10-27 ·
-  Re-checks: 0)*
-  Add a test that walks every Mega stone and asserts `getMegaApiSlug`
-  resolves to an expected PokeAPI resource name, so a bad species (Meowstic,
-  Floette, Meowstic-F were each found live) fails a test instead. Done check:
-  test passes, full suite green. Manual verification: no. Review: no.
-
-- **[Calc Sprite Swap Flicker] — Leg 1** *(Last touched: 2026-10-27 ·
-  Re-checks: 0)*
-  `CalcSideSprite` swaps from the static sprite to the GIF the moment the GIF
-  loads, which is a noticeable flicker when picking a Mega (seen with
-  Charizard). Smooth the swap (e.g. a short cross-fade) without reintroducing
-  the blank wait on a slow GIF. The static PokeAPI sprite and the Showdown
-  GIF also render at different sizes/scales in the same `h-28 w-28` box,
-  which likely adds to the pop and varies between species; normalize that
-  too. Done check: no visible pop or size jump when selecting formes. Manual verification: yes. Review: no.
-
 ## Future Milestones (unscheduled)
-
-### Calc Follow-ups (own milestone, not yet planned)
-
-Deferred out of Sprite Scoping (2026-10-26) so that milestone stays
-scoping-only. Plan with `/plan-milestone` when picked up.
-
-- **[Calc Side Panel Height Parity] — Leg 1** *(Last touched: 2026-10-26 ·
-  Re-checks: 0)*
-  Found verifying Box Integration Leg 6: the two Pokémon panels' heights differ
-  depending on whether a species is loaded and whether it has a Base/Mega or
-  other forme toggle row, so the sides (and their Box panels below) don't line
-  up. Make both sides reserve the same height regardless of content.
-
-- **[Calc Item Picker: Champions Items & Full Scroll] — Leg 1** *(Last touched:
-  2026-10-26 · Re-checks: 0)*
-  Found verifying Sprites & Icons Leg 2: the Calc item picker lists every
-  mainline item (`useDamageCalc.ts` builds `itemOptions` from `gen.items`)
-  instead of just Champions items (`VGC_ITEMS` in `config/vgcData.ts` is the
-  likely source). The list also stops scrolling partway because
-  `CalcAutocomplete.tsx` slices results to `MAX_RESULTS = 50`. Keep a path to
-  all items later (e.g. the Leg 5 "All" section). Also confirm every Champions
-  item has an icon.
 
 Password reset flow, deferred out of Web Version: Teams & Box MVP's scoping
 (2026-09-29, see `docs/investigations/web-version-scope.md`) - not yet
