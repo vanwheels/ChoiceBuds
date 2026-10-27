@@ -178,6 +178,16 @@ describe('computeSideResults', () => {
     expect(run(pokemonWithMove('Sylveon', 'Hyper Voice'))).toBe('Normal');
   });
 
+  it('still resolves the move type, with no damage, when no defender is loaded', () => {
+    const run = (attacker: CalcPokemonState, weather: '' | 'Rain' = '') =>
+      computeSideResults(gen, attacker, pokemonState(), noSide, noSide, 'Doubles', weather, '')[0];
+
+    const rain = run(pokemonWithMove('Gengar', 'Weather Ball'), 'Rain');
+    expect(rain.moveType).toBe('Water');
+    expect(rain.percent).toBeNull();
+    expect(run(pokemonWithMove('Gengar', 'Weather Ball')).moveType).toBe('Normal');
+  });
+
   it("describes stat spreads in this app's native SP scale, not @smogon/calc's own EV scale", () => {
     const attacker = pokemonWithMove('Rillaboom', 'Wood Hammer', {});
     attacker.ability = 'Grassy Surge';

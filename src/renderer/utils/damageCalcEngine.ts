@@ -446,6 +446,52 @@ export function buildPokemon(
   });
 }
 
+/**
+ * With no defender loaded there is no damage to show, but the move's resolved type
+ * (Weather Ball, Terrain Pulse, -ate abilities) depends only on the attacker and field,
+ * so calculate() against the attacker as a stand-in defender is used purely to read it.
+ */
+function computeMoveTypesOnly(
+  gen: Generation,
+  attacker: CalcPokemonState,
+  attackerSide: CalcSideConditions,
+  defenderSide: CalcSideConditions,
+  gameType: GameType,
+  weather: Weather | '',
+  terrain: Terrain | '',
+): CalcMoveResultEntry[] {
+  let pokemon: InstanceType<typeof Pokemon>;
+  try {
+    pokemon = buildPokemon(gen, attacker);
+  } catch {
+    return attacker.moves.map((m) => emptyEntry(m.name));
+  }
+  const field = new Field({
+    gameType,
+    weather: weather || undefined,
+    terrain: terrain || undefined,
+    attackerSide,
+    defenderSide,
+  });
+  return attacker.moves.map((slot) => {
+    if (!slot.name) return emptyEntry('');
+    try {
+      const move = new Move(gen, slot.name, {
+        ability: attacker.ability || undefined,
+        item: attacker.item || undefined,
+        species: attacker.species,
+        overrides: getChampionsCalcMoveOverride(slot.name),
+      });
+      return {
+        ...emptyEntry(slot.name),
+        moveType: calculate(gen, pokemon, pokemon, move, field).move.type,
+      };
+    } catch {
+      return emptyEntry(slot.name);
+    }
+  });
+}
+
 export function computeSideResults(
   gen: Generation,
   attacker: CalcPokemonState,
@@ -456,8 +502,19 @@ export function computeSideResults(
   weather: Weather | '',
   terrain: Terrain | '',
 ): CalcMoveResultEntry[] {
-  if (!attacker.species || !defender.species) {
+  if (!attacker.species) {
     return attacker.moves.map((m) => emptyEntry(m.name));
+  }
+  if (!defender.species) {
+    return computeMoveTypesOnly(
+      gen,
+      attacker,
+      attackerSide,
+      defenderSide,
+      gameType,
+      weather,
+      terrain,
+    );
   }
 
   let atkPokemon: InstanceType<typeof Pokemon>;
