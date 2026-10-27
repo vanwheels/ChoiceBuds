@@ -104,13 +104,6 @@ unblocked.
 Deferred out of Sprite Scoping (2026-10-26) so that milestone stays
 scoping-only. Plan with `/plan-milestone` when picked up.
 
-- **[Calc Move Tooltip: Dynamic Type & Ability Boost] — Leg 1** *(Last touched:
-  2026-10-26 · Re-checks: 0)*
-  Deferred from Calc Page Rework Leg 5 and not picked up by Leg 8: the Calc
-  move tooltip still shows the move's static type and no ability-boost line.
-  Show the type `calculate()` resolved (`moveType` on the result entry) and
-  the same boost indicator the team builder's move tooltip carries.
-
 - **[Calc Side Panel Height Parity] — Leg 1** *(Last touched: 2026-10-26 ·
   Re-checks: 0)*
   Found verifying Box Integration Leg 6: the two Pokémon panels' heights differ

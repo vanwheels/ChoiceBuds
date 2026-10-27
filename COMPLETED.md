@@ -125,3 +125,7 @@ Entries prior to this file's oldest are in:
 - [docs/archive/completed-2026-10-26-to-2026-10-26-calc-page-rework.md](docs/archive/completed-2026-10-26-to-2026-10-26-calc-page-rework.md)
   (the Calc Page Rework milestone's eight legs, split out at the 2026-10-26
   Calc Page Rework boundary)
+
+## [Calc Move Tooltip: Dynamic Type & Ability Boost] — Leg 1 (2026-10-26)
+
+Calc's move tooltip now shows the type `calculate()` resolved (`moveType` on the result entry) and the team builder's ability-boost line, via new `ability` / `moveTypeOverrides` props on `CalcMoveGrid` / `TooltipContent`. Type-check, lint and the full suite pass; live visual check not yet done. See commit c580b34.
