@@ -16,22 +16,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Sprite Scoping
-
-Done when:
-- The Calc forme sprite load delay has an identified cause, written up in
-  `docs/investigations/`.
-- Pokéos and Project Pokémon HOME are assessed against the Champions roster
-  (formes, shinies, Megas) with a source recommendation, written up in
-  `docs/investigations/`.
-- Any fix either write-up recommends is a tracked TODO item, not built in
-  this milestone.
-
-Do Leg 1 first: its findings may change what the second scoping leg needs
-to cover.
-
-Both scoping legs are done; close the milestone with `/close-milestone`.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something

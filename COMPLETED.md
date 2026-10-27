@@ -125,19 +125,9 @@ Entries prior to this file's oldest are in:
 - [docs/archive/completed-2026-10-26-to-2026-10-26-calc-page-rework.md](docs/archive/completed-2026-10-26-to-2026-10-26-calc-page-rework.md)
   (the Calc Page Rework milestone's eight legs, split out at the 2026-10-26
   Calc Page Rework boundary)
+- [docs/archive/completed-2026-10-26-to-2026-10-26-sprite-scoping.md](docs/archive/completed-2026-10-26-to-2026-10-26-sprite-scoping.md)
+  (the Sprite Scoping milestone's two legs plus two unrelated Calc tooltip
+  legs, split out at the 2026-10-26 Sprite Scoping boundary - named with the
+  milestone slug since it shares its date range with the Calc Page Rework
+  archive above)
 
-## [Animated Sprite Source Scoping] — Leg 1 (2026-10-26)
-
-Pokéos and Project Pokémon assessed; recommendation is to keep Showdown as the sole animated source. Showdown already has the new Megas in normal color (gaps are some shinies and Baxcalibur); Pokéos lacks the new Megas and ships 10-40x heavier GIFs with no stated terms; Project Pokémon's GIFs are Gen 8 only. No code changed, no manual verification needed; the probes were run live with curl and a browser. See commit 6539f3e447588c3dc77b12558d8f5e1c33253d3a and `docs/investigations/animated-sprite-source-scoping.md`.
-
-## [Calc Forme Sprite Load Delay] — Leg 1 (2026-10-26)
-
-Cause identified, no code changed: `getAnimatedSpriteUrl` strips the hyphen from forme names (`castformsnowy.gif`) but Showdown's files keep it (`castform-snowy.gif`), so every forme 404s, and Showdown's cold 404s take 7-20s before `CalcSideSprite` falls back to static. Reproduced with curl against the CDN and confirmed live in the app by the user 2026-10-26 (Castform Snowy side sprite blank for several seconds, then static); fix tracked as [Animated Sprite Forme Filenames]. See commit 0eb6de2.
-
-## [Calc Tooltip Type Without Opponent] — Leg 1 (2026-10-26)
-
-`computeSideResults` now resolves each move's type (Weather Ball, Terrain Pulse, -ate abilities) even with no defender loaded, by running `calculate()` against the attacker as a stand-in and returning only `moveType`; the move row tint and tooltip badge pick it up with no component change. Automated: new engine test plus full suite/lint/type-check green. Manually verified live 2026-10-26 (Weather Ball in Rain with no opponent loaded: row tint and tooltip badge turn Water). See commit 3755ffe.
-
-## [Calc Move Tooltip: Dynamic Type & Ability Boost] — Leg 1 (2026-10-26)
-
-Calc's move tooltip now shows the type `calculate()` resolved (`moveType` on the result entry) and the team builder's ability-boost line, via new `ability` / `moveTypeOverrides` props on `CalcMoveGrid` / `TooltipContent`. Type-check, lint and the full suite pass; verified live by the user (tooltip type badge and ability-boost line). The resolved type only appears once an opponent is loaded, since `moveType` comes from the calc result; without one the tooltip falls back to the static/ability-only type (tracked in TODO.md as Calc Tooltip Type Without Opponent). See commit c580b34.
