@@ -134,6 +134,8 @@ Entries prior to this file's oldest are in:
 
 ## Current milestone: Sprite, Filter & Search Fixes
 
+- **[Mega Meowstic-F Toggle Gap] — Leg 1** (2026-10-27): `getMegaApiSlug` now resolves a Meowstic-F holding Meowsticite to its own `meowstic-f-mega` slug (aliased to PokeAPI's `meowstic-female-mega`, Trace ability), so the team card Mega toggle appears and flips to the female Mega sprite. Verified manually: Meowstic-F toggles to its female Mega sprite. See commit cd69051.
+
 - **[Team Header Mega Sprite Ignores Toggle] — Leg 1** (2026-10-27): The team header's mini sprite strip now resolves its Mega sprite through `resolveActiveMegaSlug` with each slot's toggle state (`useActiveFormsForIds`), so it shows the base sprite until the Mega toggle is on. Verified manually on the Teams page: base sprite with stone held, Mega on toggle, back to base on toggle off. See commit c45735e.
 
 - **[Mega Team Card Sprite Toggle Bug] — Leg 1** (2026-10-27): Three causes

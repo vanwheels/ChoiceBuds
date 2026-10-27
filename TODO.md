@@ -29,15 +29,6 @@ Done when:
 - Searching a species name in team search returns every team containing it,
   on both app and web.
 
-- **[Mega Meowstic-F Toggle Gap] — Leg 1** *(Last touched: 2026-10-27 ·
-  Re-checks: 0)*
-  `getMegaApiSlug` requires species to equal `meowstic` exactly, so a
-  `Meowstic-F` holding Meowsticite never gets a Mega toggle on team cards
-  (and its Mega sprite would need PokeAPI's `meowstic-female-mega`). Found
-  while fixing Mega Team Card Sprite Toggle Bug. Done check: Meowstic-F
-  toggles to its own female Mega sprite, with a test. Manual verification:
-  yes. Review: no.
-
 - **[Team Search by Species] — Leg 1 (scoping)** *(Last touched: 2026-10-27 ·
   Re-checks: 0)*
   Searching a Pokémon's name in any team search should return every team
