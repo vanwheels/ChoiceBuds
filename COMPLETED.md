@@ -134,6 +134,12 @@ Entries prior to this file's oldest are in:
 
 ## Current milestone: Sprite, Filter & Search Fixes
 
+- **[Mega Golisopod Steel Filter Bug] — Leg 1** (2026-10-27): Mega rows in
+  + Add Pokemon were only emitted beside a base row that passed the active
+  chips, so a Steel chip dropped Mega Golisopod (base Bug/Water); rows are now
+  assembled independently via `assembleStatTableRows`, covering every Mega
+  that gains a type. Verified live: Steel shows Mega Golisopod. See commit 6ad1d91.
+
 - **[Animated Sprite Forme Filenames] — Leg 1** (2026-10-27): Animated GIF
   ids now keep the species/forme hyphen (`castform-snowy`, `charizard-megax`)
   with an exception list for hyphenated base names, and `CalcSideSprite`

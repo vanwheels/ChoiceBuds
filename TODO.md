@@ -24,21 +24,20 @@ Done when:
   shows first.
 - Mega Golisopod appears under the Steel filter in + Add Pokemon, and other
   Megas with altered typing are checked.
+- Toggling Mega form on the Teams page shows a Mega sprite for every Mega,
+  including the newer ones.
 - Searching a species name in team search returns every team containing it,
   on both app and web.
 
-- **[Mega Golisopod Steel Filter Bug] — Leg 1** *(Last touched: 2026-10-27 ·
+- **[Mega Team Card Sprite Toggle Bug] — Leg 1** *(Last touched: 2026-10-27 ·
   Re-checks: 0)*
-  Found during manual testing: Mega Golisopod doesn't show up under the
-  Steel filter in + Add Pokemon. Likely cause: species filtering there
-  isn't accounting for the type change caused by mega evolving, so
-  Golisopod's base typing is used instead of its Mega's. Scope the cause,
-  check whether other Megas with altered typing are affected, then fix; if
-  the cause is non-trivial, split scoping from the fix.
-  Done check: Mega Golisopod shows under Steel and every other affected Mega
-  is covered by a test. Manual verification: yes. Review: no.
-  Status: fix committed (Mega rows were only emitted beside a base row that
-  passed the filters); awaiting manual check of Steel in + Add Pokemon.
+  Found during manual testing: toggling Mega form on the Teams page for the
+  newer (Champions-introduced) Megas leaves the sprite on the base form, not
+  even the static PNG changes. Likely the sprite lookup (useMegaSprite /
+  PokeAPI slug, which 404s for Megas PokeAPI lacks) has no fallback for them.
+  Scope the cause, then fix; split scoping from the fix if non-trivial.
+  Done check: toggling any Mega shows a Mega sprite (static at minimum), with
+  a test where the logic is testable. Manual verification: yes. Review: no.
 
 - **[Team Search by Species] — Leg 1 (scoping)** *(Last touched: 2026-10-27 ·
   Re-checks: 0)*
