@@ -16,18 +16,6 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
-## Current Milestone: Calc Page Rework
-
-Rework of the Calc popup for web and app first; mobile may diverge later and
-is out of scope here. Scoped 2026-10-26. Decisions: sprites are
-semi-transparent and sit behind text, so sprites and move boxes can flex
-around each other; doubles weather/terrain follows the game rule (slower
-setter wins), re-applies only on species/ability change, and manual chip
-clicks override it; Saved Sets are wiped with no migration (everything lives
-in Box); each side gets its own bottom Box panel showing the same Box
-Pokémon, click loads into that side; smart pickers show learnable/legal
-entries first, then an "All" section when searching beyond them.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -55,6 +43,13 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+- **[Calc Move Tooltip: Dynamic Type & Ability Boost] — Leg 1** *(Last touched:
+  2026-10-26 · Re-checks: 0)*
+  Deferred from Calc Page Rework Leg 5 and not picked up by Leg 8: the Calc
+  move tooltip still shows the move's static type and no ability-boost line.
+  Show the type `calculate()` resolved (`moveType` on the result entry) and
+  the same boost indicator the team builder's move tooltip carries.
 
 - **[Calc Side Panel Height Parity] — Leg 1** *(Last touched: 2026-10-26 ·
   Re-checks: 0)*

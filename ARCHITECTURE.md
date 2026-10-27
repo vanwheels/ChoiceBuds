@@ -542,6 +542,22 @@ it (not `App.tsx`) so the engine stays behind the lazy-loaded tab boundary.
   `useSavedPokemon` entries the Box tab shows (there is no separate Calc
   "saved sets" store); a click loads that entry into its own side only. A
   panel's "Save to Box" writes through `addSavedPokemonBatch`.
+- **Auto weather/terrain**: a species or ability change sets the field via
+  the pure `utils/calcAutoField.ts` from `config/fieldSettingAbilities.ts`
+  (Doubles: slower setter wins, tie/Singles: the side that just changed;
+  Megas resolve through their granted ability). It is a one-shot write, so a
+  manual chip click overrides it until the next species/ability change.
+- **Current HP**: `curHp` state (null = full) is a synced flat/% input pair
+  feeding `@smogon/calc`; KO text uses current HP while damage % stays of max.
+- **Pickers and dropdowns**: `useCalcLegalOptions` lists a species' legal
+  abilities/moves first (Champions overrides respected) with the rest under
+  "All" once the user searches. Item/ability/move hovers reuse the team
+  builder's `Tooltip`/`TooltipContent`. Nature and Status use `CalcDropdown`
+  (Nature reuses `NaturePickerPanel`).
+- **Dynamic move type**: each result entry carries `moveType` read from
+  `result.move` (calculate clones the move), so move rows tint by the type
+  actually used (Weather Ball, -ate abilities); the static type is the
+  fallback before a calc exists.
 
 ## Gender/form handling
 

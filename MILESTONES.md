@@ -109,3 +109,5 @@ milestone.
   [post-mortem](docs/postmortems/selection-ux-data-audit.md)
 - **Calc Improvements** — 2026-10-24 — Shipped —
   [post-mortem](docs/postmortems/calc-improvements.md)
+- **Calc Page Rework** — 2026-10-26 — Shipped —
+  [post-mortem](docs/postmortems/calc-page-rework.md)

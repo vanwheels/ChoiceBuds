@@ -204,3 +204,12 @@ running on.
   write its one-line COMPLETED.md entry (commit hash included, e.g. the
   scope doc's own commit) the same day — inline resolution notes in
   TODO.md's done-when bullets are not a substitute for the archival record.
+- **Verify a scoping premise about a data store before building on it**
+  (added 2026-10-26, Calc Page Rework Leg 6: the TODO said to "wipe Saved
+  Sets", but Saved Sets and Box were already the same `useSavedPokemon`
+  store, so nothing needed wiping). Before scoping a leg around a store,
+  grep its consumers and confirm the premise holds.
+- **Deferred means tracked** (added 2026-10-26, Calc Page Rework: the move
+  tooltip's dynamic type was deferred from Leg 5 and recorded only in
+  COMPLETED.md prose, so Leg 8 didn't pick it up). Any "deferred" in a leg's
+  COMPLETED.md entry gets a matching TODO.md item in the same commit.
