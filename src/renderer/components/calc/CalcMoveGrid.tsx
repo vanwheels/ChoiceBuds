@@ -51,64 +51,67 @@ export default function CalcMoveGrid({
             key={index}
             onClick={() => slot.name && onSelect(index)}
             className={`flex flex-wrap items-center gap-2 px-2 py-0.5 rounded border transition-colors ${
-              theme ? `${theme.bg} bg-opacity-60 ${theme.text}` : ''
-            } ${
               isSelected
-                ? 'border-accent-gold ring-1 ring-accent-gold'
-                : 'border-zinc-800 hover:border-zinc-600'
+                ? 'border-accent-gold bg-accent-gold/10'
+                : 'border-zinc-800 hover:border-zinc-700'
             } ${slot.name ? 'cursor-pointer' : ''}`}
           >
-            <div className="w-40 shrink-0" onClick={(e) => e.stopPropagation()}>
-              <CalcAutocomplete
-                value={slot.name}
-                options={moveOptions}
-                placeholder="Search moves..."
-                onChange={(name) => onChangeMove(index, { name, hits: undefined })}
-                usagePercentByName={usagePercentByName}
-              />
-            </div>
-            {/* Grouped so the hit-count/crit/percent trio wraps onto its own line as a unit
-                when the row is too narrow for all of it (phone-width CalcPopup) instead of
-                each piece wrapping independently and breaking up mid-group. */}
-            <div className="flex items-center gap-2 ml-auto">
-              {minHits !== null && maxHits !== null && (
-                <select
-                  value={slot.hits ?? result?.effectiveHits ?? minHits}
-                  onChange={(e) => {
+            {/* The type tint wraps only the input through the Crit box so the damage percent
+                always sits on the neutral row background, readable regardless of type color. */}
+            <div
+              className={`flex items-center gap-2 rounded px-1 py-0.5 ${
+                theme ? `${theme.bg} bg-opacity-60` : ''
+              }`}
+            >
+              <div className="w-40 shrink-0" onClick={(e) => e.stopPropagation()}>
+                <CalcAutocomplete
+                  value={slot.name}
+                  options={moveOptions}
+                  placeholder="Search moves..."
+                  onChange={(name) => onChangeMove(index, { name, hits: undefined })}
+                  usagePercentByName={usagePercentByName}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                {minHits !== null && maxHits !== null && (
+                  <select
+                    value={slot.hits ?? result?.effectiveHits ?? minHits}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      onChangeMove(index, { hits: Number(e.target.value) });
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    title="Number of hits"
+                    className="px-1 py-0.5 text-xs bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold cursor-pointer"
+                  >
+                    {Array.from({ length: maxHits - minHits + 1 }, (_, i) => minHits + i).map(
+                      (n) => (
+                        <option key={n} value={n}>
+                          ×{n}
+                        </option>
+                      ),
+                    )}
+                  </select>
+                )}
+                <button
+                  type="button"
+                  onClick={(e) => {
                     e.stopPropagation();
-                    onChangeMove(index, { hits: Number(e.target.value) });
+                    onChangeMove(index, { isCrit: !slot.isCrit });
                   }}
-                  onClick={(e) => e.stopPropagation()}
-                  title="Number of hits"
-                  className="px-1 py-0.5 text-xs bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold cursor-pointer"
+                  className={`px-2 py-0.5 text-[10px] font-bold rounded transition-colors cursor-pointer shrink-0 ${
+                    slot.isCrit
+                      ? 'bg-accent-gold text-zinc-900'
+                      : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                  }`}
                 >
-                  {Array.from({ length: maxHits - minHits + 1 }, (_, i) => minHits + i).map((n) => (
-                    <option key={n} value={n}>
-                      ×{n}
-                    </option>
-                  ))}
-                </select>
-              )}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onChangeMove(index, { isCrit: !slot.isCrit });
-                }}
-                className={`px-2 py-0.5 text-[10px] font-bold rounded transition-colors cursor-pointer shrink-0 ${
-                  slot.isCrit
-                    ? 'bg-accent-gold text-zinc-900'
-                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
-                }`}
-              >
-                Crit
-              </button>
-              <span
-                className={`w-28 text-right text-xs font-semibold shrink-0 ${theme ? '' : 'text-zinc-200'}`}
-              >
-                {result?.errorMessage ? '—' : (result?.percent ?? '')}
-              </span>
+                  Crit
+                </button>
+              </div>
             </div>
+            <span className="w-28 text-right text-xs font-semibold text-zinc-200 shrink-0 ml-auto">
+              {result?.errorMessage ? '—' : (result?.percent ?? '')}
+            </span>
           </div>
         );
       })}

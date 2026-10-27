@@ -39,15 +39,9 @@ const ZERO_STATS: StatsTable = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 }
 
 // 'Hail' omitted - Gen 9 replaced it game-wide with 'Snow' (Ice Body/Snow
 // Warning etc. key off Snow, not Hail), so it's never a real Gen 9 state.
-export const WEATHER_OPTIONS: Weather[] = [
-  'Sun',
-  'Rain',
-  'Sand',
-  'Snow',
-  'Harsh Sunshine',
-  'Heavy Rain',
-  'Strong Winds',
-];
+// Harsh Sunshine/Heavy Rain/Strong Winds omitted - they only come from
+// Primal Groudon/Kyogre and Mega Rayquaza, none of which are in Champions.
+export const WEATHER_OPTIONS: Weather[] = ['Sun', 'Rain', 'Sand', 'Snow'];
 export const TERRAIN_OPTIONS: Terrain[] = ['Electric', 'Grassy', 'Psychic', 'Misty'];
 export const STATUS_OPTIONS: StatusName[] = ['slp', 'psn', 'brn', 'frz', 'par', 'tox'];
 export const STATUS_LABELS: Record<StatusName, string> = {

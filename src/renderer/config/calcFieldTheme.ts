@@ -9,9 +9,6 @@ export const CALC_WEATHER_TYPE: Record<string, string> = {
   Rain: 'water',
   Sand: 'ground',
   Snow: 'ice',
-  'Harsh Sunshine': 'fire',
-  'Heavy Rain': 'water',
-  'Strong Winds': 'flying',
 };
 
 export const CALC_TERRAIN_TYPE: Record<string, string> = {

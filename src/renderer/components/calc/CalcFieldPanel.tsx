@@ -68,8 +68,8 @@ function ChipGroup<T extends string>({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-[10px] text-zinc-400 uppercase tracking-wide">{label}</span>
-      <div className="flex flex-wrap gap-1">
+      <span className="text-[10px] text-zinc-400 uppercase tracking-wide text-center">{label}</span>
+      <div className="flex flex-wrap justify-center gap-1">
         {options.map((option) => {
           const theme = getTypeTheme(typeByOption[option] ?? '');
           const isActive = value === option;
