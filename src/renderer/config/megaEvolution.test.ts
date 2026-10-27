@@ -10,11 +10,13 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import megaResourceFixture from './__fixtures__/pokeapiMegaResources.json';
 import {
   CURATED_MEGA_FORM_SLUGS,
   formatMegaLabel,
   getMegaApiSlug,
   getMegaFormsForSpecies,
+  MEGA_STONE_TO_SPECIES,
   megaFormBadgeLetter,
   resolveActiveMegaSlug,
   resolveOpponentMegaControl,
@@ -154,5 +156,27 @@ describe('resolveOpponentMegaControl (Battle Logger Mega button)', () => {
         { slug: 'charizard-mega-y', item: 'charizardite y', suffix: 'mega-y' },
       ],
     });
+  });
+});
+
+/**
+ * Saved from PokeAPI's `/pokemon?limit=100000` listing (2026-10-27), filtered
+ * to names containing "-mega". A stone whose slug isn't here 404s at runtime
+ * and pins the card to the base sprite - the Meowstic, Meowstic-F and Floette
+ * bugs were each found live before this existed.
+ */
+describe('Mega Stone slug coverage', () => {
+  const pokeApiMegas = new Set(megaResourceFixture);
+  const stones = Object.entries(MEGA_STONE_TO_SPECIES);
+
+  it.each(stones)('%s resolves to a real PokeAPI Mega resource', (item, entry) => {
+    const slug = getMegaApiSlug(item, entry.species);
+    expect(slug).not.toBeNull();
+    expect(pokeApiMegas.has(toPokeApiMegaResource(slug as string))).toBe(true);
+  });
+
+  it("resolves Meowstic-F's slug to PokeAPI's female Mega resource", () => {
+    const slug = getMegaApiSlug('meowsticite', 'meowstic-f');
+    expect(pokeApiMegas.has(toPokeApiMegaResource(slug as string))).toBe(true);
   });
 });
