@@ -64,9 +64,34 @@ describe('getAnimatedSpriteUrl', () => {
     );
   });
 
-  it('mechanically strips hyphens for a regional/statistical form', () => {
+  it('keeps the hyphen between species and forme', () => {
     expect(getAnimatedSpriteUrl('Landorus-Therian', 'M', false)).toBe(
-      'https://play.pokemonshowdown.com/sprites/ani/landorustherian.gif',
+      'https://play.pokemonshowdown.com/sprites/ani/landorus-therian.gif',
+    );
+    expect(getAnimatedSpriteUrl('Castform-Snowy', 'M', false)).toBe(
+      'https://play.pokemonshowdown.com/sprites/ani/castform-snowy.gif',
+    );
+    expect(getAnimatedSpriteUrl('Raichu-Alola', 'M', true)).toBe(
+      'https://play.pokemonshowdown.com/sprites/ani-shiny/raichu-alola.gif',
+    );
+  });
+
+  it('strips hyphens inside a hyphenated base species name', () => {
+    for (const [name, id] of [
+      ['Ho-Oh', 'hooh'],
+      ['Porygon-Z', 'porygonz'],
+      ['Jangmo-o', 'jangmoo'],
+      ['Ting-Lu', 'tinglu'],
+    ]) {
+      expect(getAnimatedSpriteUrl(name, 'M', false)).toBe(
+        `https://play.pokemonshowdown.com/sprites/ani/${id}.gif`,
+      );
+    }
+  });
+
+  it('keeps the species/forme hyphen on a name containing spaces or punctuation', () => {
+    expect(getAnimatedSpriteUrl('Mr. Mime-Galar', 'M', false)).toBe(
+      'https://play.pokemonshowdown.com/sprites/ani/mrmime-galar.gif',
     );
   });
 
@@ -94,9 +119,12 @@ describe('getAnimatedSpriteUrl', () => {
     );
   });
 
-  it('mangles a Mega API slug the same mechanical way', () => {
+  it('joins a Mega API slug into one forme segment (mega-x -> megax)', () => {
     expect(getAnimatedSpriteUrl('charizard-mega-x', 'M', false)).toBe(
-      'https://play.pokemonshowdown.com/sprites/ani/charizardmegax.gif',
+      'https://play.pokemonshowdown.com/sprites/ani/charizard-megax.gif',
+    );
+    expect(getAnimatedSpriteUrl('venusaur-mega', 'M', false)).toBe(
+      'https://play.pokemonshowdown.com/sprites/ani/venusaur-mega.gif',
     );
   });
 
