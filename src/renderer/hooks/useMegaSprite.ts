@@ -31,7 +31,7 @@
 import { useState, useEffect } from 'react';
 import type { PokemonStats } from '../types/pokemon';
 import { fetchJSON } from '../services/pokeapiService';
-import { CURATED_MEGA_FORM_SLUGS } from '../config/megaEvolution';
+import { CURATED_MEGA_FORM_SLUGS, toPokeApiMegaResource } from '../config/megaEvolution';
 import { runWithConcurrency } from '../utils/concurrency';
 
 const PREFETCH_CONCURRENCY = 8;
@@ -120,7 +120,9 @@ export async function fetchMegaSprite(apiSlug: string): Promise<MegaSpriteResult
   if (existing) return existing;
 
   const request = (async () => {
-    const data = await fetchJSON<PokeAPIPokemonResponse>(`/pokemon/${apiSlug}`);
+    const data = await fetchJSON<PokeAPIPokemonResponse>(
+      `/pokemon/${toPokeApiMegaResource(apiSlug)}`,
+    );
     const result = data ? buildResult(data) : null;
     cache.set(apiSlug, result);
     inFlight.delete(apiSlug);

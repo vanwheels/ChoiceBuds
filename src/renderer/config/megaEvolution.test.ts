@@ -18,7 +18,16 @@ import {
   megaFormBadgeLetter,
   resolveActiveMegaSlug,
   resolveOpponentMegaControl,
+  toPokeApiMegaResource,
 } from './megaEvolution';
+
+describe('toPokeApiMegaResource', () => {
+  it('maps the slugs PokeAPI names differently and passes every other slug through', () => {
+    expect(toPokeApiMegaResource('floette-eternal-mega')).toBe('floette-mega');
+    expect(toPokeApiMegaResource('meowstic-mega')).toBe('meowstic-male-mega');
+    expect(toPokeApiMegaResource('charizard-mega-x')).toBe('charizard-mega-x');
+  });
+});
 
 describe('Floette Mega Evolution exception', () => {
   it('resolves the held-item match against floette-eternal, not bare floette', () => {

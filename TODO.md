@@ -38,6 +38,23 @@ Done when:
   Scope the cause, then fix; split scoping from the fix if non-trivial.
   Done check: toggling any Mega shows a Mega sprite (static at minimum), with
   a test where the logic is testable. Manual verification: yes. Review: no.
+  Status 2026-10-27: cause found and fixed — sweeping all 81 curated Mega
+  slugs against PokeAPI, only `meowstic-mega` (PokeAPI: `meowstic-male-mega`)
+  and `floette-eternal-mega` (PokeAPI: `floette-mega`) 404; every other new
+  Mega resolves with a real sprite. Fixed via `toPokeApiMegaResource` alias
+  in `config/megaEvolution.ts`. Awaiting manual check: toggle Mega Meowstic
+  and Mega Floette on a Teams page card, and spot-check a few other newer
+  Megas (Golisopod, Baxcalibur, Clefable) — if one of those still fails,
+  the cause is something other than slug naming. Then COMPLETED.md + close.
+
+- **[Mega Meowstic-F Toggle Gap] — Leg 1** *(Last touched: 2026-10-27 ·
+  Re-checks: 0)*
+  `getMegaApiSlug` requires species to equal `meowstic` exactly, so a
+  `Meowstic-F` holding Meowsticite never gets a Mega toggle on team cards
+  (and its Mega sprite would need PokeAPI's `meowstic-female-mega`). Found
+  while fixing Mega Team Card Sprite Toggle Bug. Done check: Meowstic-F
+  toggles to its own female Mega sprite, with a test. Manual verification:
+  yes. Review: no.
 
 - **[Team Search by Species] — Leg 1 (scoping)** *(Last touched: 2026-10-27 ·
   Re-checks: 0)*

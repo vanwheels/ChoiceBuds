@@ -156,6 +156,25 @@ CURATED_MEGA_FORM_SLUGS.delete('floette-eternal-mega');
 CURATED_MEGA_FORM_SLUGS.add('floette-mega');
 
 /**
+ * Mega slugs (this file's `{species}-{suffix}` scheme) whose PokeAPI resource
+ * is named differently, so `/pokemon/{slug}` 404s and the Mega sprite/types/
+ * stats never load. Found by sweeping every CURATED_MEGA_FORM_SLUGS entry
+ * against PokeAPI (2026-10-27): these two were the only misses of 81.
+ * Meowstic is gender-divergent on PokeAPI and has no gender-less Mega
+ * resource, so it resolves to the male one (Mega Meowstic-F is a separate gap:
+ * getMegaApiSlug never matches species "Meowstic-F" in the first place).
+ */
+const POKEAPI_MEGA_RESOURCE_ALIASES: Record<string, string> = {
+  'floette-eternal-mega': 'floette-mega',
+  'meowstic-mega': 'meowstic-male-mega',
+};
+
+/** The PokeAPI `/pokemon/` resource name for one of this file's Mega slugs. */
+export function toPokeApiMegaResource(megaSlug: string): string {
+  return POKEAPI_MEGA_RESOURCE_ALIASES[megaSlug] ?? megaSlug;
+}
+
+/**
  * Display label for a Mega form row (Add Pokémon Table: Mega Form Rows Leg
  * 2, see TODO.md) - "Mega {Species}" for a single-form Mega, "Mega {Species}
  * X"/"Y"/"Z" for a split form, matching megaAbilities.ts's own doc-comment

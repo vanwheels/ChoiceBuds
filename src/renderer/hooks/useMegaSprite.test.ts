@@ -38,6 +38,19 @@ describe('useMegaSprite', () => {
     expect(mockedFetchJSON).toHaveBeenCalledWith('/pokemon/venusaur-mega-test-1');
   });
 
+  // PokeAPI names Floette's and Meowstic's Megas differently from
+  // CURATED_MEGA_FORM_SLUGS' scheme; the unaliased slug 404s and the team
+  // card toggle never swaps the sprite. 'floette-eternal-mega' isn't in the
+  // curated set (swapped for 'floette-mega'), so it's safe from the
+  // prefetch test's shared-cache accounting below.
+  it("fetches PokeAPI's own resource name for a differently-named Mega slug", async () => {
+    mockedFetchJSON.mockResolvedValueOnce({ id: 10999 });
+    const { result } = renderHook(() => useMegaSprite('floette-eternal-mega'));
+    await waitFor(() => expect(result.current).not.toBeNull());
+    expect(mockedFetchJSON).toHaveBeenCalledWith('/pokemon/floette-mega');
+    expect(getCachedMegaSprite('floette-eternal-mega')?.id).toBe(10999);
+  });
+
   it('extracts types (sorted by slot) and baseStats when the response includes them', async () => {
     mockedFetchJSON.mockResolvedValueOnce({
       id: 40001,
@@ -123,6 +136,9 @@ describe('useMegaSpritePrefetch', () => {
     expect(result.current).toBe(0);
     await waitFor(() => expect(result.current).toBe(1));
     expect(mockedFetchJSON).toHaveBeenCalledTimes(CURATED_MEGA_FORM_SLUGS.size);
+
+    expect(mockedFetchJSON).toHaveBeenCalledWith('/pokemon/meowstic-male-mega');
+    expect(mockedFetchJSON).not.toHaveBeenCalledWith('/pokemon/meowstic-mega');
 
     const [sampleSlug] = CURATED_MEGA_FORM_SLUGS;
     expect(getCachedMegaSprite(sampleSlug)?.id).toBe(999);
