@@ -109,6 +109,16 @@ unblocked.
   Showdown GIF fetch vs. the 404-then-static-fallback path in
   `CalcSideSprite.tsx` vs. a sprite-cache miss.
 
+- **[Animated Sprite Source Scoping] — Leg 1** *(Last touched: 2026-10-26 ·
+  Re-checks: 0)*
+  Showdown's animated set misses some formes, shinies and Gen 9/Champions
+  Megas. Investigate Pokéos (pokeos.com/archive/assets/home; user reports GIFs
+  for modern Megas) and Project Pokémon's HOME 3D-model GIFs (Gens 1-8, no
+  Gen 9) for coverage against the Champions roster (formes, shinies, Megas),
+  file format, hotlink vs. self-host, and license/usage terms. Neither site is
+  in CLAUDE.md's hotlink exception list. Scoping only; write findings to
+  `docs/investigations/`.
+
 - **[Mega Golisopod Steel Filter Bug] — Leg 1** *(Last touched: 2026-10-26 ·
   Re-checks: 0)*
   Found during manual testing: Mega Golisopod doesn't show up under the
