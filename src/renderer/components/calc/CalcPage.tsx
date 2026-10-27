@@ -277,32 +277,41 @@ export default function CalcPage({
       <CalcResultPanel entry={selectedEntry} />
 
       <div className="flex flex-wrap gap-3">
-        <CalcPokemonPanel
-          title="Pokémon 1"
-          state={pokemon1}
-          speciesOptions={speciesOptions}
-          itemOptions={itemOptions}
-          abilityOptions={abilityOptions}
-          legalAbilityOptions={pokemon1Legal.abilities}
-          natureOptions={natureOptions}
-          moveOptions={pokemon1MoveOptions}
-          formes={pokemon1Formes}
-          baseStats={pokemon1BaseStats}
-          boostedStats={pokemon1BoostedStats}
-          natureEffect={pokemon1NatureEffect}
-          teams={teamsState.teams}
-          preferredTeamId={battleLogPlayerTeamId}
-          savedPokemonState={savedPokemonState}
-          gameDataState={gameDataState}
-          databaseState={databaseState}
-          speciesRosterState={speciesRosterState}
-          regulation={getRegulationLabel(regulationId)}
-          vgcPastesState={vgcPastesState}
-          vgcRealSetsState={vgcRealSetsState}
-          resolveSprite={spriteCacheState.resolveSprite}
-          onChange={setPokemon1}
-          onMoveUsageChange={setPokemon1MovePercentByName}
-        />
+        <div className="flex-1 min-w-[280px] flex flex-col gap-3">
+          <CalcPokemonPanel
+            title="Pokémon 1"
+            state={pokemon1}
+            speciesOptions={speciesOptions}
+            itemOptions={itemOptions}
+            abilityOptions={abilityOptions}
+            legalAbilityOptions={pokemon1Legal.abilities}
+            natureOptions={natureOptions}
+            moveOptions={pokemon1MoveOptions}
+            formes={pokemon1Formes}
+            baseStats={pokemon1BaseStats}
+            boostedStats={pokemon1BoostedStats}
+            natureEffect={pokemon1NatureEffect}
+            teams={teamsState.teams}
+            preferredTeamId={battleLogPlayerTeamId}
+            savedPokemonState={savedPokemonState}
+            gameDataState={gameDataState}
+            databaseState={databaseState}
+            speciesRosterState={speciesRosterState}
+            regulation={getRegulationLabel(regulationId)}
+            vgcPastesState={vgcPastesState}
+            vgcRealSetsState={vgcRealSetsState}
+            resolveSprite={spriteCacheState.resolveSprite}
+            onChange={setPokemon1}
+            onMoveUsageChange={setPokemon1MovePercentByName}
+          />
+          <CalcBoxPanel
+            title="Pokémon 1 Box"
+            entries={savedPokemonState.savedPokemon}
+            currentSpecies={pokemon1.species}
+            resolveSprite={spriteCacheState.resolveSprite}
+            onLoadEntry={(entry) => setPokemon1(teamPokemonToCalcUpdates(entry.pokemon))}
+          />
+        </div>
         <CalcFieldPanel
           field={field}
           onChangeField={setField}
@@ -313,50 +322,42 @@ export default function CalcPage({
           pokemon1Speed={pokemon1Speed}
           pokemon2Speed={pokemon2Speed}
         />
-        <CalcPokemonPanel
-          title="Pokémon 2"
-          state={pokemon2}
-          speciesOptions={speciesOptions}
-          itemOptions={itemOptions}
-          abilityOptions={abilityOptions}
-          legalAbilityOptions={pokemon2Legal.abilities}
-          natureOptions={natureOptions}
-          moveOptions={pokemon2MoveOptions}
-          formes={pokemon2Formes}
-          baseStats={pokemon2BaseStats}
-          boostedStats={pokemon2BoostedStats}
-          natureEffect={pokemon2NatureEffect}
-          teams={teamsState.teams}
-          opponentRoster={battleLogOpponentRoster}
-          onLoadOpponentEntry={setLinkedEntryId}
-          savedPokemonState={savedPokemonState}
-          gameDataState={gameDataState}
-          databaseState={databaseState}
-          speciesRosterState={speciesRosterState}
-          regulation={getRegulationLabel(regulationId)}
-          vgcPastesState={vgcPastesState}
-          vgcRealSetsState={vgcRealSetsState}
-          resolveSprite={spriteCacheState.resolveSprite}
-          onChange={setPokemon2}
-          onMoveUsageChange={setPokemon2MovePercentByName}
-        />
-      </div>
-
-      <div className="flex flex-wrap gap-3">
-        <CalcBoxPanel
-          title="Pokémon 1 Box"
-          entries={savedPokemonState.savedPokemon}
-          currentSpecies={pokemon1.species}
-          resolveSprite={spriteCacheState.resolveSprite}
-          onLoadEntry={(entry) => setPokemon1(teamPokemonToCalcUpdates(entry.pokemon))}
-        />
-        <CalcBoxPanel
-          title="Pokémon 2 Box"
-          entries={savedPokemonState.savedPokemon}
-          currentSpecies={pokemon2.species}
-          resolveSprite={spriteCacheState.resolveSprite}
-          onLoadEntry={(entry) => setPokemon2(teamPokemonToCalcUpdates(entry.pokemon))}
-        />
+        <div className="flex-1 min-w-[280px] flex flex-col gap-3">
+          <CalcPokemonPanel
+            title="Pokémon 2"
+            state={pokemon2}
+            speciesOptions={speciesOptions}
+            itemOptions={itemOptions}
+            abilityOptions={abilityOptions}
+            legalAbilityOptions={pokemon2Legal.abilities}
+            natureOptions={natureOptions}
+            moveOptions={pokemon2MoveOptions}
+            formes={pokemon2Formes}
+            baseStats={pokemon2BaseStats}
+            boostedStats={pokemon2BoostedStats}
+            natureEffect={pokemon2NatureEffect}
+            teams={teamsState.teams}
+            opponentRoster={battleLogOpponentRoster}
+            onLoadOpponentEntry={setLinkedEntryId}
+            savedPokemonState={savedPokemonState}
+            gameDataState={gameDataState}
+            databaseState={databaseState}
+            speciesRosterState={speciesRosterState}
+            regulation={getRegulationLabel(regulationId)}
+            vgcPastesState={vgcPastesState}
+            vgcRealSetsState={vgcRealSetsState}
+            resolveSprite={spriteCacheState.resolveSprite}
+            onChange={setPokemon2}
+            onMoveUsageChange={setPokemon2MovePercentByName}
+          />
+          <CalcBoxPanel
+            title="Pokémon 2 Box"
+            entries={savedPokemonState.savedPokemon}
+            currentSpecies={pokemon2.species}
+            resolveSprite={spriteCacheState.resolveSprite}
+            onLoadEntry={(entry) => setPokemon2(teamPokemonToCalcUpdates(entry.pokemon))}
+          />
+        </div>
       </div>
 
       <p className="text-center text-[10px] text-zinc-600">Powered by @smogon/calc</p>

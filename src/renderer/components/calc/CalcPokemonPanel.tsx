@@ -411,7 +411,7 @@ export default function CalcPokemonPanel({
 
   return (
     <div
-      className="flex-1 min-w-[280px] bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-2"
+      className="w-full bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-2"
       onDragOver={(e) => {
         if (e.dataTransfer.types.includes(CALC_TEAM_POKEMON_DRAG_TYPE)) e.preventDefault();
       }}
