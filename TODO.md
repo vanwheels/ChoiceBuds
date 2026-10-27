@@ -89,8 +89,10 @@ unblocked.
   `CalcSideSprite` swaps from the static sprite to the GIF the moment the GIF
   loads, which is a noticeable flicker when picking a Mega (seen with
   Charizard). Smooth the swap (e.g. a short cross-fade) without reintroducing
-  the blank wait on a slow GIF. Done check: no visible pop when selecting
-  formes. Manual verification: yes. Review: no.
+  the blank wait on a slow GIF. The static PokeAPI sprite and the Showdown
+  GIF also render at different sizes/scales in the same `h-28 w-28` box,
+  which likely adds to the pop and varies between species; normalize that
+  too. Done check: no visible pop or size jump when selecting formes. Manual verification: yes. Review: no.
 
 ## Future Milestones (unscheduled)
 
