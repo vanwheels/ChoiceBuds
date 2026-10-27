@@ -192,6 +192,23 @@ export default function CalcPokemonPanel({
   // this file's header comment and the hook's own header for why.
   const realSets = useCalcRealSetsLookup(regulation, vgcPastesState, vgcRealSetsState);
 
+  // Team/Box/saved-set loads set species without going through the autofill
+  // paths below, which are the only other places usage gets fetched - without
+  // this, those Pokémon showed no usage % or spread chips. Gated on the
+  // option list so half-typed species text never triggers a fetch.
+  useEffect(() => {
+    if (!state.species || !speciesOptions.includes(state.species)) return;
+    let cancelled = false;
+    gameDataState.getChampionsUsage(state.species).then((entry) => {
+      if (!cancelled) setUsage(entry);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // gameDataState is a fresh object each render; only a species change should refetch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.species, speciesOptions]);
+
   const autoFillFromUsage = async (species: string) => {
     const requestId = ++autoFillRequestRef.current;
     setUsage(null); // clear the previous species' usage immediately so no stale ranking briefly shows while this fetch is in flight
