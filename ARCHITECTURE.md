@@ -538,6 +538,10 @@ it (not `App.tsx`) so the engine stays behind the lazy-loaded tab boundary.
   convention `FormeToggle.tsx` uses), not a separate click-selection state —
   so drag-drop loads, manual species edits, and Mega-toggling all update the
   highlight for free.
+- **Box loading**: each side has its own `CalcBoxPanel.tsx` listing the same
+  `useSavedPokemon` entries the Box tab shows (there is no separate Calc
+  "saved sets" store); a click loads that entry into its own side only. A
+  panel's "Save to Box" writes through `addSavedPokemonBatch`.
 
 ## Gender/form handling
 
