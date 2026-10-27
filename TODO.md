@@ -28,13 +28,6 @@ in Box); each side gets its own bottom Box panel showing the same Box
 Pokémon, click loads into that side; smart pickers show learnable/legal
 entries first, then an "All" section when searching beyond them.
 
-- **[Calc Page Rework: Auto Weather & Terrain] — Leg 4** *(Last touched:
-  2026-10-26 · Re-checks: 0)*
-  Weather/terrain setting abilities (Drought, Psychic Surge, etc.) update the
-  field on species/ability change, per the decisions above. Needs a
-  comprehensive curated table in `config/` per the curated-effect-table
-  rule, including Megas. Tests written from the rule before the code.
-
 - **[Calc Page Rework: Smart Pickers & Hover Details] — Leg 5** *(Last
   touched: 2026-10-26 · Re-checks: 0)*
   Ability and move pickers list the current species' own options first
