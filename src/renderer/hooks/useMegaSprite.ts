@@ -120,13 +120,23 @@ export async function fetchMegaSprite(apiSlug: string): Promise<MegaSpriteResult
   if (existing) return existing;
 
   const request = (async () => {
-    const data = await fetchJSON<PokeAPIPokemonResponse>(
-      `/pokemon/${toPokeApiMegaResource(apiSlug)}`,
-    );
-    const result = data ? buildResult(data) : null;
-    cache.set(apiSlug, result);
-    inFlight.delete(apiSlug);
-    return result;
+    try {
+      const data = await fetchJSON<PokeAPIPokemonResponse>(
+        `/pokemon/${toPokeApiMegaResource(apiSlug)}`,
+      );
+      const result = data ? buildResult(data) : null;
+      cache.set(apiSlug, result);
+      return result;
+    } catch {
+      // fetchJSON throws on anything but a 404 (rate limit, network blip).
+      // Unlike a 404 that must not be cached as "no sprite": a rejected
+      // promise left in `inFlight` (or a null in `cache`) would pin this slug
+      // to the base sprite for the rest of the session, and the Teams page
+      // fires ~81 of these prefetches at once on every load.
+      return null;
+    } finally {
+      inFlight.delete(apiSlug);
+    }
   })();
   inFlight.set(apiSlug, request);
   return request;

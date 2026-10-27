@@ -51,6 +51,21 @@ describe('useMegaSprite', () => {
     expect(getCachedMegaSprite('floette-eternal-mega')?.id).toBe(10999);
   });
 
+  it('does not cache a thrown fetch as "no sprite" - a later call retries and succeeds', async () => {
+    mockedFetchJSON.mockRejectedValueOnce(new Error('PokeAPI request failed with status 429'));
+    const { result, rerender } = renderHook(({ slug }) => useMegaSprite(slug), {
+      initialProps: { slug: 'retry-mega-test' as string | null },
+    });
+    await waitFor(() => expect(mockedFetchJSON).toHaveBeenCalledTimes(1));
+    expect(result.current).toBeNull();
+    expect(getCachedMegaSprite('retry-mega-test')).toBeNull();
+
+    mockedFetchJSON.mockResolvedValueOnce({ id: 20001 });
+    rerender({ slug: null });
+    rerender({ slug: 'retry-mega-test' });
+    await waitFor(() => expect(result.current?.id).toBe(20001));
+  });
+
   it('extracts types (sorted by slot) and baseStats when the response includes them', async () => {
     mockedFetchJSON.mockResolvedValueOnce({
       id: 40001,
