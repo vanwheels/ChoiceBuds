@@ -9,6 +9,7 @@
  */
 
 import type { CalcMoveSlot, CalcMoveResultEntry } from '../../hooks/useDamageCalc';
+import { getTypeTheme } from '../../config/pokemonTheme';
 import CalcAutocomplete from './CalcAutocomplete';
 
 interface CalcMoveGridProps {
@@ -21,6 +22,8 @@ interface CalcMoveGridProps {
   onSelect: (index: number) => void;
   /** Ladder usage % per move (Regular Calc Usage-Data Auto-Populate Leg 1) - computed in the sibling CalcPokemonPanel and lifted up through CalcPage, since that's where the fetched ChampionsUsageEntry lives. Same shape CalcAutocomplete already expects. */
   usagePercentByName?: Record<string, number>;
+  /** Move name -> calc type, used to tint each row with the type's theme color. */
+  getMoveType: (moveName: string) => string | null;
 }
 
 export default function CalcMoveGrid({
@@ -32,22 +35,27 @@ export default function CalcMoveGrid({
   onChangeMove,
   onSelect,
   usagePercentByName,
+  getMoveType,
 }: CalcMoveGridProps) {
   return (
-    <div className="flex-1 min-w-[280px] bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-1">
+    <div className="flex-none basis-[calc(25%-0.5rem)] min-w-[340px] bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-1">
       <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wide">{title}</h3>
       {moves.map((slot, index) => {
         const result = results[index];
         const isSelected = selectedIndex === index;
         const [minHits, maxHits] = result?.multihitRange ?? [null, null];
+        const moveType = getMoveType(slot.name);
+        const theme = moveType ? getTypeTheme(moveType) : null;
         return (
           <div
             key={index}
             onClick={() => slot.name && onSelect(index)}
             className={`flex flex-wrap items-center gap-2 px-2 py-0.5 rounded border transition-colors ${
+              theme ? `${theme.bg} bg-opacity-60 ${theme.text}` : ''
+            } ${
               isSelected
-                ? 'border-accent-gold bg-accent-gold/10'
-                : 'border-zinc-800 hover:border-zinc-700'
+                ? 'border-accent-gold ring-1 ring-accent-gold'
+                : 'border-zinc-800 hover:border-zinc-600'
             } ${slot.name ? 'cursor-pointer' : ''}`}
           >
             <div className="w-40 shrink-0" onClick={(e) => e.stopPropagation()}>
@@ -95,7 +103,9 @@ export default function CalcMoveGrid({
               >
                 Crit
               </button>
-              <span className="w-28 text-right text-xs font-semibold text-zinc-200 shrink-0">
+              <span
+                className={`w-28 text-right text-xs font-semibold shrink-0 ${theme ? '' : 'text-zinc-200'}`}
+              >
                 {result?.errorMessage ? '—' : (result?.percent ?? '')}
               </span>
             </div>

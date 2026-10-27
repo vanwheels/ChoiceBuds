@@ -13,7 +13,9 @@ import { normalizeSlug } from '../../utils/pokemonRules';
 import { realSetBundleToCalcUpdates } from '../../utils/calcTeamImport';
 import { resolveCalcPokemonSpriteUrl } from '../../utils/calcSpriteResolve';
 import { getItemFallbackSpriteUrl } from '../../utils/itemSprite';
+import { getNatureEffect } from '../../config/vgcData';
 import CalcAutocomplete from './CalcAutocomplete';
+import NatureEffectLabel from './NatureEffectLabel';
 import SavedSetPicker from '../SavedSetPicker';
 import CalcStatRows from './CalcStatRows';
 import CalcStatSpreadChips from './CalcStatSpreadChips';
@@ -214,7 +216,10 @@ export default function CalcPokemonPanelFields({
 
       <div className="grid grid-cols-2 gap-2">
         <div className="flex flex-col gap-1">
-          <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Nature</label>
+          <label className="text-[10px] text-zinc-400 uppercase tracking-wide flex gap-2">
+            Nature
+            <NatureEffectLabel nature={state.nature} />
+          </label>
           <select
             value={state.nature}
             onChange={(e) => onChange({ nature: e.target.value as NatureName })}
@@ -222,9 +227,13 @@ export default function CalcPokemonPanelFields({
           >
             {sortedNatureOptions.map((n) => {
               const percent = naturePercentByName[normalizeSlug(n)];
+              const effect = getNatureEffect(n);
+              const effectText = effect ? ` +${effect.plus} −${effect.minus}` : '';
               return (
                 <option key={n} value={n}>
-                  {percent != null ? `${n} (${percent.toFixed(1)}%)` : n}
+                  {n}
+                  {effectText}
+                  {percent != null ? ` (${percent.toFixed(1)}%)` : ''}
                 </option>
               );
             })}

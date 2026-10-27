@@ -126,6 +126,7 @@ export default function CalcPage({
     itemOptions,
     abilityOptions,
     natureOptions,
+    getMoveType,
     pokemon1Formes,
     pokemon2Formes,
     pokemon1BaseStats,
@@ -229,8 +230,9 @@ export default function CalcPage({
         ))}
       </div>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap justify-center gap-3">
         <CalcMoveGrid
+          getMoveType={getMoveType}
           title="Pokémon 1's Moves"
           moves={pokemon1.moves}
           results={p1Results}
@@ -243,6 +245,7 @@ export default function CalcPage({
           usagePercentByName={pokemon1MovePercentByName}
         />
         <CalcMoveGrid
+          getMoveType={getMoveType}
           title="Pokémon 2's Moves"
           moves={pokemon2.moves}
           results={p2Results}

@@ -70,6 +70,19 @@ export function normalizeMoveSlug(name: string): string {
 }
 
 /**
+ * A move's type as the calc will actually use it (Champions type overrides
+ * applied), for type-coloring move rows. Null for an empty/unknown name.
+ */
+export function getCalcMoveType(gen: Generation, moveName: string): string | null {
+  if (!moveName) return null;
+  try {
+    return new Move(gen, moveName, { overrides: getChampionsCalcMoveOverride(moveName) }).type;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Which stat a nature boosts/lowers (both undefined for a genuinely neutral
  * nature - Hardy/Docile/Serious/Bashful/Quirky). @smogon/calc's own Nature
  * data always sets both `plus`/`minus` to a StatID even for these, using the

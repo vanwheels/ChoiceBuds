@@ -27,7 +27,7 @@
  * keep working unchanged.
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Generations, toID } from '@smogon/calc';
 import type { StatsTable, NatureName } from '@smogon/calc/dist/data/interface';
 import {
@@ -41,6 +41,7 @@ import type { UseGameDataReturn } from './useGameData';
 import {
   normalizeMoveSlug,
   getNatureStatEffect,
+  getCalcMoveType,
   defaultPokemonState,
   defaultFieldState,
   computeBoostedStats,
@@ -94,6 +95,8 @@ export interface UseDamageCalcReturn {
   itemOptions: string[];
   abilityOptions: string[];
   natureOptions: NatureName[];
+  /** A move's calc type (e.g. "Fire"), or null if unknown - drives move-row type coloring. */
+  getMoveType: (moveName: string) => string | null;
   pokemon1MoveOptions: string[];
   pokemon2MoveOptions: string[];
   pokemon1Formes: FormeFamily;
@@ -148,6 +151,7 @@ export function useDamageCalc(
   const moveOptions = useMemo(() => [...gen.moves].map((m) => m.name).sort(), [gen]);
   const itemOptions = useMemo(() => [...gen.items].map((i) => i.name).sort(), [gen]);
   const abilityOptions = useMemo(() => [...gen.abilities].map((a) => a.name).sort(), [gen]);
+  const getMoveType = useCallback((moveName: string) => getCalcMoveType(gen, moveName), [gen]);
   const natureOptions = useMemo(
     () => [...gen.natures].map((n) => n.name).sort() as NatureName[],
     [gen],
@@ -371,6 +375,7 @@ export function useDamageCalc(
     itemOptions,
     abilityOptions,
     natureOptions,
+    getMoveType,
     pokemon1MoveOptions,
     pokemon2MoveOptions,
     pokemon1Formes,

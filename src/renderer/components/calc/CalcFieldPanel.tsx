@@ -11,6 +11,8 @@ import type {
   CalcSideConditions as CalcSideConditionsState,
 } from '../../hooks/useDamageCalc';
 import { WEATHER_OPTIONS, TERRAIN_OPTIONS } from '../../hooks/useDamageCalc';
+import { getTypeTheme } from '../../config/pokemonTheme';
+import { CALC_WEATHER_TYPE, CALC_TERRAIN_TYPE } from '../../config/calcFieldTheme';
 import CalcSideConditions from './CalcSideConditions';
 
 interface CalcFieldPanelProps {
@@ -50,6 +52,47 @@ function SpeedTierBanner({
   );
 }
 
+/** Always-visible toggle chips; clicking the active chip clears it back to none. */
+function ChipGroup<T extends string>({
+  label,
+  options,
+  typeByOption,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: T[];
+  typeByOption: Record<string, string>;
+  value: T | '';
+  onChange: (next: T | '') => void;
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-[10px] text-zinc-400 uppercase tracking-wide">{label}</span>
+      <div className="flex flex-wrap gap-1">
+        {options.map((option) => {
+          const theme = getTypeTheme(typeByOption[option] ?? '');
+          const isActive = value === option;
+          return (
+            <button
+              key={option}
+              type="button"
+              onClick={() => onChange(isActive ? '' : option)}
+              className={`px-2 py-0.5 text-xs font-bold rounded transition-colors cursor-pointer ${
+                isActive
+                  ? `${theme.bg} ${theme.text}`
+                  : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+              }`}
+            >
+              {option}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function CalcFieldPanel({
   field,
   onChangeField,
@@ -83,42 +126,20 @@ export default function CalcFieldPanel({
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        <div className="flex flex-col gap-1">
-          <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Weather</label>
-          <select
-            value={field.weather}
-            onChange={(e) =>
-              onChangeField({ weather: e.target.value as CalcFieldState['weather'] })
-            }
-            className="px-2 py-0.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
-          >
-            <option value="">None</option>
-            {WEATHER_OPTIONS.map((w) => (
-              <option key={w} value={w}>
-                {w}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-[10px] text-zinc-400 uppercase tracking-wide">Terrain</label>
-          <select
-            value={field.terrain}
-            onChange={(e) =>
-              onChangeField({ terrain: e.target.value as CalcFieldState['terrain'] })
-            }
-            className="px-2 py-0.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-white outline-none focus:border-accent-gold"
-          >
-            <option value="">None</option>
-            {TERRAIN_OPTIONS.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+      <ChipGroup
+        label="Weather"
+        options={WEATHER_OPTIONS}
+        typeByOption={CALC_WEATHER_TYPE}
+        value={field.weather}
+        onChange={(weather) => onChangeField({ weather })}
+      />
+      <ChipGroup
+        label="Terrain"
+        options={TERRAIN_OPTIONS}
+        typeByOption={CALC_TERRAIN_TYPE}
+        value={field.terrain}
+        onChange={(terrain) => onChangeField({ terrain })}
+      />
 
       <div className="flex gap-3 pt-1 border-t border-zinc-800">
         <CalcSideConditions

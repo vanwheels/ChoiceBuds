@@ -79,7 +79,7 @@ export default function CalcPopup({ isOpen, onClose, ...calcPageProps }: CalcPop
       aria-hidden={!isOpen}
     >
       <motion.div
-        className="bg-zinc-800 rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col"
+        className="bg-zinc-800 rounded-lg shadow-xl w-full max-w-[1600px] mx-4 max-h-[90vh] overflow-hidden flex flex-col"
         variants={panelVariants}
         animate={isOpen ? 'visible' : 'hidden'}
         initial="hidden"

@@ -16,6 +16,61 @@ Task Tracking rules for the full section-lifecycle (`## Current Milestone:
 <name>` → `MILESTONES.md` + `COMPLETED.md` on ship). Finished work moves to
 [COMPLETED.md](COMPLETED.md).
 
+## Current Milestone: Calc Page Rework
+
+Rework of the Calc popup for web and app first; mobile may diverge later and
+is out of scope here. Scoped 2026-10-26. Decisions: sprites are
+semi-transparent and sit behind text, so sprites and move boxes can flex
+around each other; doubles weather/terrain follows the game rule (slower
+setter wins), re-applies only on species/ability change, and manual chip
+clicks override it; Saved Sets are wiped with no migration (everything lives
+in Box); each side gets its own bottom Box panel showing the same Box
+Pokémon, click loads into that side; smart pickers show learnable/legal
+entries first, then an "All" section when searching beyond them.
+
+- **[Calc Page Rework: Layout] — Leg 1** *(Last touched: 2026-10-26 ·
+  Re-checks: 0)*
+  Widen the popup (`CalcPopup.tsx` is `max-w-6xl`), cut move boxes to ~50%
+  width, color move boxes by type, replace weather/terrain dropdowns with
+  always-visible chips, and color natures with +/- next to names. Done when:
+  all five render correctly in `dev` and `dev:web`. Manual verification.
+  Implemented 2026-10-26, awaiting manual check (type-check/lint/965 tests
+  pass).
+
+- **[Calc Page Rework: Sprites & Icons] — Leg 2** *(Last touched: 2026-10-26 ·
+  Re-checks: 0)*
+  Semi-transparent animated sprites for each side, behind text, in the space
+  freed by Leg 1's narrower move boxes (P1 far left, P2 far right). Add
+  sprites/icons beside names in species and item search results
+  (`CalcAutocomplete.tsx`). Manual verification.
+
+- **[Calc Page Rework: Current HP] — Leg 3** *(Last touched: 2026-10-26 ·
+  Re-checks: 0)*
+  Add current HP as both % and flat value, kept in sync like Showdown's
+  calc, and feed it into the damage engine. Done when: tests cover the
+  %/flat sync and the engine result at partial HP.
+
+- **[Calc Page Rework: Auto Weather & Terrain] — Leg 4** *(Last touched:
+  2026-10-26 · Re-checks: 0)*
+  Weather/terrain setting abilities (Drought, Psychic Surge, etc.) update the
+  field on species/ability change, per the decisions above. Needs a
+  comprehensive curated table in `config/` per the curated-effect-table
+  rule, including Megas. Tests written from the rule before the code.
+
+- **[Calc Page Rework: Smart Pickers & Hover Details] — Leg 5** *(Last
+  touched: 2026-10-26 · Re-checks: 0)*
+  Ability and move pickers list the current species' own options first
+  (Champions ability overrides and movepool changes respected), with search
+  for the rest. Item, ability, and move show descriptions on hover. Split
+  into abilities/hover and moves if it won't fit one session.
+
+- **[Calc Page Rework: Box Integration] — Leg 6** *(Last touched: 2026-10-26 ·
+  Re-checks: 0)*
+  Remove the Saved Sets feature (`CalcSavedSetsModal.tsx`, its persisted
+  data, and the tab), make "Save Set" write a Pokémon to Box, and add a
+  per-side bottom Box panel. Touches persisted data, so it gets a
+  `/leg-review` before closing. Manual verification.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -44,69 +99,27 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-(Tera Blast movepool leak, previously listed here, was bundled into the
-Calc Improvements milestone, promoted to current 2026-10-24; see
-`MILESTONES.md`.)
+- **[Mega Golisopod Steel Filter Bug] — Leg 1** *(Last touched: 2026-10-26 ·
+  Re-checks: 0)*
+  Found during manual testing: Mega Golisopod doesn't show up under the
+  Steel filter in + Add Pokemon. Likely cause: species filtering there
+  isn't accounting for the type change caused by mega evolving, so
+  Golisopod's base (non-Steel) typing is used instead of its Mega's
+  Bug/Water + Steel-relevant typing. Needs scoping to confirm whether this
+  affects other Megas with altered typing, not just Golisopod.
 
-(Mega Form List Ordering and Type-Changing Ability Move Badge Color,
-previously listed here, were bundled into the Display Bug Fix Sweep
-milestone, promoted to current and shipped 2026-10-24; see
-`MILESTONES.md`.)
-
-(The Ability-Affects-Move Indicator + Type Matchup Mega Toggle item
-previously listed here was promoted to current 2026-10-23 and shipped the
-same day, see `MILESTONES.md`.)
-
-(The four items previously listed here were bundled into the Profile Social
-Scoping & Maintenance milestone on 2026-10-19, now shipped; see
-`MILESTONES.md`.)
+- **[Team Search by Species] — Leg 1** *(Last touched: 2026-10-26 ·
+  Re-checks: 0)*
+  Searching a Pokémon's name in any team search should return every team
+  containing that Pokémon. Needs scoping first: which search boxes exist
+  across app and web, and whether one shared matcher can serve them all.
 
 ## Future Milestones (unscheduled)
-
-Profile System Revamp: Previews & Import was promoted to current
-2026-10-18 and shipped the same day (see `MILESTONES.md`) - its Leg 5
-manual-review follow-ups split back out to Unscheduled above, with
-Profile Section Drag-and-Drop Between Open/Closed flagged as the pick for
-the next milestone's planning.
-
-Profile Editing & Visibility Controls (the milestone built from that pick)
-was promoted to current 2026-10-18 and shipped 2026-10-19 (see
-`MILESTONES.md`) - its own Leg 5 absorbed a planned Leg 6 and, per live
-feedback mid-leg, reversed the milestone's Leg 4 Edit-mode toggle back to
-always-on editing (see
-`docs/postmortems/profile-editing-and-visibility-controls.md`). No new
-follow-ups split out of this one beyond the `[Split useTeams.ts]` item
-already above, now flagged for a third consecutive milestone.
-
-`src/renderer/_archived/battle-logger/hooks/useBattleLogActions.ts` (1,001
-lines) is also over the 500-line hard cap flagged by the Project Revision v2
-audit (`docs/investigations/project-revision-v2-audit.md`), but it's dead/
-archived code, not a live split candidate — the other four files that audit
-flagged are now legs under the Maintenance & Code Health Sweep milestone
-above.
-
-2026-09-10 feedback pass batched into 4 candidate milestones; Battle Logger
-Overhaul, Statistics Improvements, and Team Management QoL were each
-promoted to current and have since shipped (see `MILESTONES.md`). Live Calc
-Tuning, the last of the four, was promoted 2026-09-11 and later retired in
-favor of Regular Calc Popup (see `MILESTONES.md`). VGCPastes real-set
-sourcing, deferred out of Regular Calc Popup, was itself promoted to
-current 2026-09-14 and shipped 2026-09-15 (see `MILESTONES.md`).
-
-UI Shift Assessment Sweep — Post Card UI Polish, dropped as stale
-2026-10-17 (last touched 2026-09-08, never scoped past its open-ended
-framing). Any future UI-focused requests get scoped fresh as needed rather
-than carrying this placeholder forward.
 
 Password reset flow, deferred out of Web Version: Teams & Box MVP's scoping
 (2026-09-29, see `docs/investigations/web-version-scope.md`) - not yet
 worth its own leg: needs a transactional email API + SPF/DKIM
 deliverability setup on a dedicated vannyproductions.com subdomain.
-
-Public Profiles & Team Sharing was promoted to current 2026-10-17 and
-shipped the same day (see `MILESTONES.md`) - its original leg 4 (shared
-public team browse/upload database) split back out to Unscheduled above
-since its moderation model still needs its own scoping pass.
 
 Public route bundle split (noted 2026-10-18, during Profile Page Sections &
 Layout Leg 3's routing discussion): `/u/<username>` currently shares the
@@ -122,19 +135,4 @@ already uses, since it needs a dynamic path segment `web/download/`
 doesn't) once a second public dynamic route actually gets built - e.g.
 public team displays not tied to a profile. Not worth restructuring the
 build for a pattern with only one real example today.
-
-2026-10-22 feedback/discussion pass produced six candidate milestones;
-Mega & Alt-Form Representation was promoted to current and shipped the
-same day (see `MILESTONES.md`) - its toggle state (`usePokemonFormToggle`)
-is now consumable by Type Matchup Rework. Type Matchup Rework was itself
-promoted to current and shipped 2026-10-23 (see `MILESTONES.md`), and Team
-Editor & Box Fixes was promoted to current and shipped the same day (see
-`MILESTONES.md`), bundling in two Unscheduled bug fixes found since the
-pass (Mega sprite/toggle gating, useSavedPokemon sync migration gap).
-Search & Filter: Tag-Chip Redesign was itself promoted to current and
-shipped 2026-10-24 (see `MILESTONES.md`). Selection UX & Data Audit was
-itself promoted to current and shipped 2026-10-24 (see `MILESTONES.md`).
-Calc Improvements, the last of the six, was itself promoted to current
-2026-10-24 (see `MILESTONES.md`), bundling in the Tera Blast movepool leak
-fix from Unscheduled above.
 
