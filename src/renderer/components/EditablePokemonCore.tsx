@@ -184,7 +184,21 @@ export default function EditablePokemonCore({
   const animatedCandidateUrl = showAnimatedSprites
     ? getAnimatedSpriteUrl(animatedSpeciesSlug, localGender || 'M', isLocalShiny)
     : null;
-  const useAnimated = animatedCandidateUrl !== null && animatedCandidateUrl !== failedAnimatedUrl;
+  // The animated GIF only replaces the static sprite once it has actually
+  // loaded (a hidden preload <img> below reports that). Swapping in on the
+  // URL alone left the card stuck on a blank/old image whenever Showdown's
+  // CDN was slow or hung on a GIF it doesn't have (a Mega's, typically):
+  // onError never fires for a request that never completes, so the static
+  // fallback never got its turn. Seen live 2026-10-27 on Mega Golisopod.
+  const [loadedAnimatedUrl, setLoadedAnimatedUrl] = useState<string | null>(null);
+  const useAnimated =
+    animatedCandidateUrl !== null &&
+    animatedCandidateUrl !== failedAnimatedUrl &&
+    animatedCandidateUrl === loadedAnimatedUrl;
+  const isPreloadingAnimated =
+    animatedCandidateUrl !== null &&
+    animatedCandidateUrl !== failedAnimatedUrl &&
+    animatedCandidateUrl !== loadedAnimatedUrl;
   const displaySpriteUrl = useAnimated ? animatedCandidateUrl : staticSpriteUrl;
 
   const displayedTypes = activeMegaSlug && megaSprite?.types ? megaSprite.types : types;
@@ -320,6 +334,15 @@ export default function EditablePokemonCore({
           className={`relative w-[134px] mx-auto h-24 bg-zinc-800 rounded-lg border border-zinc-600 flex items-center justify-center overflow-hidden transition-colors ${onSpriteClick ? 'cursor-pointer hover:border-accent-gold' : ''}`}
           title={onSpriteClick ? 'Click to swap this Pokémon' : undefined}
         >
+          {isPreloadingAnimated && (
+            <img
+              src={resolveSprite(animatedCandidateUrl)}
+              alt=""
+              className="hidden"
+              onLoad={() => setLoadedAnimatedUrl(animatedCandidateUrl)}
+              onError={() => setFailedAnimatedUrl(animatedCandidateUrl)}
+            />
+          )}
           {displaySpriteUrl ? (
             <img
               src={resolveSprite(displaySpriteUrl)}

@@ -35,6 +35,7 @@ import { CURATED_MEGA_FORM_SLUGS, toPokeApiMegaResource } from '../config/megaEv
 import { runWithConcurrency } from '../utils/concurrency';
 
 const PREFETCH_CONCURRENCY = 8;
+const RETRY_DELAYS_MS = [400, 1500, 4000];
 
 export interface MegaSpriteResult {
   id: number;
@@ -121,20 +122,29 @@ export async function fetchMegaSprite(apiSlug: string): Promise<MegaSpriteResult
 
   const request = (async () => {
     try {
-      const data = await fetchJSON<PokeAPIPokemonResponse>(
-        `/pokemon/${toPokeApiMegaResource(apiSlug)}`,
-      );
-      const result = data ? buildResult(data) : null;
-      cache.set(apiSlug, result);
-      return result;
-    } catch {
-      // fetchJSON throws on anything but a 404 (rate limit, network blip).
-      // Unlike a 404 that must not be cached as "no sprite": a rejected
-      // promise left in `inFlight` (or a null in `cache`) would pin this slug
-      // to the base sprite for the rest of the session, and the Teams page
-      // fires ~81 of these prefetches at once on every load.
-      return null;
+      // fetchJSON throws on anything but a 404 (rate limit, network blip), and
+      // the Teams page's ~81-slug prefetch burst really does draw 429s from
+      // PokeAPI on load (seen live 2026-10-27). A card whose own lookup lost
+      // that race has no retry trigger afterward (useMegaSprite's effect only
+      // reruns on a slug change), so the toggle silently kept the base sprite
+      // until restart - retry here instead.
+      for (let attempt = 0; ; attempt++) {
+        try {
+          const data = await fetchJSON<PokeAPIPokemonResponse>(
+            `/pokemon/${toPokeApiMegaResource(apiSlug)}`,
+          );
+          const result = data ? buildResult(data) : null;
+          cache.set(apiSlug, result);
+          return result;
+        } catch {
+          if (attempt >= RETRY_DELAYS_MS.length) return null;
+          await new Promise((resolve) => setTimeout(resolve, RETRY_DELAYS_MS[attempt]));
+        }
+      }
     } finally {
+      // Never leave a rejected/failed entry behind: an exhausted retry returns
+      // null WITHOUT writing `cache`, so a later call can still try again
+      // (unlike a 404, which is cached as a real "no Mega sprite").
       inFlight.delete(apiSlug);
     }
   })();
@@ -200,11 +210,14 @@ export function resolveDisplaySpriteUrl(
  * existing base-sprite fallback keeps showing for that one row (non-fatal,
  * same as a single fetchMegaSprite miss elsewhere).
  */
-export function useMegaSpritePrefetch(): number {
+export function useMegaSpritePrefetch(onlySlugs?: readonly string[]): number {
   const [version, setVersion] = useState(0);
+  // Content key, not identity - callers build a fresh array each render.
+  const onlyKey = onlySlugs?.join('\u0000');
   useEffect(() => {
     let cancelled = false;
-    const slugs = [...CURATED_MEGA_FORM_SLUGS].filter((slug) => !cache.has(slug));
+    const wanted = onlySlugs ? onlySlugs : [...CURATED_MEGA_FORM_SLUGS];
+    const slugs = wanted.filter((slug) => !cache.has(slug));
     if (slugs.length === 0) return;
     runWithConcurrency(slugs, PREFETCH_CONCURRENCY, () => {}, fetchMegaSprite).then(() => {
       if (!cancelled) setVersion((v) => v + 1);
@@ -212,7 +225,8 @@ export function useMegaSpritePrefetch(): number {
     return () => {
       cancelled = true;
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- onlyKey represents onlySlugs' content, not identity
+  }, [onlyKey]);
   return version;
 }
 

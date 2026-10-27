@@ -25,6 +25,7 @@ import { useRosterActions } from '../hooks/useRosterActions';
 import { toRegulationId } from '../utils/pokemonRules';
 import { getRegulationTheme } from '../config/pokemonTheme';
 import { useMegaSpritePrefetch } from '../hooks/useMegaSprite';
+import { getMegaApiSlug } from '../config/megaEvolution';
 import { DRAG_REORDER_TRANSITION } from '../config/motion';
 import TeamCardHeader from './TeamCardHeader';
 import TeamCardRosterGrid from './TeamCardRosterGrid';
@@ -173,8 +174,15 @@ export default function TeamCard({
   // forbids useMegaSprite itself there) can read a Mega form's real sprite
   // via getCachedMegaSprite instead of always falling back to the base
   // species - same pattern SpeedTiersPage.tsx uses, see that hook's own doc
-  // comment.
-  useMegaSpritePrefetch();
+  // comment. Only this team's own held-stone slugs, not every Mega: one of
+  // these per team card, all at once, was ~81 lookups per team on page load
+  // and drew PokeAPI 429s.
+  useMegaSpritePrefetch(
+    team.pokemon.flatMap((p) => {
+      const slug = getMegaApiSlug(p.showdownData.item, p.showdownData.species);
+      return slug ? [slug] : [];
+    }),
+  );
   const { updateTeam, addTeam } = teamsState;
   const rosterActions = useRosterActions(
     updateTeam,

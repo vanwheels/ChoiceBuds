@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
-import { useMegaSprite, useMegaSpritePrefetch, getCachedMegaSprite } from './useMegaSprite';
+import {
+  useMegaSprite,
+  useMegaSpritePrefetch,
+  getCachedMegaSprite,
+  fetchMegaSprite,
+} from './useMegaSprite';
 import { fetchJSON } from '../services/pokeapiService';
 import { CURATED_MEGA_FORM_SLUGS } from '../config/megaEvolution';
 
@@ -51,19 +56,33 @@ describe('useMegaSprite', () => {
     expect(getCachedMegaSprite('floette-eternal-mega')?.id).toBe(10999);
   });
 
-  it('does not cache a thrown fetch as "no sprite" - a later call retries and succeeds', async () => {
-    mockedFetchJSON.mockRejectedValueOnce(new Error('PokeAPI request failed with status 429'));
-    const { result, rerender } = renderHook(({ slug }) => useMegaSprite(slug), {
-      initialProps: { slug: 'retry-mega-test' as string | null },
-    });
-    await waitFor(() => expect(mockedFetchJSON).toHaveBeenCalledTimes(1));
-    expect(result.current).toBeNull();
-    expect(getCachedMegaSprite('retry-mega-test')).toBeNull();
+  // The Teams page's prefetch burst draws real PokeAPI 429s; the card whose
+  // lookup lost that race has no later trigger, so the retry has to live here.
+  it('retries a thrown fetch (e.g. a 429) and resolves once PokeAPI answers', async () => {
+    mockedFetchJSON
+      .mockRejectedValueOnce(new Error('PokeAPI request failed with status 429'))
+      .mockResolvedValueOnce({ id: 20001 });
+    const { result } = renderHook(() => useMegaSprite('retry-mega-test'));
+    await waitFor(() => expect(result.current?.id).toBe(20001), { timeout: 3000 });
+    expect(mockedFetchJSON).toHaveBeenCalledTimes(2);
+  });
 
-    mockedFetchJSON.mockResolvedValueOnce({ id: 20001 });
-    rerender({ slug: null });
-    rerender({ slug: 'retry-mega-test' });
-    await waitFor(() => expect(result.current?.id).toBe(20001));
+  it('does not cache "no sprite" once every retry has failed, so a later call can try again', async () => {
+    vi.useFakeTimers();
+    try {
+      mockedFetchJSON.mockRejectedValue(new Error('PokeAPI request failed with status 429'));
+      const first = fetchMegaSprite('exhausted-mega-test');
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(await first).toBeNull();
+      expect(mockedFetchJSON).toHaveBeenCalledTimes(4);
+      expect(getCachedMegaSprite('exhausted-mega-test')).toBeNull();
+
+      mockedFetchJSON.mockReset();
+      mockedFetchJSON.mockResolvedValueOnce({ id: 20002 });
+      expect((await fetchMegaSprite('exhausted-mega-test'))?.id).toBe(20002);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('extracts types (sorted by slot) and baseStats when the response includes them', async () => {

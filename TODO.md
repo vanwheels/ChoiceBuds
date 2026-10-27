@@ -38,14 +38,21 @@ Done when:
   Scope the cause, then fix; split scoping from the fix if non-trivial.
   Done check: toggling any Mega shows a Mega sprite (static at minimum), with
   a test where the logic is testable. Manual verification: yes. Review: no.
-  Status 2026-10-27: cause found and fixed — sweeping all 81 curated Mega
-  slugs against PokeAPI, only `meowstic-mega` (PokeAPI: `meowstic-male-mega`)
-  and `floette-eternal-mega` (PokeAPI: `floette-mega`) 404; every other new
-  Mega resolves with a real sprite. Fixed via `toPokeApiMegaResource` alias
-  in `config/megaEvolution.ts`. Awaiting manual check: toggle Mega Meowstic
-  and Mega Floette on a Teams page card, and spot-check a few other newer
-  Megas (Golisopod, Baxcalibur, Clefable) — if one of those still fails,
-  the cause is something other than slug naming. Then COMPLETED.md + close.
+  Status 2026-10-27: three causes found and fixed. (1) Slug names: only
+  `meowstic-mega` and `floette-eternal-mega` of 81 curated slugs 404 on
+  PokeAPI (aliased via `toPokeApiMegaResource`, `config/megaEvolution.ts`).
+  (2) The Teams page fired ~81 Mega lookups per team card on load, drawing
+  PokeAPI 429s; a card whose lookup lost had no retry until restart.
+  `fetchMegaSprite` now retries with backoff and never caches a failure, and
+  TeamCard prefetches only its own team's slugs. (3) The animated GIF held
+  the card's image until it errored, but Showdown's CDN can hang on a Mega
+  GIF it lacks, so the static Mega sprite never showed. The card now shows
+  the static sprite and swaps to the GIF only once it has loaded
+  (`EditablePokemonCore.tsx`). Awaiting manual confirmation on Soft TR
+  Ruptpod (shiny + non-shiny Golisopod) and Mega Meowstic/Floette, then
+  COMPLETED.md + close. Related, not fixed: `TeamCardHeader.tsx`'s mini
+  sprite strip shows the Mega sprite whenever the stone is held, ignoring
+  the toggle.
 
 - **[Mega Meowstic-F Toggle Gap] — Leg 1** *(Last touched: 2026-10-27 ·
   Re-checks: 0)*
