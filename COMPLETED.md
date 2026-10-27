@@ -134,6 +134,18 @@ Entries prior to this file's oldest are in:
 
 ## Current milestone: Sprite, Filter & Search Fixes
 
+- **[Mega Team Card Sprite Toggle Bug] — Leg 1** (2026-10-27): Three causes
+  behind the Mega toggle leaving the card on the base sprite. PokeAPI names
+  Meowstic's and Floette's Megas differently (`toPokeApiMegaResource` alias);
+  the ~81-slug prefetch burst drew PokeAPI 429s with no retry
+  (`fetchMegaSprite` now retries with backoff, never caches a failure, and
+  TeamCard prefetches only its own slugs); and Showdown's CDN can hang on a
+  Mega GIF it lacks, so the card never fell back (it now shows the static
+  sprite and swaps to the GIF only once loaded). Verified live by the user on
+  existing shiny and non-shiny Golisopod (Soft TR Ruptpod); Meowstic/Floette
+  were fixed by slug alias and unit test only, not separately checked live.
+  See commits ee7efae, cb43b9a, 676991e.
+
 - **[Mega Golisopod Steel Filter Bug] — Leg 1** (2026-10-27): Mega rows in
   + Add Pokemon were only emitted beside a base row that passed the active
   chips, so a Steel chip dropped Mega Golisopod (base Bug/Water); rows are now
