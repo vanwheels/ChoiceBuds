@@ -10,6 +10,7 @@
  */
 
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { useDismissable } from '../../hooks/useDismissable';
 import { normalizeSlug } from '../../utils/pokemonRules';
 
@@ -32,6 +33,8 @@ interface CalcAutocompleteProps {
    * has no usage-percentage concept).
    */
   usagePercentByName?: Record<string, number>;
+  /** Optional leading icon/sprite per dropdown row (species, item). Rows without it keep today's text-only layout. */
+  renderOptionIcon?: (option: string) => ReactNode;
 }
 
 export default function CalcAutocomplete({
@@ -42,6 +45,7 @@ export default function CalcAutocomplete({
   onChange,
   onSelect,
   usagePercentByName,
+  renderOptionIcon,
 }: CalcAutocompleteProps) {
   const [query, setQuery] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
@@ -107,6 +111,11 @@ export default function CalcAutocomplete({
                 onClick={() => handleSelect(option)}
                 className="w-full flex items-center gap-2 text-left px-2 py-1 text-sm text-zinc-200 hover:bg-accent-gold hover:text-zinc-900 transition-colors cursor-pointer"
               >
+                {renderOptionIcon && (
+                  <span className="w-7 h-7 shrink-0 flex items-center justify-center">
+                    {renderOptionIcon(option)}
+                  </span>
+                )}
                 <span className="flex-1 truncate">{option}</span>
                 {percent != null && (
                   <span className="text-accent-gold text-[10px] font-bold whitespace-nowrap">

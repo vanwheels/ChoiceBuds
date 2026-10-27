@@ -38,7 +38,7 @@ export default function CalcMoveGrid({
   getMoveType,
 }: CalcMoveGridProps) {
   return (
-    <div className="flex-none basis-[calc(25%-0.5rem)] min-w-[340px] bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-1">
+    <div className="relative z-10 flex-none basis-[calc(25%-0.5rem)] min-w-[340px] bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-1">
       <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wide">{title}</h3>
       {moves.map((slot, index) => {
         const result = results[index];

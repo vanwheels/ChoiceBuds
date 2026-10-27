@@ -28,6 +28,7 @@ import type { UseSpeciesRosterReturn } from '../../hooks/useSpeciesRoster';
 import { getRegulationLabel, toRegulationId } from '../../utils/pokemonRules';
 import CalcPokemonPanel from './CalcPokemonPanel';
 import CalcMoveGrid from './CalcMoveGrid';
+import CalcSideSprite from './CalcSideSprite';
 import CalcFieldPanel from './CalcFieldPanel';
 import CalcResultPanel from './CalcResultPanel';
 import CalcSavedSetsModal from './CalcSavedSetsModal';
@@ -230,7 +231,21 @@ export default function CalcPage({
         ))}
       </div>
 
-      <div className="flex flex-wrap justify-center gap-3">
+      <div className="relative flex flex-wrap justify-center gap-3">
+        <CalcSideSprite
+          species={pokemon1.species}
+          gender={pokemon1.gender}
+          side="left"
+          roster={speciesRosterState.roster}
+          resolveSprite={spriteCacheState.resolveSprite}
+        />
+        <CalcSideSprite
+          species={pokemon2.species}
+          gender={pokemon2.gender}
+          side="right"
+          roster={speciesRosterState.roster}
+          resolveSprite={spriteCacheState.resolveSprite}
+        />
         <CalcMoveGrid
           getMoveType={getMoveType}
           title="Pokémon 1's Moves"

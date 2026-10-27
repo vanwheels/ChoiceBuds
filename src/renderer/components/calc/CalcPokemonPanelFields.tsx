@@ -12,7 +12,7 @@ import type { UseCalcRealSetsLookupReturn } from '../../hooks/useCalcRealSetsLoo
 import { normalizeSlug } from '../../utils/pokemonRules';
 import { realSetBundleToCalcUpdates } from '../../utils/calcTeamImport';
 import { resolveCalcPokemonSpriteUrl } from '../../utils/calcSpriteResolve';
-import { getItemFallbackSpriteUrl } from '../../utils/itemSprite';
+import { getItemFallbackSpriteUrl, getItemSpriteUrl } from '../../utils/itemSprite';
 import { getNatureEffect } from '../../config/vgcData';
 import CalcAutocomplete from './CalcAutocomplete';
 import NatureEffectLabel from './NatureEffectLabel';
@@ -131,6 +131,17 @@ export default function CalcPokemonPanelFields({
             placeholder="Search species..."
             onChange={(species) => onChange({ species })}
             onSelect={onSpeciesSelect}
+            renderOptionIcon={(option) => {
+              const url = resolveCalcPokemonSpriteUrl(option, '', speciesRosterState.roster);
+              return url ? (
+                <img
+                  src={resolveSprite(url)}
+                  alt=""
+                  loading="lazy"
+                  className="w-7 h-7 object-contain [image-rendering:pixelated]"
+                />
+              ) : null;
+            }}
           />
           {savedSetPickerSpecies && (
             <SavedSetPicker
@@ -201,6 +212,20 @@ export default function CalcPokemonPanelFields({
               placeholder="None"
               onChange={(item) => onChange({ item })}
               usagePercentByName={itemPercentByName}
+              renderOptionIcon={(option) => {
+                const url = getItemSpriteUrl(
+                  option,
+                  gameDataState.getCachedItem(option)?.spriteUrl,
+                );
+                return url ? (
+                  <img
+                    src={resolveSprite(url)}
+                    alt=""
+                    loading="lazy"
+                    className="w-6 h-6 object-contain [image-rendering:pixelated]"
+                  />
+                ) : null;
+              }}
             />
           </div>
         </div>
