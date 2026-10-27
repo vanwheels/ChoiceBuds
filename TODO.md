@@ -28,12 +28,6 @@ in Box); each side gets its own bottom Box panel showing the same Box
 Pokémon, click loads into that side; smart pickers show learnable/legal
 entries first, then an "All" section when searching beyond them.
 
-- **[Calc Page Rework: Current HP] — Leg 3** *(Last touched: 2026-10-26 ·
-  Re-checks: 0)*
-  Add current HP as both % and flat value, kept in sync like Showdown's
-  calc, and feed it into the damage engine. Done when: tests cover the
-  %/flat sync and the engine result at partial HP.
-
 - **[Calc Page Rework: Auto Weather & Terrain] — Leg 4** *(Last touched:
   2026-10-26 · Re-checks: 0)*
   Weather/terrain setting abilities (Drought, Psychic Surge, etc.) update the

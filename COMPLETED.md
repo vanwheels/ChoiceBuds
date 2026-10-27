@@ -125,6 +125,8 @@ Entries prior to this file's oldest are in:
 
 ## Calc Page Rework
 
+- **[Calc Page Rework: Current HP] — Leg 3** (2026-10-26): Added current HP as synced flat/% inputs (`curHp` state, null = full) feeding `@smogon/calc`, so KO text uses current HP while damage % stays of max HP. Tests cover the %/flat sync and the engine at partial HP; live-verified in the running app by the user. See commit 8de63bd.
+
 - **[Calc Page Rework: Sprites & Icons] — Leg 2** (2026-10-26): Added
   semi-transparent animated side sprites behind each move grid
   (`CalcSideSprite.tsx`) and optional leading icons in `CalcAutocomplete`
