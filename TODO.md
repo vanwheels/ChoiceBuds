@@ -27,6 +27,15 @@ Done when:
 - A test fails on any Mega stone whose `getMegaApiSlug` doesn't resolve to a
   valid PokeAPI resource name.
 
+- **[Calc Item Picker: Item Icon Coverage] — Leg 1** *(Last touched:
+  2026-10-27 · Re-checks: 0)*
+  Added at close-out: Calc Item Picker Leg 1 (25f8a72) made the list
+  Champions-only and fully scrollable but never checked icons. Audit every
+  `VGC_ITEMS` entry against the item-sprite source the picker uses
+  (`ItemSpriteBox`/`ItemPickerPanel` path), fix any missing icons, and add a
+  test that fails on a Champions item with no resolvable icon. Done when the
+  test passes and the user confirms no blank icons in the calc item picker.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
