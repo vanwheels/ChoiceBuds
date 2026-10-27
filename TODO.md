@@ -14,19 +14,6 @@ the current milestone and "Unscheduled", items are listed highest-to-lowest
 priority. Only one milestone is "current" at a time — see root `CLAUDE.md`'s
 Task Tracking rules for the full section-lifecycle.
 
-## Current Milestone: Calc Follow-ups
-
-Done when:
-
-- Selecting a forme or Mega in the calc shows no visible sprite pop or size
-  jump.
-- Both calc side panels and their Box panels line up regardless of loaded
-  species or forme toggle row.
-- The calc item picker lists only Champions items, scrolls fully, and every
-  Champions item has an icon.
-- A test fails on any Mega stone whose `getMegaApiSlug` doesn't resolve to a
-  valid PokeAPI resource name.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something

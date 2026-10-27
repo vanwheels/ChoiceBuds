@@ -219,3 +219,7 @@ running on.
   Mega, form or sprite code, ask which other rows share the cause and grep or
   test the whole table, not just the reported one. `TODO.md`'s Mega Stone
   slug-coverage test is the standing check for Mega slugs.
+- **Sprite sizing gets a multi-form check** (added 2026-10-27, Calc Sprite Swap
+  Flicker: a 3x size cap fixed one sprite but shrank Megas). Before closing a
+  sprite sizing change, view at least three species of different native sizes
+  (a base form, a Mega, a regional form), not just the reported one.

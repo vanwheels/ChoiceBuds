@@ -531,7 +531,10 @@ it (not `App.tsx`) so the engine stays behind the lazy-loaded tab boundary.
   item sprite (reusing `ItemSpriteBox.tsx`'s PokeAPI → Serebii → emoji
   fallback chain). `speciesRosterState` is threaded down from `App.tsx`/
   `AppWeb.tsx` for this; `CalcPage.tsx` also calls `useMegaSpritePrefetch()`
-  so Mega sprites resolve too.
+  so Mega sprites resolve too. `CalcSideSprite.tsx` cross-fades the static
+  sprite into the Showdown GIF (rendered at 1.2x native size) to avoid a
+  visible swap; the Pokémon panel root is `flex-1` so both sides and their
+  Box panels align.
 - **Sprite-box highlight**: `CalcTeamTray.tsx`/`CalcOpponentTray.tsx`
   highlight the loaded Pokémon's sprite box by comparing each tray entry's
   species against the active panel's own `state.species` (the same
@@ -553,7 +556,11 @@ it (not `App.tsx`) so the engine stays behind the lazy-loaded tab boundary.
   abilities/moves first (Champions overrides respected) with the rest under
   "All" once the user searches. Item/ability/move hovers reuse the team
   builder's `Tooltip`/`TooltipContent`. Nature and Status use `CalcDropdown`
-  (Nature reuses `NaturePickerPanel`).
+  (Nature reuses `NaturePickerPanel`). The item picker lists only
+  `VGC_ITEMS` (the full `@smogon/calc` list is kept as `allItemOptions` for
+  the "All" section) with `maxResults={Infinity}`. `CalcAutocomplete` tracks
+  an `edited` flag: an unedited open (select-all on focus) lists every
+  option instead of filtering by the current value.
 - **Dynamic move type**: each result entry carries `moveType` read from
   `result.move` (calculate clones the move), so move rows tint by the type
   actually used (Weather Ball, -ate abilities); the static type is the

@@ -115,3 +115,5 @@ milestone.
   [post-mortem](docs/postmortems/sprite-scoping.md)
 - **Sprite, Filter & Search Fixes** — 2026-10-27 — Shipped —
   [post-mortem](docs/postmortems/sprite-filter-and-search-fixes.md)
+- **Calc Follow-ups** — 2026-10-27 — Shipped —
+  [post-mortem](docs/postmortems/calc-follow-ups.md)
