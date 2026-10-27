@@ -125,6 +125,14 @@ Entries prior to this file's oldest are in:
 
 ## Calc Page Rework
 
+- **[Calc Page Rework: Sprites & Icons] — Leg 2** (2026-10-26): Added
+  semi-transparent animated side sprites behind each move grid
+  (`CalcSideSprite.tsx`) and optional leading icons in `CalcAutocomplete`
+  rows for species and items. Side sprites verified manually in the app; item
+  icons mostly seen loading but not fully verified across all Champions items.
+  Findings spun out to TODO.md (item list/scroll, forme load delay). See
+  commit 538c8336a3e2f414da3183b55988fc01d4c4fb60.
+
 - **[Calc Page Rework: Layout] — Leg 1** (2026-10-26): Widened the Calc popup,
   narrowed move boxes to ~25% each, tinted the move input through the Crit box
   by calc move type, replaced weather/terrain dropdowns with type-colored chips

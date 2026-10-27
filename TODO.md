@@ -28,13 +28,6 @@ in Box); each side gets its own bottom Box panel showing the same Box
 Pokémon, click loads into that side; smart pickers show learnable/legal
 entries first, then an "All" section when searching beyond them.
 
-- **[Calc Page Rework: Sprites & Icons] — Leg 2** *(Last touched: 2026-10-26 ·
-  Re-checks: 0)*
-  Semi-transparent animated sprites for each side, behind text, in the space
-  freed by Leg 1's narrower move boxes (P1 far left, P2 far right). Add
-  sprites/icons beside names in species and item search results
-  (`CalcAutocomplete.tsx`). Manual verification.
-
 - **[Calc Page Rework: Current HP] — Leg 3** *(Last touched: 2026-10-26 ·
   Re-checks: 0)*
   Add current HP as both % and flat value, kept in sync like Showdown's
@@ -98,6 +91,23 @@ unblocked.
   TypeScript ^6.0.3.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+- **[Calc Item Picker: Champions Items & Full Scroll] — Leg 1** *(Last touched:
+  2026-10-26 · Re-checks: 0)*
+  Found verifying Sprites & Icons Leg 2: the Calc item picker lists every
+  mainline item (`useDamageCalc.ts` builds `itemOptions` from `gen.items`)
+  instead of just Champions items (`VGC_ITEMS` in `config/vgcData.ts` is the
+  likely source). The list also stops scrolling partway because
+  `CalcAutocomplete.tsx` slices results to `MAX_RESULTS = 50`. Keep a path to
+  all items later (e.g. the Leg 5 "All" section). Also confirm every Champions
+  item has an icon.
+
+- **[Calc Forme Sprite Load Delay] — Leg 1** *(Last touched: 2026-10-26 ·
+  Re-checks: 0)*
+  Found verifying Sprites & Icons Leg 2: some forme sprites (Castform Snowy)
+  take 5-10+ seconds to appear in the new side sprite. Needs scoping: slow
+  Showdown GIF fetch vs. the 404-then-static-fallback path in
+  `CalcSideSprite.tsx` vs. a sprite-cache miss.
 
 - **[Mega Golisopod Steel Filter Bug] — Leg 1** *(Last touched: 2026-10-26 ·
   Re-checks: 0)*
