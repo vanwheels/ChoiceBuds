@@ -79,6 +79,30 @@ describe('teamMatchesSearch', () => {
     expect(teamMatchesSearch(team, '   ')).toBe(true);
   });
 
+  it.each([
+    ['Landorus-Therian', 'landorus therian'],
+    ['Landorus-Therian', 'landorustherian'],
+    ['Ho-Oh', 'ho oh'],
+    ['Ho-Oh', 'hooh'],
+    ['Mr. Mime', 'mr mime'],
+    ['Mr. Mime', 'mr. mime'],
+    ['Mr. Mime', 'mrmime'],
+    ['Farfetch’d', 'farfetchd'],
+  ])('finds %s however the query is spaced or hyphenated (%s)', (species, query) => {
+    const team = makeTeam([makePokemon({ species })]);
+    expect(teamMatchesSearch(team, query)).toBe(true);
+  });
+
+  it('still rejects a query that is only separators-different from a non-matching species', () => {
+    const team = makeTeam([makePokemon({ species: 'Landorus-Therian' })]);
+    expect(teamMatchesSearch(team, 'landorus incarnate')).toBe(false);
+  });
+
+  it('treats a separators-only query as no filter', () => {
+    const team = makeTeam([makePokemon({ species: 'Gengar' })]);
+    expect(teamMatchesSearch(team, ' - ')).toBe(true);
+  });
+
   it('returns false for an empty roster with a non-empty query', () => {
     const team = makeTeam([]);
     expect(teamMatchesSearch(team, 'gengar')).toBe(false);

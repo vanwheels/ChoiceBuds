@@ -17,6 +17,7 @@ import { useState } from 'react';
 import type { Team } from '../types/pokemon';
 import { useDismissable } from '../hooks/useDismissable';
 import { getPixelSpriteUrl } from '../utils/spriteUrl';
+import { teamMatchesSearch } from '../utils/teamSearch';
 
 interface TeamSpriteRowProps {
   pokemon: Team['pokemon'];
@@ -68,7 +69,9 @@ export default function TeamPickerDropdown({
   const ref = useDismissable<HTMLDivElement>(() => setIsOpen(false));
 
   const selectedTeam = teams.find((t) => t.id === selectedTeamId);
-  const filtered = teams.filter((t) => t.name.toLowerCase().includes(search.toLowerCase()));
+  const filtered = teams.filter(
+    (t) => t.name.toLowerCase().includes(search.toLowerCase()) || teamMatchesSearch(t, search),
+  );
 
   const handleSelect = (teamId: string) => {
     onSelect(teamId);
