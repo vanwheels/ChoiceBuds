@@ -128,7 +128,7 @@ Entries prior to this file's oldest are in:
 
 ## [Calc Forme Sprite Load Delay] — Leg 1 (2026-10-26)
 
-Cause identified, no code changed: `getAnimatedSpriteUrl` strips the hyphen from forme names (`castformsnowy.gif`) but Showdown's files keep it (`castform-snowy.gif`), so every forme 404s, and Showdown's cold 404s take 7-20s before `CalcSideSprite` falls back to static. Reproduced with curl against the CDN (not yet re-checked in the app UI); fix tracked as [Animated Sprite Forme Filenames]. See commit 0eb6de2.
+Cause identified, no code changed: `getAnimatedSpriteUrl` strips the hyphen from forme names (`castformsnowy.gif`) but Showdown's files keep it (`castform-snowy.gif`), so every forme 404s, and Showdown's cold 404s take 7-20s before `CalcSideSprite` falls back to static. Reproduced with curl against the CDN and confirmed live in the app by the user 2026-10-26 (Castform Snowy side sprite blank for several seconds, then static); fix tracked as [Animated Sprite Forme Filenames]. See commit 0eb6de2.
 
 ## [Calc Tooltip Type Without Opponent] — Leg 1 (2026-10-26)
 
