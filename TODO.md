@@ -27,13 +27,6 @@ Done when:
 - A test fails on any Mega stone whose `getMegaApiSlug` doesn't resolve to a
   valid PokeAPI resource name.
 
-- **[Mega Stone Slug Coverage Test] — Leg 1** *(Last touched: 2026-10-27 ·
-  Re-checks: 0)*
-  Add a test that walks every Mega stone and asserts `getMegaApiSlug`
-  resolves to an expected PokeAPI resource name, so a bad species (Meowstic,
-  Floette, Meowstic-F were each found live) fails a test instead. Done check:
-  test passes, full suite green. Manual verification: no. Review: no.
-
 - **[Calc Sprite Swap Flicker] — Leg 1** *(Last touched: 2026-10-27 ·
   Re-checks: 0)*
   `CalcSideSprite` swaps from the static sprite to the GIF the moment the GIF

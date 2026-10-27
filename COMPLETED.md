@@ -135,3 +135,7 @@ Entries prior to this file's oldest are in:
   2026-10-27 Sprite, Filter & Search Fixes boundary - named with the
   milestone slug since it shares its date range with no other archive)
 
+- **[Mega Stone Slug Coverage Test] — Leg 1** (2026-10-27)
+  Added a test walking every `MEGA_STONE_TO_SPECIES` entry (plus Meowstic-F) that
+  asserts the resolved slug exists in a saved PokeAPI Mega-resource fixture; full
+  suite, lint and type-check green, no manual verification needed. See commit ba27f98.
