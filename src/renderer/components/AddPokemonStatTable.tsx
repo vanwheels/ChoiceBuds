@@ -117,7 +117,12 @@ import { normalizeSpeciesForAPI } from '../services/pokeapi';
 import { normalizeNameForAPI } from '../services/pokeapiService';
 import { getPixelSpriteUrl } from '../utils/spriteUrl';
 import { getStatLabelColor } from '../config/pokemonTheme';
-import { assembleStatTableRows, computeBST, nextStatTableSort, sortStatTableRows } from '../utils/statTable';
+import {
+  assembleStatTableRows,
+  computeBST,
+  nextStatTableSort,
+  sortStatTableRows,
+} from '../utils/statTable';
 import type { StatTableSort, StatTableSortKey } from '../utils/statTable';
 import { usePokemonTypeFilter } from '../hooks/usePokemonTypeFilter';
 import { usePokemonMoveFilter } from '../hooks/usePokemonMoveFilter';

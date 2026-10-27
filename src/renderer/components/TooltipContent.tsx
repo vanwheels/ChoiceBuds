@@ -86,7 +86,8 @@ export default function TooltipContent({
           <span className="font-bold text-white">{toReadableName(move.name)}</span>
           <TypeBadge
             type={
-              moveTypeOverrides?.[index] ?? getEffectiveMoveType(move.name, move.type, selectedAbility)
+              moveTypeOverrides?.[index] ??
+              getEffectiveMoveType(move.name, move.type, selectedAbility)
             }
           />
         </div>
