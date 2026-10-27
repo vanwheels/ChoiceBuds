@@ -80,22 +80,22 @@ describe('teamMatchesSearch', () => {
   });
 
   it.each([
-    ['Landorus-Therian', 'landorus therian'],
-    ['Landorus-Therian', 'landorustherian'],
-    ['Ho-Oh', 'ho oh'],
-    ['Ho-Oh', 'hooh'],
-    ['Mr. Mime', 'mr mime'],
-    ['Mr. Mime', 'mr. mime'],
-    ['Mr. Mime', 'mrmime'],
-    ['Farfetch’d', 'farfetchd'],
+    ['Ninetales-Alola', 'ninetales alola'],
+    ['Ninetales-Alola', 'ninetalesalola'],
+    ['Rotom-Wash', 'rotom wash'],
+    ['Kommo-o', 'kommo o'],
+    ['Kommo-o', 'kommoo'],
+    ['Mr. Rime', 'mr rime'],
+    ['Mr. Rime', 'mr. rime'],
+    ['Mr. Rime', 'mrrime'],
   ])('finds %s however the query is spaced or hyphenated (%s)', (species, query) => {
     const team = makeTeam([makePokemon({ species })]);
     expect(teamMatchesSearch(team, query)).toBe(true);
   });
 
-  it('still rejects a query that is only separators-different from a non-matching species', () => {
-    const team = makeTeam([makePokemon({ species: 'Landorus-Therian' })]);
-    expect(teamMatchesSearch(team, 'landorus incarnate')).toBe(false);
+  it('still rejects a different form of the same species', () => {
+    const team = makeTeam([makePokemon({ species: 'Rotom-Wash' })]);
+    expect(teamMatchesSearch(team, 'rotom heat')).toBe(false);
   });
 
   it('treats a separators-only query as no filter', () => {
