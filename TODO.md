@@ -29,27 +29,6 @@ Done when:
 - Searching a species name in team search returns every team containing it,
   on both app and web.
 
-- **[Team Search by Species] — Leg 2** *(Last touched: 2026-10-27 ·
-  Re-checks: 0)*
-  Leg 1 finding: `utils/teamSearch.ts`'s `teamMatchesSearch` already
-  exists and TeamsPage (desktop and mobile boxes) uses it; app and web share
-  that one page, so no per-target matcher is needed. The gap is the matcher
-  itself: plain `includes` on `showdownData.species` misses "landorus
-  therian", "ho oh", "mr mime" against "Landorus-Therian"/"Ho-Oh"/"Mr. Mime".
-  Not reproduced live yet, so Leg 2 starts by reproducing the user's failing
-  query. Two other boxes: `TeamPickerDropdown` (Calc, Speed Tiers, Type
-  Matchup, Record Match) filters on team name only, and
-  `VgcPasteCatalogModal` filters sample-team rows (own `species` string
-  list, not `Team`). Leg 2: (1) reproduce, (2) make `teamMatchesSearch`
-  compare via `normalizeChipText` (strips spaces/hyphens; also strip periods),
-  tests from the rule "a query naming a species returns every team holding
-  it, however spaced/hyphenated", (3) `TeamPickerDropdown` matches team name
-  OR `teamMatchesSearch`, (4) leave the catalog modal alone unless the repro
-  shows it's the failing box (it already searches species).
-  Done check: species search works on app and web; full suite passes.
-  Manual verification: yes (app and live web). Review: no - one util plus
-  two call sites.
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something

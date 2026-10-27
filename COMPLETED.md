@@ -134,6 +134,8 @@ Entries prior to this file's oldest are in:
 
 ## Current milestone: Sprite, Filter & Search Fixes
 
+- **[Team Search by Species] — Leg 2** (2026-10-27): `teamMatchesSearch` now compares species/nicknames and the query with all non-alphanumerics stripped, so spaced/hyphenated/period queries find the team, and `TeamPickerDropdown` matches team name or roster species. Verified manually on app and web by searching a spaced/hyphenated species on the Teams page and in a team picker. Tests later switched to Champions-legal species. See commit c890e66.
+
 - **[Team Search by Species] — Leg 1 (scoping)** (2026-10-27): Found `teamMatchesSearch` already serves TeamsPage on app and web; the gap is spaced/hyphenated species queries and `TeamPickerDropdown` matching team names only. Leg 2 defined in TODO.md; no code changed. See commit 37429d1.
 
 - **[Mega Meowstic-F Toggle Gap] — Leg 1** (2026-10-27): `getMegaApiSlug` now resolves a Meowstic-F holding Meowsticite to its own `meowstic-f-mega` slug (aliased to PokeAPI's `meowstic-female-mega`, Trace ability), so the team card Mega toggle appears and flips to the female Mega sprite. Verified manually: Meowstic-F toggles to its female Mega sprite. See commit cd69051.
