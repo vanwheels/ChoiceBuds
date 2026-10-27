@@ -44,10 +44,9 @@ export default function CalcDropdown({
           {children(() => setOpen(false))}
         </div>
       )}
-        <div className="absolute z-30 left-0 top-full mt-1 min-w-full w-72">
-          {children(() => setOpen(false))}
-        </div>
-      )}
+      <div className="absolute z-30 left-0 top-full mt-1 min-w-full w-72">
+        {children(() => setOpen(false))}
+      </div>
     </div>
   );
 }
