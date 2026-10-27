@@ -67,6 +67,7 @@ export function teamPokemonToCalcUpdates(p: ImportedPokemonInfo): Partial<CalcPo
       spe: sd.evs.speed,
     },
     boosts: { ...ZERO_STATS },
+    curHp: null,
     moves,
   };
 }
@@ -81,6 +82,7 @@ export function opponentEntryToCalcUpdates(entry: OpponentPokemonEntry): Partial
     species: entry.species,
     item: entry.item || '',
     ability: entry.ability || '',
+    curHp: null,
     moves,
   };
 }

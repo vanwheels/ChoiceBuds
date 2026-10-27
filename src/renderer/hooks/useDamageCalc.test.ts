@@ -63,6 +63,7 @@ describe('useDamageCalc', () => {
       status: '',
       sps: ZERO_STATS,
       boosts: ZERO_STATS,
+      curHp: null,
       moves: [
         { name: '', isCrit: false },
         { name: '', isCrit: false },

@@ -18,6 +18,7 @@ import CalcAutocomplete from './CalcAutocomplete';
 import NatureEffectLabel from './NatureEffectLabel';
 import SavedSetPicker from '../SavedSetPicker';
 import CalcStatRows from './CalcStatRows';
+import CalcCurrentHp from './CalcCurrentHp';
 import CalcStatSpreadChips from './CalcStatSpreadChips';
 import CalcRealSetsSection from './CalcRealSetsSection';
 import FormeToggle from './FormeToggle';
@@ -289,6 +290,12 @@ export default function CalcPokemonPanelFields({
         natureEffect={natureEffect}
         onChangeSp={(key, value) => onChange({ sps: { ...state.sps, [key]: value } })}
         onChangeBoost={(key, value) => onChange({ boosts: { ...state.boosts, [key]: value } })}
+      />
+
+      <CalcCurrentHp
+        curHp={state.curHp}
+        maxHp={boostedStats?.hp ?? null}
+        onChange={(curHp) => onChange({ curHp })}
       />
 
       {usage && (

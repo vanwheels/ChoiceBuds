@@ -116,6 +116,8 @@ export interface CalcPokemonState {
   status: StatusName | '';
   sps: StatsTable;
   boosts: StatsTable;
+  /** Flat current HP; null = full HP. % is derived from this (see calcCurrentHp.ts). */
+  curHp: number | null;
   moves: CalcMoveSlot[];
 }
 
@@ -130,6 +132,7 @@ export function defaultPokemonState(): CalcPokemonState {
     status: '',
     sps: { ...ZERO_STATS },
     boosts: { ...ZERO_STATS },
+    curHp: null,
     moves: defaultMoveSlots(),
   };
 }
@@ -435,6 +438,9 @@ export function buildPokemon(
     evs: spsToEvs(state.sps),
     ivs: MAX_IVS,
     boosts: state.boosts,
+    // Pokemon ignores a curHP above its own max, so a stale value left over
+    // from a higher-HP species safely falls back to full HP.
+    curHP: state.curHp ?? undefined,
   });
 }
 

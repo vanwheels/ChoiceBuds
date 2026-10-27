@@ -13,6 +13,7 @@ function makeCalcState(overrides: Partial<CalcPokemonState> = {}): CalcPokemonSt
     status: '',
     sps: { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 },
     boosts: { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 },
+    curHp: null,
     moves: [
       { name: '', isCrit: false },
       { name: '', isCrit: false },

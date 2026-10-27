@@ -319,3 +319,25 @@ describe('computeSideResults - Champions ability damage effects', () => {
     expect(entry.desc).not.toContain('Aura Guard');
   });
 });
+
+describe('computeSideResults at partial defender HP', () => {
+  const attacker = pokemonWithMove('Garchomp', 'Tackle');
+  const full = pokemonState({ species: 'Blissey' });
+  const low = pokemonState({ species: 'Blissey', curHp: 1 });
+  const run = (def: CalcPokemonState) =>
+    computeSideResults(gen, attacker, def, field.pokemon1Side, field.pokemon2Side, 'Singles', '', '')[0];
+
+  it('keeps damage % relative to max HP but KO text uses current HP', () => {
+    const f = run(full);
+    const l = run(low);
+    expect(l.percent).toBe(f.percent);
+    expect(f.kochanceText).not.toMatch(/OHKO/);
+    expect(l.kochanceText).toMatch(/guaranteed OHKO/);
+  });
+
+  it('ignores a stale curHp above the species max HP', () => {
+    expect(run(pokemonState({ species: 'Blissey', curHp: 99999 })).kochanceText).toBe(
+      run(full).kochanceText,
+    );
+  });
+});

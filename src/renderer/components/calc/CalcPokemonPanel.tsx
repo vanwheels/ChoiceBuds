@@ -282,6 +282,7 @@ export default function CalcPokemonPanel({
   // as a starting point (the saved-set picker, if opened, can still override
   // it below).
   const handleSpeciesSelect = (species: string) => {
+    onChange({ curHp: null });
     const sets = savedPokemonState.getSavedSetsForSpecies(species);
     if (sets.length > 0) setSavedSetPickerSpecies(species);
     autoFillFromUsage(species);
