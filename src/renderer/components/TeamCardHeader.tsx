@@ -3,8 +3,9 @@ import { Team, type TeamVisibility } from '../types/pokemon';
 import type { RegulationId } from '../utils/pokemonRules';
 import { getPixelSpriteUrl } from '../utils/spriteUrl';
 import { getTotalSP, MAX_TOTAL_SP } from '../utils/evTotal';
-import { getMegaApiSlug } from '../config/megaEvolution';
+import { resolveActiveMegaSlug } from '../config/megaEvolution';
 import { getCachedMegaSprite } from '../hooks/useMegaSprite';
+import { useActiveFormsForIds } from '../hooks/usePokemonFormToggle';
 import RegulationBadge from './RegulationBadge';
 import TeamVisibilityBadge from './TeamVisibilityBadge';
 import TeamOverflowMenu from './TeamOverflowMenu';
@@ -58,6 +59,8 @@ export default function TeamCardHeader({
   onExportPdf,
   onDelete,
 }: TeamCardHeaderProps) {
+  // Hook can't run per slot inside the strip's map (Rules of Hooks).
+  const activeForms = useActiveFormsForIds((team.pokemon ?? []).map((p) => p.id));
   return (
     <div
       onContextMenu={onContextMenu}
@@ -153,9 +156,13 @@ export default function TeamCardHeader({
         <div className="flex flex-row items-center gap-2 flex-wrap justify-center">
           {Array.from({ length: 6 }, (_, idx) => team.pokemon?.[idx]).map((p, idx) => {
             if (!p) return <div key={idx} className="w-14 h-14 shrink-0" />;
-            // Same "own Mega Stone" gate PokemonCard.tsx's main sprite
-            // uses - see config/megaEvolution.ts.
-            const megaApiSlug = getMegaApiSlug(p.showdownData.item, p.showdownData.species);
+            // Same "own Mega Stone AND toggle on" gate the expanded card's
+            // sprite uses - holding the stone alone isn't Mega-evolved.
+            const megaApiSlug = resolveActiveMegaSlug(
+              p.showdownData.item,
+              p.showdownData.species,
+              activeForms[p.id] ?? null,
+            );
             const megaSprite = megaApiSlug ? getCachedMegaSprite(megaApiSlug) : null;
             const spriteUrl = megaSprite
               ? p.showdownData.shiny
