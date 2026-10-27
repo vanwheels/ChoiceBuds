@@ -51,6 +51,16 @@ entries first, then an "All" section when searching beyond them.
   already colors via `getStatLabelColor`) rather than building new. Should
   land before Leg 5 so the smart pickers share it. Manual verification.
 
+- **[Calc Page Rework: Dynamic Move Types] — Leg 8** *(Last touched:
+  2026-10-26 · Re-checks: 0)*
+  Move-row type coloring should follow the field and ability: Weather Ball,
+  Terrain Pulse, Judgment-style moves under weather/terrain, and
+  Pixelate/Aerilate/Refrigerate/Galvanize/Normalize-style ability type
+  changes. Move rows currently color from the static `getMoveType`
+  (`useDamageCalc.ts`), so it needs the attacker's ability and the field
+  passed in; check how `@smogon/calc` resolves the effective type first.
+  Manual verification.
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
