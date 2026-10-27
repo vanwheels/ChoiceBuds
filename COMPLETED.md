@@ -135,6 +135,12 @@ Entries prior to this file's oldest are in:
   2026-10-27 Sprite, Filter & Search Fixes boundary - named with the
   milestone slug since it shares its date range with no other archive)
 
+- **[Calc Side Panel Height Parity] — Leg 1** (2026-10-27)
+  Calc Pokémon panel root now `flex-1`, so it fills its column (already stretched to the
+  taller side) and both panels and their Box panels align. Verified live by the user with
+  empty, single-forme and multi-forme species on each side. Full suite, lint and type-check
+  green. See commit 3553229.
+
 - **[Calc Sprite Swap Flicker] — Leg 1** (2026-10-27)
   `CalcSideSprite` now cross-fades the static sprite into the Showdown GIF and renders
   the GIF at a uniform 1.2x native size (a 3x-capped attempt had shrunk Megas), spanning

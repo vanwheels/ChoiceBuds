@@ -27,16 +27,6 @@ Done when:
 - A test fails on any Mega stone whose `getMegaApiSlug` doesn't resolve to a
   valid PokeAPI resource name.
 
-- **[Calc Side Panel Height Parity] — Leg 1** *(Last touched: 2026-10-27 ·
-  Re-checks: 0)*
-  Found verifying Box Integration Leg 6: the two Pokémon panels' heights differ
-  depending on whether a species is loaded and whether it has a Base/Mega or
-  other forme toggle row, so the sides (and their Box panels below) don't line
-  up. Make both sides reserve the same height regardless of content. Sequenced
-  after the sprite leg since the sprite box size feeds panel height. Done
-  check: sides and Box panels align with empty, single-forme and multi-forme
-  species on each side. Manual verification: yes. Review: no.
-
 - **[Calc Item Picker: Champions Items & Full Scroll] — Leg 1** *(Last
   touched: 2026-10-27 · Re-checks: 0)*
   Found verifying Sprites & Icons Leg 2: the Calc item picker lists every
