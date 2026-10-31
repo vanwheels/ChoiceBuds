@@ -23,17 +23,6 @@ Done when:
   Download, captioned screenshots, and the Credits section intact.
 - A `LICENSE` file matching `package.json`'s MIT declaration exists.
 
-- **[Screenshot & GIF Script] — Leg 1** *(Last touched: 2026-10-31 ·
-  Re-checks: 0)*
-  Add the fixed demo dataset (never real user data) and an `npm run media`
-  script per claude-config's `rules/docs.md` "README media" section. It starts
-  the web build, captures PNGs at set viewport sizes, and writes them to
-  `docs/media/` with screen-descriptive names (e.g. `damage-calc.png`). Reuse
-  `playwright-core` and `scripts/devMobile.mjs`; check `ffmpeg` is available
-  on both machines (needed by Leg 2).
-  Done check: running it twice produces the same named PNGs.
-  Manual verification: yes · Review: no
-
 - **[Screenshot & GIF Script] — Leg 2** *(Last touched: 2026-10-31 ·
   Re-checks: 0)*
   Extend `npm run media` with scripted Playwright interactions recorded to
@@ -41,6 +30,8 @@ Done when:
   plus one more), each one interaction, 3-8s, ~800px wide, 10-15 fps, a few MB
   max. Wire the `release` skill to run it before tagging when a release
   changed a pictured screen.
+  `ffmpeg` is missing on the Windows machine (`winget install Gyan.FFmpeg`);
+  the Mac is unchecked.
   Done check: GIFs generate and fit the size budget.
   Manual verification: yes · Review: no
 

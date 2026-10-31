@@ -138,3 +138,14 @@ Entries prior to this file's oldest are in:
   (the Calc Follow-ups milestone's six legs, split out at the 2026-10-27
   Calc Follow-ups boundary - named with the milestone slug since it shares
   its date range with the Sprite, Filter & Search Fixes archive above)
+
+## [Screenshot & GIF Script] — Leg 1 (2026-10-31)
+
+Added `npm run media` (`scripts/media.mjs`) and a fixed, invented Reg M-A demo
+team (`scripts/media/demoData.mjs`), seeded into the web build's IndexedDB;
+writes `teams.png`, `type-matchup.png`, `speed-tiers.png` and
+`teams-mobile.png` to `docs/media/`. Two consecutive runs gave identical
+checksums; type-check, lint and the full suite pass. Not yet verified by
+Vanny: image content, and Champions legality of the six demo species.
+`ffmpeg` is not installed on this machine (Leg 2 prerequisite; the other
+machine is unchecked). See commit e2bce6be73c4126b2bd10c5468c64a57111c84b5.
