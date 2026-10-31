@@ -14,6 +14,54 @@ the current milestone and "Unscheduled", items are listed highest-to-lowest
 priority. Only one milestone is "current" at a time — see root `CLAUDE.md`'s
 Task Tracking rules for the full section-lifecycle.
 
+## Current Milestone: README Media & Refresh
+
+Done when:
+- `npm run media` regenerates every file in `docs/media/` from the fixed demo
+  dataset, with no real user data.
+- `README.md` follows the `rules/docs.md` shape: badges, hero media, Try it /
+  Download, captioned screenshots, and the Credits section intact.
+- A `LICENSE` file matching `package.json`'s MIT declaration exists.
+
+- **[Screenshot & GIF Script] — Leg 1** *(Last touched: 2026-10-31 ·
+  Re-checks: 0)*
+  Add the fixed demo dataset (never real user data) and an `npm run media`
+  script per claude-config's `rules/docs.md` "README media" section. It starts
+  the web build, captures PNGs at set viewport sizes, and writes them to
+  `docs/media/` with screen-descriptive names (e.g. `damage-calc.png`). Reuse
+  `playwright-core` and `scripts/devMobile.mjs`; check `ffmpeg` is available
+  on both machines (needed by Leg 2).
+  Done check: running it twice produces the same named PNGs.
+  Manual verification: yes · Review: no
+
+- **[Screenshot & GIF Script] — Leg 2** *(Last touched: 2026-10-31 ·
+  Re-checks: 0)*
+  Extend `npm run media` with scripted Playwright interactions recorded to
+  video and converted to GIF with `ffmpeg`: one or two total (`team-import.gif`
+  plus one more), each one interaction, 3-8s, ~800px wide, 10-15 fps, a few MB
+  max. Wire the `release` skill to run it before tagging when a release
+  changed a pictured screen.
+  Done check: GIFs generate and fit the size budget.
+  Manual verification: yes · Review: no
+
+- **[README Refresh] — Leg 1** *(Last touched: 2026-10-31 · Re-checks: 0)*
+  Restructure `README.md` to the `rules/docs.md` README shape, without media:
+  name, pitch and CI/version badges; Try it / Download (web link first, then
+  installers); user-voice Features matching the changelog; For developers
+  (setup, link to ARCHITECTURE.md); then Credits and data sources (the existing
+  long section), the AI-involvement and not-affiliated lines, and the license.
+  Add the missing `LICENSE` file (MIT, per `package.json`). Independent of the
+  media legs, so it may run first.
+  Done check: README renders on GitHub with all sections present.
+  Manual verification: yes · Review: no
+
+- **[README Refresh] — Leg 2** *(Last touched: 2026-10-31 · Re-checks: 0)*
+  Depends on `[Screenshot & GIF Script] — Leg 2` and `[README Refresh] — Leg
+  1`. Place the hero GIF and 3-4 captioned screenshots from `docs/media/`. The
+  exact layout is TBD and may take a couple of iterations.
+  Done check: Vanny approves the rendered README.
+  Manual verification: yes · Review: no
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
