@@ -8,6 +8,7 @@
     "dev": "vite",
     "dev:web": "vite --config web/vite.config.ts",
     "dev:mobile": "node scripts/devMobile.mjs",
+    "media": "node scripts/media.mjs",
     "build": "tsc && vite build",
     "build:web": "tsc && vite build --config web/vite.config.ts",
     "type-check": "tsc --noEmit",
