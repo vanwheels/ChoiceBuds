@@ -10,6 +10,9 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { useGameData } from './useGameData';
 import type { GameDataCache, SpeciesLearnsetEntry } from '../types/pokemon';
 import { fetchSpeciesLearnset } from '../services/pokeapiService';
+import { normalizeSpeciesForAPI } from '../services/pokeapi';
+import { CHAMPIONS_DATED_MOVEPOOL_ADDITIONS } from '../config/championsRegulationPatches';
+import { getRuleset } from '../utils/pokemonRules';
 
 vi.mock('../services/pokeapiService', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../services/pokeapiService')>()),
@@ -56,6 +59,16 @@ async function renderLoaded() {
 }
 
 describe('Reg M-D movepool additions', () => {
+  it('keys every row by a Reg M-D roster species in its learnset slug form', () => {
+    // A misspelled key never matches a learnset and fails silently, so check
+    // the whole table rather than only the rows the tests below exercise.
+    const roster = new Set(getRuleset('REG-MD').allowedSpecies);
+    for (const slug of Object.keys(CHAMPIONS_DATED_MOVEPOOL_ADDITIONS)) {
+      expect(roster.has(slug), slug).toBe(true);
+      expect(normalizeSpeciesForAPI(slug), slug).toBe(slug);
+    }
+  });
+
   it('adds the patch moves to tagged species under Reg M-D only', async () => {
     const result = await renderLoaded();
     const get = (species: string, reg: 'REG-MC' | 'REG-MD') =>
