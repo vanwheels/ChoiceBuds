@@ -102,6 +102,7 @@ function setup(
       setCacheEntry,
       getEnrichedSpeciesOptions,
       getChampionsUsage,
+      'REG-MD',
     ),
   );
   return {

@@ -76,6 +76,24 @@ export const ALL_REGULATION_IDS: RegulationId[] = ['REG-MA', 'REG-MB', 'REG-MC',
  */
 export const LATEST_REGULATION_ID: RegulationId = ALL_REGULATION_IDS[ALL_REGULATION_IDS.length - 1];
 
+/**
+ * Whether `regulation` is `since` or a later one, by ALL_REGULATION_IDS
+ * order. Decides whether a dated balance patch
+ * (config/championsRegulationPatches.ts) applies to a given regulation.
+ */
+export function isRegulationAtOrAfter(regulation: RegulationId, since: RegulationId): boolean {
+  return ALL_REGULATION_IDS.indexOf(regulation) >= ALL_REGULATION_IDS.indexOf(since);
+}
+
+/**
+ * The regulation a team surface's balance data should follow: its own
+ * `format` when that's a known regulation, otherwise the latest. Accepts a
+ * plain string because public-profile teams carry `format` unvalidated.
+ */
+export function regulationForFormat(format: string | undefined): RegulationId {
+  return format && isRegulationLabel(format) ? toRegulationId(format) : LATEST_REGULATION_ID;
+}
+
 export interface ChampionsRuleset {
   id: RegulationId;
   allowedSpecies: string[]; // lowercase-hyphenated base species slugs

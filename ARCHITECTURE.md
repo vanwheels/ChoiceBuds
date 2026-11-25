@@ -109,7 +109,15 @@ change.
   at the read boundary in `useGameData.ts`: `championsMoveOverrides.ts`,
   `championsAbilityOverrides.ts`, `championsMovepoolChanges.ts`;
   `missingMoveDescriptions.ts` fills PokeAPI's own description gaps at the
-  same read boundary, same pattern, different reason). No hardcoded colors
+  same read boundary, same pattern, different reason). Those tables apply
+  to every regulation; `championsRegulationPatches.ts` holds the dated
+  layer, whose entries apply from a tagged regulation onward (so a new
+  regulation's balance patch never shows in older teams or calcs). Every
+  `useGameData` move/ability/learnset getter and
+  `getChampionsCalcMoveOverride` take a required `RegulationId`: the calc
+  passes its `regulationId`, team surfaces their `team.format`, and
+  surfaces with no regulation (Box, bulk sync) `LATEST_REGULATION_ID`.
+  No hardcoded colors
   or species lists belong anywhere else. External-source policy for this
   directory and `services/` lives in `.claude/rules/external-data-sources.md`.
 - `src/renderer/components/` — presentational only.

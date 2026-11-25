@@ -43,6 +43,7 @@ import type { UseGameDataReturn } from './useGameData';
 import { getEffectiveMoveType } from '../config/typeChangingAbilities';
 import { resolveActiveMegaSlug } from '../config/megaEvolution';
 import { resolveActiveAbility } from '../config/megaAbilities';
+import { toRegulationId } from '../utils/pokemonRules';
 
 export interface UseTeamMoveTypesReturn {
   /** One entry per team slot, parallel to team.pokemon - each slot's list of its damaging moves' types (deduped isn't necessary, computeOffensiveCoverage just takes the max). */
@@ -64,6 +65,7 @@ export function useTeamMoveTypes(
 
   useEffect(() => {
     if (!team) return;
+    const regulation = toRegulationId(team.format);
     let cancelled = false;
     Promise.all(
       team.pokemon.map((p) => {
@@ -73,7 +75,7 @@ export function useTeamMoveTypes(
           activeForms[p.id] ?? null,
         );
         const effectiveAbility = resolveActiveAbility(activeMegaSlug, p.showdownData.ability);
-        return Promise.all(p.showdownData.moves.map((name) => getMoveData(name))).then((results) =>
+        return Promise.all(p.showdownData.moves.map((name) => getMoveData(name, regulation))).then((results) =>
           results
             .filter((m): m is NonNullable<typeof m> => !!m && m.category !== 'status')
             .map((m) => getEffectiveMoveType(m.name, m.type, effectiveAbility)),

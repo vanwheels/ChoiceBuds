@@ -267,6 +267,7 @@ export default function TeamExportImageModal({
                   pokemon={pokemon}
                   gameDataState={gameDataState}
                   spriteCacheState={spriteCacheState}
+                  regulation={toRegulationId(team.format)}
                   showStatAlignment={sheetMode === 'open'}
                 />
               ))}

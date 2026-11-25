@@ -16,7 +16,7 @@ describe('useCalcLegalOptions', () => {
   it('is empty with no species and never fetches', () => {
     const fetcher = makeFetcher();
     const { result } = renderHook(() =>
-      useCalcLegalOptions('', '', fetcher, ALL_MOVES, ALL_ABILITIES),
+      useCalcLegalOptions('', '', fetcher, 'REG-MD', ALL_MOVES, ALL_ABILITIES),
     );
     expect(result.current).toEqual({ moves: [], abilities: [] });
     expect(fetcher).not.toHaveBeenCalled();
@@ -24,7 +24,7 @@ describe('useCalcLegalOptions', () => {
 
   it("maps the species' learnset onto the calc's own names, keeping calc order", async () => {
     const { result } = renderHook(() =>
-      useCalcLegalOptions('Gengar', '', makeFetcher(), ALL_MOVES, ALL_ABILITIES),
+      useCalcLegalOptions('Gengar', '', makeFetcher(), 'REG-MD', ALL_MOVES, ALL_ABILITIES),
     );
     await waitFor(() => expect(result.current.moves).toEqual(['Shadow Ball', 'Toxic']));
     expect(result.current.abilities).toEqual(['Levitate']);
@@ -33,7 +33,7 @@ describe('useCalcLegalOptions', () => {
   it('ignores results resolved for a previous species', async () => {
     const fetcher = makeFetcher();
     const { result, rerender } = renderHook(
-      ({ species }) => useCalcLegalOptions(species, '', fetcher, ALL_MOVES, ALL_ABILITIES),
+      ({ species }) => useCalcLegalOptions(species, '', fetcher, 'REG-MD', ALL_MOVES, ALL_ABILITIES),
       { initialProps: { species: 'Gengar' } },
     );
     await waitFor(() => expect(result.current.abilities).toEqual(['Levitate']));

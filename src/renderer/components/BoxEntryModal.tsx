@@ -42,7 +42,7 @@ import type { CSSProperties, MouseEvent as ReactMouseEvent } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import type { ImportedPokemonInfo, SavedPokemonEntry } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
-import type { RegulationId } from '../utils/pokemonRules';
+import { LATEST_REGULATION_ID, type RegulationId } from '../utils/pokemonRules';
 import { getTypeGlowColors } from '../config/pokemonTheme';
 import { getPixelSpriteUrl } from '../utils/spriteUrl';
 import { copyPokemonToClipboard } from '../utils/clipboardPayload';
@@ -439,6 +439,7 @@ export default function BoxEntryModal({
                 onUpdatePokemon={onUpdatePokemon}
                 gameDataState={gameDataState}
                 rulesetId={rulesetId}
+                balanceRegulation={LATEST_REGULATION_ID}
                 resolveSprite={resolveSprite}
                 showAnimatedSprites={showAnimatedSprites}
               />

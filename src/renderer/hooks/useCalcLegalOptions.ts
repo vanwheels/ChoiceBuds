@@ -10,6 +10,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { UseGameDataReturn } from './useGameData';
 import { normalizeMoveSlug, type CalcPokemonState } from '../utils/damageCalcEngine';
+import type { RegulationId } from '../utils/pokemonRules';
 
 interface LegalSlugs {
   /** Species the slugs were resolved for - a mismatch means they're stale. */
@@ -27,6 +28,7 @@ export function useCalcLegalOptions(
   species: string,
   gender: CalcPokemonState['gender'],
   getEnrichedSpeciesOptions: UseGameDataReturn['getEnrichedSpeciesOptions'],
+  regulation: RegulationId,
   allMoves: string[],
   allAbilities: string[],
 ): CalcLegalOptions {
@@ -35,7 +37,7 @@ export function useCalcLegalOptions(
   useEffect(() => {
     if (!species) return;
     let cancelled = false;
-    getEnrichedSpeciesOptions(species, gender || undefined)
+    getEnrichedSpeciesOptions(species, gender || undefined, regulation)
       .then(({ moves, abilities }) => {
         if (cancelled) return;
         setSlugs({
@@ -50,7 +52,7 @@ export function useCalcLegalOptions(
     return () => {
       cancelled = true;
     };
-  }, [species, gender, getEnrichedSpeciesOptions]);
+  }, [species, gender, regulation, getEnrichedSpeciesOptions]);
 
   // Derived rather than cleared in an effect: a species change or empty
   // species simply ignores slugs resolved for a different one.

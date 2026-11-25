@@ -21,7 +21,7 @@ import type { UseGameDataReturn } from '../../hooks/useGameData';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import type { UseDatabaseReturn } from '../../hooks/useDatabase';
 import { getRegulationTheme } from '../../config/pokemonTheme';
-import { isRegulationLabel, toRegulationId } from '../../utils/pokemonRules';
+import { isRegulationLabel, regulationForFormat, toRegulationId } from '../../utils/pokemonRules';
 import { toMotionDragProps, type GridReorderHandlers } from '../../hooks/useGridReorder';
 import { DRAG_REORDER_TRANSITION } from '../../config/motion';
 import type { ProfileLayout } from '../../hooks/useProfileLayout';
@@ -171,6 +171,7 @@ export default function ProfileTeamCard({
                 key={idx}
                 pokemon={p}
                 detailed={detailed}
+                regulation={regulationForFormat(team.format)}
                 gameDataState={gameDataState}
                 spriteCacheState={spriteCacheState}
                 databaseState={databaseState}
@@ -185,6 +186,7 @@ export default function ProfileTeamCard({
               key={idx}
               pokemon={p}
               detailed={detailed}
+              regulation={regulationForFormat(team.format)}
               gameDataState={gameDataState}
               spriteCacheState={spriteCacheState}
               databaseState={databaseState}

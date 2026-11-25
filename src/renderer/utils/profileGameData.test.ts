@@ -49,17 +49,17 @@ describe('resolveProfileItemSpriteUrl', () => {
 
 describe('getProfileMoveChipTheme', () => {
   it('returns null with no game-data cache', () => {
-    expect(getProfileMoveChipTheme('Fake Out')).toBeNull();
+    expect(getProfileMoveChipTheme('Fake Out', 'REG-MD')).toBeNull();
   });
 
   it('returns null on a cache miss', () => {
-    expect(getProfileMoveChipTheme('Fake Out', fakeGameData())).toBeNull();
+    expect(getProfileMoveChipTheme('Fake Out', 'REG-MD', fakeGameData())).toBeNull();
   });
 
   it("returns the move's type theme when cached", () => {
     const gameDataState = fakeGameData({
       getCachedMove: () => ({ type: 'fire' }) as never,
     });
-    expect(getProfileMoveChipTheme('Heat Wave', gameDataState)).toEqual(getTypeTheme('fire'));
+    expect(getProfileMoveChipTheme('Heat Wave', 'REG-MD', gameDataState)).toEqual(getTypeTheme('fire'));
   });
 });

@@ -233,6 +233,9 @@
  * here instead, same reasoning Leg 4b already established.
  */
 
+import { isRegulationAtOrAfter, type RegulationId } from '../utils/pokemonRules';
+import { CHAMPIONS_DATED_MOVEPOOL_ADDITIONS } from './championsRegulationPatches';
+
 const GLOBALLY_REMOVED_MOVES = [
   'absorb',
   'acid',
@@ -777,4 +780,21 @@ export function applyChampionsPatchRemovals(speciesSlug: string, moves: string[]
   const removals = CHAMPIONS_PATCH_MOVEPOOL_REMOVALS[speciesSlug];
   const removeSet = new Set([...CHAMPIONS_PATCH_GLOBALLY_REMOVED_MOVES, ...(removals ?? [])]);
   return moves.filter((move) => !removeSet.has(move));
+}
+
+/**
+ * Adds every dated movepool addition active in `regulation`
+ * (championsRegulationPatches.ts). Must run after every removal above so a
+ * patch can re-grant a move an older table removes; ungated by
+ * hasChampionsMoveData for the same reason as applyChampionsPatchRemovals.
+ */
+export function applyDatedMovepoolAdditions(
+  speciesSlug: string,
+  moves: string[],
+  regulation: RegulationId,
+): string[] {
+  const added = (CHAMPIONS_DATED_MOVEPOOL_ADDITIONS[speciesSlug] ?? [])
+    .filter((p) => isRegulationAtOrAfter(regulation, p.since))
+    .flatMap((p) => p.change);
+  return added.length === 0 ? moves : [...new Set([...moves, ...added])];
 }

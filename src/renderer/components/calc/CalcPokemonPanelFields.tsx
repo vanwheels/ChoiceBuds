@@ -10,6 +10,7 @@ import type { UseSpeciesRosterReturn } from '../../hooks/useSpeciesRoster';
 import type { UseVgcPastesCacheReturn } from '../../hooks/useVgcPastesCache';
 import type { UseCalcRealSetsLookupReturn } from '../../hooks/useCalcRealSetsLookup';
 import { realSetBundleToCalcUpdates } from '../../utils/calcTeamImport';
+import { toRegulationId } from '../../utils/pokemonRules';
 import { resolveCalcPokemonSpriteUrl } from '../../utils/calcSpriteResolve';
 import { getItemFallbackSpriteUrl, getItemSpriteUrl } from '../../utils/itemSprite';
 import TooltipContent from '../TooltipContent';
@@ -261,7 +262,7 @@ export default function CalcPokemonPanelFields({
               selectedItem=""
               itemData={null}
               selectedAbility={name}
-              abilityData={gameDataState.getCachedAbility(name)}
+              abilityData={gameDataState.getCachedAbility(name, toRegulationId(regulation))}
               selectedMoves={[]}
               moveDataSlots={[]}
               moveBoosts={[]}

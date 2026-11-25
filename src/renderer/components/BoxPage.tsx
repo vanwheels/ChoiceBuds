@@ -145,7 +145,7 @@ import { ALL_TYPES } from '../config/typeEffectiveness';
 import { normalizeNameForAPI } from '../services/pokeapiService';
 import { getMegaApiSlug } from '../config/megaEvolution';
 import { getMegaAbility } from '../config/megaAbilities';
-import { toRegulationId } from '../utils/pokemonRules';
+import { LATEST_REGULATION_ID, toRegulationId } from '../utils/pokemonRules';
 import { readPokemonFromClipboard } from '../utils/clipboardPayload';
 import { parseShowdownText } from '../services/parser';
 import { enrichPokemonWithAPI } from '../services/pokeapi';
@@ -196,6 +196,7 @@ export default function BoxPage({
     databaseState.setCacheEntry,
     gameDataState.getEnrichedSpeciesOptions,
     gameDataState.getChampionsUsage,
+    LATEST_REGULATION_ID,
   );
 
   const [search, setSearch] = useState('');

@@ -39,6 +39,8 @@
 
 import type { AbilityData } from '../types/pokemon';
 import { normalizeNameForAPI } from '../services/pokeapiService';
+import { isRegulationAtOrAfter, type RegulationId } from '../utils/pokemonRules';
+import { CHAMPIONS_DATED_ABILITY_PATCHES } from './championsRegulationPatches';
 
 const CHAMPIONS_ABILITY_OVERRIDES: Record<string, Partial<AbilityData>> = {
   healer: {
@@ -50,8 +52,19 @@ const CHAMPIONS_ABILITY_OVERRIDES: Record<string, Partial<AbilityData>> = {
   },
 };
 
-export function applyChampionsAbilityOverride(ability: AbilityData): AbilityData {
+/**
+ * Applies the global override, then every dated patch active in
+ * `regulation` (championsRegulationPatches.ts), oldest first.
+ */
+export function applyChampionsAbilityOverride(
+  ability: AbilityData,
+  regulation: RegulationId,
+): AbilityData {
   const slug = normalizeNameForAPI(ability.name);
-  const override = CHAMPIONS_ABILITY_OVERRIDES[slug];
-  return override ? { ...ability, ...override } : ability;
+  const global = CHAMPIONS_ABILITY_OVERRIDES[slug];
+  const dated = (CHAMPIONS_DATED_ABILITY_PATCHES[slug] ?? []).filter((p) =>
+    isRegulationAtOrAfter(regulation, p.since),
+  );
+  if (!global && dated.length === 0) return ability;
+  return dated.reduce((acc, p) => ({ ...acc, ...p.change }), { ...ability, ...global });
 }

@@ -3,6 +3,7 @@ import { renderHook, waitFor, act } from '@testing-library/react';
 import { useGameData } from './useGameData';
 import { VGC_ITEMS } from '../config/vgcData';
 import { NEVER_EXPIRES } from '../utils/cacheExpiry';
+import { LATEST_REGULATION_ID } from '../utils/pokemonRules';
 import type {
   AbilityData,
   ChampionsUsageEntry,
@@ -191,7 +192,7 @@ describe('useGameData', () => {
 
     vi.mocked(fetchAbilityData).mockResolvedValueOnce(makeAbility());
     await act(async () => {
-      await result.current.getAbilityData('Cursed Body');
+      await result.current.getAbilityData('Cursed Body', LATEST_REGULATION_ID);
     });
 
     // Write-through is debounced (see useDebouncedWrite.ts) so it doesn't
@@ -214,9 +215,9 @@ describe('useGameData', () => {
       const { result } = renderHook(() => useGameData());
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
 
-      expect(result.current.getCachedMove('missing-move')).toBeNull();
+      expect(result.current.getCachedMove('missing-move', LATEST_REGULATION_ID)).toBeNull();
       // base pp 15 is retiered to 16 game-wide by config/championsMoveOverrides.ts
-      expect(result.current.getCachedMove('Shadow Ball')?.pp).toBe(16);
+      expect(result.current.getCachedMove('Shadow Ball', LATEST_REGULATION_ID)?.pp).toBe(16);
     });
 
     it('getCachedMove treats an entry missing target/meta as a cache miss (self-heal)', async () => {
@@ -227,7 +228,7 @@ describe('useGameData', () => {
       const { result } = renderHook(() => useGameData());
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
 
-      expect(result.current.getCachedMove('shadow-ball')).toBeNull();
+      expect(result.current.getCachedMove('shadow-ball', LATEST_REGULATION_ID)).toBeNull();
     });
 
     it('getMoveData fetches, caches and overrides on a miss, and serves the cache on a hit', async () => {
@@ -235,12 +236,12 @@ describe('useGameData', () => {
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
       vi.mocked(fetchMoveData).mockResolvedValueOnce(makeMove({ pp: 5 }));
 
-      const fetched = await result.current.getMoveData('Shadow Ball');
+      const fetched = await result.current.getMoveData('Shadow Ball', LATEST_REGULATION_ID);
       expect(fetchMoveData).toHaveBeenCalledWith('shadow-ball');
       expect(fetched?.pp).toBe(8); // base pp 5 -> 8 per the retier
 
       vi.mocked(fetchMoveData).mockClear();
-      await waitFor(() => expect(result.current.getCachedMove('Shadow Ball')?.pp).toBe(8));
+      await waitFor(() => expect(result.current.getCachedMove('Shadow Ball', LATEST_REGULATION_ID)?.pp).toBe(8));
       expect(fetchMoveData).not.toHaveBeenCalled();
     });
 
@@ -250,7 +251,7 @@ describe('useGameData', () => {
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
       vi.mocked(fetchMoveData).mockRejectedValueOnce(new Error('network down'));
 
-      const fetched = await result.current.getMoveData('Shadow Ball');
+      const fetched = await result.current.getMoveData('Shadow Ball', LATEST_REGULATION_ID);
       expect(fetched).toBeNull();
       await waitFor(() => expect(result.current.error).toBe('network down'));
       consoleErrorSpy.mockRestore();
@@ -326,7 +327,7 @@ describe('useGameData', () => {
         makeAbility({ name: 'healer', description: 'mainline SV text' }),
       );
 
-      const fetched = await result.current.getAbilityData('Healer');
+      const fetched = await result.current.getAbilityData('Healer', LATEST_REGULATION_ID);
       expect(fetched?.description).toContain('50% chance to heal an adjacent ally');
     });
 
@@ -335,7 +336,7 @@ describe('useGameData', () => {
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
       vi.mocked(fetchAbilityData).mockResolvedValueOnce(makeAbility());
 
-      const fetched = await result.current.getAbilityData('Cursed Body');
+      const fetched = await result.current.getAbilityData('Cursed Body', LATEST_REGULATION_ID);
       expect(fetched?.description).toBe('May disable a move that hits.');
     });
   });
@@ -354,7 +355,7 @@ describe('useGameData', () => {
       const { result } = renderHook(() => useGameData());
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
 
-      const learnset = await result.current.getSpeciesLearnset('gengar');
+      const learnset = await result.current.getSpeciesLearnset('gengar', undefined, LATEST_REGULATION_ID);
       expect(learnset?.moves).toEqual(['shadow-ball']); // tera-blast stripped by applyChampionsPatchRemovals
     });
 
@@ -365,7 +366,7 @@ describe('useGameData', () => {
         makeLearnset({ moves: ['shadow-ball', 'tera-blast'], hasChampionsMoveData: false }),
       );
 
-      const learnset = await result.current.getSpeciesLearnset('gengar');
+      const learnset = await result.current.getSpeciesLearnset('gengar', undefined, LATEST_REGULATION_ID);
       expect(learnset?.moves).toEqual(['shadow-ball']); // tera-blast stripped
     });
 
@@ -391,7 +392,7 @@ describe('useGameData', () => {
       const { result } = renderHook(() => useGameData());
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
 
-      const learnset = await result.current.getSpeciesLearnset('gengar');
+      const learnset = await result.current.getSpeciesLearnset('gengar', undefined, LATEST_REGULATION_ID);
       expect(fetchSpeciesLearnset).toHaveBeenCalledWith('gengar', undefined);
       expect(learnset?.hasChampionsMoveData).toBe(true);
       // no hand-table correction now that PokeAPI has real data, but tera-blast
@@ -412,7 +413,7 @@ describe('useGameData', () => {
       const { result } = renderHook(() => useGameData());
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
 
-      const learnset = await result.current.getSpeciesLearnset('gengar');
+      const learnset = await result.current.getSpeciesLearnset('gengar', undefined, LATEST_REGULATION_ID);
       expect(fetchSpeciesLearnset).toHaveBeenCalledWith('gengar', undefined);
       expect(learnset?.moves).toEqual(['shadow-ball']); // re-fetched, then movepool-corrected
     });
@@ -430,7 +431,7 @@ describe('useGameData', () => {
       // note: getEnrichedSpeciesOptions only ever reads cached usage (getCachedChampionsUsage),
       // never triggers a live fetchChampionsUsage call - nothing to mock here
 
-      const options = await result.current.getEnrichedSpeciesOptions('gengar');
+      const options = await result.current.getEnrichedSpeciesOptions('gengar', undefined, LATEST_REGULATION_ID);
       expect(options.moves.map((m) => m.name)).toEqual(['shadow-ball']);
       expect(options.abilities.map((a) => a.name)).toEqual(['cursed-body']);
     });
@@ -440,7 +441,7 @@ describe('useGameData', () => {
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
       vi.mocked(fetchSpeciesLearnset).mockResolvedValueOnce(null);
 
-      const options = await result.current.getEnrichedSpeciesOptions('missingno');
+      const options = await result.current.getEnrichedSpeciesOptions('missingno', undefined, LATEST_REGULATION_ID);
       expect(options).toEqual({ moves: [], abilities: [] });
     });
 
@@ -468,7 +469,7 @@ describe('useGameData', () => {
       );
       vi.mocked(fetchAbilityData).mockResolvedValueOnce(makeAbility());
 
-      const options = await result.current.getEnrichedSpeciesOptions('gengar');
+      const options = await result.current.getEnrichedSpeciesOptions('gengar', undefined, LATEST_REGULATION_ID);
       expect(options.moves.map((m) => m.name)).toEqual(['protect', 'shadow-ball']);
     });
   });

@@ -228,7 +228,7 @@ export function useInitialSync(
           }),
         (entry) =>
           Promise.all([
-            getEnrichedSpeciesOptions(entry.name),
+            getEnrichedSpeciesOptions(entry.name, undefined, LATEST_REGULATION_ID),
             syncSpeciesStats(entry.name, databaseState),
           ]),
       );

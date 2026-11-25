@@ -14,6 +14,7 @@
  */
 
 import type { UseGameDataReturn } from '../hooks/useGameData';
+import type { RegulationId } from './pokemonRules';
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
 import type { UseDatabaseReturn } from '../hooks/useDatabase';
 import { getItemFallbackSpriteUrl, getItemSpriteUrl } from './itemSprite';
@@ -44,10 +45,11 @@ export function resolveProfileItemSpriteUrl(
 /** A move's type-colored chip theme, or null (render a neutral chip instead) without a game-data cache or on a cache miss. */
 export function getProfileMoveChipTheme(
   move: string,
+  regulation: RegulationId,
   gameDataState?: UseGameDataReturn,
 ): TypeTheme | null {
   if (!gameDataState) return null;
-  const type = gameDataState.getCachedMove(move)?.type;
+  const type = gameDataState.getCachedMove(move, regulation)?.type;
   return type ? getTypeTheme(type) : null;
 }
 

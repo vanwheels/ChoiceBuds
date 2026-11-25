@@ -32,6 +32,7 @@ import { getChampionsCalcMoveOverride } from '../config/championsMoveOverrides';
 import { getChampionsAbilityDamageEffect } from '../config/championsAbilityDamageEffects';
 import { normalizeNameForAPI } from '../services/pokeapiService';
 import { MAX_IVS, spsToEvs, evToSp, resolveCalcSpecies } from './championsStats';
+import { LATEST_REGULATION_ID, type RegulationId } from './pokemonRules';
 
 const MOVE_SLOT_COUNT = 4;
 
@@ -65,12 +66,19 @@ export function normalizeMoveSlug(name: string): string {
 
 /**
  * A move's type as the calc will actually use it (Champions type overrides
- * applied), for type-coloring move rows. Null for an empty/unknown name.
+ * for `regulation` applied), for type-coloring move rows. Null for an
+ * empty/unknown name.
  */
-export function getCalcMoveType(gen: Generation, moveName: string): string | null {
+export function getCalcMoveType(
+  gen: Generation,
+  moveName: string,
+  regulation: RegulationId,
+): string | null {
   if (!moveName) return null;
   try {
-    return new Move(gen, moveName, { overrides: getChampionsCalcMoveOverride(moveName) }).type;
+    return new Move(gen, moveName, {
+      overrides: getChampionsCalcMoveOverride(moveName, regulation),
+    }).type;
   } catch {
     return null;
   }
@@ -459,6 +467,7 @@ function computeMoveTypesOnly(
   gameType: GameType,
   weather: Weather | '',
   terrain: Terrain | '',
+  regulation: RegulationId,
 ): CalcMoveResultEntry[] {
   let pokemon: InstanceType<typeof Pokemon>;
   try {
@@ -480,7 +489,7 @@ function computeMoveTypesOnly(
         ability: attacker.ability || undefined,
         item: attacker.item || undefined,
         species: attacker.species,
-        overrides: getChampionsCalcMoveOverride(slot.name),
+        overrides: getChampionsCalcMoveOverride(slot.name, regulation),
       });
       return {
         ...emptyEntry(slot.name),
@@ -492,6 +501,12 @@ function computeMoveTypesOnly(
   });
 }
 
+/**
+ * `regulation` scopes the Champions move overrides
+ * (championsRegulationPatches.ts). It defaults to the latest regulation only
+ * so the engine's many fixture-style tests stay terse; useDamageCalc always
+ * passes the calc's selected regulationId.
+ */
 export function computeSideResults(
   gen: Generation,
   attacker: CalcPokemonState,
@@ -501,6 +516,7 @@ export function computeSideResults(
   gameType: GameType,
   weather: Weather | '',
   terrain: Terrain | '',
+  regulation: RegulationId = LATEST_REGULATION_ID,
 ): CalcMoveResultEntry[] {
   if (!attacker.species) {
     return attacker.moves.map((m) => emptyEntry(m.name));
@@ -514,6 +530,7 @@ export function computeSideResults(
       gameType,
       weather,
       terrain,
+      regulation,
     );
   }
 
@@ -544,7 +561,7 @@ export function computeSideResults(
         species: attacker.species,
         isCrit: slot.isCrit,
         hits: slot.hits,
-        overrides: getChampionsCalcMoveOverride(slot.name),
+        overrides: getChampionsCalcMoveOverride(slot.name, regulation),
       });
       const result = calculate(gen, atkPokemon, defPokemon, move, field);
       // calculate() resolves the type on its own clone of the move (gen789.js), so read it from result.move.

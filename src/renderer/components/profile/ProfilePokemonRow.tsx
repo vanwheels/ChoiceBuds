@@ -13,6 +13,7 @@
 import type { CSSProperties } from 'react';
 import type { PublicTeam } from '../../services/syncApi';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
+import type { RegulationId } from '../../utils/pokemonRules';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import type { UseDatabaseReturn } from '../../hooks/useDatabase';
 import {
@@ -27,6 +28,8 @@ type PublicPokemon = PublicTeam['pokemon'][number];
 interface ProfilePokemonRowProps {
   pokemon: PublicPokemon;
   detailed: boolean;
+  /** The team's regulation, so move-type chips follow that regulation's balance patches. */
+  regulation: RegulationId;
   gameDataState?: UseGameDataReturn;
   spriteCacheState?: UseSpriteCacheReturn;
   databaseState?: UseDatabaseReturn;
@@ -35,6 +38,7 @@ interface ProfilePokemonRowProps {
 export default function ProfilePokemonRow({
   pokemon,
   detailed,
+  regulation,
   gameDataState,
   spriteCacheState,
   databaseState,
@@ -88,7 +92,7 @@ export default function ProfilePokemonRow({
         {detailed && pokemon.moves && pokemon.moves.length > 0 && (
           <div className="mt-1 flex flex-wrap gap-1">
             {pokemon.moves.map((move, idx) => {
-              const theme = getProfileMoveChipTheme(move, gameDataState);
+              const theme = getProfileMoveChipTheme(move, regulation, gameDataState);
               return (
                 <span
                   key={idx}

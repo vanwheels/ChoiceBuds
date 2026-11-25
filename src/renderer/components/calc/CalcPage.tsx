@@ -258,7 +258,7 @@ export default function CalcPage({
           results={p1Results}
           moveOptions={moveOptions}
           legalMoveOptions={pokemon1MoveOptions}
-          getMoveData={gameDataState.getCachedMove}
+          getMoveData={(name) => gameDataState.getCachedMove(name, regulationId)}
           selectedIndex={
             effectiveSelectedResult?.side === 'p1' ? effectiveSelectedResult.index : null
           }
@@ -274,7 +274,7 @@ export default function CalcPage({
           results={p2Results}
           moveOptions={moveOptions}
           legalMoveOptions={pokemon2MoveOptions}
-          getMoveData={gameDataState.getCachedMove}
+          getMoveData={(name) => gameDataState.getCachedMove(name, regulationId)}
           selectedIndex={
             effectiveSelectedResult?.side === 'p2' ? effectiveSelectedResult.index : null
           }

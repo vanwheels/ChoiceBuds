@@ -313,6 +313,7 @@ export default function PokemonCard({
           onUpdatePokemon={updatePokemon}
           gameDataState={gameDataState}
           rulesetId={rulesetId}
+          balanceRegulation={rulesetId}
           resolveSprite={spriteCacheState.resolveSprite}
           showAnimatedSprites={showAnimatedSprites}
           onSpriteClick={() => setIsSwapPickerOpen(true)}

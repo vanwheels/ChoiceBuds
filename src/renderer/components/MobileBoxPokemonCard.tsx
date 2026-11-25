@@ -25,7 +25,7 @@ import type { CSSProperties } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import type { ImportedPokemonInfo, SavedPokemonEntry } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
-import type { RegulationId } from '../utils/pokemonRules';
+import { LATEST_REGULATION_ID, type RegulationId } from '../utils/pokemonRules';
 import { getTypeGlowColors } from '../config/pokemonTheme';
 import { copyPokemonToClipboard } from '../utils/clipboardPayload';
 import EditablePokemonCore from './EditablePokemonCore';
@@ -172,6 +172,7 @@ export default function MobileBoxPokemonCard({
           onUpdatePokemon={onUpdatePokemon}
           gameDataState={gameDataState}
           rulesetId={rulesetId}
+          balanceRegulation={LATEST_REGULATION_ID}
           resolveSprite={resolveSprite}
           showAnimatedSprites={showAnimatedSprites}
         />

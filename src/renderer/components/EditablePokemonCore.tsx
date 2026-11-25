@@ -45,6 +45,11 @@ interface EditablePokemonCoreProps {
   onUpdatePokemon: (updates: Partial<ImportedPokemonInfo>) => Promise<boolean>;
   gameDataState: UseGameDataReturn;
   rulesetId: RegulationId;
+  // Which regulation's balance patches (config/championsRegulationPatches.ts)
+  // move/ability text follows. Separate from rulesetId (picker legality):
+  // the Box judges legality against the default regulation but shows the
+  // latest balance, per docs/investigations/reg-m-d.md §7.
+  balanceRegulation: RegulationId;
   resolveSprite: (remoteUrl: string) => string;
   showAnimatedSprites: boolean;
   // Roster Swap's click-to-open-picker affordance on the sprite box - undefined
@@ -69,6 +74,7 @@ export default function EditablePokemonCore({
   onUpdatePokemon,
   gameDataState,
   rulesetId,
+  balanceRegulation,
   resolveSprite,
   showAnimatedSprites,
   onSpriteClick,
@@ -227,13 +233,13 @@ export default function EditablePokemonCore({
   useEffect(() => {
     if (!megaAbilityName) return;
     let cancelled = false;
-    gameDataState.getAbilityData(megaAbilityName).then((data) => {
+    gameDataState.getAbilityData(megaAbilityName, balanceRegulation).then((data) => {
       if (!cancelled) setMegaAbilityData(data);
     });
     return () => {
       cancelled = true;
     };
-  }, [megaAbilityName, gameDataState]);
+  }, [megaAbilityName, balanceRegulation, gameDataState]);
 
   // Item/ability/move/EV edits commit immediately through this, same
   // "write on every mutation" convention gender/shiny toggling below uses.
@@ -448,6 +454,7 @@ export default function EditablePokemonCore({
         pokemon={pokemon}
         gameDataState={gameDataState}
         rulesetId={rulesetId}
+        balanceRegulation={balanceRegulation}
         resolveSprite={resolveSprite}
         onUpdatePokemon={updateShowdownData}
         megaToggle={

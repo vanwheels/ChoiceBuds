@@ -108,6 +108,7 @@ export default function MobileTeamSwipeOverlay({
     databaseState.setCacheEntry,
     gameDataState.getEnrichedSpeciesOptions,
     gameDataState.getChampionsUsage,
+    toRegulationId(team.format),
   );
 
   const rosterLength = team.pokemon.length;

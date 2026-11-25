@@ -190,6 +190,7 @@ export default function TeamCard({
     databaseState.setCacheEntry,
     gameDataState.getEnrichedSpeciesOptions,
     gameDataState.getChampionsUsage,
+    toRegulationId(team.format),
   );
 
   const handleAddSpecies = async (species: SpeciesRosterEntry, itemOverride?: string) => {

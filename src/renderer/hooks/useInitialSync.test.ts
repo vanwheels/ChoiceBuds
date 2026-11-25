@@ -231,8 +231,8 @@ describe('useInitialSync', () => {
     expect(downloadSprite).toHaveBeenCalledWith('https://example.com/812-shiny.png');
 
     // Species data (learnset + PokeAPICache stats) fetched for both
-    expect(getEnrichedSpeciesOptions).toHaveBeenCalledWith('Gengar');
-    expect(getEnrichedSpeciesOptions).toHaveBeenCalledWith('Rillaboom');
+    expect(getEnrichedSpeciesOptions).toHaveBeenCalledWith('Gengar', undefined, 'REG-MC');
+    expect(getEnrichedSpeciesOptions).toHaveBeenCalledWith('Rillaboom', undefined, 'REG-MC');
     expect(mockedFetchPokemonData).toHaveBeenCalledWith('Gengar');
     expect(mockedFetchPokemonData).toHaveBeenCalledWith('Rillaboom');
 

@@ -494,7 +494,7 @@ describe('useDamageCalc', () => {
     await waitFor(() =>
       expect(result.current.pokemon1MoveOptions).toEqual(['Shadow Ball', 'Toxic']),
     );
-    expect(getEnrichedSpeciesOptions).toHaveBeenCalledWith('Gengar', undefined);
+    expect(getEnrichedSpeciesOptions).toHaveBeenCalledWith('Gengar', undefined, 'REG-MB');
   });
 
   it('falls back to the full move list when the learned set does not intersect any real move name', async () => {

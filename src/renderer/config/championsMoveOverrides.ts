@@ -39,6 +39,8 @@
 import type { MoveData } from '../types/pokemon';
 import { normalizeNameForAPI } from '../services/pokeapiService';
 import type { TypeName } from '@smogon/calc/dist/data/interface';
+import { isRegulationAtOrAfter, type RegulationId } from '../utils/pokemonRules';
+import { CHAMPIONS_DATED_MOVE_PATCHES } from './championsRegulationPatches';
 
 /** Fields we know how to correct, in our own MoveData's naming/casing. */
 export interface ChampionsMoveOverride {
@@ -183,10 +185,32 @@ export function getChampionsPP(moveName: string, basePP: number): number {
   return basePP;
 }
 
-/** Applies any known Champions override to a PokeAPI-sourced MoveData, plus the PP retier. */
-export function applyChampionsMoveOverride(move: MoveData): MoveData {
-  const slug = normalizeNameForAPI(move.name);
-  const override = CHAMPIONS_MOVE_OVERRIDES[slug];
+/**
+ * The global override merged with every dated patch active in
+ * `regulation`, oldest first so a later patch wins. Undefined when neither
+ * table has the move.
+ */
+function resolveMoveOverride(
+  slug: string,
+  regulation: RegulationId,
+): ChampionsMoveOverride | undefined {
+  const global = CHAMPIONS_MOVE_OVERRIDES[slug];
+  const dated = (CHAMPIONS_DATED_MOVE_PATCHES[slug] ?? []).filter((p) =>
+    isRegulationAtOrAfter(regulation, p.since),
+  );
+  if (!global && dated.length === 0) return undefined;
+  return dated.reduce<ChampionsMoveOverride>((acc, p) => ({ ...acc, ...p.change }), {
+    ...global,
+  });
+}
+
+/**
+ * Applies any known Champions override to a PokeAPI-sourced MoveData, plus
+ * the PP retier. `regulation` scopes the dated patches
+ * (championsRegulationPatches.ts); global overrides apply regardless.
+ */
+export function applyChampionsMoveOverride(move: MoveData, regulation: RegulationId): MoveData {
+  const override = resolveMoveOverride(normalizeNameForAPI(move.name), regulation);
   return {
     ...move,
     ...(override ?? {}),
@@ -196,15 +220,16 @@ export function applyChampionsMoveOverride(move: MoveData): MoveData {
 
 /**
  * Maps our override naming to @smogon/calc's Partial<I.Move> shape
- * (basePower/type in Title Case) for the live damage calculator. Returns
- * undefined for moves with no override, matching the shape Move's own
- * `overrides` constructor option expects (see useDamageCalc.ts).
+ * (basePower/type in Title Case) for the live damage calculator, scoped to
+ * the calc's selected `regulation`. Returns undefined for moves with no
+ * damage-relevant override, matching the shape Move's own `overrides`
+ * constructor option expects (see useDamageCalc.ts).
  */
 export function getChampionsCalcMoveOverride(
   moveName: string,
+  regulation: RegulationId,
 ): { basePower?: number; type?: TypeName } | undefined {
-  const slug = normalizeNameForAPI(moveName);
-  const override = CHAMPIONS_MOVE_OVERRIDES[slug];
+  const override = resolveMoveOverride(normalizeNameForAPI(moveName), regulation);
   if (!override) return undefined;
 
   const calcOverride: { basePower?: number; type?: TypeName } = {};

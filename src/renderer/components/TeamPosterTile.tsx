@@ -10,6 +10,7 @@
 
 import type { ImportedPokemonInfo } from '../types/pokemon';
 import type { UseGameDataReturn } from '../hooks/useGameData';
+import type { RegulationId } from '../utils/pokemonRules';
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
 import { getPixelSpriteUrl } from '../utils/spriteUrl';
 import { getItemSpriteUrl } from '../utils/itemSprite';
@@ -20,6 +21,8 @@ interface TeamPosterTileProps {
   pokemon: ImportedPokemonInfo;
   gameDataState: UseGameDataReturn;
   spriteCacheState: UseSpriteCacheReturn;
+  /** The team's regulation, so move-type chips follow that regulation's balance patches. */
+  regulation: RegulationId;
   /** Open Team Sheet shows the Stat Alignment line (Nature + EV spread) below the
    * moves, matching what a real VGC Open Team Sheet reveals; Closed hides it, since
    * a Closed Team Sheet reveals species/item/ability/moves but never Stat Alignment. */
@@ -30,6 +33,7 @@ export default function TeamPosterTile({
   pokemon,
   gameDataState,
   spriteCacheState,
+  regulation,
   showStatAlignment,
 }: TeamPosterTileProps) {
   const { showdownData, pokedexNumber } = pokemon;
@@ -78,7 +82,7 @@ export default function TeamPosterTile({
           tile instead of half of it, which fits nearly every move name without truncating. */}
       <div className="flex flex-col gap-1 w-full min-w-0">
         {showdownData.moves.map((move, idx) => {
-          const theme = getTypeTheme(gameDataState.getCachedMove(move)?.type ?? '');
+          const theme = getTypeTheme(gameDataState.getCachedMove(move, regulation)?.type ?? '');
           return (
             <div
               key={idx}

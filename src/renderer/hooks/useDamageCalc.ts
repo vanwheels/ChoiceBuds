@@ -163,7 +163,10 @@ export function useDamageCalc(
   // Full mainline list, kept for the later "All" section (Calc Item Picker Leg 5).
   const allItemOptions = useMemo(() => [...gen.items].map((i) => i.name).sort(), [gen]);
   const abilityOptions = useMemo(() => [...gen.abilities].map((a) => a.name).sort(), [gen]);
-  const getMoveType = useCallback((moveName: string) => getCalcMoveType(gen, moveName), [gen]);
+  const getMoveType = useCallback(
+    (moveName: string) => getCalcMoveType(gen, moveName, regulationId),
+    [gen, regulationId],
+  );
   const natureOptions = useMemo(
     () => [...gen.natures].map((n) => n.name).sort() as NatureName[],
     [gen],
@@ -225,6 +228,7 @@ export function useDamageCalc(
     pokemon1.species,
     pokemon1.gender,
     getEnrichedSpeciesOptions,
+    regulationId,
     moveOptions,
     abilityOptions,
   );
@@ -232,6 +236,7 @@ export function useDamageCalc(
     pokemon2.species,
     pokemon2.gender,
     getEnrichedSpeciesOptions,
+    regulationId,
     moveOptions,
     abilityOptions,
   );
@@ -302,8 +307,9 @@ export function useDamageCalc(
         field.gameType,
         field.weather,
         field.terrain,
+        regulationId,
       ),
-    [gen, pokemon1, pokemon2, field],
+    [gen, pokemon1, pokemon2, field, regulationId],
   );
   const p2Results = useMemo(
     () =>
@@ -316,8 +322,9 @@ export function useDamageCalc(
         field.gameType,
         field.weather,
         field.terrain,
+        regulationId,
       ),
-    [gen, pokemon1, pokemon2, field],
+    [gen, pokemon1, pokemon2, field, regulationId],
   );
 
   // Default pick once both Pokemon are set up and neither move grid has been

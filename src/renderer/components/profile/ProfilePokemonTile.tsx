@@ -23,6 +23,7 @@
 import type { CSSProperties } from 'react';
 import type { PublicTeam } from '../../services/syncApi';
 import type { UseGameDataReturn } from '../../hooks/useGameData';
+import type { RegulationId } from '../../utils/pokemonRules';
 import type { UseSpriteCacheReturn } from '../../hooks/useSpriteCache';
 import type { UseDatabaseReturn } from '../../hooks/useDatabase';
 import {
@@ -38,6 +39,8 @@ interface ProfilePokemonTileProps {
   pokemon: PublicPokemon;
   /** Closed-tier teams only ever carry species/nickname/spriteUrl. */
   detailed: boolean;
+  /** The team's regulation, so move-type chips follow that regulation's balance patches. */
+  regulation: RegulationId;
   gameDataState?: UseGameDataReturn;
   spriteCacheState?: UseSpriteCacheReturn;
   databaseState?: UseDatabaseReturn;
@@ -46,6 +49,7 @@ interface ProfilePokemonTileProps {
 export default function ProfilePokemonTile({
   pokemon,
   detailed,
+  regulation,
   gameDataState,
   spriteCacheState,
   databaseState,
@@ -102,7 +106,7 @@ export default function ProfilePokemonTile({
       {detailed && pokemon.moves && pokemon.moves.length > 0 && (
         <div className="flex w-full min-w-0 flex-col gap-1">
           {pokemon.moves.map((move, idx) => {
-            const theme = getProfileMoveChipTheme(move, gameDataState);
+            const theme = getProfileMoveChipTheme(move, regulation, gameDataState);
             return (
               <div
                 key={idx}

@@ -24,7 +24,7 @@ import {
   fetchSpeciesLearnset,
 } from '../services/pokeapiService';
 import { fetchChampionsUsage, normalizeUsageCacheKey } from '../services/championsBattleData';
-import { normalizeSlug } from '../utils/pokemonRules';
+import { normalizeSlug, type RegulationId } from '../utils/pokemonRules';
 import {
   readCacheEntry,
   runCachedFetch,
@@ -42,6 +42,7 @@ import { applyChampionsAbilityOverride } from '../config/championsAbilityOverrid
 import {
   applyChampionsMovepoolChanges,
   applyChampionsPatchRemovals,
+  applyDatedMovepoolAdditions,
 } from '../config/championsMovepoolChanges';
 
 type Gender = 'M' | 'F' | 'N' | '';
@@ -55,24 +56,38 @@ export interface UseGameDataReturn {
   // Global legal items collection (VGC_ITEMS enriched with live PokeAPI metadata)
   items: ItemData[];
 
-  getMoveData: (moveName: string) => Promise<MoveData | null>;
-  getCachedMove: (moveName: string) => MoveData | null;
+  // Every move/ability/learnset getter takes the regulation whose balance
+  // patches to apply (config/championsRegulationPatches.ts). Required, not
+  // defaulted, so a new caller has to decide: the calc passes its
+  // regulationId, team surfaces their team's format, and surfaces with no
+  // regulation of their own (Box, bulk sync) LATEST_REGULATION_ID.
+  getMoveData: (moveName: string, regulation: RegulationId) => Promise<MoveData | null>;
+  getCachedMove: (moveName: string, regulation: RegulationId) => MoveData | null;
 
   getItemData: (itemName: string) => Promise<ItemData | null>;
   getCachedItem: (itemName: string) => ItemData | null;
 
-  getAbilityData: (abilityName: string) => Promise<AbilityData | null>;
-  getCachedAbility: (abilityName: string) => AbilityData | null;
+  getAbilityData: (abilityName: string, regulation: RegulationId) => Promise<AbilityData | null>;
+  getCachedAbility: (abilityName: string, regulation: RegulationId) => AbilityData | null;
 
   // Species learnset operations (validates real legal movepool/abilities per species)
-  getSpeciesLearnset: (species: string, gender?: Gender) => Promise<SpeciesLearnsetEntry | null>;
+  getSpeciesLearnset: (
+    species: string,
+    gender: Gender | undefined,
+    regulation: RegulationId,
+  ) => Promise<SpeciesLearnsetEntry | null>;
   // Cache-only (never triggers a live fetch) - lets a caller seed a species'
   // real ability pool from this pipeline instead of @smogon/calc's own
   // bundled (and sometimes stale/incomplete) species data.
-  getCachedSpeciesLearnset: (species: string, gender?: Gender) => SpeciesLearnsetEntry | null;
+  getCachedSpeciesLearnset: (
+    species: string,
+    gender: Gender | undefined,
+    regulation: RegulationId,
+  ) => SpeciesLearnsetEntry | null;
   getEnrichedSpeciesOptions: (
     species: string,
-    gender?: Gender,
+    gender: Gender | undefined,
+    regulation: RegulationId,
   ) => Promise<{ moves: MoveData[]; abilities: AbilityData[] }>;
 
   // Pokemon Champions ranked-usage suggestions (championsbattledata.com) -
@@ -192,11 +207,16 @@ export function useGameData(): UseGameDataReturn {
   // self-heals the cache entry going forward - same self-healing philosophy
   // as the overrides above, just for fields PokeAPI itself supplies instead
   // of a hand-authored correction table.
-  const getCachedMove = useCallback((moveName: string): MoveData | null => {
-    const move = readCacheEntry(cacheRef.current?.moves, normalizeNameForAPI(moveName));
-    if (!move || !move.target || !move.meta) return null;
-    return applyMoveFlags(applyMissingMoveDescriptionFallback(applyChampionsMoveOverride(move)));
-  }, []);
+  const getCachedMove = useCallback(
+    (moveName: string, regulation: RegulationId): MoveData | null => {
+      const move = readCacheEntry(cacheRef.current?.moves, normalizeNameForAPI(moveName));
+      if (!move || !move.target || !move.meta) return null;
+      return applyMoveFlags(
+        applyMissingMoveDescriptionFallback(applyChampionsMoveOverride(move, regulation)),
+      );
+    },
+    [],
+  );
 
   // A synthesized placeholder (spriteUrl === '', see the background-load
   // effect below) is deliberately treated as a cache miss regardless of its
@@ -209,10 +229,13 @@ export function useGameData(): UseGameDataReturn {
     return item && item.spriteUrl ? item : null;
   }, []);
 
-  const getCachedAbility = useCallback((abilityName: string): AbilityData | null => {
-    const ability = readCacheEntry(cacheRef.current?.abilities, normalizeNameForAPI(abilityName));
-    return ability ? applyChampionsAbilityOverride(ability) : null;
-  }, []);
+  const getCachedAbility = useCallback(
+    (abilityName: string, regulation: RegulationId): AbilityData | null => {
+      const ability = readCacheEntry(cacheRef.current?.abilities, normalizeNameForAPI(abilityName));
+      return ability ? applyChampionsAbilityOverride(ability, regulation) : null;
+    },
+    [],
+  );
 
   // Only layer the hand-curated championsMovepoolChanges.ts corrections on
   // top when PokeAPI itself has no "champions"-tagged move data for this
@@ -227,15 +250,24 @@ export function useGameData(): UseGameDataReturn {
   // hasChampionsMoveData gate below - see its own header comment in
   // championsMovepoolChanges.ts for why a post-launch balance-patch removal
   // is never superseded by PokeAPI's champions-tag data, tagged or not.
-  const applyMovepoolChangesIfNeeded = (learnset: SpeciesLearnsetEntry): SpeciesLearnsetEntry => {
+  // applyDatedMovepoolAdditions runs last, after every removal, so a
+  // regulation's patch can re-grant a move an older table removes.
+  const applyMovepoolChangesIfNeeded = (
+    learnset: SpeciesLearnsetEntry,
+    regulation: RegulationId,
+  ): SpeciesLearnsetEntry => {
     const patched = applyChampionsPatchRemovals(learnset.species, learnset.moves);
-    return learnset.hasChampionsMoveData
-      ? { ...learnset, moves: patched }
-      : { ...learnset, moves: applyChampionsMovepoolChanges(learnset.species, patched) };
+    const gated = learnset.hasChampionsMoveData
+      ? patched
+      : applyChampionsMovepoolChanges(learnset.species, patched);
+    return {
+      ...learnset,
+      moves: applyDatedMovepoolAdditions(learnset.species, gated, regulation),
+    };
   };
 
   const getCachedSpeciesLearnset = useCallback(
-    (species: string, gender?: Gender): SpeciesLearnsetEntry | null => {
+    (species: string, gender: Gender | undefined, regulation: RegulationId): SpeciesLearnsetEntry | null => {
       const learnset = readCacheEntry(
         cacheRef.current?.learnsets,
         normalizeSpeciesForAPI(species, gender),
@@ -255,14 +287,14 @@ export function useGameData(): UseGameDataReturn {
       // every current-roster species now has real PokeAPI champions move data,
       // so the one live re-fetch this forces self-heals the entry to true.
       if (!learnset || learnset.hasChampionsMoveData !== true) return null;
-      return applyMovepoolChangesIfNeeded(learnset);
+      return applyMovepoolChangesIfNeeded(learnset, regulation);
     },
     [],
   );
 
   const getMoveData = useCallback(
-    async (moveName: string): Promise<MoveData | null> => {
-      const cached = getCachedMove(moveName);
+    async (moveName: string, regulation: RegulationId): Promise<MoveData | null> => {
+      const cached = getCachedMove(moveName, regulation);
       if (cached) return cached;
       const normalizedName = normalizeNameForAPI(moveName);
       const fresh = await runCachedFetch(
@@ -275,7 +307,9 @@ export function useGameData(): UseGameDataReturn {
         `Failed to fetch move "${moveName}"`,
       );
       return fresh
-        ? applyMoveFlags(applyMissingMoveDescriptionFallback(applyChampionsMoveOverride(fresh)))
+        ? applyMoveFlags(
+            applyMissingMoveDescriptionFallback(applyChampionsMoveOverride(fresh, regulation)),
+          )
         : null;
     },
     [getCachedMove],
@@ -300,8 +334,8 @@ export function useGameData(): UseGameDataReturn {
   );
 
   const getAbilityData = useCallback(
-    async (abilityName: string): Promise<AbilityData | null> => {
-      const cached = getCachedAbility(abilityName);
+    async (abilityName: string, regulation: RegulationId): Promise<AbilityData | null> => {
+      const cached = getCachedAbility(abilityName, regulation);
       if (cached) return cached;
       const normalizedName = normalizeNameForAPI(abilityName);
       const fresh = await runCachedFetch(
@@ -313,7 +347,7 @@ export function useGameData(): UseGameDataReturn {
         () => fetchAbilityData(normalizedName),
         `Failed to fetch ability "${abilityName}"`,
       );
-      return fresh ? applyChampionsAbilityOverride(fresh) : null;
+      return fresh ? applyChampionsAbilityOverride(fresh, regulation) : null;
     },
     [getCachedAbility],
   );
@@ -330,8 +364,12 @@ export function useGameData(): UseGameDataReturn {
   );
 
   const getSpeciesLearnset = useCallback(
-    async (species: string, gender?: Gender): Promise<SpeciesLearnsetEntry | null> => {
-      const cached = getCachedSpeciesLearnset(species, gender);
+    async (
+      species: string,
+      gender: Gender | undefined,
+      regulation: RegulationId,
+    ): Promise<SpeciesLearnsetEntry | null> => {
+      const cached = getCachedSpeciesLearnset(species, gender, regulation);
       if (cached) return cached;
       const normalizedSpecies = normalizeSpeciesForAPI(species, gender);
       const fresh = await runCachedFetch(
@@ -343,7 +381,7 @@ export function useGameData(): UseGameDataReturn {
         () => fetchSpeciesLearnset(species, gender),
         `Failed to fetch learnset for "${species}"`,
       );
-      return fresh ? applyMovepoolChangesIfNeeded(fresh) : null;
+      return fresh ? applyMovepoolChangesIfNeeded(fresh, regulation) : null;
     },
     [getCachedSpeciesLearnset],
   );
@@ -369,16 +407,17 @@ export function useGameData(): UseGameDataReturn {
   const getEnrichedSpeciesOptions = useCallback(
     async (
       species: string,
-      gender?: Gender,
+      gender: Gender | undefined,
+      regulation: RegulationId,
     ): Promise<{ moves: MoveData[]; abilities: AbilityData[] }> => {
-      const learnset = await getSpeciesLearnset(species, gender);
+      const learnset = await getSpeciesLearnset(species, gender, regulation);
       if (!learnset) {
         return { moves: [], abilities: [] };
       }
 
       const [moveResults, abilityResults] = await Promise.all([
-        Promise.all(learnset.moves.map((name) => getMoveData(name))),
-        Promise.all(learnset.abilities.map((name) => getAbilityData(name))),
+        Promise.all(learnset.moves.map((name) => getMoveData(name, regulation))),
+        Promise.all(learnset.abilities.map((name) => getAbilityData(name, regulation))),
       ]);
 
       const moves = moveResults.filter((move): move is MoveData => move !== null);

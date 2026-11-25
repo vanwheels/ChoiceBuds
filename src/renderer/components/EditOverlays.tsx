@@ -53,6 +53,11 @@ interface EditOverlaysProps {
   pokemon: ImportedPokemonInfo;
   gameDataState: UseGameDataReturn;
   rulesetId: RegulationId;
+  // Which regulation's balance patches (config/championsRegulationPatches.ts)
+  // move/ability text follows. Separate from rulesetId (picker legality):
+  // the Box judges legality against the default regulation but shows the
+  // latest balance, per docs/investigations/reg-m-d.md §7.
+  balanceRegulation: RegulationId;
   resolveSprite: (remoteUrl: string) => string;
   onUpdatePokemon: (updates: Partial<ShowdownPokemon>) => void;
   // Mega Team Card Flip (see TODO.md) - undefined when this slot isn't
@@ -71,6 +76,7 @@ export default function EditOverlays({
   pokemon,
   gameDataState,
   rulesetId,
+  balanceRegulation,
   resolveSprite,
   onUpdatePokemon,
   megaToggle,
@@ -224,7 +230,11 @@ export default function EditOverlays({
   // Real legal movepool + ability pool for this species (never a per-Pokemon fallback)
   useEffect(() => {
     let cancelled = false;
-    getEnrichedSpeciesOptions(pokemon.showdownData.species, pokemon.showdownData.gender)
+    getEnrichedSpeciesOptions(
+      pokemon.showdownData.species,
+      pokemon.showdownData.gender,
+      balanceRegulation,
+    )
       .then(({ moves, abilities }) => {
         if (cancelled) return;
         setLegalMoves(moves);
@@ -237,7 +247,12 @@ export default function EditOverlays({
     return () => {
       cancelled = true;
     };
-  }, [pokemon.showdownData.species, pokemon.showdownData.gender, getEnrichedSpeciesOptions]);
+  }, [
+    pokemon.showdownData.species,
+    pokemon.showdownData.gender,
+    balanceRegulation,
+    getEnrichedSpeciesOptions,
+  ]);
 
   // Champions ranked-ladder usage (same source/cache as the Calc page's
   // auto-fill and the Battle Logger's "Likely Set" popover) - drives the
@@ -346,13 +361,13 @@ export default function EditOverlays({
   useEffect(() => {
     if (!selectedAbility) return;
     let cancelled = false;
-    getAbilityData(selectedAbility).then((data) => {
+    getAbilityData(selectedAbility, balanceRegulation).then((data) => {
       if (!cancelled) setAbilityData(data);
     });
     return () => {
       cancelled = true;
     };
-  }, [selectedAbility, getAbilityData]);
+  }, [selectedAbility, balanceRegulation, getAbilityData]);
 
   const displayedAbilityName = megaAbilityOverride?.name || selectedAbility;
   const displayedAbilityData = megaAbilityOverride ? megaAbilityOverride.data : abilityData;
@@ -373,14 +388,16 @@ export default function EditOverlays({
   useEffect(() => {
     let cancelled = false;
     Promise.all(
-      selectedMoves.map((name) => (name ? getMoveData(name) : Promise.resolve(null))),
+      selectedMoves.map((name) =>
+        name ? getMoveData(name, balanceRegulation) : Promise.resolve(null),
+      ),
     ).then((results) => {
       if (!cancelled) setMoveDataSlots(results);
     });
     return () => {
       cancelled = true;
     };
-  }, [selectedMoves, getMoveData]);
+  }, [selectedMoves, balanceRegulation, getMoveData]);
 
   // Parsed once for the floating move picker below rather than re-parsing
   // activeMenu's "move{index}" suffix in both moveIndex and onSelect.

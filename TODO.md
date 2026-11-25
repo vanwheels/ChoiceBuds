@@ -46,6 +46,7 @@ each need only Leg 2; Legs 6-8 also need Leg 5. Leg 9 waits for launch.
   suite passes.
   Manual verification: no · Review: yes (touches many call sites and the
   calc engine)
+  Built and tests pass; awaiting Vanny's `/leg-review` before close.
 
 - **[Reg M-D Move Overrides] — Leg 6** *(Last touched: 2026-11-24 ·
   Re-checks: 0)*

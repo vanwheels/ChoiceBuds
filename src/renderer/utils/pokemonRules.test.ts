@@ -9,6 +9,8 @@ import {
   getRuleset,
   ALL_REGULATION_IDS,
   LATEST_REGULATION_ID,
+  isRegulationAtOrAfter,
+  regulationForFormat,
 } from './pokemonRules';
 import regMdResourceFixture from './__fixtures__/pokeapiRegMdResources.json';
 
@@ -253,5 +255,21 @@ describe('Reg M-D plumbing', () => {
 
   it('is the latest regulation, so bulk sync covers its roster', () => {
     expect(LATEST_REGULATION_ID).toBe('REG-MD');
+  });
+});
+
+describe('isRegulationAtOrAfter', () => {
+  it('is true for the same regulation and later ones, false for earlier ones', () => {
+    expect(isRegulationAtOrAfter('REG-MC', 'REG-MC')).toBe(true);
+    expect(isRegulationAtOrAfter('REG-MD', 'REG-MC')).toBe(true);
+    expect(isRegulationAtOrAfter('REG-MB', 'REG-MC')).toBe(false);
+  });
+});
+
+describe('regulationForFormat', () => {
+  it("uses a known format's regulation and falls back to the latest otherwise", () => {
+    expect(regulationForFormat('Reg M-B')).toBe('REG-MB');
+    expect(regulationForFormat('Some Old Format')).toBe(LATEST_REGULATION_ID);
+    expect(regulationForFormat(undefined)).toBe(LATEST_REGULATION_ID);
   });
 });

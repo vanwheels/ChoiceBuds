@@ -9,6 +9,7 @@
 import { describe, expect, it } from 'vitest';
 import { applyChampionsMoveOverride, getChampionsPP } from './championsMoveOverrides';
 import type { MoveData } from '../types/pokemon';
+import { LATEST_REGULATION_ID } from '../utils/pokemonRules';
 
 function makeMove(overrides: Partial<MoveData> = {}): MoveData {
   return {
@@ -57,7 +58,7 @@ describe('getChampionsPP', () => {
 describe('applyChampionsMoveOverride', () => {
   it('applies a known balance override on top of the PokeAPI-sourced data', () => {
     const move = makeMove({ name: 'crabhammer', power: 100, accuracy: 90, pp: 10 });
-    const result = applyChampionsMoveOverride(move);
+    const result = applyChampionsMoveOverride(move, LATEST_REGULATION_ID);
     expect(result.accuracy).toBe(95);
     expect(result.power).toBe(100); // untouched - Champions doesn't override Crabhammer's power
     expect(result.pp).toBe(12); // 10 -> 12 via the game-wide formula, no exception for this move
@@ -65,7 +66,7 @@ describe('applyChampionsMoveOverride', () => {
 
   it('leaves an unrecognized move untouched aside from the PP retier', () => {
     const move = makeMove({ name: 'tackle', power: 40, accuracy: 100, pp: 35 });
-    const result = applyChampionsMoveOverride(move);
+    const result = applyChampionsMoveOverride(move, LATEST_REGULATION_ID);
     expect(result.power).toBe(40);
     expect(result.accuracy).toBe(100);
     expect(result.pp).toBe(20); // 35 collapses to the flat 20 bucket

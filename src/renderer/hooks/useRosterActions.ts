@@ -17,7 +17,7 @@ import type {
 import type { UseGameDataReturn } from './useGameData';
 import { enrichPokemonWithAPI } from '../services/pokeapi';
 import { getFallbackGender } from '../config/pokemonRules';
-import { normalizeSlug } from '../utils/pokemonRules';
+import { normalizeSlug, type RegulationId } from '../utils/pokemonRules';
 import { toReadableName } from '../utils/displayName';
 import { cloneSavedPokemon } from '../utils/clonePokemon';
 
@@ -56,6 +56,8 @@ export function useRosterActions(
   setCacheEntry: (species: string, entry: PokeAPICacheEntry) => Promise<boolean>,
   getEnrichedSpeciesOptions: UseGameDataReturn['getEnrichedSpeciesOptions'],
   getChampionsUsage: UseGameDataReturn['getChampionsUsage'],
+  /** Whose balance patches the new slot's legal moves/abilities follow: the team's format, or the latest regulation for the Box. */
+  regulation: RegulationId,
 ): UseRosterActionsReturn {
   /**
    * Smart Slot Initialization: ability defaults to the species' most-used
@@ -87,7 +89,7 @@ export function useRosterActions(
     async (species: string, itemOverride?: string): Promise<ImportedPokemonInfo> => {
       const gender = getFallbackGender(species);
       const [{ moves, abilities }, usage] = await Promise.all([
-        getEnrichedSpeciesOptions(species, gender),
+        getEnrichedSpeciesOptions(species, gender, regulation),
         getChampionsUsage(species),
       ]);
 
@@ -115,7 +117,7 @@ export function useRosterActions(
 
       return enrichPokemonWithAPI(showdownData, getCachedEntry, setCacheEntry);
     },
-    [getEnrichedSpeciesOptions, getChampionsUsage, getCachedEntry, setCacheEntry],
+    [getEnrichedSpeciesOptions, getChampionsUsage, regulation, getCachedEntry, setCacheEntry],
   );
 
   const swapSlot = useCallback(
