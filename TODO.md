@@ -40,6 +40,10 @@ each need only Leg 2; Legs 6-8 also need Leg 5. Leg 9 waits for launch.
   mainline values under Reg M-C.
   Manual verification: yes (Rock Slide's tooltip on an M-C team and an
   M-D team) · Review: no
+  Code and tests landed (full suite, lint and type-check pass);
+  `getChampionsCalcMoveOverride` confirmed to need no change, since it maps
+  only power and type. Only the manual check is left before the
+  COMPLETED.md entry.
 
 - **[Reg M-D Patch Movepool Additions] — Leg 7** *(Last touched: 2026-11-24 ·
   Re-checks: 0)*

@@ -31,7 +31,22 @@ export interface DatedPatch<T> {
 }
 
 /** Keyed by normalized move slug (normalizeNameForAPI). */
-export const CHAMPIONS_DATED_MOVE_PATCHES: Record<string, DatedPatch<ChampionsMoveOverride>[]> = {};
+export const CHAMPIONS_DATED_MOVE_PATCHES: Record<string, DatedPatch<ChampionsMoveOverride>[]> = {
+  // Dec 2 2026 balance patch (reg-m-d.md §4). Accuracy is display-only: the
+  // damage calc ignores it, so getChampionsCalcMoveOverride maps none of these.
+  screech: [{ since: 'REG-MD', change: { accuracy: 100 } }],
+  'metal-sound': [{ since: 'REG-MD', change: { accuracy: 100 } }],
+  'steel-wing': [{ since: 'REG-MD', change: { accuracy: 100 } }],
+  'frost-breath': [{ since: 'REG-MD', change: { accuracy: 100 } }],
+  // No secondary-chance field exists, so the flinch change rides on the
+  // description, same as iron-head's global row.
+  'rock-slide': [
+    {
+      since: 'REG-MD',
+      change: { accuracy: 95, description: 'Has a 20% chance to make the target flinch.' },
+    },
+  ],
+};
 
 /** Keyed by normalized ability slug (normalizeNameForAPI). */
 export const CHAMPIONS_DATED_ABILITY_PATCHES: Record<string, DatedPatch<Partial<AbilityData>>[]> =
