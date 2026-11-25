@@ -83,6 +83,13 @@
  *   `config/megaEvolution.ts`'s CURATED_MEGA_FORM_SLUGS comment). Serebii
  *   confirms all 3: Mega Absol Z -> Sharpness, Mega Garchomp Z -> Levitate,
  *   Mega Lucario Z -> Aura Guard.
+ *
+ * Group 4 - Reg M-D (pre-launch, sourced in docs/investigations/reg-m-d.md).
+ * Mega Heatran -> Water Compaction is confirmed by Serebii. Mega Tatsugiri
+ * -> Premium Grade (all three forms) came from Vanny on 2026-11-24, before
+ * Serebii filled in the ability. `@smogon/calc` still shows placeholder
+ * abilities for both (Flash Fire, Commander), the same stale pattern as
+ * Group 3. Re-check the spelling in TODO.md's Reg M-D Post-Launch Re-check.
  */
 export const MEGA_ABILITIES: Record<string, string> = {
   'abomasnow-mega': 'Snow Warning',
@@ -131,6 +138,7 @@ export const MEGA_ABILITIES: Record<string, string> = {
   'greninja-mega': 'Protean',
   'gyarados-mega': 'Mold Breaker',
   'hawlucha-mega': 'No Guard',
+  'heatran-mega': 'Water Compaction',
   'heracross-mega': 'Skill Link',
   'houndoom-mega': 'Solar Power',
   'kangaskhan-mega': 'Parental Bond',
@@ -164,6 +172,9 @@ export const MEGA_ABILITIES: Record<string, string> = {
   'starmie-mega': 'Huge Power',
   'steelix-mega': 'Sand Force',
   'swampert-mega': 'Swift Swim',
+  'tatsugiri-curly-mega': 'Premium Grade',
+  'tatsugiri-droopy-mega': 'Premium Grade',
+  'tatsugiri-stretchy-mega': 'Premium Grade',
   'tyranitar-mega': 'Sand Stream',
   'venusaur-mega': 'Thick Fat',
   'victreebel-mega': 'Innards Out',

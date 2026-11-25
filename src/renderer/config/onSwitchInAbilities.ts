@@ -22,6 +22,7 @@ const SWITCH_IN_ABILITY_EFFECTS: Record<string, SwitchInEffect> = {
   intimidate: { kind: 'stat', stat: 'atk', stages: -1, target: 'opposing-active' },
   'intrepid-sword': { kind: 'stat', stat: 'atk', stages: 1, target: 'self' },
   'dauntless-shield': { kind: 'stat', stat: 'def', stages: 1, target: 'self' },
+  'premium-grade': { kind: 'stat', stat: 'spa', stages: 1, target: 'self' }, // Mega Tatsugiri (Reg M-D)
   drought: { kind: 'weather', weather: 'sun' },
   drizzle: { kind: 'weather', weather: 'rain' },
   'sand-stream': { kind: 'weather', weather: 'sand' },

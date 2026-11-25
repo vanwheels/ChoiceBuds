@@ -45,7 +45,7 @@
  *
  * Mega forms get their own sortable rows (Add Pokémon Table: Mega Form Rows
  * Leg 2, see TODO.md and docs/investigations/mega-form-rows-scoping.md) - one
- * per Mega Stone entry in config/megaEvolution.ts's MEGA_STONE_TO_SPECIES,
+ * per Mega form in config/megaEvolution.ts's MEGA_FORMS,
  * gated to species already present in the `roster` prop (so a Mega row never
  * outlives its base species' own legality/dedupe rules - `roster` here is
  * already regulation- and already-on-team-filtered by TeamCard.tsx). Base
@@ -130,7 +130,7 @@ import { usePokemonAbilityFilter } from '../hooks/usePokemonAbilityFilter';
 import { useMoveNameList } from '../hooks/useMoveNameList';
 import { useAbilityNameList } from '../hooks/useAbilityNameList';
 import { ALL_TYPES } from '../config/typeEffectiveness';
-import { MEGA_STONE_TO_SPECIES, formatMegaLabel } from '../config/megaEvolution';
+import { MEGA_FORMS, formatMegaLabel } from '../config/megaEvolution';
 import { getMegaAbility } from '../config/megaAbilities';
 import { getCachedMegaSprite, useMegaSpritePrefetch } from '../hooks/useMegaSprite';
 import { toTitleCase, toReadableName } from '../utils/displayName';
@@ -157,7 +157,7 @@ interface AddPokemonStatTableProps {
  * A generic row shape shared by both a plain roster species and a synthetic
  * Mega-form row - the table only needs a label/sprite/stats/click-handler to
  * render and sort, not the underlying species data itself (which differs:
- * `SpeciesRosterEntry` for a plain row, MEGA_STONE_TO_SPECIES's base
+ * `SpeciesRosterEntry` for a plain row, MEGA_FORMS's base
  * species + stone item name for a Mega row - see this file's header).
  */
 interface StatTableRow {
@@ -309,7 +309,7 @@ export default function AddPokemonStatTable({
   // directly below its own base species below, rather than all Mega rows
   // trailing the full species list.
   const megaRowsBySpecies = new Map<string, StatTableRow[]>();
-  Object.entries(MEGA_STONE_TO_SPECIES).forEach(([item, entry]) => {
+  MEGA_FORMS.forEach(({ item, ...entry }) => {
     const baseSpecies = legalRoster.find(
       (pkmn) => pkmn.name.toLowerCase() === entry.species.toLowerCase(),
     );
@@ -334,7 +334,7 @@ export default function AddPokemonStatTable({
     if (!matchesMegaChips(calcSpecies, megaAbility, baseSpecies.name)) return;
 
     const megaRow: StatTableRow = {
-      key: `mega:${item}`,
+      key: `mega:${item}:${entry.species}`,
       displayName,
       spriteUrl: getCachedMegaSprite(slug)?.spriteUrl ?? baseSpecies.spriteUrl,
       types: calcSpecies ? [...calcSpecies.types] : [],

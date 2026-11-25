@@ -16,7 +16,7 @@ import {
   formatMegaLabel,
   getMegaApiSlug,
   getMegaFormsForSpecies,
-  MEGA_STONE_TO_SPECIES,
+  MEGA_FORMS,
   megaFormBadgeLetter,
   resolveActiveMegaSlug,
   resolveOpponentMegaControl,
@@ -167,10 +167,10 @@ describe('resolveOpponentMegaControl (Battle Logger Mega button)', () => {
  */
 describe('Mega Stone slug coverage', () => {
   const pokeApiMegas = new Set(megaResourceFixture);
-  const stones = Object.entries(MEGA_STONE_TO_SPECIES);
+  const forms = MEGA_FORMS.map((f) => [`${f.item} (${f.species})`, f] as const);
 
-  it.each(stones)('%s resolves to a real PokeAPI Mega resource', (item, entry) => {
-    const slug = getMegaApiSlug(item, entry.species);
+  it.each(forms)('%s resolves to a real PokeAPI Mega resource', (_label, entry) => {
+    const slug = getMegaApiSlug(entry.item, entry.species);
     expect(slug).not.toBeNull();
     expect(pokeApiMegas.has(toPokeApiMegaResource(slug as string))).toBe(true);
   });

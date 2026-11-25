@@ -87,6 +87,9 @@ S4's "Newly Useable Pokémon" table, read in full, has only 7 rows:
   Tatsugiri-Droopy → Tatsugiri-Droopy-Mega, and so on). The build leg has
   to decide whether forms collapse under one Mega, matching the roster
   decision above, or the table gains a per-form mapping.
+  Resolved in Leg 4: a per-form mapping. `MULTI_FORM_MEGA_STONES` holds
+  Tatsugirinite's three rows, `MEGA_FORMS` flattens both tables, and bare
+  "Tatsugiri" aliases to `tatsugiri-curly` for the stone lookup.
 - `hitReactiveAbilities.ts` already has `water-compaction`, because it's a
   mainline ability. No change is needed there.
 - `onSwitchInAbilities.ts` needs `premium-grade` as a `stat` effect

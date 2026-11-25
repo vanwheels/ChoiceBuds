@@ -1,7 +1,7 @@
 /**
  * Test suite for megaAbilities.ts. Guards two things: getMegaAbility's
  * null-safety, and that every Mega form megaEvolution.ts's
- * MEGA_STONE_TO_SPECIES knows about has a matching entry here (the
+ * MEGA_FORMS knows about has a matching entry here (the
  * "Remaining Champions Mega Ability Audit" backlog item's completion
  * condition) - including the Floette exception, which is keyed
  * `floette-mega` here to match @smogon/calc's own forme name rather than
@@ -10,7 +10,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { MEGA_STONE_TO_SPECIES } from './megaEvolution';
+import { MEGA_FORMS } from './megaEvolution';
 import { getMegaAbility, MEGA_ABILITIES, resolveActiveAbility } from './megaAbilities';
 
 describe('getMegaAbility', () => {
@@ -47,8 +47,8 @@ describe('resolveActiveAbility', () => {
 });
 
 describe('MEGA_ABILITIES coverage', () => {
-  it('has an entry for every Mega form in MEGA_STONE_TO_SPECIES', () => {
-    const missing = Object.values(MEGA_STONE_TO_SPECIES)
+  it('has an entry for every Mega form in MEGA_FORMS', () => {
+    const missing = MEGA_FORMS
       .map(
         ({ species, suffix }) =>
           (species === 'floette-eternal' ? 'floette' : species) + '-' + suffix,

@@ -115,7 +115,59 @@ export const MEGA_STONE_TO_SPECIES: Record<string, { species: string; suffix: st
   tyranitarite: { species: 'tyranitar', suffix: 'mega' },
   venusaurite: { species: 'venusaur', suffix: 'mega' },
   victreebelite: { species: 'victreebel', suffix: 'mega' },
+  // Reg M-D, pre-launch. Stone spelling from Showdown/@smogon/calc until
+  // Serebii's items page lists it (docs/investigations/reg-m-d.md).
+  heatranite: { species: 'heatran', suffix: 'mega' },
 };
+
+/**
+ * Stones that Mega Evolve more than one base form, each into its own Mega.
+ * Kept out of MEGA_STONE_TO_SPECIES because that table's one-stone-one-
+ * species shape can't hold them. Tatsugiri's three forms stay separate
+ * legality slugs (utils/pokemonRules.ts), so each needs its own `-mega`
+ * slug: `tatsugiri-curly-mega` etc., matching both PokeAPI and @smogon/calc.
+ */
+const MULTI_FORM_MEGA_STONES: Record<string, { species: string; suffix: string }[]> = {
+  tatsugirinite: [
+    { species: 'tatsugiri-curly', suffix: 'mega' },
+    { species: 'tatsugiri-droopy', suffix: 'mega' },
+    { species: 'tatsugiri-stretchy', suffix: 'mega' },
+  ],
+};
+
+/** One (stone, base species) pair and the Mega form it produces. */
+export interface MegaForm {
+  item: string;
+  species: string;
+  suffix: string;
+}
+
+/**
+ * Every Mega form, one row per (stone, base species) pair. Iterate this,
+ * not MEGA_STONE_TO_SPECIES, to see every Mega: Tatsugirinite only appears
+ * here.
+ */
+export const MEGA_FORMS: readonly MegaForm[] = [
+  ...Object.entries(MEGA_STONE_TO_SPECIES).map(([item, entry]) => ({ item, ...entry })),
+  ...Object.entries(MULTI_FORM_MEGA_STONES).flatMap(([item, entries]) =>
+    entries.map((entry) => ({ item, ...entry })),
+  ),
+];
+
+/**
+ * Showdown and @smogon/calc name Curly Tatsugiri bare "Tatsugiri", but the
+ * stone tables use PokeAPI's `tatsugiri-curly` (there's no bare PokeAPI
+ * resource). Without this, a Showdown import holding Tatsugirinite never
+ * finds its Mega.
+ */
+const MEGA_BASE_SPECIES_ALIASES: Record<string, string> = {
+  tatsugiri: 'tatsugiri-curly',
+};
+
+function toMegaBaseSpecies(species: string): string {
+  const normalized = species.trim().toLowerCase();
+  return MEGA_BASE_SPECIES_ALIASES[normalized] ?? normalized;
+}
 
 /**
  * Every real Champions Mega form's full slug ("absol-mega", "charizard-mega-x"),
@@ -136,7 +188,7 @@ export const MEGA_STONE_TO_SPECIES: Record<string, { species: string; suffix: st
  * already in @smogon/calc's dex, just newly legal as of Reg M-C.
  */
 export const CURATED_MEGA_FORM_SLUGS = new Set(
-  Object.values(MEGA_STONE_TO_SPECIES).map((entry) => `${entry.species}-${entry.suffix}`),
+  MEGA_FORMS.map((entry) => `${entry.species}-${entry.suffix}`),
 );
 
 /**
@@ -205,12 +257,14 @@ export function formatMegaLabel(baseDisplayName: string, suffix: string): string
  */
 export function getMegaApiSlug(heldItem: string | undefined, species: string): string | null {
   if (!heldItem) return null;
-  const entry = MEGA_STONE_TO_SPECIES[heldItem.trim().toLowerCase()];
-  if (!entry) return null;
-  const normalized = species.trim().toLowerCase();
-  if (entry.species === normalized) return `${entry.species}-${entry.suffix}`;
-  if (FEMALE_MEGA_SPECIES[normalized] === entry.species) {
-    return `${normalized}-${entry.suffix}`;
+  const item = heldItem.trim().toLowerCase();
+  const normalized = toMegaBaseSpecies(species);
+  for (const entry of MEGA_FORMS) {
+    if (entry.item !== item) continue;
+    if (entry.species === normalized) return `${entry.species}-${entry.suffix}`;
+    if (FEMALE_MEGA_SPECIES[normalized] === entry.species) {
+      return `${normalized}-${entry.suffix}`;
+    }
   }
   return null;
 }
@@ -248,10 +302,11 @@ export function resolveActiveMegaSlug(
  * there's real ambiguity to resolve.
  */
 export function getMegaFormsForSpecies(species: string): { item: string; suffix: string }[] {
-  const normalized = species.trim().toLowerCase();
-  return Object.entries(MEGA_STONE_TO_SPECIES)
-    .filter(([, entry]) => entry.species === normalized)
-    .map(([item, entry]) => ({ item, suffix: entry.suffix }));
+  const normalized = toMegaBaseSpecies(species);
+  return MEGA_FORMS.filter((entry) => entry.species === normalized).map(({ item, suffix }) => ({
+    item,
+    suffix,
+  }));
 }
 
 /**
@@ -292,7 +347,7 @@ export function resolveOpponentMegaControl(
     return { kind: 'none' };
   }
 
-  const base = species.trim().toLowerCase();
+  const base = toMegaBaseSpecies(species);
   if (forms.length > 1) {
     return {
       kind: 'choice',
@@ -333,8 +388,10 @@ export function normalizeMegaSpeciesOnImport(species: string, item: string | und
   if (!base) return species;
   const suffix = match[1] ? `mega-${match[1].slice(1).toLowerCase()}` : 'mega';
 
-  const entry = MEGA_STONE_TO_SPECIES[item.trim().toLowerCase()];
-  if (!entry || entry.species !== base.toLowerCase() || entry.suffix !== suffix) return species;
-
-  return base;
+  const stone = item.trim().toLowerCase();
+  const baseSpecies = toMegaBaseSpecies(base);
+  const matches = MEGA_FORMS.some(
+    (entry) => entry.item === stone && entry.species === baseSpecies && entry.suffix === suffix,
+  );
+  return matches ? base : species;
 }

@@ -26,13 +26,13 @@ vi.mock('./useMegaSprite', () => ({ fetchMegaSprite: vi.fn().mockResolvedValue(n
 import { validateSpeciesLegality } from '../utils/pokemonRules';
 import { fetchPokemonData } from '../services/pokeapi';
 import { fetchMegaSprite } from './useMegaSprite';
-import { MEGA_STONE_TO_SPECIES } from '../config/megaEvolution';
+import { MEGA_FORMS } from '../config/megaEvolution';
 
 const mockedValidateLegality = vi.mocked(validateSpeciesLegality);
 const mockedFetchPokemonData = vi.mocked(fetchPokemonData);
 const mockedFetchMegaSprite = vi.mocked(fetchMegaSprite);
 const MEGA_SLUG_COUNT = new Set(
-  Object.values(MEGA_STONE_TO_SPECIES).map((e) => `${e.species}-${e.suffix}`),
+  MEGA_FORMS.map((e) => `${e.species}-${e.suffix}`),
 ).size;
 
 const CACHE_ENTRY: PokeAPICacheEntry = {
