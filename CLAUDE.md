@@ -113,12 +113,6 @@ cross-device sync, web build, and gender/form handling.
   live retest on choicebuds.vannyproductions.com (`deploy-web.yml`, a couple
   of minutes) before calling it done: base-path/routing and GitHub
   Pages-specific behavior only show up there.
-- **Worker changes need a manual deploy:** pushing to `main` deploys only
-  the web app; `worker/` has no CI deploy. A `worker/src/` change isn't live
-  until someone runs `cd worker && npx wrangler deploy`, which the sandbox
-  blocks Claude from running, so hand the user the command. Before any live
-  check of a `worker/src/` change, ask whether it has been deployed (see
-  `docs/postmortems/public-profiles-and-team-sharing.md`).
 - **Curated effect tables** (`config/moveStatEffects.ts`,
   `config/onSwitchInAbilities.ts`, `config/reactiveAbilities.ts`,
   `config/hitReactiveAbilities.ts`) hold comprehensive, research-backed
@@ -129,10 +123,6 @@ cross-device sync, web build, and gender/form handling.
 - **Leg boundaries:** when a leg finishes, say so explicitly ("that's one
   leg done, safe to `/clear` before the next") rather than continuing into
   the next leg in the same context.
-- **Record live verification when it happens:** when a leg's done check
-  includes a live/manual check and it's performed, the leg's COMPLETED.md
-  entry states what was checked, the same day (see
-  `docs/postmortems/mega-alt-form-representation.md`).
 - **Scoping-only legs still get a COMPLETED.md entry**, with the scope
   doc's commit hash, the moment they're marked done. Inline notes in
   TODO.md's done-when bullets don't substitute (see
@@ -152,3 +142,22 @@ cross-device sync, web build, and gender/form handling.
   change, view at least three species of different native sizes (a base
   form, a Mega, a regional form), not just the reported one (see
   `docs/postmortems/calc-follow-ups.md`).
+
+## Active checks
+
+- Make the user's manual check as small as possible: build the state it
+  needs yourself (test account, teams, battles, storage) before handover,
+  then hand over numbered steps, each with its expected result. If a state
+  can't be built without the user, say which and why.
+- Before a manual check or a test, ask: would this case show a different
+  result if the change did nothing? If the fixture or seeded state already
+  holds the value the code writes (or lacks what it acts on), pick another.
+- When planning a leg, run `wc -l` on each file it adds to, tests included;
+  if one would pass ~300 lines, file and run its split as an earlier leg.
+- A `Manual verification: yes` leg gets its COMPLETED.md entry only after
+  the user reports the check, and the entry states what was checked.
+- When planning a leg, give each "deployed" done clause a live check step,
+  or reword it to "in the repo". Pushing to `main` deploys only the web
+  app; a `worker/src/` change is live only after the user runs
+  `cd worker && npx wrangler deploy` (the sandbox blocks Claude), so that
+  handoff is the live check's first step.
