@@ -29,26 +29,6 @@ Done when:
 Findings for all legs below: `docs/investigations/reg-m-d.md`. Legs 3-5
 each need only Leg 2; Legs 6-8 also need Leg 5. Leg 9 waits for launch.
 
-- **[Reg M-D Mega Evolutions] — Leg 4** *(Last touched: 2026-11-24 ·
-  Re-checks: 0)*
-  Add Mega Heatran (Heatranite, Water Compaction) and Mega Tatsugiri
-  (Tatsugirinite, three forms, Premium Grade) to `megaEvolution.ts`,
-  `megaAbilities.ts` and `vgcData.ts`'s `VGC_MEGA_STONES`, plus a
-  `premium-grade` row (+1 SpA on switch-in) in `onSwitchInAbilities.ts`.
-  `MEGA_STONE_TO_SPECIES` maps one stone to one species, but Tatsugirinite
-  maps to three forms. Leg 3 kept the forms as three separate legality
-  slugs (`tatsugiri-{curly,droopy,stretchy}`, no collapse), so the stone
-  shape must resolve each form to its own `-mega` slug. The stone spellings come from Showdown/@smogon/calc and are
-  provisional until Serebii's items page lists them.
-  Done check: tests cover both stones resolving to their Mega slugs (all
-  three Tatsugiri forms), both Mega abilities, and Premium Grade's
-  switch-in effect; the Mega Stone slug-coverage test passes.
-  Manual verification: yes (Mega toggle on a Heatran and a Tatsugiri card)
-  · Review: no
-  Code, tests and docs landed in commit 7bce07e (full suite, lint and
-  type-check pass). Only the manual check is left before the COMPLETED.md
-  entry.
-
 - **[Reg M-D Regulation-Scoped Overrides] — Leg 5** *(Last touched:
   2026-11-24 · Re-checks: 0)*
   Vanny's rule: the M-D balance changes apply from Reg M-D onward and must

@@ -173,3 +173,11 @@ Added Heatran, Dondozo and Tatsugiri (curly/droopy/stretchy, not collapsed,
 since the form changes Order Up's boost) to REG-MD, with a saved PokeAPI
 fixture checking each slug. Bare "Tatsugiri" imports still 404 on PokeAPI;
 tracked as TODO.md's Leg 10. See commit 764e93601ca800319094634f3be0bce3662a15ad.
+
+## [Reg M-D Mega Evolutions] — Leg 4 (2026-11-24)
+
+Added Mega Heatran (Heatranite, Water Compaction) and Mega Tatsugiri
+(Tatsugirinite, Premium Grade, a separate Mega for each of the three forms
+via a new `MEGA_FORMS` list), plus Premium Grade's +1 SpA switch-in row.
+Vanny verified live that the Mega toggle on a Heatran card and a Tatsugiri
+card switches each one to its Mega. See commit 7bce07ec4b942158a5ed986aa5621dff34e41e70.
