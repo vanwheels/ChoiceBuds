@@ -26,12 +26,19 @@
  * source has individual rows past M-6 yet, only the regulation-level overall
  * range (September 9 - December 2, 2026). Re-check both sources for M-7+ as
  * they land; don't infer dates the way M-5 briefly was above.
+ *
+ * M-7/M-8 added 2026-11-24 from Serebii's per-season pages (M-8 ends
+ * "December 2nd at 01:59 UTC") - sources in docs/investigations/reg-m-d.md.
+ * Reg M-D (from 2026-12-02) has no published season rows yet; add them only
+ * once Serebii or Bulbapedia lists them.
  */
+
+import type { RegulationLabel } from '../types/pokemon';
 
 export interface SeasonDef {
   id: string;
   label: string;
-  regulation: 'Reg M-A' | 'Reg M-B' | 'Reg M-C';
+  regulation: RegulationLabel;
   start: number; // unix ms, inclusive
   end: number; // unix ms, exclusive (= next season's start)
 }
@@ -78,6 +85,20 @@ export const SEASONS: SeasonDef[] = [
     regulation: 'Reg M-C',
     start: Date.parse('2026-09-09'),
     end: Date.parse('2026-10-07'),
+  },
+  {
+    id: 'M-7',
+    label: 'M-7',
+    regulation: 'Reg M-C',
+    start: Date.parse('2026-10-07'),
+    end: Date.parse('2026-11-04'),
+  },
+  {
+    id: 'M-8',
+    label: 'M-8',
+    regulation: 'Reg M-C',
+    start: Date.parse('2026-11-04'),
+    end: Date.parse('2026-12-02'),
   },
 ];
 

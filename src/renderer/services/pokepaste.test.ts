@@ -5,7 +5,7 @@
  * pre-existing gap, not in scope for this change.
  */
 import { describe, it, expect, vi } from 'vitest';
-import { createPokepaste } from './pokepaste';
+import { createPokepaste, detectRegulationFromNotes } from './pokepaste';
 import type { ShowdownPokemon } from '../types/pokemon';
 
 const testMon: ShowdownPokemon = {
@@ -41,5 +41,20 @@ describe('createPokepaste', () => {
     const url = await createPokepaste([testMon]);
 
     expect(url).toBeNull();
+  });
+});
+
+describe('detectRegulationFromNotes', () => {
+  it('detects Reg M-D from a Showdown format string', () => {
+    expect(detectRegulationFromNotes('Format: gen9championsvgc2026regmd')).toBe('Reg M-D');
+  });
+
+  it('still detects the earlier regulations', () => {
+    expect(detectRegulationFromNotes('Reg M-C sand')).toBe('Reg M-C');
+    expect(detectRegulationFromNotes('regma')).toBe('Reg M-A');
+  });
+
+  it('returns null when no regulation is named', () => {
+    expect(detectRegulationFromNotes('Bring rain')).toBeNull();
   });
 });

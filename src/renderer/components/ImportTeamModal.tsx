@@ -332,6 +332,7 @@ export default function ImportTeamModal({
             <option value="Reg M-A">Reg M-A</option>
             <option value="Reg M-B">Reg M-B</option>
             <option value="Reg M-C">Reg M-C</option>
+            <option value="Reg M-D">Reg M-D</option>
           </select>
         </div>
 

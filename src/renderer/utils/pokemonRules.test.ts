@@ -8,6 +8,7 @@ import {
   toRegulationId,
   getRuleset,
   ALL_REGULATION_IDS,
+  LATEST_REGULATION_ID,
 } from './pokemonRules';
 
 describe('normalizeSlug', () => {
@@ -194,6 +195,34 @@ describe('getRuleset', () => {
   });
 
   it('ALL_REGULATION_IDS lists every regulation in display order', () => {
-    expect(ALL_REGULATION_IDS).toEqual(['REG-MA', 'REG-MB', 'REG-MC']);
+    expect(ALL_REGULATION_IDS).toEqual(['REG-MA', 'REG-MB', 'REG-MC', 'REG-MD']);
+  });
+
+  it('REG-MD ruleset is a superset of REG-MC (every M-C species included)', () => {
+    const mc = getRuleset('REG-MC');
+    const md = getRuleset('REG-MD');
+    expect(mc.allowedSpecies.every((s) => md.allowedSpecies.includes(s))).toBe(true);
+  });
+});
+
+describe('Reg M-D plumbing', () => {
+  it('labels REG-MD as "Reg M-D" and round-trips through toRegulationId', () => {
+    expect(getRegulationLabel('REG-MD')).toBe('Reg M-D');
+    expect(toRegulationId('Reg M-D')).toBe('REG-MD');
+  });
+
+  it('accepts M-C species and their cosmetic/regional variants under REG-MD', () => {
+    expect(validateSpeciesLegality('rillaboom', 'REG-MD')).toBe(true);
+    expect(validateSpeciesLegality('gengar', 'REG-MD')).toBe(true);
+    expect(validateSpeciesLegality('squawkabilly-blue-plumage', 'REG-MD')).toBe(true);
+    expect(validateSpeciesLegality('toxtricity-low-key', 'REG-MD')).toBe(true);
+  });
+
+  it('still rejects a species legal in no regulation under REG-MD', () => {
+    expect(validateSpeciesLegality('mewtwo', 'REG-MD')).toBe(false);
+  });
+
+  it('is the latest regulation, so bulk sync covers its roster', () => {
+    expect(LATEST_REGULATION_ID).toBe('REG-MD');
   });
 });

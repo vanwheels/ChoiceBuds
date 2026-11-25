@@ -62,10 +62,10 @@
 
 import type { RegulationLabel } from '../types/pokemon';
 
-export type RegulationId = 'REG-MA' | 'REG-MB' | 'REG-MC';
+export type RegulationId = 'REG-MA' | 'REG-MB' | 'REG-MC' | 'REG-MD';
 
 /** Every regulation the app knows about, in display order - drives the regulation-picker dropdown */
-export const ALL_REGULATION_IDS: RegulationId[] = ['REG-MA', 'REG-MB', 'REG-MC'];
+export const ALL_REGULATION_IDS: RegulationId[] = ['REG-MA', 'REG-MB', 'REG-MC', 'REG-MD'];
 
 /**
  * The most recently added regulation - the roster useInitialSync.ts/
@@ -426,6 +426,13 @@ const REG_MC_ADDED_SPECIES: string[] = [
   'baxcalibur',
 ];
 
+/**
+ * Reg M-D (2026-12-02 onward) additions on top of REG-MC. Sourced in
+ * docs/investigations/reg-m-d.md; filled by TODO.md's Reg M-D Species Roster
+ * leg. Empty means REG-MD is exactly REG-MC's roster until then.
+ */
+const REG_MD_ADDED_SPECIES: string[] = [];
+
 export function normalizeSlug(value: string): string {
   return value.toLowerCase().trim().replace(/['']/g, '').replace(/[.]/g, '').replace(/\s+/g, '-');
 }
@@ -475,6 +482,7 @@ const REG_MB_SPECIES_SET = new Set([...REG_MA_SPECIES, ...REG_MB_ADDED_SPECIES].
 const REG_MC_SPECIES_SET = new Set(
   [...REG_MA_SPECIES, ...REG_MB_ADDED_SPECIES, ...REG_MC_ADDED_SPECIES].map(normalizeSlug),
 );
+const REG_MD_SPECIES_SET = new Set([...REG_MC_SPECIES_SET, ...REG_MD_ADDED_SPECIES.map(normalizeSlug)]);
 
 export const CHAMPIONS_RULESETS: Record<RegulationId, ChampionsRuleset> = {
   'REG-MA': {
@@ -495,6 +503,12 @@ export const CHAMPIONS_RULESETS: Record<RegulationId, ChampionsRuleset> = {
     allowedMoves: [],
     allowedItems: [],
   },
+  'REG-MD': {
+    id: 'REG-MD',
+    allowedSpecies: [...REG_MD_SPECIES_SET],
+    allowedMoves: [],
+    allowedItems: [],
+  },
 };
 
 /** Human-readable label matching the app's existing `Team.format` convention */
@@ -502,6 +516,7 @@ const REGULATION_LABEL: Record<RegulationId, RegulationLabel> = {
   'REG-MA': 'Reg M-A',
   'REG-MB': 'Reg M-B',
   'REG-MC': 'Reg M-C',
+  'REG-MD': 'Reg M-D',
 };
 
 export function getRegulationLabel(rulesetId: RegulationId): RegulationLabel {
@@ -512,6 +527,7 @@ const LABEL_TO_REGULATION_ID: Record<RegulationLabel, RegulationId> = {
   'Reg M-A': 'REG-MA',
   'Reg M-B': 'REG-MB',
   'Reg M-C': 'REG-MC',
+  'Reg M-D': 'REG-MD',
 };
 
 /** Bridges the app's existing `Team.format` field to a RegulationId */
@@ -537,12 +553,13 @@ const SPECIES_SET_BY_REGULATION: Record<RegulationId, Set<string>> = {
   'REG-MA': REG_MA_SPECIES_SET,
   'REG-MB': REG_MB_SPECIES_SET,
   'REG-MC': REG_MC_SPECIES_SET,
+  'REG-MD': REG_MD_SPECIES_SET,
 };
 
 /**
  * Real species-legality check against the sourced "Newly Useable Pokémon"
  * allowlist for the given regulation (each later regulation is a superset of
- * the previous one - REG-MB adds to REG-MA, REG-MC adds to REG-MB).
+ * the previous one - REG-MB adds to REG-MA, REG-MC to REG-MB, REG-MD to REG-MC).
  */
 export function validateSpeciesLegality(speciesId: string, rulesetId: RegulationId): boolean {
   const normalized = canonicalizeCosmeticVariantSlug(

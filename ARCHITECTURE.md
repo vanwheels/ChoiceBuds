@@ -299,8 +299,8 @@ change.
   same `renderNavItem` row styling/active-highlight the tab items use —
   generalized to take an explicit `isActive`/key pair instead of deriving
   it from `ActiveTab`.
-- `ProfileCard`'s per-section regulation filter (pill row: All/Reg M-A/
-  Reg M-B/Reg M-C, built off the same `ALL_REGULATION_IDS`/
+- `ProfileCard`'s per-section regulation filter (pill row: All plus one
+  pill per regulation, built off the same `ALL_REGULATION_IDS`/
   `getRegulationLabel` source `TeamsPage.tsx`'s own Format Filter Buttons
   use) narrows both Open/Closed sections to one regulation at a time;
   shared by the in-app profile page and the standalone `/u/<username>`

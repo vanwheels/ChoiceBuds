@@ -31,11 +31,18 @@ import type { RegulationLabel, VgcPasteTeamRow } from '../types/pokemon';
 
 const SHEET_ID = '1axlwmzPA49rYkqXh7zHvAtSP-TKbM0ijGYBPRflLSWw';
 
-const REGULATION_TO_SHEET_TAB: Record<RegulationLabel, string> = {
+// Partial because the sheet adds a regulation's tab on its own schedule, not
+// ours. gviz silently serves the sheet's first (welcome) tab for an unknown
+// tab name, so a missing entry must stay missing rather than guessed - checked
+// 2026-11-24: no "Champions M-D" tab yet.
+const REGULATION_TO_SHEET_TAB: Partial<Record<RegulationLabel, string>> = {
   'Reg M-A': 'Champions M-A',
   'Reg M-B': 'Champions M-B',
   'Reg M-C': 'Champions M-C',
 };
+
+/** Regulations the VGCPastes sheet has a tab for, oldest first - the catalog's tab list. */
+export const VGC_PASTES_REGULATIONS = Object.keys(REGULATION_TO_SHEET_TAB) as RegulationLabel[];
 
 // 0-indexed row/column positions, verified live 2026-09-14 - see file header.
 const HEADER_ROW_INDEX = 2;
@@ -55,6 +62,7 @@ const SPECIES_COLUMNS = [37, 38, 39, 40, 41, 42];
 
 function buildSheetCsvUrl(regulation: RegulationLabel): string {
   const tab = REGULATION_TO_SHEET_TAB[regulation];
+  if (!tab) throw new Error(`VGCPastes has no ${regulation} tab yet`);
   const params = new URLSearchParams({ tqx: 'out:csv', sheet: tab });
   return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?${params.toString()}`;
 }

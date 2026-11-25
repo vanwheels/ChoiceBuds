@@ -30,6 +30,7 @@ import type { RegulationLabel, VgcPasteTeamRow } from '../types/pokemon';
 import type { UseVgcPastesCacheReturn } from '../hooks/useVgcPastesCache';
 import type { UseSpeciesRosterReturn } from '../hooks/useSpeciesRoster';
 import type { UseSpriteCacheReturn } from '../hooks/useSpriteCache';
+import { VGC_PASTES_REGULATIONS } from '../services/vgcPastes';
 import Modal from './Modal';
 import VgcPasteCatalogRow from './VgcPasteCatalogRow';
 
@@ -42,7 +43,6 @@ interface VgcPasteCatalogModalProps {
   spriteCacheState: UseSpriteCacheReturn;
 }
 
-const REGULATIONS: RegulationLabel[] = ['Reg M-A', 'Reg M-B', 'Reg M-C'];
 
 function formatLastFetched(timestamp: number | null): string | null {
   if (!timestamp) return null;
@@ -65,7 +65,13 @@ export default function VgcPasteCatalogModal({
   speciesRosterState,
   spriteCacheState,
 }: VgcPasteCatalogModalProps) {
-  const [activeTab, setActiveTab] = useState<RegulationLabel>(defaultRegulation);
+  // The user's default regulation may be newer than any sheet tab (e.g. Reg
+  // M-D before VGCPastes adds one), so fall back to the newest tab that exists.
+  const [activeTab, setActiveTab] = useState<RegulationLabel>(() =>
+    VGC_PASTES_REGULATIONS.includes(defaultRegulation)
+      ? defaultRegulation
+      : VGC_PASTES_REGULATIONS[VGC_PASTES_REGULATIONS.length - 1],
+  );
   const [searchQuery, setSearchQuery] = useState('');
 
   const rows = vgcPastesState.getRows(activeTab);
@@ -100,7 +106,7 @@ export default function VgcPasteCatalogModal({
       {/* Regulation Tabs + Refresh */}
       <div className="px-6 pt-4 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex gap-2">
-          {REGULATIONS.map((regulation) => (
+          {VGC_PASTES_REGULATIONS.map((regulation) => (
             <button
               key={regulation}
               onClick={() => setActiveTab(regulation)}

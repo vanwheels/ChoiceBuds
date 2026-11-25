@@ -136,8 +136,11 @@ each need only Leg 2; Legs 6-8 also need Leg 5. Leg 9 waits for launch.
   Close the doc's "Gaps to close after launch" list: the other 21 M-D
   species, the M-D season rows (three seasons), the Premium Grade/
   Heatranite/Tatsugirinite spellings on Serebii, and a Bulbapedia and
-  Showdown `champions`-mod cross-check of everything else. This may split
-  if the 21 species bring their own movepool gaps.
+  Showdown `champions`-mod cross-check of everything else. Also add
+  `'Reg M-D': 'Champions M-D'` to `services/vgcPastes.ts`'s tab map once
+  the VGCPastes sheet has that tab (absent 2026-11-24; the catalog hides
+  M-D until then). This may split if the 21 species bring their own
+  movepool gaps.
   Done check: every gap in `docs/investigations/reg-m-d.md` is closed or
   has its own TODO item. Proves Done when line 1.
   Manual verification: no · Review: no

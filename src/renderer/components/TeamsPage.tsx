@@ -155,7 +155,7 @@ export default function TeamsPage({
   });
 
   // Format filter buttons configuration
-  const filterButtons: TeamsFilter[] = ['All', 'Reg M-A', 'Reg M-B', 'Reg M-C'];
+  const filterButtons: TeamsFilter[] = ['All', 'Reg M-A', 'Reg M-B', 'Reg M-C', 'Reg M-D'];
 
   // Mobile Compact Top Bar: Teams & Box leg (see TODO.md) - publishes this
   // page's title/action buttons into Sidebar.tsx's mobile top bar in place

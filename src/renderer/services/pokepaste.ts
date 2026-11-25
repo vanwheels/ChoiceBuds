@@ -47,16 +47,16 @@ export async function fetchPokepaste(id: string): Promise<PokepasteData> {
 }
 
 /**
- * Best-effort Reg M-A/Reg M-B/Reg M-C detection from the paste's own `notes`
+ * Best-effort Reg M-A..Reg M-D detection from the paste's own `notes`
  * field (commonly a "Format: gen9championsvgc2026regmb"-style string) -
  * pokepast.es doesn't guarantee a parseable convention here, so callers
  * should keep whatever format they already have selected when this returns
  * null.
  */
 export function detectRegulationFromNotes(notes: string): RegulationLabel | null {
-  const match = /reg\s*m[\s-]?([abc])/i.exec(notes);
+  const match = /reg\s*m[\s-]?([abcd])/i.exec(notes);
   if (!match) return null;
-  const label: Record<string, RegulationLabel> = { a: 'Reg M-A', b: 'Reg M-B', c: 'Reg M-C' };
+  const label: Record<string, RegulationLabel> = { a: 'Reg M-A', b: 'Reg M-B', c: 'Reg M-C', d: 'Reg M-D' };
   return label[match[1].toLowerCase()];
 }
 

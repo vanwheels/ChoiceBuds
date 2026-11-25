@@ -61,6 +61,17 @@ describe('sortTeams', () => {
     expect(sortTeams(teams).map((t) => t.id)).toEqual(['b', 'c', 'a']);
   });
 
+  it('sorts Reg M-D ahead of every earlier regulation', () => {
+    const teams = [
+      makeTeam({ id: 'a', format: 'Reg M-C' }),
+      makeTeam({ id: 'b', format: 'Reg M-A' }),
+      makeTeam({ id: 'c', format: 'Reg M-D' }),
+      makeTeam({ id: 'd', format: 'Reg M-B' }),
+    ];
+
+    expect(sortTeams(teams).map((t) => t.id)).toEqual(['c', 'a', 'd', 'b']);
+  });
+
   it('preserves drag-order within a regulation group', () => {
     const teams = [
       makeTeam({ id: 'a', format: 'Reg M-C' }),

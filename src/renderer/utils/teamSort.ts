@@ -2,10 +2,10 @@ import type { Team } from '../types/pokemon';
 
 /**
  * Regulation display/chronological order, oldest first - same list as
- * TeamsPage.tsx's filterButtons / VgcPasteCatalogModal.tsx's REGULATIONS.
+ * TeamsPage.tsx's filterButtons / pokemonRules.ts's ALL_REGULATION_IDS.
  * sortTeams below reverses this (newest first) for its secondary sort key.
  */
-const REGULATION_ORDER: readonly string[] = ['Reg M-A', 'Reg M-B', 'Reg M-C'];
+const REGULATION_ORDER: readonly string[] = ['Reg M-A', 'Reg M-B', 'Reg M-C', 'Reg M-D'];
 
 function regulationRank(format: string): number {
   const index = REGULATION_ORDER.indexOf(format);
