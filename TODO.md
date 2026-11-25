@@ -1,18 +1,7 @@
 ﻿# ChoiceBuds TODO
 
-Working task list for ongoing/planned work. Every item is titled
-`[Item/Sweep Name] — Leg N` (say "Start [title]" to kick off a session on
-it). Bodies stay short — commit-message-body length, not an investigation
-log; deep cross-checks/history belong in `docs/investigations/<topic>.md`,
-linked from the item. `Last touched` + `Re-checks` are tracked per item; no
-status enum otherwise — absence of a `Blocked:` line means open. Blocked
-items are exempt from the re-check counter and live in their own tier below
-rather than mixed into the active list. This file adopted that format as of
-2026-08-31 — all re-check counters started at 0 then regardless of how long
-an item had been sitting. Reordered into priority order 2026-08-31; within
-the current milestone and "Unscheduled", items are listed highest-to-lowest
-priority. Only one milestone is "current" at a time — see root `CLAUDE.md`'s
-Task Tracking rules for the full section-lifecycle.
+Format follows the global Task Tracking rules; items are listed
+highest-to-lowest priority within each section.
 
 ## Current Milestone: Conventions Catch-up & ChoiceMods Practice Port
 
@@ -53,12 +42,19 @@ README milestone, and the LSP rule loads from global `rules/typescript.md`.
   refused. Proves Done when line 3 (guard).
   Manual verification: no · Review: no
 
-## Blocked
+## Unscheduled
 
-Items where the whole item (not just a sub-part) is stalled on something
-outside this project — a person, a dependency, or an external decision.
-Exempt from the re-check counter; they move back to "In progress" once
-unblocked.
+- **[Move Effect Chance Text] — Leg 1** *(Last touched: 2026-11-24 ·
+  Re-checks: 0)*
+  PokeAPI's `short_effect` for some moves omits the percentage (Rock
+  Slide: "Has a chance to make the target flinch."), carrying it in a
+  separate `effect_chance` field that `pokeapiService.ts` never stores, so
+  move tooltips show no number. Found during Reg M-D Move Overrides Leg 6.
+  Store `effect_chance` and fill it into texts that lack it, or audit which
+  moves are affected first.
+  Done check: Rock Slide's M-C tooltip shows 30%, with a test over a saved
+  PokeAPI fixture.
+  Manual verification: yes (Rock Slide tooltip) · Review: no
 
 - **[In-App Auto-Update: macOS] — Leg 1** *(Last touched: not recorded ·
   Re-checks: 0)*
@@ -78,20 +74,6 @@ unblocked.
   `typescript-eslint` doesn't support TypeScript 7.0.2 yet (confirmed
   peer-range rejection + real runtime crash reports). Currently on
   TypeScript ^6.0.3.
-
-## Unscheduled (not yet scoped, highest-to-lowest priority)
-
-- **[Move Effect Chance Text] — Leg 1** *(Last touched: 2026-11-24 ·
-  Re-checks: 0)*
-  PokeAPI's `short_effect` for some moves omits the percentage (Rock
-  Slide: "Has a chance to make the target flinch."), carrying it in a
-  separate `effect_chance` field that `pokeapiService.ts` never stores, so
-  move tooltips show no number. Found during Reg M-D Move Overrides Leg 6.
-  Store `effect_chance` and fill it into texts that lack it, or audit which
-  moves are affected first.
-  Done check: Rock Slide's M-C tooltip shows 30%, with a test over a saved
-  PokeAPI fixture.
-  Manual verification: yes (Rock Slide tooltip) · Review: no
 
 ## Future Milestones (unscheduled)
 
