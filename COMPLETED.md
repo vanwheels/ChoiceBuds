@@ -237,3 +237,11 @@ Added an Active checks section to CLAUDE.md with the five ported ChoiceMods
 rules, folding in the reactive Worker-deploy and record-live-verification
 bullets they supersede; CLAUDE.md is 163 lines. No manual verification (not
 required). See commit f1027732f87ad9aad2a10392a47b3b19fd0f1714.
+
+## [Conventions Catch-up] — Leg 2 (2026-11-24)
+
+Cut ARCHITECTURE.md from 666 to 100 lines of linked summaries; section text
+moved verbatim to 14 `docs/architecture/` files, and four editing-rule
+sections became path-scoped `.claude/rules/` files. Old headings all mapped
+and every link resolves. No manual verification (not required). See commit
+6f705b0c48c3636e23225a6f4f41d53ca5734981.
