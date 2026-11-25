@@ -230,3 +230,10 @@ rule and linking the post mortem holding the incident; the dev:web
 verification rationale moved into bug-fix-small-features-sweep.md. No
 manual verification (not required). See commit
 ae39429938e998a5c81aafc3b53608bb19fd553a.
+
+## [ChoiceMods Practice Port] — Leg 1 (2026-11-24)
+
+Added an Active checks section to CLAUDE.md with the five ported ChoiceMods
+rules, folding in the reactive Worker-deploy and record-live-verification
+bullets they supersede; CLAUDE.md is 163 lines. No manual verification (not
+required). See commit f1027732f87ad9aad2a10392a47b3b19fd0f1714.

@@ -31,21 +31,6 @@ Legs run in order. The global `claude-config` v3 entry is out of scope:
 ChoiceBuds already has CHANGELOG.md, the README shape sits in the deferred
 README milestone, and the LSP rule loads from global `rules/typescript.md`.
 
-- **[ChoiceMods Practice Port] — Leg 1** *(Last touched: 2026-11-24 ·
-  Re-checks: 0)*
-  Port five ChoiceMods rules as one-line active checks: build a manual
-  check's state yourself and hand over numbered steps with expected
-  results; ask whether a test or check would differ if the change did
-  nothing; run `wc -l` at planning and file a split leg first for any file
-  that would pass ~300 lines; a `Manual verification: yes` leg gets its
-  COMPLETED.md entry only after Vanny reports the check; each "deployed"
-  done clause gets a live check step or is reworded to "in the repo"
-  (replaces the reactive `wrangler deploy` bullet). Remove any other
-  bullet these supersede.
-  Done check: the five checks are present, superseded bullets gone, and
-  CLAUDE.md still under ~200 lines. Proves Done when line 1 (checks).
-  Manual verification: no · Review: no
-
 - **[Conventions Catch-up] — Leg 2** *(Last touched: 2026-11-24 ·
   Re-checks: 0)*
   ARCHITECTURE.md is 666 lines against the global one-page rule. Keep the
