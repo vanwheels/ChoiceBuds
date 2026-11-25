@@ -20,15 +20,6 @@ Legs run in order. The global `claude-config` v3 entry is out of scope:
 ChoiceBuds already has CHANGELOG.md, the README shape sits in the deferred
 README milestone, and the LSP rule loads from global `rules/typescript.md`.
 
-- **[Conventions Catch-up] — Leg 3** *(Last touched: 2026-11-24 ·
-  Re-checks: 0)*
-  TODO.md's header restates global task-tracking rules, and `## Blocked`
-  isn't in the global layout. Trim the header to a one-line pointer and
-  fold Blocked items into Unscheduled, each keeping its `Blocked:` line.
-  Done check: header trimmed, section order is Current Milestone /
-  Unscheduled / Future Milestones. Proves Done when line 3 (TODO).
-  Manual verification: no · Review: no
-
 - **[ChoiceMods Practice Port] — Leg 2** *(Last touched: 2026-11-24 ·
   Re-checks: 0)*
   Port ChoiceMods' `.claude/hooks/guard.py` as a Node `.claude/hooks/

@@ -245,3 +245,11 @@ moved verbatim to 14 `docs/architecture/` files, and four editing-rule
 sections became path-scoped `.claude/rules/` files. Old headings all mapped
 and every link resolves. No manual verification (not required). See commit
 6f705b0c48c3636e23225a6f4f41d53ca5734981.
+
+## [Conventions Catch-up] — Leg 3 (2026-11-24)
+
+Trimmed TODO.md's header to a one-line pointer at the global rules and
+folded `## Blocked` into Unscheduled, keeping each `Blocked:` line; sections
+now run Current Milestone / Unscheduled / Future Milestones. No manual
+verification (not required). See commit
+f26a73518e9a4fa25090d98e11392f1f0197bd58.
