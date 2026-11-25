@@ -199,3 +199,12 @@ patches; the calc needed no change. Vanny verified live that Rock Slide's
 tooltip shows 95% and 20% flinch on an M-D team and the mainline values on
 an M-C team, which surfaced the missing-percentage gap now tracked as
 [Move Effect Chance Text]. See commit fe0314439d8a48e11592600903f99de5a0ba878f.
+
+## [Reg M-D Patch Movepool Additions] — Leg 7 (2026-11-24)
+
+Filled `CHAMPIONS_DATED_MOVEPOOL_ADDITIONS` with the Dec 2 additions as
+`REG-MD` rows (33 rows, one per Rotom form); tests cover tagged and untagged
+species, M-C absence, and Mr. Mime keeping Psych Up past the gated removal.
+`/leg-review` found no defects; its full-table slug check is the second
+commit. No manual verification (not required). See commits
+7a501abc9fb85d1f7406b02e10ac0570166306c7 and 9f45412bfec8b9d13b39fbae13f89bffa1e1ac33.

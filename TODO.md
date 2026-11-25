@@ -29,20 +29,6 @@ Done when:
 Findings for all legs below: `docs/investigations/reg-m-d.md`. Legs 3-5
 each need only Leg 2; Legs 6-8 also need Leg 5. Leg 9 waits for launch.
 
-- **[Reg M-D Patch Movepool Additions] — Leg 7** *(Last touched: 2026-11-24 ·
-  Re-checks: 0)*
-  Depends on Leg 5. `CHAMPIONS_MOVEPOOL_ADDITIONS` only applies to species
-  with no Champions-tagged PokeAPI data, so the Dec 2 additions need Leg 5's
-  dated layer instead, applied after every removal. Fill it from the doc's
-  §5 table: Psych Up for 17 species (Rotom counts once, with six rows for
-  its forms), Slack Off, Roost, Tailwind, Wonder Room, and Play Rough for
-  the seven Eeveelutions. Mr. Mime's `psych-up` is in the gated removals
-  table and needs a test.
-  Done check: tests show the additions on tagged and untagged species under
-  Reg M-D and absent under Reg M-C, and Mr. Mime keeps Psych Up in M-D.
-  Manual verification: no · Review: yes (changes the learnset pipeline
-  every move picker reads)
-
 - **[Reg M-D Ability Overrides] — Leg 8** *(Last touched: 2026-11-24 ·
   Re-checks: 0)*
   Depends on Leg 5. Add `Reg M-D` description entries: Flash Fire's boost
