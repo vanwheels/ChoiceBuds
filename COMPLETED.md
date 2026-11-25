@@ -181,3 +181,12 @@ Added Mega Heatran (Heatranite, Water Compaction) and Mega Tatsugiri
 via a new `MEGA_FORMS` list), plus Premium Grade's +1 SpA switch-in row.
 Vanny verified live that the Mega toggle on a Heatran card and a Tatsugiri
 card switches each one to its Mega. See commit 7bce07ec4b942158a5ed986aa5621dff34e41e70.
+
+## [Reg M-D Regulation-Scoped Overrides] — Leg 5 (2026-11-24)
+
+Added the dated patch layer (`championsRegulationPatches.ts`, empty until
+Legs 6-8) and a required regulation on every move/ability/learnset getter
+and the calc override, threaded through the calc, team, profile and Box
+surfaces. `/leg-review` found no blockers; its unknown-format fallback
+fix is the second commit. See commits 069c5532ba69ed884ef5c7b112828ff137d02e26
+and 06fe3e19cefe8b4f4e0fd0b347b40b76feeb0db2.

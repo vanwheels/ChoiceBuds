@@ -29,25 +29,6 @@ Done when:
 Findings for all legs below: `docs/investigations/reg-m-d.md`. Legs 3-5
 each need only Leg 2; Legs 6-8 also need Leg 5. Leg 9 waits for launch.
 
-- **[Reg M-D Regulation-Scoped Overrides] — Leg 5** *(Last touched:
-  2026-11-24 · Re-checks: 0)*
-  Vanny's rule: the M-D balance changes apply from Reg M-D onward and must
-  not show in M-C or earlier calcs, or in those teams' move and ability
-  text. Every override table applies globally today (doc §7). Add a dated
-  patch layer (entries tagged with the regulation they start in) and a
-  regulation parameter on `useGameData.ts`'s `getCachedMove`/
-  `getCachedAbility`/`getCachedSpeciesLearnset` and on
-  `getChampionsCalcMoveOverride`. Thread it to the ~8 caller files: the calc
-  uses its `regulationId`, team surfaces use `team.regulation`, and anything
-  with no regulation (Box, etc.) uses the latest one, as Vanny confirmed. Existing global overrides stay
-  global. Leaves the layer empty; Legs 6-8 fill it.
-  Done check: tests show a dated test entry applied for its regulation and
-  later ones, and absent for earlier ones, on all four paths; the full
-  suite passes.
-  Manual verification: no · Review: yes (touches many call sites and the
-  calc engine)
-  Built and tests pass; awaiting Vanny's `/leg-review` before close.
-
 - **[Reg M-D Move Overrides] — Leg 6** *(Last touched: 2026-11-24 ·
   Re-checks: 0)*
   Depends on Leg 5. Add the Dec 2 accuracy changes as `Reg M-D` patch
