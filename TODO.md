@@ -14,11 +14,84 @@ the current milestone and "Unscheduled", items are listed highest-to-lowest
 priority. Only one milestone is "current" at a time — see root `CLAUDE.md`'s
 Task Tracking rules for the full section-lifecycle.
 
-## Current Milestone: none (next: plan Conventions Catch-up + ChoiceMods Practice Port)
+## Current Milestone: Conventions Catch-up & ChoiceMods Practice Port
 
-Reg M-D Update was paused 2026-11-24 with only its blocked Leg 9 left (see
-Future Milestones). The next milestone is `[Conventions Catch-up]` plus
-`[ChoiceMods Practice Port]`, planned together via `/plan-milestone`.
+Done when:
+- CLAUDE.md is under ~200 lines with no incident history, and carries the
+  ChoiceMods active checks in place of the bullets they supersede
+  (including the reactive `wrangler deploy` bullet).
+- ARCHITECTURE.md fits about one page, with each feature deep-dive in
+  `docs/architecture/<topic>.md` (or `.claude/rules/` when it's really an
+  editing rule), linked from ARCHITECTURE.md.
+- TODO.md's header doesn't restate global rules and its sections match the
+  global layout; a Node PreToolUse guard blocks `git add -A`/`.` and
+  `git commit -a`.
+
+Legs run in order. The global `claude-config` v3 entry is out of scope:
+ChoiceBuds already has CHANGELOG.md, the README shape sits in the deferred
+README milestone, and the LSP rule loads from global `rules/typescript.md`.
+
+- **[Conventions Catch-up] — Leg 1** *(Last touched: 2026-11-24 ·
+  Re-checks: 0)*
+  CLAUDE.md is 225 lines and its Workflow bullets carry dated incident
+  narratives ("added …, after …"). Move each history paragraph into the
+  post mortem it came from (or a `.claude/rules/` file when it is a
+  standing rule), keeping only the rule itself in CLAUDE.md. Aim for ~190
+  lines so Leg 2's additions still fit under 200.
+  Done check: `wc -l CLAUDE.md` ≤ ~190, no dated narratives left, and each
+  moved lesson is findable in a post mortem or rule. Proves Done when
+  line 1 (length, no history).
+  Manual verification: no · Review: no
+
+- **[ChoiceMods Practice Port] — Leg 1** *(Last touched: 2026-11-24 ·
+  Re-checks: 0)*
+  Port five ChoiceMods rules as one-line active checks: build a manual
+  check's state yourself and hand over numbered steps with expected
+  results; ask whether a test or check would differ if the change did
+  nothing; run `wc -l` at planning and file a split leg first for any file
+  that would pass ~300 lines; a `Manual verification: yes` leg gets its
+  COMPLETED.md entry only after Vanny reports the check; each "deployed"
+  done clause gets a live check step or is reworded to "in the repo"
+  (replaces the reactive `wrangler deploy` bullet). Remove any other
+  bullet these supersede.
+  Done check: the five checks are present, superseded bullets gone, and
+  CLAUDE.md still under ~200 lines. Proves Done when line 1 (checks).
+  Manual verification: no · Review: no
+
+- **[Conventions Catch-up] — Leg 2** *(Last touched: 2026-11-24 ·
+  Re-checks: 0)*
+  ARCHITECTURE.md is 666 lines against the global one-page rule. Keep the
+  core (process split, persisted data versioning, renderer layers, import
+  data flow, sync, web build) as short summaries; move feature deep-dives
+  (Calc popup, Tag-chip search, Mega toggle, Mobile swipe deck, Box entry
+  modal, etc.) to `docs/architecture/<topic>.md`, or to `.claude/rules/`
+  with `paths` where a section is really an editing rule. Link each.
+  Done check: ARCHITECTURE.md about one page, before/after section
+  headings diffed so nothing is lost, every moved section linked. Proves
+  Done when line 2.
+  Manual verification: no · Review: no
+
+- **[Conventions Catch-up] — Leg 3** *(Last touched: 2026-11-24 ·
+  Re-checks: 0)*
+  TODO.md's header restates global task-tracking rules, and `## Blocked`
+  isn't in the global layout. Trim the header to a one-line pointer and
+  fold Blocked items into Unscheduled, each keeping its `Blocked:` line.
+  Done check: header trimmed, section order is Current Milestone /
+  Unscheduled / Future Milestones. Proves Done when line 3 (TODO).
+  Manual verification: no · Review: no
+
+- **[ChoiceMods Practice Port] — Leg 2** *(Last touched: 2026-11-24 ·
+  Re-checks: 0)*
+  Port ChoiceMods' `.claude/hooks/guard.py` as a Node `.claude/hooks/
+  guard.mjs` (no Python venv here), limited to blocking `git add -A`/`.`
+  and `git commit -a`/`-am` from both the Bash and PowerShell tools.
+  Wire it as a PreToolUse hook in `.claude/settings.json` and widen
+  Vitest's `include` so its tests run in `npm run test`.
+  Done check: tests cover blocked (`add -A`, `add .`, `commit -a`,
+  `commit -am`) and allowed (`add src/x.ts`, `commit -m "add -A"`)
+  commands, full suite passes, and a live `git add -A` in session is
+  refused. Proves Done when line 3 (guard).
+  Manual verification: no · Review: no
 
 ## Blocked
 
@@ -48,9 +121,6 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-[Conventions Catch-up] and [ChoiceMods Practice Port] overlap (both slim
-and replace CLAUDE.md bullets); plan them together.
-
 - **[Move Effect Chance Text] — Leg 1** *(Last touched: 2026-11-24 ·
   Re-checks: 0)*
   PokeAPI's `short_effect` for some moves omits the percentage (Rock
@@ -62,45 +132,6 @@ and replace CLAUDE.md bullets); plan them together.
   Done check: Rock Slide's M-C tooltip shows 30%, with a test over a saved
   PokeAPI fixture.
   Manual verification: yes (Rock Slide tooltip) · Review: no
-
-- **[Conventions Catch-up] — Leg 1** *(Last touched: 2026-11-24 ·
-  Re-checks: 0)*
-  ChoiceBuds is stamped v2 but falls short of it. CLAUDE.md is 225 lines,
-  over the ~200 target, and its Workflow bullets carry incident history
-  that belongs in post mortems. ARCHITECTURE.md is 658 lines against the
-  one-page rule. TODO.md's header restates global rules, and its
-  `## Blocked` section isn't in the global layout. (CHANGELOG.md now
-  exists, started during Reg M-D.) The CHANGELOG, README-shape and LSP rules were added globally on 2026-10-31
-  without a conventions bump, so `/project-revision` won't flag them. A v3
-  entry in `~/claude-config` (edited outside this repo) would fix that
-  for every project. Likely splits into a CLAUDE.md slim leg and an
-  ARCHITECTURE.md trim leg.
-  Done check: CLAUDE.md under ~200 lines with history moved out,
-  ARCHITECTURE.md near one page, and TODO header trimmed.
-  Manual verification: no · Review: no
-
-- **[ChoiceMods Practice Port] — Leg 1** *(Last touched: 2026-11-24 ·
-  Re-checks: 0)*
-  Port the ChoiceMods CLAUDE.md rules that fit here, each as a one-line
-  active check:
-  - Build a manual check's state yourself, then hand over numbered steps
-    with the expected result of each.
-  - Before any test or manual check, ask whether it would show a different
-    result if the change did nothing.
-  - Run `wc -l` at planning time, and file a split leg first for any file
-    that would pass ~300 lines.
-  - A `Manual verification: yes` leg gets its COMPLETED.md entry only after
-    Vanny reports the check.
-  - Each "deployed" done clause gets a live check step, or is reworded to
-    "in the repo". This would replace the reactive `wrangler deploy`
-    bullet.
-  Also consider porting ChoiceMods' `.claude/hooks/guard.py` PreToolUse
-  hook (blocks `git add -A`/`.` and `git commit -a`). Skip its
-  guarantee-sentence audits, which don't fit this project's risk profile.
-  Done check: the rules are in CLAUDE.md or `.claude/rules/`, replacing
-  the bullets they supersede, and the hook is in `.claude/settings.json`
-  if adopted.
-  Manual verification: no · Review: no
 
 ## Future Milestones (unscheduled)
 
