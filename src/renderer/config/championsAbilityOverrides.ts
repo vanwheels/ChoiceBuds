@@ -31,6 +31,12 @@
  *   `docs/investigations/champions-showdown-mod-audit.md` for the full
  *   pass.
  *
+ * Dec 2 2026 (Reg M-D) patch: Flash Fire and Stalwart get regulation-scoped
+ * description changes in championsRegulationPatches.ts, not here, so they
+ * don't leak into Reg M-C or earlier. Both are text only: the app models
+ * neither Flash Fire's boost state nor substitutes. Source and audit:
+ * docs/investigations/reg-m-d.md §6.
+ *
  * Known limitation: these only correct the description text shown in our
  * own tooltips. If @smogon/calc has its own internal Unseen Fist-vs-Protect
  * damage logic, that deep interaction may still assume the old 100% value -

@@ -29,16 +29,6 @@ Done when:
 Findings for all legs below: `docs/investigations/reg-m-d.md`. Legs 3-5
 each need only Leg 2; Legs 6-8 also need Leg 5. Leg 9 waits for launch.
 
-- **[Reg M-D Ability Overrides] — Leg 8** *(Last touched: 2026-11-24 ·
-  Re-checks: 0)*
-  Depends on Leg 5. Add `Reg M-D` description entries: Flash Fire's boost
-  now persists through Mega Evolution, and Stalwart also ignores
-  substitutes. The app models neither behavior, so these are text only.
-  Update `championsAbilityOverrides.ts`'s header audit note.
-  Done check: tests assert both descriptions under Reg M-D and the
-  mainline text under Reg M-C.
-  Manual verification: no · Review: no
-
 - **[Reg M-D Post-Launch Re-check] — Leg 9** *(Last touched: 2026-11-24 ·
   Re-checks: 0)*
   Blocked: Reg M-D launches 2026-12-02; the data isn't published before then.

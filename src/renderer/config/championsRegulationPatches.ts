@@ -49,8 +49,28 @@ export const CHAMPIONS_DATED_MOVE_PATCHES: Record<string, DatedPatch<ChampionsMo
 };
 
 /** Keyed by normalized ability slug (normalizeNameForAPI). */
-export const CHAMPIONS_DATED_ABILITY_PATCHES: Record<string, DatedPatch<Partial<AbilityData>>[]> =
-  {};
+export const CHAMPIONS_DATED_ABILITY_PATCHES: Record<string, DatedPatch<Partial<AbilityData>>[]> = {
+  // Dec 2 2026 balance patch (reg-m-d.md §6). Text only: the app tracks
+  // neither Flash Fire's boost state nor substitutes.
+  'flash-fire': [
+    {
+      since: 'REG-MD',
+      change: {
+        description:
+          "Protects against Fire moves. Once one has been blocked, the Pokémon's own Fire moves inflict 1.5× damage until it leaves battle. The boost persists through Mega Evolution.",
+      },
+    },
+  ],
+  stalwart: [
+    {
+      since: 'REG-MD',
+      change: {
+        description:
+          "Ignores other Pokémon's move-redirecting abilities and moves, and its moves hit through substitutes.",
+      },
+    },
+  ],
+};
 
 /**
  * Keyed by the learnset's species slug (SpeciesLearnsetEntry.species), same

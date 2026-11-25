@@ -1,8 +1,8 @@
 /**
  * The dated patch layer's apply logic outside React: the calc's move
  * override path, plus how dated entries stack on the global tables.
- * The tables are mocked with test entries tagged REG-MC, since production
- * leaves them empty until Legs 6-8.
+ * The tables are mocked with test entries tagged REG-MC, so the stacking
+ * rules are tested apart from the real Reg M-D data.
  */
 
 import { describe, it, expect, vi } from 'vitest';
