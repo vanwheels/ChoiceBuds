@@ -32,7 +32,8 @@ in the OS userData directory (no database).
 - `npm run type-check` — `tsc --noEmit` only
 - `npm run lint` — ESLint over `src` for `.ts`/`.tsx`
 - `npm run test` — Vitest, single run (`test:watch` for watch mode). Config
-  is `vitest.config.ts` (jsdom, `src/**/*.test.ts`), separate from
+  is `vitest.config.ts` (jsdom, `src/**/*.test.ts` plus the
+  `.claude/hooks/guard.mjs` PreToolUse guard's `.test.mjs`), separate from
   `vite.config.ts` because the Electron/Tailwind plugins there don't apply
   to unit tests. `setupFiles` stubs `window.electron`
   (`src/renderer/test/setupElectronMock.ts`) with `vi.fn()` mocks, since

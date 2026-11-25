@@ -20,6 +20,8 @@ export default defineConfig({
     // preload.ts's contextBridge, absent under jsdom) before every test.
     environment: 'jsdom',
     setupFiles: ['./src/renderer/test/setupElectronMock.ts'],
-    include: ['src/**/*.test.ts'],
+    // .claude/hooks holds the Node PreToolUse guard; its tests are plain .mjs
+    // so the hook runs under bare `node` with no build step.
+    include: ['src/**/*.test.ts', '.claude/hooks/**/*.test.mjs'],
   },
 });
