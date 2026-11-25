@@ -31,18 +31,6 @@ Legs run in order. The global `claude-config` v3 entry is out of scope:
 ChoiceBuds already has CHANGELOG.md, the README shape sits in the deferred
 README milestone, and the LSP rule loads from global `rules/typescript.md`.
 
-- **[Conventions Catch-up] — Leg 1** *(Last touched: 2026-11-24 ·
-  Re-checks: 0)*
-  CLAUDE.md is 225 lines and its Workflow bullets carry dated incident
-  narratives ("added …, after …"). Move each history paragraph into the
-  post mortem it came from (or a `.claude/rules/` file when it is a
-  standing rule), keeping only the rule itself in CLAUDE.md. Aim for ~190
-  lines so Leg 2's additions still fit under 200.
-  Done check: `wc -l CLAUDE.md` ≤ ~190, no dated narratives left, and each
-  moved lesson is findable in a post mortem or rule. Proves Done when
-  line 1 (length, no history).
-  Manual verification: no · Review: no
-
 - **[ChoiceMods Practice Port] — Leg 1** *(Last touched: 2026-11-24 ·
   Re-checks: 0)*
   Port five ChoiceMods rules as one-line active checks: build a manual

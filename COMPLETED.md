@@ -222,3 +222,11 @@ Mapped bare "Tatsugiri" to `tatsugiri-curly` in `normalizeSpeciesForAPI`; tests
 show all three forms resolve to REG-MD-legal slugs. Heatran and Dondozo needed
 no mapping. No manual verification (not required). See commit
 879823b3c343a664d162f771cc6cbfe297286803.
+
+## [Conventions Catch-up] — Leg 1 (2026-11-24)
+
+Cut CLAUDE.md from 225 to 154 lines by reducing each workflow bullet to its
+rule and linking the post mortem holding the incident; the dev:web
+verification rationale moved into bug-fix-small-features-sweep.md. No
+manual verification (not required). See commit
+ae39429938e998a5c81aafc3b53608bb19fd553a.
