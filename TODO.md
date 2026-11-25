@@ -86,7 +86,7 @@ each need only Leg 2; Legs 6-8 also need Leg 5. Leg 9 waits for launch.
   `getCachedAbility`/`getCachedSpeciesLearnset` and on
   `getChampionsCalcMoveOverride`. Thread it to the ~8 caller files: the calc
   uses its `regulationId`, team surfaces use `team.regulation`, and anything
-  with no regulation uses the latest one. Existing global overrides stay
+  with no regulation (Box, etc.) uses the latest one, as Vanny confirmed. Existing global overrides stay
   global. Leaves the layer empty; Legs 6-8 fill it.
   Done check: tests show a dated test entry applied for its regulation and
   later ones, and absent for earlier ones, on all four paths; the full

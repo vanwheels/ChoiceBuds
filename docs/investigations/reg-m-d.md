@@ -171,7 +171,7 @@ The calc already holds a `regulationId` (`CalcPage.tsx`), and team surfaces
 have `team.regulation`. A dated patch layer therefore needs a regulation
 parameter threaded through those getters to roughly 8 caller files.
 Surfaces with no regulation of their own default to the latest
-regulation; Vanny can override that default. Existing global overrides
+regulation (confirmed by Vanny, 2026-11-24: Box and other regulation-less surfaces show the latest balance). Existing global overrides
 (launch-era corrections, Archaludon's patch removals) keep applying to
 every regulation. Only new dated entries get scoped.
 
