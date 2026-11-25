@@ -38,7 +38,9 @@ in the OS userData directory (no database).
   (`src/renderer/test/setupElectronMock.ts`) with `vi.fn()` mocks, since
   jsdom has no Electron main process. Hooks are tested with
   `@testing-library/react`'s `renderHook`/`act`. `deploy-web.yml` runs it
-  before every web deploy.
+  before every web deploy. Run it from an uppercase `D:\` working
+  directory: from a lowercase `d:` cwd every suite fails with "Vitest
+  failed to find the runner" (the setup file loads under two path casings).
 
 ## Architecture
 

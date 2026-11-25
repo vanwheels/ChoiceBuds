@@ -31,19 +31,6 @@ Legs run in order. The global `claude-config` v3 entry is out of scope:
 ChoiceBuds already has CHANGELOG.md, the README shape sits in the deferred
 README milestone, and the LSP rule loads from global `rules/typescript.md`.
 
-- **[Conventions Catch-up] — Leg 2** *(Last touched: 2026-11-24 ·
-  Re-checks: 0)*
-  ARCHITECTURE.md is 666 lines against the global one-page rule. Keep the
-  core (process split, persisted data versioning, renderer layers, import
-  data flow, sync, web build) as short summaries; move feature deep-dives
-  (Calc popup, Tag-chip search, Mega toggle, Mobile swipe deck, Box entry
-  modal, etc.) to `docs/architecture/<topic>.md`, or to `.claude/rules/`
-  with `paths` where a section is really an editing rule. Link each.
-  Done check: ARCHITECTURE.md about one page, before/after section
-  headings diffed so nothing is lost, every moved section linked. Proves
-  Done when line 2.
-  Manual verification: no · Review: no
-
 - **[Conventions Catch-up] — Leg 3** *(Last touched: 2026-11-24 ·
   Re-checks: 0)*
   TODO.md's header restates global task-tracking rules, and `## Blocked`
