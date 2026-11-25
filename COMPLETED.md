@@ -166,3 +166,10 @@ Reg M-D is selectable on a team and existing M-A/B/C teams keep their
 regulation; `/leg-review` found nothing blocking. See commits
 6f3f00d1c1c0ccbdee27307a794874ed2a18023d and
 5f00d7b371e787f8c5660b9513b8f34f98161274.
+
+## [Reg M-D Species Roster] — Leg 3 (2026-11-24)
+
+Added Heatran, Dondozo and Tatsugiri (curly/droopy/stretchy, not collapsed,
+since the form changes Order Up's boost) to REG-MD, with a saved PokeAPI
+fixture checking each slug. Bare "Tatsugiri" imports still 404 on PokeAPI;
+tracked as TODO.md's Leg 10. See commit 764e93601ca800319094634f3be0bce3662a15ad.
