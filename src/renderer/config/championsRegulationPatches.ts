@@ -59,4 +59,40 @@ export const CHAMPIONS_DATED_ABILITY_PATCHES: Record<string, DatedPatch<Partial<
  * hasChampionsMoveData: PokeAPI's tag snapshot predates any post-launch
  * patch, so it can't already contain these.
  */
-export const CHAMPIONS_DATED_MOVEPOOL_ADDITIONS: Record<string, DatedPatch<string[]>[]> = {};
+export const CHAMPIONS_DATED_MOVEPOOL_ADDITIONS: Record<string, DatedPatch<string[]>[]> = {
+  // Dec 2 2026 balance patch (reg-m-d.md §5). Mr. Mime's psych-up is also in
+  // the gated CHAMPIONS_MOVEPOOL_REMOVALS; additions run last, so it stays.
+  alakazam: [{ since: 'REG-MD', change: ['psych-up'] }],
+  starmie: [{ since: 'REG-MD', change: ['psych-up'] }],
+  'mr-mime': [{ since: 'REG-MD', change: ['psych-up'] }],
+  mawile: [{ since: 'REG-MD', change: ['psych-up'] }],
+  altaria: [{ since: 'REG-MD', change: ['psych-up'] }],
+  castform: [{ since: 'REG-MD', change: ['psych-up'] }],
+  absol: [{ since: 'REG-MD', change: ['psych-up'] }],
+  roserade: [{ since: 'REG-MD', change: ['psych-up'] }],
+  weavile: [{ since: 'REG-MD', change: ['psych-up'] }],
+  rotom: [{ since: 'REG-MD', change: ['psych-up'] }],
+  'rotom-heat': [{ since: 'REG-MD', change: ['psych-up'] }],
+  'rotom-wash': [{ since: 'REG-MD', change: ['psych-up'] }],
+  'rotom-frost': [{ since: 'REG-MD', change: ['psych-up'] }],
+  'rotom-fan': [{ since: 'REG-MD', change: ['psych-up'] }],
+  'rotom-mow': [{ since: 'REG-MD', change: ['psych-up'] }],
+  liepard: [{ since: 'REG-MD', change: ['psych-up'] }],
+  musharna: [{ since: 'REG-MD', change: ['psych-up'] }],
+  audino: [{ since: 'REG-MD', change: ['psych-up'] }],
+  cofagrigus: [{ since: 'REG-MD', change: ['psych-up'] }],
+  slurpuff: [{ since: 'REG-MD', change: ['psych-up'] }],
+  drampa: [{ since: 'REG-MD', change: ['psych-up'] }],
+  annihilape: [{ since: 'REG-MD', change: ['psych-up'] }],
+  emboar: [{ since: 'REG-MD', change: ['slack-off'] }],
+  beedrill: [{ since: 'REG-MD', change: ['roost'] }],
+  hydreigon: [{ since: 'REG-MD', change: ['roost'] }],
+  emolga: [{ since: 'REG-MD', change: ['tailwind'] }],
+  vaporeon: [{ since: 'REG-MD', change: ['play-rough'] }],
+  jolteon: [{ since: 'REG-MD', change: ['play-rough'] }],
+  flareon: [{ since: 'REG-MD', change: ['play-rough'] }],
+  espeon: [{ since: 'REG-MD', change: ['play-rough'] }],
+  umbreon: [{ since: 'REG-MD', change: ['wonder-room', 'play-rough'] }],
+  leafeon: [{ since: 'REG-MD', change: ['play-rough'] }],
+  glaceon: [{ since: 'REG-MD', change: ['play-rough'] }],
+};

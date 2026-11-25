@@ -7,3 +7,4 @@
 - Battle stats now recognize ranked seasons M-7 and M-8.
 - Mega Heatran and Mega Tatsugiri (all three forms) are in. Heatranite and Tatsugirinite are holdable, and the Mega toggle shows each one's new ability: Water Compaction and Premium Grade.
 - Reg M-D teams and calcs get the December 2 move changes: Screech, Metal Sound, Steel Wing and Frost Breath now have 100% accuracy, and Rock Slide has 95% accuracy with a 20% flinch chance. Teams on earlier regulations keep the old values.
+- Reg M-D teams and calcs can pick the December 2 movepool additions: Psych Up for 17 Pokémon including every Rotom form, Slack Off for Emboar, Roost for Beedrill and Hydreigon, Tailwind for Emolga, Wonder Room for Umbreon, and Play Rough for all seven Eeveelutions.
