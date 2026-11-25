@@ -149,3 +149,10 @@ checksums; type-check, lint and the full suite pass. Not yet verified by
 Vanny: image content, and Champions legality of the six demo species.
 `ffmpeg` is not installed on this machine (Leg 2 prerequisite; the other
 machine is unchecked). See commit e2bce6be73c4126b2bd10c5468c64a57111c84b5.
+
+## [Reg M-D Data Research] — Leg 1 (2026-11-24)
+
+Recorded every published Reg M-D change with its source in
+`docs/investigations/reg-m-d.md` (Serebii; Bulbapedia returned 403) and
+planned build Legs 3-8 from it. Leg 8 holds what is unpublished until the
+2026-12-02 launch. See commit 18b263b5ae8305f62a01c49f2cfc1993cc77d887.
