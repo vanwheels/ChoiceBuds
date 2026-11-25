@@ -14,6 +14,51 @@ the current milestone and "Unscheduled", items are listed highest-to-lowest
 priority. Only one milestone is "current" at a time — see root `CLAUDE.md`'s
 Task Tracking rules for the full section-lifecycle.
 
+## Current Milestone: Reg M-D Update
+
+Time-boxed against Reg M-D's launch (~2026-12-02). Leg 1 is research; it
+adds the data build legs (Leg 3+) once its findings are in.
+
+Done when:
+- `docs/investigations/reg-m-d.md` lists every Reg M-D change with its
+  source, and each change is either applied in `config/` or explicitly
+  deferred with a TODO.md item.
+- Reg M-D is selectable end-to-end, and `config/seasons.ts` covers M-C's
+  remaining seasons and M-D's seasons.
+
+- **[Reg M-D Data Research] — Leg 1** *(Last touched: 2026-11-24 ·
+  Re-checks: 0)*
+  Reg M-C ends ~2026-12-02 and Reg M-D replaces it. `config/seasons.ts`
+  only types `'Reg M-A' | 'Reg M-B' | 'Reg M-C'`, has no rows past M-6, and
+  its header says to re-check Serebii/Bulbapedia for M-7+. Research only,
+  sourced per `.claude/rules/external-data-sources.md`: the missing M-C
+  season rows, Reg M-D's dates and seasons, and any legality, movepool
+  (`championsMovepoolChanges.ts`), `vgcData.ts` or Mega table changes,
+  audited per the curated-tables rule. Findings go in
+  `docs/investigations/reg-m-d.md`, with build legs proposed from them
+  (one per affected table, as Leg 3+).
+  Done check: the investigation doc lists each change with its source, and
+  the follow-up build legs exist in TODO.md. Proves Done when line 1's
+  sourcing half.
+  Manual verification: no · Review: no
+
+- **[Reg M-D Regulation Plumbing] — Leg 2** *(Last touched: 2026-11-24 ·
+  Re-checks: 0)*
+  Depends on Leg 1 for M-D's dates and season rows. Widen the regulation
+  union in `types/pokemon.ts` to add `'Reg M-D'` and carry it through every
+  call site (14 files reference `'Reg M-C'` today across config, services,
+  utils and components, including `teamSort.ts`, `pokemonRules.ts`,
+  `vgcPastes.ts`, `pokepaste.ts` and the regulation selectors), plus the
+  missing M-C and new M-D rows in `seasons.ts`. This spans several systems
+  by necessity: a partial union widening doesn't type-check, so it can't be
+  split. The regulation is stored on persisted teams, so existing teams
+  must load unchanged.
+  Done check: `npm run type-check`, lint and the full test suite pass, with
+  tests for the new seasons rows and M-D sorting/rules; Vanny selects
+  Reg M-D on a team in the app and existing M-A/B/C teams still show their
+  regulation. Proves Done when line 2.
+  Manual verification: yes · Review: yes
+
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
@@ -42,22 +87,8 @@ unblocked.
 
 ## Unscheduled (not yet scoped, highest-to-lowest priority)
 
-Noted 2026-11-24 for the next `/plan-milestone` (proposed: a time-boxed
-Reg M-D Update milestone, research leg first, building after).
-
-- **[Reg M-D Data Research] — Leg 1** *(Last touched: 2026-11-24 ·
-  Re-checks: 0)*
-  Reg M-C ends ~2026-12-02 and Reg M-D replaces it. `config/seasons.ts`
-  only types `'Reg M-A' | 'Reg M-B' | 'Reg M-C'`, has no rows past M-6, and
-  its header says to re-check Serebii/Bulbapedia for M-7+. Research only,
-  sourced per `.claude/rules/external-data-sources.md`: the missing M-C
-  season rows, Reg M-D's dates and seasons, and any legality, movepool
-  (`championsMovepoolChanges.ts`), `vgcData.ts` or Mega table changes,
-  audited per the curated-tables rule. Findings go in
-  `docs/investigations/reg-m-d.md`, with build legs proposed from them.
-  Done check: the investigation doc lists each change with its source, and
-  the follow-up build legs exist in TODO.md.
-  Manual verification: no · Review: no
+[Conventions Catch-up] and [ChoiceMods Practice Port] overlap (both slim
+and replace CLAUDE.md bullets); plan them together.
 
 - **[Conventions Catch-up] — Leg 1** *(Last touched: 2026-11-24 ·
   Re-checks: 0)*
@@ -145,23 +176,26 @@ Done when:
   Done check: Vanny approves the rendered README.
   Manual verification: yes · Review: no
 
-Password reset flow, deferred out of Web Version: Teams & Box MVP's scoping
-(2026-09-29, see `docs/investigations/web-version-scope.md`) - not yet
-worth its own leg: needs a transactional email API + SPF/DKIM
-deliverability setup on a dedicated vannyproductions.com subdomain.
+### Standalone
 
-Public route bundle split (noted 2026-10-18, during Profile Page Sections &
-Layout Leg 3's routing discussion): `/u/<username>` currently shares the
-main `web/` bundle with the full signed-in app (`web/main.tsx` statically
-imports both `AppWeb` and `PublicProfilePage`) rather than being a
-dedicated lightweight bundle the way `web/download/` is - `PublicProfilePage`
-just never calls the heavier Teams/Box/sync hooks, so the "no app state for
-anonymous visitors" goal is achieved at the runtime-behavior level, not the
-bundle-size level (an anonymous `/u/<username>` visitor still downloads the
-entire app bundle). Worth splitting into a dedicated `web/public/` Vite
-entry (served via the same `404.html` redirect trick `/u/<username>`
-already uses, since it needs a dynamic path segment `web/download/`
-doesn't) once a second public dynamic route actually gets built - e.g.
-public team displays not tied to a profile. Not worth restructuring the
-build for a pattern with only one real example today.
+- **[Password Reset Flow] — Leg 1** *(Last touched: 2026-11-24 ·
+  Re-checks: 0)*
+  Deferred out of Web Version: Teams & Box MVP's scoping (2026-09-29, see
+  `docs/investigations/web-version-scope.md`). Needs a transactional email
+  API plus SPF/DKIM deliverability setup on a dedicated
+  vannyproductions.com subdomain before it's worth a leg.
+  Done check: to be set when scoped.
+  Manual verification: yes · Review: yes
+
+- **[Public Route Bundle Split] — Leg 1** *(Last touched: 2026-11-24 ·
+  Re-checks: 0)*
+  `/u/<username>` shares the main `web/` bundle with the full app
+  (`web/main.tsx` statically imports both `AppWeb` and
+  `PublicProfilePage`), so anonymous visitors download everything. Split it
+  into a dedicated `web/public/` Vite entry, served via the same `404.html`
+  redirect trick, once a second public dynamic route exists (e.g. public
+  team displays not tied to a profile); one example doesn't justify the
+  restructure.
+  Done check: to be set when scoped.
+  Manual verification: yes · Review: no
 
