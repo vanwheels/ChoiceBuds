@@ -45,6 +45,9 @@ each need only Leg 2; Legs 6-8 also need Leg 5. Leg 9 waits for launch.
   switch-in effect; the Mega Stone slug-coverage test passes.
   Manual verification: yes (Mega toggle on a Heatran and a Tatsugiri card)
   · Review: no
+  Code, tests and docs landed in commit 7bce07e (full suite, lint and
+  type-check pass). Only the manual check is left before the COMPLETED.md
+  entry.
 
 - **[Reg M-D Regulation-Scoped Overrides] — Leg 5** *(Last touched:
   2026-11-24 · Re-checks: 0)*
