@@ -10,6 +10,7 @@ import {
   ALL_REGULATION_IDS,
   LATEST_REGULATION_ID,
 } from './pokemonRules';
+import regMdResourceFixture from './__fixtures__/pokeapiRegMdResources.json';
 
 describe('normalizeSlug', () => {
   it('lowercases and trims', () => {
@@ -220,6 +221,34 @@ describe('Reg M-D plumbing', () => {
 
   it('still rejects a species legal in no regulation under REG-MD', () => {
     expect(validateSpeciesLegality('mewtwo', 'REG-MD')).toBe(false);
+  });
+
+  const MD_ADDITIONS = [
+    'heatran',
+    'dondozo',
+    'tatsugiri-curly',
+    'tatsugiri-droopy',
+    'tatsugiri-stretchy',
+  ];
+
+  it("makes Serebii's confirmed M-D species legal in REG-MD but not REG-MC", () => {
+    for (const slug of MD_ADDITIONS) {
+      expect(validateSpeciesLegality(slug, 'REG-MD'), slug).toBe(true);
+      expect(validateSpeciesLegality(slug, 'REG-MC'), slug).toBe(false);
+    }
+  });
+
+  /**
+   * Fixture is PokeAPI's `/pokemon?limit=100000` listing (2026-11-24),
+   * filtered to these species. A slug PokeAPI doesn't serve would pass the
+   * legality table but never match an imported Pokemon - the silent-drop
+   * class the 2026-09-12 Legal Species List Sweep cleaned up.
+   */
+  it('lists every REG-MD-only species under a real PokeAPI slug', () => {
+    const mc = new Set(getRuleset('REG-MC').allowedSpecies);
+    const mdOnly = getRuleset('REG-MD').allowedSpecies.filter((s) => !mc.has(s));
+    expect(mdOnly.sort()).toEqual([...MD_ADDITIONS].sort());
+    for (const slug of mdOnly) expect(regMdResourceFixture, slug).toContain(slug);
   });
 
   it('is the latest regulation, so bulk sync covers its roster', () => {

@@ -29,19 +29,6 @@ Done when:
 Findings for all legs below: `docs/investigations/reg-m-d.md`. Legs 3-5
 each need only Leg 2; Legs 6-8 also need Leg 5. Leg 9 waits for launch.
 
-- **[Reg M-D Species Roster] — Leg 3** *(Last touched: 2026-11-24 ·
-  Re-checks: 0)*
-  Add Serebii's three confirmed M-D species (Heatran, Dondozo, and
-  Tatsugiri in all three forms) to `REG_MD_ADDED_SPECIES` in
-  `utils/pokemonRules.ts`. Check Tatsugiri's live PokeAPI slugs and decide
-  whether `canonicalizeCosmeticVariantSlug` collapses them, as it does for
-  Squawkabilly. The other 21 of the announced 24 aren't named anywhere yet
-  and are added in Leg 9.
-  Done check: tests show the three species legal in REG-MD and not in
-  REG-MC, and every slug matches a PokeAPI roster entry (the 2026-09-12
-  sweep's silent-drop class).
-  Manual verification: no · Review: no
-
 - **[Reg M-D Mega Evolutions] — Leg 4** *(Last touched: 2026-11-24 ·
   Re-checks: 0)*
   Add Mega Heatran (Heatranite, Water Compaction) and Mega Tatsugiri
@@ -49,8 +36,9 @@ each need only Leg 2; Legs 6-8 also need Leg 5. Leg 9 waits for launch.
   `megaAbilities.ts` and `vgcData.ts`'s `VGC_MEGA_STONES`, plus a
   `premium-grade` row (+1 SpA on switch-in) in `onSwitchInAbilities.ts`.
   `MEGA_STONE_TO_SPECIES` maps one stone to one species, but Tatsugirinite
-  maps to three forms, so pick a shape that matches Leg 3's collapse
-  decision. The stone spellings come from Showdown/@smogon/calc and are
+  maps to three forms. Leg 3 kept the forms as three separate legality
+  slugs (`tatsugiri-{curly,droopy,stretchy}`, no collapse), so the stone
+  shape must resolve each form to its own `-mega` slug. The stone spellings come from Showdown/@smogon/calc and are
   provisional until Serebii's items page lists them.
   Done check: tests cover both stones resolving to their Mega slugs (all
   three Tatsugiri forms), both Mega abilities, and Premium Grade's
@@ -125,6 +113,18 @@ each need only Leg 2; Legs 6-8 also need Leg 5. Leg 9 waits for launch.
   movepool gaps.
   Done check: every gap in `docs/investigations/reg-m-d.md` is closed or
   has its own TODO item. Proves Done when line 1.
+  Manual verification: no · Review: no
+
+- **[Reg M-D Tatsugiri Import Slug] — Leg 10** *(Last touched: 2026-11-24 ·
+  Re-checks: 0)*
+  Showdown exports Curly Tatsugiri as bare "Tatsugiri", but PokeAPI has no
+  bare `tatsugiri` resource (confirmed 404 on 2026-11-24, found in Leg 3).
+  So an import fails enrichment and legality, like Mimikyu and Toxtricity
+  did before. Add `tatsugiri: 'tatsugiri-curly'` to
+  `services/pokeapi.ts`'s `normalizeSpeciesForAPI` form map, and grep the
+  rest of the M-D additions for the same gap.
+  Done check: a test shows `normalizeSpeciesForAPI('Tatsugiri')` returns
+  `tatsugiri-curly`, which is REG-MD-legal.
   Manual verification: no · Review: no
 
 ## Blocked

@@ -428,10 +428,19 @@ const REG_MC_ADDED_SPECIES: string[] = [
 
 /**
  * Reg M-D (2026-12-02 onward) additions on top of REG-MC. Sourced in
- * docs/investigations/reg-m-d.md; filled by TODO.md's Reg M-D Species Roster
- * leg. Empty means REG-MD is exactly REG-MC's roster until then.
+ * docs/investigations/reg-m-d.md. Only the 3 species Serebii has named so far;
+ * the rest of the announced 24 land once they're published.
  */
-const REG_MD_ADDED_SPECIES: string[] = [];
+const REG_MD_ADDED_SPECIES: string[] = [
+  'heatran',
+  'dondozo',
+  // No bare "tatsugiri" PokeAPI resource - curly is the default variety. Listed
+  // individually rather than collapsed like Squawkabilly: the form decides which
+  // stat Dondozo's Order Up raises (Atk/Def/Spe), so it isn't purely cosmetic.
+  'tatsugiri-curly',
+  'tatsugiri-droopy',
+  'tatsugiri-stretchy',
+];
 
 export function normalizeSlug(value: string): string {
   return value.toLowerCase().trim().replace(/['']/g, '').replace(/[.]/g, '').replace(/\s+/g, '-');
@@ -482,7 +491,10 @@ const REG_MB_SPECIES_SET = new Set([...REG_MA_SPECIES, ...REG_MB_ADDED_SPECIES].
 const REG_MC_SPECIES_SET = new Set(
   [...REG_MA_SPECIES, ...REG_MB_ADDED_SPECIES, ...REG_MC_ADDED_SPECIES].map(normalizeSlug),
 );
-const REG_MD_SPECIES_SET = new Set([...REG_MC_SPECIES_SET, ...REG_MD_ADDED_SPECIES.map(normalizeSlug)]);
+const REG_MD_SPECIES_SET = new Set([
+  ...REG_MC_SPECIES_SET,
+  ...REG_MD_ADDED_SPECIES.map(normalizeSlug),
+]);
 
 export const CHAMPIONS_RULESETS: Record<RegulationId, ChampionsRuleset> = {
   'REG-MA': {
