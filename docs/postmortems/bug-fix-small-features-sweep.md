@@ -52,7 +52,10 @@ files.
 - Two web-facing legs (Download page, Padding fix) were both verified live
   on the real deployed site rather than stopping at `dev:web`, matching the
   project's own CLAUDE.md rule that `dev:web`-only checking isn't enough for
-  base-path/routing or GitHub Pages-specific behavior.
+  base-path/routing or GitHub Pages-specific behavior. That live-only rule
+  was later relaxed (2026-10-16) to "iterate on `dev:web`, close with one
+  live retest": it had really been working around a push that hadn't gone
+  out yet, and `deploy-web.yml` now gates every deploy on lint/test/build.
 - The Padding fix leg recognized mid-leg that fully matching the desktop
   shell's padding would double it up on 5 pages with their own mobile
   padding, and scoped that cleanly into a separate Unscheduled item instead

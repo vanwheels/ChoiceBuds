@@ -13,25 +13,32 @@ in the OS userData directory (no database).
 
 ## Commands
 
-- `npm run dev` — start Vite + Electron in development (renderer at `http://localhost:5173`, hot reload). This is the **App** target: `App.tsx`'s desktop shell, enforced 1280x720 minimum window size.
-- `npm run dev:web` — start the web build's own Vite dev server (`http://localhost:5174`) — see `ARCHITECTURE.md`'s Web build section. This is the **Web** target: `AppWeb.tsx` at ordinary desktop browser width.
-- `npm run dev:mobile` — opens a real Chrome window (`scripts/devMobile.mjs`, via `playwright-core`'s `channel: 'chrome'`, no separate browser download) at a 375x812 phone viewport against the same web dev server, self-starting it if `dev:web` isn't already running. This is the **Mobile Web** target: `AppWeb.tsx` below the 768px `md:` breakpoint. Don't try to simulate this by resizing the `dev`/`dev:web` window/tab by hand — Electron's window has an enforced 1280 minimum width that `resize` can't get under (see `.claude/skills/run-desktop/driver.mjs`'s own `zoom` workaround for why that skill needs a page-zoom trick instead), and a manually narrowed browser tab won't carry the right touch/mobile user agent either.
+- `npm run dev` — Vite + Electron dev (renderer at `http://localhost:5173`,
+  hot reload). The **App** target: `App.tsx`'s desktop shell, enforced
+  1280x720 minimum window size.
+- `npm run dev:web` — the web build's own Vite dev server
+  (`http://localhost:5174`); see `ARCHITECTURE.md`'s Web build section. The
+  **Web** target: `AppWeb.tsx` at desktop browser width.
+- `npm run dev:mobile` — opens real Chrome (`scripts/devMobile.mjs`, via
+  `playwright-core`'s `channel: 'chrome'`) at a 375x812 phone viewport
+  against the web dev server, starting it if needed. The **Mobile Web**
+  target: `AppWeb.tsx` below the 768px `md:` breakpoint. Don't simulate it by
+  resizing the `dev`/`dev:web` window by hand: Electron's 1280 minimum width
+  can't be resized under (hence `run-desktop`'s page-zoom trick), and a
+  narrowed tab lacks the touch/mobile user agent.
 - `npm run build` — type-check (`tsc`) then production build via `vite build`
-- `npm run build:web` — type-check then production build of the web entry, output to `dist/web/`
+- `npm run build:web` — type-check then production build of the web entry,
+  output to `dist/web/`
 - `npm run type-check` — `tsc --noEmit` only
 - `npm run lint` — ESLint over `src` for `.ts`/`.tsx`
 - `npm run test` — Vitest, single run (`test:watch` for watch mode). Config
-  is `vitest.config.ts` (jsdom environment, `src/**/*.test.ts`), separate
-  from `vite.config.ts` since the Electron/Tailwind plugins there have
-  nothing to do with unit tests. `setupFiles` stubs `window.electron`
-  (`src/renderer/test/setupElectronMock.ts`) with `vi.fn()` mocks before
-  every test, since jsdom has no real Electron main process behind it.
-  Coverage starts with pure `services/`/`utils/` functions
-  (`services/parser.test.ts` is the first one, converted from a former
-  console.log-assertions script) and now also covers a first batch of
-  simpler `hooks/` (via `@testing-library/react`'s `renderHook`/`act`) —
-  see `TODO.md`'s testing-workflow entry for which hooks are covered so far
-  and which are intentionally still open. Not yet wired into CI.
+  is `vitest.config.ts` (jsdom, `src/**/*.test.ts`), separate from
+  `vite.config.ts` because the Electron/Tailwind plugins there don't apply
+  to unit tests. `setupFiles` stubs `window.electron`
+  (`src/renderer/test/setupElectronMock.ts`) with `vi.fn()` mocks, since
+  jsdom has no Electron main process. Hooks are tested with
+  `@testing-library/react`'s `renderHook`/`act`. `deploy-web.yml` runs it
+  before every web deploy.
 
 ## Architecture
 
@@ -52,174 +59,96 @@ cross-device sync, web build, and gender/form handling.
 
 - Editing affordances default to always-on, gated only by ownership
   (`isOwnProfile`, etc.), never behind an explicit Edit-mode toggle —
-  `PokemonCard.tsx`'s permanent "×" and the profile page's permanent
-  edit controls are the existing convention. Before scoping a new gating
-  mechanism (a toggle, a mode switch) for an editing affordance, check
-  whether this convention already answers the question; building a toggle
-  and then removing it cost a full leg during Profile Editing & Visibility
-  Controls (see `docs/postmortems/profile-editing-and-visibility-controls.md`).
+  `PokemonCard.tsx`'s permanent "×" and the profile page's permanent edit
+  controls are the convention. Check it before scoping any new gating
+  mechanism for an editing affordance (see
+  `docs/postmortems/profile-editing-and-visibility-controls.md`).
 - Strict decoupled architecture — no monolithic files.
-- `src/renderer/components/*` should stay small and single-purpose; extract
-  sub-components when a file starts mixing unrelated concerns rather than
-  growing one file. This used to be a hard 250-line cap — that number was
-  tuned for a previous pay-per-token AI workflow's cost pressure, not for its
-  own sake. Treat it as a smell test now (does this file still do one
-  thing?), not a line-count gate — a cohesive file a bit over 250 lines
-  doesn't need to be split just to hit a number, but a file dragging in
-  unrelated responsibilities should still be split regardless of length.
-- All core app state changes flow through custom hooks in `src/renderer/hooks/`; never manage cross-render state directly in JSX/markup.
-- Static theme tables, hex colors, and type/category maps live in `src/renderer/config/`, never inlined in components or utilities.
-- External data/asset sources for game data (PokeAPI plus nine specific,
-  dated exceptions covering Serebii/Bulbapedia, Pokepaste, GitHub Releases,
+- `src/renderer/components/*` stay small and single-purpose; extract
+  sub-components when a file starts mixing unrelated concerns. The test is
+  "does this file still do one thing?", not a line count: a cohesive file a
+  bit over 250 lines needn't be split, but one with unrelated
+  responsibilities should be regardless of length.
+- All core app state changes flow through custom hooks in
+  `src/renderer/hooks/`; never manage cross-render state directly in JSX.
+- Static theme tables, hex colors, and type/category maps live in
+  `src/renderer/config/`, never inlined in components or utilities.
+- External data/asset sources for game data (PokeAPI plus specific, dated
+  exceptions covering Serebii/Bulbapedia, Pokepaste, GitHub Releases,
   championsbattledata.com, Showdown sprites/source, and the VGCPastes
   sheet) are governed by `.claude/rules/external-data-sources.md`, scoped to
   `src/renderer/services/**` and `src/renderer/config/**`.
-- Use explicit TypeScript interfaces for every data contract; `as any` is forbidden except at external boundary wrappers (e.g. the preload bridge, per the rule above).
+- Use explicit TypeScript interfaces for every data contract; `as any` is
+  forbidden except at external boundary wrappers (e.g. the preload bridge).
 
 ## Workflow conventions
 
-These reflect how the user actually wants to work in this project,
-independent of which machine (Windows or macOS) Claude Code happens to be
-running on.
-
-- **Task tracking** lives in `TODO.md` at the repo root (active/in-progress
-  work), with finished work archived to `COMPLETED.md`. Read `TODO.md` first
-  when resuming work or asked what's next; only open `COMPLETED.md` for
-  historical detail on how/why something already-done was built.
-- **Commit messages** (updated 2026-07-13): Claude now runs `git commit`/
-  `git push` directly — the user handed this over ("starting with this
-  one"), replacing the prior GitHub Desktop-only workflow. Still proactively
-  draft a commit summary + description after finishing a meaningful
-  checkpoint (a `TODO.md` item, a live-verified fix) — don't wait to be
-  asked — and still put the summary and description in two separate fenced
-  code blocks when discussing a commit in chat, since that's independently
-  useful for the user to read/copy. But the actual `git commit`/`git push`
-  no longer needs separate permission each time; treat it like any other
-  local, reversible action on this solo `main` branch (no PR review gate in
-  place).
-- **GitHub Releases** (process changed 2026-07-16 by the release-build-
-  automation item below — read that first): tag matches `package.json`'s
-  `version` with a leading `v` (e.g. `v0.1.0` for `"0.1.0"` — the update
-  checker in `services/github.ts` strips the `v` before comparing, so they
-  must match). Sequencing now matters: **push the version tag first**
-  (`git tag vX.Y.Z && git push origin vX.Y.Z`) and let
-  `.github/workflows/release.yml` build and attach installers to a fresh
-  **draft** release — do not run `gh release create` first, since that would
-  create the release+tag itself and the workflow's own build would then
-  find an existing non-draft-incompatible release for that tag and skip
-  attaching anything (confirmed live 2026-07-16 with a throwaway test tag —
-  see `TODO.md`). Once the workflow's run finishes, draft the title + body
-  the same two-fenced-code-block way as before, then fill them in with
-  `gh release edit vX.Y.Z --title "..." --notes "..."` (not
-  `gh release create` — the release object already exists as a draft). Only
-  flip it live (`gh release edit vX.Y.Z --draft=false`) once the user
-  confirms the content and gives the go-ahead — a Release is a visible,
-  external, public-facing action, so always confirm before publishing one,
-  unlike a routine commit/push.
-- **Release build automation** (added 2026-07-16, verified live the same
-  day with a throwaway tag — see `TODO.md` for the full trail):
-  `.github/workflows/release.yml` builds the Windows and macOS installers on
-  any `v*.*.*` tag push and attaches them to a GitHub Release via
-  `electron-builder --publish always`. electron-builder resolves the target
-  release by `package.json`'s `version` field, not by the pushed git tag
-  directly, and lands as a **draft** release when none exists yet for that
-  version — see the sequencing note in the GitHub Releases bullet above for
-  why the tag must be pushed before `gh release create`/`gh release edit`
-  touches that version at all. No signing secrets are configured, so output
-  is unsigned, matching current manual builds.
-- **Live UI testing** (narrowed 2026-08-31 for token efficiency — matches
-  the global default now): default to manual verification for visual/UI
-  changes, same as other projects — the user checks the running app
-  themselves. Reserve `.claude/skills/run-desktop` (Playwright-based,
-  cross-platform — see its `SKILL.md`) for cases manual checking doesn't
-  reliably cover: verifying a fix against persisted-state mutations (faint
-  toggles, switch-ins, team edits) where a wrong result doesn't show up as
-  "looks off" on screen, a pre-release regression pass, or whenever
-  explicitly asked to test/verify. When it's used for a state-mutating case,
-  always create a fresh disposable battle/team for it rather than testing
-  against the user's real data, and clean it up afterward. Still never fall
-  back to OS-level mouse/keyboard automation.
-- **Web verification: dev server to iterate, live site to close** (revised
-  2026-10-16 now that `deploy-web.yml` runs lint/test/`build:web` — which
-  itself runs `tsc` — before every deploy and stops on failure; the original
-  live-only rule from 2026-10-08's Web Bug Sweep Leg 3 was really working
-  around a push that hadn't gone out yet, not evidence `dev:web` was
-  unreliable). Default to `npm run dev:web`'s local dev server
-  (`http://localhost:5174`) while iterating on a web-only fix. Once it looks
-  right locally, commit and push to `main`, then do one live retest on
-  choicebuds.vannyproductions.com (via `deploy-web.yml`, takes a couple
-  minutes to land) before calling the fix done — base-path/routing and
-  GitHub Pages-specific behavior only show up there, not on localhost.
-- **Worker changes need their own manual deploy** (added 2026-10-17,
-  confirmed live the same day when a Public Profiles leg's new endpoint
-  came back 404 on the live site right after merging): pushing to `main`
-  only redeploys the web app (`deploy-web.yml`) — `worker/` has no CI
-  deploy step at all, per its own README's "infrastructure you own and
-  run" framing. Any change under `worker/src/` isn't actually live until
-  someone runs `cd worker && npx wrangler deploy`. Claude's sandbox
-  auto-mode classifier blocks Claude from running `wrangler deploy`
-  itself (denied outright, no retry worth attempting), so hand the user
-  the exact command to run themselves rather than trying to work around
-  the block — then verify live once they confirm it ran. This recurred
-  twice within one milestone (Public Profiles & Team Sharing) even with
-  this bullet already written, because each time it was only caught
-  reactively, after a live check had already come back 404/stale. Before
-  attempting *any* live verification of a change touching `worker/src/`,
-  proactively ask whether `wrangler deploy` has been run for it yet —
-  don't wait for the live check to fail first.
+- **Task tracking:** read `TODO.md` first when resuming or asked what's
+  next; open `COMPLETED.md` only for how/why something already-done was
+  built.
+- **Commits:** after a meaningful checkpoint (a TODO item, a live-verified
+  fix), draft the summary and description unprompted, in two separate
+  fenced code blocks in chat, then commit/push directly to `main` (solo
+  branch, no PR gate).
+- **GitHub Releases:** the tag is `package.json`'s `version` with a leading
+  `v` (`services/github.ts` strips the `v` before comparing). Sequence:
+  1. Push the tag first (`git tag vX.Y.Z && git push origin vX.Y.Z`).
+     `.github/workflows/release.yml` builds Windows/macOS installers and
+     attaches them via `electron-builder --publish always`, which resolves
+     the release by `package.json`'s `version` and creates it as a draft.
+     Never run `gh release create` first: electron-builder then finds an
+     existing release and attaches nothing.
+  2. After the run finishes, draft title + body as two fenced code blocks
+     and fill them in with `gh release edit vX.Y.Z --title ... --notes ...`.
+  3. Publish (`gh release edit vX.Y.Z --draft=false`) only after the user
+     confirms the content. Output is unsigned (no signing secrets).
+- **Live UI testing:** default to the user's manual verification for UI
+  changes. Use `.claude/skills/run-desktop` only where manual checking is
+  unreliable (persisted-state mutations like faint toggles, switch-ins,
+  team edits; a pre-release regression pass) or when asked. For
+  state-mutating runs, use a fresh disposable battle/team and clean it up
+  afterward. Never fall back to OS-level mouse/keyboard automation.
+- **Web verification:** iterate on `npm run dev:web`
+  (`http://localhost:5174`). Once it looks right, push to `main` and do one
+  live retest on choicebuds.vannyproductions.com (`deploy-web.yml`, a couple
+  of minutes) before calling it done: base-path/routing and GitHub
+  Pages-specific behavior only show up there.
+- **Worker changes need a manual deploy:** pushing to `main` deploys only
+  the web app; `worker/` has no CI deploy. A `worker/src/` change isn't live
+  until someone runs `cd worker && npx wrangler deploy`, which the sandbox
+  blocks Claude from running, so hand the user the command. Before any live
+  check of a `worker/src/` change, ask whether it has been deployed (see
+  `docs/postmortems/public-profiles-and-team-sharing.md`).
 - **Curated effect tables** (`config/moveStatEffects.ts`,
   `config/onSwitchInAbilities.ts`, `config/reactiveAbilities.ts`,
-  `config/hitReactiveAbilities.ts`) should hold comprehensive,
-  research-backed coverage of their effect category, not a hand-picked
-  subset. If asked to add one specific missing move/ability, treat that as a
-  signal the whole category needs auditing rather than a request for just
-  that row, and document in the file's header what's deliberately excluded
-  (chance-based effects, data the app doesn't track yet) instead of silently
-  omitting it.
-- **Batching into legs, with `/clear` in between** (added 2026-08-29,
-  carried over from the user's GW2 Squaded project): when a piece of work
-  naturally splits into multiple chunks (a manual-testing batch's individual
-  items, a multi-phase feature's phases), break it into discrete legs — each
-  one a self-contained unit that gets implemented and verified (and ideally
-  committed) before moving on. Durable state belongs in
-  `TODO.md`/`COMPLETED.md`/git, not conversation memory, specifically so a
-  leg boundary is a safe place for the user to run `/clear` and free up
-  context without losing anything real. Call out the boundary explicitly
-  when a leg finishes ("that's one leg done, safe to `/clear` before the
-  next") rather than silently plowing into the next leg in the same context.
-- **Record live verification when it happens** (added 2026-10-22, after
-  Mega & Alt-Form Representation's Leg 2 was verified live against a real
-  Mega but that check never made it into COMPLETED.md — `/close-milestone`'s
-  acceptance-criteria review couldn't tell met from unmet from the log and
-  had to ask instead of read): whenever a leg's done check includes a
-  live/manual verification step and it's actually performed, say so
-  explicitly in that leg's COMPLETED.md entry — what was checked, not just
-  that the feature was built — the same day, not as a later note.
-- **Scoping-only legs still get a COMPLETED.md entry** (added 2026-10-23,
-  after Ability-Affects-Move Indicator Scoping's Leg 1 was marked done
-  directly in TODO.md's own done-when bullets but never got a COMPLETED.md
-  line — `/close-milestone` had to reconstruct the entry retroactively from
-  TODO.md and `git log` instead of reading it straight from COMPLETED.md):
-  a leg with no code changed is still a leg. The moment it's marked done,
-  write its one-line COMPLETED.md entry (commit hash included, e.g. the
-  scope doc's own commit) the same day — inline resolution notes in
-  TODO.md's done-when bullets are not a substitute for the archival record.
-- **Verify a scoping premise about a data store before building on it**
-  (added 2026-10-26, Calc Page Rework Leg 6: the TODO said to "wipe Saved
-  Sets", but Saved Sets and Box were already the same `useSavedPokemon`
-  store, so nothing needed wiping). Before scoping a leg around a store,
-  grep its consumers and confirm the premise holds.
-- **Deferred means tracked** (added 2026-10-26, Calc Page Rework: the move
-  tooltip's dynamic type was deferred from Leg 5 and recorded only in
-  COMPLETED.md prose, so Leg 8 didn't pick it up). Any "deferred" in a leg's
-  COMPLETED.md entry gets a matching TODO.md item in the same commit.
-- **Table-driven fixes get a sibling check** (added 2026-10-27, Sprite, Filter
-  & Search Fixes: the Mega toggle bug surfaced as five separate legs, one
-  species or surface at a time). Before closing a fix for one species/row in
-  Mega, form or sprite code, ask which other rows share the cause and grep or
-  test the whole table, not just the reported one. `TODO.md`'s Mega Stone
-  slug-coverage test is the standing check for Mega slugs.
-- **Sprite sizing gets a multi-form check** (added 2026-10-27, Calc Sprite Swap
-  Flicker: a 3x size cap fixed one sprite but shrank Megas). Before closing a
-  sprite sizing change, view at least three species of different native sizes
-  (a base form, a Mega, a regional form), not just the reported one.
+  `config/hitReactiveAbilities.ts`) hold comprehensive, research-backed
+  coverage of their effect category, not a hand-picked subset. A request to
+  add one missing row means audit the whole category, and the file header
+  documents what's deliberately excluded (chance-based effects, untracked
+  data) instead of silently omitting it.
+- **Leg boundaries:** when a leg finishes, say so explicitly ("that's one
+  leg done, safe to `/clear` before the next") rather than continuing into
+  the next leg in the same context.
+- **Record live verification when it happens:** when a leg's done check
+  includes a live/manual check and it's performed, the leg's COMPLETED.md
+  entry states what was checked, the same day (see
+  `docs/postmortems/mega-alt-form-representation.md`).
+- **Scoping-only legs still get a COMPLETED.md entry**, with the scope
+  doc's commit hash, the moment they're marked done. Inline notes in
+  TODO.md's done-when bullets don't substitute (see
+  `docs/postmortems/ability-affects-move-indicator-scoping.md`).
+- **Verify a scoping premise about a data store before building on it:**
+  grep the store's consumers and confirm the premise holds (see
+  `docs/postmortems/calc-page-rework.md`).
+- **Deferred means tracked:** any "deferred" in a leg's COMPLETED.md entry
+  gets a matching TODO.md item in the same commit (see
+  `docs/postmortems/calc-page-rework.md`).
+- **Table-driven fixes get a sibling check:** before closing a fix for one
+  species/row in Mega, form or sprite code, ask which other rows share the
+  cause and grep or test the whole table. `TODO.md`'s Mega Stone
+  slug-coverage test is the standing check for Mega slugs (see
+  `docs/postmortems/sprite-filter-and-search-fixes.md`).
+- **Sprite sizing gets a multi-form check:** before closing a sprite sizing
+  change, view at least three species of different native sizes (a base
+  form, a Mega, a regional form), not just the reported one (see
+  `docs/postmortems/calc-follow-ups.md`).
