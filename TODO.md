@@ -20,18 +20,7 @@ Legs run in order. The global `claude-config` v3 entry is out of scope:
 ChoiceBuds already has CHANGELOG.md, the README shape sits in the deferred
 README milestone, and the LSP rule loads from global `rules/typescript.md`.
 
-- **[ChoiceMods Practice Port] — Leg 2** *(Last touched: 2026-11-24 ·
-  Re-checks: 0)*
-  Port ChoiceMods' `.claude/hooks/guard.py` as a Node `.claude/hooks/
-  guard.mjs` (no Python venv here), limited to blocking `git add -A`/`.`
-  and `git commit -a`/`-am` from both the Bash and PowerShell tools.
-  Wire it as a PreToolUse hook in `.claude/settings.json` and widen
-  Vitest's `include` so its tests run in `npm run test`.
-  Done check: tests cover blocked (`add -A`, `add .`, `commit -a`,
-  `commit -am`) and allowed (`add src/x.ts`, `commit -m "add -A"`)
-  commands, full suite passes, and a live `git add -A` in session is
-  refused. Proves Done when line 3 (guard).
-  Manual verification: no · Review: no
+All legs done; the milestone is ready for `/close-milestone`.
 
 ## Unscheduled
 

@@ -253,3 +253,12 @@ folded `## Blocked` into Unscheduled, keeping each `Blocked:` line; sections
 now run Current Milestone / Unscheduled / Future Milestones. No manual
 verification (not required). See commit
 f26a73518e9a4fa25090d98e11392f1f0197bd58.
+
+## [ChoiceMods Practice Port] — Leg 2 (2026-11-25)
+
+Ported ChoiceMods' guard as `.claude/hooks/guard.mjs`, a PreToolUse hook on
+Bash and PowerShell that blocks `git add -A`/`.` and `git commit -a`/`-am`
+while ignoring quoted, heredoc and here-string text; 24 tests run in
+`npm run test`, and live `git add -A` (Bash) and `git commit -am`
+(PowerShell) were refused in session. See commit
+a356ac576791e8b0f9e7d1b097e96bc59caa361d.
