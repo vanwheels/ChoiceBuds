@@ -74,7 +74,7 @@ S4's "Newly Useable Pokémon" table, read in full, has only 7 rows:
 | Mega | Stone | Ability | Base stats | Status |
 |---|---|---|---|---|
 | Mega Heatran | Heatranite | Water Compaction (+2 Def when hit by a Water move) | 91/120/106/175/141/67 (700) | ability and stats confirmed (S3, S6). Stone name provisional (D1, D2; S7 doesn't list it yet) |
-| Mega Tatsugiri (Curly/Droopy/Stretchy) | Tatsugirinite | unnamed new ability: +1 SpA on switch-in | 68/65/90/135/125/92 (575), all three forms | stats confirmed (S6). Stone provisional (D1, D2). **Ability name open**: S6's ability field is blank, and D1 holds placeholder base abilities (Commander/Storm Drain), the same pattern Reg M-C's Megas had before launch |
+| Mega Tatsugiri (Curly/Droopy/Stretchy) | Tatsugirinite | Premium Grade (+1 SpA on switch-in) | 68/65/90/135/125/92 (575), all three forms | stats confirmed (S6). Stone provisional (D1, D2). Ability name from Vanny, 2026-11-24. S6's ability field is still blank, and D1 holds placeholder base abilities (Commander/Storm Drain), the same pattern Reg M-C's Megas had before launch. Effect from S3 |
 
 - S3 says "4 Mega Evolutions". S4's four Mega rows are Mega Heatran plus
   three Mega Tatsugiri forms, so no Mega for an unnamed species is implied.
@@ -89,8 +89,8 @@ S4's "Newly Useable Pokémon" table, read in full, has only 7 rows:
   decision above, or the table gains a per-form mapping.
 - `hitReactiveAbilities.ts` already has `water-compaction`, because it's a
   mainline ability. No change is needed there.
-- `onSwitchInAbilities.ts` needs Mega Tatsugiri's ability as a `stat`
-  effect (`spa +1`, target self) once it has a name.
+- `onSwitchInAbilities.ts` needs `premium-grade` as a `stat` effect
+  (`spa +1`, target self).
 - `vgcData.ts`'s `VGC_MEGA_STONES` gets Heatranite and Tatsugirinite. S3,
   S4 and S5 announce no new hold items or berries.
 
@@ -130,9 +130,9 @@ S5 lists moves newly learnable as of December 2:
   PokeAPI has no Champions-tagged moves for a species (the
   `hasChampionsMoveData` gate in `useGameData.ts`). Every species above
   has Champions tag data already, so a row there would never apply. These
-  additions need an always-on `CHAMPIONS_PATCH_MOVEPOOL_ADDITIONS` that
-  mirrors the existing `CHAMPIONS_PATCH_MOVEPOOL_REMOVALS`, for the same
-  reason: PokeAPI's tag snapshot predates the patch.
+  additions have to bypass that gate, as the existing
+  `CHAMPIONS_PATCH_MOVEPOOL_REMOVALS` does, because PokeAPI's tag snapshot
+  predates the patch. They also have to be regulation-scoped (§7).
 - **Conflict:** `CHAMPIONS_MOVEPOOL_REMOVALS['mr-mime']` removes
   `psych-up`, but the patch adds it to Mr. Mime. That removals table is
   gated too, so it shouldn't fire for a tagged species. Even so, the build
@@ -155,7 +155,27 @@ Both are from S5:
   ability (`megaAbilities.ts`). Neither has modeled behavior here, so both
   changes are description overrides only.
 
-## 7. Not applicable
+## 7. Regulation scoping (decided by Vanny, 2026-11-24)
+
+The §4–6 balance changes take effect from Reg M-D onward. They must not
+show in M-C or earlier calcs, or in those teams' move and ability text.
+Every override table today applies globally:
+
+- `useGameData.ts`'s `getCachedMove`, `getCachedAbility` and
+  `getCachedSpeciesLearnset` apply move, ability and movepool overrides
+  with no regulation input.
+- `damageCalcEngine.ts` calls `getChampionsCalcMoveOverride(moveName)`,
+  also with no regulation input.
+
+The calc already holds a `regulationId` (`CalcPage.tsx`), and team surfaces
+have `team.regulation`. A dated patch layer therefore needs a regulation
+parameter threaded through those getters to roughly 8 caller files.
+Surfaces with no regulation of their own default to the latest
+regulation; Vanny can override that default. Existing global overrides
+(launch-era corrections, Archaludon's patch removals) keep applying to
+every regulation. Only new dated entries get scoped.
+
+## 8. Not applicable
 
 - No items added or removed (S3, S5).
 - No move power or type changes, and no new moves (S5).
@@ -164,7 +184,8 @@ Both are from S5:
 
 1. The other 21 Reg M-D species. Re-read S4 once the regulation is live.
 2. The M-D season rows (M-9 onward, three seasons per S4).
-3. Mega Tatsugiri's ability name.
+3. ~~Mega Tatsugiri's ability name~~: Premium Grade (Vanny, 2026-11-24).
+   Still confirm the spelling against Serebii once it's listed.
 4. Heatranite and Tatsugirinite on S7, to confirm the provisional spelling.
 5. A Bulbapedia cross-check of everything above, once its pages are
    reachable.
