@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { normalizeSpeciesForAPI, fetchPokemonData } from './pokeapi';
+import { validateSpeciesLegality } from '../utils/pokemonRules';
 
 function mockFetchOnce(json: unknown) {
   vi.stubGlobal(
@@ -86,6 +87,24 @@ describe('normalizeSpeciesForAPI', () => {
     expect(normalizeSpeciesForAPI('Morpeko')).toBe('morpeko-full-belly');
     expect(normalizeSpeciesForAPI('Pyroar')).toBe('pyroar-male');
     expect(normalizeSpeciesForAPI('Toxtricity')).toBe('toxtricity-amped');
+  });
+
+  // Showdown exports Curly Tatsugiri as bare "Tatsugiri"; the slug it resolves
+  // to must also pass Reg M-D legality, or the import still fails downstream.
+  it('maps a bare "Tatsugiri" export to the REG-MD-legal Curly slug', () => {
+    const slug = normalizeSpeciesForAPI('Tatsugiri');
+    expect(slug).toBe('tatsugiri-curly');
+    expect(validateSpeciesLegality(slug, 'REG-MD')).toBe(true);
+  });
+
+  it('leaves suffixed Tatsugiri forms on their own REG-MD-legal slugs', () => {
+    for (const [name, slug] of [
+      ['Tatsugiri-Droopy', 'tatsugiri-droopy'],
+      ['Tatsugiri-Stretchy', 'tatsugiri-stretchy'],
+    ]) {
+      expect(normalizeSpeciesForAPI(name)).toBe(slug);
+      expect(validateSpeciesLegality(slug, 'REG-MD')).toBe(true);
+    }
   });
 
   it('appends "-breed" to Paldean Tauros forms, matching PokeAPI\'s real slugs', () => {

@@ -196,6 +196,10 @@ export function normalizeSpeciesForAPI(name: string, gender?: 'M' | 'F' | 'N' | 
     // enough VGC pick that this was a real, silent import-enrichment failure
     // the same way Mimikyu's was.
     toxtricity: 'toxtricity-amped',
+    // Reg M-D: Showdown exports Curly Tatsugiri as bare "Tatsugiri", but PokeAPI
+    // has no bare `tatsugiri` resource (confirmed 404 on 2026-11-24). Droopy and
+    // Stretchy export with their suffix, which already matches PokeAPI's slugs.
+    tatsugiri: 'tatsugiri-curly',
     // @smogon/calc spells the Paldean Tauros breeds without "-breed" (see
     // utils/pokemonRules.ts) but PokeAPI's actual slugs all keep it - confirmed
     // live 404 on `/pokemon/tauros-paldea-combat` before this fix.

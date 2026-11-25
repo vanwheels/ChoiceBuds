@@ -44,18 +44,6 @@ each need only Leg 2; Legs 6-8 also need Leg 5. Leg 9 waits for launch.
   has its own TODO item. Proves Done when line 1.
   Manual verification: no · Review: no
 
-- **[Reg M-D Tatsugiri Import Slug] — Leg 10** *(Last touched: 2026-11-24 ·
-  Re-checks: 0)*
-  Showdown exports Curly Tatsugiri as bare "Tatsugiri", but PokeAPI has no
-  bare `tatsugiri` resource (confirmed 404 on 2026-11-24, found in Leg 3).
-  So an import fails enrichment and legality, like Mimikyu and Toxtricity
-  did before. Add `tatsugiri: 'tatsugiri-curly'` to
-  `services/pokeapi.ts`'s `normalizeSpeciesForAPI` form map, and grep the
-  rest of the M-D additions for the same gap.
-  Done check: a test shows `normalizeSpeciesForAPI('Tatsugiri')` returns
-  `tatsugiri-curly`, which is REG-MD-legal.
-  Manual verification: no · Review: no
-
 ## Blocked
 
 Items where the whole item (not just a sub-part) is stalled on something
