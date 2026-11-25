@@ -267,7 +267,11 @@ export function useGameData(): UseGameDataReturn {
   };
 
   const getCachedSpeciesLearnset = useCallback(
-    (species: string, gender: Gender | undefined, regulation: RegulationId): SpeciesLearnsetEntry | null => {
+    (
+      species: string,
+      gender: Gender | undefined,
+      regulation: RegulationId,
+    ): SpeciesLearnsetEntry | null => {
       const learnset = readCacheEntry(
         cacheRef.current?.learnsets,
         normalizeSpeciesForAPI(species, gender),

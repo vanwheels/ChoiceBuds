@@ -75,10 +75,11 @@ export function useTeamMoveTypes(
           activeForms[p.id] ?? null,
         );
         const effectiveAbility = resolveActiveAbility(activeMegaSlug, p.showdownData.ability);
-        return Promise.all(p.showdownData.moves.map((name) => getMoveData(name, regulation))).then((results) =>
-          results
-            .filter((m): m is NonNullable<typeof m> => !!m && m.category !== 'status')
-            .map((m) => getEffectiveMoveType(m.name, m.type, effectiveAbility)),
+        return Promise.all(p.showdownData.moves.map((name) => getMoveData(name, regulation))).then(
+          (results) =>
+            results
+              .filter((m): m is NonNullable<typeof m> => !!m && m.category !== 'status')
+              .map((m) => getEffectiveMoveType(m.name, m.type, effectiveAbility)),
         );
       }),
     ).then((results) => {

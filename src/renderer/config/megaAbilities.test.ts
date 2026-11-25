@@ -48,12 +48,9 @@ describe('resolveActiveAbility', () => {
 
 describe('MEGA_ABILITIES coverage', () => {
   it('has an entry for every Mega form in MEGA_FORMS', () => {
-    const missing = MEGA_FORMS
-      .map(
-        ({ species, suffix }) =>
-          (species === 'floette-eternal' ? 'floette' : species) + '-' + suffix,
-      )
-      .filter((slug) => !(slug in MEGA_ABILITIES));
+    const missing = MEGA_FORMS.map(
+      ({ species, suffix }) => (species === 'floette-eternal' ? 'floette' : species) + '-' + suffix,
+    ).filter((slug) => !(slug in MEGA_ABILITIES));
 
     expect(missing).toEqual([]);
   });

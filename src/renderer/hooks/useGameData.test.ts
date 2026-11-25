@@ -241,7 +241,9 @@ describe('useGameData', () => {
       expect(fetched?.pp).toBe(8); // base pp 5 -> 8 per the retier
 
       vi.mocked(fetchMoveData).mockClear();
-      await waitFor(() => expect(result.current.getCachedMove('Shadow Ball', LATEST_REGULATION_ID)?.pp).toBe(8));
+      await waitFor(() =>
+        expect(result.current.getCachedMove('Shadow Ball', LATEST_REGULATION_ID)?.pp).toBe(8),
+      );
       expect(fetchMoveData).not.toHaveBeenCalled();
     });
 
@@ -355,7 +357,11 @@ describe('useGameData', () => {
       const { result } = renderHook(() => useGameData());
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
 
-      const learnset = await result.current.getSpeciesLearnset('gengar', undefined, LATEST_REGULATION_ID);
+      const learnset = await result.current.getSpeciesLearnset(
+        'gengar',
+        undefined,
+        LATEST_REGULATION_ID,
+      );
       expect(learnset?.moves).toEqual(['shadow-ball']); // tera-blast stripped by applyChampionsPatchRemovals
     });
 
@@ -366,7 +372,11 @@ describe('useGameData', () => {
         makeLearnset({ moves: ['shadow-ball', 'tera-blast'], hasChampionsMoveData: false }),
       );
 
-      const learnset = await result.current.getSpeciesLearnset('gengar', undefined, LATEST_REGULATION_ID);
+      const learnset = await result.current.getSpeciesLearnset(
+        'gengar',
+        undefined,
+        LATEST_REGULATION_ID,
+      );
       expect(learnset?.moves).toEqual(['shadow-ball']); // tera-blast stripped
     });
 
@@ -392,7 +402,11 @@ describe('useGameData', () => {
       const { result } = renderHook(() => useGameData());
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
 
-      const learnset = await result.current.getSpeciesLearnset('gengar', undefined, LATEST_REGULATION_ID);
+      const learnset = await result.current.getSpeciesLearnset(
+        'gengar',
+        undefined,
+        LATEST_REGULATION_ID,
+      );
       expect(fetchSpeciesLearnset).toHaveBeenCalledWith('gengar', undefined);
       expect(learnset?.hasChampionsMoveData).toBe(true);
       // no hand-table correction now that PokeAPI has real data, but tera-blast
@@ -413,7 +427,11 @@ describe('useGameData', () => {
       const { result } = renderHook(() => useGameData());
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
 
-      const learnset = await result.current.getSpeciesLearnset('gengar', undefined, LATEST_REGULATION_ID);
+      const learnset = await result.current.getSpeciesLearnset(
+        'gengar',
+        undefined,
+        LATEST_REGULATION_ID,
+      );
       expect(fetchSpeciesLearnset).toHaveBeenCalledWith('gengar', undefined);
       expect(learnset?.moves).toEqual(['shadow-ball']); // re-fetched, then movepool-corrected
     });
@@ -431,7 +449,11 @@ describe('useGameData', () => {
       // note: getEnrichedSpeciesOptions only ever reads cached usage (getCachedChampionsUsage),
       // never triggers a live fetchChampionsUsage call - nothing to mock here
 
-      const options = await result.current.getEnrichedSpeciesOptions('gengar', undefined, LATEST_REGULATION_ID);
+      const options = await result.current.getEnrichedSpeciesOptions(
+        'gengar',
+        undefined,
+        LATEST_REGULATION_ID,
+      );
       expect(options.moves.map((m) => m.name)).toEqual(['shadow-ball']);
       expect(options.abilities.map((a) => a.name)).toEqual(['cursed-body']);
     });
@@ -441,7 +463,11 @@ describe('useGameData', () => {
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
       vi.mocked(fetchSpeciesLearnset).mockResolvedValueOnce(null);
 
-      const options = await result.current.getEnrichedSpeciesOptions('missingno', undefined, LATEST_REGULATION_ID);
+      const options = await result.current.getEnrichedSpeciesOptions(
+        'missingno',
+        undefined,
+        LATEST_REGULATION_ID,
+      );
       expect(options).toEqual({ moves: [], abilities: [] });
     });
 
@@ -469,7 +495,11 @@ describe('useGameData', () => {
       );
       vi.mocked(fetchAbilityData).mockResolvedValueOnce(makeAbility());
 
-      const options = await result.current.getEnrichedSpeciesOptions('gengar', undefined, LATEST_REGULATION_ID);
+      const options = await result.current.getEnrichedSpeciesOptions(
+        'gengar',
+        undefined,
+        LATEST_REGULATION_ID,
+      );
       expect(options.moves.map((m) => m.name)).toEqual(['protect', 'shadow-ball']);
     });
   });

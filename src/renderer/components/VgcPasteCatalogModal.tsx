@@ -43,7 +43,6 @@ interface VgcPasteCatalogModalProps {
   spriteCacheState: UseSpriteCacheReturn;
 }
 
-
 function formatLastFetched(timestamp: number | null): string | null {
   if (!timestamp) return null;
   const minutes = Math.max(1, Math.round((Date.now() - timestamp) / 60000));

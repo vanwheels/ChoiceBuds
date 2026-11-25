@@ -31,9 +31,7 @@ import { MEGA_FORMS } from '../config/megaEvolution';
 const mockedValidateLegality = vi.mocked(validateSpeciesLegality);
 const mockedFetchPokemonData = vi.mocked(fetchPokemonData);
 const mockedFetchMegaSprite = vi.mocked(fetchMegaSprite);
-const MEGA_SLUG_COUNT = new Set(
-  MEGA_FORMS.map((e) => `${e.species}-${e.suffix}`),
-).size;
+const MEGA_SLUG_COUNT = new Set(MEGA_FORMS.map((e) => `${e.species}-${e.suffix}`)).size;
 
 const CACHE_ENTRY: PokeAPICacheEntry = {
   species: 'gengar',

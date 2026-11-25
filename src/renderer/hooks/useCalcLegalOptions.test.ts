@@ -33,7 +33,8 @@ describe('useCalcLegalOptions', () => {
   it('ignores results resolved for a previous species', async () => {
     const fetcher = makeFetcher();
     const { result, rerender } = renderHook(
-      ({ species }) => useCalcLegalOptions(species, '', fetcher, 'REG-MD', ALL_MOVES, ALL_ABILITIES),
+      ({ species }) =>
+        useCalcLegalOptions(species, '', fetcher, 'REG-MD', ALL_MOVES, ALL_ABILITIES),
       { initialProps: { species: 'Gengar' } },
     );
     await waitFor(() => expect(result.current.abilities).toEqual(['Levitate']));

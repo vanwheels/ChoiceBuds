@@ -60,6 +60,8 @@ describe('getProfileMoveChipTheme', () => {
     const gameDataState = fakeGameData({
       getCachedMove: () => ({ type: 'fire' }) as never,
     });
-    expect(getProfileMoveChipTheme('Heat Wave', 'REG-MD', gameDataState)).toEqual(getTypeTheme('fire'));
+    expect(getProfileMoveChipTheme('Heat Wave', 'REG-MD', gameDataState)).toEqual(
+      getTypeTheme('fire'),
+    );
   });
 });

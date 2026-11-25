@@ -56,7 +56,12 @@ export async function fetchPokepaste(id: string): Promise<PokepasteData> {
 export function detectRegulationFromNotes(notes: string): RegulationLabel | null {
   const match = /reg\s*m[\s-]?([abcd])/i.exec(notes);
   if (!match) return null;
-  const label: Record<string, RegulationLabel> = { a: 'Reg M-A', b: 'Reg M-B', c: 'Reg M-C', d: 'Reg M-D' };
+  const label: Record<string, RegulationLabel> = {
+    a: 'Reg M-A',
+    b: 'Reg M-B',
+    c: 'Reg M-C',
+    d: 'Reg M-D',
+  };
   return label[match[1].toLowerCase()];
 }
 
