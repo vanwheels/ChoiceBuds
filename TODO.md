@@ -26,38 +26,105 @@ Done when:
 - Reg M-D is selectable end-to-end, and `config/seasons.ts` covers M-C's
   remaining seasons and M-D's seasons.
 
-- **[Reg M-D Data Research] — Leg 1** *(Last touched: 2026-11-24 ·
-  Re-checks: 0)*
-  Reg M-C ends ~2026-12-02 and Reg M-D replaces it. `config/seasons.ts`
-  only types `'Reg M-A' | 'Reg M-B' | 'Reg M-C'`, has no rows past M-6, and
-  its header says to re-check Serebii/Bulbapedia for M-7+. Research only,
-  sourced per `.claude/rules/external-data-sources.md`: the missing M-C
-  season rows, Reg M-D's dates and seasons, and any legality, movepool
-  (`championsMovepoolChanges.ts`), `vgcData.ts` or Mega table changes,
-  audited per the curated-tables rule. Findings go in
-  `docs/investigations/reg-m-d.md`, with build legs proposed from them
-  (one per affected table, as Leg 3+).
-  Done check: the investigation doc lists each change with its source, and
-  the follow-up build legs exist in TODO.md. Proves Done when line 1's
-  sourcing half.
-  Manual verification: no · Review: no
+Findings for all legs below: `docs/investigations/reg-m-d.md`. Legs 3-7
+can each run independently once Leg 2 lands. Leg 8 waits for launch.
 
 - **[Reg M-D Regulation Plumbing] — Leg 2** *(Last touched: 2026-11-24 ·
   Re-checks: 0)*
-  Depends on Leg 1 for M-D's dates and season rows. Widen the regulation
-  union in `types/pokemon.ts` to add `'Reg M-D'` and carry it through every
-  call site (14 files reference `'Reg M-C'` today across config, services,
-  utils and components, including `teamSort.ts`, `pokemonRules.ts`,
-  `vgcPastes.ts`, `pokepaste.ts` and the regulation selectors), plus the
-  missing M-C and new M-D rows in `seasons.ts`. This spans several systems
-  by necessity: a partial union widening doesn't type-check, so it can't be
-  split. The regulation is stored on persisted teams, so existing teams
-  must load unchanged.
+  Widen the regulation union in `types/pokemon.ts` to add `'Reg M-D'` and
+  carry it through every call site (14 files reference `'Reg M-C'` today,
+  including `teamSort.ts`, `pokemonRules.ts`, `vgcPastes.ts`, `pokepaste.ts`
+  and the regulation selectors). `REG-MD`'s species set starts as M-C's
+  plus an empty `REG_MD_ADDED_SPECIES`, which Leg 3 fills. Also add the
+  confirmed M-7 (Oct 7 – Nov 4) and M-8 (Nov 4 – Dec 2) rows to
+  `seasons.ts`. M-D's season dates aren't published yet, so those rows go
+  in Leg 8. This spans several systems by necessity: a partial union
+  widening doesn't type-check. The regulation is stored on persisted
+  teams, so existing teams must load unchanged.
   Done check: `npm run type-check`, lint and the full test suite pass, with
-  tests for the new seasons rows and M-D sorting/rules; Vanny selects
-  Reg M-D on a team in the app and existing M-A/B/C teams still show their
-  regulation. Proves Done when line 2.
+  tests for the M-7/M-8 rows and M-D sorting/rules; Vanny selects Reg M-D
+  on a team in the app and existing M-A/B/C teams still show their
+  regulation. Proves Done when line 2's selectable half.
   Manual verification: yes · Review: yes
+
+- **[Reg M-D Species Roster] — Leg 3** *(Last touched: 2026-11-24 ·
+  Re-checks: 0)*
+  Add Serebii's three confirmed M-D species (Heatran, Dondozo, and
+  Tatsugiri in all three forms) to `REG_MD_ADDED_SPECIES` in
+  `utils/pokemonRules.ts`. Check Tatsugiri's live PokeAPI slugs and decide
+  whether `canonicalizeCosmeticVariantSlug` collapses them, as it does for
+  Squawkabilly. The other 21 of the announced 24 aren't named anywhere yet
+  and are added in Leg 8.
+  Done check: tests show the three species legal in REG-MD and not in
+  REG-MC, and every slug matches a PokeAPI roster entry (the 2026-09-12
+  sweep's silent-drop class).
+  Manual verification: no · Review: no
+
+- **[Reg M-D Mega Evolutions] — Leg 4** *(Last touched: 2026-11-24 ·
+  Re-checks: 0)*
+  Add Mega Heatran (Heatranite, Water Compaction) and Mega Tatsugiri
+  (Tatsugirinite, three forms) to `megaEvolution.ts`, `megaAbilities.ts`
+  and `vgcData.ts`'s `VGC_MEGA_STONES`. `MEGA_STONE_TO_SPECIES` maps one
+  stone to one species, but Tatsugirinite maps to three forms, so pick a
+  shape that matches Leg 3's collapse decision. Mega Tatsugiri's ability
+  isn't named yet. Leave its `MEGA_ABILITIES` and `onSwitchInAbilities.ts`
+  rows for Leg 8, with a comment marking the gap. The stone spellings come
+  from Showdown/@smogon/calc and are provisional until Serebii's items
+  page lists them.
+  Done check: tests cover both stones resolving to their Mega slugs (all
+  three Tatsugiri forms) and Mega Heatran's ability; the Mega Stone
+  slug-coverage test passes.
+  Manual verification: yes (Mega toggle on a Heatran and a Tatsugiri card)
+  · Review: no
+
+- **[Reg M-D Move Overrides] — Leg 5** *(Last touched: 2026-11-24 ·
+  Re-checks: 0)*
+  Add the Dec 2 accuracy changes to `championsMoveOverrides.ts`: Screech
+  and Metal Sound 85→100, Steel Wing and Frost Breath 90→100, and Rock
+  Slide 90→95, plus a description row for Rock Slide's flinch chance
+  dropping from 30% to 20%. Confirm `getChampionsCalcMoveOverride` needs
+  no accuracy change.
+  Done check: tests assert each override's accuracy and Rock Slide's
+  description.
+  Manual verification: no · Review: no
+
+- **[Reg M-D Patch Movepool Additions] — Leg 6** *(Last touched: 2026-11-24 ·
+  Re-checks: 0)*
+  `CHAMPIONS_MOVEPOOL_ADDITIONS` only applies to species with no
+  Champions-tagged PokeAPI data, so the Dec 2 additions would never show.
+  Add an always-on `CHAMPIONS_PATCH_MOVEPOOL_ADDITIONS` beside
+  `CHAMPIONS_PATCH_MOVEPOOL_REMOVALS`, wire it into `useGameData.ts`'s
+  learnset path after every removal, and fill it from the doc's §5 table:
+  Psych Up for 17 species (Rotom counts once, with six rows for its forms),
+  Slack Off, Roost, Tailwind, Wonder Room, and Play Rough for the seven
+  Eeveelutions. Mr. Mime's `psych-up` is in the gated removals table and
+  needs a test.
+  Done check: tests show patch additions applied to tagged and untagged
+  species, and Mr. Mime keeps Psych Up.
+  Manual verification: no · Review: yes (changes the learnset pipeline
+  every move picker reads)
+
+- **[Reg M-D Ability Overrides] — Leg 7** *(Last touched: 2026-11-24 ·
+  Re-checks: 0)*
+  Add description overrides to `championsAbilityOverrides.ts`: Flash
+  Fire's boost now persists through Mega Evolution, and Stalwart also
+  ignores substitutes. The app models neither behavior, so these are text
+  only. Update the file header's audit note.
+  Done check: tests assert both descriptions.
+  Manual verification: no · Review: no
+
+- **[Reg M-D Post-Launch Re-check] — Leg 8** *(Last touched: 2026-11-24 ·
+  Re-checks: 0)*
+  Blocked: Reg M-D launches 2026-12-02; the data isn't published before then.
+  Close the doc's "Gaps to close after launch" list: the other 21 M-D
+  species, the M-D season rows (three seasons), Mega Tatsugiri's ability
+  name and its switch-in effect, the Heatranite/Tatsugirinite spellings on
+  Serebii's items page, and a Bulbapedia and Showdown `champions`-mod
+  cross-check of everything else. This may split if the 21 species bring
+  their own movepool gaps.
+  Done check: every gap in `docs/investigations/reg-m-d.md` is closed or
+  has its own TODO item. Proves Done when line 1.
+  Manual verification: no · Review: no
 
 ## Blocked
 
