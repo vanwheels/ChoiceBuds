@@ -208,3 +208,10 @@ species, M-C absence, and Mr. Mime keeping Psych Up past the gated removal.
 `/leg-review` found no defects; its full-table slug check is the second
 commit. No manual verification (not required). See commits
 7a501abc9fb85d1f7406b02e10ac0570166306c7 and 9f45412bfec8b9d13b39fbae13f89bffa1e1ac33.
+
+## [Reg M-D Ability Overrides] — Leg 8 (2026-11-24)
+
+Added Flash Fire's persists-through-Mega and Stalwart's ignores-substitutes
+text as `REG-MD` dated ability patches (description only); tests assert both
+under M-D and the mainline text under M-C. No manual verification (not
+required). See commit 5b600124eff923c974f19ae9fe98b010f91870b9.
