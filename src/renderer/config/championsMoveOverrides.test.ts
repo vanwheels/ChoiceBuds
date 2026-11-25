@@ -86,7 +86,7 @@ describe('Reg M-D move patches (Dec 2 2026)', () => {
     { name: 'frost-breath', accuracy: 90, mdAccuracy: 100 },
     { name: 'rock-slide', accuracy: 90, mdAccuracy: 95 },
   ];
-  const ROCK_SLIDE_MAINLINE_DESC = 'Has a 30% chance to make the target flinch.';
+  const ROCK_SLIDE_MAINLINE_DESC = 'Has a chance to make the target flinch.'; // PokeAPI's short_effect, no %;
 
   it.each(MAINLINE)(
     '$name takes its new accuracy under Reg M-D',

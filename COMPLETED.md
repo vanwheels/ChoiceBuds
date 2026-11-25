@@ -190,3 +190,12 @@ and the calc override, threaded through the calc, team, profile and Box
 surfaces. `/leg-review` found no blockers; its unknown-format fallback
 fix is the second commit. See commits 069c5532ba69ed884ef5c7b112828ff137d02e26
 and 06fe3e19cefe8b4f4e0fd0b347b40b76feeb0db2.
+
+## [Reg M-D Move Overrides] — Leg 6 (2026-11-24)
+
+Added the Dec 2 accuracy changes (Screech, Metal Sound, Steel Wing, Frost
+Breath, Rock Slide) and Rock Slide's 20% flinch text as `REG-MD` dated
+patches; the calc needed no change. Vanny verified live that Rock Slide's
+tooltip shows 95% and 20% flinch on an M-D team and the mainline values on
+an M-C team, which surfaced the missing-percentage gap now tracked as
+[Move Effect Chance Text]. See commit fe0314439d8a48e11592600903f99de5a0ba878f.

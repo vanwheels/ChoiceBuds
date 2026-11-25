@@ -29,22 +29,6 @@ Done when:
 Findings for all legs below: `docs/investigations/reg-m-d.md`. Legs 3-5
 each need only Leg 2; Legs 6-8 also need Leg 5. Leg 9 waits for launch.
 
-- **[Reg M-D Move Overrides] — Leg 6** *(Last touched: 2026-11-24 ·
-  Re-checks: 0)*
-  Depends on Leg 5. Add the Dec 2 accuracy changes as `Reg M-D` patch
-  entries: Screech and Metal Sound 85→100, Steel Wing and Frost Breath
-  90→100, and Rock Slide 90→95, plus a description entry for Rock Slide's
-  flinch chance dropping from 30% to 20%. Confirm
-  `getChampionsCalcMoveOverride` needs no accuracy change for damage.
-  Done check: tests assert each override under Reg M-D and the unchanged
-  mainline values under Reg M-C.
-  Manual verification: yes (Rock Slide's tooltip on an M-C team and an
-  M-D team) · Review: no
-  Code and tests landed (full suite, lint and type-check pass);
-  `getChampionsCalcMoveOverride` confirmed to need no change, since it maps
-  only power and type. Only the manual check is left before the
-  COMPLETED.md entry.
-
 - **[Reg M-D Patch Movepool Additions] — Leg 7** *(Last touched: 2026-11-24 ·
   Re-checks: 0)*
   Depends on Leg 5. `CHAMPIONS_MOVEPOOL_ADDITIONS` only applies to species
@@ -126,6 +110,18 @@ unblocked.
 
 [Conventions Catch-up] and [ChoiceMods Practice Port] overlap (both slim
 and replace CLAUDE.md bullets); plan them together.
+
+- **[Move Effect Chance Text] — Leg 1** *(Last touched: 2026-11-24 ·
+  Re-checks: 0)*
+  PokeAPI's `short_effect` for some moves omits the percentage (Rock
+  Slide: "Has a chance to make the target flinch."), carrying it in a
+  separate `effect_chance` field that `pokeapiService.ts` never stores, so
+  move tooltips show no number. Found during Reg M-D Move Overrides Leg 6.
+  Store `effect_chance` and fill it into texts that lack it, or audit which
+  moves are affected first.
+  Done check: Rock Slide's M-C tooltip shows 30%, with a test over a saved
+  PokeAPI fixture.
+  Manual verification: yes (Rock Slide tooltip) · Review: no
 
 - **[Conventions Catch-up] — Leg 1** *(Last touched: 2026-11-24 ·
   Re-checks: 0)*
