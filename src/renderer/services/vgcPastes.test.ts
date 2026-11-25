@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it, vi, afterEach } from 'vitest';
-import { fetchVgcPasteRows, buildCatalogNotes } from './vgcPastes';
+import { fetchVgcPasteRows, buildCatalogNotes, VGC_PASTES_REGULATIONS } from './vgcPastes';
 import type { VgcPasteTeamRow } from '../types/pokemon';
 
 /** Builds one fixture data row with the real sheet's column layout (43 columns, 0-42). */
@@ -211,5 +211,24 @@ describe('buildCatalogNotes', () => {
   it('keeps a non-"-" value like "No Tweet" as a real line', () => {
     const notes = buildCatalogNotes(buildCatalogRow({ linkToSource: 'No Tweet' }));
     expect(notes).toBe('Link to Source: No Tweet');
+  });
+});
+
+// The sheet has no "Champions M-D" tab yet, and gviz serves its welcome tab
+// for unknown names - guards against a guessed tab entry going in early.
+describe('regulations without a sheet tab', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('leaves Reg M-D out of the catalog tab list', () => {
+    expect(VGC_PASTES_REGULATIONS).toEqual(['Reg M-A', 'Reg M-B', 'Reg M-C']);
+  });
+
+  it('rejects a Reg M-D fetch without calling the sheet', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(fetchVgcPasteRows('Reg M-D')).rejects.toThrow(/no Reg M-D tab/);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
