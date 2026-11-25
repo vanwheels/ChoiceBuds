@@ -215,3 +215,10 @@ Added Flash Fire's persists-through-Mega and Stalwart's ignores-substitutes
 text as `REG-MD` dated ability patches (description only); tests assert both
 under M-D and the mainline text under M-C. No manual verification (not
 required). See commit 5b600124eff923c974f19ae9fe98b010f91870b9.
+
+## [Reg M-D Tatsugiri Import Slug] — Leg 10 (2026-11-24)
+
+Mapped bare "Tatsugiri" to `tatsugiri-curly` in `normalizeSpeciesForAPI`; tests
+show all three forms resolve to REG-MD-legal slugs. Heatran and Dondozo needed
+no mapping. No manual verification (not required). See commit
+879823b3c343a664d162f771cc6cbfe297286803.
