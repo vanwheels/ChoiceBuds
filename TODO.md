@@ -14,35 +14,11 @@ the current milestone and "Unscheduled", items are listed highest-to-lowest
 priority. Only one milestone is "current" at a time — see root `CLAUDE.md`'s
 Task Tracking rules for the full section-lifecycle.
 
-## Current Milestone: Reg M-D Update
+## Current Milestone: none (next: plan Conventions Catch-up + ChoiceMods Practice Port)
 
-Time-boxed against Reg M-D's launch (~2026-12-02). Leg 1 is research; it
-adds the data build legs (Leg 3+) once its findings are in.
-
-Done when:
-- `docs/investigations/reg-m-d.md` lists every Reg M-D change with its
-  source, and each change is either applied in `config/` or explicitly
-  deferred with a TODO.md item.
-- Reg M-D is selectable end-to-end, and `config/seasons.ts` covers M-C's
-  remaining seasons and M-D's seasons.
-
-Findings for all legs below: `docs/investigations/reg-m-d.md`. Legs 3-5
-each need only Leg 2; Legs 6-8 also need Leg 5. Leg 9 waits for launch.
-
-- **[Reg M-D Post-Launch Re-check] — Leg 9** *(Last touched: 2026-11-24 ·
-  Re-checks: 0)*
-  Blocked: Reg M-D launches 2026-12-02; the data isn't published before then.
-  Close the doc's "Gaps to close after launch" list: the other 21 M-D
-  species, the M-D season rows (three seasons), the Premium Grade/
-  Heatranite/Tatsugirinite spellings on Serebii, and a Bulbapedia and
-  Showdown `champions`-mod cross-check of everything else. Also add
-  `'Reg M-D': 'Champions M-D'` to `services/vgcPastes.ts`'s tab map once
-  the VGCPastes sheet has that tab (absent 2026-11-24; the catalog hides
-  M-D until then). This may split if the 21 species bring their own
-  movepool gaps.
-  Done check: every gap in `docs/investigations/reg-m-d.md` is closed or
-  has its own TODO item. Proves Done when line 1.
-  Manual verification: no · Review: no
+Reg M-D Update was paused 2026-11-24 with only its blocked Leg 9 left (see
+Future Milestones). The next milestone is `[Conventions Catch-up]` plus
+`[ChoiceMods Practice Port]`, planned together via `/plan-milestone`.
 
 ## Blocked
 
@@ -93,16 +69,14 @@ and replace CLAUDE.md bullets); plan them together.
   over the ~200 target, and its Workflow bullets carry incident history
   that belongs in post mortems. ARCHITECTURE.md is 658 lines against the
   one-page rule. TODO.md's header restates global rules, and its
-  `## Blocked` section isn't in the global layout. There's also no
-  CHANGELOG.md, which the global CLAUDE.md and `/release` require. The
-  CHANGELOG, README-shape and LSP rules were added globally on 2026-10-31
+  `## Blocked` section isn't in the global layout. (CHANGELOG.md now
+  exists, started during Reg M-D.) The CHANGELOG, README-shape and LSP rules were added globally on 2026-10-31
   without a conventions bump, so `/project-revision` won't flag them. A v3
   entry in `~/claude-config` (edited outside this repo) would fix that
   for every project. Likely splits into a CLAUDE.md slim leg and an
   ARCHITECTURE.md trim leg.
   Done check: CLAUDE.md under ~200 lines with history moved out,
-  ARCHITECTURE.md near one page, TODO header trimmed, and CHANGELOG.md
-  started with `## Unreleased`.
+  ARCHITECTURE.md near one page, and TODO header trimmed.
   Manual verification: no · Review: no
 
 - **[ChoiceMods Practice Port] — Leg 1** *(Last touched: 2026-11-24 ·
@@ -129,6 +103,41 @@ and replace CLAUDE.md bullets); plan them together.
   Manual verification: no · Review: no
 
 ## Future Milestones (unscheduled)
+
+### Reg M-D Update (deferred 2026-11-24)
+
+Paused with Legs 1-8 done and only the post-launch re-check left. New Reg
+M-D information arrives in waves: some before launch (~2026-12-02), the
+rest datamined around then and slowly worked into Showdown, Smogon and
+eventually PokeAPI. As Vanny feeds each batch, record it in
+`docs/investigations/reg-m-d.md` and add or extend legs here under the
+same workflow as Legs 3-8; Leg 9 closes whatever gaps remain. Resume as
+the current milestone once the remaining work is unblocked.
+
+Done when:
+- `docs/investigations/reg-m-d.md` lists every Reg M-D change with its
+  source, and each change is either applied in `config/` or explicitly
+  deferred with a TODO.md item.
+- Reg M-D is selectable end-to-end, and `config/seasons.ts` covers M-C's
+  remaining seasons and M-D's seasons.
+
+Findings for all legs below: `docs/investigations/reg-m-d.md`. Legs 3-5
+each need only Leg 2; Legs 6-8 also need Leg 5. Leg 9 waits for launch.
+
+- **[Reg M-D Post-Launch Re-check] — Leg 9** *(Last touched: 2026-11-24 ·
+  Re-checks: 0)*
+  Blocked: Reg M-D launches 2026-12-02; the data isn't published before then.
+  Close the doc's "Gaps to close after launch" list: the other 21 M-D
+  species, the M-D season rows (three seasons), the Premium Grade/
+  Heatranite/Tatsugirinite spellings on Serebii, and a Bulbapedia and
+  Showdown `champions`-mod cross-check of everything else. Also add
+  `'Reg M-D': 'Champions M-D'` to `services/vgcPastes.ts`'s tab map once
+  the VGCPastes sheet has that tab (absent 2026-11-24; the catalog hides
+  M-D until then). This may split if the 21 species bring their own
+  movepool gaps.
+  Done check: every gap in `docs/investigations/reg-m-d.md` is closed or
+  has its own TODO item. Proves Done when line 1.
+  Manual verification: no · Review: no
 
 ### README Media & Refresh (deferred 2026-11-24)
 
