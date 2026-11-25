@@ -90,6 +90,7 @@ describe('dated patches stack on the global overrides', () => {
   });
 
   it('adds dated movepool moves without duplicating ones already present', () => {
+    expect(applyDatedMovepoolAdditions('gengar', ['hex'], 'REG-MC')).toEqual(['hex', 'psych-up']);
     expect(applyDatedMovepoolAdditions('gengar', ['psych-up'], 'REG-MC')).toEqual(['psych-up']);
     expect(applyDatedMovepoolAdditions('gengar', ['hex'], 'REG-MB')).toEqual(['hex']);
   });

@@ -264,6 +264,11 @@ describe('isRegulationAtOrAfter', () => {
     expect(isRegulationAtOrAfter('REG-MD', 'REG-MC')).toBe(true);
     expect(isRegulationAtOrAfter('REG-MB', 'REG-MC')).toBe(false);
   });
+
+  it('treats an unrecognised regulation as the latest', () => {
+    // toRegulationId(team.format) yields undefined at runtime for an unknown format
+    expect(isRegulationAtOrAfter(undefined as never, LATEST_REGULATION_ID)).toBe(true);
+  });
 });
 
 describe('regulationForFormat', () => {

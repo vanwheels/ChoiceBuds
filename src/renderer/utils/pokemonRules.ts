@@ -80,9 +80,14 @@ export const LATEST_REGULATION_ID: RegulationId = ALL_REGULATION_IDS[ALL_REGULAT
  * Whether `regulation` is `since` or a later one, by ALL_REGULATION_IDS
  * order. Decides whether a dated balance patch
  * (config/championsRegulationPatches.ts) applies to a given regulation.
+ * An unrecognised regulation counts as the latest: a team saved with an
+ * unknown `format` reaches here as `toRegulationId`'s runtime `undefined`,
+ * and indexOf's -1 would otherwise pin it to the oldest balance.
  */
 export function isRegulationAtOrAfter(regulation: RegulationId, since: RegulationId): boolean {
-  return ALL_REGULATION_IDS.indexOf(regulation) >= ALL_REGULATION_IDS.indexOf(since);
+  const index = ALL_REGULATION_IDS.indexOf(regulation);
+  const effective = index === -1 ? ALL_REGULATION_IDS.length - 1 : index;
+  return effective >= ALL_REGULATION_IDS.indexOf(since);
 }
 
 /**
