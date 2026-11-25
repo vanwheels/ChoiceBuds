@@ -138,6 +138,10 @@ Entries prior to this file's oldest are in:
   (the Calc Follow-ups milestone's six legs, split out at the 2026-10-27
   Calc Follow-ups boundary - named with the milestone slug since it shares
   its date range with the Sprite, Filter & Search Fixes archive above)
+- [docs/archive/completed-2026-11-24-to-2026-11-25.md](docs/archive/completed-2026-11-24-to-2026-11-25.md)
+  (the Conventions Catch-up & ChoiceMods Practice Port milestone's five
+  legs, split out at the 2026-11-25 boundary; the Reg M-D legs above stay
+  here until that deferred milestone closes)
 
 ## [Screenshot & GIF Script] — Leg 1 (2026-10-31)
 
@@ -222,43 +226,3 @@ Mapped bare "Tatsugiri" to `tatsugiri-curly` in `normalizeSpeciesForAPI`; tests
 show all three forms resolve to REG-MD-legal slugs. Heatran and Dondozo needed
 no mapping. No manual verification (not required). See commit
 879823b3c343a664d162f771cc6cbfe297286803.
-
-## [Conventions Catch-up] — Leg 1 (2026-11-24)
-
-Cut CLAUDE.md from 225 to 154 lines by reducing each workflow bullet to its
-rule and linking the post mortem holding the incident; the dev:web
-verification rationale moved into bug-fix-small-features-sweep.md. No
-manual verification (not required). See commit
-ae39429938e998a5c81aafc3b53608bb19fd553a.
-
-## [ChoiceMods Practice Port] — Leg 1 (2026-11-24)
-
-Added an Active checks section to CLAUDE.md with the five ported ChoiceMods
-rules, folding in the reactive Worker-deploy and record-live-verification
-bullets they supersede; CLAUDE.md is 163 lines. No manual verification (not
-required). See commit f1027732f87ad9aad2a10392a47b3b19fd0f1714.
-
-## [Conventions Catch-up] — Leg 2 (2026-11-24)
-
-Cut ARCHITECTURE.md from 666 to 100 lines of linked summaries; section text
-moved verbatim to 14 `docs/architecture/` files, and four editing-rule
-sections became path-scoped `.claude/rules/` files. Old headings all mapped
-and every link resolves. No manual verification (not required). See commit
-6f705b0c48c3636e23225a6f4f41d53ca5734981.
-
-## [Conventions Catch-up] — Leg 3 (2026-11-24)
-
-Trimmed TODO.md's header to a one-line pointer at the global rules and
-folded `## Blocked` into Unscheduled, keeping each `Blocked:` line; sections
-now run Current Milestone / Unscheduled / Future Milestones. No manual
-verification (not required). See commit
-f26a73518e9a4fa25090d98e11392f1f0197bd58.
-
-## [ChoiceMods Practice Port] — Leg 2 (2026-11-25)
-
-Ported ChoiceMods' guard as `.claude/hooks/guard.mjs`, a PreToolUse hook on
-Bash and PowerShell that blocks `git add -A`/`.` and `git commit -a`/`-am`
-while ignoring quoted, heredoc and here-string text; 24 tests run in
-`npm run test`, and live `git add -A` (Bash) and `git commit -am`
-(PowerShell) were refused in session. See commit
-a356ac576791e8b0f9e7d1b097e96bc59caa361d.

@@ -157,6 +157,8 @@ cross-device sync, web build, and gender/form handling.
   holds the value the code writes (or lacks what it acts on), pick another.
 - When planning a leg, run `wc -l` on each file it adds to, tests included;
   if one would pass ~300 lines, file and run its split as an earlier leg.
+  A leg adding to CLAUDE.md (~200 cap) or ARCHITECTURE.md (~one page) runs
+  `wc -l` on it too and adds only a rule or linked summary, never history.
 - A `Manual verification: yes` leg gets its COMPLETED.md entry only after
   the user reports the check, and the entry states what was checked.
 - When planning a leg, give each "deployed" done clause a live check step,

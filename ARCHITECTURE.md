@@ -77,6 +77,15 @@ that never loads the PokeAPI game-data cache. Mobile pages pad themselves
 (`.claude/rules/mobile-web-page-padding.md`).
 → [web-build.md](docs/architecture/web-build.md)
 
+## Claude Code guard hook
+
+`.claude/hooks/guard.mjs` is a PreToolUse hook (wired in
+`.claude/settings.json` for Bash and PowerShell) that refuses `git add -A`/`.`
+and `git commit -a`, so a leg only commits the files it staged by name. It
+strips quoted text, heredocs and here-strings before matching, so a commit
+message mentioning those commands passes. Node rather than Python so it needs
+no venv; its tests run in `npm run test`.
+
 ## Feature deep-dives
 
 - [Tourney tab](docs/architecture/tourney-tab.md) — hand-authored event

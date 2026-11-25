@@ -3,25 +3,6 @@
 Format follows the global Task Tracking rules; items are listed
 highest-to-lowest priority within each section.
 
-## Current Milestone: Conventions Catch-up & ChoiceMods Practice Port
-
-Done when:
-- CLAUDE.md is under ~200 lines with no incident history, and carries the
-  ChoiceMods active checks in place of the bullets they supersede
-  (including the reactive `wrangler deploy` bullet).
-- ARCHITECTURE.md fits about one page, with each feature deep-dive in
-  `docs/architecture/<topic>.md` (or `.claude/rules/` when it's really an
-  editing rule), linked from ARCHITECTURE.md.
-- TODO.md's header doesn't restate global rules and its sections match the
-  global layout; a Node PreToolUse guard blocks `git add -A`/`.` and
-  `git commit -a`.
-
-Legs run in order. The global `claude-config` v3 entry is out of scope:
-ChoiceBuds already has CHANGELOG.md, the README shape sits in the deferred
-README milestone, and the LSP rule loads from global `rules/typescript.md`.
-
-All legs done; the milestone is ready for `/close-milestone`.
-
 ## Unscheduled
 
 - **[Move Effect Chance Text] — Leg 1** *(Last touched: 2026-11-24 ·

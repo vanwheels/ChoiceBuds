@@ -117,3 +117,8 @@ milestone.
   [post-mortem](docs/postmortems/sprite-filter-and-search-fixes.md)
 - **Calc Follow-ups** — 2026-10-27 — Shipped —
   [post-mortem](docs/postmortems/calc-follow-ups.md)
+- **Conventions Catch-up & ChoiceMods Practice Port** — 2026-11-24 to
+  2026-11-25 — Shipped — CLAUDE.md trimmed to rules, ARCHITECTURE.md cut to
+  one page with 14 deep-dives, TODO.md layout aligned, whole-tree git
+  staging guard —
+  [post-mortem](docs/postmortems/conventions-catch-up-and-choicemods-practice-port.md)
