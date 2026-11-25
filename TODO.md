@@ -14,7 +14,99 @@ the current milestone and "Unscheduled", items are listed highest-to-lowest
 priority. Only one milestone is "current" at a time — see root `CLAUDE.md`'s
 Task Tracking rules for the full section-lifecycle.
 
-## Current Milestone: README Media & Refresh
+## Blocked
+
+Items where the whole item (not just a sub-part) is stalled on something
+outside this project — a person, a dependency, or an external decision.
+Exempt from the re-check counter; they move back to "In progress" once
+unblocked.
+
+- **[In-App Auto-Update: macOS] — Leg 1** *(Last touched: not recorded ·
+  Re-checks: 0)*
+  Blocked: user needs a paid Apple Developer account ($99/yr) + notarization.
+  Windows shipped in v0.2.1 (see COMPLETED.md). macOS is blocked: Squirrel.Mac
+  (what `electron-updater` uses there) requires code signing to auto-update
+  at all, and Gatekeeper heavily restricts unsigned builds regardless. Once
+  unblocked, `registerAutoUpdater()`'s `process.platform !== 'win32'` guard
+  in `main.ts` is the one line to revisit.
+  - Separately, a paid Windows code-signing cert (~$100-400+/yr) isn't
+    required for Windows auto-update to function, but would remove the
+    SmartScreen warning — not yet decided.
+
+- **[TypeScript 7 Upgrade] — Leg 1** *(Last touched: not recorded ·
+  Re-checks: 0)*
+  Blocked: waiting on real `typescript-eslint` 7.x support.
+  `typescript-eslint` doesn't support TypeScript 7.0.2 yet (confirmed
+  peer-range rejection + real runtime crash reports). Currently on
+  TypeScript ^6.0.3.
+
+## Unscheduled (not yet scoped, highest-to-lowest priority)
+
+Noted 2026-11-24 for the next `/plan-milestone` (proposed: a time-boxed
+Reg M-D Update milestone, research leg first, building after).
+
+- **[Reg M-D Data Research] — Leg 1** *(Last touched: 2026-11-24 ·
+  Re-checks: 0)*
+  Reg M-C ends ~2026-12-02 and Reg M-D replaces it. `config/seasons.ts`
+  only types `'Reg M-A' | 'Reg M-B' | 'Reg M-C'`, has no rows past M-6, and
+  its header says to re-check Serebii/Bulbapedia for M-7+. Research only,
+  sourced per `.claude/rules/external-data-sources.md`: the missing M-C
+  season rows, Reg M-D's dates and seasons, and any legality, movepool
+  (`championsMovepoolChanges.ts`), `vgcData.ts` or Mega table changes,
+  audited per the curated-tables rule. Findings go in
+  `docs/investigations/reg-m-d.md`, with build legs proposed from them.
+  Done check: the investigation doc lists each change with its source, and
+  the follow-up build legs exist in TODO.md.
+  Manual verification: no · Review: no
+
+- **[Conventions Catch-up] — Leg 1** *(Last touched: 2026-11-24 ·
+  Re-checks: 0)*
+  ChoiceBuds is stamped v2 but falls short of it. CLAUDE.md is 225 lines,
+  over the ~200 target, and its Workflow bullets carry incident history
+  that belongs in post mortems. ARCHITECTURE.md is 658 lines against the
+  one-page rule. TODO.md's header restates global rules, and its
+  `## Blocked` section isn't in the global layout. There's also no
+  CHANGELOG.md, which the global CLAUDE.md and `/release` require. The
+  CHANGELOG, README-shape and LSP rules were added globally on 2026-10-31
+  without a conventions bump, so `/project-revision` won't flag them. A v3
+  entry in `~/claude-config` (edited outside this repo) would fix that
+  for every project. Likely splits into a CLAUDE.md slim leg and an
+  ARCHITECTURE.md trim leg.
+  Done check: CLAUDE.md under ~200 lines with history moved out,
+  ARCHITECTURE.md near one page, TODO header trimmed, and CHANGELOG.md
+  started with `## Unreleased`.
+  Manual verification: no · Review: no
+
+- **[ChoiceMods Practice Port] — Leg 1** *(Last touched: 2026-11-24 ·
+  Re-checks: 0)*
+  Port the ChoiceMods CLAUDE.md rules that fit here, each as a one-line
+  active check:
+  - Build a manual check's state yourself, then hand over numbered steps
+    with the expected result of each.
+  - Before any test or manual check, ask whether it would show a different
+    result if the change did nothing.
+  - Run `wc -l` at planning time, and file a split leg first for any file
+    that would pass ~300 lines.
+  - A `Manual verification: yes` leg gets its COMPLETED.md entry only after
+    Vanny reports the check.
+  - Each "deployed" done clause gets a live check step, or is reworded to
+    "in the repo". This would replace the reactive `wrangler deploy`
+    bullet.
+  Also consider porting ChoiceMods' `.claude/hooks/guard.py` PreToolUse
+  hook (blocks `git add -A`/`.` and `git commit -a`). Skip its
+  guarantee-sentence audits, which don't fit this project's risk profile.
+  Done check: the rules are in CLAUDE.md or `.claude/rules/`, replacing
+  the bullets they supersede, and the hook is in `.claude/settings.json`
+  if adopted.
+  Manual verification: no · Review: no
+
+## Future Milestones (unscheduled)
+
+### README Media & Refresh (deferred 2026-11-24)
+
+Moved out of Current Milestone intact to make room for the Reg M-D update
+(Reg M-D launches ~2026-12-02). Resume via `/plan-milestone` when picked
+back up; `[Screenshot & GIF Script] — Leg 1` is already done.
 
 Done when:
 - `npm run media` regenerates every file in `docs/media/` from the fixed demo
@@ -52,36 +144,6 @@ Done when:
   exact layout is TBD and may take a couple of iterations.
   Done check: Vanny approves the rendered README.
   Manual verification: yes · Review: no
-
-## Blocked
-
-Items where the whole item (not just a sub-part) is stalled on something
-outside this project — a person, a dependency, or an external decision.
-Exempt from the re-check counter; they move back to "In progress" once
-unblocked.
-
-- **[In-App Auto-Update: macOS] — Leg 1** *(Last touched: not recorded ·
-  Re-checks: 0)*
-  Blocked: user needs a paid Apple Developer account ($99/yr) + notarization.
-  Windows shipped in v0.2.1 (see COMPLETED.md). macOS is blocked: Squirrel.Mac
-  (what `electron-updater` uses there) requires code signing to auto-update
-  at all, and Gatekeeper heavily restricts unsigned builds regardless. Once
-  unblocked, `registerAutoUpdater()`'s `process.platform !== 'win32'` guard
-  in `main.ts` is the one line to revisit.
-  - Separately, a paid Windows code-signing cert (~$100-400+/yr) isn't
-    required for Windows auto-update to function, but would remove the
-    SmartScreen warning — not yet decided.
-
-- **[TypeScript 7 Upgrade] — Leg 1** *(Last touched: not recorded ·
-  Re-checks: 0)*
-  Blocked: waiting on real `typescript-eslint` 7.x support.
-  `typescript-eslint` doesn't support TypeScript 7.0.2 yet (confirmed
-  peer-range rejection + real runtime crash reports). Currently on
-  TypeScript ^6.0.3.
-
-## Unscheduled (not yet scoped, highest-to-lowest priority)
-
-## Future Milestones (unscheduled)
 
 Password reset flow, deferred out of Web Version: Teams & Box MVP's scoping
 (2026-09-29, see `docs/investigations/web-version-scope.md`) - not yet
