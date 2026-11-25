@@ -29,24 +29,6 @@ Done when:
 Findings for all legs below: `docs/investigations/reg-m-d.md`. Legs 3-5
 each need only Leg 2; Legs 6-8 also need Leg 5. Leg 9 waits for launch.
 
-- **[Reg M-D Regulation Plumbing] — Leg 2** *(Last touched: 2026-11-24 ·
-  Re-checks: 0)*
-  Widen the regulation union in `types/pokemon.ts` to add `'Reg M-D'` and
-  carry it through every call site (14 files reference `'Reg M-C'` today,
-  including `teamSort.ts`, `pokemonRules.ts`, `vgcPastes.ts`, `pokepaste.ts`
-  and the regulation selectors). `REG-MD`'s species set starts as M-C's
-  plus an empty `REG_MD_ADDED_SPECIES`, which Leg 3 fills. Also add the
-  confirmed M-7 (Oct 7 – Nov 4) and M-8 (Nov 4 – Dec 2) rows to
-  `seasons.ts`. M-D's season dates aren't published yet, so those rows go
-  in Leg 9. This spans several systems by necessity: a partial union
-  widening doesn't type-check. The regulation is stored on persisted
-  teams, so existing teams must load unchanged.
-  Done check: `npm run type-check`, lint and the full test suite pass, with
-  tests for the M-7/M-8 rows and M-D sorting/rules; Vanny selects Reg M-D
-  on a team in the app and existing M-A/B/C teams still show their
-  regulation. Proves Done when line 2's selectable half.
-  Manual verification: yes · Review: yes
-
 - **[Reg M-D Species Roster] — Leg 3** *(Last touched: 2026-11-24 ·
   Re-checks: 0)*
   Add Serebii's three confirmed M-D species (Heatran, Dondozo, and

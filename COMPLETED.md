@@ -156,3 +156,13 @@ Recorded every published Reg M-D change with its source in
 `docs/investigations/reg-m-d.md` (Serebii; Bulbapedia returned 403) and
 planned build Legs 3-8 from it. Leg 8 holds what is unpublished until the
 2026-12-02 launch. See commit 18b263b5ae8305f62a01c49f2cfc1993cc77d887.
+
+## [Reg M-D Regulation Plumbing] — Leg 2 (2026-11-24)
+
+Added Reg M-D as a regulation everywhere (REG-MD = M-C's roster plus an
+empty `REG_MD_ADDED_SPECIES`) and the M-7/M-8 season rows; the VGCPastes
+catalog hides M-D until the sheet has that tab. Vanny verified live that
+Reg M-D is selectable on a team and existing M-A/B/C teams keep their
+regulation; `/leg-review` found nothing blocking. See commits
+6f3f00d1c1c0ccbdee27307a794874ed2a18023d and
+5f00d7b371e787f8c5660b9513b8f34f98161274.
